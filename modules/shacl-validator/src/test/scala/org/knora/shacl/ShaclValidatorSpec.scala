@@ -5,13 +5,22 @@
 
 package org.knora.shacl
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
-object ShaclValidatorSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+/** The SHACL shapes fixture, materialized to a real file so `RdfData.TurtleFile` can read it. */
+final case class ShapesFile(path: Path)
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ShaclValidatorSpec extends ZIOSpecDefault {
 
   private val schemaGraphIri = "http://www.knora.org/ontology/knora-base"
   private val ontoGraphIri   = "http://www.knora.org/ontology/0001/test"
@@ -53,30 +62,48 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
       |""".stripMargin
 
-  private def shapesPath: Path =
-    Path.of(getClass.getClassLoader.getResource("shacl/test-onto-shapes.ttl").toURI)
+  // The shapes fixture is a classpath resource. `RdfData.TurtleFile` needs a real
+  // filesystem Path, so copy the resource to a temp file (read via a stream, which
+  // works whether the resource is a loose file under sbt or inside a jar under
+  // Bazel/RBE). Scoped + shared, so it is created once per run and deleted after.
+  private val shapesFileLayer: ZLayer[Any, Throwable, ShapesFile] =
+    ZLayer.scoped {
+      ZIO.acquireRelease(
+        ZIO.attemptBlocking {
+          val resource = "shacl/test-onto-shapes.ttl"
+          val in       = getClass.getClassLoader.getResourceAsStream(resource)
+          if (in eq null) throw new java.io.FileNotFoundException(s"classpath resource not found: $resource")
+          val tmp = Files.createTempFile("test-onto-shapes-", ".ttl")
+          try Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING)
+          finally in.close()
+          ShapesFile(tmp)
+        },
+      )(sf => ZIO.attemptBlocking(Files.deleteIfExists(sf.path)).orDie)
+    }
 
   /** No-op shapes — contains no SHACL shape definitions, so validation always conforms. */
   private val noOpShapes = RdfData.InMemoryTurtle("", "urn:no-op-shapes")
 
-  private def ontologyShapes = ShaclShapes(
+  private def ontologyShapes(shapesPath: Path) = ShaclShapes(
     ontologyShapes = NonEmptyChunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
     dataShapes = NonEmptyChunk(noOpShapes),
   )
 
   private def validate(ontologyTtl: String, schemaTtl: String = minimalSchema) =
-    ShaclValidator
-      .validate(
-        graphs = RdfGraphs(
-          ontologies = NonEmptyChunk(
-            RdfData.InMemoryTurtle(schemaTtl, schemaGraphIri),
-            RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+    ZIO.serviceWithZIO[ShapesFile] { shapesFile =>
+      ShaclValidator
+        .validate(
+          graphs = RdfGraphs(
+            ontologies = NonEmptyChunk(
+              RdfData.InMemoryTurtle(schemaTtl, schemaGraphIri),
+              RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+            ),
+            data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
           ),
-          data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
-        ),
-        shapes = ontologyShapes,
-      )
-      .either
+          shapes = ontologyShapes(shapesFile.path),
+        )
+        .either
+    }
 
   /** Convert Turtle triples into NQuad lines within a named graph. */
   private def ttlToNQuads(ttl: String, graphIri: String): String = {
@@ -239,19 +266,21 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
       test("ontology provided as NQuads conforms") {
         val ttl = prefixes + validOntologyHeader
         val nq  = ttlToNQuads(ttl, ontoGraphIri)
-        ShaclValidator
-          .validate(
-            graphs = RdfGraphs(
-              ontologies = NonEmptyChunk(
-                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-                RdfData.InMemoryNQuad(nq),
+        ZIO.serviceWithZIO[ShapesFile] { shapesFile =>
+          ShaclValidator
+            .validate(
+              graphs = RdfGraphs(
+                ontologies = NonEmptyChunk(
+                  RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                  RdfData.InMemoryNQuad(nq),
+                ),
+                data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
               ),
-              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
-            ),
-            shapes = ontologyShapes,
-          )
-          .either
-          .map(result => assert(result)(isRight))
+              shapes = ontologyShapes(shapesFile.path),
+            )
+            .either
+            .map(result => assert(result)(isRight))
+        }
       },
       test("ontology as NQuads missing rdfs:label fails") {
         val ttl = prefixes +
@@ -261,19 +290,21 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
             |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
             |""".stripMargin
         val nq = ttlToNQuads(ttl, ontoGraphIri)
-        ShaclValidator
-          .validate(
-            graphs = RdfGraphs(
-              ontologies = NonEmptyChunk(
-                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-                RdfData.InMemoryNQuad(nq),
+        ZIO.serviceWithZIO[ShapesFile] { shapesFile =>
+          ShaclValidator
+            .validate(
+              graphs = RdfGraphs(
+                ontologies = NonEmptyChunk(
+                  RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                  RdfData.InMemoryNQuad(nq),
+                ),
+                data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
               ),
-              data = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
-            ),
-            shapes = ontologyShapes,
-          )
-          .either
-          .map(result => assert(result)(isLeft))
+              shapes = ontologyShapes(shapesFile.path),
+            )
+            .either
+            .map(result => assert(result)(isLeft))
+        }
       },
     ),
     suite("two-step validation")(
@@ -287,27 +318,26 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
         // Data contains an owl:Ontology too — but ontology validation should fail first, before data is added
         val dataNq =
           s"""<http://example.org/ind1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> <$dataGraphIri> .\n"""
-        ShaclValidator
-          .validate(
-            graphs = RdfGraphs(
-              ontologies = NonEmptyChunk(
-                RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-                RdfData.InMemoryTurtle(invalidOntoTtl, ontoGraphIri),
+        ZIO.serviceWithZIO[ShapesFile] { shapesFile =>
+          ShaclValidator
+            .validate(
+              graphs = RdfGraphs(
+                ontologies = NonEmptyChunk(
+                  RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+                  RdfData.InMemoryTurtle(invalidOntoTtl, ontoGraphIri),
+                ),
+                data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
               ),
-              data = NonEmptyChunk(RdfData.InMemoryNQuad(dataNq)),
-            ),
-            shapes = ShaclShapes(
-              ontologyShapes = NonEmptyChunk(RdfData.TurtleFile(shapesPath, "urn:shapes")),
-              dataShapes = NonEmptyChunk(noOpShapes),
-            ),
-          )
-          .either
-          .map { result =>
-            assert(result)(isLeft) &&
-            assert(result.left.toOption.get)(
-              Assertion.isSubtype[ShaclValidationError.OntologyValidationError](anything),
+              shapes = ontologyShapes(shapesFile.path),
             )
-          }
+            .either
+            .map { result =>
+              assert(result)(isLeft) &&
+              assert(result.left.toOption.get)(
+                Assertion.isSubtype[ShaclValidationError.OntologyValidationError](anything),
+              )
+            }
+        }
       },
       test("data shapes can use RDFS inference from ontology triples") {
         val ontoTtl = prefixes + validOntologyHeader +
@@ -441,5 +471,5 @@ object ShaclValidatorSpec extends ZIOSpecDefault {
           }
       },
     ),
-  )
+  ).provideLayerShared(shapesFileLayer)
 }

@@ -53,7 +53,8 @@ lazy val buildTime   = sys.env.getOrElse("BUILD_TIME", "dev")
 
 lazy val knoraSipiVersion = gitVersion
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, testkit, it, e2e, bagit, jwt, shaclValidator)
+lazy val aggregatedProjects: Seq[ProjectReference] =
+  Seq(webapi, testkit, it, e2e, bagit, jwt, shaclValidator, testRunner)
 
 lazy val year           = java.time.LocalDate.now().getYear
 lazy val projectLicense = Some(
@@ -83,6 +84,7 @@ lazy val root: Project = Project(id = "root", file("."))
     bagit,
     jwt,
     shaclValidator,
+    testRunner,
   )
   .settings(
     // values set for all sub-projects
@@ -104,11 +106,11 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate shacl-validator/headerCreate shacl-validator/Test/headerCreate",
+  "; all webapi/headerCreate webapi/Test/headerCreate testkit/headerCreate test-it/headerCreate test-it/Test/headerCreate test-e2e/headerCreate test-e2e/Test/headerCreate bagit/headerCreate bagit/Test/headerCreate jwt/headerCreate jwt/Test/headerCreate shacl-validator/headerCreate shacl-validator/Test/headerCreate test-runner/headerCreate",
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck shacl-validator/headerCheck shacl-validator/Test/headerCheck",
+  "; all webapi/headerCheck webapi/Test/headerCheck testkit/headerCheck test-it/headerCheck test-it/Test/headerCheck test-e2e/headerCheck test-e2e/Test/headerCheck bagit/headerCheck bagit/Test/headerCheck jwt/headerCheck jwt/Test/headerCheck shacl-validator/headerCheck shacl-validator/Test/headerCheck test-runner/headerCheck",
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("test-it", "test-it/test")
@@ -141,7 +143,7 @@ val customScalacOptions = Seq(
   "-unchecked",
   "-deprecation",
   "-Xresolve-term-conflict:package", // renamed from -Yresolve-term-conflict on Scala 3.8
-  "-Wconf:src=target/.*:s", // silence TWIRL templates unused imports warnings
+  "-Wconf:src=target/.*:s",          // silence TWIRL templates unused imports warnings
   "-Wvalue-discard",
   "-Xmax-inlines:64",
   "-Wunused:all",
@@ -265,13 +267,14 @@ lazy val webapi: Project = Project(id = "webapi", base = file("modules/webapi"))
 //////////////////////////////////////
 
 lazy val jwt: Project = Project(id = "jwt", base = file("modules/jwt"))
+  .dependsOn(testRunner % Test)
   .settings(buildSettings)
   .settings(
     scalacOptions ++= customScalacOptions,
-    logLevel := Level.Info,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    logLevel       := Level.Info,
+    testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
     libraryDependencies ++= Seq(Dependencies.zio, Dependencies.zioJson) ++
-      Seq(Dependencies.zioTest, Dependencies.zioTestSbt).map(_ % Test),
+      Seq(Dependencies.zioTest, Dependencies.junitInterface).map(_ % Test),
     publish / skip := true,
     name           := "jwt",
   )
@@ -282,11 +285,12 @@ lazy val jwt: Project = Project(id = "jwt", base = file("modules/jwt"))
 //////////////////////////////////////
 
 lazy val bagit: Project = Project(id = "bagit", base = file("modules/bagit"))
+  .dependsOn(testRunner % Test)
   .settings(buildSettings)
   .settings(
     scalacOptions ++= customScalacOptions,
-    logLevel := Level.Info,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    logLevel       := Level.Info,
+    testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
     libraryDependencies ++= Dependencies.bagitDependencies ++ Dependencies.bagitTestDependencies,
     publish / skip := true,
     name           := "bagit",
@@ -298,14 +302,33 @@ lazy val bagit: Project = Project(id = "bagit", base = file("modules/bagit"))
 //////////////////////////////////////
 
 lazy val shaclValidator: Project = Project(id = "shacl-validator", base = file("modules/shacl-validator"))
+  .dependsOn(testRunner % Test)
+  .settings(buildSettings)
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    logLevel       := Level.Info,
+    testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
+    libraryDependencies ++= Dependencies.shaclValidatorDependencies ++ Dependencies.shaclValidatorTestDependencies,
+    publish / skip := true,
+    name           := "shacl-validator",
+  )
+  .enablePlugins(HeaderPlugin)
+
+//////////////////////////////////////
+// TEST-RUNNER (custom JUnit runner)
+//////////////////////////////////////
+
+// Home of DspZTestJUnitRunner, the single custom JUnit runner both sbt and Bazel
+// use to run ZIO Test specs. A minimal leaf module (zio-test + junit only, no
+// webapi) so every test module can depend on it without a cycle.
+lazy val testRunner: Project = Project(id = "test-runner", base = file("modules/test-runner"))
   .settings(buildSettings)
   .settings(
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
-    libraryDependencies ++= Dependencies.shaclValidatorDependencies ++ Dependencies.shaclValidatorTestDependencies,
+    libraryDependencies ++= Seq(Dependencies.zioTest, Dependencies.junit),
     publish / skip := true,
-    name           := "shacl-validator",
+    name           := "test-runner",
   )
   .enablePlugins(HeaderPlugin)
 

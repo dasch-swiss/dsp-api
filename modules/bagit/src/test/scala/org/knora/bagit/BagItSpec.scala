@@ -5,6 +5,7 @@
 
 package org.knora.bagit
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -20,8 +21,10 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 import org.knora.bagit.domain.*
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagItSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagItSpec extends ZIOSpecDefault {
 
   private def createTestFiles: ZIO[Scope, Throwable, (Path, Path, Path)] =
     for {

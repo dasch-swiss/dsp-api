@@ -3,8 +3,8 @@
 Working doc for continuing the Bazel migration on another machine/session. Self-contained
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
-**Last updated:** 2026-07-09
-**Branch:** `worktree-bazelify` (⚠️ **local only — not yet pushed**; see "Resume on another machine")
+**Last updated:** 2026-07-10
+**Branch:** `worktree-bazelify` (pushed; Phase 0, 0.5 and 1 done — Phase 2 is next)
 **Base:** `d84f7edec` on `main`
 
 ---
@@ -99,20 +99,43 @@ Two commits on `worktree-bazelify`:
 
 ## Roadmap — remaining phases (from the approved plan)
 
-### Phase 1 — Leaf libs + custom `DspZTestJUnitRunner` spike (NEXT)
+### Phase 1 — Leaf libs + custom `DspZTestJUnitRunner` spike ✅ COMPLETE
 
-- Write `DspZTestJUnitRunner` (in `modules/testkit`): a `Runner` that returns a coarse per-spec
-  `Description` **without** running `bootstrap` in `getDescription`, and builds the env once in
-  `run()`. Referenced via `@RunWith(classOf[DspZTestJUnitRunner])`.
-- `modules/{bagit,jwt,shacl-validator}/BUILD.bazel`: `scala_library` + `scala_junit_test`
-  (`suffixes = ["Spec","IT","Test"]` — a missed suffix silently skips specs).
-- Convert those 14 specs from `object … extends ZIOSpecDefault` to `@RunWith` **classes**.
-- sbt wiring (per module with tests): `libraryDependencies += "com.github.sbt" % "junit-interface"
-  % "<latest>" % Test` and `testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework"))`
-  (**replace** `ZTestFramework`, don't append — else specs double-run).
-- **Gate:** `sbt test` and `bazel test` agree on pass/fail AND discovered-spec count; no double-run.
-- Also run `bazel cquery --output=build //bazel/toolchains:...` (deferred from Phase 0) to confirm
-  our scalacopts win over the default toolchain.
+Done: `modules/{bagit,jwt,shacl-validator}` build + test under Bazel, and sbt ⇄ bazel **agree**
+(bagit 125, jwt 30, shacl-validator 20; all pass; no double-run). Deferred toolchain `cquery` ran.
+
+- **`DspZTestJUnitRunner` lives in `modules/test-runner`, NOT `modules/testkit`.** testkit →
+  webapi → {bagit,jwt,shacl-validator}, so a leaf test depending on testkit for the runner cycles.
+  The new leaf module `test-runner` (zio-test + junit only) is depended on by every test module.
+- The runner's real implementation is `zio.test.junit.DspZTestRunnerBase` (package `zio.test.junit`
+  is required to reach zio-test's `private[zio]` `runSpecAsApp`); `org.knora.testrunner.DspZTestJUnitRunner`
+  is a thin subclass so specs reference a DaSCH type. `getDescription` is coarse
+  (`createSuiteDescription(klass)`) → no double-`bootstrap`; per-test `Description`s use the
+  `(Class, name)` overload with a path-qualified name → non-null `getTestClass` (Bazel's JUnit
+  runner NPEs on a name-only description when a test fails).
+- 14 specs converted `object … extends ZIOSpecDefault` → `@RunWith(classOf[DspZTestJUnitRunner]) class …`.
+- sbt: `testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework"))` (**replaced**
+  `ZTestFramework`), `junit-interface` added, `zioTestSbt` dropped from the three leaf modules.
+- Two test-portability fixes for the Bazel sandbox / RBE (both kept green under sbt too):
+  `ShaclValidatorSpec` now materializes its `.ttl` fixture to a temp file via a shared scoped
+  `ZLayer` (classpath resource → jar under Bazel, so `Path.of(getResource.toURI)` fails);
+  `BagReaderSpec`'s deep-dir test now runs `walkDirectory` on a small-stack thread at a
+  path-safe depth (was implicitly testing macOS `PATH_MAX`, not stack-safety).
+
+### Phase 0.5 — Toolchain foundation the Scala build actually needed (discovered in Phase 1)
+
+Phase 0 built only the sipi OCI image + buildinfo, so it never exercised a `scala_library`. The
+first real Scala compile needed:
+
+- **Hermetic LLVM C toolchain** (`bazel_dep llvm 0.8.10`, LLVM 22.1.7, sipi's `hermetic_llvm_headers_glob.patch`)
+  — the rules_scala worker builds protobuf/upb from source; no system Xcode, RBE-ready. See `.bazelrc`.
+- `use_repo(scala_deps, …)` the compiler artifact repos (`io_bazel_rules_scala_scala_*_3_8_4`,
+  `org_scala_sbt_compiler_interface_3_8_4`).
+- Toolchain **`dependency_mode = "transitive"`** (default "direct" hides zio-stacktracer → ZIO
+  auto-trace `given` missing → "No given zio.Trace" on every effect), **`strict_deps_mode = "off"`**,
+  and `-Wconf:src=.*external/.*:s` (exempt rules_scala's own from-source helpers from `-Werror`).
+- `maven.install(excluded_artifacts = [scala3-library_3, scala-library, tasty-core_3])` — the toolchain
+  provides the 3.8.4 stdlib; maven pulls 3.3.7 transitively → `scala.caps` package/object clash.
 
 ### Phase 2 — webapi library + BuildInfo + its 153 specs
 
@@ -198,7 +221,9 @@ Two commits on `worktree-bazelify`:
      `bazel-bin/tools/buildinfo/SmokeBuildInfo.scala` (stamping works)
    - `./sbtx "webapi/compile"` (sbt on 3.8.4 still clean)
    - if maven needs a refetch: `nix develop --command bazel run @unpinned_maven//:pin`
-5. **Then start Phase 1** (see roadmap above).
+5. **Then start Phase 2** (webapi library + BuildInfo + its specs; see roadmap above). Phase 0.5 and
+   Phase 1 are done — the Scala toolchain, hermetic LLVM C toolchain, and the custom JUnit runner
+   (`//modules/test-runner`) are in place and green.
 
 ## Useful commands
 

@@ -52,6 +52,7 @@
     "io.opentelemetry:opentelemetry-exporter-otlp": 1372354329,
     "io.opentelemetry:opentelemetry-sdk": 1757639230,
     "io.opentelemetry:opentelemetry-sdk-testing": 767764801,
+    "junit:junit": -744267592,
     "net.datafaker:datafaker": 1356988932,
     "net.sf.saxon:Saxon-HE": 2018956298,
     "org.apache.commons:commons-lang3": -278168457,
@@ -66,6 +67,9 @@
     "org.glassfish:jakarta.json": 1056313227,
     "org.scala-graph:graph-core_3": 599998029,
     "org.scala-lang.modules:scala-xml_3": -1340734140,
+    "org.scala-lang:scala-library": 1230160761,
+    "org.scala-lang:scala3-library_3": 1771369610,
+    "org.scala-lang:tasty-core_3": 1934156016,
     "org.slf4j:slf4j-api": -2005163028,
     "org.slf4j:slf4j-simple": 1999565066,
     "org.springframework.security:spring-security-core": 652476572,
@@ -115,7 +119,7 @@
     "com.github.jknack:handlebars:jar:sources": 1234049305,
     "com.github.jsonld-java:jsonld-java": -1157349735,
     "com.github.jsonld-java:jsonld-java:jar:sources": 267400367,
-    "com.github.tototoshi:scala-csv_3": 1805233087,
+    "com.github.tototoshi:scala-csv_3": -1463172423,
     "com.github.tototoshi:scala-csv_3:jar:sources": 99062729,
     "com.google.code.findbugs:jsr305": 870839855,
     "com.google.code.findbugs:jsr305:jar:sources": -935881202,
@@ -138,73 +142,73 @@
     "com.ibm.icu:icu4j:jar:sources": 1011748514,
     "com.jayway.jsonpath:json-path": -816079498,
     "com.jayway.jsonpath:json-path:jar:sources": -1185551957,
-    "com.lihaoyi:unroll-annotation_3": -252805768,
+    "com.lihaoyi:unroll-annotation_3": 42736306,
     "com.lihaoyi:unroll-annotation_3:jar:sources": -1102142611,
-    "com.lihaoyi:unroll-plugin_3": -929342747,
+    "com.lihaoyi:unroll-plugin_3": 1408339440,
     "com.lihaoyi:unroll-plugin_3:jar:sources": -1267756075,
     "com.networknt:json-schema-validator": 1870081960,
     "com.networknt:json-schema-validator:jar:sources": 668026887,
     "com.opencsv:opencsv": -444879549,
     "com.opencsv:opencsv:jar:sources": -1556307505,
-    "com.softwaremill.magnolia1_3:magnolia_3": 106124707,
+    "com.softwaremill.magnolia1_3:magnolia_3": -111524451,
     "com.softwaremill.magnolia1_3:magnolia_3:jar:sources": 1519922573,
-    "com.softwaremill.quicklens:quicklens_3": -1325403895,
+    "com.softwaremill.quicklens:quicklens_3": -742798717,
     "com.softwaremill.quicklens:quicklens_3:jar:sources": -992461941,
-    "com.softwaremill.sttp.apispec:apispec-model_3": -1733154568,
+    "com.softwaremill.sttp.apispec:apispec-model_3": 2037294642,
     "com.softwaremill.sttp.apispec:apispec-model_3:jar:sources": -909107094,
-    "com.softwaremill.sttp.apispec:asyncapi-model_3": -361645090,
+    "com.softwaremill.sttp.apispec:asyncapi-model_3": -1475517866,
     "com.softwaremill.sttp.apispec:asyncapi-model_3:jar:sources": 1558011033,
-    "com.softwaremill.sttp.apispec:jsonschema-circe_3": -1827676433,
+    "com.softwaremill.sttp.apispec:jsonschema-circe_3": -217977526,
     "com.softwaremill.sttp.apispec:jsonschema-circe_3:jar:sources": -1367428052,
-    "com.softwaremill.sttp.apispec:openapi-circe-yaml_3": 339109454,
+    "com.softwaremill.sttp.apispec:openapi-circe-yaml_3": -776565181,
     "com.softwaremill.sttp.apispec:openapi-circe-yaml_3:jar:sources": 1804628981,
-    "com.softwaremill.sttp.apispec:openapi-circe_3": -538415658,
+    "com.softwaremill.sttp.apispec:openapi-circe_3": -2060157018,
     "com.softwaremill.sttp.apispec:openapi-circe_3:jar:sources": -1494360248,
-    "com.softwaremill.sttp.apispec:openapi-model_3": 31959827,
+    "com.softwaremill.sttp.apispec:openapi-model_3": 1451873601,
     "com.softwaremill.sttp.apispec:openapi-model_3:jar:sources": -35898088,
-    "com.softwaremill.sttp.client4:core_3": 30635572,
+    "com.softwaremill.sttp.client4:core_3": -1678806440,
     "com.softwaremill.sttp.client4:core_3:jar:sources": -2072623281,
-    "com.softwaremill.sttp.client4:json-common_3": -839038072,
+    "com.softwaremill.sttp.client4:json-common_3": 644729493,
     "com.softwaremill.sttp.client4:json-common_3:jar:sources": 420495851,
-    "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": -523614835,
+    "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": 1882022720,
     "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3:jar:sources": 1301939477,
-    "com.softwaremill.sttp.client4:zio-json_3": -760642092,
+    "com.softwaremill.sttp.client4:zio-json_3": 774809437,
     "com.softwaremill.sttp.client4:zio-json_3:jar:sources": -580463715,
-    "com.softwaremill.sttp.client4:zio_3": -1851416021,
+    "com.softwaremill.sttp.client4:zio_3": 634972300,
     "com.softwaremill.sttp.client4:zio_3:jar:sources": -1857819448,
-    "com.softwaremill.sttp.model:core_3": -1221348704,
+    "com.softwaremill.sttp.model:core_3": 1694521818,
     "com.softwaremill.sttp.model:core_3:jar:sources": -449644307,
-    "com.softwaremill.sttp.shared:core_3": 1233878431,
+    "com.softwaremill.sttp.shared:core_3": -1734013799,
     "com.softwaremill.sttp.shared:core_3:jar:sources": -55821617,
-    "com.softwaremill.sttp.shared:ws_3": 1624521524,
+    "com.softwaremill.sttp.shared:ws_3": -877534252,
     "com.softwaremill.sttp.shared:ws_3:jar:sources": 1206984387,
-    "com.softwaremill.sttp.shared:zio_3": -1979205682,
+    "com.softwaremill.sttp.shared:zio_3": 1206525877,
     "com.softwaremill.sttp.shared:zio_3:jar:sources": 441771509,
-    "com.softwaremill.sttp.tapir:tapir-apispec-docs_3": 602618548,
+    "com.softwaremill.sttp.tapir:tapir-apispec-docs_3": 186134832,
     "com.softwaremill.sttp.tapir:tapir-apispec-docs_3:jar:sources": 966960525,
-    "com.softwaremill.sttp.tapir:tapir-core_3": 495801686,
+    "com.softwaremill.sttp.tapir:tapir-core_3": -583721199,
     "com.softwaremill.sttp.tapir:tapir-core_3:jar:sources": -169520961,
-    "com.softwaremill.sttp.tapir:tapir-files_3": 1472193948,
+    "com.softwaremill.sttp.tapir:tapir-files_3": 1592013312,
     "com.softwaremill.sttp.tapir:tapir-files_3:jar:sources": -1547405898,
-    "com.softwaremill.sttp.tapir:tapir-json-zio_3": 893081506,
+    "com.softwaremill.sttp.tapir:tapir-json-zio_3": -1742341472,
     "com.softwaremill.sttp.tapir:tapir-json-zio_3:jar:sources": 177883969,
-    "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": -1972188004,
+    "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": 487140222,
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3:jar:sources": 1170133420,
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": 114354236,
+    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": 1190072577,
     "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:jar:sources": -1436615356,
-    "com.softwaremill.sttp.tapir:tapir-refined_3": 1254070392,
+    "com.softwaremill.sttp.tapir:tapir-refined_3": 1392156133,
     "com.softwaremill.sttp.tapir:tapir-refined_3:jar:sources": -1425749627,
-    "com.softwaremill.sttp.tapir:tapir-server_3": -868066536,
+    "com.softwaremill.sttp.tapir:tapir-server_3": 897041668,
     "com.softwaremill.sttp.tapir:tapir-server_3:jar:sources": -19086602,
-    "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3": 2002499915,
+    "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3": 604664214,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:jar:sources": 299237074,
-    "com.softwaremill.sttp.tapir:tapir-swagger-ui_3": -1451954791,
+    "com.softwaremill.sttp.tapir:tapir-swagger-ui_3": -872630530,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3:jar:sources": -716466033,
-    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": -600741072,
+    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": 1800146115,
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:jar:sources": -459117824,
-    "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": 2019282190,
+    "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": -156961219,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:jar:sources": 1656340738,
-    "com.softwaremill.sttp.tapir:tapir-zio_3": -1504891720,
+    "com.softwaremill.sttp.tapir:tapir-zio_3": -1184414428,
     "com.softwaremill.sttp.tapir:tapir-zio_3:jar:sources": 601750533,
     "com.squareup.okhttp3:okhttp-jvm": 859102873,
     "com.squareup.okhttp3:okhttp-jvm:jar:sources": -433851252,
@@ -234,101 +238,101 @@
     "commons-io:commons-io:jar:sources": -238571367,
     "commons-validator:commons-validator": -1129902132,
     "commons-validator:commons-validator:jar:sources": 1288604053,
-    "dev.optics:monocle-core_3": 1497588913,
+    "dev.optics:monocle-core_3": 1490497332,
     "dev.optics:monocle-core_3:jar:sources": 873146664,
-    "dev.optics:monocle-law_3": 169224203,
+    "dev.optics:monocle-law_3": 1080699249,
     "dev.optics:monocle-law_3:jar:sources": 875602418,
-    "dev.optics:monocle-macro_3": -426616750,
+    "dev.optics:monocle-macro_3": 471102300,
     "dev.optics:monocle-macro_3:jar:sources": -571506960,
-    "dev.optics:monocle-refined_3": 351925792,
+    "dev.optics:monocle-refined_3": 12775073,
     "dev.optics:monocle-refined_3:jar:sources": 1869831135,
-    "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": 1439161813,
+    "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": -1692071345,
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3:jar:sources": 343704133,
-    "dev.zio:izumi-reflect_3": 886459760,
+    "dev.zio:izumi-reflect_3": -655092843,
     "dev.zio:izumi-reflect_3:jar:sources": -148042695,
-    "dev.zio:zio-config-derivation_3": 885385848,
+    "dev.zio:zio-config-derivation_3": -1870395090,
     "dev.zio:zio-config-derivation_3:jar:sources": -187498114,
-    "dev.zio:zio-config-magnolia_3": 1139651483,
+    "dev.zio:zio-config-magnolia_3": 1373611703,
     "dev.zio:zio-config-magnolia_3:jar:sources": 948882666,
-    "dev.zio:zio-config-typesafe_3": -595884176,
+    "dev.zio:zio-config-typesafe_3": 1048235994,
     "dev.zio:zio-config-typesafe_3:jar:sources": -1767501657,
-    "dev.zio:zio-config_3": 2104617017,
+    "dev.zio:zio-config_3": -569713365,
     "dev.zio:zio-config_3:jar:sources": 1348924478,
-    "dev.zio:zio-constraintless_3": 1377310798,
+    "dev.zio:zio-constraintless_3": -992019704,
     "dev.zio:zio-constraintless_3:jar:sources": -1765365602,
-    "dev.zio:zio-http_3": 384873411,
+    "dev.zio:zio-http_3": 130809420,
     "dev.zio:zio-http_3:jar:sources": -2106303485,
-    "dev.zio:zio-internal-macros_3": -90980393,
+    "dev.zio:zio-internal-macros_3": -1586160431,
     "dev.zio:zio-internal-macros_3:jar:sources": 1422710146,
-    "dev.zio:zio-interop-reactivestreams_3": 631160518,
+    "dev.zio:zio-interop-reactivestreams_3": -626132826,
     "dev.zio:zio-interop-reactivestreams_3:jar:sources": -898866081,
-    "dev.zio:zio-json-interop-refined_3": -1433335250,
+    "dev.zio:zio-json-interop-refined_3": 1444778548,
     "dev.zio:zio-json-interop-refined_3:jar:sources": -1033731743,
-    "dev.zio:zio-json_3": -814673464,
+    "dev.zio:zio-json_3": -1811458241,
     "dev.zio:zio-json_3:jar:sources": 2134384464,
-    "dev.zio:zio-logging-slf4j2-bridge_3": -1516331478,
+    "dev.zio:zio-logging-slf4j2-bridge_3": -1411930264,
     "dev.zio:zio-logging-slf4j2-bridge_3:jar:sources": -1068601729,
-    "dev.zio:zio-logging_3": -239686580,
+    "dev.zio:zio-logging_3": 1200613476,
     "dev.zio:zio-logging_3:jar:sources": 252607868,
-    "dev.zio:zio-metrics-connectors-prometheus_3": -916803126,
+    "dev.zio:zio-metrics-connectors-prometheus_3": 130850898,
     "dev.zio:zio-metrics-connectors-prometheus_3:jar:sources": 658693039,
-    "dev.zio:zio-metrics-connectors_3": -549755886,
+    "dev.zio:zio-metrics-connectors_3": 704154611,
     "dev.zio:zio-metrics-connectors_3:jar:sources": -202368306,
-    "dev.zio:zio-mock_3": 1764464746,
+    "dev.zio:zio-mock_3": 1886871178,
     "dev.zio:zio-mock_3:jar:sources": -526943379,
-    "dev.zio:zio-nio_3": 903947704,
+    "dev.zio:zio-nio_3": 1955173943,
     "dev.zio:zio-nio_3:jar:sources": -1261065214,
-    "dev.zio:zio-opentelemetry_3": 1011656465,
+    "dev.zio:zio-opentelemetry_3": -1974774791,
     "dev.zio:zio-opentelemetry_3:jar:sources": -1638179673,
-    "dev.zio:zio-parser_3": 1549040247,
+    "dev.zio:zio-parser_3": 1764797589,
     "dev.zio:zio-parser_3:jar:sources": -1892608480,
-    "dev.zio:zio-prelude-macros_3": 261656503,
+    "dev.zio:zio-prelude-macros_3": -1183652687,
     "dev.zio:zio-prelude-macros_3:jar:sources": 1970471984,
-    "dev.zio:zio-prelude_3": -2059964649,
+    "dev.zio:zio-prelude_3": -1519904057,
     "dev.zio:zio-prelude_3:jar:sources": 202825751,
-    "dev.zio:zio-schema-derivation_3": 960450188,
+    "dev.zio:zio-schema-derivation_3": -1700151410,
     "dev.zio:zio-schema-derivation_3:jar:sources": -1539004246,
-    "dev.zio:zio-schema-json_3": -1744379434,
+    "dev.zio:zio-schema-json_3": 1802747398,
     "dev.zio:zio-schema-json_3:jar:sources": -1059871454,
-    "dev.zio:zio-schema-macros_3": -247650009,
+    "dev.zio:zio-schema-macros_3": -1838917087,
     "dev.zio:zio-schema-macros_3:jar:sources": 1640611595,
-    "dev.zio:zio-schema-protobuf_3": -1533555094,
+    "dev.zio:zio-schema-protobuf_3": -1180135216,
     "dev.zio:zio-schema-protobuf_3:jar:sources": 1284314446,
-    "dev.zio:zio-schema_3": 554340438,
+    "dev.zio:zio-schema_3": -1708384038,
     "dev.zio:zio-schema_3:jar:sources": 1564878660,
-    "dev.zio:zio-stacktracer_3": -1884094336,
+    "dev.zio:zio-stacktracer_3": 526917562,
     "dev.zio:zio-stacktracer_3:jar:sources": 579217593,
-    "dev.zio:zio-streams_3": 733190981,
+    "dev.zio:zio-streams_3": -164191962,
     "dev.zio:zio-streams_3:jar:sources": -1160030206,
-    "dev.zio:zio-test-junit_3": 1398873282,
+    "dev.zio:zio-test-junit_3": 63704887,
     "dev.zio:zio-test-junit_3:jar:sources": 1370688858,
-    "dev.zio:zio-test-magnolia_3": 1204864457,
+    "dev.zio:zio-test-magnolia_3": 1112001671,
     "dev.zio:zio-test-magnolia_3:jar:sources": 1150114640,
-    "dev.zio:zio-test-sbt_3": 66221986,
+    "dev.zio:zio-test-sbt_3": 1552516807,
     "dev.zio:zio-test-sbt_3:jar:sources": 1795313818,
-    "dev.zio:zio-test_3": 1685077480,
+    "dev.zio:zio-test_3": -2076573586,
     "dev.zio:zio-test_3:jar:sources": 895591478,
-    "dev.zio:zio_3": 629727469,
+    "dev.zio:zio_3": -1077749875,
     "dev.zio:zio_3:jar:sources": 1513395708,
     "eu.neverblink.jelly:jelly-core": -1517588263,
     "eu.neverblink.jelly:jelly-core:jar:sources": 1505168369,
     "eu.neverblink.jelly:jelly-jena": -1103741368,
     "eu.neverblink.jelly:jelly-jena:jar:sources": -440860059,
-    "eu.timepit:refined_3": -1346912393,
+    "eu.timepit:refined_3": 1718092913,
     "eu.timepit:refined_3:jar:sources": 1826191078,
-    "io.circe:circe-core_3": -1332500624,
+    "io.circe:circe-core_3": -411538615,
     "io.circe:circe-core_3:jar:sources": 186607776,
-    "io.circe:circe-generic_3": 1470361048,
+    "io.circe:circe-generic_3": -2107467599,
     "io.circe:circe-generic_3:jar:sources": -1146861241,
-    "io.circe:circe-jawn_3": -918639075,
+    "io.circe:circe-jawn_3": -378440880,
     "io.circe:circe-jawn_3:jar:sources": -677432946,
-    "io.circe:circe-numbers_3": 1594992188,
+    "io.circe:circe-numbers_3": -1185753994,
     "io.circe:circe-numbers_3:jar:sources": 1659069531,
-    "io.circe:circe-parser_3": 1234494822,
+    "io.circe:circe-parser_3": -826408091,
     "io.circe:circe-parser_3:jar:sources": -410174889,
-    "io.circe:circe-yaml-common_3": 2116074836,
+    "io.circe:circe-yaml-common_3": -663289163,
     "io.circe:circe-yaml-common_3:jar:sources": -659205144,
-    "io.circe:circe-yaml_3": -1854897127,
+    "io.circe:circe-yaml_3": -651418819,
     "io.circe:circe-yaml_3:jar:sources": 461922146,
     "io.micrometer:micrometer-commons": 2146891883,
     "io.micrometer:micrometer-commons:jar:sources": -1493710057,
@@ -682,7 +686,7 @@
     "org.jline:jline-terminal:jar:sources": -1223455576,
     "org.jspecify:jspecify": 117231129,
     "org.jspecify:jspecify:jar:sources": -2134060298,
-    "org.portable-scala:portable-scala-reflect_2.13": -1735266972,
+    "org.portable-scala:portable-scala-reflect_2.13": 739363824,
     "org.portable-scala:portable-scala-reflect_2.13:jar:sources": 1074691409,
     "org.reactivestreams:reactive-streams": 1281941191,
     "org.reactivestreams:reactive-streams:jar:sources": -1454226778,
@@ -690,31 +694,25 @@
     "org.rnorth.duct-tape:duct-tape:jar:sources": -1798015648,
     "org.roaringbitmap:RoaringBitmap": 1640516570,
     "org.roaringbitmap:RoaringBitmap:jar:sources": -1639062104,
-    "org.scala-graph:graph-core_3": 2120855084,
+    "org.scala-graph:graph-core_3": -2098830282,
     "org.scala-graph:graph-core_3:jar:sources": 847535680,
     "org.scala-lang.modules:scala-asm": -679780990,
     "org.scala-lang.modules:scala-asm:jar:sources": -1053518001,
-    "org.scala-lang.modules:scala-collection-compat_3": -863516414,
+    "org.scala-lang.modules:scala-collection-compat_3": -1493780292,
     "org.scala-lang.modules:scala-collection-compat_3:jar:sources": 214419088,
-    "org.scala-lang.modules:scala-xml_3": -363693508,
+    "org.scala-lang.modules:scala-xml_3": 195602550,
     "org.scala-lang.modules:scala-xml_3:jar:sources": -1176012239,
-    "org.scala-lang:scala-library": -1079389784,
-    "org.scala-lang:scala-library:jar:sources": 9987806,
-    "org.scala-lang:scala3-compiler_3": 1146310058,
+    "org.scala-lang:scala3-compiler_3": -1718406073,
     "org.scala-lang:scala3-compiler_3:jar:sources": -1029692100,
     "org.scala-lang:scala3-interfaces": 573462442,
     "org.scala-lang:scala3-interfaces:jar:sources": 109369527,
-    "org.scala-lang:scala3-library_3": 1390222611,
-    "org.scala-lang:scala3-library_3:jar:sources": 1354323123,
-    "org.scala-lang:tasty-core_3": 141194169,
-    "org.scala-lang:tasty-core_3:jar:sources": 1970690466,
     "org.scala-sbt:compiler-interface": 943503627,
     "org.scala-sbt:compiler-interface:jar:sources": 1557741819,
     "org.scala-sbt:test-interface": -896079610,
     "org.scala-sbt:test-interface:jar:sources": -427347570,
     "org.scala-sbt:util-interface": 106470229,
     "org.scala-sbt:util-interface:jar:sources": 533924268,
-    "org.scalacheck:scalacheck_3": 1156318682,
+    "org.scalacheck:scalacheck_3": 1013984743,
     "org.scalacheck:scalacheck_3:jar:sources": -1474185735,
     "org.slf4j:jcl-over-slf4j": 498129285,
     "org.slf4j:jcl-over-slf4j:jar:sources": -953923141,
@@ -738,15 +736,15 @@
     "org.testcontainers:testcontainers:jar:sources": 375219890,
     "org.topbraid:shacl": -279784144,
     "org.topbraid:shacl:jar:sources": -998749544,
-    "org.typelevel:cats-core_3": 52429233,
+    "org.typelevel:cats-core_3": 91902594,
     "org.typelevel:cats-core_3:jar:sources": 856599929,
-    "org.typelevel:cats-free_3": -306678399,
+    "org.typelevel:cats-free_3": 471612367,
     "org.typelevel:cats-free_3:jar:sources": 1143434049,
-    "org.typelevel:cats-kernel_3": -1261590444,
+    "org.typelevel:cats-kernel_3": 537631886,
     "org.typelevel:cats-kernel_3:jar:sources": 1608215695,
-    "org.typelevel:discipline-core_3": 569260512,
+    "org.typelevel:discipline-core_3": -1865296662,
     "org.typelevel:discipline-core_3:jar:sources": -511015175,
-    "org.typelevel:jawn-parser_3": -1701831387,
+    "org.typelevel:jawn-parser_3": -2072470113,
     "org.typelevel:jawn-parser_3:jar:sources": 461393166,
     "org.webjars:swagger-ui": 1250722510,
     "org.wiremock:wiremock": -1154157278,
@@ -2936,13 +2934,6 @@
       },
       "version": "2.4.0"
     },
-    "org.scala-lang:scala-library": {
-      "shasums": {
-        "jar": "1ebb2b6f9e4eb4022497c19b1e1e825019c08514f962aaac197145f88ed730f1",
-        "sources": "c02edc324e7db59c52115214a6ef36e2d78d0a50dff635eda4dcee5502b1dea5"
-      },
-      "version": "2.13.16"
-    },
     "org.scala-lang:scala3-compiler_3": {
       "shasums": {
         "jar": "da070033d637a405a14cfe8ef8a16a792166e175f88f2c9f32b9a5cd403e5130",
@@ -2954,20 +2945,6 @@
       "shasums": {
         "jar": "da9741cc37def9111174befa2beb1672d81b9b3d7403f54ad875a5d40ae430c5",
         "sources": "6aa5d79ade6ad9d1f4f980e461a3f33de81707b2be69bb67f5f975d133065db3"
-      },
-      "version": "3.3.1"
-    },
-    "org.scala-lang:scala3-library_3": {
-      "shasums": {
-        "jar": "a16e046f4a9df9e0d0e0bc54bf6298c94d7d867457f7b3b68291a88c568b92d0",
-        "sources": "d06c4573324f048c6e4f0526da6b63753f20102be1fc8c752c97e3bb6b0e80c2"
-      },
-      "version": "3.3.7"
-    },
-    "org.scala-lang:tasty-core_3": {
-      "shasums": {
-        "jar": "921027ca6a3f0cfac3b20fcadfea613558b4e6e607c1cc247ab4a05a62af3965",
-        "sources": "2c9c4060531adc125bf1d6ffcc083c4186d91509ec47168fa3bb9cfebe068e9f"
       },
       "version": "3.3.1"
     },
@@ -3223,9 +3200,6 @@
     "com.github.jknack:handlebars-helpers": [
       "com.github.jknack:handlebars"
     ],
-    "com.github.tototoshi:scala-csv_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "com.google.guava:guava": [
       "com.google.code.findbugs:jsr305",
       "com.google.errorprone:error_prone_annotations",
@@ -3238,13 +3212,9 @@
       "net.minidev:json-smart",
       "org.slf4j:slf4j-api"
     ],
-    "com.lihaoyi:unroll-annotation_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "com.lihaoyi:unroll-plugin_3": [
       "com.lihaoyi:unroll-annotation_3",
-      "org.scala-lang:scala3-compiler_3",
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang:scala3-compiler_3"
     ],
     "com.networknt:json-schema-validator": [
       "com.ethlo.time:itu",
@@ -3258,162 +3228,122 @@
       "org.apache.commons:commons-lang3",
       "org.apache.commons:commons-text"
     ],
-    "com.softwaremill.magnolia1_3:magnolia_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
-    "com.softwaremill.quicklens:quicklens_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
-    "com.softwaremill.sttp.apispec:apispec-model_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "com.softwaremill.sttp.apispec:asyncapi-model_3": [
-      "com.softwaremill.sttp.apispec:apispec-model_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.apispec:apispec-model_3"
     ],
     "com.softwaremill.sttp.apispec:jsonschema-circe_3": [
       "com.softwaremill.sttp.apispec:apispec-model_3",
       "io.circe:circe-core_3",
       "io.circe:circe-generic_3",
-      "io.circe:circe-parser_3",
-      "org.scala-lang:scala3-library_3"
+      "io.circe:circe-parser_3"
     ],
     "com.softwaremill.sttp.apispec:openapi-circe-yaml_3": [
       "com.softwaremill.sttp.apispec:openapi-circe_3",
-      "io.circe:circe-yaml_3",
-      "org.scala-lang:scala3-library_3"
+      "io.circe:circe-yaml_3"
     ],
     "com.softwaremill.sttp.apispec:openapi-circe_3": [
       "com.softwaremill.sttp.apispec:jsonschema-circe_3",
-      "com.softwaremill.sttp.apispec:openapi-model_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.apispec:openapi-model_3"
     ],
     "com.softwaremill.sttp.apispec:openapi-model_3": [
-      "com.softwaremill.sttp.apispec:apispec-model_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.apispec:apispec-model_3"
     ],
     "com.softwaremill.sttp.client4:core_3": [
       "com.softwaremill.sttp.model:core_3",
       "com.softwaremill.sttp.shared:core_3",
-      "com.softwaremill.sttp.shared:ws_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.shared:ws_3"
     ],
     "com.softwaremill.sttp.client4:json-common_3": [
-      "com.softwaremill.sttp.client4:core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.client4:core_3"
     ],
     "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": [
       "com.softwaremill.sttp.client4:core_3",
       "com.softwaremill.sttp.client4:zio_3",
       "dev.zio:zio-opentelemetry_3",
       "io.opentelemetry.semconv:opentelemetry-semconv",
-      "io.opentelemetry:opentelemetry-api",
-      "org.scala-lang:scala3-library_3"
+      "io.opentelemetry:opentelemetry-api"
     ],
     "com.softwaremill.sttp.client4:zio-json_3": [
       "com.softwaremill.sttp.client4:core_3",
       "com.softwaremill.sttp.client4:json-common_3",
       "com.softwaremill.sttp.shared:zio_3",
-      "dev.zio:zio-json_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-json_3"
     ],
     "com.softwaremill.sttp.client4:zio_3": [
       "com.softwaremill.sttp.client4:core_3",
       "com.softwaremill.sttp.shared:zio_3",
       "dev.zio:zio-interop-reactivestreams_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "com.softwaremill.sttp.model:core_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
-    "com.softwaremill.sttp.shared:core_3": [
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "com.softwaremill.sttp.shared:ws_3": [
       "com.softwaremill.sttp.model:core_3",
-      "com.softwaremill.sttp.shared:core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.shared:core_3"
     ],
     "com.softwaremill.sttp.shared:zio_3": [
       "com.softwaremill.sttp.shared:core_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-apispec-docs_3": [
       "com.softwaremill.sttp.apispec:asyncapi-model_3",
-      "com.softwaremill.sttp.tapir:tapir-core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.tapir:tapir-core_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-core_3": [
       "com.softwaremill.magnolia1_3:magnolia_3",
       "com.softwaremill.sttp.model:core_3",
       "com.softwaremill.sttp.shared:core_3",
-      "com.softwaremill.sttp.shared:ws_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.shared:ws_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-files_3": [
-      "com.softwaremill.sttp.tapir:tapir-core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.tapir:tapir-core_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-json-zio_3": [
       "com.softwaremill.sttp.tapir:tapir-core_3",
-      "dev.zio:zio-json_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-json_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": [
       "com.softwaremill.quicklens:quicklens_3",
       "com.softwaremill.sttp.apispec:openapi-model_3",
       "com.softwaremill.sttp.tapir:tapir-apispec-docs_3",
-      "com.softwaremill.sttp.tapir:tapir-core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.tapir:tapir-core_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": [
       "com.softwaremill.sttp.tapir:tapir-server_3",
       "io.opentelemetry.semconv:opentelemetry-semconv",
-      "io.opentelemetry:opentelemetry-api",
-      "org.scala-lang:scala3-library_3"
+      "io.opentelemetry:opentelemetry-api"
     ],
     "com.softwaremill.sttp.tapir:tapir-refined_3": [
       "com.softwaremill.sttp.tapir:tapir-core_3",
-      "eu.timepit:refined_3",
-      "org.scala-lang:scala3-library_3"
+      "eu.timepit:refined_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-server_3": [
-      "com.softwaremill.sttp.tapir:tapir-core_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.tapir:tapir-core_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3": [
       "com.softwaremill.sttp.apispec:openapi-circe-yaml_3",
       "com.softwaremill.sttp.tapir:tapir-openapi-docs_3",
-      "com.softwaremill.sttp.tapir:tapir-swagger-ui_3",
-      "org.scala-lang:scala3-library_3"
+      "com.softwaremill.sttp.tapir:tapir-swagger-ui_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3": [
       "com.softwaremill.sttp.tapir:tapir-core_3",
       "com.softwaremill.sttp.tapir:tapir-files_3",
-      "org.scala-lang:scala3-library_3",
       "org.webjars:swagger-ui"
     ],
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": [
       "com.softwaremill.sttp.tapir:tapir-server_3",
       "com.softwaremill.sttp.tapir:tapir-zio_3",
-      "dev.zio:zio-http_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-http_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": [
       "com.softwaremill.sttp.tapir:tapir-server_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "com.softwaremill.sttp.tapir:tapir-zio_3": [
       "com.softwaremill.sttp.shared:zio_3",
       "com.softwaremill.sttp.tapir:tapir-core_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "com.squareup.okhttp3:okhttp-jvm": [
       "com.squareup.okio:okio-jvm",
@@ -3437,54 +3367,39 @@
       "commons-digester:commons-digester"
     ],
     "dev.optics:monocle-core_3": [
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:cats-core_3",
       "org.typelevel:cats-free_3"
     ],
     "dev.optics:monocle-law_3": [
       "dev.optics:monocle-core_3",
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:discipline-core_3"
     ],
     "dev.optics:monocle-macro_3": [
-      "dev.optics:monocle-core_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.optics:monocle-core_3"
     ],
     "dev.optics:monocle-refined_3": [
       "dev.optics:monocle-core_3",
       "dev.optics:monocle-law_3",
       "eu.timepit:refined_3",
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:cats-core_3"
     ],
-    "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "dev.zio:izumi-reflect_3": [
-      "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3"
     ],
     "dev.zio:zio-config-derivation_3": [
-      "dev.zio:zio-config_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-config_3"
     ],
     "dev.zio:zio-config-magnolia_3": [
       "dev.zio:zio-config-derivation_3",
-      "dev.zio:zio-config_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-config_3"
     ],
     "dev.zio:zio-config-typesafe_3": [
       "com.typesafe:config",
-      "dev.zio:zio-config_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-config_3"
     ],
     "dev.zio:zio-config_3": [
       "dev.zio:zio_3",
-      "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "dev.zio:zio-constraintless_3": [
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang.modules:scala-collection-compat_3"
     ],
     "dev.zio:zio-http_3": [
       "com.lihaoyi:unroll-annotation_3",
@@ -3503,62 +3418,49 @@
       "io.netty:netty-transport-native-kqueue",
       "io.netty:netty-transport-native-kqueue:jar:osx-aarch_64",
       "io.netty:netty-transport-native-kqueue:jar:osx-x86_64",
-      "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "dev.zio:zio-internal-macros_3": [
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang.modules:scala-collection-compat_3"
     ],
     "dev.zio:zio-interop-reactivestreams_3": [
       "dev.zio:zio-streams_3",
       "dev.zio:zio_3",
-      "org.reactivestreams:reactive-streams",
-      "org.scala-lang:scala3-library_3"
+      "org.reactivestreams:reactive-streams"
     ],
     "dev.zio:zio-json-interop-refined_3": [
       "dev.zio:zio-json_3",
-      "eu.timepit:refined_3",
-      "org.scala-lang:scala3-library_3"
+      "eu.timepit:refined_3"
     ],
     "dev.zio:zio-json_3": [
       "com.softwaremill.magnolia1_3:magnolia_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-logging-slf4j2-bridge_3": [
       "dev.zio:zio-logging_3",
       "dev.zio:zio_3",
       "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3",
       "org.slf4j:slf4j-api"
     ],
     "dev.zio:zio-logging_3": [
       "dev.zio:zio-parser_3",
       "dev.zio:zio-prelude_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-metrics-connectors-prometheus_3": [
-      "dev.zio:zio-metrics-connectors_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-metrics-connectors_3"
     ],
     "dev.zio:zio-metrics-connectors_3": [
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-mock_3": [
       "dev.zio:zio-streams_3",
       "dev.zio:zio-test_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-nio_3": [
       "dev.zio:zio-streams_3",
       "dev.zio:zio_3",
-      "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang.modules:scala-collection-compat_3"
     ],
     "dev.zio:zio-opentelemetry_3": [
       "dev.zio:izumi-reflect_3",
@@ -3566,87 +3468,65 @@
       "dev.zio:zio_3",
       "io.opentelemetry:opentelemetry-api",
       "io.opentelemetry:opentelemetry-context",
-      "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang.modules:scala-collection-compat_3"
     ],
     "dev.zio:zio-parser_3": [
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "dev.zio:zio-prelude-macros_3": [
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-prelude_3": [
       "dev.zio:zio-prelude-macros_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-schema-derivation_3": [
       "dev.zio:zio-prelude_3",
       "dev.zio:zio-schema_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-schema-json_3": [
       "dev.zio:zio-json_3",
       "dev.zio:zio-schema-derivation_3",
-      "dev.zio:zio-schema_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "dev.zio:zio-schema-macros_3": [
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-schema_3"
     ],
     "dev.zio:zio-schema-protobuf_3": [
       "dev.zio:zio-schema-derivation_3",
-      "dev.zio:zio-schema_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-schema_3"
     ],
     "dev.zio:zio-schema_3": [
       "dev.zio:zio-constraintless_3",
       "dev.zio:zio-prelude_3",
       "dev.zio:zio-schema-macros_3",
       "dev.zio:zio-streams_3",
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
-    ],
-    "dev.zio:zio-stacktracer_3": [
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-streams_3": [
-      "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio_3"
     ],
     "dev.zio:zio-test-junit_3": [
       "dev.zio:zio-test_3",
-      "junit:junit",
-      "org.scala-lang:scala3-library_3"
+      "junit:junit"
     ],
     "dev.zio:zio-test-magnolia_3": [
       "com.softwaremill.magnolia1_3:magnolia_3",
-      "dev.zio:zio-test_3",
-      "org.scala-lang:scala3-library_3"
+      "dev.zio:zio-test_3"
     ],
     "dev.zio:zio-test-sbt_3": [
       "dev.zio:zio-test_3",
       "dev.zio:zio_3",
-      "org.scala-lang:scala3-library_3",
       "org.scala-sbt:test-interface"
     ],
     "dev.zio:zio-test_3": [
       "dev.zio:zio-streams_3",
       "dev.zio:zio_3",
-      "org.portable-scala:portable-scala-reflect_2.13",
-      "org.scala-lang:scala3-library_3"
+      "org.portable-scala:portable-scala-reflect_2.13"
     ],
     "dev.zio:zio_3": [
       "dev.zio:izumi-reflect_3",
       "dev.zio:zio-internal-macros_3",
       "dev.zio:zio-stacktracer_3",
-      "org.scala-lang.modules:scala-collection-compat_3",
-      "org.scala-lang:scala3-library_3"
+      "org.scala-lang.modules:scala-collection-compat_3"
     ],
     "eu.neverblink.jelly:jelly-core": [
       "com.google.protobuf:protobuf-java"
@@ -3656,38 +3536,26 @@
       "org.apache.jena:jena-arq",
       "org.apache.jena:jena-core"
     ],
-    "eu.timepit:refined_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "io.circe:circe-core_3": [
       "io.circe:circe-numbers_3",
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:cats-core_3"
     ],
     "io.circe:circe-generic_3": [
-      "io.circe:circe-core_3",
-      "org.scala-lang:scala3-library_3"
+      "io.circe:circe-core_3"
     ],
     "io.circe:circe-jawn_3": [
       "io.circe:circe-core_3",
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:jawn-parser_3"
-    ],
-    "io.circe:circe-numbers_3": [
-      "org.scala-lang:scala3-library_3"
     ],
     "io.circe:circe-parser_3": [
       "io.circe:circe-core_3",
-      "io.circe:circe-jawn_3",
-      "org.scala-lang:scala3-library_3"
+      "io.circe:circe-jawn_3"
     ],
     "io.circe:circe-yaml-common_3": [
-      "io.circe:circe-core_3",
-      "org.scala-lang:scala3-library_3"
+      "io.circe:circe-core_3"
     ],
     "io.circe:circe-yaml_3": [
       "io.circe:circe-yaml-common_3",
-      "org.scala-lang:scala3-library_3",
       "org.yaml:snakeyaml"
     ],
     "io.micrometer:micrometer-commons": [
@@ -4546,21 +4414,11 @@
       "net.java.dev.jna:jna",
       "org.jline:jline-terminal"
     ],
-    "org.portable-scala:portable-scala-reflect_2.13": [
-      "org.scala-lang:scala-library"
-    ],
     "org.rnorth.duct-tape:duct-tape": [
       "org.jetbrains:annotations"
     ],
     "org.scala-graph:graph-core_3": [
-      "org.scala-lang:scala3-library_3",
       "org.scalacheck:scalacheck_3"
-    ],
-    "org.scala-lang.modules:scala-collection-compat_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
-    "org.scala-lang.modules:scala-xml_3": [
-      "org.scala-lang:scala3-library_3"
     ],
     "org.scala-lang:scala3-compiler_3": [
       "org.jline:jline-reader",
@@ -4568,22 +4426,13 @@
       "org.jline:jline-terminal-jna",
       "org.scala-lang.modules:scala-asm",
       "org.scala-lang:scala3-interfaces",
-      "org.scala-lang:scala3-library_3",
-      "org.scala-lang:tasty-core_3",
       "org.scala-sbt:compiler-interface"
-    ],
-    "org.scala-lang:scala3-library_3": [
-      "org.scala-lang:scala-library"
-    ],
-    "org.scala-lang:tasty-core_3": [
-      "org.scala-lang:scala3-library_3"
     ],
     "org.scala-sbt:compiler-interface": [
       "com.google.protobuf:protobuf-java",
       "org.scala-sbt:util-interface"
     ],
     "org.scalacheck:scalacheck_3": [
-      "org.scala-lang:scala3-library_3",
       "org.scala-sbt:test-interface"
     ],
     "org.slf4j:jcl-over-slf4j": [
@@ -4628,22 +4477,13 @@
       "org.slf4j:slf4j-api"
     ],
     "org.typelevel:cats-core_3": [
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:cats-kernel_3"
     ],
     "org.typelevel:cats-free_3": [
-      "org.scala-lang:scala3-library_3",
       "org.typelevel:cats-core_3"
     ],
-    "org.typelevel:cats-kernel_3": [
-      "org.scala-lang:scala3-library_3"
-    ],
     "org.typelevel:discipline-core_3": [
-      "org.scala-lang:scala3-library_3",
       "org.scalacheck:scalacheck_3"
-    ],
-    "org.typelevel:jawn-parser_3": [
-      "org.scala-lang:scala3-library_3"
     ],
     "org.wiremock:wiremock": [
       "com.fasterxml.jackson.core:jackson-annotations",
@@ -8187,38 +8027,6 @@
       "scala.xml.parsing",
       "scala.xml.transform"
     ],
-    "org.scala-lang:scala-library": [
-      "scala",
-      "scala.annotation",
-      "scala.annotation.meta",
-      "scala.annotation.unchecked",
-      "scala.beans",
-      "scala.collection",
-      "scala.collection.concurrent",
-      "scala.collection.convert",
-      "scala.collection.convert.impl",
-      "scala.collection.generic",
-      "scala.collection.immutable",
-      "scala.collection.mutable",
-      "scala.compat",
-      "scala.concurrent",
-      "scala.concurrent.duration",
-      "scala.concurrent.impl",
-      "scala.io",
-      "scala.jdk",
-      "scala.jdk.javaapi",
-      "scala.math",
-      "scala.ref",
-      "scala.reflect",
-      "scala.reflect.macros.internal",
-      "scala.runtime",
-      "scala.sys",
-      "scala.sys.process",
-      "scala.util",
-      "scala.util.control",
-      "scala.util.hashing",
-      "scala.util.matching"
-    ],
     "org.scala-lang:scala3-compiler_3": [
       "dotty.tools",
       "dotty.tools.backend",
@@ -8268,28 +8076,6 @@
     ],
     "org.scala-lang:scala3-interfaces": [
       "dotty.tools.dotc.interfaces"
-    ],
-    "org.scala-lang:scala3-library_3": [
-      "scala",
-      "scala.annotation",
-      "scala.annotation.internal",
-      "scala.annotation.unchecked",
-      "scala.compiletime.ops",
-      "scala.compiletime.testing",
-      "scala.deriving",
-      "scala.quoted",
-      "scala.quoted.runtime",
-      "scala.reflect",
-      "scala.runtime",
-      "scala.runtime.coverage",
-      "scala.runtime.function",
-      "scala.runtime.stdLibPatches",
-      "scala.util",
-      "scala.util.control"
-    ],
-    "org.scala-lang:tasty-core_3": [
-      "dotty.tools.tasty",
-      "dotty.tools.tasty.util"
     ],
     "org.scala-sbt:compiler-interface": [
       "xsbti",
@@ -9854,16 +9640,10 @@
       "org.scala-lang.modules:scala-collection-compat_3:jar:sources",
       "org.scala-lang.modules:scala-xml_3",
       "org.scala-lang.modules:scala-xml_3:jar:sources",
-      "org.scala-lang:scala-library",
-      "org.scala-lang:scala-library:jar:sources",
       "org.scala-lang:scala3-compiler_3",
       "org.scala-lang:scala3-compiler_3:jar:sources",
       "org.scala-lang:scala3-interfaces",
       "org.scala-lang:scala3-interfaces:jar:sources",
-      "org.scala-lang:scala3-library_3",
-      "org.scala-lang:scala3-library_3:jar:sources",
-      "org.scala-lang:tasty-core_3",
-      "org.scala-lang:tasty-core_3:jar:sources",
       "org.scala-sbt:compiler-interface",
       "org.scala-sbt:compiler-interface:jar:sources",
       "org.scala-sbt:test-interface",

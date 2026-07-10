@@ -5,9 +5,13 @@
 
 package org.knora.bagit.domain
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object PayloadPathSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class PayloadPathSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("PayloadPathSpec")(
     test("rejects '../escape'") {

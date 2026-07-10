@@ -9,6 +9,19 @@ load("@rules_scala//scala:scala.bzl", "setup_scala_toolchain")
 setup_scala_toolchain(
     name = "dsp_scala_toolchain",
     scala_version = "3.8.4",
+    # Put the full transitive closure on the compiler classpath, matching sbt.
+    # rules_scala defaults to "direct", which omits transitive-only deps — that
+    # breaks Scala 3 libraries whose public API relies on `inline given`s defined
+    # in a transitive module. Concretely, ZIO's auto-trace `given` lives in
+    # zio-stacktracer (a transitive dep of zio); under "direct" it is off the
+    # compiler classpath and every `ZIO.*` call fails with "No given instance of
+    # type zio.Trace". "transitive" also spares us from re-declaring every
+    # transitively-used artifact (the sbt build never had to).
+    dependency_mode = "transitive",
+    # "transitive" would otherwise default strict-deps to "error" (demanding every
+    # directly-used transitive, e.g. the Scala stdlib, be re-declared per target).
+    # sbt enforces no such hygiene; keep it off so the migration mirrors sbt.
+    strict_deps_mode = "off",
     enable_semanticdb = True,  # go-to-references for Metals-over-Bazel later
     scalacopts = [
         "-feature",
@@ -17,6 +30,12 @@ setup_scala_toolchain(
         "-Xresolve-term-conflict:package",
         "-Wvalue-discard",
         "-Xmax-inlines:64",
+        # A Bazel toolchain applies to ALL from-source Scala in the graph, including
+        # rules_scala's own helper targets (test_discovery, source_compat). sbt scopes
+        # `-Werror` per project; here we must exempt third-party sources under external/
+        # from -Wunused/-Werror so their warnings don't fail our build. Our own code
+        # (under modules/) is unaffected. Mirrors build.sbt's `-Wconf:src=target/.*:s`.
+        "-Wconf:src=.*external/.*:s",
         "-Wunused:all",
         "-Werror",
     ],

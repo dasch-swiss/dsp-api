@@ -18,6 +18,28 @@ bazel_dep(name = "rules_jvm_external", version = "7.0")
 bazel_dep(name = "rules_java", version = "9.1.0")  # provides remotejdk_25; matches rules_scala's transitive
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 
+# `llvm` (hermeticbuild/hermetic-llvm) registers a fully-hermetic LLVM C/C++
+# toolchain. dsp-api ships no C/C++ product code, but compiling the Scala build
+# requires the rules_scala worker, which builds protobuf/upb from source and
+# thus needs a C toolchain. We use hermetic-llvm (not Bazel's autodetected host
+# clang) so the build is reproducible and works under remote build execution —
+# it bundles per-target glibc stubs + libc++ + compiler-rt and fetches the macOS
+# SDK from Apple's CDN, with no dependency on host Nix/Xcode tooling. Mirrors the
+# sipi repo's toolchain (see its docs/adr/0014-toolchain-provider-swap.md).
+bazel_dep(name = "llvm", version = "0.8.10")
+
+# hermetic-llvm hands the Linux kernel + glibc headers to compile actions as a
+# bare source directory; remote execution drops that directory from the action's
+# Merkle tree, breaking cold-cache toolchain-bootstrap compiles. The patch globs
+# those directories into discrete File artifacts so RBE sees every header. Local
+# sandboxed builds work without it, but it is required for RBE. Drop if fixed
+# upstream. (Same patch/version as sipi.)
+single_version_override(
+    module_name = "llvm",
+    patch_strip = 1,
+    patches = ["//bazel/patches:hermetic_llvm_headers_glob.patch"],
+)
+
 #############################################
 # Scala toolchain (rules_scala, Scala 3.8.4)
 #############################################
@@ -34,11 +56,65 @@ use_repo(
     scala_deps,
     "rules_scala_toolchains",
     "scala_compiler_sources",
+    # Compiler/library artifact repos the custom toolchain in //bazel/toolchains
+    # references via setup_scala_toolchain's default_deps. The builtin toolchain
+    # uses these internally; a root-module toolchain must import them explicitly.
+    "io_bazel_rules_scala_scala_asm_3_8_4",
+    "io_bazel_rules_scala_scala_compiler_3_8_4",
+    "io_bazel_rules_scala_scala_interfaces_3_8_4",
+    "io_bazel_rules_scala_scala_library_3_8_4",
+    "io_bazel_rules_scala_scala_library_2_3_8_4",
+    "io_bazel_rules_scala_scala_parser_combinators_3_8_4",
+    "io_bazel_rules_scala_scala_tasty_core_3_8_4",
+    "io_bazel_rules_scala_scala_xml_3_8_4",
+    "org_scala_sbt_compiler_interface_3_8_4",
 )
 
 # Our own toolchain (custom scalacopts + semanticdb) registered from the root
 # module so it wins over the one scala_deps.scala() auto-registers.
 register_toolchains("//bazel/toolchains:dsp_scala_toolchain")
+
+#############################################
+# C/C++ toolchain (hermetic LLVM 22.1.7)
+#############################################
+
+# See the `llvm` bazel_dep note above. `exec` = hosts we build ON, `target` =
+# platforms we build FOR. Declaring all three (macOS-arm64, linux-x86_64,
+# linux-aarch64) covers local dev, CI, and remote build execution; only the
+# host's exec toolchain is materialized for a given build. libc++ is the
+# toolchain default on every target.
+llvm_source = use_extension("@llvm//extensions:llvm_source.bzl", "llvm_source")
+llvm_source.version(llvm_version = "22.1.7")
+use_repo(llvm_source, "llvm-raw", "llvm_config", "llvm_zlib", "llvm_zstd")
+
+toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
+toolchain.exec(
+    arch = "aarch64",
+    os = "macos",
+)
+toolchain.exec(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.exec(
+    arch = "aarch64",
+    os = "linux",
+)
+toolchain.target(
+    arch = "aarch64",
+    os = "macos",
+)
+toolchain.target(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.target(
+    arch = "aarch64",
+    os = "linux",
+)
+use_repo(toolchain, "llvm_toolchains")
+
+register_toolchains("@llvm_toolchains//:all")
 
 #############################################
 # Third-party JVM dependencies (@maven)
@@ -125,37 +201,52 @@ maven.install(
         "net.datafaker:datafaker:2.5.4",
         "org.testcontainers:testcontainers:2.0.5",
         "org.wiremock:wiremock:3.13.2",
+        # JUnit 4: compile-time dep of //modules/test-runner (DspZTestJUnitRunner
+        # implements org.junit.runner.Runner). scala_junit_test targets get JUnit
+        # implicitly, but the runner library needs it explicitly.
+        "junit:junit:4.13.2",
     ],
-    repositories = ["https://repo1.maven.org/maven2"],
+    # The Scala stdlib + compiler artifacts come from the rules_scala toolchain
+    # (Scala 3.8.4). Many maven artifacts also pull them transitively at older
+    # versions (e.g. scala3-library 3.3.7), and with dependency_mode=transitive
+    # both land on the compiler classpath — the 3.3.x/3.8.4 clash surfaces as
+    # "package/object name conflict in favor of package scala.caps". Exclude them
+    # so the toolchain is the sole provider.
+    excluded_artifacts = [
+        "org.scala-lang:scala3-library_3",
+        "org.scala-lang:scala-library",
+        "org.scala-lang:tasty-core_3",
+    ],
     fetch_sources = True,
-    lock_file = "//:maven_install.json",
-    version_conflict_policy = "pinned",
     # rules_scala's transitive deps also contribute to @maven; resolve together.
     known_contributing_modules = [
         "bazel_worker_java",
         "protobuf",
     ],
+    lock_file = "//:maven_install.json",
+    repositories = ["https://repo1.maven.org/maven2"],
+    version_conflict_policy = "pinned",
 )
 
 # Artifacts needing exclusions (mirror the sbt `exclude(...)` calls in Dependencies.scala).
 maven.artifact(
     name = "maven",
-    group = "commons-validator",
     artifact = "commons-validator",
-    version = "1.10.1",
     exclusions = ["commons-logging:commons-logging"],
+    group = "commons-validator",
+    version = "1.10.1",
 )
 maven.artifact(
     name = "maven",
-    group = "org.springframework.security",
     artifact = "spring-security-core",
-    version = "7.0.5",
     exclusions = [
         "commons-logging:commons-logging",
         "org.springframework:spring-aop",
     ],
+    group = "org.springframework.security",
+    version = "7.0.5",
 )
-use_repo(maven, "maven")
+use_repo(maven, "maven", "unpinned_maven")
 
 #############################################
 # knora-sipi OCI image (unchanged)
@@ -171,13 +262,13 @@ oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 # Index digest: sha256:aa9e049e075782cf6ec792668462088dde7e4ec644f419c3a5dca55c404d31e4
 oci.pull(
     name = "sipi_base_amd64",
-    image = "index.docker.io/daschswiss/sipi",
     digest = "sha256:a137157aed6284c789fe9af723beb484e5f5623ebeccd33b62dcabac4964ec56",
+    image = "index.docker.io/daschswiss/sipi",
 )
 oci.pull(
     name = "sipi_base_arm64",
-    image = "index.docker.io/daschswiss/sipi",
     digest = "sha256:9e2e2ee1612d03bbb20746302ddd91a4ad0bc78ce43957710ab6e3f43c9faafe",
+    image = "index.docker.io/daschswiss/sipi",
 )
 use_repo(
     oci,

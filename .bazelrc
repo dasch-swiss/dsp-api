@@ -9,6 +9,33 @@ build --show_timestamps
 # Git version/commit + image tags for stamped rules (//tools/buildinfo, image labels).
 build --workspace_status_command=tools/workspace_status.sh
 
+# ── C/C++ toolchain (hermetic LLVM, see MODULE.bazel) ──────────────────────
+# Strict action env keeps unrelated host env vars out of Bazel's cache keys.
+build --incompatible_strict_action_env
+# Force the resolved hermetic `llvm` toolchain instead of Bazel's autodetected
+# host clang — without this Bazel can silently fall back to the host compiler
+# (system Xcode / Nix clang), breaking hermeticity and RBE.
+build --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+# Strict action env otherwise rebuilds PATH from a small allow-list that omits
+# the Nix dev-shell's /nix/store/…/bin entries; inherit it so tools like `git`
+# (used by tools/workspace_status.sh) stay reachable.
+build --action_env=PATH
+# Auto-apply the :macos / :linux blocks below by detected host platform.
+build --enable_platform_specific_config
+# protobuf/upb (built from source for the rules_scala worker) needs C++17.
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+
+# macOS: hermetic-llvm fetches the SDK from Apple's CDN (no host Xcode CLT).
+# Pin the deployment-target floor so binaries are portable; inherit PATH during
+# repo-rule evaluation so Nix dev-shell tools stay reachable.
+build:macos --copt=-mmacosx-version-min=13.3
+build:macos --linkopt=-mmacosx-version-min=13.3
+build:macos --host_copt=-mmacosx-version-min=13.3
+build:macos --host_linkopt=-mmacosx-version-min=13.3
+build:macos --action_env=MACOSX_DEPLOYMENT_TARGET=13.3
+build:macos --repo_env=PATH
+
 # JDK 25 (matches the runtime base eclipse-temurin:25-jre-noble and sbt's Temurin 25).
 # Requires rules_java >= 8.16 (remotejdk_25). Only resolved when a Java/Scala target builds.
 build --java_language_version=25
