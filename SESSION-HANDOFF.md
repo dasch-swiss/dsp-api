@@ -4,7 +4,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
 **Last updated:** 2026-07-11
-**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2, 3 and 4 done — Phase 5 is next). Phase 2 = commit `176ab2f1b`.
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2, 3, 4 and 5 done — Phase 6 is next). Phase 2 = commit `176ab2f1b`.
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
@@ -12,9 +12,10 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 ## Goal
 
 Move the **whole build** to Bazel — compile all Scala with `rules_scala`, run tests under
-`bazel test`, and produce all three remaining container images (`knora-api`, `dsp-ingest`,
+`bazel test`, and produce all container images (`knora-sipi`, `knora-api`, `dsp-ingest`,
 `apache-jena-fuseki`) with `rules_oci`. One coarse Bazel package per module under `modules/`
-(finer-grained targets later). The `knora-sipi` image is already on Bazel.
+(finer-grained targets later). **All four images now build with Bazel** (sipi/api/ingest/fuseki,
+Phases 0–5); only Makefile/CI/docker-compose still drive the sbt/Docker paths (Phase 6).
 
 **sbt stays fully functional in parallel** for a validation period; we do not retire it yet.
 The one deliberate sbt-side change is the test runner (both tools move to a single custom
@@ -44,7 +45,9 @@ JUnit runner — see Phase 1).
   with `TestContainerLayers` memoized as a JVM singleton to keep container startups ~1.
 - **Images**: `rules_oci`, mirroring `modules/sipi/BUILD.bazel` (per-arch `oci_image` →
   `oci_image_index` → `alias`+`select` → `oci_load`/`oci_push`). `oci_load` emits the exact
-  `:latest` tags `docker-compose.yml` consumes.
+  tags `docker-compose.yml` consumes — `:latest` for sipi/knora-api/dsp-ingest, but the pinned
+  version tag (e.g. `6.1.0-0`) for fuseki, since `docker-compose.yml` references fuseki by version,
+  not `:latest` (see Phase 5).
 
 ---
 
@@ -392,13 +395,128 @@ independence both confirmed by reading the actual code, not assumed), and test-p
 Bazel pass counts independently re-confirmed via fresh runs or raw log inspection, no fabricated
 numbers).
 
-### Phase 5 — fuseki image
+### Phase 5 — fuseki image ✅ COMPLETE
 
-- `modules/fuseki/BUILD.bazel`: base `eclipse-temurin:21-jre-jammy` (has bash+coreutils);
-  add **static** `tini` + `curl` via `http_file` (NO apt/distroless); verify `openssl` in base
-  (else rewrite the entrypoint's `openssl rand` line to `od`/`tr` on `/dev/urandom`). Fuseki
-  tarball via `http_archive` from `archive.apache.org` (sha512 SRI = base64 of raw bytes;
-  `strip_prefix`). Config/otel layers; `oci_image` env/volumes/entrypoint/cmd/labels.
+Done: `modules/fuseki/BUILD.bazel` (new) builds the fuseki image with `rules_oci`, both arches,
+verified live: loaded as `daschswiss/apache-jena-fuseki:6.1.0-0` (the version tag compose already
+consumes, not `:latest`), brought up standalone and in the full 5-container compose stack
+(db+sipi+ingest+api+alloy), confirmed real TDB2 write/read/persist-across-restart, confirmed the
+knora-api (Bazel-built) successfully loads its ontologies against it (`/health` green, fuseki logs
+show the real startup CONSTRUCT queries for knora-base/knora-admin/salsah-gui/standoff, all
+`200 OK`), confirmed OTel spans (`DSP_db_db`) land in the local Tempo correctly nested inside the
+same distributed trace as `DSP_svc_api`. sbt/Dockerfile path (`make docker-build-fuseki-image`)
+still builds, untouched. Regression: `//modules/{sipi,webapi,ingest}:image_amd64` still green.
+
+**Two decisions locked in for this phase (see plan, not re-litigated):** consolidated onto the
+existing `@temurin_base_{amd64,arm64}` (`eclipse-temurin:25-jre-noble`) instead of the Dockerfile's
+`21-jre-jammy` — one base across all four images; and reused the existing pinned
+`@otel_javaagent`/`@pyroscope_otel` (v2.26.1/v1.1.0) instead of the Dockerfile's older v2.21.0/v1.0.4
+— killing the fuseki↔api OTel drift.
+
+- **Base-binary audit gate paid off but found nothing to fix.** Before assembling anything,
+  swept every command the entrypoint/healthcheck/fuseki-server wrapper invoke
+  (`bash sed grep cp mkdir rm date printf od head tr openssl`) against
+  `eclipse-temurin:25-jre-noble` via one `docker run`. All present, including `openssl` (the
+  entrypoint's `openssl rand -hex 32` healthcheck-password line) — **no entrypoint script change
+  needed.** Only `tini` was absent (expected; it was already planned as a separate `http_file`
+  prefetch, same as `static_curl`).
+- **Java 25 + TDB2 was the real risk, not "does it compile."** `bazel build` proves nothing about
+  whether TDB2's mmap/`sun.misc.Unsafe` usage still works under Java 25's tightened native-access
+  restrictions — general Jena-on-25 was already proven by webapi's test suite (Phase 2), but TDB2's
+  storage layer isn't exercised there. Verified directly: inserted a triple into a named graph,
+  read it back, **restarted the container, and read it back again** — confirms both the write path
+  and on-disk persistence survive a real restart, not just an in-process cache. (A `java.lang.foreign.Linker`
+  warning from Lucene's `PosixNativeAccess` and a `sun.misc.Unsafe` warning from the pyroscope-otel
+  extension both appear in the logs — informational deprecation notices, not failures.)
+  **⚠️ MONITOR (no action needed yet — do not "fix" this speculatively):** both warnings are
+  governed by OpenJDK JEPs on an explicit deprecation-to-enforcement timeline that will eventually
+  turn them into hard failures, not just log noise:
+  - `java.lang.foreign.Linker`/native-access (Lucene, via `jena-text`): controlled by
+    `--illegal-native-access={allow,warn,deny}` (JEP 472). `warn` has been the default since JDK 24
+    (unchanged in 25); `deny` (→ `IllegalCallerException`) becomes default in an as-yet-unnumbered
+    future JDK release.
+  - `sun.misc.Unsafe` (from `pyroscope-otel`'s vendored protobuf, not Fuseki/Jena code): controlled
+    by `--sun-misc-unsafe-memory-access={allow,warn,debug,deny}` (JEP 471). Phase 2 (runtime
+    warnings, what we're seeing) targets "JDK 25 or earlier"; Phase 3 (exceptions by default) targets
+    "JDK 26 or later".
+  - `modules/fuseki/docker-entrypoint.sh` already has a commented-out fix on hand
+    (`--enable-native-access=ALL-UNNAMED --add-modules=jdk.incubator.vector`, see the comment above
+    the `JVM_ARGS` block referencing `apache/jena#2533`/`#2782`) — cheap and purely permissive if
+    ever uncommented, but deliberately left as-is per an explicit decision (2026-07-11) not to bundle
+    a runtime-behavior change into this migration PR.
+  - **Confirmed not already handled elsewhere**: grepped the `ops-deploy` repo for
+    `enable-native-access`/`illegal-native-access`/`incubator.vector`/`sun-misc-unsafe` — zero
+    matches. Production's `JVM_ARGS` (`roles/dsp-deploy/templates/docker-compose-db.yml.j2`) only
+    sets heap size (`-Xmx{{ DSP_DB_HEAP_SIZE }}`, per-host: `1G` default, `2G`–`3G` in prod/stage)
+    and `-Dlog4j2.formatMsgNoLookups=true` (Log4Shell mitigation, unrelated).
+  - **Revisit when:** OpenJDK actually numbers/ships the `deny`-by-default JDK for JEP 472 (watch
+    https://openjdk.org/jeps/472), or sooner if `--illegal-native-access=deny`/an equivalent hard
+    failure is ever observed in fuseki's logs.
+- **Jena's `tdb2:unionDefaultGraph true` gotcha, unrelated to the migration but easy to
+  misdiagnose as one:** an `INSERT DATA` with no `GRAPH` clause lands in the store's actual default
+  graph, which `unionDefaultGraph` does **not** include when redefining "the default graph" as the
+  union of *named* graphs — so a same-session read-back of an unnamed-graph insert comes back
+  empty. This is a pre-existing `dsp-repo.ttl` config characteristic (unchanged by this phase, and
+  identical under the original Dockerfile image), not a Bazel-image defect. dsp-api always writes
+  to named graphs, so this never surfaces in practice; noted here purely so a future debugging
+  session doesn't waste time on it.
+- **`pkg_tar`'s own default silently flattens every subdirectory; `pkg_files` +
+  `strip_prefix.from_pkg()` doesn't.** This is the first image needing a *whole nested directory
+  tree* from an external `http_archive` (sipi/webapi/ingest only ever packed a flat jar list or a
+  single local-package glob). Empirically verified via a throwaway probe target + `tar -tvf`
+  inspection (not assumed from docs, which are ambiguous about cross-repo/package semantics): plain
+  `pkg_tar(srcs=["@fuseki_dist//:dist"], package_dir=...)` collapsed the tarball's
+  `service/service/fuseki.initd` down to a top-level `fuseki.initd` — harmless *today* (that
+  subdirectory is an unused host sysv-init sample the container never invokes) but would silently
+  corrupt a future release that ships a real nested `lib/`or `webapp/` dir onto the classpath.
+  Fixed by switching to `pkg_files(strip_prefix = strip_prefix.from_pkg())` → `pkg_tar`, confirmed to
+  preserve the nested path exactly.
+- **`pkg_files`'s own default mode (`0644`) silently drops the tarball's real exec bits**, unlike
+  the Dockerfile's plain `tar zxf` (which preserves them) — a second gap the same probe caught.
+  Checked the actual upstream tarball's permissions directly (`tar -tvf`, not assumed): only
+  `fuseki-backup`, `fuseki-plain`, `fuseki-server` ship `0755`; everything else is `0644`. Split the
+  distribution into two `pkg_files` targets (an explicit-`0755` subset for those three, default
+  `0644` for the rest) rather than a single blanket mode.
+- **`http_archive`'s `build_file_content` needs its own synthetic files excluded from the
+  glob.** A first pass (`glob(["**"], exclude=["fuseki.war"])`) leaked the repo rule's own
+  `BUILD.bazel` and bzlmod's `REPO.bazel` marker into the image (caught by the same `tar -tvf`
+  inspection). Excluded both explicitly; `fuseki-backup`/`fuseki-plain`/`fuseki-server` are also
+  `exports_files()`'d (needed for cross-package `pkg_files` label references into `@fuseki_dist//`).
+- **Fuseki dist tarball sourced from `archive.apache.org` (the permanent archive), not
+  `downloads.apache.org` or the `mirrors.cgi` redirector** — `downloads.apache.org` serves only the
+  *current* release and would 404 a clean fetch once Jena ships past 6.1.0; the mirror redirector
+  resolves to a randomly-chosen, non-permanent mirror. `archive.apache.org` never purges old
+  releases. `sha256` pin independently computed from the download and cross-checked byte-for-byte
+  against the Dockerfile's `ARG FUSEKI_SHA512` (both verify the identical bytes).
+- **`tools/oci/check_image_versions.sh` gained two new checks (fuseki dist version, fuseki image
+  tag)**, taking two new args (`modules/fuseki/Dockerfile` and `modules/fuseki/BUILD.bazel`, both
+  now `exports_files()`'d for cross-package reference from `//tools/oci`). The SHA256/SHA512 pins
+  are self-guarding at fetch time (a version bump without a matching hash update fails the
+  download, not silently succeeds), so the first check only needs to catch a bumped
+  `FUSEKI_VERSION` whose tarball URL wasn't updated to match. **The second check was added after
+  adversarial review caught a real gap**: unlike the other three images, fuseki's `IMAGE_VERSION`
+  tag (`6.1.0-0`) is a plain literal baked into `modules/fuseki/BUILD.bazel`'s labels/env/
+  `repo_tags` (not read from a stamped workspace-status key, since it's a pinned upstream release
+  repackaged, not a git-versioned artifact) — so nothing was catching a bumped `IMAGE_VERSION`
+  whose `BUILD.bazel` literals weren't updated to match. Verified the fix actually fails on a
+  simulated drift (not a rubber stamp) before trusting it.
+- **No `OTEL_DISABLE_ENV` on fuseki** (unlike api/ingest) — fuseki has no manual span
+  instrumentation of its own, so the javaagent's HTTP/Netty auto-instrumentation is wanted, not
+  redundant.
+- `oci_image`'s exact attribute names (`workdir`, not `working_dir`; `volumes` as a plain list)
+  confirmed via context7 docs before use — none of the other three images needed them, so there was
+  no local precedent to copy.
+- **Adversarial review (5 parallel Sonnet lenses over the diff)**: image-parity-vs-Dockerfile,
+  layer/exec-bit correctness (rebuilt each layer and inspected `tar -tvf` output directly), version/
+  label/drift-guard correctness (independently re-downloaded and re-hashed every pinned artifact),
+  pattern-consistency-vs-sipi/webapi/ingest + handoff-accuracy cross-check, and an adversarial bug
+  hunt (arch-swap check, live rebuild, runtime smoke test). No functional bug found — the image
+  builds, runs, and serves data correctly, matching the Dockerfile with only the two intentional,
+  pre-approved deviations (base image, OTel version). One real gap fixed (the `IMAGE_VERSION` drift
+  check above, found independently by two of the five reviewers). Two cosmetic doc nits also fixed:
+  `tools/oci/defs.bzl`'s module docstring updated to mention fuseki as a fourth consumer; this
+  doc's own "Decisions locked in" section amended so it no longer implies *every* image's `oci_load`
+  emits `:latest` (fuseki's is a pinned version tag, matching `docker-compose.yml`).
 
 ### Phase 6 — Rewire Makefile + CI + docker-compose
 
@@ -452,7 +570,8 @@ numbers).
    - Docker-dependent test targets (`test-it`, `test-e2e`, `test-ingest-integration`) need the
      `:latest` images preloaded first: `bazel run //modules/sipi:load && bazel run
      //modules/ingest:load` (see below).
-5. **Then start Phase 5** (fuseki image; see roadmap above).
+   - `nix develop --command bazel build //modules/fuseki:image_amd64` (fuseki image builds)
+5. **Then start Phase 6** (rewire Makefile/CI/docker-compose; see roadmap above).
 
 ## Useful commands
 
@@ -477,4 +596,11 @@ curl http://localhost:3333/health && curl http://localhost:3340/health
 bazel test //modules/ingest:test
 bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span //modules/test-e2e:test
 bazel test //modules/test-ingest-integration:test
+
+# Phase 5 — fuseki image (note: version tag, not :latest — matches docker-compose.yml)
+bazel build //modules/fuseki:image_{amd64,arm64}
+bazel run //modules/fuseki:load
+bazel test //tools/oci:image_versions_match_sbt   # sbt⇄Bazel version-drift guard, now incl. fuseki
+docker compose up -d db sipi ingest api alloy
+curl -u admin:test http://localhost:3030/$/datasets/dsp-repo && curl http://localhost:3333/health
 ```

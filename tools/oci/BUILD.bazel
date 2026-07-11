@@ -2,9 +2,10 @@
 
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
-# Catches the temurin base tag / OTel+Pyroscope jar versions drifting between
-# MODULE.bazel (Bazel image build) and build.sbt / project/Dependencies.scala
-# (sbt image build) before the two builds silently diverge.
+# Catches the temurin base tag / OTel+Pyroscope jar versions / fuseki version
+# drifting between MODULE.bazel (Bazel image build) and build.sbt /
+# project/Dependencies.scala / modules/fuseki/Dockerfile (sbt+docker image
+# build) before the two builds silently diverge.
 sh_test(
     name = "image_versions_match_sbt",
     srcs = ["check_image_versions.sh"],
@@ -12,10 +13,14 @@ sh_test(
         "$(location //:MODULE.bazel)",
         "$(location //:build.sbt)",
         "$(location //:project/Dependencies.scala)",
+        "$(location //modules/fuseki:Dockerfile)",
+        "$(location //modules/fuseki:BUILD.bazel)",
     ],
     data = [
         "//:MODULE.bazel",
         "//:build.sbt",
         "//:project/Dependencies.scala",
+        "//modules/fuseki:Dockerfile",
+        "//modules/fuseki:BUILD.bazel",
     ],
 )

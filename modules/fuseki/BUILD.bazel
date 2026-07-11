@@ -1,0 +1,243 @@
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//tools/oci:defs.bzl", "oci_stamped_labels")
+
+# The Dockerfile stays as the sbt/docker build path during the validation
+# period (see SESSION-HANDOFF.md); //tools/oci:image_versions_match_sbt reads
+# its FUSEKI_VERSION (against this file's fuseki_dist pin) and its
+# IMAGE_VERSION (against this BUILD.bazel's own embedded tag literals) to
+# catch drift between the two builds.
+exports_files([
+    "BUILD.bazel",
+    "Dockerfile",
+])
+
+# Replaces modules/fuseki/Dockerfile with rules_oci. The Dockerfile downloads
+# the Fuseki tarball + apt-installs tini/curl at build time; rules_oci has no
+# ADD-from-URL or apt-install, so both are prefetched hermetically in
+# MODULE.bazel (@fuseki_dist, @tini_{amd64,arm64}) instead — same pattern as
+# the OTel jars and static curl/jq already used by webapi/ingest.
+
+# --- Fuseki distribution -> /jena-fuseki ------------------------------------
+# @fuseki_dist ships fuseki-backup/fuseki-plain/fuseki-server with the exec
+# bit set (verified against the real upstream tarball); pkg_files' own default
+# (0644) would silently drop that, unlike the Dockerfile's plain `tar zxf`
+# which preserves it. Split into an executable subset (explicit 0755) and
+# everything else, so pkg_files' per-target `attributes` can apply to just the
+# three scripts. strip_prefix.from_pkg() (not pkg_tar's plain default, which
+# flattens every subdirectory) preserves the dist's nested paths -- there's
+# only "service/service/*" today (an unused host-init sample, harmless), but a
+# future Fuseki release adding a real lib/ or webapp/ subdir must not be
+# silently flattened onto the classpath.
+pkg_files(
+    name = "fuseki_exec_files",
+    srcs = [
+        "@fuseki_dist//:fuseki-backup",
+        "@fuseki_dist//:fuseki-plain",
+        "@fuseki_dist//:fuseki-server",
+    ],
+    attributes = pkg_attributes(mode = "0755"),
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_files(
+    name = "fuseki_data_files",
+    srcs = ["@fuseki_dist//:dist"],
+    excludes = [
+        "@fuseki_dist//:fuseki-backup",
+        "@fuseki_dist//:fuseki-plain",
+        "@fuseki_dist//:fuseki-server",
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_tar(
+    name = "fuseki_home_layer",
+    srcs = [
+        ":fuseki_exec_files",
+        ":fuseki_data_files",
+    ],
+    package_dir = "/jena-fuseki",
+)
+
+# --- Config: shiro.ini + dsp-repo.ttl -> /jena-fuseki/ -----------------------
+# Data files (Dockerfile just COPYs them, no chmod) -- explicit 0644 so they
+# don't pick up pkg_tar's own blanket-executable default (see scripts_layer
+# below for why that default is otherwise convenient).
+pkg_tar(
+    name = "config_layer",
+    srcs = [
+        "dsp-repo.ttl",
+        "shiro.ini",
+    ],
+    mode = "0644",
+    package_dir = "/jena-fuseki",
+)
+
+# --- Entrypoint + healthcheck -> / ------------------------------------------
+# Dockerfile: `COPY ... /` + `chmod 755` for both.
+pkg_tar(
+    name = "scripts_layer",
+    srcs = [
+        "docker-entrypoint.sh",
+        "healthcheck.sh",
+    ],
+    mode = "0755",
+    package_dir = "/",
+)
+
+# --- tini + curl -> /usr/bin (per-arch) -------------------------------------
+# tini is fuseki's ENTRYPOINT (Dockerfile apt-installs it); curl backs
+# healthcheck.sh. Mirrors webapi's curl_jq_layer_{amd64,arm64} pattern.
+pkg_tar(
+    name = "tini_curl_layer_amd64",
+    files = {
+        "@static_curl_amd64//:curl": "/usr/bin/curl",
+        "@tini_amd64//file": "/usr/bin/tini",
+    },
+    mode = "0755",
+)
+
+pkg_tar(
+    name = "tini_curl_layer_arm64",
+    files = {
+        "@static_curl_arm64//:curl": "/usr/bin/curl",
+        "@tini_arm64//file": "/usr/bin/tini",
+    },
+    mode = "0755",
+)
+
+# --- OTel agent + Pyroscope extension -> /usr/local/lib ---------------------
+# Same jars webapi/ingest use (see MODULE.bazel); Dockerfile ADDed older
+# v2.21.0/v1.0.4 -- consolidated onto the shared pin, killing that drift.
+pkg_tar(
+    name = "otel_layer",
+    srcs = [
+        "@otel_javaagent//file",
+        "@pyroscope_otel//file",
+    ],
+    package_dir = "/usr/local/lib",
+)
+
+# org.opencontainers.image.* labels, mirroring the Dockerfile's static LABELs
+# + stamped revision (see oci_stamped_labels' doc in //tools/oci:defs.bzl).
+# `.version` is the human image tag (source of truth: Dependencies.scala's
+# fusekiImage, kept in sync by CI's check-fuseki-version-consistency job) --
+# NOT stamped from git, since it isn't a git-versioned artifact like
+# knora-api/dsp-ingest, it's a pinned upstream release repackaged.
+oci_stamped_labels(
+    name = "image_labels",
+    labels = {
+        "maintainer": "support@dasch.swiss",
+        "org.opencontainers.image.authors": "DaSCH — https://dasch.swiss",
+        "org.opencontainers.image.description": "Fuseki is a SPARQL 1.1 server with a web interface, backed by the Apache Jena TDB RDF triple store.",
+        "org.opencontainers.image.documentation": "https://jena.apache.org/documentation/fuseki2/",
+        "org.opencontainers.image.licenses": "(Apache-2.0 AND (GPL-2.0 WITH Classpath-exception-2.0) AND GPL-3.0)",
+        "org.opencontainers.image.source": "https://github.com/dasch-swiss/dsp-api",
+        "org.opencontainers.image.title": "Apache Jena Fuseki",
+        "org.opencontainers.image.url": "https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki",
+        "org.opencontainers.image.version": "6.1.0-0",
+    },
+    stamp_labels = {
+        "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
+    },
+)
+
+# No `user` (root, matches the Dockerfile -- no USER directive; NFS/orchestrator
+# reasons don't apply here, but ops-deploy expects the same root-uid contract
+# every other DSP image has had). HEALTHCHECK isn't emitted (rules_oci can't);
+# moves to docker-compose in Phase 6, same as the other three images.
+oci_image(
+    name = "image_amd64",
+    base = "@temurin_base_amd64",
+    entrypoint = [
+        "/usr/bin/tini",
+        "--",
+        "/docker-entrypoint.sh",
+    ],
+    cmd = ["/jena-fuseki/fuseki-server"],
+    env = {
+        "LANG": "C.UTF-8",
+        "FUSEKI_HOME": "/jena-fuseki",
+        "FUSEKI_BASE": "/fuseki",
+        "INDEX_BASE": "/fuseki/lucene",
+        "IMAGE_VERSION": "6.1.0-0",
+        "FUSEKI_VERSION": "6.1.0",
+    },
+    exposed_ports = ["3030"],
+    labels = ":image_labels",
+    volumes = ["/fuseki"],
+    workdir = "/jena-fuseki",
+    tars = [
+        ":fuseki_home_layer",
+        ":config_layer",
+        ":scripts_layer",
+        ":tini_curl_layer_amd64",
+        ":otel_layer",
+    ],
+)
+
+oci_image(
+    name = "image_arm64",
+    base = "@temurin_base_arm64",
+    entrypoint = [
+        "/usr/bin/tini",
+        "--",
+        "/docker-entrypoint.sh",
+    ],
+    cmd = ["/jena-fuseki/fuseki-server"],
+    env = {
+        "LANG": "C.UTF-8",
+        "FUSEKI_HOME": "/jena-fuseki",
+        "FUSEKI_BASE": "/fuseki",
+        "INDEX_BASE": "/fuseki/lucene",
+        "IMAGE_VERSION": "6.1.0-0",
+        "FUSEKI_VERSION": "6.1.0",
+    },
+    exposed_ports = ["3030"],
+    labels = ":image_labels",
+    volumes = ["/fuseki"],
+    workdir = "/jena-fuseki",
+    tars = [
+        ":fuseki_home_layer",
+        ":config_layer",
+        ":scripts_layer",
+        ":tini_curl_layer_arm64",
+        ":otel_layer",
+    ],
+)
+
+# Multi-arch index for publishing.
+oci_image_index(
+    name = "index",
+    images = [
+        ":image_amd64",
+        ":image_arm64",
+    ],
+)
+
+# Host-arch image, selected for the local `oci_load` below.
+alias(
+    name = "image",
+    actual = select({
+        "@platforms//cpu:arm64": ":image_arm64",
+        "@platforms//cpu:x86_64": ":image_amd64",
+    }),
+)
+
+# `bazel run //modules/fuseki:load` — load the host-arch image into the local
+# Docker daemon at the version tag docker-compose.yml consumes (fuseki is
+# referenced by version, not :latest, unlike the other three images).
+oci_load(
+    name = "load",
+    image = ":image",
+    repo_tags = ["daschswiss/apache-jena-fuseki:6.1.0-0"],
+)
+
+# `bazel run //modules/fuseki:push -- -t 6.1.0-0` — push the multi-arch index.
+oci_push(
+    name = "push",
+    image = ":index",
+    repository = "index.docker.io/daschswiss/apache-jena-fuseki",
+)

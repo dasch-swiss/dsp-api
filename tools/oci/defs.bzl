@@ -1,4 +1,4 @@
-"""OCI helpers for the dsp-api image build (Phase 3: knora-api, dsp-ingest).
+"""OCI helpers for the dsp-api image build (Phase 3: knora-api, dsp-ingest; Phase 5: fuseki).
 
 `runtime_jars` collects a scala_library/scala_binary's transitive runtime classpath, for
 packing into a lib-dir layer (see `oci_stamped_labels`'s sibling doc below for why we don't

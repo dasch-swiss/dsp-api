@@ -397,3 +397,55 @@ http_file(
     sha256 = "8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309",
     urls = ["https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-arm64"],
 )
+
+#############################################
+# Fuseki dist tarball + tini (Phase 5)
+#############################################
+
+# modules/fuseki/Dockerfile downloads this tarball at build time via `curl` +
+# `ARG FUSEKI_SHA512`; rules_oci has no ADD-from-URL, so fetch hermetically
+# here instead (same pattern as the OTel jars / static curl above). sha256
+# below was computed from the archive.apache.org download and cross-checked
+# against the Dockerfile's `ARG FUSEKI_SHA512`
+# (75457f45d14397876a41ed51abe7ae5d2f1e708dfe1315765f858158bc5c6813bc036ec1539ddc4dffd26201f5cc31fadec299ca5c3dc2548b723513ed31d326)
+# -- both verify the identical bytes. Version mirrors project/Dependencies.scala's
+# fusekiImage (kept in sync with the Dockerfile by CI's
+# check-fuseki-version-consistency job); bump all three together.
+http_archive(
+    name = "fuseki_dist",
+    build_file_content = "\n".join([
+        # fuseki.war: unused (Fuseki runs standalone via fuseki-server, not a
+        # servlet container), dropped in the Dockerfile too. BUILD.bazel/
+        # REPO.bazel are this repo rule's own synthetic files, not part of the
+        # actual distribution.
+        'exports_files(["fuseki-backup", "fuseki-plain", "fuseki-server"])',
+        'filegroup(',
+        '    name = "dist",',
+        '    srcs = glob(["**"], exclude = ["fuseki.war", "BUILD.bazel", "REPO.bazel"]),',
+        '    visibility = ["//visibility:public"],',
+        ')',
+    ]),
+    sha256 = "a4a845bb602515f66e3397e89b52180ca055f4b240ddb442a1a793a98ce4d280",
+    strip_prefix = "apache-jena-fuseki-6.1.0",
+    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-6.1.0.tar.gz"],
+)
+
+# Static tini (fuseki's ENTRYPOINT, apt-installed in the Dockerfile) -- the
+# temurin base has no package manager, so fetch per-arch like static_curl
+# above. Not sourced from the sipi rootfs extraction (//modules/sipi) since
+# fuseki isn't built on the sipi base.
+http_file(
+    name = "tini_amd64",
+    downloaded_file_path = "tini",
+    executable = True,
+    sha256 = "c5b0666b4cb676901f90dfcb37106783c5fe2077b04590973b885950611b30ee",
+    urls = ["https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-amd64"],
+)
+
+http_file(
+    name = "tini_arm64",
+    downloaded_file_path = "tini",
+    executable = True,
+    sha256 = "eae1d3aa50c48fb23b8cbdf4e369d0910dfc538566bfd09df89a774aa84a48b9",
+    urls = ["https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-arm64"],
+)
