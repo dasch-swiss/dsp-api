@@ -1,0 +1,17 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+# Catches MODULE.bazel's maven.install artifact versions drifting from
+# Dependencies.scala's (the sbt build's source of truth) -- e.g. someone bumps
+# ZioVersion for sbt and forgets the matching dev.zio:zio_3:... bump here.
+sh_test(
+    name = "maven_versions_match_sbt",
+    srcs = ["check_maven_versions.py"],
+    args = [
+        "$(location //:MODULE.bazel)",
+        "$(location //:project/Dependencies.scala)",
+    ],
+    data = [
+        "//:MODULE.bazel",
+        "//:project/Dependencies.scala",
+    ],
+)

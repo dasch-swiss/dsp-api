@@ -229,6 +229,15 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
   missing/mistyped `STABLE_*` key** (a review caught the original `grep ... || true` silently
   writing an empty label/BuildInfo value instead). Rewritten with bash `${var//pattern/replacement}`
   instead of `sed` — also sidesteps sed's `&`/`\` replacement-escaping footgun for free.
+- **Two `sh_test`s catch sbt⇄Bazel dependency drift** (new `rules_shell` bazel_dep — native
+  `sh_test` is gone from this Bazel version): `//tools/oci:image_versions_match_sbt` (temurin base
+  tag, sipi base tag, OTel/Pyroscope jar versions) and `//tools/deps:maven_versions_match_sbt` (every
+  shared Maven coordinate between `MODULE.bazel`'s `maven.install` and `Dependencies.scala` — parses
+  sbt's real `"group" %%/% "artifact" % VERSION_EXPR` syntax, resolving `val`-bound version
+  identifiers, plus the two `maven.artifact()` exclusion overrides). Both verified against several
+  real injected mismatches (single-artifact bump, a shared version val touching 3 artifacts, a
+  `maven.artifact()` override, an unresolvable identifier handled as a graceful warning) before
+  trusting them.
 
 ### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration + ingest's own specs
 
