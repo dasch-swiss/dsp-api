@@ -123,10 +123,15 @@ final case class V2(
   resourcesSequence: ResourcesSequence,
   fulltextSearch: FulltextSearch,
   graphRoute: GraphRoute,
+  resources: Resources,
 )
 
 final case class ResourcesSequence(
   resultsPerPage: Int,
+)
+
+final case class Resources(
+  maxBatchSize: Int,
 )
 
 final case class FulltextSearch(
@@ -183,6 +188,7 @@ object AppConfig {
     .map(c => // provide a default value for the JWT issuer if not set explicitly in application.conf
       c.copy(jwt = c.jwt.copy(issuer = c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort)))),
     )
+    .validate("app.v2.resources.max-batch-size must be >= 1")(_.v2.resources.maxBatchSize >= 1)
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
