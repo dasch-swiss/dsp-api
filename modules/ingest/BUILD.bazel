@@ -3,7 +3,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_library")
 load("//tools/buildinfo:defs.bzl", "buildinfo")
-load("//tools/oci:defs.bzl", "runtime_jars")
+load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
 # Replaces sbt-buildinfo for dsp-ingest (package swiss.dasch.version; mirrors
 # build.sbt's ingest buildInfoKeys). knoraSipiVersion is read at RUNTIME
@@ -117,23 +117,33 @@ pkg_tar(
     package_dir = "/usr/local/lib",
 )
 
+# org.opencontainers.image.* labels stamped from git, matching webapi's image
+# (both introduced in the same phase; consistent provenance matters for
+# incident response / knowing which commit a running container corresponds to).
+oci_stamped_labels(
+    name = "image_labels",
+    labels = {
+        "maintainer": "support@dasch.swiss",
+        "org.opencontainers.image.source": "github.com/dasch-swiss/dsp-api",
+    },
+    stamp_labels = {
+        "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
+        "org.opencontainers.image.version": "STABLE_GIT_VERSION",
+    },
+)
+
 # No `user` (root, matches build.sbt stripping USER -- Sipi reads NFS-mounted
 # assets owned by orchestrator-controlled uids). HEALTHCHECK isn't emitted
 # (rules_oci can't); moves to docker-compose in Phase 6, reusing the extracted
 # `/sbin/sipi health --port 3340` binary as sbt's image did. Do NOT bake
 # JAVA_TOOL_OPTIONS -- compose/ops-deploy set it at runtime.
-_INGEST_ENV = {
-    "OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED": "false",
-    "OTEL_INSTRUMENTATION_NETTY_ENABLED": "false",
-}
-
 oci_image(
     name = "image_amd64",
     base = "@temurin_base_amd64",
     entrypoint = ["java", "-cp", "/sipi/lib/*", "swiss.dasch.Main"],
-    env = _INGEST_ENV,
+    env = OTEL_DISABLE_ENV,
     exposed_ports = ["3340"],
-    labels = {"maintainer": "support@dasch.swiss"},
+    labels = ":image_labels",
     tars = [
         "//modules/sipi:runtime_fs_amd64",  # /sbin/sipi, /sipi/**, /usr/bin/{tini,ffmpeg,ffprobe}
         ":otel_layer",
@@ -145,9 +155,9 @@ oci_image(
     name = "image_arm64",
     base = "@temurin_base_arm64",
     entrypoint = ["java", "-cp", "/sipi/lib/*", "swiss.dasch.Main"],
-    env = _INGEST_ENV,
+    env = OTEL_DISABLE_ENV,
     exposed_ports = ["3340"],
-    labels = {"maintainer": "support@dasch.swiss"},
+    labels = ":image_labels",
     tars = [
         "//modules/sipi:runtime_fs_arm64",
         ":otel_layer",

@@ -12,6 +12,9 @@ module(
 
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
+# Native sh_test/sh_binary are gone as of this Bazel version; //tools/oci's
+# image_versions_match_sbt check needs it.
+bazel_dep(name = "rules_shell", version = "0.6.1")
 # rules_oci depends on tar.bzl transitively (for its own oci_load); declaring it
 # directly here too makes `@tar.bzl//tar/toolchain:type` resolvable from our own
 # BUILD/bzl files (//tools/oci:defs.bzl's image_rootfs_extract rule). Same

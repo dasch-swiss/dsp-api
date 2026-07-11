@@ -230,8 +230,13 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
   writing an empty label/BuildInfo value instead). Rewritten with bash `${var//pattern/replacement}`
   instead of `sed` — also sidesteps sed's `&`/`\` replacement-escaping footgun for free.
 
-### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration
+### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration + ingest's own specs
 
+- **`modules/ingest` itself also needs a `scala_junit_test` target** — Phase 3 added its
+  `scala_library`/`scala_binary`/image but no test target (out of that phase's scope), and this
+  bullet's four modules don't cover it: `test-ingest-integration` is the separate `ingestIntegration`
+  sbt project (Testcontainers, spins up the built image), not `modules/ingest/src/test/scala`'s own
+  unit specs. Convert those the same way Phase 2 did for webapi (`@RunWith(classOf[DspZTestJUnitRunner])`).
 - testkit `scala_library` (compile-scope test libs). Module-level `scala_junit_test` per test
   module (one JVM each, `tags=["requires-network","no-sandbox"]`, `test_data` wired). Make
   `TestContainerLayers` a JVM-memoized singleton; split `SearchResponderV2GravsearchSpanE2ESpec`

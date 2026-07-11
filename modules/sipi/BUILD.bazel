@@ -80,6 +80,11 @@ oci_push(
             name = "runtime_load_" + arch,
             image = ":image_" + arch,
             repo_tags = ["daschswiss/knora-sipi:extract-" + arch],
+            # This exists only to expose the tarball output group to
+            # image_rootfs_extract below; `tags=["manual"]` keeps it out of
+            # wildcard `bazel run|build //...` so it can't accidentally load a
+            # confusingly-tagged stray image into a dev's local Docker daemon.
+            tags = ["manual"],
         ),
         filegroup(
             name = "runtime_tar_" + arch,

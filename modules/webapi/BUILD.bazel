@@ -4,7 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
 load("//tools/buildinfo:defs.bzl", "buildinfo")
-load("//tools/oci:defs.bzl", "oci_stamped_labels", "runtime_jars")
+load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
 # Replaces sbt-buildinfo. Fields mirror build.sbt's `buildInfoKeys` for webapi
 # (package org.knora.webapi.http.version). Source reads version, buildCommit,
@@ -218,16 +218,11 @@ oci_stamped_labels(
 # had). HEALTHCHECK isn't emitted (rules_oci can't); it's a docker-compose
 # concern (Phase 6). Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
 # `-javaagent:... -Xmx...` at runtime.
-_KNORA_API_ENV = {
-    "OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED": "false",
-    "OTEL_INSTRUMENTATION_NETTY_ENABLED": "false",
-}
-
 oci_image(
     name = "image_amd64",
     base = "@temurin_base_amd64",
     entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
-    env = _KNORA_API_ENV,
+    env = OTEL_DISABLE_ENV,
     exposed_ports = [
         "3333",
         "3339",
@@ -245,7 +240,7 @@ oci_image(
     name = "image_arm64",
     base = "@temurin_base_arm64",
     entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
-    env = _KNORA_API_ENV,
+    env = OTEL_DISABLE_ENV,
     exposed_ports = [
         "3333",
         "3339",

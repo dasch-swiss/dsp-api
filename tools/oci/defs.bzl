@@ -19,6 +19,14 @@ Linux RBE).
 load("@bazel_skylib//lib:shell.bzl", "shell")
 load("@rules_java//java/common:java_info.bzl", "JavaInfo")
 
+# Shared by every image's oci_image(env=...): the OTel javaagent auto-instruments
+# HTTP client + Netty by default, which double-instruments dsp-api services that
+# already trace these manually (sttp4/zio-http middleware).
+OTEL_DISABLE_ENV = {
+    "OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED": "false",
+    "OTEL_INSTRUMENTATION_NETTY_ENABLED": "false",
+}
+
 def _runtime_jars_impl(ctx):
     jars = depset(transitive = [d[JavaInfo].transitive_runtime_jars for d in ctx.attr.deps])
     return [DefaultInfo(files = jars)]

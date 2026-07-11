@@ -54,12 +54,20 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Bazel & the Nix dev shell
 
-The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
+All three container images (`knora-sipi`, `knora-api`, `dsp-ingest`) build with **Bazel**
+(`rules_oci`) as of the in-progress Bazelify migration (see `SESSION-HANDOFF.md` on
+`worktree-bazelify` for status). Bazel is provided through a **Nix dev shell** (`flake.nix`) that
+puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and
+`crane` on `PATH`.
 
 - **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
 - `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //modules/sipi:load`.
 - `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //modules/sipi:push`.
-- The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
+- `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
+  dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
+  them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
+- The Makefile (`make docker-build` / `make docker-publish`) still builds knora-api and dsp-ingest
+  via sbt — that rewiring is Phase 6 of the migration, not done yet.
 
 ## Architecture
 
