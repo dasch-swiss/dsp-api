@@ -9,6 +9,7 @@ import sttp.model.MediaType
 import zio.*
 
 import dsp.errors.BadRequestException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -31,6 +32,7 @@ final case class ResourcesRestService(
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
   private val readResources: ReadResourcesService,
+  private val appConfig: AppConfig,
 ) {
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
@@ -106,6 +108,39 @@ final case class ResourcesRestService(
   ): Task[(RenderedResponse, MediaType)] =
     for {
       resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
+      response <- readResources
+                    .getResourcesWithDeletedResource(
+                      resIris,
+                      propertyIri = None,
+                      valueUuid = None,
+                      versionDate,
+                      withDeleted = true,
+                      showDeletedValues = false,
+                      formatOptions.schema,
+                      formatOptions.rendering,
+                      user,
+                    )
+                    .flatMap(renderer.render(_, formatOptions))
+    } yield response
+
+  def getResourcesBatch(user: User)(
+    request: BatchResourcesRequest,
+    formatOptions: FormatOptions,
+    versionDate: Option[VersionDate],
+  ): Task[(RenderedResponse, MediaType)] =
+    val max = appConfig.v2.resources.maxBatchSize
+    for {
+      _ <- ZIO.when(request.resourceIris.sizeIs > max)(
+             ZIO.fail(
+               BadRequestException(
+                 s"Too many resources requested: ${request.resourceIris.size} (maximum is $max).",
+               ),
+             ),
+           )
+      _ <- ZIO.when(request.resourceIris.isEmpty)(
+             ZIO.fail(BadRequestException("resourceIris must not be empty.")),
+           )
+      resIris  <- ZIO.foreach(request.resourceIris)(parseResourceIri).map(_.distinct)
       response <- readResources
                     .getResourcesWithDeletedResource(
                       resIris,

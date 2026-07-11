@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.v2.resources
 import sttp.tapir.ztapir.*
 import zio.*
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
@@ -31,6 +32,7 @@ final class ResourcesServerEndpoints(resourcesEndpoints: ResourcesEndpoints, res
     resourcesEndpoints.getResourcesHistory.serverLogic(restService.getResourceHistory),
     resourcesEndpoints.getResourcesParams.serverLogic(restService.searchResourcesByProjectAndClass),
     resourcesEndpoints.getResources.serverLogic(restService.getResources),
+    resourcesEndpoints.postResourcesBatch.serverLogic(restService.getResourcesBatch),
     resourcesEndpoints.getResourcesTei.serverLogic(restService.getResourceAsTeiV2),
     resourcesEndpoints.postResourcesErase.serverLogic(restService.eraseResource),
     resourcesEndpoints.postResourcesDelete.serverLogic(restService.deleteResource),
@@ -42,7 +44,7 @@ final class ResourcesServerEndpoints(resourcesEndpoints: ResourcesEndpoints, res
 
 object ResourcesServerEndpoints {
 
-  type Dependencies = ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & IriConverter &
+  type Dependencies = AppConfig & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & IriConverter &
     KnoraResponseRenderer & ReadResourcesService & ResourcesResponderV2 & SearchResponderV2
 
   type Provided = ResourcesServerEndpoints
