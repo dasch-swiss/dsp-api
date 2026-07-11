@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util.standoff
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -18,9 +19,11 @@ import zio.test.assertTrue
 import java.nio.file.Paths
 
 import dsp.errors.StandoffConversionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.util.FileUtil
 
-object XMLUtilSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class XMLUtilSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] = suite("The XML to standoff utility")(
     test("transform an XML document to HTML") {

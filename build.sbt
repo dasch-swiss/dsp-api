@@ -385,7 +385,7 @@ lazy val testkit: Project = Project(id = "testkit", base = file("modules/testkit
 //////////////////////////////////////
 
 lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
-  .dependsOn(webapi, testkit)
+  .dependsOn(webapi, testkit, testRunner % Test)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
@@ -393,7 +393,9 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     },
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    // Specs run through the custom DspZTestJUnitRunner (junit-interface) so sbt and
+    // Bazel share one runner. Replaces the ZTestFramework registration.
+    testFrameworks            := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
     Test / exportJars         := false,
     Test / fork               := true,
     Test / testForkedParallel := false,
@@ -405,7 +407,8 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
     // forked JVM the OTel `Tracing` service is effectively shared across specs (the first spec to
     // build it wins), which silently bypasses the override and leaves the exporter empty. Run that
     // spec in its own JVM so its exporter-backed layer is the one in effect — every other spec
-    // keeps sharing a single JVM as before.
+    // keeps sharing a single JVM as before. (Bazel mirrors this with a separate
+    // `test_gravsearch_span` scala_junit_test target — see modules/test-it/BUILD.bazel.)
     Test / testGrouping := {
       val opts               = (Test / forkOptions).value
       val (isolated, shared) = (Test / definedTests).value.partition(
@@ -415,7 +418,8 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
         isolated.map(t => Tests.Group(t.name, Seq(t), Tests.SubProcess(opts)))
       groups.filter(_.tests.nonEmpty)
     },
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++
+      Dependencies.integrationTestDependencies ++ Seq(Dependencies.junitInterface % Test),
   )
   .settings(LocalSettings.localScalacOptions: _*)
   .enablePlugins(HeaderPlugin)
@@ -431,7 +435,7 @@ lazy val it: Project = Project(id = "test-it", base = file("modules/test-it"))
 //////////////////////////////////////
 
 lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e"))
-  .dependsOn(webapi, testkit)
+  .dependsOn(webapi, testkit, testRunner % Test)
   .settings(buildSettings)
   .settings(
     inConfig(Test) {
@@ -439,14 +443,17 @@ lazy val e2e: Project = Project(id = "test-e2e", base = file("modules/test-e2e")
     },
     scalacOptions ++= customScalacOptions,
     logLevel := Level.Info,
-    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    // Specs run through the custom DspZTestJUnitRunner (junit-interface) so sbt and
+    // Bazel share one runner. Replaces the ZTestFramework registration.
+    testFrameworks            := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
     Test / exportJars         := false,
     Test / fork               := true,
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
     Test / testOptions += Tests.Argument("-oDF"),
     Test / baseDirectory := (ThisBuild / baseDirectory).value,
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies,
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++
+      Dependencies.integrationTestDependencies ++ Seq(Dependencies.junitInterface % Test),
   )
   .settings(LocalSettings.localScalacOptions: _*)
   .enablePlugins(HeaderPlugin)
@@ -461,7 +468,7 @@ lazy val ingest = {
   import Dependencies._
 
   Project(id = "ingest", file("modules/ingest"))
-    .dependsOn(bagit, jwt)
+    .dependsOn(bagit, jwt, testRunner % Test)
     .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
     .settings(
       scalacOptions ++= Seq("-old-syntax", "-rewrite"),
@@ -498,8 +505,10 @@ lazy val ingest = {
         // logging
         "dev.zio" %% "zio-logging"               % ZioLoggingVersion,
         "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion,
-      ) ++ ingestTest,
-      testFrameworks            := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      ) ++ ingestTest ++ Seq(Dependencies.junitInterface % Test),
+      // Specs run through the custom DspZTestJUnitRunner (junit-interface) so sbt and
+      // Bazel share one runner. Replaces the ZTestFramework registration.
+      testFrameworks            := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
       Docker / dockerRepository := Some("daschswiss"),
       Docker / packageName      := "dsp-ingest",
       dockerExposedPorts        := Seq(3340),
@@ -578,10 +587,15 @@ lazy val ingest = {
 }
 
 lazy val ingestIntegration = (project in file("modules/test-ingest-integration"))
-  .dependsOn(ingest)
+  .dependsOn(ingest, testRunner % Test)
   .settings(
     publish / skip := true,
     headerLicense  := projectLicense,
-    libraryDependencies ++= Dependencies.ingestTest ++ Seq(Dependencies.testcontainers),
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    libraryDependencies ++= Dependencies.ingestTest ++ Seq(
+      Dependencies.testcontainers,
+      Dependencies.junitInterface % Test,
+    ),
+    // Specs run through the custom DspZTestJUnitRunner (junit-interface) so sbt and
+    // Bazel share one runner. Replaces the ZTestFramework registration.
+    testFrameworks := Seq(new TestFramework("com.novocode.junit.JUnitFramework")),
   )

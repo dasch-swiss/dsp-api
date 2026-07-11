@@ -5,10 +5,12 @@
 
 package org.knora.webapi.e2e.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -17,12 +19,8 @@ import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
 
-/**
- * End-to-End (E2E) test specification for Sipi access.
- *
- * This spec tests the 'admin/files'.
- */
-object AdminFilesE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminFilesE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 

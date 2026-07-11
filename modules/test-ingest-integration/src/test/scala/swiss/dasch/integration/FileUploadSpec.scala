@@ -5,8 +5,8 @@
 
 package swiss.dasch.integration
 
+import org.junit.runner.RunWith
 import sttp.capabilities.zio.ZioStreams
-import sttp.client4
 import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.client4.{StreamBackend, basicRequest}
 import sttp.model.{Header, Uri}
@@ -16,8 +16,12 @@ import zio.nio.file.Files
 import zio.stream.ZStream
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
+
 val timeout = 5.minutes
-object FileUploadSpec extends ZIOSpecDefault {
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class FileUploadSpec extends ZIOSpecDefault {
 
   private val client = ZIO.serviceWithZIO[TestIngestClient]
 

@@ -7,28 +7,19 @@ package org.knora.webapi.responders.v2
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
+import org.junit.runner.RunWith
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 
 import scala.jdk.CollectionConverters.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
 
-/**
- * Tests the `SearchResponderV2.stageSpan` helper (Decision 3) against the in-memory span harness.
- *
- * These lock the two error-handling guarantees that are one edit away from silently regressing:
- *   - a stage failure produces an ERROR span whose status description is exactly `"<stage>: <Class>"`,
- *     never the raw exception message/stacktrace, and records no exception event (REQ-1.6);
- *   - an interruption marks the open stage span with `gravsearch.exit_reason=interrupted` + ERROR (REQ-1.11).
- *
- * The description-equality assertion is the regression lock against the `unsetOnFailure` brittleness:
- * if the mapper is ever changed from UNSET to ERROR, zio-telemetry would overwrite the sanitized
- * description with `cause.prettyPrint` (which echoes the offending FILTER literal) and this test fails.
- */
-object SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
 
   private val stage = "gravsearch.prequery.execute"
 

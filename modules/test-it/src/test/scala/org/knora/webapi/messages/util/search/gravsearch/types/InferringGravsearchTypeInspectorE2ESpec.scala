@@ -5,16 +5,18 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 
-object InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class InferringGravsearchTypeInspectorE2ESpec extends E2EZSpec {
 
   private val queryRdfTypeRule: String =
     """

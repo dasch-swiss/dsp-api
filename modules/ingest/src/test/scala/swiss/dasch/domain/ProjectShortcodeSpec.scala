@@ -5,11 +5,15 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.stream.ZStream
 import zio.test.*
 
-object ProjectShortcodeSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectShortcodeSpec extends ZIOSpecDefault {
 
   def randomFourDigitHexString: UIO[String] = {
     val hexDigits = "0123456789abcdefABCDEF"

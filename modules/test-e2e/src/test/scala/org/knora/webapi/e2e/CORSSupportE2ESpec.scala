@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e
 
+import org.junit.runner.RunWith
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
 import sttp.client4.httpclient.zio.HttpClientZioBackend
@@ -14,12 +15,14 @@ import sttp.model.HeaderNames.*
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object CORSSupportE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CORSSupportE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = anythingRdfOntologyAndData
 

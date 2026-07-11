@@ -5,6 +5,7 @@
 
 package org.knora.webapi
 
+import org.junit.runner.RunWith
 import sttp.model.StatusCode
 import zio.Chunk
 import zio.NonEmptyChunk
@@ -16,6 +17,7 @@ import zio.test.assertTrue
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.v2.OntologyResponderV2
@@ -60,7 +62,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
 
-object ProjectEraseIT extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectEraseIT extends E2EZSpec {
 
   private val users    = ZIO.serviceWithZIO[KnoraUserService]
   private val projects = ZIO.serviceWithZIO[KnoraProjectService]
@@ -136,7 +139,7 @@ object ProjectEraseIT extends E2EZSpec {
 
   private def doesGraphExist(graphName: InternalIri) = db(_.query(Ask(s"ASK { GRAPH <${graphName.value}> {} }")))
 
-  override def e2eSpec: Spec[ProjectEraseIT.env, Any] =
+  override def e2eSpec: Spec[env, Any] =
     suiteAll(s"The project erase endpoint /admin/projects/:shortcode/erase") {
 
       suite("given project to delete is not present")(

@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import swiss.dasch.domain.AssetInfoFileTestHelper.*
 import swiss.dasch.test.SpecConfigurations
 import zio.Scope
@@ -14,7 +15,10 @@ import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object AssetInfoServiceSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AssetInfoServiceSpec extends ZIOSpecDefault {
   private val findByAssetRefSuite = {
     suite("findByAssetRef")(
       test("parsing a simple file info works") {

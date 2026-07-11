@@ -5,19 +5,17 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.v2.SearchResponderV2.QueryResultType
 
-/**
- * Unit tests for the `gravsearch.query.shape` derivation (Decision 4). The shape must be bounded,
- * human-readable and derived from query *structure* only — never from literal values — so that it is
- * safe to use as a metric label and never encodes user data (REQ-1.3).
- */
-object GravsearchQueryShapeSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchQueryShapeSpec extends ZIOSpecDefault {
 
   // GravsearchParser uses the process-wide StringFormatter; initialise it before parsing.
   private val _ = StringFormatter.getInitializedTestInstance

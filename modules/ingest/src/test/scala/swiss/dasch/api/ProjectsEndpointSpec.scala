@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import sttp.client4.impl.zio.RIOMonadAsyncError
 import sttp.client4.testing.BackendStub
 import sttp.client4.testing.ResponseStub
@@ -47,8 +48,10 @@ import scala.language.implicitConversions
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object ProjectsEndpointSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectsEndpointSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[ProjectsEndpointsHandler](handler =>
              ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),

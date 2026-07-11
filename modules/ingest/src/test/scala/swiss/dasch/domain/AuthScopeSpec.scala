@@ -5,10 +5,14 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.domain.AuthScope.ScopeValue.*
 import zio.test.*
 
-object AuthScopeSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthScopeSpec extends ZIOSpecDefault {
   val shortcode: String => ProjectShortcode = ProjectShortcode.unsafeFrom
 
   val spec = suite("AuthScopeSpec")(

@@ -26,3 +26,19 @@ java_library(
     ],
     visibility = ["//visibility:public"],
 )
+
+# Loose fixture files for the container-backed integration/e2e specs (test-it, test-e2e): unlike
+# webapi's unit specs above, many of these read test_data via raw relative filesystem paths (e.g.
+# `new FileInputStream("test_data/...")`, `TestDataFileUtil`), the same way they do under sbt's
+# `baseDirectory := repo root`. A `resources`-packaged java_library only puts files on the
+# *classpath* (inside a jar) - it does not expose them as loose files, so it can't satisfy this
+# read pattern. Declared as `data` (not deps) on the test-it/test-e2e scala_junit_test targets:
+# Bazel then symlinks the whole tree into the test's runfiles at its natural repo-relative path,
+# and `bazel test`'s CWD is that runfiles root, so `test_data/...` resolves exactly as it does
+# under sbt. Globbed wholesale (runfiles are symlinks, so there's no real size cost) to avoid
+# having to track every subtree a new spec might read.
+filegroup(
+    name = "integration_fixture_files",
+    srcs = glob(["**"], exclude = ["BUILD.bazel"]),
+    visibility = ["//visibility:public"],
+)

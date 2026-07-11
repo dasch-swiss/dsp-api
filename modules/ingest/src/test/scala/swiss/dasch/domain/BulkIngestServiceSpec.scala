@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
@@ -24,7 +25,10 @@ import zio.test.assertTrue
 
 import scala.language.implicitConversions
 
-object BulkIngestServiceSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class BulkIngestServiceSpec extends ZIOSpecDefault {
   // accessor functions for testing
   private val storageService    = ZIO.serviceWithZIO[StorageService]
   private val bulkIngestService = ZIO.serviceWithZIO[BulkIngestService]

@@ -1,7 +1,7 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_library")
+load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
 load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
@@ -84,6 +84,24 @@ scala_binary(
     main_class = "swiss.dasch.Main",
     visibility = ["//visibility:public"],
     runtime_deps = [":ingest"],
+)
+
+scala_junit_test(
+    name = "test",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    resource_strip_prefix = "modules/ingest/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    deps = [
+        ":ingest",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+    ],
 )
 
 # --- dsp-ingest image (Phase 3) ----------------------------------------------

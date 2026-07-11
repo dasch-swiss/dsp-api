@@ -4,6 +4,7 @@
  */
 
 package org.knora.webapi.slice.resources.api
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -23,6 +24,7 @@ import scala.xml.XML
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
@@ -47,7 +49,8 @@ import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
-object ValuesEndpointsE2ESpec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
 
   private val intValueIri                      = new MutableTestIri
   private val intValueWithCustomPermissionsIri = new MutableTestIri

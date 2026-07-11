@@ -5,10 +5,14 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
-object CsvUtilSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class CsvUtilSpec extends ZIOSpecDefault {
 
   private val escapeCsvValueSuite = suite("escapeCsvValue")(
     test("Should not escape a value without special characters") {

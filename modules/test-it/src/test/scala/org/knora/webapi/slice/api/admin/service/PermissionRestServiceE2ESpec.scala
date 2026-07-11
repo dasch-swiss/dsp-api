@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.admin.service
 
+import org.junit.runner.RunWith
 import zio.Exit
 import zio.ZIO
 import zio.test.*
@@ -13,6 +14,7 @@ import scala.reflect.ClassTag
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.responders.admin.PermissionsResponder
@@ -22,7 +24,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
-object PermissionRestServiceE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PermissionRestServiceE2ESpec extends E2EZSpec {
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
   val e2eSpec                       = suite("PermissionResponder")(
     suite("Administrative Permission Create Requests")(

@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.junit.runner.RunWith
 import zio.*
 import zio.http.*
 import zio.json.DecoderOps
@@ -25,15 +26,17 @@ import dsp.valueobjects.UuidUtil
 import org.knora.jwt.JwtClaim
 import org.knora.jwt.JwtCodec
 import org.knora.sipi.MockDspApiServer.verify.*
+import org.knora.sipi.SipiIT.dspApiPort
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
-object SipiIT extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SipiIT extends ZIOSpecDefault {
 
-  val dspApiPort: Int       = 5555
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
   private val prefix        = "0001"
 
@@ -277,6 +280,10 @@ object SipiIT extends ZIOSpecDefault {
       .provideSomeLayerShared[Scope & Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential @@ TestAspect.withLiveClock
 
+}
+
+object SipiIT {
+  val dspApiPort: Int = 5555
 }
 
 object MockDspApiServer {

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.messages.IriConversions.*
@@ -21,7 +23,8 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
-object SearchResponderV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchResponderV2Spec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.*
 import swiss.dasch.util.TestUtils
@@ -24,8 +25,10 @@ import java.util.zip.ZipOutputStream
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object ImportServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ImportServiceSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ImportService")(

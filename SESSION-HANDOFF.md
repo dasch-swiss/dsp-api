@@ -4,7 +4,7 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
 **Last updated:** 2026-07-11
-**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2 and 3 done — Phase 4 is next). Phase 2 = commit `176ab2f1b`.
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2, 3 and 4 done — Phase 5 is next). Phase 2 = commit `176ab2f1b`.
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
@@ -170,6 +170,7 @@ double-run). Regression: leaf-module tests + `//modules/sipi:image_amd64` still 
   (script over `*.scala` only, per gotcha #5).
 
 **Phase 2 gotchas (save the rediscovery):**
+
 1. **`com.google.gwt:gwt-servlet` relocates to `org.gwtproject:gwt-servlet`** — the `@maven` label
    is `org_gwtproject_gwt_servlet`, not `com_google_gwt_gwt_servlet`. rules_jvm_external names the
    target by the *resolved* coordinate. Grep the generated `@maven` `BUILD` for the real label when
@@ -246,17 +247,150 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
   identifier handled as a graceful warning) before
   trusting them.
 
-### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration + ingest's own specs
+### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration + ingest's own specs ✅ COMPLETE
 
-- **`modules/ingest` itself also needs a `scala_junit_test` target** — Phase 3 added its
-  `scala_library`/`scala_binary`/image but no test target (out of that phase's scope), and this
-  bullet's four modules don't cover it: `test-ingest-integration` is the separate `ingestIntegration`
-  sbt project (Testcontainers, spins up the built image), not `modules/ingest/src/test/scala`'s own
-  unit specs. Convert those the same way Phase 2 did for webapi (`@RunWith(classOf[DspZTestJUnitRunner])`).
-- testkit `scala_library` (compile-scope test libs). Module-level `scala_junit_test` per test
-  module (one JVM each, `tags=["requires-network","no-sandbox"]`, `test_data` wired). Make
-  `TestContainerLayers` a JVM-memoized singleton; split `SearchResponderV2GravsearchSpanE2ESpec`
-  into its own target (own JVM). Verify container startups not multiplied; span isolation holds.
+Done: all five test-support modules build + run under `bazel test`, byte-matching sbt's pass
+counts exactly, with container startups held to ~1 set per JVM (not per spec class):
+
+| Target | Bazel | sbt |
+| --- | --- | --- |
+| `//modules/ingest:test` | OK (186 tests) | Passed: Total 186 |
+| `//modules/test-it:test` | OK (775 tests), 4 container starts | 775 of the 780 |
+| `//modules/test-it:test_gravsearch_span` | OK (5 tests), 3 container starts, isolated | 5 of the 780 |
+| `//modules/test-e2e:test` | OK (879 tests), 3 container starts | Passed: Total 879 |
+| `//modules/test-ingest-integration:test` | OK (1 test) | Passed: Total 1 |
+
+Regression: `//modules/{sipi,webapi,ingest}:image_amd64` and
+`//modules/{bagit,jwt,shacl-validator,webapi}:test` still green.
+
+- `modules/testkit/BUILD.bazel` (new): a **`scala_macro_library`, not `scala_library`.**
+  `GoldenTest.scala` (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`) defines a
+  real Scala 3 macro (`inline def goldenPath(suffix) = ${ goldenPathImpl(...) }`); the compiler
+  interprets `goldenPathImpl` via reflection when a *different* Bazel target (test-it/test-e2e)
+  calls it. A plain `scala_library` only exposes its **ijar** (interface jar, method bodies
+  stripped) on a dependent's compile classpath — the interpreter needs real bytecode and dies with
+  `ClassFormatError: Absent Code attribute ... GoldenTest$`. `scala_macro_library` sets
+  `ScalaInfo.contains_macros = True`, which makes `rules_scala`'s `collect_jars` (`scala/private/
+  common.bzl`) put the *full runtime jar* of that dependency ahead of any ijar on the consumer's
+  classpath. webapi's own `GoldenTest.scala` copy (same file, duplicated because testkit depends on
+  webapi so webapi can't depend on testkit) never hits this — its callers compile in the *same*
+  Bazel target, so the macro never crosses a jar boundary. Symptom → cause was found by decompiling
+  the real crash (`bazel-workers/worker-2-Scalac.log`), not guessed.
+- **`TestContainerLayers`** (`modules/testkit/.../core/TestContainerLayers.scala`) is now a
+  **process-static singleton**: `DspZTestRunnerBase.run` does a fresh
+  `Runtime.default.unsafe.run{…}.provide(spec.bootstrap)` per spec class, so the per-spec `lazy val
+  all` that memoized fine under sbt's shared zio-test runtime would rebuild the Fuseki/Sipi/
+  dsp-ingest containers once per class. Fix: memoize only the container `ZEnvironment` in a Scala
+  `lazy val`, built once via `Unsafe.unsafe { Runtime.default.unsafe.run(Scope.global.extend[Any](containersLayer.build)) }`
+  — `Scope.global` is a permanently-open `Scope.Closeable` built into ZIO for exactly this
+  ("shared for life of the process") — then `ZLayer.succeedEnvironment(cached) >+>
+  AppConfigForTestContainers.testcontainers` (the config layer, with its `Runtime.setConfigProvider`
+  side effect, stays *per-spec* — cheap, and correctness-sensitive). **Do not use `ZLayer.memoize`**
+  — it dedupes within one runtime build, which is exactly what differs across per-class runner
+  instances; the memo has to live below ZIO. Verified via `javap` against the real
+  `zio_3-2.1.26.jar`, not assumed from docs.
+- **Two jar-URI portability fixes**, same root cause as Phase 1/2's `ShaclValidatorSpec`/
+  `TriplestoreServiceInMemorySpec` (`getClass.getResource(...).toURI` is a `jar:` URI under Bazel,
+  a plain `file:` path under sbt; `Files.walk`/`FileInputStream` on it only works in the sbt case):
+  `SharedVolumes.Images.createAssets` now branches on `uri.getScheme == "jar"` and opens a
+  `FileSystems.newFileSystem(uri, ...)` to walk the jar-internal dir; `ingest`'s
+  `SpecPaths.pathFromResource`/`resourceDir` do the same (single-file stream-copy vs.
+  directory `Files.walkFileTree`-copy to a real temp dir).
+- **`data`, not just `resources`, for anything read via a raw filesystem path.** A `resources`
+  attribute (`java_library`/`scala_junit_test`) only puts files **on the classpath inside a jar** —
+  it does not expose them as loose files, so any code doing `new FileInputStream("test_data/...")`
+  or `Files.exists(Paths.get(...))` relative to CWD (sbt sets `baseDirectory := repo root` for
+  test-it/test-e2e, so this "just works" under sbt) gets `FileNotFoundException` under Bazel.
+  Fixed generically, not per call-site: declared `test_data/**` as a **`filegroup`**
+  (`//test_data:integration_fixture_files`, replacing the earlier `integration_fixtures`
+  `java_library` — sbt proves no code needs it on the classpath, since test_data isn't on sbt's
+  classpath either) and `src/test/resources/**` a second time, both wired via `data =` on the
+  `scala_junit_test` targets. `bazel test`'s CWD is the runfiles root, so a loose file at
+  `test_data/project_data/anything-data.ttl` under that root resolves exactly like sbt's
+  CWD-relative read. This fixes both `TestDataFileUtil.readTestData` (a shared helper, no fallback
+  at all) and `GoldenTest.assertGolden` (its `goldenPath` macro computes a path by string-replacing
+  `.../src/test/scala/...` → `.../src/test/resources/...` in the compiler's own source position,
+  then does a raw filesystem check against it — the "resources jar" and "loose data file" paths for
+  the *same* directory serve two different reader patterns, keep both attributes).
+- **testcontainers' `withClasspathResourceMapping` + Bazel's `TEST_TMPDIR` + macOS Docker Desktop
+  ⇒ non-deterministic-looking (actually 100% reproducible) container-start failure**, isolated to
+  `SipiIT` (`modules/test-it/src/test/scala/org/knora/sipi/SipiIT.scala`, an independent
+  `ZIOSpecDefault` that builds its own Sipi container, not through `TestContainerLayers`).
+  `withClasspathResourceMapping` (used by `SipiTestContainer.make`, shared with
+  `TestContainerLayers`' Sipi, which never fails) extracts the mapped classpath resource to a fresh
+  temp file under `java.io.tmpdir` on every container start. Bazel's `TEST_TMPDIR` (what
+  `java.io.tmpdir` defaults to under `bazel test`) lives under the execroot's ephemeral `_tmp`
+  scratch dir; a container started well into a long-running JVM (SipiIT runs late relative to the
+  earlier, JVM-startup-time `TestContainerLayers` build) hits
+  `InternalServerErrorException: ... error while creating mount source path ...: no such file or
+  directory` — a brand-new nested execroot path that hasn't propagated through Docker Desktop's
+  file-sharing layer in time. Confirmed the cause (not just worked around it) with a discriminating
+  test: pinning `-Djava.io.tmpdir=/tmp` (jvm_flags on the `scala_junit_test`) made `SipiIT` pass
+  deterministically; reproduced the failure twice identically first, which is what ruled out "random
+  flake" as an explanation. This also matches sbt, which never overrides `java.io.tmpdir` from the
+  OS default — so the fix makes Bazel behave like sbt, not the other way around. Applied to every
+  Docker-testcontainers target (test-it, test_gravsearch_span, test-e2e, test-ingest-integration).
+- **`"exclusive"` tag**: `E2EZSpec` starts an in-process API server on a fixed port; two of these
+  `scala_junit_test` targets (test-it, test_gravsearch_span, test-e2e) running concurrently on one
+  machine race for it (`NativeIoException: bind(..) failed ... Address already in use`). Confirmed
+  inter-target, not intra-target, by running test-it alone first (0 bind errors) before running all
+  three together (bind errors appeared) — sbt never hits this because it runs one project's tests at
+  a time. Fixed by tagging all Docker-dependent targets `"exclusive"`.
+- `SearchResponderV2GravsearchSpanE2ESpec` split into its own `scala_junit_test`
+  (`test_gravsearch_span`) — mirrors the `Test / testGrouping` isolation `build.sbt` already had for
+  it (its in-memory OTel span exporter would otherwise be silently bypassed by whichever spec's
+  fiber builds the shared `Tracing` service first).
+- 135 further specs converted `object … extends (E2EZSpec|ZIOSpecDefault)` →
+  `@RunWith(classOf[DspZTestJUnitRunner]) class …` (32 ingest, 54 test-it, 48 test-e2e, 1
+  test-ingest-integration). The usual object→class static-path breakages recurred (Phase 2 gotcha
+  #2's three sub-patterns: redundant self-import deleted, same-class self-qualifier stripped,
+  genuine cross-file reference moved into a companion object + self-import) — worth calling out
+  `SipiIT.scala` specifically: `dspApiPort` was referenced from a *separate* object
+  (`MockDspApiServer`) in the same file, not a companion, so the fix had to *create* a companion
+  `object SipiIT` rather than just de-qualify.
+- Two unused imports removed from `test-ingest-integration` (`swiss.dasch.version.BuildInfo`,
+  `sttp.client4`) to satisfy the stricter `-Wunused:all -Werror` on the Bazel toolchain — genuinely
+  dead code, not needed under sbt either.
+- sbt (`build.sbt` ingest/test-it/test-e2e/ingestIntegration blocks): the usual
+  `testFrameworks := Seq(JUnitFramework)` + `junitInterface % Test` + `dependsOn(testRunner % Test)`
+  swap (Phase 2 pattern). testkit itself is untouched sbt-side (compile-scope lib; its two main-scope
+  specs — `FileModelsSpec`, `core/TestContainerLayersSpec` — still aren't run by either tool).
+
+**Adversarial review (5 parallel lenses over the diff) caught two real issues, fixed:**
+
+1. **Latent `FileSystemAlreadyExistsException` hazard in `SharedVolumes.resourceDirPath`.** The
+   memoized `TestContainerLayers.cachedContainers` opens a `jar:` filesystem for `/sipi/testfiles`
+   inside `Scope.global` — which never closes it. `SipiIT` independently builds its own
+   `SharedVolumes.Images.layer` (bypassing the memo entirely), and the JDK's jar filesystem
+   provider only allows one open filesystem per URI — a second `FileSystems.newFileSystem` on the
+   same jar throws, and `Images.layer` ends in `.orDie`, so this would be a hard failure. It wasn't
+   firing only because of incidental test-discovery ordering (`SipiIT` happens to run and close its
+   own properly-scoped jar-fs before any memoized-container spec forces the permanent one) — a
+   future spec addition or sharding change could flip it. Fixed by making `resourceDirPath`
+   idempotent: on `FileSystemAlreadyExistsException`, attach to the existing filesystem via
+   `FileSystems.getFileSystem(uri)` instead of failing, and only close what was actually opened
+   (tracked via an `owned` flag) — attaching to someone else's filesystem must not close it out
+   from under its real owner. Re-verified: `//modules/test-it:test` still `OK (775 tests)`, 4
+   container starts, unchanged.
+2. **`"exclusive"` tag rationale was incomplete for `test-ingest-integration`.** It doesn't use
+   `E2EZSpec`'s fixed-port API server, so the port-collision reason alone wouldn't justify tagging
+   it `exclusive` — but `SharedVolumes.Temp` (both the testkit and test-ingest-integration copies)
+   is `ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))`, not a freshly-created
+   unique-per-run directory, so every Docker target pinning `java.io.tmpdir` to the same literal
+   `/tmp` bind-mounts and writes to the *same host tree* through different dsp-ingest containers if
+   run concurrently. Documented both reasons explicitly in the `_TAGS` comment
+   (`modules/test-it/BUILD.bazel`) so a future edit doesn't "correct" `exclusive` away from
+   `test-ingest-integration` on the mistaken belief only the port reason applies there. Also bumped
+   `test-ingest-integration`'s `size` from `"medium"` to `"large"` for real headroom above its own
+   5-minute `TestAspect.timeout`.
+
+Reviews that found nothing to fix: spec-conversion consistency (all 135 conversions + companion-
+object gotcha fixes verified correct; all four sbt project blocks apply the identical pattern),
+data-isolation/span-isolation skepticism (traced `Db.initWithTestData`'s drop-then-reload confirms
+no cross-spec RDF leak through the shared container; span-spec exclude path and `SipiIT`'s
+independence both confirmed by reading the actual code, not assumed), and test-parity (all 5
+Bazel pass counts independently re-confirmed via fresh runs or raw log inspection, no fabricated
+numbers).
 
 ### Phase 5 — fuseki image
 
@@ -315,8 +449,10 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
      (both remaining images still build)
    - `./sbtx "webapi/compile"` (sbt on 3.8.4 still clean)
    - if maven needs a refetch: `nix develop --command bazel run @unpinned_maven//:pin`
-5. **Then start Phase 4** (testkit + test-it + test-e2e + test-ingest-integration; see roadmap
-   above).
+   - Docker-dependent test targets (`test-it`, `test-e2e`, `test-ingest-integration`) need the
+     `:latest` images preloaded first: `bazel run //modules/sipi:load && bazel run
+     //modules/ingest:load` (see below).
+5. **Then start Phase 5** (fuseki image; see roadmap above).
 
 ## Useful commands
 
@@ -336,4 +472,9 @@ bazel build //modules/{sipi,webapi,ingest}:image_{amd64,arm64}
 bazel run //modules/sipi:load && bazel run //modules/webapi:load && bazel run //modules/ingest:load
 docker compose up -d db sipi ingest api alloy
 curl http://localhost:3333/health && curl http://localhost:3340/health
+
+# Phase 4 — test-support modules (Docker-dependent ones need sipi+ingest :latest loaded first)
+bazel test //modules/ingest:test
+bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span //modules/test-e2e:test
+bazel test //modules/test-ingest-integration:test
 ```

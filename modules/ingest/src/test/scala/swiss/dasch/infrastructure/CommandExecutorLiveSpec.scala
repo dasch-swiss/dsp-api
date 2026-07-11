@@ -5,6 +5,7 @@
 
 package swiss.dasch.infrastructure
 
+import org.junit.runner.RunWith
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
 import swiss.dasch.domain.StorageServiceLive
@@ -15,7 +16,10 @@ import zio.ZLayer
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object CommandExecutorLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class CommandExecutorLiveSpec extends ZIOSpecDefault {
   val devLayer = ZLayer.succeed(SipiConfig(useLocalDev = true)) >>> CommandExecutorLive.layer
 
   val spec = suite("CommandExecutorLive")(

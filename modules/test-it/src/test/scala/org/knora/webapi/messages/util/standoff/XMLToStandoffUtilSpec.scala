@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util.standoff
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -14,12 +15,11 @@ import zio.test.assertTrue
 
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 
-/**
- * Tests [[XMLToStandoffUtil]].
- */
-object XMLToStandoffUtilSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] = suite("The XML to standoff utility")(
     test("convert an XML document to text with standoff, then back to an equivalent XML document") {
@@ -27,14 +27,14 @@ object XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
       // Convert the XML document to text with standoff.
       val textWithStandoff: TextWithStandoff =
-        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc)
+        standoffUtil.xml2TextWithStandoff(simpleXmlDoc)
 
       // Convert the text with standoff back to XML.
       val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
-        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDoc))
+        .compare(Input.fromString(simpleXmlDoc))
         .withTest(Input.fromString(backToXml))
         .build()
       assertTrue(!xmlDiff.hasDifferences)
@@ -46,14 +46,14 @@ object XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
       // Convert the XML document to text with standoff.
       val textWithStandoff: TextWithStandoff =
-        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag)
+        standoffUtil.xml2TextWithStandoff(simpleXmlDocWithNestedEmptyTag)
 
       // Convert the text with standoff back to XML.
       val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
-        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag))
+        .compare(Input.fromString(simpleXmlDocWithNestedEmptyTag))
         .withTest(Input.fromString(backToXml))
         .build()
       assertTrue(!xmlDiff.hasDifferences)
@@ -65,14 +65,14 @@ object XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
       // Convert the XML document to text with standoff.
       val textWithStandoff: TextWithStandoff =
-        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags)
+        standoffUtil.xml2TextWithStandoff(simpleXmlDocWithNestedEmptyTags)
 
       // Convert the text with standoff back to XML.
       val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
-        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags))
+        .compare(Input.fromString(simpleXmlDocWithNestedEmptyTags))
         .withTest(Input.fromString(backToXml))
         .build()
       assertTrue(!xmlDiff.hasDifferences)
@@ -95,14 +95,14 @@ object XMLToStandoffUtilSpec extends ZIOSpecDefault {
 
       // Convert the XML document to text with standoff.
       val textWithStandoff: TextWithStandoff =
-        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix)
+        standoffUtil.xml2TextWithStandoff(xmlDocWithClix)
 
       // Convert the text with standoff back to XML.
       val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
-        .compare(Input.fromString(XMLToStandoffUtilSpec.xmlDocWithClix))
+        .compare(Input.fromString(xmlDocWithClix))
         .withTest(Input.fromString(backToXml))
         .build()
       assertTrue(!xmlDiff.hasDifferences)

@@ -9,6 +9,7 @@ import eu.timepit.refined.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.numeric.Greater.greaterValidate
+import org.junit.runner.RunWith
 import swiss.dasch.api.SipiClientMock
 import swiss.dasch.api.SipiClientMockMethodInvocation.ApplyTopLeftCorrection
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
@@ -30,7 +31,10 @@ import zio.test.Assertion.isSubtype
 import java.io.IOException
 import scala.language.implicitConversions
 
-object StillImageServiceLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class StillImageServiceLiveSpec extends ZIOSpecDefault {
 
   private val asset      = AssetRef("needs-topleft-correction".toAssetId, "0001".toProjectShortcode)
   private val imageFile  = StorageService.getAssetFolder(asset).map(dir => dir / s"${dir.assetId}.jp2")
