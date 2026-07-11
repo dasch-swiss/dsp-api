@@ -170,6 +170,7 @@ final case class TestApiClient(
       .post(relativeUri)
       .body(body.toJson)
       .contentType(MediaType.ApplicationJson)
+      .response(asString)
     sendRequest(request, Some(user))
   }
 

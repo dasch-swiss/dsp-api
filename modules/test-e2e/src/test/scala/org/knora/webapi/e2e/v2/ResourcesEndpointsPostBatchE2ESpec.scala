@@ -12,21 +12,23 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.api.v2.resources.BatchResourcesRequest
+import org.knora.webapi.slice.api.v2.resources.ResourcesBatchRequest
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert403
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 
 /**
  * E2E tests for `POST /v2/resources/batch` (fetch multiple resources by IRI via a JSON
  * body). The endpoint reuses the same fetch service and renderer as `GET /v2/resources`,
- * so per-resource serialization, permission (403), soft-delete tombstone (200) and
- * content-negotiation behaviour are inherited from — and covered by — the GET specs
- * (`ResourcesEndpointsGetResourcesE2ESpec`, `ResourcesRouteV2E2ESpec`). These tests focus
- * on the batch-specific behaviour: request/response parity with the GET, de-duplication,
- * the configurable cap, and the input-validation error cases.
+ * so soft-delete tombstone (200) and content-negotiation behaviour are inherited from the
+ * reused service and covered by the GET specs (`ResourcesEndpointsGetResourcesE2ESpec`,
+ * `ResourcesRouteV2E2ESpec`). These tests focus on the batch-specific behaviour:
+ * request/response parity with the GET, de-duplication, the configurable cap, the
+ * input-validation error cases, and the permission (403) / not-found (404) paths — the
+ * latter two were not previously covered for a direct top-level request on either route.
  */
 object ResourcesEndpointsPostBatchE2ESpec extends E2EZSpec {
 
@@ -48,7 +50,7 @@ object ResourcesEndpointsPostBatchE2ESpec extends E2EZSpec {
   private val bookIri  = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")
   private val thingIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw")
 
-  private def batch(iris: String*): BatchResourcesRequest = BatchResourcesRequest(iris.toList)
+  private def batch(iris: String*): ResourcesBatchRequest = ResourcesBatchRequest(iris.toList)
 
   private val parity = suite("parity with GET /v2/resources")(
     test("a single-IRI batch returns the same RDF as the GET for that IRI") {
@@ -89,10 +91,10 @@ object ResourcesEndpointsPostBatchE2ESpec extends E2EZSpec {
       } yield assertTrue(body.contains("must not be empty"))
     },
     test("more IRIs than the configured cap are rejected with 400 before any fetch") {
-      val tooMany = batch(List.fill(201)("http://rdfh.ch/0001/does-not-need-to-exist")*)
+      val tooMany = batch(List.fill(101)("http://rdfh.ch/0001/does-not-need-to-exist")*)
       for {
         body <- TestApiClient.postJsonReceiveString(uri"/v2/resources/batch", tooMany, user).flatMap(_.assert400)
-      } yield assertTrue(body.contains("maximum is 200"))
+      } yield assertTrue(body.contains("maximum is 100"))
     },
     test("a syntactically invalid IRI is rejected with 400") {
       for {
@@ -108,6 +110,15 @@ object ResourcesEndpointsPostBatchE2ESpec extends E2EZSpec {
         _ <- TestApiClient
                .postJsonReceiveString(uri"/v2/resources/batch", batch("http://rdfh.ch/0803/000000000000"), user)
                .flatMap(_.assert404)
+      } yield assertTrue(true)
+    },
+    test("a resource the user is not permitted to read yields 403") {
+      // "hidden thing" — project-member-only permissions; normalUser is not a member of 0001.
+      val hiddenThing = "http://rdfh.ch/0001/IwMDbs0KQsaxSRUTl2cAIQ"
+      for {
+        _ <- TestApiClient
+               .postJsonReceiveString(uri"/v2/resources/batch", batch(hiddenThing), SharedTestDataADM.normalUser)
+               .flatMap(_.assert403)
       } yield assertTrue(true)
     },
   )
