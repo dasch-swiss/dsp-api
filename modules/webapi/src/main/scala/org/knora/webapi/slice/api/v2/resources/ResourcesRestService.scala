@@ -108,23 +108,11 @@ final case class ResourcesRestService(
   ): Task[(RenderedResponse, MediaType)] =
     for {
       resIris  <- ZIO.foreach(resourceIris)(parseResourceIri)
-      response <- readResources
-                    .getResourcesWithDeletedResource(
-                      resIris,
-                      propertyIri = None,
-                      valueUuid = None,
-                      versionDate,
-                      withDeleted = true,
-                      showDeletedValues = false,
-                      formatOptions.schema,
-                      formatOptions.rendering,
-                      user,
-                    )
-                    .flatMap(renderer.render(_, formatOptions))
+      response <- readAndRender(resIris, versionDate, formatOptions, user)
     } yield response
 
   def getResourcesBatch(user: User)(
-    request: BatchResourcesRequest,
+    request: ResourcesBatchRequest,
     formatOptions: FormatOptions,
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
@@ -141,20 +129,32 @@ final case class ResourcesRestService(
              ZIO.fail(BadRequestException("resourceIris must not be empty.")),
            )
       resIris  <- ZIO.foreach(request.resourceIris)(parseResourceIri).map(_.distinct)
-      response <- readResources
-                    .getResourcesWithDeletedResource(
-                      resIris,
-                      propertyIri = None,
-                      valueUuid = None,
-                      versionDate,
-                      withDeleted = true,
-                      showDeletedValues = false,
-                      formatOptions.schema,
-                      formatOptions.rendering,
-                      user,
-                    )
-                    .flatMap(renderer.render(_, formatOptions))
+      response <- readAndRender(resIris, versionDate, formatOptions, user)
     } yield response
+
+  /**
+   * Shared read-and-render used by both the single/multi GET and the batch POST, so
+   *  the two endpoints stay behaviourally in lock-step.
+   */
+  private def readAndRender(
+    resourceIris: List[ResourceIri],
+    versionDate: Option[VersionDate],
+    formatOptions: FormatOptions,
+    user: User,
+  ): Task[(RenderedResponse, MediaType)] =
+    readResources
+      .getResourcesWithDeletedResource(
+        resourceIris,
+        propertyIri = None,
+        valueUuid = None,
+        versionDate,
+        withDeleted = true,
+        showDeletedValues = false,
+        formatOptions.schema,
+        formatOptions.rendering,
+        user,
+      )
+      .flatMap(renderer.render(_, formatOptions))
 
   def getResourcesGraph(user: User)(
     resourceIri: IriDto,

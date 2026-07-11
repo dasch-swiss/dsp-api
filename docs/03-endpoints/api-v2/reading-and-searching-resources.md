@@ -138,7 +138,7 @@ The request body must be sent with `Content-Type: application/json`:
 ```
 
 The maximum number of IRIs accepted per request is configurable
-(`app.v2.resources.max-batch-size`, default 200, overridable via
+(`app.v2.resources.max-batch-size`, default 100, overridable via
 `KNORA_WEBAPI_V2_RESOURCES_MAX_BATCH_SIZE`); a request exceeding it is rejected with
 `400 Bad Request`. An empty list is also a `400`. Duplicate IRIs are de-duplicated. As
 with the `GET` route, the request fails as a whole if any requested resource is not

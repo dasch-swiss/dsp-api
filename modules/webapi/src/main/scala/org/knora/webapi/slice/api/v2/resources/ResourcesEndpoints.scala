@@ -21,11 +21,12 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 
 /**
  * Request body for `POST /v2/resources/batch`: the resource IRIs to fetch. Plain JSON
- * (not JSON-LD) so the IRI list is carried in the body rather than the URL path.
+ * (not JSON-LD) so the IRI list is carried in the body rather than the URL path. Name
+ * mirrors the path/handler word order (resources → batch).
  */
-final case class BatchResourcesRequest(resourceIris: List[String])
-object BatchResourcesRequest {
-  given JsonCodec[BatchResourcesRequest] = DeriveJsonCodec.gen[BatchResourcesRequest]
+final case class ResourcesBatchRequest(resourceIris: List[String])
+object ResourcesBatchRequest {
+  given JsonCodec[ResourcesBatchRequest] = DeriveJsonCodec.gen[ResourcesBatchRequest]
 }
 
 final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute) {
@@ -115,7 +116,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
 
   val postResourcesBatch = baseEndpoints.withUserEndpoint.post
     .in(base / "batch")
-    .in(jsonBody[BatchResourcesRequest])
+    .in(jsonBody[ResourcesBatchRequest])
     .in(ApiV2.Inputs.formatOptions)
     .in(versionQuery)
     .out(ApiV2.Outputs.stringBodyFormatted)
