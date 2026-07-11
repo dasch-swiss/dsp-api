@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Fails if MODULE.bazel's temurin base tag or OTel/Pyroscope jar versions have
-# drifted from build.sbt / project/Dependencies.scala's values. Run via
-# `bazel test //tools/oci:image_versions_match_sbt`.
+# Fails if any Bazel-side image pin (temurin base, sipi base, OTel/Pyroscope
+# jars) has drifted from build.sbt / project/Dependencies.scala's values. Run
+# via `bazel test //tools/oci:image_versions_match_sbt`.
 set -euo pipefail
 
 module_bazel="$1"
@@ -15,6 +15,15 @@ fail=0
 sbt_temurin="$(grep -o 'dockerBaseImage *:= *"[^"]*"' "$build_sbt" | head -1 | sed -E 's/.*"([^"]*)"/\1/')"
 if ! grep -qF "$sbt_temurin" "$module_bazel"; then
   echo "MISMATCH: MODULE.bazel's temurin base comment doesn't mention build.sbt's dockerBaseImage ($sbt_temurin)" >&2
+  fail=1
+fi
+
+# sipi base tag (modules/sipi/BUILD.bazel's oci.pull -- same duplication
+# pattern and the same silent-drift risk as temurin above): MODULE.bazel's
+# comment names the repo:tag; source of truth is Dependencies.scala's sipiImage.
+sbt_sipi="$(grep -o 'sipiImage *= *"[^"]*"' "$dependencies_scala" | sed -E 's/.*"([^"]*)"/\1/')"
+if ! grep -qF "$sbt_sipi" "$module_bazel"; then
+  echo "MISMATCH: MODULE.bazel's sipi base comment doesn't mention Dependencies.scala's sipiImage ($sbt_sipi)" >&2
   fail=1
 fi
 
@@ -38,4 +47,4 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-echo "OK: MODULE.bazel's temurin base tag and OTel/Pyroscope versions match sbt."
+echo "OK: MODULE.bazel's temurin/sipi base tags and OTel/Pyroscope versions match sbt."
