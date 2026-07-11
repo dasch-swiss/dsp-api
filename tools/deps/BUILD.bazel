@@ -1,9 +1,12 @@
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("@rules_python//python:defs.bzl", "py_test")
 
 # Catches MODULE.bazel's maven.install artifact versions drifting from
 # Dependencies.scala's (the sbt build's source of truth) -- e.g. someone bumps
 # ZioVersion for sbt and forgets the matching dev.zio:zio_3:... bump here.
-sh_test(
+# py_test (not an sh_test wrapping a python3-shebang script): resolves the
+# hermetic interpreter registered in MODULE.bazel, so this doesn't depend on
+# whatever (if any) python3 an RBE worker happens to have on PATH.
+py_test(
     name = "maven_versions_match_sbt",
     srcs = ["check_maven_versions.py"],
     args = [
@@ -14,4 +17,5 @@ sh_test(
         "//:MODULE.bazel",
         "//:project/Dependencies.scala",
     ],
+    main = "check_maven_versions.py",
 )

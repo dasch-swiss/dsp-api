@@ -229,14 +229,21 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
   missing/mistyped `STABLE_*` key** (a review caught the original `grep ... || true` silently
   writing an empty label/BuildInfo value instead). Rewritten with bash `${var//pattern/replacement}`
   instead of `sed` — also sidesteps sed's `&`/`\` replacement-escaping footgun for free.
-- **Two `sh_test`s catch sbt⇄Bazel dependency drift** (new `rules_shell` bazel_dep — native
-  `sh_test` is gone from this Bazel version): `//tools/oci:image_versions_match_sbt` (temurin base
-  tag, sipi base tag, OTel/Pyroscope jar versions) and `//tools/deps:maven_versions_match_sbt` (every
-  shared Maven coordinate between `MODULE.bazel`'s `maven.install` and `Dependencies.scala` — parses
-  sbt's real `"group" %%/% "artifact" % VERSION_EXPR` syntax, resolving `val`-bound version
-  identifiers, plus the two `maven.artifact()` exclusion overrides). Both verified against several
-  real injected mismatches (single-artifact bump, a shared version val touching 3 artifacts, a
-  `maven.artifact()` override, an unresolvable identifier handled as a graceful warning) before
+- **Two tests catch sbt⇄Bazel dependency drift.** `//tools/oci:image_versions_match_sbt` (temurin
+  base tag, sipi base tag, OTel/Pyroscope jar versions) is an `sh_test` (new `rules_shell` bazel_dep
+  — native `sh_test` is gone from this Bazel version; bash/grep/sed are an RBE-safe baseline, same
+  assumption every `sh_*`/`genrule` in the Bazel ecosystem makes).
+  `//tools/deps:maven_versions_match_sbt` (every shared Maven coordinate between `MODULE.bazel`'s
+  `maven.install` and `Dependencies.scala` — parses sbt's real `"group" %%/% "artifact" %
+  VERSION_EXPR` syntax, resolving `val`-bound version identifiers, plus the two `maven.artifact()`
+  exclusion overrides) is a **`py_test`, not an `sh_test` shelling out to a python3 shebang** — that
+  would silently depend on whatever (if any) python3 an RBE worker has on PATH. New `rules_python`
+  bazel_dep (already a transitive dep of the graph, so free) + `python.toolchain(python_version =
+  "3.12")` registers a real hermetic per-platform CPython, confirmed via `cquery`
+  (`interpreter_path` points at the fetched `rules_python++python+python_3_12_...` repo, not
+  `/usr/bin/python3`). Both verified against several real injected mismatches (single-artifact bump,
+  a shared version val touching 3 artifacts, a `maven.artifact()` override, an unresolvable
+  identifier handled as a graceful warning) before
   trusting them.
 
 ### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration + ingest's own specs

@@ -12,6 +12,11 @@ module(
 
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
+# Already a transitive dep of the graph (resolves to 1.7.0 regardless); declared
+# directly for the hermetic interpreter //tools/deps:maven_versions_match_sbt
+# needs — a py_test, not a host-python3-via-shebang script, so it doesn't break
+# on an RBE worker that has no (or a different) python3 on PATH.
+bazel_dep(name = "rules_python", version = "1.7.0")
 # Native sh_test/sh_binary are gone as of this Bazel version; //tools/oci's
 # image_versions_match_sbt check needs it.
 bazel_dep(name = "rules_shell", version = "0.6.1")
@@ -123,6 +128,16 @@ toolchain.target(
 use_repo(toolchain, "llvm_toolchains")
 
 register_toolchains("@llvm_toolchains//:all")
+
+#############################################
+# Hermetic Python (rules_python)
+#############################################
+
+# A prebuilt CPython per platform, fetched and registered the same way as the
+# JDK (rules_java) and LLVM above -- RBE-safe, no dependency on whatever (if
+# any) python3 happens to be on a given machine's PATH.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12")
 
 #############################################
 # Third-party JVM dependencies (@maven)
