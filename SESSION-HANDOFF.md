@@ -220,10 +220,15 @@ the temurin base pulls, the two OTel jar `http_file`s, and a `tar.bzl` bazel_dep
   rules_oci itself registers (`@tar.bzl//tar/toolchain:type`) — needed its own `bazel_dep(tar.bzl)`
   since bzlmod doesn't expose a transitive dep's repos by bare name. No usrmerge surprises on the
   sipi base (`/sbin`, `/usr/bin` are real paths).
-- **Dropped the static-curl layer from the original sketch.** Its source
-  (`moparisthebest/static-curl`) stopped publishing an `aarch64` build after Nov 2024. Not worth
-  depending on. rules_oci can't emit `HEALTHCHECK` anyway, so this is Phase 6's problem — use a
-  bash `/dev/tcp` check there instead of curl.
+- **knora-api's `healthcheck.sh` needs curl+jq**, which the temurin base lacks and rules_oci can't
+  apt-install. `moparisthebest/static-curl` (the obvious first choice) dropped its `aarch64` build
+  after Nov 2024 — use `stunnel/static-curl` (actively maintained, genuinely multi-arch, musl-static)
+  instead; jq's own official releases are already static, no third-party source needed. Verified
+  live: `bash -x healthcheck.sh` inside the built container actually invokes both and exits 0.
+- **`tools/oci/defs.bzl` and `tools/buildinfo/defs.bzl`'s stamp substitution now fails loudly on a
+  missing/mistyped `STABLE_*` key** (a review caught the original `grep ... || true` silently
+  writing an empty label/BuildInfo value instead). Rewritten with bash `${var//pattern/replacement}`
+  instead of `sed` — also sidesteps sed's `&`/`\` replacement-escaping footgun for free.
 
 ### Phase 4 — testkit + test-it + test-e2e + test-ingest-integration
 

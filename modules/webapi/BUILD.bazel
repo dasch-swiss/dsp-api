@@ -178,6 +178,26 @@ pkg_tar(
     package_dir = "/usr/local/lib",
 )
 
+# healthcheck.sh's curl+jq dependency (see MODULE.bazel for sourcing/shas).
+# Per-arch: the fetched binaries are architecture-specific.
+pkg_tar(
+    name = "curl_jq_layer_amd64",
+    files = {
+        "@jq_amd64//file": "/usr/bin/jq",
+        "@static_curl_amd64//:curl": "/usr/bin/curl",
+    },
+    mode = "0755",
+)
+
+pkg_tar(
+    name = "curl_jq_layer_arm64",
+    files = {
+        "@jq_arm64//file": "/usr/bin/jq",
+        "@static_curl_arm64//:curl": "/usr/bin/curl",
+    },
+    mode = "0755",
+)
+
 # org.opencontainers.image.* labels stamped from git — oci_image's dict form
 # can't stamp, so this mirrors //tools/buildinfo's workspace-status substitution.
 oci_stamped_labels(
@@ -217,6 +237,7 @@ oci_image(
         ":webapi_lib_layer",
         ":scripts_layer",
         ":otel_layer",
+        ":curl_jq_layer_amd64",
     ],
 )
 
@@ -234,6 +255,7 @@ oci_image(
         ":webapi_lib_layer",
         ":scripts_layer",
         ":otel_layer",
+        ":curl_jq_layer_arm64",
     ],
 )
 

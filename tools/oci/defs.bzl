@@ -39,12 +39,18 @@ def _oci_stamped_labels_impl(ctx):
     lines += ["%s=__%s__" % (k, v) for k, v in ctx.attr.stamp_labels.items()]
     ctx.actions.write(tmpl, "\n".join(lines) + "\n")
 
-    # Unique stamp keys → substitute their status values, same pattern as //tools/buildinfo.
+    # Unique stamp keys → substitute their status values. Bash parameter
+    # substitution (not sed) so a value containing regex-replacement
+    # metacharacters (&, \) can't corrupt the output; grep failing on a
+    # missing/mistyped status key aborts the build (set -e) instead of
+    # silently substituting an empty string.
     keys = {v: True for v in ctx.attr.stamp_labels.values()}
-    script = "set -euo pipefail\ncp %s %s\n" % (tmpl.path, out.path)
+    script = "set -euo pipefail\n"
+    script += 'content="$(cat %s)"\n' % tmpl.path
     for key in keys:
-        script += "V=\"$(grep '^%s ' %s | cut -d' ' -f2- || true)\"\n" % (key, info.path)
-        script += 'sed "s|__%s__|$V|g" %s > %s.n && mv %s.n %s\n' % (key, out.path, out.path, out.path, out.path)
+        script += "V=\"$(grep '^%s ' %s | cut -d' ' -f2-)\"\n" % (key, info.path)
+        script += 'content="${content//__%s__/$V}"\n' % key
+    script += 'printf "%%s" "$content" > %s\n' % out.path
 
     ctx.actions.run_shell(
         inputs = [tmpl, info],

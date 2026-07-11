@@ -26,12 +26,18 @@ def _buildinfo_impl(ctx):
 
     info = ctx.info_file  # bazel-out/stable-status.txt (from workspace_status_command)
 
-    # Unique stamp keys → substitute their status values.
+    # Unique stamp keys → substitute their status values. Bash parameter
+    # substitution (not sed) so a value containing regex-replacement
+    # metacharacters (&, \) can't corrupt the output; grep failing on a
+    # missing/mistyped status key aborts the build (set -e) instead of
+    # silently substituting an empty string.
     keys = {ctx.attr.stamp_fields[k]: True for k in ctx.attr.stamp_fields}
-    script = "set -euo pipefail\ncp %s %s\n" % (tmpl.path, out.path)
+    script = "set -euo pipefail\n"
+    script += 'content="$(cat %s)"\n' % tmpl.path
     for key in keys:
-        script += "V=\"$(grep '^%s ' %s | cut -d' ' -f2- || true)\"\n" % (key, info.path)
-        script += 'sed "s|__%s__|$V|g" %s > %s.n && mv %s.n %s\n' % (key, out.path, out.path, out.path, out.path)
+        script += "V=\"$(grep '^%s ' %s | cut -d' ' -f2-)\"\n" % (key, info.path)
+        script += 'content="${content//__%s__/$V}"\n' % key
+    script += 'printf "%%s" "$content" > %s\n' % out.path
 
     ctx.actions.run_shell(
         inputs = [tmpl, info],
