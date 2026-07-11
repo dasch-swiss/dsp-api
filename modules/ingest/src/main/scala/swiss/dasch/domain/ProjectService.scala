@@ -20,6 +20,7 @@ import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
+import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 
 final case class ProjectService(
@@ -83,8 +84,10 @@ final case class ProjectService(
                   externalIdentifier = Some(shortcode.value),
                   additionalFields = List("Ingest-Export-Version" -> "1"),
                 )
-      payloadEntries = List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path))
-      resultPath    <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
+      // Assets are already-compressed media; store them (DEFLATE level 0) instead of wasting CPU re-compressing.
+      payloadEntries =
+        List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path, compression = Compression.Store))
+      resultPath <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
     } yield Some(resultPath)
 
   def deleteProject(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] =

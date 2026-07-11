@@ -69,7 +69,7 @@ object BagCreatorSpec extends ZIOSpecDefault {
           nonExistent = tempDir / "does-not-exist"
           result     <- BagCreator
                       .createBag(
-                        List(PayloadEntry.Directory("missing", nonExistent)),
+                        List(PayloadEntry.Directory("missing", nonExistent, Compression.Deflate)),
                         List(ChecksumAlgorithm.SHA256),
                         Some(BagInfo(sourceOrganization = Some("Test"))),
                         outputZip,
@@ -86,8 +86,8 @@ object BagCreatorSpec extends ZIOSpecDefault {
           setup                         <- createTempSetup
           (filePath, dirPath, outputZip) = setup
           entries                        = List(
-                      PayloadEntry.File("single-file.txt", filePath),
-                      PayloadEntry.Directory("test-dir", dirPath),
+                      PayloadEntry.File("single-file.txt", filePath, Compression.Deflate),
+                      PayloadEntry.Directory("test-dir", dirPath, Compression.Deflate),
                     )
           result <- BagCreator.createBag(
                       entries,
@@ -138,7 +138,7 @@ object BagCreatorSpec extends ZIOSpecDefault {
           _        <- Files.createFile(dirPath / "b.txt")
           outputZip = tempDir / "empty-bag.zip"
           result   <- BagCreator.createBag(
-                      List(PayloadEntry.Directory("data-dir", dirPath)),
+                      List(PayloadEntry.Directory("data-dir", dirPath, Compression.Deflate)),
                       List(ChecksumAlgorithm.SHA256),
                       Some(BagInfo(sourceOrganization = Some("Test"))),
                       outputZip,

@@ -46,6 +46,7 @@ import java.text.Normalizer
 import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
+import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 
 object ProjectsEndpointSpec extends ZIOSpecDefault {
@@ -176,9 +177,12 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                         .attemptBlockingIO(java.nio.file.Files.createTempDirectory("bagit-test"))
                         .map(zio.nio.file.Path.fromJava),
                     )(p => ZIO.attemptBlockingIO(org.apache.commons.io.FileUtils.deleteDirectory(p.toFile)).ignore)
-          bagitZipPath  = tmpDir / "test-import.bagit.zip"
-          sourceDir     = SpecPaths.testFolder / "0001" / "fg"
-          _            <- BagIt.create(List(PayloadEntry.Directory(prefix = "fg", sourcePath = sourceDir)), bagitZipPath)
+          bagitZipPath = tmpDir / "test-import.bagit.zip"
+          sourceDir    = SpecPaths.testFolder / "0001" / "fg"
+          _           <- BagIt.create(
+                 List(PayloadEntry.Directory(prefix = "fg", sourcePath = sourceDir, compression = Compression.Deflate)),
+                 bagitZipPath,
+               )
           body         <- Body.fromFile(bagitZipPath.toFile)
           response     <- postImport(emptyProject, body, validContentTypeHeaders)
           importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)

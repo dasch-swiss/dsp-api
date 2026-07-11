@@ -15,6 +15,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
@@ -45,8 +46,8 @@ object BagItSpec extends ZIOSpecDefault {
           setup                         <- createTestFiles
           (filePath, dirPath, outputZip) = setup
           entries                        = List(
-                      PayloadEntry.File("readme.txt", filePath),
-                      PayloadEntry.Directory("content", dirPath),
+                      PayloadEntry.File("readme.txt", filePath, Compression.Deflate),
+                      PayloadEntry.Directory("content", dirPath, Compression.Deflate),
                     )
           _ <- BagIt.create(
                  entries,
@@ -64,8 +65,8 @@ object BagItSpec extends ZIOSpecDefault {
           setup                         <- createTestFiles
           (filePath, dirPath, outputZip) = setup
           entries                        = List(
-                      PayloadEntry.File("readme.txt", filePath),
-                      PayloadEntry.Directory("content", dirPath),
+                      PayloadEntry.File("readme.txt", filePath, Compression.Deflate),
+                      PayloadEntry.Directory("content", dirPath, Compression.Deflate),
                     )
           // Read original file contents before bagging
           originalFiles  <- collectRelativeFiles(dirPath, dirPath)
@@ -98,7 +99,7 @@ object BagItSpec extends ZIOSpecDefault {
         for {
           setup                   <- createTestFiles
           (filePath, _, outputZip) = setup
-          entries                  = List(PayloadEntry.File("readme.txt", filePath))
+          entries                  = List(PayloadEntry.File("readme.txt", filePath, Compression.Deflate))
           _                       <- BagIt.create(entries, outputZip)
           zipEntryNames           <- listZipEntryNames(outputZip)
         } yield assertTrue(
@@ -112,7 +113,7 @@ object BagItSpec extends ZIOSpecDefault {
         for {
           setup                   <- createTestFiles
           (filePath, _, outputZip) = setup
-          entries                  = List(PayloadEntry.File("readme.txt", filePath))
+          entries                  = List(PayloadEntry.File("readme.txt", filePath, Compression.Deflate))
           _                       <- BagIt.create(entries, outputZip, algorithms = List(ChecksumAlgorithm.SHA256))
           zipEntryNames           <- listZipEntryNames(outputZip)
         } yield assertTrue(
@@ -162,13 +163,99 @@ object BagItSpec extends ZIOSpecDefault {
           _        <- Files.writeBytes(filePath, Chunk.fromArray("percent test".getBytes("UTF-8")))
           outputZip = tempDir / "pct-bag.zip"
           // Use a relativePath that contains a literal percent sign
-          entries = List(PayloadEntry.File("100%done.txt", filePath))
+          entries = List(PayloadEntry.File("100%done.txt", filePath, Compression.Deflate))
           _      <- BagIt.create(entries, outputZip)
           _      <- BagIt.readAndValidateZip(outputZip)
           // Verify the manifest inside the ZIP contains the encoded path
           zipEntryNames   <- listZipEntryNames(outputZip)
           manifestContent <- readZipEntry(outputZip, zipEntryNames.find(_.startsWith("manifest-")).get)
         } yield assertTrue(manifestContent.contains("data/100%25done.txt"))
+      }
+    },
+    test("compression: a Store entry is written without effective compression while a Deflate entry shrinks") {
+      ZIO.scoped {
+        for {
+          tempDir <- Files.createTempDirectoryScoped(Some("bagit-compression-test"), Seq.empty)
+          oneMb    = 1024 * 1024
+          probe    = tempDir / "probe.bin"
+          // 1 MB of zeros: highly compressible, so Store vs Deflate is clearly distinguishable
+          _        <- Files.writeBytes(probe, Chunk.fromArray(new Array[Byte](oneMb)))
+          outputZip = tempDir / "compression-bag.zip"
+          entries   = List(
+                      PayloadEntry.File("stored.bin", probe, Compression.Store),
+                      PayloadEntry.File("deflated.bin", probe, Compression.Deflate),
+                    )
+          _                           <- BagIt.create(entries, outputZip)
+          sizes                       <- zipEntrySizes(outputZip)
+          (storedSize, storedComp)     = sizes("data/stored.bin")
+          (deflatedSize, deflatedComp) = sizes("data/deflated.bin")
+        } yield assertTrue(
+          storedSize == oneMb.toLong,
+          deflatedSize == oneMb.toLong,
+          // Store = DEFLATE level 0: compressed size ~= uncompressed size (only ~0.03% wrapper overhead)
+          storedComp >= storedSize,
+          storedComp < storedSize * 101 / 100,
+          // Deflate: 1 MB of zeros collapses to a tiny fraction of its size
+          deflatedComp < storedSize / 10,
+        )
+      }
+    },
+    test("nested Store: a stored assets.zip (itself stored-inside) round-trips byte-for-byte and stays valid") {
+      ZIO.scoped {
+        for {
+          tempDir <- Files.createTempDirectoryScoped(Some("bagit-nested-store-test"), Seq.empty)
+          // Inner bag = the ingest-produced assets.zip: all asset entries Stored.
+          assetsDir = tempDir / "assets"
+          _        <- Files.createDirectory(assetsDir)
+          _        <- Files.writeBytes(
+                 assetsDir / "image.jp2",
+                 Chunk.fromArray("pretend-already-compressed-jp2".getBytes("UTF-8")),
+               )
+          _          <- Files.writeBytes(assetsDir / "video.mp4", Chunk.fromArray(new Array[Byte](64 * 1024)))
+          innerZip    = tempDir / "assets.zip"
+          _          <- BagIt.create(List(PayloadEntry.Directory("", assetsDir, Compression.Store)), innerZip)
+          innerBytes <- Files.readAllBytes(innerZip)
+          // Outer migration bag: rdf compressed, the inner assets.zip stored.
+          rdfDir       = tempDir / "rdf"
+          _           <- Files.createDirectory(rdfDir)
+          _           <- Files.writeBytes(rdfDir / "admin.nq", Chunk.fromArray(("<a> <b> <c> .\n" * 5000).getBytes("UTF-8")))
+          outerZip     = tempDir / "outer.zip"
+          outerEntries = List(
+                           PayloadEntry.Directory("rdf", rdfDir, Compression.Deflate),
+                           PayloadEntry.File("assets/assets.zip", innerZip, Compression.Store),
+                         )
+          _              <- BagIt.create(outerEntries, outerZip)
+          outerResult    <- BagIt.readAndValidateZip(outerZip)
+          (_, outerRoot)  = outerResult
+          extractedInner  = outerRoot / "data" / "assets" / "assets.zip"
+          extractedBytes <- Files.readAllBytes(extractedInner)
+          // The extracted inner zip must itself still validate as a bag (Store-inside-Store).
+          _ <- BagIt.readAndValidateZip(extractedInner)
+        } yield assertTrue(extractedBytes == innerBytes)
+      }
+    },
+    test("backward compatibility: an all-Deflate bag (old policy) still validates and extracts byte-for-byte") {
+      ZIO.scoped {
+        for {
+          tempDir  <- Files.createTempDirectoryScoped(Some("bagit-deflate-compat-test"), Seq.empty)
+          filePath  = tempDir / "notes.txt"
+          _        <- Files.writeBytes(filePath, Chunk.fromArray(("some repeated text\n" * 1000).getBytes("UTF-8")))
+          dirPath   = tempDir / "docs"
+          _        <- Files.createDirectory(dirPath)
+          _        <- Files.writeBytes(dirPath / "a.txt", Chunk.fromArray("aaaa".getBytes("UTF-8")))
+          original <- Files.readAllBytes(filePath)
+          outputZip = tempDir / "old-policy-bag.zip"
+          // The old policy was all-DEFLATE; passing Deflate everywhere reproduces it. Assert the bag still
+          // validates and its payload extracts byte-for-byte.
+          entries = List(
+                      PayloadEntry.File("notes.txt", filePath, Compression.Deflate),
+                      PayloadEntry.Directory("docs", dirPath, Compression.Deflate),
+                    )
+          _           <- BagIt.create(entries, outputZip)
+          result      <- BagIt.readAndValidateZip(outputZip)
+          (_, bagRoot) = result
+          extracted   <- Files.readAllBytes(bagRoot / "data" / "notes.txt")
+        } yield assertTrue(extracted == original)
       }
     },
     test("corruption: tampered file produces ChecksumMismatch") {
@@ -179,7 +266,7 @@ object BagItSpec extends ZIOSpecDefault {
           _        <- Files.writeBytes(filePath, Chunk.fromArray("Original content".getBytes("UTF-8")))
           outputZip = tempDir / "bag.zip"
           _        <- BagIt.create(
-                 List(PayloadEntry.File("original.txt", filePath)),
+                 List(PayloadEntry.File("original.txt", filePath, Compression.Deflate)),
                  outputZip,
                )
           // Tamper: extract, modify a payload file, re-zip
@@ -189,6 +276,21 @@ object BagItSpec extends ZIOSpecDefault {
       }
     },
   )
+
+  /** Reads each non-directory entry's (uncompressed size, compressed size) from the ZIP central directory. */
+  private def zipEntrySizes(zipPath: Path): Task[Map[String, (Long, Long)]] =
+    ZIO.attemptBlocking {
+      val zf = new ZipFile(zipPath.toFile)
+      try {
+        var sizes   = Map.empty[String, (Long, Long)]
+        val entries = zf.entries()
+        while (entries.hasMoreElements) {
+          val e = entries.nextElement()
+          if (!e.isDirectory) sizes = sizes + (e.getName -> (e.getSize, e.getCompressedSize))
+        }
+        sizes
+      } finally zf.close()
+    }
 
   private def listZipEntryNames(zipPath: Path): Task[List[String]] =
     ZIO.attemptBlocking {
