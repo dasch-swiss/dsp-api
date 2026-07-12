@@ -654,6 +654,33 @@ with no prod regression.
    regression to investigate. **Follow-up, out of this phase's scope:** wire a Bazel `--disk_cache`
    via `actions/cache`, or a remote cache.
 
+**Real bug this surfaced, found and fixed after the first PR push:** `//modules/ingest:test`
+failed on the Linux CI runner (`AssetFilenameSpec` — both a legitimate international filename and
+the deliberately-invalid emoji case threw `java.nio.file.InvalidPathException: Malformed input or
+input contains unmappable characters`), even though the identical test passed under sbt on the
+same commit/runner just before this phase. Root cause: `.bazelrc`'s pre-existing
+`--incompatible_strict_action_env` (added for hermetic C++/LLVM builds) strips almost every host
+env var from Bazel's actions, including test execution — only `PATH` and one build var were
+explicitly re-added via `--action_env`. On Linux, the JVM's native filesystem encoding
+(`sun.jnu.encoding`) is derived from `LANG`/`LC_ALL`; stripped, it falls back to POSIX/ASCII, so
+`Paths.get(...)` throws on **any** non-ASCII filename — not just invalid ones. sbt's forked JVM
+never hit this because it inherits the full host environment (the Actions runner sets a UTF-8
+locale). **This is a test-sandbox-only gap, not a production bug**: verified directly that the
+runtime base image (`eclipse-temurin:25-jre-noble`) sets `LANG=en_US.UTF-8` and reports
+`sun.jnu.encoding=UTF-8` via a plain `docker run`, so the actual dsp-ingest container is unaffected.
+Confirmed the exact mechanism with a throwaway Linux repro (a bare `Paths.get(...)` call run twice
+in a `eclipse-temurin:25-jre-noble` container with `env -i`): without `LANG`/`LC_ALL` it reports
+`sun.jnu.encoding=ANSI_X3.4-1968` and throws on both a legitimate accented filename and the emoji;
+with `LC_ALL=C.UTF-8`/`LANG=C.UTF-8` added it reports `UTF-8` and both round-trip correctly (the
+emoji then falls through to the regex check exactly as designed). **Do not "fix" this by catching
+`InvalidPathException` in `AssetFilename.from`** — that was the first fix attempted and is wrong:
+it would silently reject every legitimate non-ASCII filename (German umlauts, Kanji, Arabic, etc. —
+`AssetFilenameSpec` explicitly requires these to be *accepted*) whenever the JVM lacks a UTF-8
+locale, masking the real problem instead of fixing it. Fixed by adding
+`test --test_env=LANG=C.UTF-8` and `test --test_env=LC_ALL=C.UTF-8` to `.bazelrc` (`C.UTF-8` is a
+glibc-builtin locale, no `locale-gen` needed) — restores the same environment sbt's forked JVM
+already had, for every Bazel test target, not just ingest's.
+
 **Manual coordination needed outside the repo tree (GitHub branch-protection settings):**
 remove the now-deleted `Upload coverage` required check if it was ever marked required, and check
 whether any required check references a dorny check-run name rather than a job name — if so, prefer
