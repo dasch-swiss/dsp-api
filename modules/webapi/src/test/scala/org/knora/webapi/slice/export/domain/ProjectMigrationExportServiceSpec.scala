@@ -15,6 +15,7 @@ import zio.nio.file.Path
 import zio.test.*
 
 import java.io.IOException
+import java.util.zip.ZipFile
 import scala.jdk.CollectionConverters.*
 
 import org.knora.bagit.BagIt
@@ -54,8 +55,10 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
       ZIO.die(new UnsupportedOperationException("not used in export tests"))
     override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
+      // A sizeable, highly-compressible stand-in for the inner assets.zip (1 MB of zeros). This makes the
+      // outer-bag compression-policy assertions non-vacuous: were it re-compressed, its size would collapse.
       exportProjectCalled.set(true) *> Files.createDirectories(outputFile.parent.get) *>
-        Files.writeBytes(outputFile, Chunk.fromArray("fake-zip".getBytes)).as(Some(outputFile))
+        Files.writeBytes(outputFile, Chunk.fromArray(new Array[Byte](1024 * 1024))).as(Some(outputFile))
     override def eraseProject(shortcode: Shortcode): Task[Unit] =
       ZIO.die(new UnsupportedOperationException("not used in export tests"))
     override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
@@ -190,6 +193,21 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
       } yield new String(bytes.toArray)
     }
 
+  /** Reads each non-directory entry's (uncompressed size, compressed size) from a ZIP's central directory. */
+  private def zipEntrySizes(zipPath: Path): Task[Map[String, (Long, Long)]] =
+    ZIO.attemptBlocking {
+      val zf = new ZipFile(zipPath.toFile)
+      try {
+        var sizes   = Map.empty[String, (Long, Long)]
+        val entries = zf.entries()
+        while (entries.hasMoreElements) {
+          val e = entries.nextElement()
+          if (!e.isDirectory) sizes = sizes + (e.getName -> (e.getSize, e.getCompressedSize))
+        }
+        sizes
+      } finally zf.close()
+    }
+
   /** Parses N-Quads content into a Jena `Model` (unions all named graphs). */
   private def parseNQuads(content: String): Model = {
     val dataset = org.apache.jena.query.DatasetFactory.create()
@@ -273,6 +291,41 @@ object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
         result.status == DataTaskStatus.Completed,
         bagResult._1, // assets/assets.zip exists
         bagResult._2, // rdf directory exists
+      )
+    },
+    test("export with skipAssets=false stores assets.zip and compresses rdf in the outer bag") {
+      val ka         = "http://www.knora.org/ontology/knora-admin#"
+      val projectIri = testProject.id.value
+      // A sizeable, highly-compressible admin graph so the rdf compression assertion is non-vacuous.
+      val users = (1 to 1500)
+        .map(i => s"""<http://rdfh.ch/users/user$i> a knora-admin:User ;
+                     |  knora-admin:username "user$i" ;
+                     |  knora-admin:email "user$i@example.com" ;
+                     |  knora-admin:isInProject <$projectIri> .""".stripMargin)
+        .mkString("\n")
+      val constructResult =
+        s"""@prefix knora-admin: <$ka> .
+           |<$projectIri> a knora-admin:knoraProject ;
+           |  knora-admin:projectShortcode "0001" .
+           |$users
+           |""".stripMargin
+      for {
+        env                     <- makeTestEnv
+        _                       <- env.constructRdfRef.set(constructResult)
+        task                    <- env.service.createExport(testProject, testUser, skipAssets = false)
+        result                  <- pollUntilDone(env.service, task.id)
+        zipFile                 <- env.storage.exportBagItZipPath(task.id)
+        sizes                   <- zipEntrySizes(zipFile)
+        _                       <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
+        (assetsSize, assetsComp) = sizes("data/assets/assets.zip")
+        (rdfSize, rdfComp)       = sizes("data/rdf/admin.nq")
+      } yield assertTrue(
+        result.status == DataTaskStatus.Completed,
+        // assets/assets.zip is stored (DEFLATE level 0): compressed size ~= uncompressed size
+        assetsComp >= assetsSize,
+        assetsComp < assetsSize * 101 / 100,
+        // rdf/admin.nq stays compressed: N-Quads shrink well under DEFLATE
+        rdfComp * 2 < rdfSize,
       )
     },
     suite("collectAdminGraphData with referenced users")(

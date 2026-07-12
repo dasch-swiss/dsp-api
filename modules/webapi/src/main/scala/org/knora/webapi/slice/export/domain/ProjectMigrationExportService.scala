@@ -15,6 +15,7 @@ import zio.stream.ZStream
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
+import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.config.AppConfig
@@ -199,9 +200,11 @@ final class ProjectMigrationExportService(
       zipFile      <- storage.exportBagItZipPath(taskId)
       externalHost <- AppConfig.knoraApi(_.externalHost)
       _            <- ZIO.logInfo(s"$taskId: Writing export $zipFile")
-      assetEntries  = assetZipPath.map(p => PayloadEntry.File("assets/assets.zip", p)).toList
-      _            <- BagIt.create(
-             PayloadEntry.Directory("rdf", rdfPath) :: assetEntries,
+      // The inner assets.zip is already compressed, so store it (kills the double-deflate); rdf/ N-Quads
+      // are verbose and compress well, so keep them on Deflate.
+      assetEntries = assetZipPath.map(p => PayloadEntry.File("assets/assets.zip", p, Compression.Store)).toList
+      _           <- BagIt.create(
+             PayloadEntry.Directory("rdf", rdfPath, Compression.Deflate) :: assetEntries,
              zipFile,
              bagInfo = Some(
                BagInfo(
