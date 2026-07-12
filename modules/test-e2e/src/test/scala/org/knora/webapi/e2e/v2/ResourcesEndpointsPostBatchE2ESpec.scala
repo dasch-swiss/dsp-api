@@ -85,41 +85,49 @@ object ResourcesEndpointsPostBatchE2ESpec extends E2EZSpec {
   )
 
   private val errors = suite("validation and error cases")(
-    test("an empty resourceIris list is rejected with 400 (minItems)") {
+    test("an empty resourceIris list is rejected with 400 citing the minItems (>= 1) bound") {
       for {
-        _ <- TestApiClient.postJsonReceiveString(uri"/v2/resources/batch", batch(), user).flatMap(_.assert400)
-      } yield assertTrue(true)
+        body <- TestApiClient.postJsonReceiveString(uri"/v2/resources/batch", batch(), user).flatMap(_.assert400)
+      } yield assertTrue(
+        body.contains("resourceIris"),
+        body.contains("greater than or equal to 1"),
+        body.contains("but got 0"),
+      )
     },
-    test("more IRIs than the configured cap are rejected with 400 (maxItems) before any fetch") {
-      val tooMany = batch(List.fill(101)("http://rdfh.ch/0001/does-not-need-to-exist")*)
+    test("more IRIs than the configured cap are rejected with 400 citing the maxItems (100) bound, before any fetch") {
+      val overCap = 101 // one past the default max-batch-size of 100
+      val tooMany = batch(List.fill(overCap)("http://rdfh.ch/0001/does-not-need-to-exist")*)
       for {
-        _ <- TestApiClient.postJsonReceiveString(uri"/v2/resources/batch", tooMany, user).flatMap(_.assert400)
-      } yield assertTrue(true)
+        body <- TestApiClient.postJsonReceiveString(uri"/v2/resources/batch", tooMany, user).flatMap(_.assert400)
+      } yield assertTrue(
+        body.contains("resourceIris"),
+        body.contains("less than or equal to 100"),
+        body.contains(s"but got $overCap"),
+      )
     },
-    test("a syntactically invalid IRI is rejected with 400") {
+    test("a syntactically invalid IRI is rejected with 400 identifying the offending IRI") {
       for {
-        _ <- TestApiClient
-               .postJsonReceiveString(uri"/v2/resources/batch", batch("not-a-valid-iri"), user)
-               .flatMap(
-                 _.assert400,
-               )
-      } yield assertTrue(true)
+        body <- TestApiClient
+                  .postJsonReceiveString(uri"/v2/resources/batch", batch("not-a-valid-iri"), user)
+                  .flatMap(_.assert400)
+      } yield assertTrue(body.contains("not-a-valid-iri") && body.contains("is not a Knora resource IRI"))
     },
-    test("a well-formed but non-existent IRI yields 404") {
+    test("a well-formed but non-existent IRI yields 404 listing the missing IRI") {
+      val missing = "http://rdfh.ch/0803/000000000000"
       for {
-        _ <- TestApiClient
-               .postJsonReceiveString(uri"/v2/resources/batch", batch("http://rdfh.ch/0803/000000000000"), user)
-               .flatMap(_.assert404)
-      } yield assertTrue(true)
+        body <- TestApiClient
+                  .postJsonReceiveString(uri"/v2/resources/batch", batch(missing), user)
+                  .flatMap(_.assert404)
+      } yield assertTrue(body.contains(missing) && body.contains("not found"))
     },
-    test("a resource the user is not permitted to read yields 403") {
+    test("a resource the user is not permitted to read yields 403 listing the forbidden IRI") {
       // "hidden thing" — project-member-only permissions; normalUser is not a member of 0001.
       val hiddenThing = "http://rdfh.ch/0001/IwMDbs0KQsaxSRUTl2cAIQ"
       for {
-        _ <- TestApiClient
-               .postJsonReceiveString(uri"/v2/resources/batch", batch(hiddenThing), SharedTestDataADM.normalUser)
-               .flatMap(_.assert403)
-      } yield assertTrue(true)
+        body <- TestApiClient
+                  .postJsonReceiveString(uri"/v2/resources/batch", batch(hiddenThing), SharedTestDataADM.normalUser)
+                  .flatMap(_.assert403)
+      } yield assertTrue(body.contains(hiddenThing) && body.contains("do not have permission"))
     },
   )
 
