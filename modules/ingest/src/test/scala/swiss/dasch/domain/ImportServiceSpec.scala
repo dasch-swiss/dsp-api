@@ -22,6 +22,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 import org.knora.bagit.BagIt
+import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 
 object ImportServiceSpec extends ZIOSpecDefault {
@@ -46,7 +47,13 @@ object ImportServiceSpec extends ZIOSpecDefault {
             tmpDir        <- Files.createTempDirectoryScoped(None, List.empty)
             validZip       = tmpDir / "valid.bagit.zip"
             _             <- BagIt.create(
-                   List(PayloadEntry.Directory(prefix = "", sourcePath = projectFolder.path)),
+                   List(
+                     PayloadEntry.Directory(
+                       prefix = "",
+                       sourcePath = projectFolder.path,
+                       compression = Compression.Deflate,
+                     ),
+                   ),
                    validZip,
                  )
             corruptedZip = tmpDir / "corrupted.bagit.zip"

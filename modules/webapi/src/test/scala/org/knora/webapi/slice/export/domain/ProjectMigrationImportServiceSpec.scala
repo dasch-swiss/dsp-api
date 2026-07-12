@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.BagInfo
+import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.TestDataFactory
@@ -97,7 +98,7 @@ object ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
                   additionalFields = bagInfoFields,
                 )
       allNames = payloadFiles.keys ++ binaryPayloadFiles.keys
-      entries  = allNames.map(name => PayloadEntry.File(name, tempDir / name)).toList
+      entries  = allNames.map(name => PayloadEntry.File(name, tempDir / name, Compression.Deflate)).toList
       zipPath  = tempDir / "output.zip"
       _       <- BagIt.create(entries, zipPath, bagInfo = Some(bagInfo))
     } yield ZStream.fromFile(zipPath.toFile)

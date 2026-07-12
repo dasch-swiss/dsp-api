@@ -13,6 +13,7 @@ import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
 import java.time.LocalDate
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -26,6 +27,12 @@ object BagCreator {
 
   /** Emit a progress line at least this often (evaluated after each file) even if no new step was crossed. */
   private val ProgressMaxGap = 5.minutes
+
+  /** Maps the per-entry [[Compression]] to a `Deflater` level. `Store` is level 0 (see [[Compression.Store]]). */
+  private def deflateLevel(c: Compression): Int = c match {
+    case Compression.Deflate => Deflater.DEFAULT_COMPRESSION // -1 -> ~level 6
+    case Compression.Store   => Deflater.NO_COMPRESSION      // 0  -> no effective compression
+  }
 
   def createBag(
     payloadEntries: List[PayloadEntry],
@@ -48,12 +55,15 @@ object BagCreator {
     zipPath: String,
     sourceFile: File,
     algorithms: List[ChecksumAlgorithm],
+    compression: Compression,
   ): IO[IOException, (String, Map[ChecksumAlgorithm, String], Long)] =
     ZIO.scoped {
       for {
         fis    <- JioHelper.bufferedFileInputStream(sourceFile)
         result <- ZIO.attemptBlocking {
                     val digests = algorithms.map(a => a -> MessageDigest.getInstance(a.javaName))
+                    // setLevel applies to subsequent entries, so it must be set before putNextEntry.
+                    zos.setLevel(deflateLevel(compression))
                     zos.putNextEntry(new ZipEntry(zipPath))
                     val buffer     = new Array[Byte](8192)
                     var bytesTotal = 0L
@@ -73,17 +83,17 @@ object BagCreator {
       } yield result
     }
 
-  /** Flattens the payload entries into the concrete (zip path, source file) pairs to be written. */
-  private def collectFiles(entries: List[PayloadEntry]): List[(String, File)] =
+  /** Flattens the payload entries into the concrete (zip path, source file, compression) tuples to be written. */
+  private def collectFiles(entries: List[PayloadEntry]): List[(String, File, Compression)] =
     entries.flatMap {
-      case PayloadEntry.File(relativePath, sourcePath) =>
-        List((s"data/$relativePath", sourcePath.toFile))
-      case PayloadEntry.Directory(prefix, sourcePath) =>
+      case PayloadEntry.File(relativePath, sourcePath, compression) =>
+        List((s"data/$relativePath", sourcePath.toFile, compression))
+      case PayloadEntry.Directory(prefix, sourcePath, compression) =>
         val baseDir = sourcePath.toFile
         JioHelper.walkDirectory(baseDir).map { file =>
           val rel     = baseDir.toPath.relativize(file.toPath).toString.replace('\\', '/')
           val zipPath = if (prefix.isEmpty) s"data/$rel" else s"data/$prefix/$rel"
-          (zipPath, file)
+          (zipPath, file, compression)
         }
     }
 
@@ -100,8 +110,10 @@ object BagCreator {
       _          <- ZIO.logDebug(BagProgress.startLine(totalFiles, totalBytes))
       progress   <- Ref.make(BagProgress.ReporterState(start, 0))
       bytesDone  <- Ref.make(0L)
-      results    <- ZIO.foreach(files.zipWithIndex) { case ((zipPath, file), idx) =>
-                   writePayloadFile(zos, zipPath, file, algorithms).tap { case (_, _, fileBytes) =>
+      // Must stay sequential (ZIO.foreach, not foreachPar): per-entry setLevel mutates the single shared
+      // Deflater in `zos`, and ZIP entry framing is inherently sequential -- parallelizing would corrupt the bag.
+      results <- ZIO.foreach(files.zipWithIndex) { case ((zipPath, file, compression), idx) =>
+                   writePayloadFile(zos, zipPath, file, algorithms, compression).tap { case (_, _, fileBytes) =>
                      logProgress(progress, bytesDone, fileBytes, idx + 1L, totalFiles, totalBytes, start)
                    }
                  }
@@ -150,6 +162,10 @@ object BagCreator {
     fileCount: Long,
   ): IO[IOException, Map[String, Array[Byte]]] =
     ZIO.attemptBlocking {
+      // Payload entries may have left the deflate level at 0 (Store); tag files are tiny but should be
+      // written at the default level. This single reset also covers writeTagManifests, which runs afterward.
+      zos.setLevel(Deflater.DEFAULT_COMPRESSION)
+
       val bagitTxtContent = "BagIt-Version: 1.0\nTag-File-Character-Encoding: UTF-8\n"
       val bagitTxtBytes   = bagitTxtContent.getBytes("UTF-8")
       zos.putNextEntry(new ZipEntry("bagit.txt"))

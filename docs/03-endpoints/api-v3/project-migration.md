@@ -55,6 +55,10 @@ data/
 
 All RDF data is serialized as N-Quads and uses the internal knora-base schema.
 
+Within the archive, the `data/rdf/` N-Quads are DEFLATE-compressed, while `data/assets/assets.zip` is stored
+without effective compression: its contents are already-compressed media, so re-compressing them only wastes
+CPU. This is why `assets.zip` does not shrink relative to its source.
+
 The `bag-info.txt` file includes metadata fields:
 
 | Field                  | Description                                     |

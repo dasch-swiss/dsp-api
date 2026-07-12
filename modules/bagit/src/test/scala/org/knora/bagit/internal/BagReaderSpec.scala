@@ -29,7 +29,7 @@ object BagReaderSpec extends ZIOSpecDefault {
       _        <- Files.writeBytes(filePath, Chunk.fromArray("Test content".getBytes("UTF-8")))
       outputZip = tempDir / "test.zip"
       _        <- BagCreator.createBag(
-             List(PayloadEntry.File("test-file.txt", filePath)),
+             List(PayloadEntry.File("test-file.txt", filePath, Compression.Deflate)),
              List(ChecksumAlgorithm.SHA256),
              Some(BagInfo(sourceOrganization = Some("Test Org"))),
              outputZip,
@@ -354,7 +354,7 @@ object BagReaderSpec extends ZIOSpecDefault {
           outputZip = tempDir / "o.zip"
           nestedDir = tempDir / "d"
           _        <- BagCreator.createBag(
-                 List(PayloadEntry.Directory("n", nestedDir)),
+                 List(PayloadEntry.Directory("n", nestedDir, Compression.Deflate)),
                  List(ChecksumAlgorithm.SHA256),
                  None,
                  outputZip,
@@ -393,7 +393,7 @@ object BagReaderSpec extends ZIOSpecDefault {
                }
           outputZip = tempDir / "flat.zip"
           _        <- BagCreator.createBag(
-                 List(PayloadEntry.Directory("", flatDir)),
+                 List(PayloadEntry.Directory("", flatDir, Compression.Deflate)),
                  List(ChecksumAlgorithm.SHA256),
                  None,
                  outputZip,
@@ -429,7 +429,7 @@ object BagReaderSpec extends ZIOSpecDefault {
                }
           outputZip = tempDir / "mixed.zip"
           _        <- BagCreator.createBag(
-                 List(PayloadEntry.Directory("", mixedDir)),
+                 List(PayloadEntry.Directory("", mixedDir, Compression.Deflate)),
                  List(ChecksumAlgorithm.SHA256),
                  None,
                  outputZip,

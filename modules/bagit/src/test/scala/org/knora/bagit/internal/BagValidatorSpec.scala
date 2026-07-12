@@ -24,7 +24,7 @@ object BagValidatorSpec extends ZIOSpecDefault {
       _        <- Files.writeBytes(filePath, Chunk.fromArray("Payload content".getBytes("UTF-8")))
       outputZip = tempDir / "test.zip"
       _        <- BagCreator.createBag(
-             List(PayloadEntry.File("payload.txt", filePath)),
+             List(PayloadEntry.File("payload.txt", filePath, Compression.Deflate)),
              List(ChecksumAlgorithm.SHA256),
              Some(BagInfo(sourceOrganization = Some("Test"))),
              outputZip,
@@ -143,7 +143,7 @@ object BagValidatorSpec extends ZIOSpecDefault {
                        Files
                          .writeBytes(path, Chunk.fromArray(content.getBytes("UTF-8")))
                          .as(
-                           PayloadEntry.File(name, path),
+                           PayloadEntry.File(name, path, Compression.Deflate),
                          )
                      }
           outputZip = tempDir / "many-files.zip"
