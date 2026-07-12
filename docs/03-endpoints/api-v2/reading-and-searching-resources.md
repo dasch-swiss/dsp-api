@@ -1,6 +1,10 @@
 # Reading and Searching Resources
 
-To retrieve an existing resource, the HTTP method `GET` has to be used.
+To retrieve an existing resource, the HTTP method `GET` is used. Several
+resources can be fetched together as well — either with a `GET` whose IRIs are
+in the URL path, or, for larger sets, with a `POST` whose IRIs are in a JSON
+request body (see
+[Get Multiple Resources by IRI via POST](#get-multiple-resources-by-iri-via-post)).
 Reading resources may require authentication, since some resources may
 have restricted viewing permissions.
 
@@ -110,6 +114,38 @@ More formally, the URL looks like this:
 ```text
 HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ```
+
+Because resource IRIs are long, the number that fits into a single URL is limited by
+URL-length limits outside DaSCH's control. To fetch a large set of resources in one
+request, use the `POST` variant below instead.
+
+### Get Multiple Resources by IRI via POST
+
+`POST /v2/resources/batch` fetches one or more resources by IRI supplied in a plain
+JSON request body, avoiding the URL-length limit of the `GET` route above. The response
+is the same as for the `GET` route: default JSON-LD, content-negotiable via the `Accept`
+header, with identical permission and all-or-nothing semantics.
+
+The request body must be sent with `Content-Type: application/json`:
+
+```json
+{
+  "resourceIris": [
+    "http://rdfh.ch/0803/2a6221216701",
+    "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+  ]
+}
+```
+
+Each request must carry **between 1 and the configured maximum** resource IRIs. That
+maximum is an operational setting (`app.v2.resources.max-batch-size`, default 100,
+overridable per deployment via `KNORA_WEBAPI_V2_RESOURCES_MAX_BATCH_SIZE`). It is
+published in the endpoint's OpenAPI schema as the `minItems` / `maxItems` of
+`resourceIris`, so the documented limit always matches what the running server actually
+enforces. A request with too many IRIs — or an empty list — is rejected with
+`400 Bad Request`. Duplicate IRIs are de-duplicated. As with the `GET` route, the request
+fails as a whole if any requested resource is not found (`404`) or not readable by the
+user (`403`).
 
 ### Get a Full Representation of a Version of a Resource by IRI
 

@@ -6,9 +6,12 @@
 package org.knora.webapi.slice.api.v2.resources
 
 import sttp.tapir.*
+import sttp.tapir.json.zio.jsonBody
 import zio.ZLayer
+import zio.json.*
 
 import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.config.Resources
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.GraphDirection
@@ -16,9 +19,28 @@ import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
-final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute) {
+/**
+ * Request body for `POST /v2/resources/batch`: the resource IRIs to fetch. Plain JSON
+ * (not JSON-LD) so the IRI list is carried in the body rather than the URL path. Name
+ * mirrors the path/handler word order (resources → batch).
+ */
+final case class ResourcesBatchRequest(resourceIris: List[String])
+object ResourcesBatchRequest {
+  given JsonCodec[ResourcesBatchRequest] = DeriveJsonCodec.gen[ResourcesBatchRequest]
+}
+
+final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute, resourcesConfig: Resources) {
 
   private val base = "v2" / "resources"
+
+  // Schema built from the running config so the batch cap (min 1, max = app.v2.resources.max-batch-size)
+  // is enforced at the request boundary and surfaces as minItems/maxItems in the generated OpenAPI.
+  private given Schema[ResourcesBatchRequest] =
+    Schema
+      .derived[ResourcesBatchRequest]
+      .modify(_.resourceIris)(
+        _.validate(Validator.minSize(1)).validate(Validator.maxSize(resourcesConfig.maxBatchSize)),
+      )
 
   private val versionQuery = query[Option[VersionDate]]("version")
     .and(query[Option[VersionDate]]("version date"))
@@ -99,6 +121,21 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "Get one or more resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+    )
+
+  val postResourcesBatch = baseEndpoints.withUserEndpoint.post
+    .in(base / "batch")
+    .in(jsonBody[ResourcesBatchRequest])
+    .in(ApiV2.Inputs.formatOptions)
+    .in(versionQuery)
+    .out(ApiV2.Outputs.stringBodyFormatted)
+    .out(ApiV2.Outputs.contentTypeHeader)
+    .description(
+      s"Fetch one or more resources by IRI, supplied as a JSON body `{\"resourceIris\": [...]}`. " +
+        "A POST alternative to GET /v2/resources for large IRI sets that would exceed URL-length limits. " +
+        s"Between 1 and ${resourcesConfig.maxBatchSize} IRIs may be sent per request (this deployment's " +
+        "configured limit; exceeding it is a 400). Publicly accessible. Requires appropriate object access " +
+        "permissions on the resources.",
     )
 
   val getResourcesParams = baseEndpoints.withUserEndpoint.get
@@ -204,6 +241,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     getResourcesHistoryEvents,
     getResourcesHistory,
     getResources,
+    postResourcesBatch,
     getResourcesParams,
     getResourcesGraph,
     getResourcesTei,

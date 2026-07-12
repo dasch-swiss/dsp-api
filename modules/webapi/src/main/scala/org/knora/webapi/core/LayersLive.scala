@@ -15,6 +15,7 @@ import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.config.Resources
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.util.*
@@ -101,7 +102,7 @@ object LayersLive { self =>
     otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer,
   ): URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & JwtConfig,
+      AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,

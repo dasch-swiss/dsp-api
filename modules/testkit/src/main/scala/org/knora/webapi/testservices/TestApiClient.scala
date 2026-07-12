@@ -170,6 +170,7 @@ final case class TestApiClient(
       .post(relativeUri)
       .body(body.toJson)
       .contentType(MediaType.ApplicationJson)
+      .response(asString)
     sendRequest(request, Some(user))
   }
 
@@ -451,6 +452,13 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postJsonLd(relativeUri, jsonLdBody, user))
+
+  def postJsonReceiveString[B: JsonEncoder](
+    relativeUri: Uri,
+    body: B,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postJsonReceiveString(relativeUri, body, user))
 
   def postJsonLdDocument(
     relativeUri: Uri,
