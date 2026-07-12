@@ -3,8 +3,8 @@
 Working doc for continuing the Bazel migration on another machine/session. Self-contained
 (the original plan lived in `~/.claude/plans/`, which does not travel between machines).
 
-**Last updated:** 2026-07-11
-**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2, 3, 4 and 5 done — Phase 6 is next). Phase 2 = commit `176ab2f1b`.
+**Last updated:** 2026-07-12
+**Branch:** `worktree-bazelify` (Phase 0, 0.5, 1, 2, 3, 4, 5 and 6 done — migration complete). Phase 2 = commit `176ab2f1b`.
 **Base:** rebased onto `origin/main` (`afa1e940a`); force-pushed. Was `d84f7edec`.
 
 ---
@@ -14,8 +14,10 @@ Working doc for continuing the Bazel migration on another machine/session. Self-
 Move the **whole build** to Bazel — compile all Scala with `rules_scala`, run tests under
 `bazel test`, and produce all container images (`knora-sipi`, `knora-api`, `dsp-ingest`,
 `apache-jena-fuseki`) with `rules_oci`. One coarse Bazel package per module under `modules/`
-(finer-grained targets later). **All four images now build with Bazel** (sipi/api/ingest/fuseki,
-Phases 0–5); only Makefile/CI/docker-compose still drive the sbt/Docker paths (Phase 6).
+(finer-grained targets later). **All four images build with Bazel** (sipi/api/ingest/fuseki,
+Phases 0–5), and as of Phase 6 the **driver layer** (Makefile, CI, docker-compose) calls Bazel
+too — sbt is no longer in the everyday build/test/publish path except where deliberately retained
+(fuseki's publish path, and a temporary tag-drift gate — see Phase 6).
 
 **sbt stays fully functional in parallel** for a validation period; we do not retire it yet.
 The one deliberate sbt-side change is the test runner (both tools move to a single custom
@@ -431,27 +433,27 @@ existing `@temurin_base_{amd64,arm64}` (`eclipse-temurin:25-jre-noble`) instead 
   **⚠️ MONITOR (no action needed yet — do not "fix" this speculatively):** both warnings are
   governed by OpenJDK JEPs on an explicit deprecation-to-enforcement timeline that will eventually
   turn them into hard failures, not just log noise:
-  - `java.lang.foreign.Linker`/native-access (Lucene, via `jena-text`): controlled by
-    `--illegal-native-access={allow,warn,deny}` (JEP 472). `warn` has been the default since JDK 24
-    (unchanged in 25); `deny` (→ `IllegalCallerException`) becomes default in an as-yet-unnumbered
-    future JDK release.
-  - `sun.misc.Unsafe` (from `pyroscope-otel`'s vendored protobuf, not Fuseki/Jena code): controlled
-    by `--sun-misc-unsafe-memory-access={allow,warn,debug,deny}` (JEP 471). Phase 2 (runtime
-    warnings, what we're seeing) targets "JDK 25 or earlier"; Phase 3 (exceptions by default) targets
-    "JDK 26 or later".
-  - `modules/fuseki/docker-entrypoint.sh` already has a commented-out fix on hand
-    (`--enable-native-access=ALL-UNNAMED --add-modules=jdk.incubator.vector`, see the comment above
-    the `JVM_ARGS` block referencing `apache/jena#2533`/`#2782`) — cheap and purely permissive if
-    ever uncommented, but deliberately left as-is per an explicit decision (2026-07-11) not to bundle
-    a runtime-behavior change into this migration PR.
-  - **Confirmed not already handled elsewhere**: grepped the `ops-deploy` repo for
-    `enable-native-access`/`illegal-native-access`/`incubator.vector`/`sun-misc-unsafe` — zero
-    matches. Production's `JVM_ARGS` (`roles/dsp-deploy/templates/docker-compose-db.yml.j2`) only
-    sets heap size (`-Xmx{{ DSP_DB_HEAP_SIZE }}`, per-host: `1G` default, `2G`–`3G` in prod/stage)
-    and `-Dlog4j2.formatMsgNoLookups=true` (Log4Shell mitigation, unrelated).
-  - **Revisit when:** OpenJDK actually numbers/ships the `deny`-by-default JDK for JEP 472 (watch
-    https://openjdk.org/jeps/472), or sooner if `--illegal-native-access=deny`/an equivalent hard
-    failure is ever observed in fuseki's logs.
+    - `java.lang.foreign.Linker`/native-access (Lucene, via `jena-text`): controlled by
+      `--illegal-native-access={allow,warn,deny}` (JEP 472). `warn` has been the default since JDK 24
+      (unchanged in 25); `deny` (→ `IllegalCallerException`) becomes default in an as-yet-unnumbered
+      future JDK release.
+    - `sun.misc.Unsafe` (from `pyroscope-otel`'s vendored protobuf, not Fuseki/Jena code): controlled
+      by `--sun-misc-unsafe-memory-access={allow,warn,debug,deny}` (JEP 471). Phase 2 (runtime
+      warnings, what we're seeing) targets "JDK 25 or earlier"; Phase 3 (exceptions by default) targets
+      "JDK 26 or later".
+    - `modules/fuseki/docker-entrypoint.sh` already has a commented-out fix on hand
+      (`--enable-native-access=ALL-UNNAMED --add-modules=jdk.incubator.vector`, see the comment above
+      the `JVM_ARGS` block referencing `apache/jena#2533`/`#2782`) — cheap and purely permissive if
+      ever uncommented, but deliberately left as-is per an explicit decision (2026-07-11) not to bundle
+      a runtime-behavior change into this migration PR.
+    - **Confirmed not already handled elsewhere**: grepped the `ops-deploy` repo for
+      `enable-native-access`/`illegal-native-access`/`incubator.vector`/`sun-misc-unsafe` — zero
+      matches. Production's `JVM_ARGS` (`roles/dsp-deploy/templates/docker-compose-db.yml.j2`) only
+      sets heap size (`-Xmx{{ DSP_DB_HEAP_SIZE }}`, per-host: `1G` default, `2G`–`3G` in prod/stage)
+      and `-Dlog4j2.formatMsgNoLookups=true` (Log4Shell mitigation, unrelated).
+    - **Revisit when:** OpenJDK actually numbers/ships the `deny`-by-default JDK for JEP 472 (watch
+      <https://openjdk.org/jeps/472>), or sooner if `--illegal-native-access=deny`/an equivalent hard
+      failure is ever observed in fuseki's logs.
 - **Jena's `tdb2:unionDefaultGraph true` gotcha, unrelated to the migration but easy to
   misdiagnose as one:** an `INSERT DATA` with no `GRAPH` clause lands in the store's actual default
   graph, which `unionDefaultGraph` does **not** include when redefining "the default graph" as the
@@ -518,15 +520,136 @@ existing `@temurin_base_{amd64,arm64}` (`eclipse-temurin:25-jre-noble`) instead 
   doc's own "Decisions locked in" section amended so it no longer implies *every* image's `oci_load`
   emits `:latest` (fuseki's is a pinned version tag, matching `docker-compose.yml`).
 
-### Phase 6 — Rewire Makefile + CI + docker-compose
+### Phase 6 — Rewire Makefile + CI + docker-compose ✅ COMPLETE
 
-- Makefile `docker-build/publish-*` → `bazel run //modules/<m>:{load,push}`; test targets →
-  `bazel test`. `docker-image-tag` → `workspace_status.sh` `STABLE_GIT_VERSION` **+ a CI gate
-  asserting it byte-matches `sbt "print dockerImageTag"`** (deployed tag flows to Jenkins).
-- CI: `docker-publish(-fuseki).yml` → bazel; `build-and-test.yml` → `bazel test` + repoint
-  `dorny/test-reporter` globs to `bazel-testlogs/**/test.xml`; bump `preparation` action java → 25.
-- docker-compose: add `healthcheck:` blocks for `api`, `ingest`, `db` (rules_oci can't emit the
-  Docker `HEALTHCHECK` directive; prod uses k8s `httpGet` probes, so no prod regression).
+Done: the Makefile, `justfile`, `docker-compose.yml`, and `build-and-test.yml` now drive
+Bazel for the everyday build/test/publish path. Verified live (not just "the target ran"):
+all four images built + loaded via `bazel run //modules/<m>:load`, `docker compose up --wait`
+reports all 5 containers **healthy** (incl. the three new healthchecks), each healthcheck
+command run manually inside its container exits 0, `api`/`ingest`/`fuseki` endpoints respond
+correctly, `make test`/`bazel test //modules/bagit:test` pass, and the CI `cp -L` collect step
+correctly dereferences the `bazel-testlogs` symlink into a real workspace file (checked locally,
+not assumed). **Deliberately deferred, not forgotten:** fuseki's *publish* path (Makefile
+`docker-build/publish-fuseki-image`, `docker-publish-fuseki.yml`) stays on the Dockerfile/
+`docker buildx` — consistent with the Phase 5 decision to retain the Dockerfile as fuseki's
+publish path during the validation window. The Bazel fuseki image is still exercised every CI
+run as a test-preload (`bazel run //modules/fuseki:load`) and guarded by
+`//tools/oci:image_versions_match_sbt`.
+
+**6a — Makefile (+ justfile):**
+
+- `docker-build-dsp-api-image`/`docker-publish-dsp-api-image` and the ingest equivalents now
+  mirror the sipi pattern exactly: extract `TAG` from `docker-image-tag`, `bazel run
+  //modules/<m>:load` + `docker tag ...:latest ...:$TAG` for build; `bazel run //modules/<m>:push
+  -- -t latest -t "$TAG"` for publish. Fuseki's own build/publish targets are untouched (buildx,
+  deferred above); the `docker-build`/`docker-publish` aggregates already excluded fuseki before
+  this phase and still do.
+- `docker-image-tag` now reads `tools/workspace_status.sh`'s `STABLE_GIT_VERSION` key instead of
+  calling sbt — that script already mirrors sbt's `gitVersion` exactly (same `git describe --tag
+  --dirty --abbrev=7 --always`, same non-`main` branch suffix, same `+`→`-`). **The two
+  computations can't structurally diverge**: `build.sbt` doesn't reimplement any of this in Scala —
+  it shells out via `!!` to the literal same `git describe`/`git rev-parse` commands the bash script
+  runs, against the same working tree, so there's no "two independent implementations" risk, only a
+  "did we transcribe the same flags/stage-order" risk. **New `check-docker-image-tag` target**
+  asserts byte-match against sbt's `print dockerImageTag` anyway, as a mechanical safety net for
+  that transcription risk — this is the one place sbt is intentionally retained (temporarily) since
+  the tag flows to the Jenkins deploy webhook via `docker-publish.yml`. **Verified live on this
+  actual worktree** — a dirty tree on a non-`main` branch
+  (`v37.0.0-24-gf4d322b-dirty-worktree-bazelify`) exercises both the `-dirty` and branch-suffix
+  paths simultaneously and both tools agree byte-for-byte.
+- New `docker-load-test-images` target (Makefile + justfile) factors out the three-image preload
+  (`bazel run //modules/{sipi,ingest,fuseki}:load`) shared by `test-it`/`test-e2e`/
+  `test-ingest-integration`, replacing their old `docker-build-sipi-image` (sbt-tag-bearing)
+  prerequisite. Test targets themselves became bare `bazel test //modules/<m>:test` (dropped the
+  `coverage ... coverageAggregate copyCoverageReport` sbt chain — coverage reporting is dropped
+  this phase, see 6c).
+
+**6b — docker-compose healthchecks:** added `healthcheck:` blocks for `api`, `ingest`, `db` (only
+`sipi` had one before). **Commands copied verbatim from the sbt-built images' own `HEALTHCHECK`
+directives** (`build.sbt:245–248` api, `build.sbt:533–540` ingest, `modules/fuseki/Dockerfile:90–91`
+db) rather than invented fresh — same intervals too. `depends_on` was deliberately left untouched
+(no `condition: service_healthy` upgrade — that's a startup-ordering change nobody asked for).
+rules_oci can't emit the Docker `HEALTHCHECK` directive itself, and prod runs out-of-repo
+(`ops-deploy`) and doesn't consume this compose file for probing, so these are dev-only additions
+with no prod regression.
+
+**6c — CI (`build-and-test.yml` + `preparation` action):**
+
+- Every test job now runs `nix develop --command bazel test --test_output=errors //...` instead of
+  `./sbtx`. `test-it`/`test-e2e`/`test-ingest-integration` simplified further: since `make test-it`
+  (etc.) now embeds the `docker-load-test-images` preload as a Make prerequisite, the CI step for
+  each collapsed to a single `nix develop --command make test-it` — the old separate "build fuseki
+  if changed" conditional and "build sipi locally" steps were removed entirely, replaced by an
+  **unconditional** preload of all three images every run (more correct: previously fuseki was only
+  rebuilt when its own files changed, so a stale registry fuseki could silently back an IT run that
+  touched shared code).
+- **dorny/test-reporter repointed (all 7 usages).** Bazel writes coarse
+  `bazel-testlogs/modules/<m>/test/test.xml` (one `<testcase>` per spec class, `classname` null —
+  Phase 2 gotcha #5) via a symlink into the Bazel output base, outside `GITHUB_WORKSPACE`. Rather
+  than pointing dorny's glob straight through that symlink (fragile — `@actions/glob` following a
+  symlink whose target lives outside the workspace is exactly the case that breaks), every job
+  gets a `Collect Bazel test XML` step (`if: success() || failure()` — **mandatory**, or the
+  collect step is skipped on the one case you need it, a real test failure) that `cp -L`s the real
+  file into a workspace-local `test-xml/` dir; dorny then globs `test-xml/*.xml`. **Verified locally
+  that `cp -L` actually dereferences correctly** (macOS; Linux CI behaves the same via GNU
+  coreutils) — this was the one CI-only risk that turned out to be checkable without pushing.
+  Accepted, unavoidable consequence: dorny's per-spec granularity is gone; the actual merge gate is
+  each job's `bazel test` exit code, not dorny's rendering — **only a problem if a dorny check-run
+  name (not the job name) is a required status check**, see the manual follow-up below.
+- **Coverage reporting dropped entirely** (scoverage is sbt-only; `bazel test` emits no cobertura,
+  and the decision was to drop rather than wire JaCoCo). Removed: the whole `upload-coverage` job
+  (Codacy + Codecov uploads), every per-job "Upload coverage report" artifact step, the
+  `coverageAggregate copyCoverageReport` sbt chains, the `id-token: write` permission (existed only
+  for Codecov's tokenless OIDC upload), and `.codecov.yml`. **`.codacy.yml` was deliberately kept**
+  — it configures Codacy's static-analysis `exclude_paths`, not coverage, so it's an unrelated
+  concern that happens to share a vendor.
+- **`docker-healthcheck` job fix**: its `make docker-build-dsp-api-image` call ran bare (no `nix
+  develop`) because that target used to be sbt. Now that 6a made it a Bazel target, the bare call
+  would break (`bazel: command not found`) — wrapped under `nix develop --command`. A full sweep of
+  every bare `make docker-*`/`make docker-publish*` call across all workflows confirmed this was
+  the **only** genuine break; every other bare call either stays non-Bazel (fuseki buildx,
+  `docker-image-tag` — now plain git+awk, no sbt either) or was already under `nix develop`.
+- **New temporary job `check-docker-image-tag`**: runs `make check-docker-image-tag` on every PR,
+  using `preparation`'s `fetch-depth: 0` checkout (full history + tags). This isn't about the two
+  *sides* disagreeing (they run the identical `git describe`, so they can't) — it's that without
+  tags, `git describe --tag --always` degenerates to the bare short-hash fallback on **both** sides
+  identically, which exercises only the weakest code path and proves nothing about whether the
+  gate would catch a real transcription bug in the tag-suffix/`+`→`-` logic. `fetch-depth: 0` is
+  what makes this a real test of that logic rather than a vacuous one. Remove this job once the
+  validation window closes and the tag-source switch is trusted.
+- **`preparation` action's `java-version` default bumped `"21"` → `"25"`.** Affects the **four**
+  workflows that call it without an explicit version: `docker-publish.yml`, `publish-release.yml`,
+  `publish-from-branch.yml`, and `publish-docs.yml` (confirmed via a full grep of every workflow —
+  `create-release.yml` and `scala-steward.yml` don't call `preparation` unversioned and don't touch
+  any rewired Make target, so they're unaffected). **The bump is invisible until merged** — every
+  caller references `dasch-swiss/dsp-api/.github/actions/preparation@main`, so a PR that only edits
+  the composite action doesn't exercise the new default from a PR checkout.
+- **Publish workflows needed no changes at all.** `docker-publish.yml`/`publish-release.yml`/
+  `publish-from-branch.yml` already ran `nix develop --command make docker-publish`; once that
+  target's sub-targets became Bazel (6a), the invocation shape was unchanged. `docker-publish.yml`'s
+  Jenkins tag-output step (`make docker-image-tag`, bare) also kept working unmodified — it's now
+  pure git+awk instead of sbt, which is strictly less fragile bare, not more.
+
+**Items that could only be validated by pushing to CI (not locally) — watch the first real PR run:**
+
+1. Whether a failing spec's coarse `<testcase>` actually carries a `<failure>` element (only
+   matters if a dorny check-run name, not the job name, is a required status check).
+2. `oci_push` authentication against the runner's `~/.docker/config.json` (a credential-helper
+   configuration would break this; GitHub-hosted runners normally write inline base64 auth via
+   `docker login`, so expected to work, but unverified in this repo's actual runner image).
+3. The `preparation@main` java bump's effect on `publish-docs.yml`'s docs build (expected fine —
+   it's a `just`/mkdocs pipeline with no visible Java dependency — but now technically in the
+   blast radius of the version bump).
+4. **CI wall-time will increase.** `magic-nix-cache-action` persists only the Nix store, not the
+   Bazel output base or the Maven repository cache, so every Bazel CI job compiles cold (no
+   `cache: sbt`-equivalent exists yet for Bazel in this repo). A slower first run is expected, not a
+   regression to investigate. **Follow-up, out of this phase's scope:** wire a Bazel `--disk_cache`
+   via `actions/cache`, or a remote cache.
+
+**Manual coordination needed outside the repo tree (GitHub branch-protection settings):**
+remove the now-deleted `Upload coverage` required check if it was ever marked required, and check
+whether any required check references a dorny check-run name rather than a job name — if so, prefer
+switching it to the job name so the coarse-XML rendering (above) stays cosmetic rather than gating.
 
 ---
 
@@ -568,10 +691,17 @@ existing `@temurin_base_{amd64,arm64}` (`eclipse-temurin:25-jre-noble`) instead 
    - `./sbtx "webapi/compile"` (sbt on 3.8.4 still clean)
    - if maven needs a refetch: `nix develop --command bazel run @unpinned_maven//:pin`
    - Docker-dependent test targets (`test-it`, `test-e2e`, `test-ingest-integration`) need the
-     `:latest` images preloaded first: `bazel run //modules/sipi:load && bazel run
-     //modules/ingest:load` (see below).
+     `:latest`/pinned images preloaded first: `make docker-load-test-images` (or `bazel run
+     //modules/{sipi,ingest,fuseki}:load` directly — see below).
    - `nix develop --command bazel build //modules/fuseki:image_amd64` (fuseki image builds)
-5. **Then start Phase 6** (rewire Makefile/CI/docker-compose; see roadmap above).
+   - `make check-docker-image-tag` (sbt⇄workspace_status tag-drift gate, temporary — see Phase 6)
+5. **Migration is code-complete (Phases 0–6).** Remaining work is operational, not code: watch the
+   first real CI run for the push-only risks listed at the end of the Phase 6 section, and do the
+   manual branch-protection coordination noted there. If reviving this doc for further work, the
+   natural next increments are: retire the sbt-parallel paths once the validation window closes
+   (remove `check-docker-image-tag`, drop the fuseki-publish Dockerfile/buildx path, remove `./sbtx`
+   entirely from CI/Makefile), and wire a Bazel disk/remote cache for CI (flagged in Phase 6 as
+   out-of-scope for this pass).
 
 ## Useful commands
 
@@ -603,4 +733,12 @@ bazel run //modules/fuseki:load
 bazel test //tools/oci:image_versions_match_sbt   # sbt⇄Bazel version-drift guard, now incl. fuseki
 docker compose up -d db sipi ingest api alloy
 curl -u admin:test http://localhost:3030/$/datasets/dsp-repo && curl http://localhost:3333/health
+
+# Phase 6 — Makefile/CI now drive Bazel; docker-compose has healthchecks for api/ingest/db too
+make docker-image-tag                # git-describe tag, no sbt (was: sbt "print dockerImageTag")
+make check-docker-image-tag          # temporary drift gate: workspace_status.sh vs sbt, byte-match
+make docker-build-dsp-api-image      # bazel run //modules/webapi:load + docker tag (mirrors sipi)
+make docker-load-test-images         # preload sipi+ingest+fuseki :latest/pinned for IT/E2E tests
+make test test-it test-e2e test-ingest-integration   # all bazel test now, no coverage wrapping
+docker compose up --wait db sipi ingest api          # all four now have healthcheck: blocks
 ```

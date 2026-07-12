@@ -1,10 +1,7 @@
 name: CI-build-and-test
 
 on:
-  # Run on every push to main so Codecov gets a fresh coverage report for each
-  # main commit. Without this the PR "base" coverage is frozen at the last main
-  # commit that ever had a report uploaded, and every PR is compared against a
-  # stale baseline.
+  # Run on every push to main to keep main green visible per-commit.
   push:
     branches:
       - main
@@ -13,12 +10,10 @@ on:
     branches-ignore:
       - "**/graphite-base/**"
 
-# Least-privilege token plus the OIDC scope Codecov needs for tokenless uploads.
-# `checks: write` is required by dorny/test-reporter.
+# Least-privilege token. `checks: write` is required by dorny/test-reporter.
 permissions:
   contents: read
   checks: write
-  id-token: write
 
 env:
   JAVA_VERSION: 25
@@ -27,10 +22,9 @@ env:
 # bump CHANGELOG.md and version.txt — no source changes — so every job below is
 # skipped for them via `!startsWith(github.head_ref, 'release-please')`. This
 # saves CI resources and lets the release PR go green immediately. On `push`
-# events `github.head_ref` is empty, so main pushes still run the full suite
-# (incl. the Codecov baseline). A required check skipped by a job-level `if:`
-# counts as passing in branch protection, so the release PR stays mergeable.
-# See DEV-6678.
+# events `github.head_ref` is empty, so main pushes still run the full suite.
+# A required check skipped by a job-level `if:` counts as passing in branch
+# protection, so the release PR stays mergeable. See DEV-6678.
 
 jobs:
   build-and-test:
@@ -42,24 +36,25 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Run webapi tests
-        run: ./sbtx -v coverage webapi/test
-      - name: Run ingest tests
-        run: ./sbtx -v coverage ingest/test
-      - name: Aggregate coverage
-        run: ./sbtx -v coverageAggregate copyCoverageReport
+      - name: Install Nix (Bazel drives the build)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+      - name: Run webapi + ingest unit tests
+        run: nix develop --command bazel test --test_output=errors //modules/webapi:test //modules/ingest:test
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/webapi/test/test.xml test-xml/webapi-test.xml || true
+          cp -L bazel-testlogs/modules/ingest/test/test.xml test-xml/ingest-test.xml || true
       - name: WebApi Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi Unit Test Results
-          path: ./modules/webapi/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-unit
-          path: ./target/coverage-report/cobertura.xml
 
   test-bagit:
     name: Test bagit
@@ -70,14 +65,23 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Install Nix (Bazel drives the build)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
       - name: Run bagit tests
-        run: ./sbtx -v bagit/test
+        run: nix develop --command bazel test --test_output=errors //modules/bagit:test
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/bagit/test/test.xml test-xml/bagit-test.xml || true
       - name: Bagit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: Bagit Test Results
-          path: ./modules/bagit/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
 
   test-jwt:
@@ -89,14 +93,23 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Install Nix (Bazel drives the build)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
       - name: Run jwt tests
-        run: ./sbtx -v jwt/test
+        run: nix develop --command bazel test --test_output=errors //modules/jwt:test
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/jwt/test/test.xml test-xml/jwt-test.xml || true
       - name: JWT Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: JWT Test Results
-          path: ./modules/jwt/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
 
   test-shacl-validator:
@@ -108,14 +121,23 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - name: Install Nix (Bazel drives the build)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
       - name: Run shacl-validator tests
-        run: ./sbtx -v shacl-validator/test
+        run: nix develop --command bazel test --test_output=errors //modules/shacl-validator:test
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/shacl-validator/test/test.xml test-xml/shacl-validator-test.xml || true
       - name: SHACL Validator Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: SHACL Validator Test Results
-          path: ./modules/shacl-validator/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
 
   test-it:
@@ -130,32 +152,28 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Build Fuseki image if modules/fuseki/ changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
-          if echo "$CHANGED" | grep -q "^modules/fuseki/"; then
-            make docker-build-fuseki-image
-          fi
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
         uses: DeterminateSystems/magic-nix-cache-action@v13
       - name: Run integration tests
+        # `make test-it` loads the PR's sipi/ingest/fuseki images (via its
+        # docker-load-test-images prerequisite) before running the Bazel tests,
+        # so the PR's own images are exercised, not the registry's lagging :latest.
         run: nix develop --command make test-it
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-it/test/test.xml test-xml/test-it-test.xml || true
+          cp -L bazel-testlogs/modules/test-it/test_gravsearch_span/test.xml test-xml/test-it-gravsearch-span.xml || true
       - name: WebApi IT Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi IT Test Results
-          path: ./modules/test-it/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-integration
-          path: ./target/coverage-report/cobertura.xml
 
   test-e2e:
     name: Build and E2E test
@@ -169,91 +187,28 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Build Fuseki image if modules/fuseki/ changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
-          if echo "$CHANGED" | grep -q "^modules/fuseki/"; then
-            make docker-build-fuseki-image
-          fi
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
         uses: DeterminateSystems/magic-nix-cache-action@v13
-      - name: Build sipi image locally
-        # `SipiTestContainer` runs `daschswiss/knora-sipi:latest`. The registry
-        # version lags the PR; build the PR's version locally so the CLI surface
-        # matches (relevant across major Sipi base bumps, e.g. v4 -> v5).
-        run: nix develop --command make docker-build-sipi-image
       - name: Run end-to-end tests
-        run: ./sbtx -v coverage "test-e2e/test" coverageAggregate copyCoverageReport
+        # `make test-e2e` loads the PR's sipi/ingest/fuseki images (via its
+        # docker-load-test-images prerequisite) before running the Bazel tests.
+        # This replaces the old "build sipi locally" step — the registry's
+        # :latest lags the PR, which matters across major Sipi base bumps.
+        run: nix develop --command make test-e2e
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-e2e/test/test.xml test-xml/test-e2e-test.xml || true
       - name: WebApi E2E Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi E2E Test Results
-          path: ./modules/test-e2e/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-e2e
-          path: ./target/coverage-report/cobertura.xml
-
-  upload-coverage:
-    name: Upload coverage
-    runs-on: ubuntu-latest
-    needs: [build-and-test, test-it, test-e2e]
-    # Coverage reporting is advisory, not a merge gate. Isolating the Codacy and
-    # Codecov uploads in their own job means an outage in either (e.g. the
-    # Codecov CLI's GPG bootstrap failing) shows up as a red `Upload coverage`
-    # check instead of reddening a test job, and `continue-on-error` keeps it
-    # from blocking merges or releases. A red test job therefore always means a
-    # real test failure — never a coverage-upload hiccup.
-    continue-on-error: true
-    steps:
-      # Checkout so Codecov can resolve the cobertura report's relative paths
-      # against the source tree when building its file network.
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Download coverage reports
-        uses: actions/download-artifact@v4
-        with:
-          path: coverage
-      - name: Upload unit coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-unit/cobertura.xml
-      - name: Upload unit coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-unit/cobertura.xml
-          flags: unit
-      - name: Upload integration coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-integration/cobertura.xml
-      - name: Upload integration coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-integration/cobertura.xml
-          flags: integration
-      - name: Upload e2e coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-e2e/cobertura.xml
-      - name: Upload e2e coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-e2e/cobertura.xml
-          flags: e2e
 
   test-ingest-integration:
     runs-on: ubuntu-latest
@@ -275,17 +230,18 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@v13
       - name: Run integration tests
         run: nix develop --command make test-ingest-integration
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-ingest-integration/test/test.xml test-xml/test-ingest-integration-test.xml || true
       - name: WebApi Ingest Integration Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi Ingest Integration Test Results
-          path: ./modules/test-ingest-integration/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      # No coverage upload here: these tests exercise the ingest service via a
-      # Docker container, so in-process scoverage instrumentation records 0%.
-      # Uploading that report only dilutes the merged coverage. Ingest unit-test
-      # coverage is uploaded by the `build-and-test` job instead.
 
   test-docs-build:
     name: Test docs
@@ -340,6 +296,24 @@ jobs:
       - name: Check formatting
         run: make check
 
+  # Temporary drift gate for the Phase 6 sbt->Bazel `docker-image-tag` source
+  # switch: asserts tools/workspace_status.sh's STABLE_GIT_VERSION byte-matches
+  # sbt's `print dockerImageTag` on every PR. Relies on `preparation`'s
+  # `fetch-depth: 0` checkout (full history + tags) — without tags, both sides
+  # fall back identically to the bare short hash and the gate passes vacuously.
+  # Remove once the sbt-parallel validation window closes.
+  check-docker-image-tag:
+    name: Check docker-image-tag (workspace_status vs sbt)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Assert workspace_status.sh matches sbt's dockerImageTag
+        run: make check-docker-image-tag
+
   docker-healthcheck:
     name: Run the healthcheck from the container
     runs-on: ubuntu-latest
@@ -357,9 +331,10 @@ jobs:
         # Build both knora-api and knora-sipi so docker compose picks up the
         # PR's images. The registry's :latest for knora-sipi lags by a merge,
         # which matters across major Sipi base-image bumps (e.g. v4 -> v5
-        # changed CLI surface and the compose `command:`).
+        # changed CLI surface and the compose `command:`). Both are now Bazel
+        # targets, so both need to run inside the Nix dev shell.
         run: |
-          make docker-build-dsp-api-image
+          nix develop --command make docker-build-dsp-api-image
           nix develop --command make docker-build-sipi-image
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api

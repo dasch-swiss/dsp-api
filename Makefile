@@ -40,16 +40,17 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
 
-# add DOCKER_BUILDKIT=1 to enable buildkit logging as info
-# https://github.com/sbt/sbt-native-packager/issues/1371
-
 .PHONY: docker-build-dsp-api-image
-docker-build-dsp-api-image: # build and publish dsp-api docker image locally
-	export DOCKER_BUILDKIT=1; $(SBTX) "webapi / Docker / publishLocal"
+docker-build-dsp-api-image: # build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
+		bazel run //modules/webapi:load && \
+		docker tag daschswiss/knora-api:latest "daschswiss/knora-api:$$TAG" && \
+		echo "Loaded daschswiss/knora-api: latest + $$TAG"
 
 .PHONY: docker-publish-dsp-api-image
-docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
-	export DOCKER_BUILDKIT=1; $(SBTX) "webapi / Docker / publish"
+docker-publish-dsp-api-image: # build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
+		bazel run //modules/webapi:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
@@ -64,12 +65,16 @@ docker-publish-sipi-image: # build + publish the multi-arch knora-sipi image wit
 		bazel run //modules/sipi:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-publish-ingest-image
-docker-publish-ingest-image: # publish ingest image to Dockerhub
-	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publish"
+docker-publish-ingest-image: # build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
+		bazel run //modules/ingest:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-build-ingest-image
-docker-build-ingest-image: # publish ingest image to Dockerhub
-	export DOCKER_BUILDKIT=1; $(SBTX) "ingest / Docker / publishLocal"
+docker-build-ingest-image: # build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
+		bazel run //modules/ingest:load && \
+		docker tag daschswiss/dsp-ingest:latest "daschswiss/dsp-ingest:$$TAG" && \
+		echo "Loaded daschswiss/dsp-ingest: latest + $$TAG"
 
 # Lazy assignment (=): evaluated only when a Fuseki target is invoked, not at parse time.
 # This avoids errors when modules/fuseki/Dockerfile does not yet exist (Step 1 must run first).
@@ -100,7 +105,17 @@ docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-pu
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
-	@$(SBTX) -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
+	@tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $$2}'
+
+.PHONY: check-docker-image-tag
+check-docker-image-tag: ## assert workspace_status.sh's STABLE_GIT_VERSION byte-matches sbt's dockerImageTag (temporary drift gate for the sbt->Bazel tag-source switch)
+	@ws=$$(tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $$2}'); \
+	 sbt=$$($(SBTX) -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | tr -d '[:space:]'); \
+	 if [ "$$ws" != "$$sbt" ]; then \
+	   echo "DRIFT: workspace_status=$$ws sbt=$$sbt"; \
+	   exit 1; \
+	 fi; \
+	 echo "OK: $$ws"
 
 #################################
 ## DSP Stack Targets
@@ -209,19 +224,25 @@ test-all: test test-it test-e2e
 
 .PHONY: test
 test: ## runs all unit tests
-	$(SBTX) -v coverage webapi/test coverageAggregate copyCoverageReport
+	bazel test //modules/webapi:test
+
+.PHONY: docker-load-test-images
+docker-load-test-images: # loads the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon for Docker-dependent test targets
+	bazel run //modules/sipi:load
+	bazel run //modules/ingest:load
+	bazel run //modules/fuseki:load
 
 .PHONY: test-it
-test-it: docker-build-sipi-image ## runs integration (service/repo) tests
-	$(SBTX) -v coverage test-it/test coverageAggregate copyCoverageReport
+test-it: docker-load-test-images ## runs integration (service/repo) tests
+	bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span
 
 .PHONY: test-e2e
-test-e2e: docker-build-sipi-image ## runs end-to-end (HTTP) tests
-	$(SBTX) -v coverage test-e2e/test coverageAggregate copyCoverageReport
+test-e2e: docker-load-test-images ## runs end-to-end (HTTP) tests
+	bazel test //modules/test-e2e:test
 
 .PHONY: test-ingest-integration
-test-ingest-integration: docker-build-sipi-image docker-build-ingest-image ## runs end-to-end (HTTP) tests
-	$(SBTX) -v coverage ingestIntegration/test coverageAggregate copyCoverageReport
+test-ingest-integration: docker-load-test-images ## runs end-to-end (HTTP) tests
+	bazel test //modules/test-ingest-integration:test
 
 
 #################################

@@ -14,23 +14,29 @@ fmt:
 
 # Run unit tests for dsp-api
 test:
-    ./sbtx "webapi/test"
+    bazel test //modules/webapi:test
+
+# Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
+docker-load-test-images:
+    bazel run //modules/sipi:load
+    bazel run //modules/ingest:load
+    bazel run //modules/fuseki:load
 
 # Run integration tests for dsp-api
-test-it:
-    ./sbtx "test-it/test"
+test-it: docker-load-test-images
+    bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span
 
 # Run End-2-End tests for dsp-api
-test-e2e:
-    ./sbtx "test-e2e/test"
+test-e2e: docker-load-test-images
+    bazel test //modules/test-e2e:test
 
 # Run unit tests for ingest
 test-ingest:
-    ./sbtx ingest/test
+    bazel test //modules/ingest:test
 
 # Run integration tests for ingest
-test-ingest-integration:
-    ./sbtx ingestIntegration/test
+test-ingest-integration: docker-load-test-images
+    bazel test //modules/test-ingest-integration:test
 
 # Start stack
 stack-start:

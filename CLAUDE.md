@@ -54,20 +54,26 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Bazel & the Nix dev shell
 
-All three container images (`knora-sipi`, `knora-api`, `dsp-ingest`) build with **Bazel**
-(`rules_oci`) as of the in-progress Bazelify migration (see `SESSION-HANDOFF.md` on
-`worktree-bazelify` for status). Bazel is provided through a **Nix dev shell** (`flake.nix`) that
-puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and
-`crane` on `PATH`.
+All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena-fuseki`) build with
+**Bazel** (`rules_oci`) (see `SESSION-HANDOFF.md` on `worktree-bazelify` for full migration status).
+Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
+the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
 - **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
-- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //modules/sipi:load`.
-- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //modules/sipi:push`.
+- `make docker-build-sipi-image` / `make docker-build-dsp-api-image` / `make docker-build-ingest-image`
+  build the image and load it into the local Docker daemon (`:latest` plus the git-describe
+  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `docker-publish-*`
+  variants build + push the multi-arch image via `bazel run //modules/<m>:push`.
 - `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
   dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
   them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
-- The Makefile (`make docker-build` / `make docker-publish`) still builds knora-api and dsp-ingest
-  via sbt — that rewiring is Phase 6 of the migration, not done yet.
+- Fuseki's own Makefile targets (`docker-build-fuseki-image`/`docker-publish-fuseki-image`) are a
+  deliberate exception: they stay on the original Dockerfile/`docker buildx` path during the
+  sbt-parallel validation window, even though `//modules/fuseki:load`/`:push` work — see
+  `SESSION-HANDOFF.md` Phase 6.
+- Bazel also now drives `bazel test` in CI and the Makefile's `test`/`test-it`/`test-e2e`/
+  `test-ingest-integration` targets — sbt is retained only for fuseki's publish path and a
+  temporary tag-drift gate (`make check-docker-image-tag`), both removable once validation closes.
 
 ## Architecture
 
