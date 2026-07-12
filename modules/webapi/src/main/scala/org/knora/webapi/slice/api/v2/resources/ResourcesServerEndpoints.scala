@@ -8,8 +8,8 @@ package org.knora.webapi.slice.api.v2.resources
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.config.Resources
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
@@ -44,8 +44,8 @@ final class ResourcesServerEndpoints(resourcesEndpoints: ResourcesEndpoints, res
 
 object ResourcesServerEndpoints {
 
-  type Dependencies = AppConfig & ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & IriConverter &
-    KnoraResponseRenderer & ReadResourcesService & ResourcesResponderV2 & SearchResponderV2
+  type Dependencies = ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & IriConverter &
+    KnoraResponseRenderer & ReadResourcesService & Resources & ResourcesResponderV2 & SearchResponderV2
 
   type Provided = ResourcesServerEndpoints
 

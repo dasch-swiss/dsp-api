@@ -9,7 +9,6 @@ import sttp.model.MediaType
 import zio.*
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -32,7 +31,6 @@ final case class ResourcesRestService(
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
   private val readResources: ReadResourcesService,
-  private val appConfig: AppConfig,
 ) {
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
@@ -116,18 +114,9 @@ final case class ResourcesRestService(
     formatOptions: FormatOptions,
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
-    val max = appConfig.v2.resources.maxBatchSize
+    // Batch size (1..max-batch-size) and non-emptiness are enforced at the request boundary by the
+    // Tapir schema on ResourcesBatchRequest; here we only parse, de-duplicate, and delegate.
     for {
-      _ <- ZIO.when(request.resourceIris.sizeIs > max)(
-             ZIO.fail(
-               BadRequestException(
-                 s"Too many resources requested: ${request.resourceIris.size} (maximum is $max).",
-               ),
-             ),
-           )
-      _ <- ZIO.when(request.resourceIris.isEmpty)(
-             ZIO.fail(BadRequestException("resourceIris must not be empty.")),
-           )
       resIris  <- ZIO.foreach(request.resourceIris)(parseResourceIri).map(_.distinct)
       response <- readAndRender(resIris, versionDate, formatOptions, user)
     } yield response

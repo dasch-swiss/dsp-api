@@ -181,7 +181,7 @@ final case class Features(
 
 object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
-    GraphRoute & JwtConfig
+    GraphRoute & Resources & JwtConfig
 
   val config: Config[AppConfig] = deriveConfig[AppConfig]
     .mapKey(toKebabCase)
@@ -224,5 +224,6 @@ object AppConfig {
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
       appConfigLayer.project(_.jwt) ++
-      appConfigLayer.project(_.v2.graphRoute)
+      appConfigLayer.project(_.v2.graphRoute) ++
+      appConfigLayer.project(_.v2.resources)
 }

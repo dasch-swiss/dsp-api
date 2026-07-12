@@ -137,12 +137,15 @@ The request body must be sent with `Content-Type: application/json`:
 }
 ```
 
-The maximum number of IRIs accepted per request is configurable
-(`app.v2.resources.max-batch-size`, default 100, overridable via
-`KNORA_WEBAPI_V2_RESOURCES_MAX_BATCH_SIZE`); a request exceeding it is rejected with
-`400 Bad Request`. An empty list is also a `400`. Duplicate IRIs are de-duplicated. As
-with the `GET` route, the request fails as a whole if any requested resource is not
-found (`404`) or not readable by the user (`403`).
+Each request must carry **between 1 and the configured maximum** resource IRIs. That
+maximum is an operational setting (`app.v2.resources.max-batch-size`, default 100,
+overridable per deployment via `KNORA_WEBAPI_V2_RESOURCES_MAX_BATCH_SIZE`). It is
+published in the endpoint's OpenAPI schema as the `minItems` / `maxItems` of
+`resourceIris`, so the documented limit always matches what the running server actually
+enforces. A request with too many IRIs — or an empty list — is rejected with
+`400 Bad Request`. Duplicate IRIs are de-duplicated. As with the `GET` route, the request
+fails as a whole if any requested resource is not found (`404`) or not readable by the
+user (`403`).
 
 ### Get a Full Representation of a Version of a Resource by IRI
 
