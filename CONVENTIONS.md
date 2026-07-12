@@ -65,13 +65,14 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 - Scalafmt via `sbt fmt`; CI runs `sbt check`.
 - Every source file carries the Apache-2.0 + SPDX header (managed by `sbt headerCreateAll` / `headerCheckAll`).
 
-### Static analysis (Codacy)
+### Code style (formerly Codacy-enforced)
 
-CI runs Codacy and reports new issues (pre-existing ones are grandfathered). It is **advisory** — not a required check — but keep new/changed **production** source (`src/main`) clear of its common triggers. Test sources are excluded (`.codacy.yml`), so test-only idioms never trip it.
+These conventions apply to new/changed **production** source (`src/main`); they are no longer
+CI-enforced (Codacy static analysis was removed from this repo), but keep following them.
 
 - **ASCII only** in source — no smart punctuation (`…`, `→`, `≥`, curly quotes); write `...`, `->`, `>=`. (The `©` in the licence header is exempt.)
-- **Prefer immutable `val`s and recursion / collection combinators** over `var` and `while`. This isn't an absolute ban — a mutable loop is fine where it is genuinely the clearest option (e.g. a tight byte-copy loop) — but Codacy flags every *new* occurrence, so reach for `@tailrec` / folds first and only keep a `var`/`while` when it really reads better.
-- **Methods ≤ 50 lines** in production source — split long ones. (This rule is intentionally **not** applied to tests: long ZIO `spec` methods are fine, which is why `src/test/**` is excluded from Codacy.)
+- **Prefer immutable `val`s and recursion / collection combinators** over `var` and `while`. This isn't an absolute ban — a mutable loop is fine where it is genuinely the clearest option (e.g. a tight byte-copy loop) — but reach for `@tailrec` / folds first and only keep a `var`/`while` when it really reads better.
+- **Methods ≤ 50 lines** in production source — split long ones. (This rule is intentionally **not** applied to tests: long ZIO `spec` methods are fine.)
 
 ### Naming in human-readable text
 

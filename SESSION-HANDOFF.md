@@ -600,9 +600,17 @@ with no prod regression.
   and the decision was to drop rather than wire JaCoCo). Removed: the whole `upload-coverage` job
   (Codacy + Codecov uploads), every per-job "Upload coverage report" artifact step, the
   `coverageAggregate copyCoverageReport` sbt chains, the `id-token: write` permission (existed only
-  for Codecov's tokenless OIDC upload), and `.codecov.yml`. **`.codacy.yml` was deliberately kept**
-  — it configures Codacy's static-analysis `exclude_paths`, not coverage, so it's an unrelated
-  concern that happens to share a vendor.
+  for Codecov's tokenless OIDC upload), and `.codecov.yml`.
+- **Codacy static analysis removed too** (follow-up decision after the coverage drop): deleted
+  `.codacy.yml`, the two Codacy README badges (root `README.md`), and retitled `CONVENTIONS.md`'s
+  "Static analysis (Codacy)" section to plain code-style guidance (the underlying rules — ASCII
+  only, prefer immutability, method-length cap — are kept as team convention, just no longer framed
+  as CI-enforced). **Manual step still needed, outside this repo's code**: the "Codacy Static Code
+  Analysis" GitHub check is driven by Codacy's GitHub App integration on the repo, not by any file
+  here — deleting `.codacy.yml` stops the exclude-paths config from applying but does **not** by
+  itself stop the check from running or appearing on PRs. Uninstalling/disabling the Codacy GitHub
+  App for this repo (via repo Settings → Integrations, or the Codacy dashboard) requires org/repo
+  admin access and is a separate action someone needs to take.
 - **`docker-healthcheck` job fix**: its `make docker-build-dsp-api-image` call ran bare (no `nix
   develop`) because that target used to be sbt. Now that 6a made it a Bazel target, the bare call
   would break (`bazel: command not found`) — wrapped under `nix develop --command`. A full sweep of
