@@ -1,5 +1,28 @@
 # Changelog
 
+## [37.1.0](https://github.com/dasch-swiss/dsp-api/compare/v37.0.0...v37.1.0) (2026-07-12)
+
+
+### Maintenances
+
+* build the Sipi image with Bazel (rules_oci) instead of sbt ([#4159](https://github.com/dasch-swiss/dsp-api/issues/4159)) ([aa7a42b](https://github.com/dasch-swiss/dsp-api/commit/aa7a42b80c104108fcb727d9d73016941ca0fcaf))
+* **build:** move fuseki, ingest, sipi, webapi under modules/ ([#4183](https://github.com/dasch-swiss/dsp-api/issues/4183)) ([d84f7ed](https://github.com/dasch-swiss/dsp-api/commit/d84f7edec0c53b8786e3ea5dd1c9f2ffb2a53122))
+
+
+### Documentation
+
+* capture ontology, SPARQL and lenient-read conventions from the legal-metadata reviews (DEV-6719) ([#4182](https://github.com/dasch-swiss/dsp-api/issues/4182)) ([afa1e94](https://github.com/dasch-swiss/dsp-api/commit/afa1e940a93b559642af0b5cb72667d8bb2167d0))
+* prefer opt.fold over opt.map(...).getOrElse in Scala conventions ([#4188](https://github.com/dasch-swiss/dsp-api/issues/4188)) ([751f5c3](https://github.com/dasch-swiss/dsp-api/commit/751f5c3ee5b88064b1d51e0d85512d80460eb083))
+
+
+### Enhancements
+
+* add POST /v2/resources/batch to fetch multiple resources by IRI (DEV-6730) ([#4189](https://github.com/dasch-swiss/dsp-api/issues/4189)) ([2237e0f](https://github.com/dasch-swiss/dsp-api/commit/2237e0ff3a746fb43c61ed96c767e25158a6a866))
+* eliminate redundant asset compression in project-migration export (DEV-6592) ([#4190](https://github.com/dasch-swiss/dsp-api/issues/4190)) ([af90a88](https://github.com/dasch-swiss/dsp-api/commit/af90a887318407c7c80714a60124962ac73a67f8))
+* **gravsearch:** add matchFulltext function ([#4184](https://github.com/dasch-swiss/dsp-api/issues/4184)) ([d2d13d2](https://github.com/dasch-swiss/dsp-api/commit/d2d13d24d1099b52a9bad4199bff244591ad0c5c))
+* include resource-side legal info in the CSV download when legal metadata is set (DEV-6721) ([#4186](https://github.com/dasch-swiss/dsp-api/issues/4186)) ([85ca121](https://github.com/dasch-swiss/dsp-api/commit/85ca1215a661be38823748949209b646cddca66f))
+* **oai:** expose mime type and direct file link in OAI metadata records (DEV-6684) ([#4166](https://github.com/dasch-swiss/dsp-api/issues/4166)) ([4eac14e](https://github.com/dasch-swiss/dsp-api/commit/4eac14e87fed81734a37bfa5150326655f267471))
+
 ## [37.0.0](https://github.com/dasch-swiss/dsp-api/compare/v36.4.0...v37.0.0) (2026-07-06)
 
 
