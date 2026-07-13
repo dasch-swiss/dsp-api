@@ -242,62 +242,6 @@ init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the
 init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the dsp-repo repository with minimal data
 	@echo $@
 
-.PHONY: init-db-from-test
-init-db-from-test: ## init local database with data from test server. Use as `make init-db-from-test PW=database-password`
-	@echo $@
-	${MAKE} init-db-from-env ENV=db.test.dasch.swiss
-
-.PHONY: init-db-from-test-dump
-init-db-from-test-dump: ## init local database with data from local dump file of test server. Use as `make init-db-from-test-dump`
-	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.test.dasch.swiss.trig
-
-.PHONY: init-db-from-stage
-init-db-from-stage: ## init local database with data from stage server. Use as `make init-db-from-stage PW=database-password`
-	@echo $@
-	${MAKE} init-db-from-env ENV=db.stage.dasch.swiss
-
-.PHONY: init-db-from-stage-dump
-init-db-from-stage-dump: ## init local database with data from local dump file of stage server. Use as `make init-db-from-stage-dump`
-	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.stage.dasch.swiss.trig
-
-.PHONY: init-db-from-prod
-init-db-from-prod: ## init local database with data from prod server. Use as `make init-db-from-prod PW=database-password`
-	@echo $@
-	${MAKE} init-db-from-env ENV=db.dasch.swiss
-
-.PHONY: init-db-from-prod-dump
-init-db-from-prod-dump: ## init local database with data from local dump file of prod server. Use as `make init-db-from-prod-dump`
-	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.dasch.swiss.trig
-
-.PHONY: init-db-from-dev
-init-db-from-dev: ## init local database with data from dev. Use as `make init-db-from-dev PW=database-password`
-	@echo $@
-	${MAKE} init-db-from-env ENV=db.dev.dasch.swiss
-
-.PHONY: init-db-from-dev-dump
-init-db-from-dev-dump: ## init local database with data from local dump file of dev server. Use as `make init-db-from-dev-dump`
-	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.dev.dasch.swiss.trig
-
-.PHONY: init-db-from-ls-test-server
-init-db-from-ls-test-server: ## init local database with data from ls-test-server. Use as `make init-db-from-ls-test-server PW=database-password`
-	@echo $@
-	${MAKE} init-db-from-env ENV=db.ls-test-server.dasch.swiss
-
-.PHONY: init-db-from-ls-test-server-dump
-init-db-from-ls-test-server-dump: ## init local database with data from local dump file of ls-test-server server. Use as `make init-db-from-ls-test-server-dump`
-	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.ls-test-server.dasch.swiss.trig
-
-.PHONY: db-dump
-db-dump: ## Dump data from an env. Use as `make db-dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
-	@echo $@
-	@echo dumping environment ${ENV}
-	@curl -f -X GET -H "Accept: application/trig" -u "admin:${PW}" "https://${ENV}/dsp-repo" > "${ENV}.trig"
-
 .PHONY: init-db-from-dump-file
 init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
 	@echo $@
@@ -305,13 +249,6 @@ init-db-from-dump-file: ## init local database from a specified dump file. Use a
 	${MAKE} init-db-test-empty
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/dsp-repo"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/dsp-repo"
-
-.PHONY: init-db-from-env
-init-db-from-env: ## ## Dump data from an env and upload it to the local DB. Use as `make init-db-from-env PW=database-password ENV=db.0000-test-server.dasch.swiss`
-	@echo $@
-	${MAKE} db-dump
-	${MAKE} init-db-from-dump-file DUMP=${ENV}.trig
-
 
 #################################
 ## Other

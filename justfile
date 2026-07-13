@@ -78,24 +78,6 @@ stack-destroy:
 stack-init-test: && stack-start
     make init-db-test
 
-# Run API locally against the dev Fuseki (requires VPN)
-run-with-dev-db:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -f .env ]; then
-        main=$(git worktree list --porcelain | awk 'NR==1{sub(/^worktree /, ""); print}')
-        ln -s "$main/.env" .env
-    fi
-    source .env
-    export KNORA_WEBAPI_TRIPLESTORE_HOST=db.dev.dasch.swiss
-    export KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS=true
-    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT=443
-    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
-    export KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=$DEV_DB_PASSWORD
-    export KNORA_WEBAPI_SIPI_INTERNAL_HOST=iiif.dev.dasch.swiss                                                             
-    export KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL=https                                                                        
-    export KNORA_WEBAPI_SIPI_INTERNAL_PORT=443
-    ./sbtx "webapi/run"
 
 ## Documentation
 
