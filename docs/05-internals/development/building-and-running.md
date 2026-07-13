@@ -117,6 +117,26 @@ docker logs to the terminal window of the editor.
 The docker plugin also allows for a number of other useful features, like inspecting the container's file system or
 attaching a shell to the container.
 
+## Testing against realistic data
+
+Direct access to the remote dev/stage triplestore — the former `just run-with-dev-db`
+and `make init-db-from-<env>` recipes — has been **retired**: shared DB passwords are
+gone and the DB network is locked down. An API-based replacement is planned (tracked
+internally as DEV-6734).
+
+For reference — useful when building that replacement — the retired workflows worked
+like this:
+
+- **Dump a dataset:** `GET https://<host>/dsp-repo` with `Accept: application/trig` and
+  HTTP basic auth returns a TriG file of all named graphs.
+- **Load a dump into local Fuseki:** `DROP ALL` via a SPARQL update, then `POST` the
+  TriG to `http://localhost:3030/dsp-repo` with `Content-Type: application/trig`
+  (per-graph loads use `PUT .../dsp-repo/data?graph=<iri>`).
+- **Point a local API at a remote store:** set `KNORA_WEBAPI_TRIPLESTORE_HOST`,
+  `KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS`, `KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT`,
+  `KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME` / `_PASSWORD`, plus the matching
+  `KNORA_WEBAPI_SIPI_INTERNAL_HOST` / `_PROTOCOL` / `_PORT` for assets.
+
 ## Running the automated tests
 
 To run all test targets, use the following in the command line:
