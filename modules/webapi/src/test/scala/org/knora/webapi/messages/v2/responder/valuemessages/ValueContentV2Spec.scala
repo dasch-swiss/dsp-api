@@ -67,6 +67,23 @@ object ValueContentV2Spec extends ZIOSpecDefault {
           assertTrue(result.isLeft)
         },
       ),
+      suite("GeomValueContentV2.parseShape")(
+        test("extracts geomType 'rectangle' (the region-preview crop/highlight gate)") {
+          val geom =
+            """{"status":"active","points":[{"x":0.1,"y":0.2},{"x":0.3,"y":0.4}],"type":"rectangle"}"""
+          val result = GeomValueContentV2.parseShape(geom)
+          assertTrue(result.map(_.geomType) == Right(Some("rectangle")), result.map(_.points.size) == Right(2))
+        },
+        test("extracts a non-rectangle geomType (crop/highlight are gated off for it)") {
+          val geom   = """{"points":[{"x":0.1,"y":0.2},{"x":0.3,"y":0.4},{"x":0.5,"y":0.1}],"type":"polygon"}"""
+          val result = GeomValueContentV2.parseShape(geom)
+          assertTrue(result.map(_.geomType) == Right(Some("polygon")))
+        },
+        test("yields geomType None when the type field is absent") {
+          val result = GeomValueContentV2.parseShape("""{"points":[]}""")
+          assertTrue(result.map(_.geomType) == Right(None))
+        },
+      ),
     )
 
   private def mockSipi() = ZLayer.succeed(new SipiService {

@@ -83,6 +83,12 @@ For example, here is a request to create a resource with various value types:
       "@id" : "http://rdfh.ch/0001/a-thing"
     }
   },
+  "anything:hasRegionPreview" : {
+    "@type" : "knora-api:RegionPreviewValue",
+    "knora-api:isRegionPreviewOf" : {
+      "@id" : "http://rdfh.ch/0001/a-region"
+    }
+  },
   "anything:hasRichtext" : {
     "@type" : "knora-api:TextValue",
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
