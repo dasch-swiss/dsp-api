@@ -463,7 +463,12 @@ final class ResourcesResponderV2(
     isResourceInUse(resourceIri)
       .flatMap(usingResources =>
         ZIO
-          .fail(BadRequestException(s"Resource $resourceIri is used by: ${usingResources.mkString(",")}."))
+          .fail(
+            BadRequestException(
+              s"Resource $resourceIri cannot be deleted because it is still referenced by: " +
+                s"${usingResources.mkString(", ")}. Remove the referencing region preview(s) or link(s) first.",
+            ),
+          )
           .when(usingResources.nonEmpty),
       )
       .unit
