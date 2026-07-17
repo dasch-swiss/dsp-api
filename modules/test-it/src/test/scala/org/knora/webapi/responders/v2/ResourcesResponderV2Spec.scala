@@ -1693,6 +1693,44 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           resource.creationDate == createdResourceCreationDate,
         )
       },
+      test("protect a Region referenced by a live region preview, and release it once the preview is deleted") {
+        // The fixture resource 55Urkg holds a live region preview pointing at region A5NfXW; deleting that
+        // preview must free the region (the value-node isDeleted filter in isResourceInUse). rootUser is a
+        // system admin, so permission checks never mask the in-use result.
+        val referencedRegionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w")
+        val regionClassIri      = "http://api.knora.org/ontology/knora-api/v2#Region".toSmartIri
+        val previewHostIri      = ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
+        val previewValueIri     =
+          ValueIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w")
+        val canDeleteRegion = resourceResponder(
+          _.canDeleteResource(
+            DeleteOrEraseResourceRequestV2(
+              resourceIri = referencedRegionIri,
+              resourceClassIri = regionClassIri,
+              maybeLastModificationDate = None,
+              requestingUser = rootUser,
+              apiRequestID = randomUUID,
+            ),
+          ),
+        )
+        for {
+          protection <- canDeleteRegion
+          _          <- ZIO.serviceWithZIO[ValuesResponderV2](
+                 _.deleteValueV2(
+                   DeleteValueV2(
+                     previewHostIri,
+                     ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+                     PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri),
+                     previewValueIri,
+                     valueTypeIri = OntologyConstants.KnoraApiV2Complex.RegionPreviewValue.toSmartIri,
+                     apiRequestId = randomUUID,
+                   ),
+                   rootUser,
+                 ),
+               )
+          release <- canDeleteRegion
+        } yield assertTrue(!protection.canDo.value, release.canDo.value)
+      },
       test("mark a resource as deleted, supplying a custom delete date") {
         val resourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA")
         val deleteDate: Instant = Instant.now
