@@ -46,14 +46,23 @@ final case class ValueContentValidator(
     ensureNoCrossProjectLink(vc, inProject) *> ensureValidLegalInfo(vc, inProject)
 
   private def ensureNoCrossProjectLink(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] = vc match
-    case lvc: LinkValueContentV2 => ensureNoCrossProjectLink(lvc, inProject)
-    case tvc: TextValueContentV2 => ensureNoCrossProjectLink(tvc, inProject)
-    case _                       => ZIO.unit
+    case lvc: LinkValueContentV2           => ensureNoCrossProjectLink(lvc, inProject)
+    case tvc: TextValueContentV2           => ensureNoCrossProjectLink(tvc, inProject)
+    case rpvc: RegionPreviewValueContentV2 => ensureNoCrossProjectLink(rpvc, inProject)
+    case _                                 => ZIO.unit
 
   private def ensureNoCrossProjectLink(lvc: LinkValueContentV2, inProject: Shortcode) = {
     val refShortcode = lvc.referredResourceIri.shortcode
     ZIO
       .fail(s"Cannot create a link between resources cross projects $inProject and $refShortcode")
+      .unless(inProject == refShortcode)
+      .unit
+  }
+
+  private def ensureNoCrossProjectLink(rpvc: RegionPreviewValueContentV2, inProject: Shortcode) = {
+    val refShortcode = rpvc.regionIri.shortcode
+    ZIO
+      .fail(s"Cannot reference a Region across projects $inProject and $refShortcode")
       .unless(inProject == refShortcode)
       .unit
   }
