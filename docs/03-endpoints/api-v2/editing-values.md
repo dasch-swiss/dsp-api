@@ -185,7 +185,7 @@ A `knora-api:RegionPreviewValue` references a `Region` directly, without link-va
 ```
 
 The target must exist, be a `Region`, and belong to the same project as the referencing resource, otherwise the request
-is rejected. Only the target reference (and an optional `knora-api:valueHasComment`) is stored; the crop/thumbnail/
+is rejected. Only the target reference (and any other generic properties that are used by all values) is stored; the crop/thumbnail/
 highlight/full-image/legal fields are computed on read and must not be submitted. Updating the value follows the same
 shape and payload; re-pointing it to a different region is subject to the same referential-integrity checks.
 
