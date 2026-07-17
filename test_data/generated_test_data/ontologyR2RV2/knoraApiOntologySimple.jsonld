@@ -1794,18 +1794,6 @@
             "@id": "knora-api:hasValue"
         },
         {
-            "rdfs:label": "is an IIIF URL",
-            "rdfs:comment": "IIIF URL for the region preview",
-            "@type": "owl:DatatypeProperty",
-            "knora-api:subjectType": {
-                "@id": "knora-api:RegionPreviewValue"
-            },
-            "knora-api:objectType": {
-                "@id": "xsd:string"
-            },
-            "@id": "knora-api:iiifUrl"
-        },
-        {
             "rdfs:label": "is Annotation of",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
