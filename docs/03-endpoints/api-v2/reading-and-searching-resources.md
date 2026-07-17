@@ -55,6 +55,7 @@ geometry and the still image it is part of:
   `knora-api:hasPreviewHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). These are present
   **only when the region's geometry is a rectangle**; for other geometries they are omitted.
 - `knora-api:hasPreviewThumbnailUrl` — a IIIF URL of the full page at a fixed height, present for any geometry.
+- `knora-api:hasPreviewColor` — the region's colour (its `knora-base:hasColor`), present for any geometry.
 - `knora-api:hasPreviewFullImage` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the still image resource.
 - `knora-api:hasCopyrightHolder`, `knora-api:hasAuthorship`, `knora-api:hasLicense` — the still image's legal
   metadata.

@@ -212,6 +212,7 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
           preview.flatMap(_.fullImage).map(_.label).contains("A thing with a picture"),
           preview.flatMap(_.fullImage).exists(_.resourceClassIri.toString.endsWith("#ThingPicture")),
+          preview.flatMap(_.color).contains("#ff3333"),
           preview.flatMap(_.legalInfo).contains(LegalInfo(None, None, None)),
         )
       },
@@ -242,6 +243,8 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
               "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg",
             ),
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
+          // colour is geometry-independent, so it survives the rectangle gate
+          preview.flatMap(_.color).contains("#ff3333"),
           preview.flatMap(_.legalInfo).isDefined,
         )
       },
@@ -266,6 +269,8 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           body.contains("full/^,256/0/default.jpg"),
           body.contains("hasPreviewHighlightBoxX"),
           body.contains("hasPreviewHighlightBoxH"),
+          // precise: #ff3333 is the object of hasPreviewColor (a bare string), not merely present somewhere
+          "\"[^\"]*hasPreviewColor\"\\s*:\\s*\"#ff3333\"".r.findFirstIn(body).isDefined,
           body.contains("hasPreviewFullImage"),
           body.contains("http://rdfh.ch/0001/a-thing-picture"),
           // crop/thumbnail must be xsd:anyURI typed literals (Phase 3.1 <-> Phase 7 datatype match)

@@ -2569,6 +2569,7 @@ final case class HighlightBox(x: BigDecimal, y: BigDecimal, w: BigDecimal, h: Bi
  * @param cropUrl        IIIF URL of the cropped region image (rectangle geometry only), computed at read time.
  * @param thumbnailUrl   IIIF URL of the full-page thumbnail, computed at read time.
  * @param highlightBox   the region's bounding box as percentages (rectangle geometry only), computed at read time.
+ * @param color          the region's color (its knora-base:hasColor), computed at read time; geometry-independent.
  * @param fullImage      identity of the still image the region is part of, computed at read time.
  * @param legalInfo      the still image's copyright/authorship/license metadata, computed at read time.
  */
@@ -2579,6 +2580,7 @@ case class RegionPreviewValueContentV2(
   cropUrl: Option[String] = None,
   thumbnailUrl: Option[String] = None,
   highlightBox: Option[HighlightBox] = None,
+  color: Option[String] = None,
   fullImage: Option[FullImageIdentity] = None,
   legalInfo: Option[LegalInfo] = None,
 ) extends ValueContentV2 {
@@ -2648,6 +2650,9 @@ case class RegionPreviewValueContentV2(
                 ),
               ),
             ) ++
+            // A plain hex string, emitted as a bare JsonLDString like ColorValueContentV2's colorValueAsColor
+            // (not an anyURI/decimal typed literal).
+            color.map(c => HasPreviewColor -> JsonLDString(c)).toList ++
             fullImage.map(fi => HasPreviewFullImage -> fullImageJsonLd(fi)).toList ++
             legalInfo.toList.flatMap(legalInfoJsonLd)
         fields.toMap

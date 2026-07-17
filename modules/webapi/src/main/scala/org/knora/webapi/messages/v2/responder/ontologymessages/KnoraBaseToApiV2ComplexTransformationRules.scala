@@ -456,6 +456,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("has region preview highlight box height")
     .withRdfCommentEn("Height percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
 
+  private val HasPreviewColor = makeOwlDatatypeProperty(KA.HasPreviewColor, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview color")
+    .withRdfCommentEn("The region's color (its knora-base:hasColor, computed on read; geometry-independent).")
+
   private val HasPreviewFullImage = makeOwlObjectProperty(KA.HasPreviewFullImage, KA.Resource)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
@@ -471,6 +477,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.HasPreviewHighlightBoxY -> ZeroOrOne,
     KA.HasPreviewHighlightBoxW -> ZeroOrOne,
     KA.HasPreviewHighlightBoxH -> ZeroOrOne,
+    KA.HasPreviewColor         -> ZeroOrOne,
     KA.HasPreviewFullImage     -> ZeroOrOne,
     KA.HasCopyrightHolder      -> ZeroOrOne,
     KA.HasAuthorship           -> Unbounded,
@@ -740,6 +747,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasPreviewHighlightBoxY,
     HasPreviewHighlightBoxW,
     HasPreviewHighlightBoxH,
+    HasPreviewColor,
     HasPreviewFullImage,
     HasResourceAuthorship,
     IntValueAsInt,

@@ -859,6 +859,7 @@ object OntologyConstants {
     val HasPreviewHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxY"
     val HasPreviewHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxW"
     val HasPreviewHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxH"
+    val HasPreviewColor: IRI         = KnoraApiV2PrefixExpansion + "hasPreviewColor"
     val HasPreviewFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasPreviewFullImage"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"

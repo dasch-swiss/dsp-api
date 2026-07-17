@@ -4447,6 +4447,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasPreviewColor"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasPreviewCropUrl"
                     },
                     "owl:maxCardinality": 1
@@ -9186,6 +9193,21 @@
                 "@id": "xsd:string"
             },
             "rdfs:label": "has permissions"
+        },
+        {
+            "rdfs:label": "has region preview color",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasPreviewColor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The region's color (its knora-base:hasColor, computed on read; geometry-independent)."
         },
         {
             "rdfs:label": "has region preview crop URL",

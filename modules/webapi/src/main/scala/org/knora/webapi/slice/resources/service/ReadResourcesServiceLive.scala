@@ -19,6 +19,7 @@ import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ColorValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FullImageIdentity
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HighlightBox
@@ -281,6 +282,7 @@ final case class ReadResourcesServiceLive(
     cropUrl: Option[String],
     thumbnailUrl: Option[String],
     highlightBox: Option[HighlightBox],
+    color: Option[String],
     fullImage: Option[FullImageIdentity],
     legalInfo: Option[LegalInfo],
   )
@@ -321,8 +323,12 @@ final case class ReadResourcesServiceLive(
             (Some(s"$base/$selector/max/0/default.jpg"), Some(b))
           case None => (None, None)
         }
+        // The region's color (knora-base:hasColor) — geometry-independent, so present even for a non-rectangle.
+        val color = region.values.values.flatten
+          .map(_.valueContent)
+          .collectFirst { case c: ColorValueContentV2 => c.valueHasColor }
         region.resourceIri ->
-          RegionPreviewComputed(cropUrl, Some(thumbnailUrl), highlightBox, Some(fullImage), Some(legalInfo))
+          RegionPreviewComputed(cropUrl, Some(thumbnailUrl), highlightBox, color, Some(fullImage), Some(legalInfo))
       }
     }.toMap
   }
@@ -367,6 +373,7 @@ final case class ReadResourcesServiceLive(
                       cropUrl = c.cropUrl,
                       thumbnailUrl = c.thumbnailUrl,
                       highlightBox = c.highlightBox,
+                      color = c.color,
                       fullImage = c.fullImage,
                       legalInfo = c.legalInfo,
                     ),
