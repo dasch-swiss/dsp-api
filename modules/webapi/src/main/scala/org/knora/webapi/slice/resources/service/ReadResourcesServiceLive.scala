@@ -19,11 +19,14 @@ import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FullImageIdentity
 import org.knora.webapi.messages.v2.responder.valuemessages.GeomValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.HighlightBox
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ResourceIri
@@ -178,7 +181,7 @@ final case class ReadResourcesServiceLive(
             requestingUser = requestingUser,
           )
 
-        readSequence <- augmentRegionPreviewValues(baseSequence, targetSchema, requestingUser)
+        readSequence <- augmentRegionPreviewValues(baseSequence, targetSchema)
 
         _ <-
           ZIO.foreach(readSequence.checkResourceIris(resourceIris.toSet, readSequence)) { throwable =>
@@ -235,17 +238,17 @@ final case class ReadResourcesServiceLive(
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
   /**
-   * Augments every [[RegionPreviewValueContentV2]] in `seq` with a computed IIIF URL.
-   *
-   * For each referenced region we fetch the region resource (for its geometry) and the still image
-   * the region is `isRegionOf` (for its internal filename and project shortcode). The geometry's
-   * bounding box becomes the IIIF region selector `pct:x,y,w,h`, and the URL is rendered at max size:
-   * `{sipiBaseUrl}/{shortcode}/{filename}/pct:x,y,w,h/max/0/default.jpg`.
+   * Augments every [[RegionPreviewValueContentV2]] in `seq` with the fields computed on read: the crop URL and
+   * highlight box (rectangle geometry only), the full-page thumbnail URL, the full-image identity, and the legal
+   * info. The region and image resources are read with the elevated [[KnoraSystemInstances.Users.SystemUser]]:
+   * value-level permission filtering has already dropped any preview the requesting user cannot view, so a
+   * value-visible preview always yields its identity + legal metadata regardless of the user's permissions on the
+   * region or image. Only a bounded field set is projected onto the content; the full still-image resource is
+   * never attached. Sipi enforces the image pixels per request, so no image-tier permission gate is applied here.
    */
   private def augmentRegionPreviewValues(
     seq: ReadResourcesSequenceV2,
     ts: ApiV2Schema,
-    user: User,
   ): Task[ReadResourcesSequenceV2] = {
     val regionIris = seq.resources
       .flatMap(_.values.values.flatten)
@@ -256,57 +259,97 @@ final case class ReadResourcesServiceLive(
     if (regionIris.isEmpty) ZIO.succeed(seq)
     else
       for {
-        regions  <- readResourcesSequence_(regionIris, targetSchema = ts, requestingUser = user)
+        regions <- readResourcesSequence_(
+                     regionIris,
+                     targetSchema = ts,
+                     requestingUser = KnoraSystemInstances.Users.SystemUser,
+                   )
         imageIris = regions.resources.flatMap(_.isRegionOfValueReferredIri.toList).distinct
-        images   <- readResourcesSequence_(imageIris, targetSchema = ts, requestingUser = user)
-        iiifUrls  = regionIiifUrls(regions, images)
+        images   <- readResourcesSequence_(
+                    imageIris,
+                    targetSchema = ts,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser,
+                  )
+        computed = regionPreviewComputed(regions, images)
       } yield seq
         .focus(_.resources)
-        .modify(_.map(r => augmentResourceRegionPreviews(r, iiifUrls)))
+        .modify(_.map(r => augmentResourceRegionPreviews(r, computed)))
   }
 
-  /** Builds a `regionIri -> iiifUrl` map from the fetched region and image resources. */
-  private def regionIiifUrls(
+  /** The fields computed on read for a single region preview. */
+  private final case class RegionPreviewComputed(
+    cropUrl: Option[String],
+    thumbnailUrl: Option[String],
+    highlightBox: Option[HighlightBox],
+    fullImage: Option[FullImageIdentity],
+    legalInfo: Option[LegalInfo],
+  )
+
+  /**
+   * Builds a `regionIri -> computed fields` map from the fetched region and image resources. The still image is
+   * resolved independently of geometry, so thumbnail + full-image identity + legal info are produced for any
+   * geometry; only crop URL + highlight box are gated on the region being a rectangle.
+   */
+  private def regionPreviewComputed(
     regions: ReadResourcesSequenceV2,
     images: ReadResourcesSequenceV2,
-  ): Map[ResourceIri, String] = {
+  ): Map[ResourceIri, RegionPreviewComputed] = {
     val imagesByIri = images.resources.map(img => img.resourceIri -> img).toMap
     regions.resources.flatMap { region =>
       for {
-        regionSelector <- geometryToIiifRegion(region)
-        imageIri       <- region.isRegionOfValueReferredIri
-        image          <- imagesByIri.get(imageIri)
-        stillImage     <- image.values.values.flatten.map(_.valueContent).collectFirst {
+        imageIri   <- region.isRegionOfValueReferredIri
+        image      <- imagesByIri.get(imageIri)
+        stillImage <- image.values.values.flatten.map(_.valueContent).collectFirst {
                         case si: StillImageFileValueContentV2 => si
                       }
-      } yield region.resourceIri ->
-        s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}/$regionSelector/max/0/default.jpg"
+      } yield {
+        val base =
+          s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}"
+        val thumbnailUrl = s"$base/full/,512/0/default.jpg"
+        val fullImage    = FullImageIdentity(image.resourceIri.value, image.label, image.resourceClassIri)
+        val legalInfo    = LegalInfo(
+          stillImage.fileValue.copyrightHolder,
+          stillImage.fileValue.authorship,
+          stillImage.fileValue.licenseIri,
+        )
+        val (cropUrl, highlightBox) = regionBoundingBox(region) match {
+          case Some(b) =>
+            val selector =
+              s"pct:${b.x.bigDecimal.toPlainString},${b.y.bigDecimal.toPlainString},${b.w.bigDecimal.toPlainString},${b.h.bigDecimal.toPlainString}"
+            (Some(s"$base/$selector/max/0/default.jpg"), Some(b))
+          case None => (None, None)
+        }
+        region.resourceIri ->
+          RegionPreviewComputed(cropUrl, Some(thumbnailUrl), highlightBox, Some(fullImage), Some(legalInfo))
+      }
     }.toMap
   }
 
-  /** Derives the IIIF `pct:x,y,w,h` region selector from a region resource's geometry value. */
-  private def geometryToIiifRegion(region: ReadResourceV2): Option[String] =
+  /**
+   * The region's bounding box as IIIF percentages (0..100, 6 decimals, HALF_UP), only when its geometry is a
+   * rectangle; `None` for any other geometry so no crop/highlight is emitted.
+   */
+  private def regionBoundingBox(region: ReadResourceV2): Option[HighlightBox] =
     region.values.values.flatten
       .map(_.valueContent)
       .collectFirst { case geom: GeomValueContentV2 => geom }
-      .flatMap(geom => GeomValueContentV2.parsePoints(geom.valueHasGeometry).toOption)
-      .filter(_.nonEmpty)
-      .map { points =>
-        val xs                     = points.map(_.x)
-        val ys                     = points.map(_.y)
-        val minX                   = xs.min
-        val minY                   = ys.min
-        val w                      = xs.max - minX
-        val h                      = ys.max - minY
-        def pct(d: Double): String =
-          BigDecimal(d * 100).setScale(6, BigDecimal.RoundingMode.HALF_UP).bigDecimal.toPlainString
-        s"pct:${pct(minX)},${pct(minY)},${pct(w)},${pct(h)}"
+      .flatMap(geom => GeomValueContentV2.parseShape(geom.valueHasGeometry).toOption)
+      .filter(shape => shape.geomType.contains("rectangle") && shape.points.nonEmpty)
+      .map { shape =>
+        val xs                            = shape.points.map(_.x)
+        val ys                            = shape.points.map(_.y)
+        val minX                          = xs.min
+        val minY                          = ys.min
+        val w                             = xs.max - minX
+        val h                             = ys.max - minY
+        def scaled(d: Double): BigDecimal = BigDecimal(d * 100).setScale(6, BigDecimal.RoundingMode.HALF_UP)
+        HighlightBox(scaled(minX), scaled(minY), scaled(w), scaled(h))
       }
 
-  /** Replaces the `iiifUrl` on each [[RegionPreviewValueContentV2]] of `resource` using `iiifUrls`. */
+  /** Copies the computed fields onto each [[RegionPreviewValueContentV2]] of `resource`. */
   private def augmentResourceRegionPreviews(
     resource: ReadResourceV2,
-    iiifUrls: Map[ResourceIri, String],
+    computed: Map[ResourceIri, RegionPreviewComputed],
   ): ReadResourceV2 =
     resource
       .focus(_.values)
@@ -314,9 +357,19 @@ final case class ReadResourcesServiceLive(
         _.view
           .mapValues(_.map {
             case rov @ ReadOtherValueV2(_, _, _, _, _, _, rp: RegionPreviewValueContentV2, _, _) =>
-              iiifUrls
+              computed
                 .get(rp.regionIri)
-                .fold(rov: ReadValueV2)(url => rov.copy(valueContent = rp.copy(iiifUrl = Some(url))))
+                .fold(rov: ReadValueV2)(c =>
+                  rov.copy(valueContent =
+                    rp.copy(
+                      cropUrl = c.cropUrl,
+                      thumbnailUrl = c.thumbnailUrl,
+                      highlightBox = c.highlightBox,
+                      fullImage = c.fullImage,
+                      legalInfo = c.legalInfo,
+                    ),
+                  ),
+                )
             case readValue => readValue
           })
           .toMap,

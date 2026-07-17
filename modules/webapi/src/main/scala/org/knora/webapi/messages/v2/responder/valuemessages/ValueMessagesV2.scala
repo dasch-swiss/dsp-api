@@ -10,6 +10,7 @@ import zio.IO
 import zio.ZIO
 import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
+import zio.json.jsonField
 
 import java.net.URI
 import java.time.Instant
@@ -42,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2.FileI
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
@@ -1460,13 +1462,21 @@ object GeomValueContentV2 {
   } yield GeomValueContentV2(ApiV2Complex, geom, comment)
 
   final case class Point(x: Double, y: Double)
-  private final case class GeomShape(points: List[Point])
+  // Public so the read-surface augmentation can gate crop/highlight on `geomType`. The JSON key `type` is
+  // reserved, hence the `@jsonField` rename; zio-json ignores the other geometry keys we do not model here.
+  final case class GeomShape(
+    @jsonField("type") geomType: Option[String],
+    points: List[Point],
+  )
 
   private given JsonDecoder[Point]     = DeriveJsonDecoder.gen[Point]
   private given JsonDecoder[GeomShape] = DeriveJsonDecoder.gen[GeomShape]
 
   def parsePoints(valueHasGeometry: String): Either[String, List[Point]] =
-    JsonDecoder[GeomShape].decodeJson(valueHasGeometry).map(_.points)
+    parseShape(valueHasGeometry).map(_.points)
+
+  def parseShape(valueHasGeometry: String): Either[String, GeomShape] =
+    JsonDecoder[GeomShape].decodeJson(valueHasGeometry)
 }
 
 /**
@@ -2530,18 +2540,47 @@ object LinkValueContentV2 {
 }
 
 /**
+ * Identity of the still image a region preview ultimately points at, projected as a bounded
+ * `{ "@id", "@type", "rdfs:label" }` reference (never the full still-image resource).
+ *
+ * @param iri              the still image resource IRI.
+ * @param label            the still image's `rdfs:label`.
+ * @param resourceClassIri the still image's resource class IRI (needed to render `@type`).
+ */
+final case class FullImageIdentity(iri: String, label: String, resourceClassIri: SmartIri)
+
+/**
+ * The region's bounding box as IIIF percentages in the range 0..100, pre-scaled to 6 decimals so the
+ * numbers stay byte-identical to the crop selector.
+ */
+final case class HighlightBox(x: BigDecimal, y: BigDecimal, w: BigDecimal, h: BigDecimal)
+
+/**
  * Represents a region preview value, which directly references a Region resource without link-value reification.
  *
- * @param ontologySchema   the ontology schema.
- * @param regionIri        the IRI of the Region resource this value points to.
- * @param iiifUrl          the IIIF preview URL for the region, computed at read time in `ReadResourcesServiceLive`.
- * @param comment          a comment on this [[RegionPreviewValueContentV2]], if any.
+ * Only `regionIri` and `comment` are stored; the geometry/image-derived fields (crop URL, thumbnail URL,
+ * highlight box, full-image identity, legal info) are all computed on read in `ReadResourcesServiceLive` and
+ * default to absent. `cropUrl` and `highlightBox` stay `None` when the region's geometry is not a rectangle;
+ * `thumbnailUrl`, `fullImage`, and `legalInfo` are emitted for any geometry.
+ *
+ * @param ontologySchema the ontology schema.
+ * @param regionIri      the IRI of the Region resource this value points to.
+ * @param comment        a comment on this [[RegionPreviewValueContentV2]], if any.
+ * @param cropUrl        IIIF URL of the cropped region image (rectangle geometry only), computed at read time.
+ * @param thumbnailUrl   IIIF URL of the full-page thumbnail, computed at read time.
+ * @param highlightBox   the region's bounding box as percentages (rectangle geometry only), computed at read time.
+ * @param fullImage      identity of the still image the region is part of, computed at read time.
+ * @param legalInfo      the still image's copyright/authorship/license metadata, computed at read time.
  */
 case class RegionPreviewValueContentV2(
   ontologySchema: OntologySchema,
   regionIri: ResourceIri,
-  iiifUrl: Option[String] = None,
   comment: Option[String] = None,
+  cropUrl: Option[String] = None,
+  thumbnailUrl: Option[String] = None,
+  highlightBox: Option[HighlightBox] = None,
+  fullImage: Option[FullImageIdentity] = None,
+  legalInfo: Option[LegalInfo] = None,
 ) extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2558,11 +2597,64 @@ case class RegionPreviewValueContentV2(
     projectADM: Project,
     appConfig: AppConfig,
     schemaOptions: Set[Rendering],
-  ): JsonLDValue =
-    JsonLDObject(
-      Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value)) ++
-        iiifUrl.map(url => IiifUrl -> JsonLDString(url)),
-    )
+  ): JsonLDValue = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val xsdAnyURI                                 = OntologyConstants.Xsd.Uri.toSmartIri
+    val xsdDecimal                                = OntologyConstants.Xsd.Decimal.toSmartIri
+
+    def mkString(sv: StringValue): JsonLDString           = JsonLDString(sv.value)
+    def mkStringArray(vs: List[StringValue]): JsonLDArray = JsonLDArray(vs.map(mkString))
+    def mkId(sv: StringValue): JsonLDObject               = JsonLDObject(Map("@id" -> JsonLDString(sv.value)))
+
+    // Bounded reference to the still image: only `@id`, `@type`, and `rdfs:label`. Never the whole resource
+    // (unlike LinkValueContentV2, which embeds its full target).
+    def fullImageJsonLd(fi: FullImageIdentity): JsonLDObject =
+      JsonLDObject(
+        Map(
+          "@id"                        -> JsonLDString(fi.iri),
+          "@type"                      -> JsonLDString(fi.resourceClassIri.toOntologySchema(targetSchema).toString),
+          OntologyConstants.Rdfs.Label -> JsonLDString(fi.label),
+        ),
+      )
+
+    // Reuse the exact predicates and shapes FileValueContentV2 emits for legal metadata.
+    def legalInfoJsonLd(li: LegalInfo): List[(IRI, JsonLDValue)] =
+      li.copyrightHolder.map(mkString).map((HasCopyrightHolder, _)).toList ++
+        li.authorship.map(mkStringArray).map((HasAuthorship, _)).toList ++
+        li.licenseIri.map(mkId).map((HasLicense, _)).toList
+
+    val target: Map[IRI, JsonLDValue] = Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value))
+
+    // Computed fields are complex-schema only. crop/thumbnail render as xsd:anyURI typed literals (not bare
+    // JsonLDString) to match the served anyURI declaration, mirroring FileValueAsUrl.
+    val computed: Map[IRI, JsonLDValue] =
+      if (targetSchema == ApiV2Complex) {
+        val fields: List[(IRI, JsonLDValue)] =
+          cropUrl.map(url => HasPreviewCropUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI)).toList ++
+            thumbnailUrl
+              .map(url => HasPreviewThumbnailUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI))
+              .toList ++
+            highlightBox.toList.flatMap(b =>
+              List(
+                HasPreviewHighlightBoxX -> JsonLDUtil
+                  .datatypeValueToJsonLDObject(b.x.bigDecimal.toPlainString, xsdDecimal),
+                HasPreviewHighlightBoxY -> JsonLDUtil
+                  .datatypeValueToJsonLDObject(b.y.bigDecimal.toPlainString, xsdDecimal),
+                HasPreviewHighlightBoxW -> JsonLDUtil
+                  .datatypeValueToJsonLDObject(b.w.bigDecimal.toPlainString, xsdDecimal),
+                HasPreviewHighlightBoxH -> JsonLDUtil.datatypeValueToJsonLDObject(
+                  b.h.bigDecimal.toPlainString,
+                  xsdDecimal,
+                ),
+              ),
+            ) ++
+            fullImage.map(fi => HasPreviewFullImage -> fullImageJsonLd(fi)).toList ++
+            legalInfo.toList.flatMap(legalInfoJsonLd)
+        fields.toMap
+      } else Map.empty
+
+    JsonLDObject(target ++ computed)
+  }
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
@@ -2577,7 +2669,7 @@ object RegionPreviewValueContentV2 {
       regionIriStr <- r.objectUri(IsRegionPreviewOf)
       comment      <- objectCommentOption(r)
       regionIri    <- ResourceIri.from(regionIriStr)
-    } yield RegionPreviewValueContentV2(ApiV2Complex, regionIri, comment)
+    } yield RegionPreviewValueContentV2(ApiV2Complex, regionIri, comment = comment)
 }
 
 /**

@@ -850,7 +850,16 @@ object OntologyConstants {
 
     val RegionPreviewValue: IRI = KnoraApiV2PrefixExpansion + "RegionPreviewValue"
     val IsRegionPreviewOf: IRI  = KnoraApiV2PrefixExpansion + "isRegionPreviewOf"
-    val IiifUrl: IRI            = KnoraApiV2PrefixExpansion + "iiifUrl"
+
+    // Runtime (computed-on-read) fields of a region preview value. Declared as knora-api-only
+    // properties in KnoraBaseToApiV2ComplexTransformationRules; never stored in knora-base.
+    val HasPreviewCropUrl: IRI       = KnoraApiV2PrefixExpansion + "hasPreviewCropUrl"
+    val HasPreviewThumbnailUrl: IRI  = KnoraApiV2PrefixExpansion + "hasPreviewThumbnailUrl"
+    val HasPreviewHighlightBoxX: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxX"
+    val HasPreviewHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxY"
+    val HasPreviewHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxW"
+    val HasPreviewHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxH"
+    val HasPreviewFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasPreviewFullImage"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
