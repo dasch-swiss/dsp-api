@@ -148,6 +148,13 @@
     :guiAttributeDefinition "hlist(required):iri" .
 
 
+###  http://www.knora.org/ontology/salsah-gui#RegionPreview
+
+:RegionPreview
+    rdf:type :Guielement,
+             owl:NamedIndividual .
+
+
 ###  http://www.knora.org/ontology/salsah-gui#Richtext
 
 :Richtext
