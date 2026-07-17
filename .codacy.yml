@@ -1,6 +1,10 @@
 ---
 exclude_paths:
   - "docs/**"
+  # "**/*.md" only matches markdown in subdirectories; root-level files (e.g. CONTEXT-MAP.md)
+  # need the "*.md" pattern too, otherwise Codacy analyses them with its default markdownlint
+  # rules, which conflict with our .markdownlint.yml (4-space list indent, MD004 off, ...).
+  - "*.md"
   - "**/*.md"
   # Test sources follow different idioms (e.g. long ZIO `spec` methods) that the default
   # patterns flag unhelpfully; analyse production code only.
