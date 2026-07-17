@@ -1683,11 +1683,13 @@ final class ValuesResponderV2(
               requestingUser,
             )
 
-          // We're referencing a Region through a region preview. The generic non-link check below would only
-          // assert the value's own type (RegionPreviewValue) and never look at the target, so handle it here:
-          // the referenced resource must exist, be viewable, and be a Region.
+          // We're referencing a Region through a region preview. The value's own type must satisfy the
+          // property's object class constraint (as for any non-link value), AND the referenced resource must
+          // exist, be viewable, and be a Region. The generic non-link check covers the former but never looks
+          // at the target, so we run both.
           case regionPreview: RegionPreviewValueContentV2 =>
-            checkRegionPreviewTarget(propertyIri, regionPreview, requestingUser)
+            checkNonLinkPropertyObjectClassConstraint(propertyIri, objectClassConstraint, regionPreview) *>
+              checkRegionPreviewTarget(propertyIri, regionPreview, requestingUser)
 
           // We're creating an ordinary value.
           case otherValue =>
