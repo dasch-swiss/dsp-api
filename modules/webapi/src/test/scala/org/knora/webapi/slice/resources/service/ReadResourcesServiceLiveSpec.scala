@@ -82,6 +82,10 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       name = "http://www.knora.org/data/0001/anything",
     ),
     RdfDataObject(
+      path = "test_data/project_data/region-preview-nonrectangle-test-data.ttl",
+      name = "http://www.knora.org/data/0001/anything",
+    ),
+    RdfDataObject(
       path = "test_data/project_data/admin-data.ttl",
       name = "http://www.knora.org/data/admin",
     ),
@@ -209,6 +213,36 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           preview.flatMap(_.fullImage).map(_.label).contains("A thing with a picture"),
           preview.flatMap(_.fullImage).exists(_.resourceClassIri.toString.endsWith("#ThingPicture")),
           preview.flatMap(_.legalInfo).contains(LegalInfo(None, None, None)),
+        )
+      },
+      test("readResourcesSequence omits crop + highlight for a non-rectangle region but keeps thumbnail + identity") {
+        val host = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonrect-preview-host")
+        for {
+          _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(host),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          preview = sequence.resources
+                      .flatMap(_.values.values.flatten)
+                      .map(_.valueContent)
+                      .collectFirst { case rp: RegionPreviewValueContentV2 => rp }
+        } yield assertTrue(
+          preview.isDefined,
+          // rectangle-gate: non-rectangle geometry yields no crop and no highlight box
+          preview.flatMap(_.cropUrl).isEmpty,
+          preview.flatMap(_.highlightBox).isEmpty,
+          // but the geometry-independent fields are still present
+          preview
+            .flatMap(_.thumbnailUrl)
+            .contains(
+              "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/,512/0/default.jpg",
+            ),
+          preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
+          preview.flatMap(_.legalInfo).isDefined,
         )
       },
       test("readResourcesSequence renders the computed RegionPreviewValue fields into the JSON-LD response body") {

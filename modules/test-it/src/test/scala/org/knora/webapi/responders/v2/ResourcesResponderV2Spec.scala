@@ -1733,6 +1733,57 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           release <- canDeleteRegion
         } yield assertTrue(!protection.canDo.value, release.canDo.value)
       },
+      test("reject creating a resource with an inline region preview whose target is not a Region") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri
+        val inputResource         = CreateResourceV2(
+          resourceIri = Some(ResourceIri.makeNew(anythingProject.shortcode)),
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "thing with an invalid inline region preview",
+          values = Map(
+            propertyIri -> Seq(
+              CreateValueInNewResourceV2(
+                // a-thing is a Thing, not a Region
+                valueContent =
+                  RegionPreviewValueContentV2(ApiV2Complex, ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")),
+              ),
+            ),
+          ),
+          projectADM = anythingProject,
+        )
+        resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser1, randomUUID))).exit
+          .map(err => assert(err)(failsWithA[OntologyConstraintException]))
+      },
+      test("create a resource with an inline region preview to a valid Region") {
+        val resourceIri           = ResourceIri.makeNew(anythingProject.shortcode)
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri
+        val inputResource         = CreateResourceV2(
+          resourceIri = Some(resourceIri),
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "thing with an inline region preview",
+          values = Map(
+            propertyIri -> Seq(
+              CreateValueInNewResourceV2(
+                valueContent = RegionPreviewValueContentV2(
+                  ApiV2Complex,
+                  ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w"),
+                ),
+              ),
+            ),
+          ),
+          projectADM = anythingProject,
+        )
+        for {
+          _      <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser1, randomUUID)))
+          out    <- getResource(resourceIri.value)
+          preview = out.values(propertyIri).head.valueContent
+        } yield assertTrue(
+          preview.isInstanceOf[RegionPreviewValueContentV2],
+          preview
+            .asInstanceOf[RegionPreviewValueContentV2]
+            .regionIri
+            .value == "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w",
+        )
+      },
       test("mark a resource as deleted, supplying a custom delete date") {
         val resourceIri         = ResourceIri.unsafeFrom("http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA")
         val deleteDate: Instant = Instant.now
