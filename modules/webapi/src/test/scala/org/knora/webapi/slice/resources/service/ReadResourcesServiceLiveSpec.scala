@@ -175,11 +175,11 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       test("readResourcesSequence augments a RegionPreviewValue with the fields computed from the region geometry") {
         val regionPreviewHostResourceIri =
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
-        // The region's geometry is a rectangle; crop is pct:x,y,w,h (percent) at /max/, thumbnail is full/,512.
+        // The region's geometry is a rectangle; crop is pct:x,y,w,h (percent) at /max/, thumbnail is full/^,256.
         val expectedCropUrl =
           "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"
         val expectedThumbnailUrl =
-          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/,512/0/default.jpg"
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg"
         for {
           _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           sequence <- ZIO.serviceWithZIO[ReadResourcesService](
@@ -239,7 +239,7 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           preview
             .flatMap(_.thumbnailUrl)
             .contains(
-              "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/,512/0/default.jpg",
+              "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg",
             ),
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
           preview.flatMap(_.legalInfo).isDefined,
@@ -263,7 +263,7 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           body.contains("hasPreviewCropUrl"),
           body.contains("pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"),
           body.contains("hasPreviewThumbnailUrl"),
-          body.contains("full/,512/0/default.jpg"),
+          body.contains("full/^,256/0/default.jpg"),
           body.contains("hasPreviewHighlightBoxX"),
           body.contains("hasPreviewHighlightBoxH"),
           body.contains("hasPreviewFullImage"),

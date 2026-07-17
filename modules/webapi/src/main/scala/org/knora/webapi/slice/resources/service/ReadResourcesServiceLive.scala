@@ -305,7 +305,9 @@ final case class ReadResourcesServiceLive(
       } yield {
         val base =
           s"${appConfig.sipi.externalBaseUrl}/${image.projectADM.shortcode}/${stillImage.fileValue.internalFilename}"
-        val thumbnailUrl = s"$base/full/,512/0/default.jpg"
+        // `^` allows IIIF upscaling: page images shorter than 256px must not 400 with
+        // "Upscaling not allowed!" (Sipi is IIIF Image API 3.0), so the thumbnail keeps a uniform 256px height.
+        val thumbnailUrl = s"$base/full/^,256/0/default.jpg"
         val fullImage    = FullImageIdentity(image.resourceIri.value, image.label, image.resourceClassIri)
         val legalInfo    = LegalInfo(
           stillImage.fileValue.copyrightHolder,
