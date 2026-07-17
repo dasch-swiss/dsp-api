@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
@@ -364,19 +365,36 @@ final class ResourcesResponderV2(
                .findByShortcode(resourceIri.shortcode)
                .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
 
-      (other, otherClass, p) = (variable("other"), variable("otherClass"), variable("p"))
-      inUsePattern           = other
+      (other, otherClass, p, valueProp, valueNode) =
+        (variable("other"), variable("otherClass"), variable("p"), variable("valueProp"), variable("valueNode"))
+      dataGraph = Rdf.iri(projectService.getDataGraphForProject(prj).value)
+
+      // Branch 1: a non-deleted resource refers to <resource> directly in object position.
+      directBranch = other
                        .has(p, Rdf.iri(resourceIri.toString))
                        .andHas(KB.isDeleted, false)
                        .andIsA(otherClass)
-                       .from(Rdf.iri(projectService.getDataGraphForProject(prj).value))
+                       .from(dataGraph)
+
+      // Branch 2: a non-deleted resource refers to <resource> through one of its non-deleted value nodes via
+      // isRegionPreviewOf (a region preview points at the Region from a Value node, not from the Resource).
+      viaValueNodeBranch = other
+                             .has(valueProp, valueNode)
+                             .andHas(KB.isDeleted, false)
+                             .andIsA(otherClass)
+                             .and(
+                               valueNode
+                                 .has(KB.isRegionPreviewOf, Rdf.iri(resourceIri.toString))
+                                 .andHas(KB.isDeleted, false),
+                             )
+                             .from(dataGraph)
 
       subClassOfPropertyPath = PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build()
       classConstraintPattern = otherClass.has(subClassOfPropertyPath, KB.Resource)
 
       query = Queries
                 .SELECT(SparqlBuilder.select(other).distinct())
-                .where(inUsePattern, classConstraintPattern)
+                .where(GraphPatterns.union(directBranch, viaValueNodeBranch).and(classConstraintPattern))
                 .prefix(prefix(RDFS.NS), prefix(KB.NS), prefix(XSD.NS))
       result <- triplestore.query(Select(query))
 
