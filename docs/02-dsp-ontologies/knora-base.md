@@ -421,6 +421,31 @@ it has been deleted).
 For details about how links are created in DSP-API, see
 [Links Between Resources](#links-between-resources).
 
+##### RegionPreviewValue
+
+A `RegionPreviewValue` is a direct reference from a resource to a `Region`, without link-value reification. It lets a
+resource carry a preview of a region on an image (for example, a cropped detail on a page) without creating a full link
+value. It has one stored property:
+
+`isRegionPreviewOf` (1)
+
+:   The `Region` this value points to. The target must exist, be a `Region`, and belong to the same project as the
+referencing resource; these constraints are enforced at create and update time. Nothing else (no geometry, no image
+data) is stored on the value.
+
+A resource property that carries a region preview uses the `salsah-gui:RegionPreview` GUI element and has an object
+type of `RegionPreviewValue`.
+
+On read, the API augments each `RegionPreviewValue` with computed fields derived from the referenced region's geometry
+and the still image it is part of: `hasPreviewCropUrl` and the four `hasPreviewHighlightBox{X,Y,W,H}` percentages
+(rectangle geometry only), a full-page `hasPreviewThumbnailUrl`, a bounded `hasPreviewFullImage` reference to the still
+image, and the still image's legal metadata (`hasCopyrightHolder`, `hasAuthorship`, `hasLicense`). These fields are
+computed on the fly and are not part of `knora-base`; see
+[Reading Resources](../03-endpoints/api-v2/reading-and-searching-resources.md).
+
+A `Region` referenced by a live (non-deleted) `RegionPreviewValue` cannot be deleted or erased; once the preview is
+deleted or re-pointed, the region can be deleted again.
+
 ##### ExternalResValue
 
 Represents a resource that is not stored in the RDF triplestore managed by DSP-API, but instead resides in an external

@@ -44,6 +44,27 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
 `ApiV2WithValueObjects`).
 
+### Region Preview Values
+
+A `knora-api:RegionPreviewValue` (see
+[RegionPreviewValue](../../02-dsp-ontologies/knora-base.md#regionpreviewvalue)) stores only its
+`knora-api:isRegionPreviewOf` target. On read, the API augments it with fields computed from the referenced region's
+geometry and the still image it is part of:
+
+- `knora-api:hasPreviewCropUrl` — a IIIF URL of the cropped region, and
+  `knora-api:hasPreviewHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). These are present
+  **only when the region's geometry is a rectangle**; for other geometries they are omitted.
+- `knora-api:hasPreviewThumbnailUrl` — a IIIF URL of the full page at a fixed height, present for any geometry.
+- `knora-api:hasPreviewFullImage` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the still image resource.
+- `knora-api:hasCopyrightHolder`, `knora-api:hasAuthorship`, `knora-api:hasLicense` — the still image's legal
+  metadata.
+
+Permissions follow a two-tier model. The value's own permission is the master gate: a user who cannot view the
+`RegionPreviewValue` never sees it at all. Once that gate passes, the identity and legal metadata above are always
+returned (resolved via a bounded elevated read, regardless of the user's permissions on the region or the image), and
+the image URLs are always emitted — the actual image **pixels** are enforced per request by Sipi, not by DSP-API. The
+IIIF URLs are therefore permission-independent; dereferencing them may still be denied or restricted by Sipi.
+
 ### Requesting Text Markup as XML
 
 When requesting a text value with standoff markup, there are three possibilities:

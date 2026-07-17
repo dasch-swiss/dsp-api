@@ -132,6 +132,11 @@ definition that uses this element must also contain this
 `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
 
+### RegionPreview
+
+`RegionPreview` is a GUI element for a property that references a `Region` as a preview (see
+[RegionPreviewValue](knora-base.md#regionpreviewvalue)). It takes no `guiAttribute`.
+
 ### Richtext
 
 `Richtext` is a GUI element for editing multi-line formatted text.
