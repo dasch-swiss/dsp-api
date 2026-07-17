@@ -374,7 +374,6 @@ final class ResourcesResponderV2(
                        .has(p, Rdf.iri(resourceIri.toString))
                        .andHas(KB.isDeleted, false)
                        .andIsA(otherClass)
-                       .from(dataGraph)
 
       // Branch 2: a non-deleted resource refers to <resource> through one of its non-deleted value nodes via
       // isRegionPreviewOf (a region preview points at the Region from a Value node, not from the Resource).
@@ -387,14 +386,16 @@ final class ResourcesResponderV2(
                                  .has(KB.isRegionPreviewOf, Rdf.iri(resourceIri.toString))
                                  .andHas(KB.isDeleted, false),
                              )
-                             .from(dataGraph)
 
+      // Scope both branches to the project data graph; the class-hierarchy guard stays in the default graph so
+      // the rdfs:subClassOf* traversal reaches the ontology (matching the pre-existing single-branch behaviour).
+      inUsePattern           = GraphPatterns.union(directBranch, viaValueNodeBranch).from(dataGraph)
       subClassOfPropertyPath = PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build()
       classConstraintPattern = otherClass.has(subClassOfPropertyPath, KB.Resource)
 
       query = Queries
                 .SELECT(SparqlBuilder.select(other).distinct())
-                .where(GraphPatterns.union(directBranch, viaValueNodeBranch).and(classConstraintPattern))
+                .where(inUsePattern, classConstraintPattern)
                 .prefix(prefix(RDFS.NS), prefix(KB.NS), prefix(XSD.NS))
       result <- triplestore.query(Select(query))
 
