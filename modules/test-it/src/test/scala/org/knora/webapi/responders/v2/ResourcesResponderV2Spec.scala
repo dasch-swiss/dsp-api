@@ -1720,7 +1720,9 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
                    DeleteValueV2(
                      previewHostIri,
                      ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
-                     PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri),
+                     PropertyIri.unsafeFrom(
+                       "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri,
+                     ),
                      previewValueIri,
                      valueTypeIri = OntologyConstants.KnoraApiV2Complex.RegionPreviewValue.toSmartIri,
                      apiRequestId = randomUUID,
