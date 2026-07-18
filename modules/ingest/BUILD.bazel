@@ -5,11 +5,10 @@ load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala
 load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
-# Replaces sbt-buildinfo for dsp-ingest (package swiss.dasch.version; mirrors
-# build.sbt's ingest buildInfoKeys). knoraSipiVersion is read at RUNTIME
-# (CommandExecutorLive shells out to `daschswiss/knora-sipi:${knoraSipiVersion}`),
-# so it must equal the git version, same as sbt's `knoraSipiVersion = gitVersion`.
-# gitCommit is full HEAD (sbt used `git rev-parse HEAD`) -> STABLE_GIT_COMMIT.
+# Generates the dsp-ingest buildinfo (package swiss.dasch.version). knoraSipiVersion
+# is read at RUNTIME (CommandExecutorLive shells out to
+# `daschswiss/knora-sipi:${knoraSipiVersion}`), so it must equal the git version.
+# gitCommit is the full HEAD -> STABLE_GIT_COMMIT.
 buildinfo(
     name = "buildinfo",
     out = "BuildInfo.scala",
@@ -104,7 +103,7 @@ scala_junit_test(
     ],
 )
 
-# --- dsp-ingest image (Phase 3) ----------------------------------------------
+# --- dsp-ingest image --------------------------------------------------------
 # Same lib-dir rationale as //modules/webapi (see its BUILD.bazel comment):
 # preserves per-jar META-INF/services + reference.conf instead of a fat jar's
 # last-wins merge.
@@ -125,7 +124,7 @@ pkg_tar(
     srcs = [":ingest_lib_files"],
 )
 
-# OTel java agent + Grafana Pyroscope extension (were `ADD <url>` in build.sbt).
+# OTel java agent + Grafana Pyroscope extension.
 pkg_tar(
     name = "otel_layer",
     srcs = [
@@ -135,9 +134,9 @@ pkg_tar(
     package_dir = "/usr/local/lib",
 )
 
-# org.opencontainers.image.* labels stamped from git, matching webapi's image
-# (both introduced in the same phase; consistent provenance matters for
-# incident response / knowing which commit a running container corresponds to).
+# org.opencontainers.image.* labels stamped from git, matching webapi's image —
+# consistent provenance matters for incident response (knowing which commit a
+# running container corresponds to).
 oci_stamped_labels(
     name = "image_labels",
     labels = {
@@ -150,10 +149,9 @@ oci_stamped_labels(
     },
 )
 
-# No `user` (root, matches build.sbt stripping USER -- Sipi reads NFS-mounted
-# assets owned by orchestrator-controlled uids). HEALTHCHECK isn't emitted
-# (rules_oci can't); moves to docker-compose in Phase 6, reusing the extracted
-# `/sbin/sipi health --port 3340` binary as sbt's image did. Do NOT bake
+# No `user` (root): Sipi reads NFS-mounted assets owned by orchestrator-controlled
+# uids. HEALTHCHECK isn't emitted (rules_oci can't); it's a docker-compose concern,
+# reusing the extracted `/sbin/sipi health --port 3340` binary. Do NOT bake
 # JAVA_TOOL_OPTIONS -- compose/ops-deploy set it at runtime.
 oci_image(
     name = "image_amd64",

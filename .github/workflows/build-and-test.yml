@@ -85,7 +85,7 @@ jobs:
 
   test-it:
     name: Build and IT test
-    runs-on: ubuntu-latest # previously: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
       group: ${{ github.ref }}-it
@@ -283,12 +283,11 @@ jobs:
       - name: Check formatting
         run: just check
 
-  # Temporary drift gate for the Phase 6 sbt->Bazel `docker-image-tag` source
-  # switch: asserts tools/workspace_status.sh's STABLE_GIT_VERSION byte-matches
-  # sbt's `print dockerImageTag` on every PR. Relies on `preparation`'s
-  # `fetch-depth: 0` checkout (full history + tags) — without tags, both sides
-  # fall back identically to the bare short hash and the gate passes vacuously.
-  # Remove once the sbt-parallel validation window closes.
+  # Temporary drift gate: asserts tools/workspace_status.sh's STABLE_GIT_VERSION
+  # byte-matches sbt's `print dockerImageTag` on every PR. Relies on `preparation`'s
+  # `fetch-depth: 0` checkout (full history + tags) — without tags, both sides fall
+  # back identically to the bare short hash and the gate passes vacuously. Remove
+  # when sbt is retired from the build.
   check-docker-image-tag:
     name: Check docker-image-tag (workspace_status vs sbt)
     runs-on: ubuntu-latest

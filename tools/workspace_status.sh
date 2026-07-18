@@ -6,7 +6,7 @@
 # STABLE_* keys land in bazel-out/stable-status.txt (a change re-triggers stamped
 # consumers); everything else goes to volatile-status.txt.
 #
-# The version string mirrors build.sbt exactly so the Bazel and sbt image tags match:
+# The version string is derived from git:
 #   gitVersion = `git describe --tag --dirty --abbrev=7 --always` + non-main branch suffix ('/'->'-')
 #   then '+' -> '-' (Docker tags reject '+').
 set -euo pipefail
@@ -27,9 +27,8 @@ version="${version//+/-}"
 sipi="$(sed -n 's/.*val sipiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
 fuseki="$(sed -n 's/.*val fusekiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
 
-# Mirrors build.sbt's `buildTime = sys.env.getOrElse("BUILD_TIME", "dev")`: a fixed
-# value per build (CI sets BUILD_TIME; local dev falls back to "dev"), so it stays
-# stable within a build and does not needlessly bust the buildinfo cache.
+# A fixed value per build (CI sets BUILD_TIME; local dev falls back to "dev"), so it
+# stays stable within a build and does not needlessly bust the buildinfo cache.
 build_time="${BUILD_TIME:-dev}"
 
 echo "STABLE_GIT_VERSION ${version}"

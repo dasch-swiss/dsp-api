@@ -1,12 +1,11 @@
 load("@rules_scala//scala:scala.bzl", "scala_junit_test")
 
 # Container-backed integration specs (Fuseki/Sipi/dsp-ingest via testcontainers). Requires the
-# Phase-3 `:latest` images preloaded into the local Docker daemon
+# `:latest` images preloaded into the local Docker daemon
 # (`bazel run //modules/{sipi,ingest}:load`) and a reachable Docker socket - these targets do not
-# run on RBE. `SearchResponderV2GravsearchSpanE2ESpec` asserts on OpenTelemetry spans captured by
-# an in-memory exporter wired as the application's own OTel layer; it must run in its own JVM (own
-# `scala_junit_test` target below) so no other spec's spans land in its exporter - mirrors the
-# `Test / testGrouping` isolation build.sbt already does for this spec.
+# run on the RBE remote executor. `SearchResponderV2GravsearchSpanE2ESpec` asserts on OpenTelemetry
+# spans captured by an in-memory exporter wired as the application's own OTel layer; it must run in
+# its own JVM (own `scala_junit_test` target below) so no other spec's spans land in its exporter.
 _GRAVSEARCH_SPAN_SPEC = "src/test/scala/org/knora/webapi/responders/v2/SearchResponderV2GravsearchSpanE2ESpec.scala"
 
 _DEPS = [
@@ -28,21 +27,19 @@ _DEPS = [
 # reads above - a `resources` jar alone doesn't satisfy it.
 _DATA = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**"])
 
-# "exclusive" is required on every Docker-testcontainers target in this migration (test-it,
+# "exclusive" is required on every Docker-testcontainers target (test-it,
 # test_gravsearch_span, test-e2e, test-ingest-integration), for two independent reasons - do not
 # drop it from a target just because one of these doesn't apply to it:
 #  1. These specs (via E2EZSpec) start an in-process API server on a fixed port: two targets
 #     running concurrently on the same machine race for that port
 #     (io.netty.channel.unix.Errors$NativeIoException: bind(..) failed with error(-48): Address
-#     already in use), confirmed by running test-it alone (0 bind errors) vs. alongside test-e2e
-#     (bind errors present). Does not apply to test-ingest-integration (no E2EZSpec there).
+#     already in use). Does not apply to test-ingest-integration (no E2EZSpec there).
 #  2. SharedVolumes.Temp (this module's and test-ingest-integration's copy) is
 #     `ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))` - unlike Images.layer, it is
 #     NOT a freshly-created unique-per-run directory, just the raw tmpdir path. Since every one of
 #     these targets pins java.io.tmpdir to the same literal `/tmp` (see _JVM_FLAGS below), any two
 #     of them running concurrently bind-mount and write to the *same* host /tmp tree through
 #     different dsp-ingest containers - a real race. This DOES apply to test-ingest-integration.
-# sbt never hits either because it runs one project's tests at a time.
 #
 # "requires-network" + "no-sandbox" + "no-remote": these specs drive Docker testcontainers through
 # the host Docker socket, so they cannot run in the Bazel sandbox or on the RBE remote executor -
@@ -64,8 +61,7 @@ _TAGS = [
 # independent Sipi container, separately from TestContainerLayers' memoized one) can hit
 # "error while creating mount source path ...: no such file or directory" because that brand-new
 # nested execroot path hasn't propagated through Docker Desktop's file-sharing layer yet. Pointing
-# java.io.tmpdir at a stable, long-lived directory (verified: fixes SipiIT deterministically)
-# sidesteps it - this also matches sbt, which never overrides java.io.tmpdir from the OS default.
+# java.io.tmpdir at a stable, long-lived directory sidesteps it.
 _JVM_FLAGS = ["-Djava.io.tmpdir=/tmp"]
 
 scala_junit_test(

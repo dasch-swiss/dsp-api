@@ -1,7 +1,6 @@
 # Bazel configuration for dsp-api.
 #
-# Builds the knora-sipi OCI image (rules_oci) and the Scala build (rules_scala).
-# sbt runs in parallel as the build of record during the validation period.
+# Builds the Scala build (rules_scala) and the container images (rules_oci).
 
 common --incompatible_disallow_empty_glob
 build --show_timestamps

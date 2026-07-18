@@ -56,8 +56,7 @@ object SharedVolumes {
      * `/sipi/testfiles` is a classpath resource *directory*. Under sbt it resolves to a real
      * filesystem directory (loose class/resource output), so `Path(uri)` + `Files.walk` works
      * directly. Under Bazel, test resources are packaged into a resource jar, so the resource URI
-     * is a `jar:` one that the default NIO filesystem provider can't `Files.walk` into (same
-     * failure mode the Phase 1 `ShaclValidatorSpec` fix hit for a single file). Open a `jar:`
+     * is a `jar:` one that the default NIO filesystem provider can't `Files.walk` into. Open a `jar:`
      * filesystem for that case - closed with the enclosing scope - and fall back to the plain
      * `file:` path otherwise.
      *

@@ -6,10 +6,10 @@ load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala
 load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
-# Replaces sbt-buildinfo. Fields mirror build.sbt's `buildInfoKeys` for webapi
-# (package org.knora.webapi.http.version). Source reads version, buildCommit,
-# buildTime, fuseki, scalaVersion, sipi; ManagementEndpoints splits fuseki/scala/
-# sipi on ':' so those must carry the full "repo:tag" / version strings.
+# Generates the webapi buildinfo (package org.knora.webapi.http.version). Source
+# reads version, buildCommit, buildTime, fuseki, scalaVersion, sipi;
+# ManagementEndpoints splits fuseki/scala/sipi on ':' so those must carry the full
+# "repo:tag" / version strings.
 buildinfo(
     name = "buildinfo",
     out = "BuildInfo.scala",
@@ -109,10 +109,10 @@ java_library(
     resources = glob(["src/test/resources/org/knora/webapi/slice/export/api/service/*.ttl"]),
 )
 
-# One test target for the whole module → one shared JVM (matches the migration's
-# runner decision). suffixes restricts discovery to *Spec/*IT/*Test, so the ~20
-# non-spec helper files (fakes, TestDataFactory, the ApplyUpgradePluginToTestData
-# ZIOAppDefault utility) are compiled but not run.
+# One test target for the whole module → one shared JVM. suffixes restricts
+# discovery to *Spec/*IT/*Test, so the ~20 non-spec helper files (fakes,
+# TestDataFactory, the ApplyUpgradePluginToTestData ZIOAppDefault utility) are
+# compiled but not run.
 scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
@@ -135,13 +135,12 @@ scala_junit_test(
     ],
 )
 
-# --- knora-api image (Phase 3) ----------------------------------------------
+# --- knora-api image ---------------------------------------------------------
 # Lib-dir classpath, not rules_scala's implicit fat `app_deploy.jar`: a fat jar's
 # last-wins merge silently drops duplicate `META-INF/services/*` (OTel
 # autoconfigure SPI, slf4j) and `reference.conf` entries across ~200 runtime
-# jars. Packing each jar intact under /opt/docker/lib (as sbt-native-packager
-# did) preserves them; the entrypoint uses Java's own `-cp .../*` wildcard
-# expansion (no shell needed).
+# jars. Packing each jar intact under /opt/docker/lib preserves them; the
+# entrypoint uses Java's own `-cp .../*` wildcard expansion (no shell needed).
 runtime_jars(
     name = "webapi_runtime_jars",
     deps = [":webapi"],
@@ -199,7 +198,7 @@ pkg_tar(
 )
 
 # org.opencontainers.image.* labels stamped from git — oci_image's dict form
-# can't stamp, so this mirrors //tools/buildinfo's workspace-status substitution.
+# can't stamp, so this substitutes workspace-status values.
 oci_stamped_labels(
     name = "image_labels",
     labels = {
@@ -212,11 +211,9 @@ oci_stamped_labels(
     },
 )
 
-# No `user`: inherits the temurin base's default (root) — mirrors build.sbt
-# stripping the plugin's default USER directive (Sipi/NFS reasons don't apply
-# here, but ops-deploy expects the same root-uid contract knora-api has always
-# had). HEALTHCHECK isn't emitted (rules_oci can't); it's a docker-compose
-# concern (Phase 6). Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
+# No `user`: inherits the temurin base's default (root) — ops-deploy expects
+# knora-api to run as root. HEALTHCHECK isn't emitted (rules_oci can't); it's a
+# docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
 # `-javaagent:... -Xmx...` at runtime.
 oci_image(
     name = "image_amd64",

@@ -1,4 +1,4 @@
-"""OCI helpers for the dsp-api image build (Phase 3: knora-api, dsp-ingest; Phase 5: fuseki).
+"""OCI helpers for the dsp-api container images (knora-api, dsp-ingest, fuseki).
 
 `runtime_jars` collects a scala_library/scala_binary's transitive runtime classpath, for
 packing into a lib-dir layer (see `oci_stamped_labels`'s sibling doc below for why we don't
@@ -6,8 +6,8 @@ use rules_scala's implicit `_deploy.jar` fat jar).
 
 `oci_stamped_labels` emits an OCI labels file (`name=value` per line, the format
 `oci_image(labels=<file>)` expects) mixing static and workspace-status (stamped) values —
-`oci_image`'s dict form can't stamp, so this mirrors //tools/buildinfo's `ctx.info_file`
-substitution for the label case.
+`oci_image`'s dict form can't stamp, so this performs the `ctx.info_file` substitution
+for the label case.
 
 `image_rootfs_extract` flattens an image tarball with `crane export` (via the
 rules_oci-registered hermetic crane toolchain) and repacks a chosen subset of paths into a

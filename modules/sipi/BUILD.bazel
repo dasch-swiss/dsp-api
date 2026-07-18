@@ -32,7 +32,7 @@ oci_image(
     tars = [":scripts_layer"],
 )
 
-# Multi-arch index for publishing (mirrors the old buildx arm64+amd64 set).
+# Multi-arch index for publishing (arm64 + amd64).
 oci_image_index(
     name = "index",
     images = [
@@ -67,12 +67,11 @@ oci_push(
     repository = "index.docker.io/daschswiss/knora-sipi",
 )
 
-# --- Sipi runtime bits, extracted for the dsp-ingest image (Phase 3) ---------
-# dsp-ingest's base moved off `daschswiss/knora-sipi` (Sipi v5 is distroless; see
-# build.sbt's ingest dockerCommands comment), so it needs the sipi binary, the
-# whole `/sipi` tree (incl. `/sipi/scripts`, added by this file's overlay — not
-# present in `@sipi_base_*`), and ffmpeg/ffprobe/tini extracted onto its own
-# eclipse-temurin base. `image_{arch}` is package-private, so the extraction
+# --- Sipi runtime bits, extracted for the dsp-ingest image --------------------
+# dsp-ingest runs on an eclipse-temurin base (Sipi v5 is distroless), so it needs
+# the sipi binary, the whole `/sipi` tree (incl. `/sipi/scripts`, added by this
+# file's overlay — not present in `@sipi_base_*`), and ffmpeg/ffprobe/tini
+# extracted onto that base. `image_{arch}` is package-private, so the extraction
 # lives here and exports only the flattened result to //modules/ingest.
 [
     (

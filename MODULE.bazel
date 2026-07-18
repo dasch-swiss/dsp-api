@@ -1,8 +1,8 @@
 """dsp-api Bazel module.
 
-Builds the `knora-sipi` OCI image and (in progress) the full Scala build —
-knora-api, dsp-ingest, and their libraries/tests — with rules_scala. sbt runs
-in parallel as the build of record during the validation period.
+Builds the full Scala build (knora-api, dsp-ingest, and their libraries/tests)
+with rules_scala, and the container images (knora-sipi, knora-api, dsp-ingest,
+apache-jena-fuseki) with rules_oci.
 """
 
 module(
@@ -37,8 +37,7 @@ bazel_dep(name = "bazel_skylib", version = "1.8.2")
 # thus needs a C toolchain. We use hermetic-llvm (not Bazel's autodetected host
 # clang) so the build is reproducible and works under remote build execution —
 # it bundles per-target glibc stubs + libc++ + compiler-rt and fetches the macOS
-# SDK from Apple's CDN, with no dependency on host Nix/Xcode tooling. Mirrors the
-# sipi repo's toolchain (see its docs/adr/0014-toolchain-provider-swap.md).
+# SDK from Apple's CDN, with no dependency on host Nix/Xcode tooling.
 bazel_dep(name = "llvm", version = "0.8.10")
 
 # hermetic-llvm hands the Linux kernel + glibc headers to compile actions as a
@@ -251,7 +250,8 @@ maven.install(
     version_conflict_policy = "pinned",
 )
 
-# Artifacts needing exclusions (mirror the sbt `exclude(...)` calls in Dependencies.scala).
+# Artifacts needing exclusions, kept in sync with project/Dependencies.scala (enforced by
+# //tools/deps:maven_versions_match_sbt).
 maven.artifact(
     name = "maven",
     artifact = "commons-validator",
@@ -303,10 +303,9 @@ use_repo(
 # knora-api / dsp-ingest base image (temurin)
 #############################################
 
-# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest — same
-# reason as sipi: the arm64 index entry carries a `v8` variant, which a bare
-# linux/arm64 platform request does not match. Tag mirrors build.sbt's
-# dockerBaseImage (webapi + ingest). Bump both together.
+# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest: the
+# arm64 index entry carries a `v8` variant, which a bare linux/arm64 platform
+# request does not match. Bump both arches together.
 # Re-resolve after a base bump:
 #   crane manifest eclipse-temurin:25-jre-noble | jq -r \
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
@@ -336,7 +335,8 @@ use_repo(
 # ADDed from a URL in the sbt images (build.sbt webapi + ingest blocks); rules_oci
 # has no ADD-from-URL, so fetch hermetically and pack into a layer instead (see
 # the *_layer pkg_tar targets in modules/webapi and modules/ingest BUILD files).
-# Versions mirror project/Dependencies.scala's otelAgentVersion/otelPyroscopeVersion.
+# Versions kept in sync with project/Dependencies.scala's otelAgentVersion/otelPyroscopeVersion
+# (enforced by //tools/oci:image_versions_match_sbt).
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
@@ -399,18 +399,15 @@ http_file(
 )
 
 #############################################
-# Fuseki dist tarball + tini (Phase 5)
+# Fuseki dist tarball + tini
 #############################################
 
-# modules/fuseki/Dockerfile downloads this tarball at build time via `curl` +
-# `ARG FUSEKI_SHA512`; rules_oci has no ADD-from-URL, so fetch hermetically
-# here instead (same pattern as the OTel jars / static curl above). sha256
-# below was computed from the archive.apache.org download and cross-checked
-# against the Dockerfile's `ARG FUSEKI_SHA512`
+# rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
+# here. The sha256 below and modules/fuseki/Dockerfile's `ARG FUSEKI_SHA512`
 # (75457f45d14397876a41ed51abe7ae5d2f1e708dfe1315765f858158bc5c6813bc036ec1539ddc4dffd26201f5cc31fadec299ca5c3dc2548b723513ed31d326)
-# -- both verify the identical bytes. Version mirrors project/Dependencies.scala's
-# fusekiImage (kept in sync with the Dockerfile by CI's
-# check-fuseki-version-consistency job); bump all three together.
+# verify the identical bytes. The version is kept in sync across this file,
+# project/Dependencies.scala's fusekiImage, and the Dockerfile by CI's
+# check-fuseki-version-consistency job; bump all three together.
 http_archive(
     name = "fuseki_dist",
     build_file_content = "\n".join([

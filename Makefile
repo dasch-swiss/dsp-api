@@ -1,12 +1,8 @@
 # ============================================================================
-# ⚠️  DEPRECATED — this Makefile is being retired in favour of `just`.
-#     Run `just --list` for the current entry points. The test / publish /
-#     image-tag / format-check targets have moved to the justfile (canonical);
-#     CI no longer calls `make`. The docker-build* + docker-image-tag targets
-#     below are kept only transitionally because the local `stack-up*` targets
-#     depend on them — they are duplicated in `just` and will be removed once
-#     the remaining local-dev targets (stack-*, init-db-*, clean-*) are ported
-#     and this file is deleted. Do not add new targets here; add them to justfile.
+# ⚠️  DEPRECATED — use `just` (run `just --list`). The canonical build / test /
+#     publish / image-tag / format-check recipes live in the justfile. The
+#     targets below are local-dev helpers; `docker-build*` and `docker-image-tag`
+#     are also available as `just` recipes. Add new targets to the justfile.
 # ============================================================================
 
 # Determine this makefile's path.
@@ -45,7 +41,7 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 	@docker run -it --rm -p 8080:8080 -v $(CURRENT_DIR)/docs/architecture:/usr/local/structurizr structurizr/lite
 
 #################################
-# Docker targets (transitional — canonical copies live in the justfile)
+# Docker targets (also available as `just` recipes)
 #################################
 
 .PHONY: docker-build-dsp-api-image

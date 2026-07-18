@@ -1,9 +1,8 @@
 load("@rules_scala//scala:scala.bzl", "scala_macro_library")
 
 # testkit is a compile-scope support library (base specs, container layers, test services) that
-# webapi's own integration/e2e test modules depend on directly - mirrors `.dependsOn(webapi)` in
-# build.sbt (compile->compile, not `% Test`). It has no `src/test`, so no test target here: its two
-# main-scope specs (FileModelsSpec, core/TestContainerLayersSpec) are not run by sbt either.
+# webapi's own integration/e2e test modules depend on directly. It has no `src/test`, so no test
+# target here; its two main-scope specs (FileModelsSpec, core/TestContainerLayersSpec) are not run.
 #
 # scala_macro_library (not scala_library): GoldenTest.scala defines a real inline macro
 # (`goldenPath`) whose implementation the Scala 3 compiler must interpret via reflection when it's

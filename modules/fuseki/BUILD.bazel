@@ -3,11 +3,10 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefi
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//tools/oci:defs.bzl", "oci_stamped_labels")
 
-# The Dockerfile stays as the sbt/docker build path during the validation
-# period (see SESSION-HANDOFF.md); //tools/oci:image_versions_match_sbt reads
-# its FUSEKI_VERSION (against this file's fuseki_dist pin) and its
-# IMAGE_VERSION (against this BUILD.bazel's own embedded tag literals) to
-# catch drift between the two builds.
+# The Dockerfile is the publish path for the Fuseki image;
+# //tools/oci:image_versions_match_sbt reads its FUSEKI_VERSION (against this
+# file's fuseki_dist pin) and its IMAGE_VERSION (against this BUILD.bazel's own
+# embedded tag literals) to catch drift between the Dockerfile and this file.
 exports_files([
     "BUILD.bazel",
     "Dockerfile",
@@ -144,10 +143,8 @@ oci_stamped_labels(
     },
 )
 
-# No `user` (root, matches the Dockerfile -- no USER directive; NFS/orchestrator
-# reasons don't apply here, but ops-deploy expects the same root-uid contract
-# every other DSP image has had). HEALTHCHECK isn't emitted (rules_oci can't);
-# moves to docker-compose in Phase 6, same as the other three images.
+# No `user` (root): ops-deploy expects the root-uid contract. HEALTHCHECK isn't
+# emitted (rules_oci can't); it's a docker-compose concern.
 oci_image(
     name = "image_amd64",
     base = "@temurin_base_amd64",
