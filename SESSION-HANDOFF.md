@@ -686,7 +686,7 @@ remove the now-deleted `Upload coverage` required check if it was ever marked re
 whether any required check references a dorny check-run name rather than a job name — if so, prefer
 switching it to the job name so the coarse-XML rendering (above) stays cosmetic rather than gating.
 
-### Phase 7 — Remote build execution (RBE) + CI on `just` 🚧 IN PROGRESS (Stage 1 landed)
+### Phase 7 — Remote build execution (RBE) + CI on `just` ✅ STAGE 1 COMPLETE (executor = Stage 2, pending)
 
 Closes the Phase 6 "wire a Bazel disk/remote cache for CI" follow-up. Points dsp-api's Bazel CI at
 sipi's shared **NativeLink** backend (`dasch-remotebuild-prod-01`, `:50051`, mTLS) for a remote cache
@@ -715,12 +715,19 @@ now **deprecated**). Full rationale + the staged rollout live in `docs/developme
   dorny report); the 3 Docker jobs stay separate (they're `exclusive`). Docker test targets already
   carried `no-remote` (run local, no stale-pass poisoning); added the RBE rationale to the `_TAGS`
   comment.
-- **Verified locally**: `.bazelrc` flags parse + `//modules/bagit:bagit` builds; `just` FLAGS thread
-  into recipes + prereqs; all workflow/action YAML parse; the action emits correct flags for
-  cache/full/fork cases. **Not yet verified (needs a CI push)**: mTLS connects, cache hits on re-run,
-  and (Stage 2) whether rules_scala compiles + JVM unit-test execution run on the NativeLink worker.
-- **Stage 2 (deferred, gated on a spike)**: flip `stage: cache` → `full` on `unit-tests` first;
-  confirm Scalac + `webapi:test`/`ingest:test` report `runner: remote` and stay green before rolling out.
+- **Verified in CI (PR #4187, all green)**: cold first run green, then a same-SHA re-run cut the
+  Bazel jobs 2-3x (Unit tests 12m30s→3m54s, IT 19m→9m, E2E 18m→10m, healthcheck 13m→6.6m) — proves
+  the remote cache connects over mTLS and serves compile actions, not just `--remote_local_fallback`.
+  Commits `2dd5e8e56` (Phase 7) + `2fa83c158` (fix). **Gotcha that cost the first run** (worth
+  remembering): do **not** put a `${{ }}` expression in a composite action's `description:` — GitHub
+  evaluates `${{ }}` everywhere in the manifest, so a stray `${{ steps.rbe... }}` (a workflow-step id,
+  invalid in the action's own context) makes the whole action fail to load ("Unrecognized named-value:
+  'steps'"). The `./`-local action reference works fine on a PR (resolves from checkout — it does NOT
+  need to be on main, contrary to first assumption).
+- **Stage 2 (executor) — gated on a spike, still pending**: flip `stage: cache` → `full` on
+  `unit-tests` first; confirm Scalac + `webapi:test`/`ingest:test` report `runner: remote` and stay
+  green before rolling out. `--remote_local_fallback` means a worker problem degrades to local, not a
+  CI break.
 - **Branch protection (manual)**: merging the unit jobs renames checks (4 → 1 "Unit Test Results",
   job `unit-tests`); update any required check referencing the old names (`Build and test`,
   `Test bagit`/`Test jwt`/`Test shacl-validator`).
