@@ -44,9 +44,9 @@ jobs:
       - name: Install Nix (Bazel drives the build)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: Restore Bazel repository cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/bazel-repo
           key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
@@ -98,9 +98,9 @@ jobs:
       - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: Restore Bazel repository cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/bazel-repo
           key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
@@ -148,9 +148,9 @@ jobs:
       - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: Restore Bazel repository cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/bazel-repo
           key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
@@ -186,11 +186,11 @@ jobs:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 25
@@ -198,9 +198,9 @@ jobs:
       - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: Restore Bazel repository cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/bazel-repo
           key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
@@ -239,7 +239,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         run: |
@@ -256,7 +256,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Assert modules/fuseki/BUILD.bazel, Dependencies.scala, and docker-compose.yml agree
         run: |
           set -euo pipefail
@@ -313,9 +313,9 @@ jobs:
       - name: Install Nix (Bazel drives the image builds)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: Restore Bazel repository cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/bazel-repo
           key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
