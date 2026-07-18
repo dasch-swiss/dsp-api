@@ -1,0 +1,75 @@
+name: bazel-rbe
+description: >
+  Set up mTLS material for the shared self-hosted NativeLink RBE backend and emit the Bazel flag
+  string consumed by the `just` recipes (`just <recipe> ${{ steps.rbe.outputs.flags }}`). Bazel does
+  NOT expand env vars in .bazelrc, so the connection + mTLS flags live here (per CI step), not in the
+  rc file; the backend-agnostic tuning flags (--remote_download_toplevel, --remote_local_fallback,
+  --repository_cache, …) are in .bazelrc. stage=cache emits remote-cache-only flags; stage=full also
+  adds the remote executor. Flags are empty when mTLS material is absent (fork PR → cold local build).
+  dsp-api is single-arch (all runners are x86_64 = the worker arch), so there is no cross-compile /
+  target-platform machinery. External archives are cached via --repository_cache + the actions/cache
+  step, not a remote downloader.
+
+inputs:
+  stage:
+    description: "cache = remote cache only (local execution); full = also remote executor."
+    default: "cache"
+  runner-endpoint:
+    description: RE-API endpoint, e.g. grpcs://<host>:50051 — serves the remote cache (AC+CAS) and the remote executor.
+    required: true
+  ca-cert:
+    description: NativeLink server CA (PEM). Bazel verifies the server cert against it.
+    required: true
+  client-cert:
+    description: mTLS client cert (PEM) — the CI identity.
+    required: true
+  client-key:
+    description: mTLS client key (PEM).
+    required: true
+
+outputs:
+  flags:
+    description: Bazel flag string to pass to a `just` recipe. Empty when mTLS material is absent (fork PR → cold build).
+    value: ${{ steps.build.outputs.flags }}
+
+runs:
+  using: composite
+  steps:
+    - id: build
+      shell: bash
+      env:
+        RBE_STAGE: ${{ inputs.stage }}
+        RBE_RUNNER_ENDPOINT: ${{ inputs.runner-endpoint }}
+        RBE_CA_CERT: ${{ inputs.ca-cert }}
+        RBE_CLIENT_CERT: ${{ inputs.client-cert }}
+        RBE_CLIENT_KEY: ${{ inputs.client-key }}
+      run: |
+        set -euo pipefail
+        # Fork PRs / missing secrets → emit empty flags so the build runs cold (local, no remote).
+        if [ -z "${RBE_RUNNER_ENDPOINT:-}" ] || [ -z "${RBE_CLIENT_KEY:-}" ]; then
+          echo "bazel-rbe: endpoint/mTLS material absent (fork PR?) — cold local build." >&2
+          echo "flags=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        # Cert material lives OUTSIDE the checkout so it can never be picked up as a Bazel input/output.
+        CERT_DIR="$RUNNER_TEMP/.nl"
+        mkdir -p "$CERT_DIR"
+        printf '%s' "$RBE_CA_CERT"     > "$CERT_DIR/ca.crt"
+        printf '%s' "$RBE_CLIENT_CERT" > "$CERT_DIR/client.crt"
+        printf '%s' "$RBE_CLIENT_KEY"  > "$CERT_DIR/client.key"
+        chmod 600 "$CERT_DIR/client.key"
+        # Remote cache (AC + CAS) + mTLS. --tls_certificate is the CA (server verification); the
+        # client pair is the mTLS identity. --noremote_cache_compression: NativeLink does not
+        # advertise wire compression, so enabling it fails the capabilities query.
+        FLAGS="--remote_cache=$RBE_RUNNER_ENDPOINT --remote_instance_name=main"
+        FLAGS="$FLAGS --tls_certificate=$CERT_DIR/ca.crt --tls_client_certificate=$CERT_DIR/client.crt --tls_client_key=$CERT_DIR/client.key"
+        FLAGS="$FLAGS --noremote_cache_compression --remote_upload_local_results=true --experimental_remote_cache_eviction_retries=5"
+        if [ "$RBE_STAGE" = "full" ]; then
+          # Remote executor: build/compile actions run on the x86_64 worker; the scheduler matches it
+          # on cpu_arch. Docker-dependent test targets opt out locally via a `no-remote` BUILD tag
+          # (they need the local Docker daemon); unit tests run remotely + result-cache. --jobs raises
+          # the client fan-out far above the runner core count (actions run on the worker, not locally)
+          # — start at 128, retune with ops as more repos onboard.
+          FLAGS="$FLAGS --remote_executor=$RBE_RUNNER_ENDPOINT --remote_default_exec_properties=cpu_arch=x86_64 --jobs=128"
+        fi
+        echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"

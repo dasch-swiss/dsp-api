@@ -51,3 +51,31 @@ build --tool_java_runtime_version=remotejdk_25
 # on every Linux runner this repo targets.
 test --test_env=LANG=C.UTF-8
 test --test_env=LC_ALL=C.UTF-8
+
+# Surface test stderr on failure (was passed per-command in CI; here so `just` recipes stay clean).
+test --test_output=errors
+
+# ── Remote build execution (shared NativeLink backend) ─────────────────────
+# CI points Bazel at sipi's shared NativeLink backend (dasch-remotebuild-prod-01, :50051, mTLS) for a
+# remote cache (+ executor in Stage 2). The connection + mTLS flags are NOT here — Bazel does not
+# expand env vars in .bazelrc, so the `bazel-rbe` composite action emits them per CI step and each
+# `just` recipe appends them (`{{FLAGS}}`). These backend-agnostic tuning flags are safe no-ops when
+# no remote is configured (local dev never contacts the backend).
+#   --remote_download_toplevel: fetch outputs of explicitly built/run targets locally — needed so
+#     `bazel run //modules/*:load|push` has the image tarball bytes to hand to the Docker daemon.
+#   --remote_local_fallback: a backend outage degrades to a local build instead of failing CI.
+#   --remote_timeout: per-request budget sized for cold compiles on the worker.
+#   --remote_max_connections: raise the gRPC parallelism ceiling for bulk cache lookups.
+build --remote_download_toplevel
+build --remote_local_fallback
+build --remote_timeout=600s
+build --remote_max_connections=200
+
+# Content-addressed cache of external downloads (http_archive tarballs, bzlmod registry files, Maven).
+# Pinning a stable path lets CI persist it across runs via actions/cache (keyed on MODULE.bazel.lock)
+# and gives local dev one shared location across workspaces.
+common --repository_cache=~/.cache/bazel-repo
+
+# Local-machine-only flags (e.g. --disk_cache=...) belong in user.bazelrc; the file is gitignored.
+# This is NOT the CI flag channel — CI threads remote flags through `just` recipes (see above).
+try-import %workspace%/user.bazelrc

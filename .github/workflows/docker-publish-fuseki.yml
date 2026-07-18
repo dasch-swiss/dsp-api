@@ -23,6 +23,7 @@ jobs:
       version: ${{ steps.fuseki_version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v2
       - name: Get Fuseki version
         id: fuseki_version
         run: |
@@ -40,7 +41,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Build and publish Fuseki image to Docker Hub
-        run: make docker-publish-fuseki-image
+        run: just docker-publish-fuseki-image
 
   trigger-dev-deployment:
     name: Trigger deployment to DEV

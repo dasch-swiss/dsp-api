@@ -686,6 +686,45 @@ remove the now-deleted `Upload coverage` required check if it was ever marked re
 whether any required check references a dorny check-run name rather than a job name — if so, prefer
 switching it to the job name so the coarse-XML rendering (above) stays cosmetic rather than gating.
 
+### Phase 7 — Remote build execution (RBE) + CI on `just` 🚧 IN PROGRESS (Stage 1 landed)
+
+Closes the Phase 6 "wire a Bazel disk/remote cache for CI" follow-up. Points dsp-api's Bazel CI at
+sipi's shared **NativeLink** backend (`dasch-remotebuild-prod-01`, `:50051`, mTLS) for a remote cache
+(remote executor deferred to Stage 2), and makes `just` the sole CI/build entry point (the Makefile is
+now **deprecated**). Full rationale + the staged rollout live in `docs/development/dsp-api-rbe.md`.
+
+- **`.bazelrc`**: added backend-agnostic tuning flags (safe no-ops without a remote) —
+  `--remote_download_toplevel`, `--remote_local_fallback`, `--remote_timeout=600s`,
+  `--remote_max_connections=200`, `--repository_cache=~/.cache/bazel-repo`, `test --test_output=errors`,
+  `try-import %workspace%/user.bazelrc`. **No `ci.bazelrc`** — connection/cert flags are threaded per
+  CI step, not baked into the rc file (Bazel doesn't expand env vars there).
+- **`.github/actions/bazel-rbe/action.yml`** (new): ported from sipi, simplified (single-arch, no
+  cross-leg machinery). Writes mTLS certs to `$RUNNER_TEMP/.nl/`, emits a `flags` step-output. A
+  `stage` input (`cache`|`full`) selects cache-only vs. cache+executor. Fork PRs (no secrets) → empty
+  flags → cold local build. Org secrets/vars `REMOTEBUILD_{RUNNER_ENDPOINT,CA_CERT,CLIENT_CERT,CLIENT_KEY}`.
+- **`justfile`**: every bazel recipe takes `*FLAGS=''` and appends `{{FLAGS}}`; prereqs pass FLAGS
+  through (`test-it *FLAGS='': (docker-load-test-images FLAGS)`). New `test-unit` (all pure-JVM
+  modules). Ported the build/publish/image-tag/check surface from the Makefile (canonical home now).
+- **Makefile deprecated**: removed the test/publish/tag/check targets (now in `just`); a
+  deprecation banner + the entangled `docker-build*`/`docker-image-tag` cluster and the local-dev
+  targets (`stack-*`, `init-db-*`, `clean-*`) remain until a follow-up ports them and deletes the file.
+- **CI**: every workflow step runs `nix develop --command just <recipe> ${{ steps.rbe.outputs.flags }}`
+  (fuseki-publish uses `extractions/setup-just`, no Nix). Each Bazel job gained an `actions/cache`
+  (`~/.cache/bazel-repo`, keyed on `MODULE.bazel.lock`) + `bazel-rbe` step. **The 4 pure-JVM unit
+  jobs merged into one `unit-tests` job** (`just test-unit`, one consolidated "Unit Test Results"
+  dorny report); the 3 Docker jobs stay separate (they're `exclusive`). Docker test targets already
+  carried `no-remote` (run local, no stale-pass poisoning); added the RBE rationale to the `_TAGS`
+  comment.
+- **Verified locally**: `.bazelrc` flags parse + `//modules/bagit:bagit` builds; `just` FLAGS thread
+  into recipes + prereqs; all workflow/action YAML parse; the action emits correct flags for
+  cache/full/fork cases. **Not yet verified (needs a CI push)**: mTLS connects, cache hits on re-run,
+  and (Stage 2) whether rules_scala compiles + JVM unit-test execution run on the NativeLink worker.
+- **Stage 2 (deferred, gated on a spike)**: flip `stage: cache` → `full` on `unit-tests` first;
+  confirm Scalac + `webapi:test`/`ingest:test` report `runner: remote` and stay green before rolling out.
+- **Branch protection (manual)**: merging the unit jobs renames checks (4 → 1 "Unit Test Results",
+  job `unit-tests`); update any required check referencing the old names (`Build and test`,
+  `Test bagit`/`Test jwt`/`Test shacl-validator`).
+
 ---
 
 ## Key gotchas / learnings (save yourself the rediscovery)
@@ -726,17 +765,17 @@ switching it to the job name so the coarse-XML rendering (above) stays cosmetic 
    - `./sbtx "webapi/compile"` (sbt on 3.8.4 still clean)
    - if maven needs a refetch: `nix develop --command bazel run @unpinned_maven//:pin`
    - Docker-dependent test targets (`test-it`, `test-e2e`, `test-ingest-integration`) need the
-     `:latest`/pinned images preloaded first: `make docker-load-test-images` (or `bazel run
-     //modules/{sipi,ingest,fuseki}:load` directly — see below).
+     `:latest`/pinned images preloaded first: the `just test-*` recipes do this via their
+     `docker-load-test-images` prerequisite (or `bazel run //modules/{sipi,ingest,fuseki}:load` directly).
    - `nix develop --command bazel build //modules/fuseki:image_amd64` (fuseki image builds)
-   - `make check-docker-image-tag` (sbt⇄workspace_status tag-drift gate, temporary — see Phase 6)
-5. **Migration is code-complete (Phases 0–6).** Remaining work is operational, not code: watch the
-   first real CI run for the push-only risks listed at the end of the Phase 6 section, and do the
-   manual branch-protection coordination noted there. If reviving this doc for further work, the
-   natural next increments are: retire the sbt-parallel paths once the validation window closes
-   (remove `check-docker-image-tag`, drop the fuseki-publish Dockerfile/buildx path, remove `./sbtx`
-   entirely from CI/Makefile), and wire a Bazel disk/remote cache for CI (flagged in Phase 6 as
-   out-of-scope for this pass).
+   - `just check-docker-image-tag` (sbt⇄workspace_status tag-drift gate, temporary — see Phase 6)
+5. **Migration is code-complete (Phases 0–6); Phase 7 (RBE + CI on `just`) Stage 1 is landed** (see
+   above). Remaining work is operational, not code: watch the first real CI run for the Phase 6/7
+   push-only risks, do the manual branch-protection coordination, and run the Phase 7 Stage 2 spike
+   (flip `stage: cache` → `full`). The `just` recipes are now the entry point; the **Makefile is
+   deprecated**. Other natural increments: retire the sbt-parallel paths once the validation window
+   closes (remove `check-docker-image-tag`, drop the fuseki-publish Dockerfile/buildx path, remove
+   `./sbtx` entirely), and finish deleting the Makefile (port its remaining local-dev targets to `just`).
 
 ## Useful commands
 
@@ -749,7 +788,7 @@ switching it to the job name so the coarse-XML rendering (above) stays cosmetic 
 bazel run @unpinned_maven//:pin          # re-pin maven after changing deps
 bazel build //tools/buildinfo:smoke      # verify buildinfo + stamping
 bazel build //modules/sipi:image_amd64   # sipi image (regression check)
-make docker-build-sipi-image             # sipi image via Makefile (bazel under the hood)
+just docker-build-sipi-image             # sipi image via just (bazel under the hood)
 
 # Phase 3 images — build, load into local Docker as :latest, bring up the stack
 bazel build //modules/{sipi,webapi,ingest}:image_{amd64,arm64}
@@ -769,11 +808,14 @@ bazel test //tools/oci:image_versions_match_sbt   # sbt⇄Bazel version-drift gu
 docker compose up -d db sipi ingest api alloy
 curl -u admin:test http://localhost:3030/$/datasets/dsp-repo && curl http://localhost:3333/health
 
-# Phase 6 — Makefile/CI now drive Bazel; docker-compose has healthchecks for api/ingest/db too
-make docker-image-tag                # git-describe tag, no sbt (was: sbt "print dockerImageTag")
-make check-docker-image-tag          # temporary drift gate: workspace_status.sh vs sbt, byte-match
-make docker-build-dsp-api-image      # bazel run //modules/webapi:load + docker tag (mirrors sipi)
-make docker-load-test-images         # preload sipi+ingest+fuseki :latest/pinned for IT/E2E tests
-make test test-it test-e2e test-ingest-integration   # all bazel test now, no coverage wrapping
+# Phase 6/7 — CI drives Bazel via `just` (Makefile deprecated); docker-compose has healthchecks too
+just docker-image-tag                # git-describe tag, no sbt (was: sbt "print dockerImageTag")
+just check-docker-image-tag          # temporary drift gate: workspace_status.sh vs sbt, byte-match
+just docker-build-dsp-api-image      # bazel run //modules/webapi:load + docker tag (mirrors sipi)
+just docker-load-test-images         # preload sipi+ingest+fuseki :latest/pinned for IT/E2E tests
+just test-unit test-it test-e2e test-ingest-integration   # all bazel test now, no coverage wrapping
 docker compose up --wait db sipi ingest api          # all four now have healthcheck: blocks
+
+# Phase 7 — RBE flags are injected by CI only (bazel-rbe action → just <recipe> "$FLAGS"); local dev
+# never contacts the backend. See docs/development/dsp-api-rbe.md.
 ```

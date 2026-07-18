@@ -1,3 +1,14 @@
+# ============================================================================
+# ⚠️  DEPRECATED — this Makefile is being retired in favour of `just`.
+#     Run `just --list` for the current entry points. The test / publish /
+#     image-tag / format-check targets have moved to the justfile (canonical);
+#     CI no longer calls `make`. The docker-build* + docker-image-tag targets
+#     below are kept only transitionally because the local `stack-up*` targets
+#     depend on them — they are duplicated in `just` and will be removed once
+#     the remaining local-dev targets (stack-*, init-db-*, clean-*) are ported
+#     and this file is deleted. Do not add new targets here; add them to justfile.
+# ============================================================================
+
 # Determine this makefile's path.
 # Be sure to place this BEFORE `include` directives, if any.
 # THIS_FILE := $(lastword $(MAKEFILE_LIST))
@@ -34,11 +45,8 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 	@docker run -it --rm -p 8080:8080 -v $(CURRENT_DIR)/docs/architecture:/usr/local/structurizr structurizr/lite
 
 #################################
-# Docker targets
+# Docker targets (transitional — canonical copies live in the justfile)
 #################################
-
-.PHONY: build
-build: docker-build ## build all targets (excluding docs)
 
 .PHONY: docker-build-dsp-api-image
 docker-build-dsp-api-image: # build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
@@ -47,27 +55,12 @@ docker-build-dsp-api-image: # build the knora-api image with Bazel + load it int
 		docker tag daschswiss/knora-api:latest "daschswiss/knora-api:$$TAG" && \
 		echo "Loaded daschswiss/knora-api: latest + $$TAG"
 
-.PHONY: docker-publish-dsp-api-image
-docker-publish-dsp-api-image: # build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
-	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
-		bazel run //modules/webapi:push -- -t latest -t "$$TAG"
-
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
 	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
 		bazel run //modules/sipi:load && \
 		docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$$TAG" && \
 		echo "Loaded daschswiss/knora-sipi: latest + $$TAG"
-
-.PHONY: docker-publish-sipi-image
-docker-publish-sipi-image: # build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
-	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
-		bazel run //modules/sipi:push -- -t latest -t "$$TAG"
-
-.PHONY: docker-publish-ingest-image
-docker-publish-ingest-image: # build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
-	@TAG=$$($(MAKE) -s docker-image-tag | sed -e '/^[[:space:]]*$$/d' | tail -n1 | tr -d '[:space:]'); \
-		bazel run //modules/ingest:push -- -t latest -t "$$TAG"
 
 .PHONY: docker-build-ingest-image
 docker-build-ingest-image: # build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
@@ -76,46 +69,12 @@ docker-build-ingest-image: # build the dsp-ingest image with Bazel + load it int
 		docker tag daschswiss/dsp-ingest:latest "daschswiss/dsp-ingest:$$TAG" && \
 		echo "Loaded daschswiss/dsp-ingest: latest + $$TAG"
 
-# Lazy assignment (=): evaluated only when a Fuseki target is invoked, not at parse time.
-# This avoids errors when modules/fuseki/Dockerfile does not yet exist (Step 1 must run first).
-FUSEKI_IMAGE_VERSION = $(shell grep "^ARG IMAGE_VERSION=" modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
-FUSEKI_DOCKER_IMAGE  = daschswiss/apache-jena-fuseki:$(FUSEKI_IMAGE_VERSION)
-
-.PHONY: docker-build-fuseki-image
-docker-build-fuseki-image: # build Fuseki image into the local Docker daemon
-	export DOCKER_BUILDKIT=1; \
-	docker build \
-	  -t $(FUSEKI_DOCKER_IMAGE) \
-	  modules/fuseki/
-
-.PHONY: docker-publish-fuseki-image
-docker-publish-fuseki-image: # publish multi-platform Fuseki image to Docker Hub
-	export DOCKER_BUILDKIT=1; \
-	docker buildx build \
-	  --platform linux/amd64,linux/arm64/v8 \
-	  -t $(FUSEKI_DOCKER_IMAGE) \
-	  --push \
-	  modules/fuseki/
-
 .PHONY: docker-build
-docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image ## build dsp-api/sipi/ingest images locally (Fuseki excluded: use docker-build-fuseki-image explicitly)
-
-.PHONY: docker-publish
-docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image docker-publish-ingest-image ## publish dsp-api/sipi/ingest images to Dockerhub (Fuseki excluded: published separately via docker-publish-fuseki-image)
+docker-build: docker-build-dsp-api-image docker-build-sipi-image docker-build-ingest-image ## build dsp-api/sipi/ingest images locally (Fuseki excluded)
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
 	@tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $$2}'
-
-.PHONY: check-docker-image-tag
-check-docker-image-tag: ## assert workspace_status.sh's STABLE_GIT_VERSION byte-matches sbt's dockerImageTag (temporary drift gate for the sbt->Bazel tag-source switch)
-	@ws=$$(tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $$2}'); \
-	 sbt=$$($(SBTX) -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | tr -d '[:space:]'); \
-	 if [ "$$ws" != "$$sbt" ]; then \
-	   echo "DRIFT: workspace_status=$$ws sbt=$$sbt"; \
-	   exit 1; \
-	 fi; \
-	 echo "OK: $$ws"
 
 #################################
 ## DSP Stack Targets
@@ -214,36 +173,6 @@ stack-without-api-and-sipi: stack-up ## starts the dsp-stack without dsp-api and
 stack-db-only:  ## starts only fuseki.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/modules/webapi/scripts/wait-for-db.sh
-
-#################################
-## Test Targets
-#################################
-
-.PHONY: test-all
-test-all: test test-it test-e2e
-
-.PHONY: test
-test: ## runs all unit tests
-	bazel test //modules/webapi:test
-
-.PHONY: docker-load-test-images
-docker-load-test-images: # loads the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon for Docker-dependent test targets
-	bazel run //modules/sipi:load
-	bazel run //modules/ingest:load
-	bazel run //modules/fuseki:load
-
-.PHONY: test-it
-test-it: docker-load-test-images ## runs integration (service/repo) tests
-	bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span
-
-.PHONY: test-e2e
-test-e2e: docker-load-test-images ## runs end-to-end (HTTP) tests
-	bazel test //modules/test-e2e:test
-
-.PHONY: test-ingest-integration
-test-ingest-integration: docker-load-test-images ## runs end-to-end (HTTP) tests
-	bazel test //modules/test-ingest-integration:test
-
 
 #################################
 ## Database Management
@@ -370,10 +299,6 @@ clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
 .PHONY: clean-sipi-projects
 clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf modules/sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
-
-.PHONY: check
-check: ## Run code formatting check
-	@$(SBTX) "check"
 
 .PHONY: fmt
 fmt: ## Run code formatting fix

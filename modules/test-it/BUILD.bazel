@@ -43,6 +43,13 @@ _DATA = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**
 #     of them running concurrently bind-mount and write to the *same* host /tmp tree through
 #     different dsp-ingest containers - a real race. This DOES apply to test-ingest-integration.
 # sbt never hits either because it runs one project's tests at a time.
+#
+# "requires-network" + "no-sandbox" + "no-remote": these specs drive Docker testcontainers through
+# the host Docker socket, so they cannot run in the Bazel sandbox or on the RBE remote executor -
+# they must execute locally with network access. "no-remote" also keeps their results OUT of the
+# remote cache: the images they depend on are loaded as a side effect (`//modules/*:load`) that
+# Bazel does not model as a test input, so a cached "pass" could be served after an image changed.
+# Pure-JVM unit-test targets carry none of these tags - they run remotely and result-cache.
 _TAGS = [
     "requires-network",
     "no-sandbox",

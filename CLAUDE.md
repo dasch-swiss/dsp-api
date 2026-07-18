@@ -17,9 +17,12 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Core Build Tool
 
-- **Primary**: `sbt` (Scala Build Tool) - use `./sbtx` wrapper script
-- **Alternative**: `just` (command runner) for common tasks
-- **Alternative**: `make` for Docker and documentation tasks
+- **Primary**: `just` (command runner) - the canonical entry point for build, test, image, and CI
+  tasks; it wraps Bazel. Run `just --list`.
+- **Compilation / formatting**: `sbt` - use the `./sbtx` wrapper (still the Scala build of record
+  during the Bazel validation window).
+- **Deprecated**: `make` - being retired in favour of `just`. A few local-dev targets (stack logs,
+  DB init) remain there until ported; do not add new ones.
 
 ### Essential Development Commands
 
@@ -28,10 +31,10 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 - Run a single test: `sbt "testOnly *TestClassName*"`
 - Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
-- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
-- `make test-it` - Run integration tests (requires Docker)
-- `make test-e2e` - Run end-to-end HTTP API tests (requires Docker)
-- `make test-all` - Run all tests
+- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `just docker-build-sipi-image`.
+- `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator)
+- `just test-it` - Run integration tests (requires Docker)
+- `just test-e2e` - Run end-to-end HTTP API tests (requires Docker)
 
 **Code Quality:**
 
@@ -42,8 +45,8 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 **Building:**
 
 - `sbt compile` - Compile the project
-- `make docker-build` - Build Docker images
-- `make docker-build-dsp-api-image` - Build only the API Docker image
+- `just docker-build` - Build the dsp-api/sipi/ingest Docker images (Fuseki excluded)
+- `just docker-build-dsp-api-image` - Build only the API Docker image
 
 **Local Development Stack:**
 
@@ -59,21 +62,22 @@ All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena
 Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
 the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
-- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
-- `make docker-build-sipi-image` / `make docker-build-dsp-api-image` / `make docker-build-ingest-image`
+- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command just docker-build-sipi-image`.
+- `just docker-build-sipi-image` / `just docker-build-dsp-api-image` / `just docker-build-ingest-image`
   build the image and load it into the local Docker daemon (`:latest` plus the git-describe
-  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `docker-publish-*`
+  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `just docker-publish-*`
   variants build + push the multi-arch image via `bazel run //modules/<m>:push`.
 - `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
   dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
   them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
-- Fuseki's own Makefile targets (`docker-build-fuseki-image`/`docker-publish-fuseki-image`) are a
+- Fuseki's own recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) are a
   deliberate exception: they stay on the original Dockerfile/`docker buildx` path during the
   sbt-parallel validation window, even though `//modules/fuseki:load`/`:push` work — see
   `SESSION-HANDOFF.md` Phase 6.
-- Bazel also now drives `bazel test` in CI and the Makefile's `test`/`test-it`/`test-e2e`/
-  `test-ingest-integration` targets — sbt is retained only for fuseki's publish path and a
-  temporary tag-drift gate (`make check-docker-image-tag`), both removable once validation closes.
+- CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
+  (`dasch-remotebuild-prod-01`) for a remote cache (remote executor in Stage 2). See
+  `docs/development/dsp-api-rbe.md`. sbt is retained only for fuseki's publish path and a temporary
+  tag-drift gate (`just check-docker-image-tag`), both removable once validation closes.
 
 ## Architecture
 

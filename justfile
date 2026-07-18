@@ -12,31 +12,131 @@ alias ssd := stack-start-dev
 fmt:
     ./sbtx fmt
 
-# Run unit tests for dsp-api
-test:
-    bazel test //modules/webapi:test
+# CI threads the RBE flag string emitted by the bazel-rbe composite action into these recipes as a
+# trailing `*FLAGS` argument (`just <recipe> "$FLAGS"`); each bazel command appends `{{FLAGS}}`.
+# Locally FLAGS is empty (dev never contacts the remote backend) and the recipes run as before.
+
+# Run unit tests for dsp-api (webapi only; use `test-unit` for the full pure-JVM suite)
+test *FLAGS='':
+    bazel test //modules/webapi:test {{FLAGS}}
+
+# Run all pure-JVM unit tests (matches the CI `unit-tests` job; RBE-safe: runs remotely + result-caches)
+test-unit *FLAGS='':
+    bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test {{FLAGS}}
 
 # Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
-docker-load-test-images:
-    bazel run //modules/sipi:load
-    bazel run //modules/ingest:load
-    bazel run //modules/fuseki:load
+docker-load-test-images *FLAGS='':
+    bazel run {{FLAGS}} //modules/sipi:load
+    bazel run {{FLAGS}} //modules/ingest:load
+    bazel run {{FLAGS}} //modules/fuseki:load
 
 # Run integration tests for dsp-api
-test-it: docker-load-test-images
-    bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span
+test-it *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span {{FLAGS}}
 
 # Run End-2-End tests for dsp-api
-test-e2e: docker-load-test-images
-    bazel test //modules/test-e2e:test
+test-e2e *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-e2e:test {{FLAGS}}
 
 # Run unit tests for ingest
-test-ingest:
-    bazel test //modules/ingest:test
+test-ingest *FLAGS='':
+    bazel test //modules/ingest:test {{FLAGS}}
 
 # Run integration tests for ingest
-test-ingest-integration: docker-load-test-images
-    bazel test //modules/test-ingest-integration:test
+test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-ingest-integration:test {{FLAGS}}
+
+# Run code formatting + lint check (sbt)
+check:
+    ./sbtx check
+
+## Docker image build / publish (canonical home — the Makefile is deprecated)
+
+# Print the docker image tag (git describe via workspace_status.sh; no sbt)
+docker-image-tag:
+    @tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}'
+
+# Assert workspace_status.sh's STABLE_GIT_VERSION byte-matches sbt's dockerImageTag (temporary gate)
+check-docker-image-tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ws=$(tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}')
+    sbt=$(./sbtx -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | tr -d '[:space:]')
+    if [ "$ws" != "$sbt" ]; then
+      echo "DRIFT: workspace_status=$ws sbt=$sbt"
+      exit 1
+    fi
+    echo "OK: $ws"
+
+# Build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-dsp-api-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/webapi:load
+    docker tag daschswiss/knora-api:latest "daschswiss/knora-api:$TAG"
+    echo "Loaded daschswiss/knora-api: latest + $TAG"
+
+# Build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-sipi-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/sipi:load
+    docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$TAG"
+    echo "Loaded daschswiss/knora-sipi: latest + $TAG"
+
+# Build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-ingest-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/ingest:load
+    docker tag daschswiss/dsp-ingest:latest "daschswiss/dsp-ingest:$TAG"
+    echo "Loaded daschswiss/dsp-ingest: latest + $TAG"
+
+# Build dsp-api/sipi/ingest images locally (Fuseki excluded: use docker-build-fuseki-image)
+docker-build *FLAGS='': (docker-build-dsp-api-image FLAGS) (docker-build-sipi-image FLAGS) (docker-build-ingest-image FLAGS)
+
+# Build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
+docker-publish-dsp-api-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/webapi:push -- -t latest -t "$TAG"
+
+# Build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
+docker-publish-sipi-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/sipi:push -- -t latest -t "$TAG"
+
+# Build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
+docker-publish-ingest-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/ingest:push -- -t latest -t "$TAG"
+
+# Publish dsp-api/sipi/ingest images to Docker Hub (Fuseki excluded: published separately)
+docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS)
+
+# Build the Fuseki image into the local Docker daemon (Dockerfile/buildx — deliberately not Bazel)
+docker-build-fuseki-image:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export DOCKER_BUILDKIT=1
+    VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+    docker build -t "daschswiss/apache-jena-fuseki:$VER" modules/fuseki/
+
+# Publish the multi-platform Fuseki image to Docker Hub (buildx — deliberately not Bazel)
+docker-publish-fuseki-image:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export DOCKER_BUILDKIT=1
+    VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+    docker buildx build --platform linux/amd64,linux/arm64/v8 -t "daschswiss/apache-jena-fuseki:$VER" --push modules/fuseki/
 
 # Start stack
 stack-start:
