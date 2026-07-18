@@ -55,7 +55,10 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: cache
+          # Stage 2 spike: this job uses the remote EXECUTOR (compiles + JVM unit tests run on the
+          # NativeLink worker). The other Bazel jobs stay on `cache` until this proves green; roll
+          # them to `full` afterward. `--remote_local_fallback` degrades to local if the worker fails.
+          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
