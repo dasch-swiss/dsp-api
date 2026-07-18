@@ -686,7 +686,7 @@ remove the now-deleted `Upload coverage` required check if it was ever marked re
 whether any required check references a dorny check-run name rather than a job name — if so, prefer
 switching it to the job name so the coarse-XML rendering (above) stays cosmetic rather than gating.
 
-### Phase 7 — Remote build execution (RBE) + CI on `just` ✅ STAGE 1 COMPLETE (executor = Stage 2, pending)
+### Phase 7 — Remote build execution (RBE) + CI on `just` ✅ COMPLETE (cache + executor, all green in CI)
 
 Closes the Phase 6 "wire a Bazel disk/remote cache for CI" follow-up. Points dsp-api's Bazel CI at
 sipi's shared **NativeLink** backend (`dasch-remotebuild-prod-01`, `:50051`, mTLS) for a remote cache
@@ -724,10 +724,16 @@ now **deprecated**). Full rationale + the staged rollout live in `docs/developme
   invalid in the action's own context) makes the whole action fail to load ("Unrecognized named-value:
   'steps'"). The `./`-local action reference works fine on a PR (resolves from checkout — it does NOT
   need to be on main, contrary to first assumption).
-- **Stage 2 (executor) — gated on a spike, still pending**: flip `stage: cache` → `full` on
-  `unit-tests` first; confirm Scalac + `webapi:test`/`ingest:test` report `runner: remote` and stay
-  green before rolling out. `--remote_local_fallback` means a worker problem degrades to local, not a
-  CI break.
+- **Stage 2 (executor) — DONE, green** (commits `999b822c9` spike, `705541c34` rollout). The
+  unit-tests spike proved rules_scala compiles + JVM unit-test execution run on the NativeLink worker
+  (1483/2464 actions remote, all tests pass) — the make-or-break unknown, resolved. Rolled `stage: full`
+  to all 5 build-and-test Bazel jobs; the image-build-on-worker → local-load path works (healthcheck
+  loaded both knora-api + knora-sipi). Docker/testcontainer test targets stay local via `no-remote`
+  (the small "N local" counts in each job's process summary).
+- **Publish workflows deliberately stay on `stage: cache`** (release path): local multi-arch image
+  assembly on the x86_64 runner is already proven and the remote cache gives the cross-run win; remote
+  arm64 assembly on the worker is unproven and the executor speedup doesn't justify the risk on
+  infrequent real Docker Hub pushes. Flip to `full` later only if wanted.
 - **Branch protection (manual)**: merging the unit jobs renames checks (4 → 1 "Unit Test Results",
   job `unit-tests`); update any required check referencing the old names (`Build and test`,
   `Test bagit`/`Test jwt`/`Test shacl-validator`).
