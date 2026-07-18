@@ -1,7 +1,7 @@
 name: bazel-rbe
 description: >
   Set up mTLS material for the shared self-hosted NativeLink RBE backend and emit the Bazel flag
-  string consumed by the `just` recipes (`just <recipe> ${{ steps.rbe.outputs.flags }}`). Bazel does
+  string (the `flags` output) that each CI step passes to a `just` recipe. Bazel does
   NOT expand env vars in .bazelrc, so the connection + mTLS flags live here (per CI step), not in the
   rc file; the backend-agnostic tuning flags (--remote_download_toplevel, --remote_local_fallback,
   --repository_cache, …) are in .bazelrc. stage=cache emits remote-cache-only flags; stage=full also
