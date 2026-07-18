@@ -403,11 +403,9 @@ http_file(
 #############################################
 
 # rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
-# here. The sha256 below and modules/fuseki/Dockerfile's `ARG FUSEKI_SHA512`
-# (75457f45d14397876a41ed51abe7ae5d2f1e708dfe1315765f858158bc5c6813bc036ec1539ddc4dffd26201f5cc31fadec299ca5c3dc2548b723513ed31d326)
-# verify the identical bytes. The version is kept in sync across this file,
-# project/Dependencies.scala's fusekiImage, and the Dockerfile by CI's
-# check-fuseki-version-consistency job; bump all three together.
+# here; the sha256 pin below guards its integrity. The dist version must match
+# modules/fuseki/BUILD.bazel's FUSEKI_VERSION (checked by
+# //tools/oci:image_versions_match_sbt); bump both together.
 http_archive(
     name = "fuseki_dist",
     build_file_content = "\n".join([

@@ -1,6 +1,6 @@
 # Apache Jena Fuseki — DaSCH image
 
-Custom Docker image for [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) used as the triplestore for dsp-api.
+Custom container image for [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) used as the triplestore for dsp-api. Built with Bazel (`//modules/fuseki`, rules_oci).
 
 Published to Docker Hub as `daschswiss/apache-jena-fuseki:<IMAGE_VERSION>`.
 
@@ -20,7 +20,7 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 ## Configuration
 
 | Variable | Description | Default |
-|---|---|---|
+| --- | --- | --- |
 | `ADMIN_PASSWORD` | Fuseki admin password | value from `shiro.ini` |
 | `JVM_ARGS` | JVM heap and flags | `-Xmx4G` |
 | `REBUILD_INDEX_OF_DATASET` | Dataset name to rebuild Lucene index for | unset |
@@ -28,18 +28,19 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 ## Updating Jena/Fuseki
 
 1. Find the new version on [jena.apache.org/download](https://jena.apache.org/download/)
-2. Download the SHA512 checksum for `apache-jena-fuseki-<version>.tar.gz.sha512`
-3. Update `modules/fuseki/Dockerfile`:
-   - `ARG IMAGE_VERSION` — new Docker image tag (e.g. `5.6.0-1`, increment the `-N` suffix for DaSCH revisions)
-   - `ARG FUSEKI_VERSION` — new Apache Jena Fuseki version (e.g. `5.6.0`)
-   - `ARG FUSEKI_SHA512` — new SHA512 checksum
+2. Update `MODULE.bazel`'s `@fuseki_dist` `http_archive`:
+   - the tarball `urls` — new `apache-jena-fuseki-<version>.tar.gz`
+   - `sha256` — the checksum of that tarball
+3. Update `modules/fuseki/BUILD.bazel`:
+   - `FUSEKI_VERSION` (in the image `env`) — new Apache Jena Fuseki version (e.g. `5.6.0`)
+   - `IMAGE_VERSION` (image `env` + `.version` label) and the `:load` `repo_tags` — new image tag (e.g. `5.6.0-1`, increment the `-N` suffix for DaSCH revisions)
 4. Update `docker-compose.yml`: bump the `db` service image tag to match `IMAGE_VERSION`
 5. Update `project/Dependencies.scala`: bump `fusekiImage` to match `IMAGE_VERSION`
 
-The CI `check-fuseki-version-consistency` job will fail if these three are out of sync.
+CI guards this: `//tools/oci:image_versions_match_sbt` fails if `FUSEKI_VERSION` doesn't match the `@fuseki_dist` tarball URL, and `check-fuseki-version-consistency` fails if the image tag is out of sync across `BUILD.bazel`, `docker-compose.yml`, and `Dependencies.scala`.
 
 ## Publishing
 
-The image is published automatically by `docker-publish-fuseki.yml` on every merge to `main` that touches `modules/fuseki/**`. No manual action is needed — open a PR with the version bump and merge it.
+The image is published automatically by `docker-publish-fuseki.yml` on every merge to `main` that touches `modules/fuseki/**` (via `bazel run //modules/fuseki:push`). No manual action is needed — open a PR with the version bump and merge it.
 
-To publish manually from a branch (e.g. for testing): trigger `Docker Publish from branch` via GitHub Actions `workflow_dispatch`.
+To build + load it locally: `just docker-build-fuseki-image`. To publish manually: `just docker-publish-fuseki-image` (needs Docker Hub credentials).

@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 # Fails if any Bazel-side image pin (temurin base, sipi base, OTel/Pyroscope
-# jars, fuseki dist/tag) has drifted from build.sbt / project/Dependencies.scala /
-# modules/fuseki/Dockerfile's values. Run via
-# `bazel test //tools/oci:image_versions_match_sbt`.
+# jars, fuseki dist version) has drifted from build.sbt / project/Dependencies.scala.
+# Run via `bazel test //tools/oci:image_versions_match_sbt`.
 set -euo pipefail
 
 module_bazel="$1"
 build_sbt="$2"
 dependencies_scala="$3"
-fuseki_dockerfile="$4"
-fuseki_build_bazel="$5"
+fuseki_build_bazel="$4"
 
 fail=0
 
@@ -44,28 +42,16 @@ if ! grep -qF "download/${sbt_pyroscope}/pyroscope-otel.jar" "$module_bazel"; th
   fail=1
 fi
 
-# Fuseki dist version (the tarball MODULE.bazel fetches). The SHA512 pin in
-# the Dockerfile is self-guarding at fetch time (a version bump without a
-# matching hash change would 404 or fail @fuseki_dist's checksum, not silently
-# succeed), so this only needs to catch a bumped FUSEKI_VERSION whose tarball
-# URL wasn't updated to match. `ARG FUSEKI_VERSION=` is checked (not the `ENV`
-# line a few lines below it, which only ever echoes the same ARG value) so
-# this doesn't depend on which of the two comes first in the Dockerfile.
-dockerfile_fuseki="$(grep -o 'ARG FUSEKI_VERSION=[^[:space:]]*' "$fuseki_dockerfile" | head -1 | cut -d= -f2)"
-if ! grep -qF "apache-jena-fuseki-${dockerfile_fuseki}.tar.gz" "$module_bazel"; then
-  echo "MISMATCH: MODULE.bazel's fuseki_dist URL doesn't match modules/fuseki/Dockerfile's FUSEKI_VERSION ($dockerfile_fuseki)" >&2
-  fail=1
-fi
-
-# Fuseki image tag (IMAGE_VERSION, e.g. "6.1.0-0"). Unlike the other three
-# images, modules/fuseki/BUILD.bazel bakes this literal into its labels/env/
-# repo_tags rather than reading it from a stamped workspace-status key (it
-# isn't a git-versioned artifact -- it's a pinned upstream release
-# repackaged), so nothing else here would catch a bumped IMAGE_VERSION that
-# the BUILD.bazel literals weren't updated to match.
-dockerfile_image_version="$(grep -o 'ARG IMAGE_VERSION=[^[:space:]]*' "$fuseki_dockerfile" | head -1 | cut -d= -f2)"
-if ! grep -qF "$dockerfile_image_version" "$fuseki_build_bazel"; then
-  echo "MISMATCH: modules/fuseki/BUILD.bazel doesn't mention modules/fuseki/Dockerfile's IMAGE_VERSION ($dockerfile_image_version)" >&2
+# Fuseki dist version (the tarball MODULE.bazel fetches, e.g. "6.1.0"). The
+# @fuseki_dist sha256 pin is self-guarding at fetch time (a version bump without a
+# matching hash change fails the checksum, not silently succeeds), so this only
+# catches a bumped FUSEKI_VERSION in modules/fuseki/BUILD.bazel whose MODULE.bazel
+# tarball URL wasn't updated to match. (The image tag IMAGE_VERSION is checked
+# against Dependencies.scala + docker-compose.yml by the check-fuseki-version-consistency
+# CI job.)
+bazel_fuseki="$(grep -oE '"FUSEKI_VERSION": "[^"]+"' "$fuseki_build_bazel" | head -1 | cut -d'"' -f4)"
+if ! grep -qF "apache-jena-fuseki-${bazel_fuseki}.tar.gz" "$module_bazel"; then
+  echo "MISMATCH: MODULE.bazel's fuseki_dist URL doesn't match modules/fuseki/BUILD.bazel's FUSEKI_VERSION ($bazel_fuseki)" >&2
   fail=1
 fi
 

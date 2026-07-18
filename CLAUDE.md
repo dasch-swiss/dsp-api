@@ -70,14 +70,12 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
 - `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
   dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
   them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
-- Fuseki's own recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) are a
-  deliberate exception: they stay on the original Dockerfile/`docker buildx` path during the
-  sbt-parallel validation window, even though `//modules/fuseki:load`/`:push` work — see
-  `SESSION-HANDOFF.md` Phase 6.
+- Fuseki's recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) build and
+  publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
 - CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
-  (`dasch-remotebuild-prod-01`) for a remote cache (remote executor in Stage 2). See
-  `docs/development/dsp-api-rbe.md`. sbt is retained only for fuseki's publish path and a temporary
-  tag-drift gate (`just check-docker-image-tag`), both removable once validation closes.
+  (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
+  sbt is retained only for the formatting check (`just check`) and a temporary tag-drift gate
+  (`just check-docker-image-tag`), both removable once validation closes.
 
 ## Architecture
 

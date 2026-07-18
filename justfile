@@ -122,21 +122,16 @@ docker-publish-ingest-image *FLAGS='':
 # Publish dsp-api/sipi/ingest images to Docker Hub (Fuseki excluded: published separately)
 docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS)
 
-# Build the Fuseki image into the local Docker daemon (Dockerfile/buildx — deliberately not Bazel)
-docker-build-fuseki-image:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export DOCKER_BUILDKIT=1
-    VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
-    docker build -t "daschswiss/apache-jena-fuseki:$VER" modules/fuseki/
+# Build the Fuseki image with Bazel + load it into the local Docker daemon (at its version tag)
+docker-build-fuseki-image *FLAGS='':
+    bazel run {{FLAGS}} //modules/fuseki:load
 
-# Publish the multi-platform Fuseki image to Docker Hub (buildx — deliberately not Bazel)
-docker-publish-fuseki-image:
+# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel
+docker-publish-fuseki-image *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    export DOCKER_BUILDKIT=1
-    VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
-    docker buildx build --platform linux/amd64,linux/arm64/v8 -t "daschswiss/apache-jena-fuseki:$VER" --push modules/fuseki/
+    VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
+    bazel run {{FLAGS}} //modules/fuseki:push -- -t "$VER"
 
 # Start stack
 stack-start:

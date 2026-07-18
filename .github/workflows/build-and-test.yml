@@ -257,18 +257,18 @@ jobs:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - uses: actions/checkout@v4
-      - name: Assert modules/fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
+      - name: Assert modules/fuseki/BUILD.bazel, Dependencies.scala, and docker-compose.yml agree
         run: |
           set -euo pipefail
-          DOCKERFILE_VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+          BUILD_VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
           DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
           COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
-          echo "modules/fuseki/Dockerfile:  $DOCKERFILE_VER"
+          echo "modules/fuseki/BUILD.bazel: $BUILD_VER"
           echo "project/Dependencies.scala: $DEPS_VER"
           echo "docker-compose.yml:         $COMPOSE_VER"
-          [ "$DOCKERFILE_VER" = "$DEPS_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
-          [ "$DOCKERFILE_VER" = "$COMPOSE_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
-          echo "All Fuseki versions match: $DOCKERFILE_VER"
+          [ "$BUILD_VER" = "$DEPS_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
+          [ "$BUILD_VER" = "$COMPOSE_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
+          echo "All Fuseki versions match: $BUILD_VER"
 
   check-formatting:
     name: Check formatting
