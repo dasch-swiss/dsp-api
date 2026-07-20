@@ -110,7 +110,7 @@ Each slice typically contains:
 
 ### Technology Stack
 
-- **Language**: Scala 3.3.5
+- **Language**: Scala 3.8.4
 - **Framework**: ZIO 2.x for functional programming
 - **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
@@ -156,12 +156,13 @@ Each slice typically contains:
 
 ### Prerequisites
 
-- JDK Temurin 25
-- sbt
+- [Nix](https://determinate.systems) (with flakes) + `direnv` — the only toolchain install needed;
+  the dev shell it loads provides `bazel`, JDK Temurin 25, `just`, and `crane` (see "Bazel & the Nix
+  dev shell" above)
 - Docker Desktop
-- Nix (with flakes) + direnv — provides the Bazel dev shell used to build the Sipi image (see "Bazel & the Nix dev shell" above)
-- just (optional)
-- Scala 3.3.X
+
+`sbt` is not installed separately — the checked-in `./sbtx` wrapper runs it on the dev shell's JDK,
+and it remains the Scala build of record (Scala 3.8.4) during the Bazel validation window.
 
 ### Local Development
 
