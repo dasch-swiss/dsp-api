@@ -140,7 +140,7 @@ addCommandAlias("test-e2e", "test-e2e/test")
 // The `knora-sipi` image (a thin overlay that copies the Lua scripts onto the
 // upstream `daschswiss/sipi` image) is built with Bazel `rules_oci`, not sbt.
 // See modules/sipi/BUILD.bazel (`//modules/sipi:load` locally, `//modules/sipi:push` to publish),
-// driven by the Makefile docker-{build,publish}-sipi-image targets.
+// driven by the justfile docker-{build,publish}-sipi-image recipes.
 // `Dependencies.sipiImage` (the base image) and `knoraSipiVersion` (consumed by
 // the dsp-ingest image below) remain here.
 

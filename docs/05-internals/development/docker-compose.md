@@ -6,7 +6,7 @@ Webapi running each in its own Docker container.
 To run the whole stack:
 
 ```bash
-make stack-up
+just stack-up
 ```
 
 For additional information please see the [Docker Compose documentation](https://docs.docker.com/compose/)

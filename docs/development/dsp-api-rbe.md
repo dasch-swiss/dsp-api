@@ -47,7 +47,7 @@ runtime. So they are **not** committed to `.bazelrc` and **no** `ci.bazelrc` is 
    `nix develop --command just <recipe> ${{ steps.rbe.outputs.flags }}`.
 3. Each bazel-invoking `just` recipe takes `*FLAGS=''` and appends `{{FLAGS}}` to its `bazel` command.
 
-`just` is the single CI/build entry point (the Makefile is deprecated). The backend-agnostic tuning
+`just` is the single CI/build entry point. The backend-agnostic tuning
 flags (`--remote_download_toplevel`, `--remote_local_fallback`, `--remote_timeout`,
 `--remote_max_connections`, `--repository_cache`) live in `.bazelrc` — they are safe no-ops when no
 remote is configured. External archives (http_archive, Maven) are cached via `--repository_cache`

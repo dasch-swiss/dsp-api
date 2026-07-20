@@ -104,19 +104,19 @@ sbt test
 Run integration tests:
 
 ```shell
-make test-it
+just test-it
 ```
 
 Run end-to-end tests:
 
 ```shell
-make test-e2e
+just test-e2e
 ```
 
 Run all tests:
 
 ```shell
-make test-all
+just test-unit test-it test-e2e
 ```
 
 ## Release Versioning Convention

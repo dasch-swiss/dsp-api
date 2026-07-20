@@ -17,12 +17,10 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Core Build Tool
 
-- **Primary**: `just` (command runner) - the canonical entry point for build, test, image, and CI
-  tasks; it wraps Bazel. Run `just --list`.
+- **Primary**: `just` (command runner) - the canonical entry point for build, test, image, CI, and
+  local-dev tasks (stack lifecycle, DB init, cleanup); it wraps Bazel. Run `just --list`.
 - **Compilation / formatting**: `sbt` - use the `./sbtx` wrapper (still the Scala build of record
   during the Bazel validation window).
-- **Deprecated**: `make` - being retired in favour of `just`. A few local-dev targets (stack logs,
-  DB init) remain there until ported; do not add new ones.
 
 ### Essential Development Commands
 
@@ -242,9 +240,9 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 
 ### Debugging
 
-- Use `make stack-logs` to view all service logs
-- Check `make stack-health` for API health status
-- Use `make stack-status` to see container status
+- Use `just stack-logs` to view all service logs
+- Check `just stack-health` for API health status
+- Use `just stack-status` to see container status
 
 
 ### Writing SPARQL queries

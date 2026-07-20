@@ -50,7 +50,7 @@ test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
 check:
     ./sbtx check
 
-## Docker image build / publish (canonical home — the Makefile is deprecated)
+## Docker image build / publish
 
 # Print the docker image tag (git describe via workspace_status.sh; no sbt)
 docker-image-tag:
@@ -177,7 +177,7 @@ stack-destroy:
 # Initialize the db with a set of test data
 [confirm]
 stack-init-test: && stack-start
-    make init-db-test
+    just init-db-test
 
 # Run API locally against the dev Fuseki (requires VPN)
 run-with-dev-db:
@@ -227,3 +227,190 @@ markdownlint:
     --config .markdownlint.yml \
     --disable MD013 MD040 -- \
     "docs/**/*.md"
+
+## Architecture docs
+
+# starts the structurizer and serves c4 architecture docs
+structurizer:
+    docker pull structurizr/lite
+    docker run -it --rm -p 8080:8080 -v {{justfile_directory()}}/docs/architecture:/usr/local/structurizr structurizr/lite
+
+## DSP stack (local dev)
+
+# starts the dsp-stack: fuseki, sipi, api and app
+stack-up: docker-build
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+    docker compose -f docker-compose.yml up -d
+    ./modules/webapi/scripts/wait-for-api.sh
+
+# starts the dsp-stack, rebuilding only the api image
+stack-up-fast: docker-build-dsp-api-image
+    docker compose -f docker-compose.yml up -d
+
+# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, api
+stack-up-ci: docker-build
+    docker compose -f docker-compose.yml up -d
+
+# re-starts the api (usually after loading data into fuseki)
+stack-restart-api:
+    docker compose -f docker-compose.yml restart api
+    ./modules/webapi/scripts/wait-for-api.sh
+
+# prints out and follows the logs of the running dsp-stack
+stack-logs:
+    docker compose -f docker-compose.yml logs -f
+
+# prints out and follows the logs of the 'db' container
+stack-logs-db:
+    docker compose -f docker-compose.yml logs -f db
+
+# prints out the logs of the 'db' container (no follow)
+stack-logs-db-no-follow:
+    docker compose -f docker-compose.yml logs db
+
+# prints out and follows the logs of the 'sipi' container
+stack-logs-sipi:
+    docker compose -f docker-compose.yml logs -f sipi
+
+# prints out the logs of the 'sipi' container (no follow)
+stack-logs-sipi-no-follow:
+    docker compose -f docker-compose.yml logs sipi
+
+# prints out and follows the logs of the 'api' container
+stack-logs-api:
+    docker compose -f docker-compose.yml logs -f api
+
+# prints out the logs of the 'api' container (no follow)
+stack-logs-api-no-follow:
+    docker compose -f docker-compose.yml logs api
+
+# checks the api health endpoint
+stack-health:
+    curl -f 0.0.0.0:3333/health
+
+# shows the status of the stack containers
+stack-status:
+    docker compose -f docker-compose.yml ps
+
+# stops the dsp-stack (removes containers)
+stack-down:
+    docker compose -f docker-compose.yml down
+
+# stops the dsp-stack and deletes any created volumes (deletes the database!)
+stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp
+    docker compose -f docker-compose.yml down --volumes
+
+# prints the resolved docker-compose config
+stack-config:
+    docker compose -f docker-compose.yml config
+
+# starts the dsp-stack without dsp-api: fuseki and sipi only
+stack-without-api: stack-up
+    docker compose -f docker-compose.yml stop api
+
+# starts the dsp-stack without dsp-app
+stack-without-app: stack-up
+    docker compose -f docker-compose.yml stop app
+
+# starts the dsp-stack without dsp-api and sipi: fuseki only
+stack-without-api-and-sipi: stack-up
+    docker compose -f docker-compose.yml stop api
+    docker compose -f docker-compose.yml stop sipi
+
+# starts only fuseki
+stack-db-only:
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+
+## Database management
+
+# initializes the dsp-repo repository
+init-db-test: stack-down-delete-volumes stack-db-only
+    cd modules/webapi/scripts && ./fuseki-init-knora-test.sh
+
+# initializes the dsp-repo repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only
+    cd modules/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
+
+# initializes an empty dsp-repo repository
+init-db-test-empty: stack-down-delete-volumes stack-db-only
+    @echo init-db-test-empty
+
+# init local database with data from test server. Use as `just init-db-from-test <password>`
+init-db-from-test PW: (init-db-from-env PW "db.test.dasch.swiss")
+
+# init local database with data from a local dump file of test server
+init-db-from-test-dump: (init-db-from-dump-file "db.test.dasch.swiss.trig")
+
+# init local database with data from stage server. Use as `just init-db-from-stage <password>`
+init-db-from-stage PW: (init-db-from-env PW "db.stage.dasch.swiss")
+
+# init local database with data from a local dump file of stage server
+init-db-from-stage-dump: (init-db-from-dump-file "db.stage.dasch.swiss.trig")
+
+# init local database with data from prod server. Use as `just init-db-from-prod <password>`
+init-db-from-prod PW: (init-db-from-env PW "db.dasch.swiss")
+
+# init local database with data from a local dump file of prod server
+init-db-from-prod-dump: (init-db-from-dump-file "db.dasch.swiss.trig")
+
+# init local database with data from dev server. Use as `just init-db-from-dev <password>`
+init-db-from-dev PW: (init-db-from-env PW "db.dev.dasch.swiss")
+
+# init local database with data from a local dump file of dev server
+init-db-from-dev-dump: (init-db-from-dump-file "db.dev.dasch.swiss.trig")
+
+# init local database with data from ls-test-server. Use as `just init-db-from-ls-test-server <password>`
+init-db-from-ls-test-server PW: (init-db-from-env PW "db.ls-test-server.dasch.swiss")
+
+# init local database with data from a local dump file of ls-test-server
+init-db-from-ls-test-server-dump: (init-db-from-dump-file "db.ls-test-server.dasch.swiss.trig")
+
+# dump data from an env. Use as `just db-dump <password> <env>` e.g. db.0000-test-server.dasch.swiss
+db-dump PW ENV:
+    @echo "dumping environment {{ENV}}"
+    curl -f -X GET -H "Accept: application/trig" -u "admin:{{PW}}" "https://{{ENV}}/dsp-repo" > "{{ENV}}.trig"
+
+# init local database from a specified dump file. Use as `just init-db-from-dump-file <dump-file.trig>`
+init-db-from-dump-file DUMP: init-db-test-empty
+    @echo "dump file: {{DUMP}}"
+    curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/dsp-repo"
+    curl -X POST -H "Content-Type: application/trig" -T "{{justfile_directory()}}/{{DUMP}}" -u "admin:test" "http://localhost:3030/dsp-repo"
+
+# dump data from an env and upload it to the local DB. Use as `just init-db-from-env <password> <env>`
+init-db-from-env PW ENV: (db-dump PW ENV) (init-db-from-dump-file (ENV + ".trig"))
+
+## Clean
+
+# cleans the docker installation
+clean-docker:
+    docker system prune -af
+    docker volume prune -f
+
+clean-local-tmp:
+    rm -rf .tmp
+    mkdir .tmp
+
+# clean SBT and Metals related stuff
+clean-metals:
+    rm -rf .bloop
+    rm -rf .bsp
+    rm -rf .metals
+    rm -rf target
+    ./sbtx clean
+
+# clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp
+    rm -rf .env
+
+# deletes all files in Sipi's tmp folder
+clean-sipi-tmp:
+    mkdir empty_folder_for_clean_sipi_tmp
+    cp modules/sipi/images/tmp/.gitignore empty_folder_for_clean_sipi_tmp/.gitignore
+    rsync -a --delete empty_folder_for_clean_sipi_tmp/ modules/sipi/images/tmp/
+    rm -r empty_folder_for_clean_sipi_tmp
+
+# deletes all files uploaded within a project
+clean-sipi-projects:
+    rm -rf modules/sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]

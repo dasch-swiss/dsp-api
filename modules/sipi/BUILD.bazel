@@ -52,7 +52,7 @@ alias(
 
 # `bazel run //sipi:load` — load the host-arch image into the local Docker
 # daemon as :latest (what SipiTestContainer and docker-compose reference). The
-# Makefile adds the git-describe version tag via `docker tag`.
+# justfile adds the git-describe version tag via `docker tag`.
 oci_load(
     name = "load",
     image = ":image",
@@ -60,7 +60,7 @@ oci_load(
 )
 
 # `bazel run //sipi:push -- -t latest -t <version>` — push the multi-arch index.
-# The Makefile passes the tags (version sourced from `make docker-image-tag`).
+# The justfile passes the tags (version sourced from `just docker-image-tag`).
 oci_push(
     name = "push",
     image = ":index",

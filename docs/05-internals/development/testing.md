@@ -35,13 +35,13 @@ In this case create it in the `modules/test-it/src/test/scala/` directory.
 Run all integration tests from the terminal.
 
 ```shell
-make test-it
+just test-it
 ```
 
 Run all end-to-end HTTP API tests from the terminal.
 
 ```shell
-make test-e2e
+just test-e2e
 ```
 
 ### Sipi Image Versioning
@@ -59,7 +59,7 @@ You can override this behavior with environment variables:
 If the required image doesn't exist locally, build it with:
 
 ```shell
-make docker-build-sipi-image
+just docker-build-sipi-image
 ```
 
 ## Debugging
