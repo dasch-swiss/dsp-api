@@ -420,37 +420,37 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   // Runtime (computed-on-read) fields of a region preview value. They are declared here as knora-api-only
   // properties (never stored in knora-base), so a read instance validates against the served ontology.
-  private val HasPreviewCropUrl = makeOwlDatatypeProperty(KA.HasPreviewCropUrl, XSD.ANYURI)
+  private val HasPreviewUrl = makeOwlDatatypeProperty(KA.HasPreviewUrl, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
-    .withRdfLabelEn("has region preview crop URL")
+    .withRdfLabelEn("has region preview URL")
     .withRdfCommentEn("IIIF URL of the cropped region image (computed on read; rectangle geometry only).")
 
-  private val HasPreviewThumbnailUrl = makeOwlDatatypeProperty(KA.HasPreviewThumbnailUrl, XSD.ANYURI)
+  private val HasThumbnailUrl = makeOwlDatatypeProperty(KA.HasThumbnailUrl, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview thumbnail URL")
     .withRdfCommentEn("IIIF URL of the full-page thumbnail the region is on (computed on read).")
 
-  private val HasPreviewHighlightBoxX = makeOwlDatatypeProperty(KA.HasPreviewHighlightBoxX, XSD.DECIMAL)
+  private val HasHighlightBoxX = makeOwlDatatypeProperty(KA.HasHighlightBoxX, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box X")
     .withRdfCommentEn("X percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
 
-  private val HasPreviewHighlightBoxY = makeOwlDatatypeProperty(KA.HasPreviewHighlightBoxY, XSD.DECIMAL)
+  private val HasHighlightBoxY = makeOwlDatatypeProperty(KA.HasHighlightBoxY, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box Y")
     .withRdfCommentEn("Y percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
 
-  private val HasPreviewHighlightBoxW = makeOwlDatatypeProperty(KA.HasPreviewHighlightBoxW, XSD.DECIMAL)
+  private val HasHighlightBoxW = makeOwlDatatypeProperty(KA.HasHighlightBoxW, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box width")
     .withRdfCommentEn("Width percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
 
-  private val HasPreviewHighlightBoxH = makeOwlDatatypeProperty(KA.HasPreviewHighlightBoxH, XSD.DECIMAL)
+  private val HasHighlightBoxH = makeOwlDatatypeProperty(KA.HasHighlightBoxH, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box height")
@@ -462,26 +462,46 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("has region preview color")
     .withRdfCommentEn("The region's color (its knora-base:hasColor, computed on read; geometry-independent).")
 
-  private val HasPreviewFullImage = makeOwlObjectProperty(KA.HasPreviewFullImage, KA.Resource)
+  private val HasFullImage = makeOwlObjectProperty(KA.HasFullImage, KA.Resource)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview full image")
     .withRdfCommentEn("The still image resource the region is part of (computed on read).")
 
-  // Legal-info cardinalities mirror StillImageFileValue's (hasCopyrightHolder/hasLicense max 1, hasAuthorship
-  // unbounded). The three legal properties themselves are reused from FileValue's declarations above.
+  // Legal metadata of the full image, dedicated to the region preview value. Unlike FileValue's
+  // hasCopyrightHolder/hasAuthorship/hasLicense (which describe the subject file value), these state the
+  // legal metadata of the linked still image the preview points at. Cardinalities mirror StillImageFileValue's
+  // (copyright holder / license max 1, authorship unbounded).
+  private val HasFullImageCopyrightHolder = makeOwlDatatypeProperty(KA.HasFullImageCopyrightHolder, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image copyright holder")
+    .withRdfCommentEn("The copyright holder of the still image the region is part of (computed on read).")
+
+  private val HasFullImageAuthorship = makeOwlDatatypeProperty(KA.HasFullImageAuthorship, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image authorship")
+    .withRdfCommentEn("The authorship of the still image the region is part of (computed on read).")
+
+  private val HasFullImageLicense = makeOwlObjectProperty(KA.HasFullImageLicense, KA.License)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image license")
+    .withRdfCommentEn("The license of the still image the region is part of (computed on read).")
+
   private val RegionPreviewValueCardinalities = Map(
-    KA.HasPreviewCropUrl       -> ZeroOrOne,
-    KA.HasPreviewThumbnailUrl  -> ZeroOrOne,
-    KA.HasPreviewHighlightBoxX -> ZeroOrOne,
-    KA.HasPreviewHighlightBoxY -> ZeroOrOne,
-    KA.HasPreviewHighlightBoxW -> ZeroOrOne,
-    KA.HasPreviewHighlightBoxH -> ZeroOrOne,
-    KA.HasPreviewColor         -> ZeroOrOne,
-    KA.HasPreviewFullImage     -> ZeroOrOne,
-    KA.HasCopyrightHolder      -> ZeroOrOne,
-    KA.HasAuthorship           -> Unbounded,
-    KA.HasLicense              -> ZeroOrOne,
+    KA.HasPreviewUrl               -> ZeroOrOne,
+    KA.HasThumbnailUrl             -> ZeroOrOne,
+    KA.HasHighlightBoxX            -> ZeroOrOne,
+    KA.HasHighlightBoxY            -> ZeroOrOne,
+    KA.HasHighlightBoxW            -> ZeroOrOne,
+    KA.HasHighlightBoxH            -> ZeroOrOne,
+    KA.HasPreviewColor             -> ZeroOrOne,
+    KA.HasFullImage                -> ZeroOrOne,
+    KA.HasFullImageCopyrightHolder -> ZeroOrOne,
+    KA.HasFullImageAuthorship      -> Unbounded,
+    KA.HasFullImageLicense         -> ZeroOrOne,
   )
 
   private val ResourceCardinalities = Map(
@@ -741,14 +761,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasAuthorship,
     HasIncomingLinkValue,
     HasLicense,
-    HasPreviewCropUrl,
-    HasPreviewThumbnailUrl,
-    HasPreviewHighlightBoxX,
-    HasPreviewHighlightBoxY,
-    HasPreviewHighlightBoxW,
-    HasPreviewHighlightBoxH,
+    HasPreviewUrl,
+    HasThumbnailUrl,
+    HasHighlightBoxX,
+    HasHighlightBoxY,
+    HasHighlightBoxW,
+    HasHighlightBoxH,
     HasPreviewColor,
-    HasPreviewFullImage,
+    HasFullImage,
+    HasFullImageCopyrightHolder,
+    HasFullImageAuthorship,
+    HasFullImageLicense,
     HasResourceAuthorship,
     IntValueAsInt,
     IntervalValueHasEnd,

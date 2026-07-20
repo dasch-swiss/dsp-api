@@ -96,7 +96,7 @@ object CheckObjectClassConstraints {
                 ZIO.when(!targetClassInfo.allBaseClasses.contains(regionClass)) {
                   ZIO.fail(
                     OntologyConstraintException(
-                      s"${resourceIdForErrorMsg}Resource <${rpvc.regionIri.value}> cannot be referenced by property <${propertyIri.toComplexSchema}>, because it is not a member of class <${regionClass.toComplexSchema}>",
+                      s"${resourceIdForErrorMsg}The target of the region preview value for property <${propertyIri.toComplexSchema}> must be a <${regionClass.toComplexSchema}>, but resource <${rpvc.regionIri.value}> is not.",
                     ),
                   )
                 }

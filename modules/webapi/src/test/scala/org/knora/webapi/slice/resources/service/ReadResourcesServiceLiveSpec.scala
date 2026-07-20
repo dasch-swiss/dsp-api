@@ -263,15 +263,15 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                       )
           body = sequence.format(JsonLD, ApiV2Complex, Set.empty, appConfig)
         } yield assertTrue(
-          body.contains("hasPreviewCropUrl"),
+          body.contains("hasPreviewUrl"),
           body.contains("pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"),
-          body.contains("hasPreviewThumbnailUrl"),
+          body.contains("hasThumbnailUrl"),
           body.contains("full/^,256/0/default.jpg"),
-          body.contains("hasPreviewHighlightBoxX"),
-          body.contains("hasPreviewHighlightBoxH"),
+          body.contains("hasHighlightBoxX"),
+          body.contains("hasHighlightBoxH"),
           // precise: #ff3333 is the object of hasPreviewColor (a bare string), not merely present somewhere
           "\"[^\"]*hasPreviewColor\"\\s*:\\s*\"#ff3333\"".r.findFirstIn(body).isDefined,
-          body.contains("hasPreviewFullImage"),
+          body.contains("hasFullImage"),
           body.contains("http://rdfh.ch/0001/a-thing-picture"),
           // crop/thumbnail must be xsd:anyURI typed literals (Phase 3.1 <-> Phase 7 datatype match)
           body.contains("xsd:anyURI"),

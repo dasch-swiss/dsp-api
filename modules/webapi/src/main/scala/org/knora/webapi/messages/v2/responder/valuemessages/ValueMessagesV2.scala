@@ -1462,8 +1462,16 @@ object GeomValueContentV2 {
   } yield GeomValueContentV2(ApiV2Complex, geom, comment)
 
   final case class Point(x: Double, y: Double)
-  // Public so the read-surface augmentation can gate crop/highlight on `geomType`. The JSON key `type` is
-  // reserved, hence the `@jsonField` rename; zio-json ignores the other geometry keys we do not model here.
+  // Models the region geometry stored as a JSON string in `knora-base:valueHasGeometry`, e.g.
+  // {"status":"active","lineColor":"#ff3333","lineWidth":2,
+  //  "points":[{"x":0.1,"y":0.1},{"x":0.3,"y":0.4}],"type":"rectangle"}
+  // Only two keys are modelled here:
+  //   - `geomType`: the shape type ("rectangle", "polygon", "circle", ...). The region-preview read surface
+  //     computes the crop URL and highlight box only when this is a rectangle. Its JSON key is `type`, which
+  //     `DeriveJsonDecoder` cannot use as a Scala field name, hence the `@jsonField("type")` rename.
+  //   - `points`: the shape's corner points, from which the bounding box is derived.
+  // zio-json silently ignores the other geometry keys (status, lineColor, lineWidth, ...) we do not need.
+  // The class is public so `ReadResourcesServiceLive` can reuse it when augmenting the preview on read.
   final case class GeomShape(
     @jsonField("type") geomType: Option[String],
     points: List[Point],
@@ -2619,11 +2627,12 @@ case class RegionPreviewValueContentV2(
         ),
       )
 
-    // Reuse the exact predicates and shapes FileValueContentV2 emits for legal metadata.
+    // Dedicated region-preview predicates (hasFullImage*), distinct from FileValue's legal predicates: the
+    // metadata describes the linked still image, not this value. The JSON-LD shapes mirror FileValueContentV2.
     def legalInfoJsonLd(li: LegalInfo): List[(IRI, JsonLDValue)] =
-      li.copyrightHolder.map(mkString).map((HasCopyrightHolder, _)).toList ++
-        li.authorship.map(mkStringArray).map((HasAuthorship, _)).toList ++
-        li.licenseIri.map(mkId).map((HasLicense, _)).toList
+      li.copyrightHolder.map(mkString).map((HasFullImageCopyrightHolder, _)).toList ++
+        li.authorship.map(mkStringArray).map((HasFullImageAuthorship, _)).toList ++
+        li.licenseIri.map(mkId).map((HasFullImageLicense, _)).toList
 
     val target: Map[IRI, JsonLDValue] = Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value))
 
@@ -2632,19 +2641,19 @@ case class RegionPreviewValueContentV2(
     val computed: Map[IRI, JsonLDValue] =
       if (targetSchema == ApiV2Complex) {
         val fields: List[(IRI, JsonLDValue)] =
-          cropUrl.map(url => HasPreviewCropUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI)).toList ++
+          cropUrl.map(url => HasPreviewUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI)).toList ++
             thumbnailUrl
-              .map(url => HasPreviewThumbnailUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI))
+              .map(url => HasThumbnailUrl -> JsonLDUtil.datatypeValueToJsonLDObject(url, xsdAnyURI))
               .toList ++
             highlightBox.toList.flatMap(b =>
               List(
-                HasPreviewHighlightBoxX -> JsonLDUtil
+                HasHighlightBoxX -> JsonLDUtil
                   .datatypeValueToJsonLDObject(b.x.bigDecimal.toPlainString, xsdDecimal),
-                HasPreviewHighlightBoxY -> JsonLDUtil
+                HasHighlightBoxY -> JsonLDUtil
                   .datatypeValueToJsonLDObject(b.y.bigDecimal.toPlainString, xsdDecimal),
-                HasPreviewHighlightBoxW -> JsonLDUtil
+                HasHighlightBoxW -> JsonLDUtil
                   .datatypeValueToJsonLDObject(b.w.bigDecimal.toPlainString, xsdDecimal),
-                HasPreviewHighlightBoxH -> JsonLDUtil.datatypeValueToJsonLDObject(
+                HasHighlightBoxH -> JsonLDUtil.datatypeValueToJsonLDObject(
                   b.h.bigDecimal.toPlainString,
                   xsdDecimal,
                 ),
@@ -2653,7 +2662,7 @@ case class RegionPreviewValueContentV2(
             // A plain hex string, emitted as a bare JsonLDString like ColorValueContentV2's colorValueAsColor
             // (not an anyURI/decimal typed literal).
             color.map(c => HasPreviewColor -> JsonLDString(c)).toList ++
-            fullImage.map(fi => HasPreviewFullImage -> fullImageJsonLd(fi)).toList ++
+            fullImage.map(fi => HasFullImage -> fullImageJsonLd(fi)).toList ++
             legalInfo.toList.flatMap(legalInfoJsonLd)
         fields.toMap
       } else Map.empty

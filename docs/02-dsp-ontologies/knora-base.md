@@ -437,11 +437,11 @@ A resource property that carries a region preview uses the `salsah-gui:RegionPre
 type of `RegionPreviewValue`.
 
 On read, the API augments each `RegionPreviewValue` with computed fields derived from the referenced region's geometry
-and the still image it is part of: `hasPreviewCropUrl` and the four `hasPreviewHighlightBox{X,Y,W,H}` percentages
-(rectangle geometry only), a full-page `hasPreviewThumbnailUrl`, the region's `hasPreviewColor` (its `hasColor`), a
-bounded `hasPreviewFullImage` reference to the still image, and the still image's legal metadata
-(`hasCopyrightHolder`, `hasAuthorship`, `hasLicense`). These fields are computed on the fly and are not part of
-`knora-base`; see
+and the still image it is part of: `hasPreviewUrl` and the four `hasHighlightBox{X,Y,W,H}` percentages
+(rectangle geometry only), a full-page `hasThumbnailUrl`, the region's `hasPreviewColor` (its `hasColor`), a
+bounded `hasFullImage` reference to the still image, and the still image's legal metadata
+(`hasFullImageCopyrightHolder`, `hasFullImageAuthorship`, `hasFullImageLicense`). These fields are computed on the fly
+and are not part of `knora-base`; see
 [Reading Resources](../03-endpoints/api-v2/reading-and-searching-resources.md).
 
 A `Region` referenced by a live (non-deleted) `RegionPreviewValue` cannot be deleted or erased; once the preview is

@@ -853,14 +853,21 @@ object OntologyConstants {
 
     // Runtime (computed-on-read) fields of a region preview value. Declared as knora-api-only
     // properties in KnoraBaseToApiV2ComplexTransformationRules; never stored in knora-base.
-    val HasPreviewCropUrl: IRI       = KnoraApiV2PrefixExpansion + "hasPreviewCropUrl"
-    val HasPreviewThumbnailUrl: IRI  = KnoraApiV2PrefixExpansion + "hasPreviewThumbnailUrl"
-    val HasPreviewHighlightBoxX: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxX"
-    val HasPreviewHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxY"
-    val HasPreviewHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxW"
-    val HasPreviewHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasPreviewHighlightBoxH"
-    val HasPreviewColor: IRI         = KnoraApiV2PrefixExpansion + "hasPreviewColor"
-    val HasPreviewFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasPreviewFullImage"
+    val HasPreviewUrl: IRI    = KnoraApiV2PrefixExpansion + "hasPreviewUrl"
+    val HasThumbnailUrl: IRI  = KnoraApiV2PrefixExpansion + "hasThumbnailUrl"
+    val HasHighlightBoxX: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxX"
+    val HasHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxY"
+    val HasHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxW"
+    val HasHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxH"
+    val HasPreviewColor: IRI  = KnoraApiV2PrefixExpansion + "hasPreviewColor"
+    val HasFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasFullImage"
+
+    // Legal metadata of the region preview's full image. Kept distinct from FileValue's
+    // hasCopyrightHolder/hasAuthorship/hasLicense: those state the copyright of the subject file value,
+    // whereas these state the copyright of the linked still image the preview points at.
+    val HasFullImageCopyrightHolder: IRI = KnoraApiV2PrefixExpansion + "hasFullImageCopyrightHolder"
+    val HasFullImageAuthorship: IRI      = KnoraApiV2PrefixExpansion + "hasFullImageAuthorship"
+    val HasFullImageLicense: IRI         = KnoraApiV2PrefixExpansion + "hasFullImageLicense"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 

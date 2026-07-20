@@ -1225,21 +1225,21 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
     // The reject-create tests run before the successful create so that aThing has no preview yet; a failed create
     // never persists, so cardinality never interferes with the referential-integrity assertions.
     suite("RegionPreview Values")(
-      test("reject creating a region preview whose target does not exist (REQ-1.2)") {
+      test("reject creating a region preview whose target does not exist") {
         valuesResponder(_.createValueV2(createPreviewParams(missingRegionIri), anythingUser1, randomUUID)).exit
           .map(err => assert(err)(failsWithA[NotFoundException]))
       },
-      test("reject creating a region preview whose target is not a Region (REQ-1.4)") {
+      test("reject creating a region preview whose target is not a Region") {
         // aThing is a Thing, not a Region.
         valuesResponder(_.createValueV2(createPreviewParams(aThingIri), anythingUser1, randomUUID)).exit
           .map(err => assert(err)(failsWithA[OntologyConstraintException]))
       },
-      test("reject creating a region preview whose target is in another project (REQ-1.3)") {
+      test("reject creating a region preview whose target is in another project") {
         // zeitgloecklein is in the incunabula project (0803).
         valuesResponder(_.createValueV2(createPreviewParams(zeitgloeckleinIri), anythingUser1, randomUUID)).exit
           .map(err => assert(err)(failsWithA[BadRequestException]))
       },
-      test("create a region preview value (REQ-1.1)") {
+      test("create a region preview value") {
         val propertyIri = Anything.hasRegionPreview.smartIri
         for {
           maybeResourceLastModDate <- getResourceLastModificationDate(aThingIri, anythingUser1)
@@ -1257,7 +1257,7 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
           actual <- asInstanceOf[RegionPreviewValueContentV2](valueFromTriplestore.valueContent)
         } yield assertTrue(actual.regionIri == regionIri)
       },
-      test("reject re-pointing a region preview to a non-Region target (REQ-1.4, update path)") {
+      test("reject re-pointing a region preview to a non-Region target (update path)") {
         val updateParams = UpdateValueContentV2(
           resourceIri = aThingIri,
           resourceClassIri = Anything.thingClass.smartIri,
