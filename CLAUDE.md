@@ -56,7 +56,7 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 ### Bazel & the Nix dev shell
 
 All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena-fuseki`) build with
-**Bazel** (`rules_oci`) (see `SESSION-HANDOFF.md` on `worktree-bazelify` for full migration status).
+**Bazel** (`rules_oci`).
 Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
 the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
