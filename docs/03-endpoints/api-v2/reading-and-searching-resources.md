@@ -51,6 +51,8 @@ A `knora-api:RegionPreviewValue` (see
 `knora-api:isRegionPreviewOf` target. On read, the API augments it with fields computed from the referenced region's
 geometry and the still image it is part of:
 
+- `knora-api:isRegionPreviewOf` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the region the preview
+  represents. On write only the `@id` is required; the `@type` and `rdfs:label` are added on read.
 - `knora-api:hasPreviewUrl` — a IIIF URL of the cropped region, and
   `knora-api:hasHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). These are present
   **only when the region's geometry is a rectangle**; for other geometries they are omitted.

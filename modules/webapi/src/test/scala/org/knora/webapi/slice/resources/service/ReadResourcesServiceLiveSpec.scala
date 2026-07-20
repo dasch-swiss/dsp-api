@@ -212,6 +212,9 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
           preview.flatMap(_.fullImage).map(_.label).contains("A thing with a picture"),
           preview.flatMap(_.fullImage).exists(_.resourceClassIri.toString.endsWith("#ThingPicture")),
+          // the region reference is expanded to a bounded { @id, @type, rdfs:label }
+          preview.flatMap(_.regionLabel).contains("A test region"),
+          preview.flatMap(_.regionResourceClassIri).exists(_.toString.endsWith("#Region")),
           preview.flatMap(_.color).contains("#ff3333"),
           preview.flatMap(_.legalInfo).contains(LegalInfo(None, None, None)),
         )
@@ -243,6 +246,9 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
               "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg",
             ),
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
+          // the region label + class are geometry-independent, so they survive the rectangle gate too
+          preview.flatMap(_.regionLabel).contains("a non-rectangle test region"),
+          preview.flatMap(_.regionResourceClassIri).exists(_.toString.endsWith("#Region")),
           // colour is geometry-independent, so it survives the rectangle gate
           preview.flatMap(_.color).contains("#ff3333"),
           preview.flatMap(_.legalInfo).isDefined,
@@ -273,6 +279,9 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           "\"[^\"]*hasPreviewColor\"\\s*:\\s*\"#ff3333\"".r.findFirstIn(body).isDefined,
           body.contains("hasFullImage"),
           body.contains("http://rdfh.ch/0001/a-thing-picture"),
+          // isRegionPreviewOf is now a bounded reference (an object) carrying the region's label
+          body.contains("A test region"),
+          "\"[^\"]*isRegionPreviewOf\"\\s*:\\s*\\{".r.findFirstIn(body).isDefined,
           // crop/thumbnail must be xsd:anyURI typed literals (Phase 3.1 <-> Phase 7 datatype match)
           body.contains("xsd:anyURI"),
           // the v1 computed iiifUrl term is gone

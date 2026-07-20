@@ -2566,25 +2566,32 @@ final case class HighlightBox(x: BigDecimal, y: BigDecimal, w: BigDecimal, h: Bi
 /**
  * Represents a region preview value, which directly references a Region resource without link-value reification.
  *
- * Only `regionIri` and `comment` are stored; the geometry/image-derived fields (crop URL, thumbnail URL,
- * highlight box, full-image identity, legal info) are all computed on read in `ReadResourcesServiceLive` and
- * default to absent. `cropUrl` and `highlightBox` stay `None` when the region's geometry is not a rectangle;
- * `thumbnailUrl`, `fullImage`, and `legalInfo` are emitted for any geometry.
+ * Only `regionIri` and `comment` are stored; the geometry/image-derived fields (region label + class, crop URL,
+ * thumbnail URL, highlight box, full-image identity, legal info) are all computed on read in
+ * `ReadResourcesServiceLive` and default to absent. On read the region reference (`isRegionPreviewOf`) is
+ * expanded into a bounded `{ @id, @type, rdfs:label }` reference, mirroring the full-image reference.
+ * `cropUrl` and `highlightBox` stay `None` when the region's geometry is not a rectangle; `thumbnailUrl`,
+ * `fullImage`, and `legalInfo` are emitted for any geometry.
  *
- * @param ontologySchema the ontology schema.
- * @param regionIri      the IRI of the Region resource this value points to.
- * @param comment        a comment on this [[RegionPreviewValueContentV2]], if any.
- * @param cropUrl        IIIF URL of the cropped region image (rectangle geometry only), computed at read time.
- * @param thumbnailUrl   IIIF URL of the full-page thumbnail, computed at read time.
- * @param highlightBox   the region's bounding box as percentages (rectangle geometry only), computed at read time.
- * @param color          the region's color (its knora-base:hasColor), computed at read time; geometry-independent.
- * @param fullImage      identity of the still image the region is part of, computed at read time.
- * @param legalInfo      the still image's copyright/authorship/license metadata, computed at read time.
+ * @param ontologySchema         the ontology schema.
+ * @param regionIri              the IRI of the Region resource this value points to.
+ * @param comment                a comment on this [[RegionPreviewValueContentV2]], if any.
+ * @param regionLabel            the region's `rdfs:label`, computed at read time.
+ * @param regionResourceClassIri the region's resource class IRI (for the `@type` of the bounded reference),
+ *                               computed at read time.
+ * @param cropUrl                IIIF URL of the cropped region image (rectangle geometry only), computed at read time.
+ * @param thumbnailUrl           IIIF URL of the full-page thumbnail, computed at read time.
+ * @param highlightBox           the region's bounding box as percentages (rectangle geometry only), computed at read time.
+ * @param color                  the region's color (its knora-base:hasColor), computed at read time; geometry-independent.
+ * @param fullImage              identity of the still image the region is part of, computed at read time.
+ * @param legalInfo              the still image's copyright/authorship/license metadata, computed at read time.
  */
 case class RegionPreviewValueContentV2(
   ontologySchema: OntologySchema,
   regionIri: ResourceIri,
   comment: Option[String] = None,
+  regionLabel: Option[String] = None,
+  regionResourceClassIri: Option[SmartIri] = None,
   cropUrl: Option[String] = None,
   thumbnailUrl: Option[String] = None,
   highlightBox: Option[HighlightBox] = None,
@@ -2634,7 +2641,19 @@ case class RegionPreviewValueContentV2(
         li.authorship.map(mkStringArray).map((HasFullImageAuthorship, _)).toList ++
         li.licenseIri.map(mkId).map((HasFullImageLicense, _)).toList
 
-    val target: Map[IRI, JsonLDValue] = Map(IsRegionPreviewOf -> JsonLDUtil.iriToJsonLDObject(regionIri.value))
+    // On read (complex schema) the region reference is expanded into a bounded { @id, @type, rdfs:label }
+    // reference, mirroring the full-image reference above; @type/label come from the region resource resolved
+    // on read. In the simple schema, and on the write path (which only reads @id), it stays a bare { @id }.
+    val regionRef: JsonLDValue =
+      if (targetSchema == ApiV2Complex)
+        JsonLDObject(
+          Map[IRI, JsonLDValue]("@id" -> JsonLDString(regionIri.value))
+            ++ regionResourceClassIri.map(c => "@type" -> JsonLDString(c.toOntologySchema(targetSchema).toString))
+            ++ regionLabel.map(l => OntologyConstants.Rdfs.Label -> JsonLDString(l)),
+        )
+      else JsonLDUtil.iriToJsonLDObject(regionIri.value)
+
+    val target: Map[IRI, JsonLDValue] = Map(IsRegionPreviewOf -> regionRef)
 
     // Computed fields are complex-schema only. crop/thumbnail render as xsd:anyURI typed literals (not bare
     // JsonLDString) to match the served anyURI declaration, mirroring FileValueAsUrl.

@@ -239,9 +239,10 @@ final case class ReadResourcesServiceLive(
       .map(_.fold(ReadResourcesSequenceV2(Seq.empty))(_ ++ _))
 
   /**
-   * Augments every [[RegionPreviewValueContentV2]] in `seq` with the fields computed on read: the crop URL and
-   * highlight box (rectangle geometry only), the full-page thumbnail URL, the full-image identity, and the legal
-   * info. The region and image resources are read with the elevated [[KnoraSystemInstances.Users.SystemUser]]:
+   * Augments every [[RegionPreviewValueContentV2]] in `seq` with the fields computed on read: the region's label
+   * and class (which expand `isRegionPreviewOf` into a bounded reference), the crop URL and highlight box
+   * (rectangle geometry only), the full-page thumbnail URL, the full-image identity, and the legal info.
+   * The region and image resources are read with the elevated [[KnoraSystemInstances.Users.SystemUser]]:
    * value-level permission filtering has already dropped any preview the requesting user cannot view, so a
    * value-visible preview always yields its identity + legal metadata regardless of the user's permissions on the
    * region or image. Only a bounded field set is projected onto the content; the full still-image resource is
@@ -279,6 +280,8 @@ final case class ReadResourcesServiceLive(
 
   /** The fields computed on read for a single region preview. */
   private final case class RegionPreviewComputed(
+    regionLabel: String,
+    regionResourceClassIri: SmartIri,
     cropUrl: Option[String],
     thumbnailUrl: Option[String],
     highlightBox: Option[HighlightBox],
@@ -328,7 +331,16 @@ final case class ReadResourcesServiceLive(
           .map(_.valueContent)
           .collectFirst { case c: ColorValueContentV2 => c.valueHasColor }
         region.resourceIri ->
-          RegionPreviewComputed(cropUrl, Some(thumbnailUrl), highlightBox, color, Some(fullImage), Some(legalInfo))
+          RegionPreviewComputed(
+            region.label,
+            region.resourceClassIri,
+            cropUrl,
+            Some(thumbnailUrl),
+            highlightBox,
+            color,
+            Some(fullImage),
+            Some(legalInfo),
+          )
       }
     }.toMap
   }
@@ -370,6 +382,8 @@ final case class ReadResourcesServiceLive(
                 .fold(rov: ReadValueV2)(c =>
                   rov.copy(valueContent =
                     rp.copy(
+                      regionLabel = Some(c.regionLabel),
+                      regionResourceClassIri = Some(c.regionResourceClassIri),
                       cropUrl = c.cropUrl,
                       thumbnailUrl = c.thumbnailUrl,
                       highlightBox = c.highlightBox,
