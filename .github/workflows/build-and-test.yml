@@ -33,7 +33,7 @@ jobs:
   # overhead four times. The Docker/testcontainer suites stay in their own jobs
   # (they are `exclusive`, so one invocation would serialize them).
   unit-tests:
-    name: Unit tests
+    name: Build and Unit Test
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     steps:
@@ -84,7 +84,7 @@ jobs:
           reporter: java-junit
 
   test-it:
-    name: Build and IT test
+    name: Build and IT Test
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
@@ -134,7 +134,7 @@ jobs:
           reporter: java-junit
 
   test-e2e:
-    name: Build and E2E test
+    name: Build and E2E Test
     runs-on: ubuntu-latest-large-runner
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
@@ -182,6 +182,7 @@ jobs:
           reporter: java-junit
 
   test-ingest-integration:
+    name: Build and Ingest Integration Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
@@ -230,7 +231,7 @@ jobs:
           reporter: java-junit
 
   test-docs-build:
-    name: Test docs
+    name: Docs Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
