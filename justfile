@@ -61,7 +61,9 @@ check-docker-image-tag:
     #!/usr/bin/env bash
     set -euo pipefail
     ws=$(tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}')
-    sbt=$(./sbtx -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | tr -d '[:space:]')
+    # `print dockerImageTag` emits the value on the last stdout line; take only that
+    # line so a cold sbt-launcher bootstrap (download messages to stdout) can't pollute it.
+    sbt=$(./sbtx -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | awk 'NF{last=$0} END{print last}' | tr -d '[:space:]')
     if [ "$ws" != "$sbt" ]; then
       echo "DRIFT: workspace_status=$ws sbt=$sbt"
       exit 1
