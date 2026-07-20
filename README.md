@@ -17,11 +17,11 @@ released under the [Apache License, Version 2.0](http://www.apache.org/licenses/
 ## Features
 
 * Stores humanities data as industry-standard [RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/) graphs, plus files for binary data such as digitized primary sources.
-  * Designed to work with any standards-compliant RDF triplestore. Tested with [Jena Fuseki](https://jena.apache.org/).
+    * Designed to work with any standards-compliant RDF triplestore. Tested with [Jena Fuseki](https://jena.apache.org/).
 * Based on [OWL](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/) ontologies that express abstract, cross-disciplinary commonalities in the structure and semantics of research data.
 * Offers a generic HTTP-based API, implemented in [Scala](https://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
-  * Handles authentication and authorization.
-  * Provides automatic versioning of data.
+    * Handles authentication and authorization.
+    * Provides automatic versioning of data.
 * Uses [Sipi](https://sipi.io), a high-performance media server implemented in C++.
 * Designed to be be used with [DSP-APP](https://docs.dasch.swiss/latest/DSP-APP/), a general-purpose, browser-based virtual research environment,
   as well as with custom user interfaces.
@@ -35,21 +35,25 @@ Each developer machine should have the following prerequisites installed:
 * Linux or macOS
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [Homebrew](https://brew.sh) (macOS)
-* JDK [Temurin 21](https://adoptium.net/en-GB/temurin/)
-* [sbt](https://www.scala-sbt.org/)
-* [just](https://just.systems/man/en/)
+* [Nix](https://determinate.systems) (with flakes) and [direnv](https://direnv.net/)
 
-#### JDK Temurin 21
+The build runs on [Bazel](https://bazel.build/) inside a [Nix](https://nixos.org/) dev shell defined
+in `flake.nix`. The dev shell puts `bazel` (a bazelisk wrapper pinned via `.bazelversion`), a JDK
+[Temurin 25](https://adoptium.net/temurin/), [`just`](https://just.systems/man/en/), and `crane` on
+your `PATH`, so you do not need to install any of these separately.
 
-Follow the steps described on [https://sdkman.io/](https://sdkman.io/) to install SDKMAN.
-Then, follow these steps:
+#### Nix
+
+Install Nix with the [Determinate Systems installer](https://determinate.systems) (flakes are enabled
+by default):
 
 ```shell
-sdk ls java  # choose the latest version of Temurin 21
-sdk install java 21.x.y-tem
+curl -fsSL https://install.determinate.systems/nix | sh -s -- install
 ```
 
-SDKMAN will take care of the environment variable JAVA_HOME.
+With [direnv](https://direnv.net/) installed, the dev shell loads automatically when you `cd` into the
+repository — run `direnv allow` once to approve it. Without direnv, prefix commands with
+`nix develop --command`, for example `nix develop --command just test-unit`.
 
 #### EditorConfig
 
@@ -98,7 +102,7 @@ Automated tests are split into different modules: fast unit tests, integration t
 Run unit tests:
 
 ```shell
-sbt test
+just test-unit
 ```
 
 Run integration tests:
