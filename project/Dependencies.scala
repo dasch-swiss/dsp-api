@@ -18,7 +18,7 @@ object Dependencies {
 
   val MonocleVersion = "3.3.0"
 
-  val Rdf4jVersion = "5.3.1"
+  val Rdf4jVersion = "5.3.2"
   val JenaVersion  = "6.1.0"
 
   val ZioConfigVersion            = "4.0.7"
@@ -73,7 +73,7 @@ object Dependencies {
 
   // refined
   val refined = Seq(
-    "eu.timepit" %% "refined"                  % "0.11.3",
+    "eu.timepit" %% "refined"                  % "0.11.4",
     "dev.zio"    %% "zio-json-interop-refined" % ZioJsonVersion,
   )
 
@@ -110,11 +110,11 @@ object Dependencies {
 
   // authentication
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "7.0.5" exclude (
+    "org.springframework.security" % "spring-security-core" % "7.0.6" exclude (
       "commons-logging",
       "commons-logging",
     ) exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.84"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.85"
 
   // caching
   val ehcache = "org.ehcache" % "ehcache" % "3.12.0"
@@ -131,7 +131,7 @@ object Dependencies {
   val scalaXml       = "org.scala-lang.modules" %% "scala-xml"        % "2.4.0"
 
   // test
-  val dataFaker = "net.datafaker" % "datafaker" % "2.5.4"
+  val dataFaker = "net.datafaker" % "datafaker" % "2.7.0"
 
   val testcontainers = "org.testcontainers" % "testcontainers" % "2.0.5"
 
@@ -140,7 +140,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.20.0"
 
-  val tapirVersion = "1.13.19"
+  val tapirVersion = "1.13.25"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
@@ -154,16 +154,16 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion,
   )
 
-  val otelVersion = "1.62.0"
+  val otelVersion = "1.63.0"
 
   val openTelemetryWithSentry = Seq(
     "com.softwaremill.sttp.client4" %% "opentelemetry-tracing-zio-backend"   % SttpClientVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-opentelemetry-tracing"         % tapirVersion,
-    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.17",
+    "dev.zio"                       %% "zio-opentelemetry"                   % "3.1.18",
     "io.opentelemetry"               % "opentelemetry-exporter-logging-otlp" % otelVersion,
     "io.opentelemetry"               % "opentelemetry-exporter-otlp"         % otelVersion,
     "io.opentelemetry"               % "opentelemetry-sdk"                   % otelVersion,
-    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.41.1",
+    "io.opentelemetry.semconv"       % "opentelemetry-semconv"               % "1.42.0",
   )
 
   // In-memory span exporter for the span-assertion test harness (testkit).
@@ -221,10 +221,10 @@ object Dependencies {
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
-  val flywayVersion        = "12.7.0"
+  val flywayVersion        = "12.10.0"
   val otelAgentVersion     = "v2.26.1"
   val otelPyroscopeVersion = "v1.1.0"
-  val hikariVersion        = "7.0.2"
+  val hikariVersion        = "7.1.0"
   val sqliteVersion        = "3.53.2.0"
 
   val db = Seq(
