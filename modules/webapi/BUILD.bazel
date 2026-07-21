@@ -243,6 +243,11 @@ oci_image(
         ":otel_layer",
         ":curl_jq_layer_amd64",
     ],
+    # WORKDIR: ResetTriplestoreContent resolves test-data files relative to the
+    # CWD (../test_data -> the /opt/test_data bind-mount). sbt-native-packager
+    # set this; rules_oci does not, so without it the container runs from / and
+    # the reset endpoint 500s. See TriplestoreServiceLive.insertObjectIntoTriplestore.
+    workdir = "/opt/docker",
 )
 
 oci_image(
@@ -261,6 +266,9 @@ oci_image(
         ":otel_layer",
         ":curl_jq_layer_arm64",
     ],
+    # WORKDIR: see image_amd64 above — required so ResetTriplestoreContent can
+    # resolve test-data files relative to the /opt/test_data bind-mount.
+    workdir = "/opt/docker",
 )
 
 # Multi-arch index for publishing.
