@@ -5,12 +5,12 @@ load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala
 load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
-# Generates the dsp-ingest buildinfo (package swiss.dasch.version). knoraSipiVersion
-# is read at RUNTIME (CommandExecutorLive shells out to
+# Generates the dsp-ingest buildinfo source (package swiss.dasch.version).
+# knoraSipiVersion is read at RUNTIME (CommandExecutorLive shells out to
 # `daschswiss/knora-sipi:${knoraSipiVersion}`), so it must equal the git version.
 # gitCommit is the full HEAD -> STABLE_GIT_COMMIT.
 buildinfo(
-    name = "buildinfo",
+    name = "buildinfo_gen",
     out = "BuildInfo.scala",
     package_name = "swiss.dasch.version",
     stamp_fields = {
@@ -26,18 +26,30 @@ buildinfo(
     },
 )
 
+# BuildInfo lives in its own tiny library so a version/commit change (which
+# rewrites BuildInfo.scala on every push) recompiles only this one file. Its
+# interface jar exposes just getter signatures — the stamped string values are
+# method bodies, stripped from the ijar — so :ingest cache-hits across pushes.
+# Were :buildinfo_gen inlined into :ingest's srcs, the whole module would recompile.
+scala_library(
+    name = "buildinfo",
+    srcs = [":buildinfo_gen"],
+    visibility = ["//visibility:public"],
+)
+
 # Direct third-party deps only (dependency_mode=transitive on
 # //bazel/toolchains:dsp_scala_toolchain resolves the rest) — the set is
 # build.sbt's `db ++ tapir ++ metrics ++ zioSeq ++ zioSttpClient ++
 # openTelemetryWithSentry ++ Seq(...)` for the ingest project.
 scala_library(
     name = "ingest",
-    srcs = glob(["src/main/scala/**/*.scala"]) + [":buildinfo"],
+    srcs = glob(["src/main/scala/**/*.scala"]),
     # db/migration/*.sql must land at the classpath key Flyway expects (db/migration/...).
     resource_strip_prefix = "modules/ingest/src/main/resources",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
+        ":buildinfo",
         "//modules/bagit",
         "//modules/jwt",
         "@maven//:com_github_tototoshi_scala_csv_3",

@@ -6,12 +6,12 @@ load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala
 load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
-# Generates the webapi buildinfo (package org.knora.webapi.http.version). Source
-# reads version, buildCommit, buildTime, fuseki, scalaVersion, sipi;
+# Generates the webapi buildinfo source (package org.knora.webapi.http.version).
+# Source reads version, buildCommit, buildTime, fuseki, scalaVersion, sipi;
 # ManagementEndpoints splits fuseki/scala/sipi on ':' so those must carry the full
 # "repo:tag" / version strings.
 buildinfo(
-    name = "buildinfo",
+    name = "buildinfo_gen",
     out = "BuildInfo.scala",
     package_name = "org.knora.webapi.http.version",
     stamp_fields = {
@@ -27,16 +27,28 @@ buildinfo(
     },
 )
 
+# BuildInfo lives in its own tiny library so a version/commit change (which
+# rewrites BuildInfo.scala on every push) recompiles only this one file. Its
+# interface jar exposes just getter signatures — the stamped string values are
+# method bodies, stripped from the ijar — so :webapi cache-hits across pushes.
+# Were :buildinfo_gen inlined into :webapi's srcs, the whole module would recompile.
+scala_library(
+    name = "buildinfo",
+    srcs = [":buildinfo_gen"],
+    visibility = ["//visibility:public"],
+)
+
 # The scalac options, dependency_mode=transitive and strict_deps_mode=off come from
 # //bazel/toolchains:dsp_scala_toolchain, so deps below list only webapi's direct
 # third-party deps (the set in project/Dependencies.scala `webapiDependencies`).
 scala_library(
     name = "webapi",
-    srcs = glob(["src/main/scala/**/*.scala"]) + [":buildinfo"],
+    srcs = glob(["src/main/scala/**/*.scala"]),
     resource_strip_prefix = "modules/webapi/src/main/resources",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
+        ":buildinfo",
         "//modules/bagit",
         "//modules/jwt",
         "//modules/shacl-validator",
