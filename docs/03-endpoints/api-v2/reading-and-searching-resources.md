@@ -67,6 +67,59 @@ geometry and the still image it is part of:
   the still image's legal metadata. Optional, since they are optional on the file itself (copyright holder and
   license 0–1, authorship 0–n).
 
+For example, reading a `Thing` that carries a region preview (rectangle geometry, and a still image with legal
+metadata) returns:
+
+```json
+{
+  "@id": "http://rdfh.ch/0001/a-thing",
+  "@type": "anything:Thing",
+  "rdfs:label": "A thing with a region preview",
+  "anything:hasRegionPreview": {
+    "@id": "http://rdfh.ch/0001/a-thing/values/preview-value-uuid",
+    "@type": "knora-api:RegionPreviewValue",
+    "knora-api:isRegionPreviewOf": {
+      "@id": "http://rdfh.ch/0001/a-region",
+      "@type": "knora-api:Region",
+      "rdfs:label": "A region on the title page"
+    },
+    "knora-api:hasPreviewUrl": {
+      "@type": "xsd:anyURI",
+      "@value": "http://0.0.0.0:1024/0001/image.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"
+    },
+    "knora-api:hasThumbnailUrl": {
+      "@type": "xsd:anyURI",
+      "@value": "http://0.0.0.0:1024/0001/image.jp2/full/^,256/0/default.jpg"
+    },
+    "knora-api:hasHighlightBoxX": { "@type": "xsd:decimal", "@value": "39.796687" },
+    "knora-api:hasHighlightBoxY": { "@type": "xsd:decimal", "@value": "24.423475" },
+    "knora-api:hasHighlightBoxW": { "@type": "xsd:decimal", "@value": "9.266166" },
+    "knora-api:hasHighlightBoxH": { "@type": "xsd:decimal", "@value": "17.576948" },
+    "knora-api:hasPreviewColor": "#ff3333",
+    "knora-api:hasFullImage": {
+      "@id": "http://rdfh.ch/0001/a-thing-picture",
+      "@type": "anything:ThingPicture",
+      "rdfs:label": "A thing with a picture"
+    },
+    "knora-api:hasFullImageCopyrightHolder": "DaSCH",
+    "knora-api:hasFullImageAuthorship": [ "Jane Doe" ],
+    "knora-api:hasFullImageLicense": {
+      "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+    }
+  },
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The `hasPreviewUrl`/`hasThumbnailUrl` hosts and filename are the media server's; the last three
+`hasFullImage*` legal properties are only present when the still image carries that metadata. All other computed
+fields are always present.
+
 Permissions follow a two-tier model. The value's own permission is the master gate: a user who cannot view the
 `RegionPreviewValue` never sees it at all. Once that gate passes, the identity and legal metadata above are always
 returned (resolved via a bounded elevated read, regardless of the user's permissions on the region or the image), and
