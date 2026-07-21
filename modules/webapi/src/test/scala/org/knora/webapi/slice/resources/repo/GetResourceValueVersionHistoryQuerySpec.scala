@@ -5,13 +5,16 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.ResourceIri
 
-object GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
 
   private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
   private val startDate   = Instant.parse("2018-06-04T00:00:00Z")

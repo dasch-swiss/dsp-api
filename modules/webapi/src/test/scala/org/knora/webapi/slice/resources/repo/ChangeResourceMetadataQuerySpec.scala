@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.NonEmptyChunk
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
@@ -22,7 +24,8 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 
-object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -47,7 +50,7 @@ object ChangeResourceMetadataQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val testLastModificationDate = LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
   private val testNewModificationDate  = LastModificationDate.from(Instant.parse("2023-08-02T15:45:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangeResourceMetadataQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("ChangeResourceMetadataQuerySpec")(
     suite("build")(
       // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
       // Regression guard for the silent no-op bug (DEV-6669): the golden output MUST scope the named

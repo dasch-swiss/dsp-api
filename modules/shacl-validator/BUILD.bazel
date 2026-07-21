@@ -1,0 +1,32 @@
+load("@rules_scala//scala:scala.bzl", "scala_junit_test", "scala_library")
+
+# SHACL validator. Pure leaf module; consumed by //modules/webapi in a later phase.
+scala_library(
+    name = "shacl-validator",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:dev_zio_zio_3",
+        # topbraid-shacl's API surface returns Apache Jena types; ShaclValidator uses
+        # jena-core (rdf.model, graph) and jena-arq (riot, sparql) directly.
+        "@maven//:org_apache_jena_jena_arq",
+        "@maven//:org_apache_jena_jena_core",
+        "@maven//:org_topbraid_shacl",
+    ],
+)
+
+scala_junit_test(
+    name = "test",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    # Discovery is by class-name suffix; a missed suffix silently skips specs.
+    suffixes = ["Spec", "IT", "Test"],
+    # test-onto-shapes.ttl fixture read by ShaclValidatorSpec.
+    resources = glob(["src/test/resources/**"]),
+    deps = [
+        ":shacl-validator",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_slf4j_slf4j_simple",
+    ],
+)

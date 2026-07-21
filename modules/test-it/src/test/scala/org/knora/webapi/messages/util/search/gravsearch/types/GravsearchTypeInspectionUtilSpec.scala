@@ -5,16 +5,19 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 
-object GravsearchTypeInspectionUtilSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchTypeInspectionUtilSpec extends E2EZSpec {
 
   override val e2eSpec = suite("GravsearchTypeInspectionUtil")(
     test("remove the type annotations from a WHERE clause") {

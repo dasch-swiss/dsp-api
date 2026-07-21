@@ -5,9 +5,13 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object PathSecuritySpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class PathSecuritySpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("PathSecuritySpec")(
     test("rejects '..' path traversal") {

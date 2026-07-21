@@ -9,12 +9,14 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.data.SpanData
+import org.junit.runner.RunWith
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 
 import scala.jdk.CollectionConverters.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -22,28 +24,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
 import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
 
-/**
- * Full-path span-topology test for the Gravsearch instrumentation, exercised against a real triplestore.
- * The application under test runs with an in-memory span exporter (injected via the overridable
- * [[E2EZSpec.otelLayer]] seam) so the emitted spans can be asserted.
- *
- * The Gravsearch is invoked through the `SearchResponderV2` service from the spec environment (not over HTTP):
- * the in-process HTTP server `E2EZSpec` starts is wired with its own telemetry subgraph that does not share
- * this spec's exporter, whereas the environment's responder does (verified once below). Driving the responder
- * directly is therefore what exercises the instrumented code with the asserted exporter.
- *
- * Verifies the span-topology acceptance criteria (REQ-1.1/1.2/1.4/1.7/1.9):
- *   - a full-path search emits the root `gravsearch` span + all 7 stage spans, each a child of the root;
- *   - the root nests under an active SERVER-kind span (FiberRef auto-parenting);
- *   - the triplestore CLIENT span (sttp backend) nests under the `prequery.execute`/`mainquery.execute` spans;
- *   - an empty-result search omits the three main-query spans;
- *   - the count path emits exactly the four prequery-side stages.
- *
- * The SERVER parent is a synthetic span opened in-test (rather than a real HTTP request) because
- * `E2EZSpec`'s in-process server does not share this exporter; the real APP→ingress→gravsearch correlation
- * is verified in production (Phase 4).
- */
-object SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
 
   // Held externally so the test can read finished spans directly (the exporter is not exposed in the env).
   private lazy val exporter: InMemorySpanExporter = InMemorySpanExporter.create()

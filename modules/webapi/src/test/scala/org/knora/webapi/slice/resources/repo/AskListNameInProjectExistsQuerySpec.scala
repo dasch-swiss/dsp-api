@@ -5,13 +5,16 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
-object AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
 
   private val testListName    = ListName.unsafeFrom("testList")
   private val testProjectIri  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")

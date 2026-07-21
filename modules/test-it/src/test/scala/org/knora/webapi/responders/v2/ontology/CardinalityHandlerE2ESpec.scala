@@ -5,14 +5,17 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object CardinalityHandlerE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CardinalityHandlerE2ESpec extends E2EZSpec {
 
   private val cardinalityHandler = ZIO.serviceWithZIO[CardinalityHandler]
 

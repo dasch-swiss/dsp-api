@@ -5,14 +5,17 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.*
 
-object UpgradePluginPR1921Spec extends ZIOSpecDefault with UpgradePluginSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpgradePluginPR1921Spec extends ZIOSpecDefault with UpgradePluginSpec {
 
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Boolean =
     model

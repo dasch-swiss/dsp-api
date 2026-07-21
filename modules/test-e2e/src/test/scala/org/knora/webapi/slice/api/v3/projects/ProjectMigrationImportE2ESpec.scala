@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.projects
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.model.*
@@ -13,6 +14,7 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -24,7 +26,8 @@ import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestApiClient
 
-object ProjectMigrationImportE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectMigrationImportE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
 

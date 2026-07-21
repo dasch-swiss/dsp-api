@@ -5,16 +5,19 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object LoadOntologiesSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LoadOntologiesSpec extends E2EZSpec {
 
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
 

@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Bind
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
@@ -121,10 +120,10 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     val query = Queries
       .MODIFY()
       .from(dataGraphVar)
-      .delete(deletePatterns: _*)
+      .delete(deletePatterns*)
       .into(dataGraphVar)
-      .insert(insertPatterns: _*)
-      .where(wherePatterns: _*)
+      .insert(insertPatterns*)
+      .where(wherePatterns*)
       .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS)
 
     Update(query.getQueryString())

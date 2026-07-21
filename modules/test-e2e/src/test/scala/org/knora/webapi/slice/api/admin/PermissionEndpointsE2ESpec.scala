@@ -5,8 +5,10 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo.builtIn.Projec
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
 
-object PermissionEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PermissionEndpointsE2ESpec extends E2EZSpec {
 
   val imageProjectIri: ProjectIri  = ProjectIri.unsafeFrom(SharedTestDataADM2.imagesProjectInfo.id)
   val customDOAPIri: PermissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg")

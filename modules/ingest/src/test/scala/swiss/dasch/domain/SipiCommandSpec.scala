@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.domain.SipiCommand.ApplyTopLeft
 import swiss.dasch.domain.SipiCommand.Query
 import swiss.dasch.domain.SipiCommand.Transcode
@@ -12,9 +13,12 @@ import zio.*
 import zio.nio.file.*
 import zio.test.*
 
-object SipiCommandSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
 
-  val spec: Spec[TestEnvironment with Scope, Nothing] =
+@RunWith(classOf[DspZTestJUnitRunner])
+class SipiCommandSpec extends ZIOSpecDefault {
+
+  val spec: Spec[TestEnvironment & Scope, Nothing] =
     suite("SipiCommand")(
       test("should render convert subcommand with --json for Transcode") {
         check(Gen.fromIterable(SipiImageFormat.all)) { format =>

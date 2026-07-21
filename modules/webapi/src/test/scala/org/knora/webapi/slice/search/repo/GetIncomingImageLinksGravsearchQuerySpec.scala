@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.search.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.ResourceIri
 
-object GetIncomingImageLinksGravsearchQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetIncomingImageLinksGravsearchQuerySpec extends ZIOSpecDefault {
 
   private val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
 

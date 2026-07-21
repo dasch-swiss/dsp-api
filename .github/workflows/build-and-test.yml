@@ -1,10 +1,7 @@
 name: CI-build-and-test
 
 on:
-  # Run on every push to main so Codecov gets a fresh coverage report for each
-  # main commit. Without this the PR "base" coverage is frozen at the last main
-  # commit that ever had a report uploaded, and every PR is compared against a
-  # stale baseline.
+  # Run on every push to main to keep main green visible per-commit.
   push:
     branches:
       - main
@@ -13,12 +10,10 @@ on:
     branches-ignore:
       - "**/graphite-base/**"
 
-# Least-privilege token plus the OIDC scope Codecov needs for tokenless uploads.
-# `checks: write` is required by dorny/test-reporter.
+# Least-privilege token. `checks: write` is required by dorny/test-reporter.
 permissions:
   contents: read
   checks: write
-  id-token: write
 
 env:
   JAVA_VERSION: 25
@@ -27,14 +22,18 @@ env:
 # bump CHANGELOG.md and version.txt — no source changes — so every job below is
 # skipped for them via `!startsWith(github.head_ref, 'release-please')`. This
 # saves CI resources and lets the release PR go green immediately. On `push`
-# events `github.head_ref` is empty, so main pushes still run the full suite
-# (incl. the Codecov baseline). A required check skipped by a job-level `if:`
-# counts as passing in branch protection, so the release PR stays mergeable.
-# See DEV-6678.
+# events `github.head_ref` is empty, so main pushes still run the full suite.
+# A required check skipped by a job-level `if:` counts as passing in branch
+# protection, so the release PR stays mergeable. See DEV-6678.
 
 jobs:
-  build-and-test:
-    name: Build and test
+  # All pure-JVM unit tests run in a single job: one `bazel test` over every
+  # module lets Bazel + the RBE backend parallelize the test actions internally,
+  # instead of paying per-job (checkout + Nix + cache-restore + cold-JVM)
+  # overhead four times. The Docker/testcontainer suites stay in their own jobs
+  # (they are `exclusive`, so one invocation would serialize them).
+  unit-tests:
+    name: Build and Unit Test
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     steps:
@@ -42,85 +41,51 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Run webapi tests
-        run: ./sbtx -v coverage webapi/test
-      - name: Run ingest tests
-        run: ./sbtx -v coverage ingest/test
-      - name: Aggregate coverage
-        run: ./sbtx -v coverageAggregate
-      - name: WebApi Unit Test Report
+      - name: Install Nix (Bazel drives the build)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          # Stage 2: remote EXECUTOR — compiles + tests run on the NativeLink worker (the unit-tests
+          # spike proved this green: 1483/2464 actions remote, all tests pass). All Bazel jobs use it;
+          # Docker/testcontainer test targets still run local via their `no-remote` tag.
+          # `--remote_local_fallback` degrades to a local build if the worker is unreachable.
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
+      - name: Run all unit tests
+        run: nix develop --command just test-unit ${{ steps.rbe.outputs.flags }}
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/webapi/test/test.xml test-xml/webapi-test.xml || true
+          cp -L bazel-testlogs/modules/ingest/test/test.xml test-xml/ingest-test.xml || true
+          cp -L bazel-testlogs/modules/bagit/test/test.xml test-xml/bagit-test.xml || true
+          cp -L bazel-testlogs/modules/jwt/test/test.xml test-xml/jwt-test.xml || true
+          cp -L bazel-testlogs/modules/shacl-validator/test/test.xml test-xml/shacl-validator-test.xml || true
+      - name: Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
-          name: WebApi Unit Test Results
-          path: ./modules/webapi/target/test-reports/TEST-*.xml
-          reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-unit
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
-
-  test-bagit:
-    name: Test bagit
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-      - name: Run bagit tests
-        run: ./sbtx -v bagit/test
-      - name: Bagit Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: Bagit Test Results
-          path: ./modules/bagit/target/test-reports/TEST-*.xml
-          reporter: java-junit
-
-  test-jwt:
-    name: Test jwt
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-      - name: Run jwt tests
-        run: ./sbtx -v jwt/test
-      - name: JWT Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: JWT Test Results
-          path: ./modules/jwt/target/test-reports/TEST-*.xml
-          reporter: java-junit
-
-  test-shacl-validator:
-    name: Test shacl-validator
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-      - name: Run shacl-validator tests
-        run: ./sbtx -v shacl-validator/test
-      - name: SHACL Validator Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: SHACL Validator Test Results
-          path: ./modules/shacl-validator/target/test-reports/TEST-*.xml
+          name: Unit Test Results
+          path: test-xml/*.xml
           reporter: java-junit
 
   test-it:
-    name: Build and IT test
-    runs-on: ubuntu-latest # previously: buildjet-4vcpu-ubuntu-2204
+    name: Build and IT Test
+    runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
       group: ${{ github.ref }}-it
@@ -130,35 +95,46 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Build Fuseki image if modules/fuseki/ changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
-          if echo "$CHANGED" | grep -q "^modules/fuseki/"; then
-            make docker-build-fuseki-image
-          fi
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run integration tests
-        run: nix develop --command make test-it
+        # `just test-it` loads the PR's sipi/ingest/fuseki images (via its
+        # docker-load-test-images prerequisite) before running the Bazel tests,
+        # so the PR's own images are exercised, not the registry's lagging :latest.
+        run: nix develop --command just test-it ${{ steps.rbe.outputs.flags }}
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-it/test/test.xml test-xml/test-it-test.xml || true
+          cp -L bazel-testlogs/modules/test-it/test_gravsearch_span/test.xml test-xml/test-it-gravsearch-span.xml || true
       - name: WebApi IT Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi IT Test Results
-          path: ./modules/test-it/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-integration
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
 
   test-e2e:
-    name: Build and E2E test
+    name: Build and E2E Test
     runs-on: ubuntu-latest-large-runner
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     concurrency:
@@ -169,126 +145,93 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Build Fuseki image if modules/fuseki/ changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD)
-          if echo "$CHANGED" | grep -q "^modules/fuseki/"; then
-            make docker-build-fuseki-image
-          fi
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-      - name: Build sipi image locally
-        # `SipiTestContainer` runs `daschswiss/knora-sipi:latest`. The registry
-        # version lags the PR; build the PR's version locally so the CLI surface
-        # matches (relevant across major Sipi base bumps, e.g. v4 -> v5).
-        run: nix develop --command make docker-build-sipi-image
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run end-to-end tests
-        run: ./sbtx -v coverage "test-e2e/test" coverageAggregate
+        # `just test-e2e` loads the PR's sipi/ingest/fuseki images (via its
+        # docker-load-test-images prerequisite) before running the Bazel tests.
+        run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }}
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-e2e/test/test.xml test-xml/test-e2e-test.xml || true
       - name: WebApi E2E Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi E2E Test Results
-          path: ./modules/test-e2e/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-e2e
-          path: ./target/scala-3.3.7/coverage-report/cobertura.xml
-
-  upload-coverage:
-    name: Upload coverage
-    runs-on: ubuntu-latest
-    needs: [build-and-test, test-it, test-e2e]
-    # Coverage reporting is advisory, not a merge gate. Isolating the Codacy and
-    # Codecov uploads in their own job means an outage in either (e.g. the
-    # Codecov CLI's GPG bootstrap failing) shows up as a red `Upload coverage`
-    # check instead of reddening a test job, and `continue-on-error` keeps it
-    # from blocking merges or releases. A red test job therefore always means a
-    # real test failure — never a coverage-upload hiccup.
-    continue-on-error: true
-    steps:
-      # Checkout so Codecov can resolve the cobertura report's relative paths
-      # against the source tree when building its file network.
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Download coverage reports
-        uses: actions/download-artifact@v4
-        with:
-          path: coverage
-      - name: Upload unit coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-unit/cobertura.xml
-      - name: Upload unit coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-unit/cobertura.xml
-          flags: unit
-      - name: Upload integration coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-integration/cobertura.xml
-      - name: Upload integration coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-integration/cobertura.xml
-          flags: integration
-      - name: Upload e2e coverage to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: coverage/coverage-e2e/cobertura.xml
-      - name: Upload e2e coverage to codecov
-        uses: codecov/codecov-action@v5
-        with:
-          use_oidc: true
-          files: coverage/coverage-e2e/cobertura.xml
-          flags: e2e
 
   test-ingest-integration:
+    name: Build and Ingest Integration Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 25
           cache: sbt
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run integration tests
-        run: nix develop --command make test-ingest-integration
+        run: nix develop --command just test-ingest-integration ${{ steps.rbe.outputs.flags }}
+      - name: Collect Bazel test XML
+        if: success() || failure()
+        run: |
+          mkdir -p test-xml
+          cp -L bazel-testlogs/modules/test-ingest-integration/test/test.xml test-xml/test-ingest-integration-test.xml || true
       - name: WebApi Ingest Integration Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
           name: WebApi Ingest Integration Test Results
-          path: ./modules/test-ingest-integration/target/test-reports/TEST-*.xml
+          path: test-xml/*.xml
           reporter: java-junit
-      # No coverage upload here: these tests exercise the ingest service via a
-      # Docker container, so in-process scoverage instrumentation records 0%.
-      # Uploading that report only dilutes the merged coverage. Ingest unit-test
-      # coverage is uploaded by the `build-and-test` job instead.
 
   test-docs-build:
-    name: Test docs
+    name: Docs Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
@@ -297,7 +240,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         run: |
@@ -314,19 +257,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
-      - uses: actions/checkout@v4
-      - name: Assert modules/fuseki/Dockerfile, Dependencies.scala, and docker-compose.yml agree
+      - uses: actions/checkout@v5
+      - name: Assert modules/fuseki/BUILD.bazel, Dependencies.scala, and docker-compose.yml agree
         run: |
           set -euo pipefail
-          DOCKERFILE_VER=$(grep '^ARG IMAGE_VERSION=' modules/fuseki/Dockerfile | cut -d= -f2 | tr -d '"[:space:]')
+          BUILD_VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
           DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
           COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
-          echo "modules/fuseki/Dockerfile:  $DOCKERFILE_VER"
+          echo "modules/fuseki/BUILD.bazel: $BUILD_VER"
           echo "project/Dependencies.scala: $DEPS_VER"
           echo "docker-compose.yml:         $COMPOSE_VER"
-          [ "$DOCKERFILE_VER" = "$DEPS_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
-          [ "$DOCKERFILE_VER" = "$COMPOSE_VER" ] || { echo "ERROR: Dockerfile ($DOCKERFILE_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
-          echo "All Fuseki versions match: $DOCKERFILE_VER"
+          [ "$BUILD_VER" = "$DEPS_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
+          [ "$BUILD_VER" = "$COMPOSE_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
+          echo "All Fuseki versions match: $BUILD_VER"
 
   check-formatting:
     name: Check formatting
@@ -337,8 +280,27 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
+      - uses: extractions/setup-just@v2
       - name: Check formatting
-        run: make check
+        run: just check
+
+  # Temporary drift gate: asserts tools/workspace_status.sh's STABLE_GIT_VERSION
+  # byte-matches sbt's `print dockerImageTag` on every PR. Relies on `preparation`'s
+  # `fetch-depth: 0` checkout (full history + tags) — without tags, both sides fall
+  # back identically to the bare short hash and the gate passes vacuously. Remove
+  # when sbt is retired from the build.
+  check-docker-image-tag:
+    name: Check docker-image-tag (workspace_status vs sbt)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: extractions/setup-just@v2
+      - name: Assert workspace_status.sh matches sbt's dockerImageTag
+        run: just check-docker-image-tag
 
   docker-healthcheck:
     name: Run the healthcheck from the container
@@ -349,17 +311,32 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Install Nix (Bazel drives the knora-sipi image build)
+      - name: Install Nix (Bazel drives the image builds)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build images locally
         # Build both knora-api and knora-sipi so docker compose picks up the
         # PR's images. The registry's :latest for knora-sipi lags by a merge,
         # which matters across major Sipi base-image bumps (e.g. v4 -> v5
         # changed CLI surface and the compose `command:`).
         run: |
-          make docker-build-dsp-api-image
-          nix develop --command make docker-build-sipi-image
+          nix develop --command just docker-build-dsp-api-image ${{ steps.rbe.outputs.flags }}
+          nix develop --command just docker-build-sipi-image ${{ steps.rbe.outputs.flags }}
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import org.junit.runner.RunWith
 import zio.IO
 import zio.Scope
 import zio.ZIO
@@ -30,6 +31,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.jwt.JwtClaim
 import org.knora.jwt.JwtCodec
 import org.knora.jwt.JwtHeader
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -43,7 +45,8 @@ object ScopeJs {
   implicit val decoder: JsonDecoder[ScopeJs] = DeriveJsonDecoder.gen[ScopeJs]
 }
 
-object JwtServiceLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class JwtServiceLiveSpec extends ZIOSpecDefault {
 
   private val JwtService = ZIO.serviceWithZIO[JwtService]
 
@@ -87,9 +90,9 @@ object JwtServiceLiveSpec extends ZIOSpecDefault {
     decodeToken(token).flatMap { case (_, claims, _) => extract(claims).mapError(new Exception(_)) }
 
   private def getScopeClaimValue(token: String) =
-    getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](ScopeJs.decoder))).map(_.scope)
+    getClaimZIO(token, c => ZIO.fromEither(c.content.fromJson[ScopeJs](using ScopeJs.decoder))).map(_.scope)
 
-  val spec: Spec[TestEnvironment with Scope, Any] = (suite("JwtService")(
+  val spec: Spec[TestEnvironment & Scope, Any] = (suite("JwtService")(
     test("create a token") {
       for {
         token    <- JwtService(_.createJwt(user.userIri, AuthScope.empty, Map("foo" -> Json.Str("bar"))))

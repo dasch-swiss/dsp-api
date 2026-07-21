@@ -55,10 +55,10 @@ object ChangeClassLabelsOrCommentsQuery extends QueryBuilderHelper {
                 .MODIFY()
                 .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
                 .from(ontologyIri)
-                .delete(deletePattern: _*)
+                .delete(deletePattern*)
                 .into(ontologyIri)
-                .insert(insertPatterns: _*)
-                .where(wherePatterns: _*)
+                .insert(insertPatterns*)
+                .where(wherePatterns*)
     } yield Update(query)
   }
 

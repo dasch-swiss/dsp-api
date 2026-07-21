@@ -1,0 +1,44 @@
+load("@rules_java//java:defs.bzl", "java_library")
+
+# RDF fixtures that webapi specs load by the `test_data/...` path. Packaged as
+# resources so they sit on the test classpath at exactly that path: the in-memory
+# triplestore loader and FileUtil.readTextResource both look them up via
+# getResourceAsStream("test_data/..."). Under sbt these files are read from the
+# working directory instead (test_data is not on sbt's classpath), so both build
+# tools resolve the same fixtures. Scoped to the referenced files, not the whole
+# multi-hundred-MB test_data tree. Add entries here when a Bazel-run spec needs a
+# new fixture.
+java_library(
+    name = "fixtures",
+    resource_strip_prefix = "",
+    resources = glob(["project_ontologies/*.ttl"]) + [
+        # DefaultRdfData project_data + the data files individual specs load.
+        "project_data/admin-data.ttl",
+        "project_data/anything-data.ttl",
+        "project_data/books-data.ttl",
+        "project_data/permissions-data.ttl",
+        "project_data/system-data.ttl",
+        # generated fixtures used by JsonLDUtilSpec
+        "generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld",
+        "generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl",
+        "generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld",
+        "generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Loose fixture files for the container-backed integration/e2e specs (test-it, test-e2e): unlike
+# webapi's unit specs above, many of these read test_data via raw relative filesystem paths (e.g.
+# `new FileInputStream("test_data/...")`, `TestDataFileUtil`), the same way they do under sbt's
+# `baseDirectory := repo root`. A `resources`-packaged java_library only puts files on the
+# *classpath* (inside a jar) - it does not expose them as loose files, so it can't satisfy this
+# read pattern. Declared as `data` (not deps) on the test-it/test-e2e scala_junit_test targets:
+# Bazel then symlinks the whole tree into the test's runfiles at its natural repo-relative path,
+# and `bazel test`'s CWD is that runfiles root, so `test_data/...` resolves exactly as it does
+# under sbt. Globbed wholesale (runfiles are symlinks, so there's no real size cost) to avoid
+# having to track every subtree a new spec might read.
+filegroup(
+    name = "integration_fixture_files",
+    srcs = glob(["**"], exclude = ["BUILD.bazel"]),
+    visibility = ["//visibility:public"],
+)

@@ -5,11 +5,15 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object CacheManagerSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class CacheManagerSpec extends ZIOSpecDefault {
 
   private val cacheManager = ZIO.serviceWithZIO[CacheManager]
 

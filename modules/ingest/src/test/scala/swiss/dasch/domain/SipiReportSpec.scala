@@ -5,10 +5,14 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import zio.json.*
 import zio.test.*
 
-object SipiReportSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class SipiReportSpec extends ZIOSpecDefault {
 
   private val successPayload =
     """{

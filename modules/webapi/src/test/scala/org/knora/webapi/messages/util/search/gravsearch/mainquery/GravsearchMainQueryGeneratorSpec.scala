@@ -5,10 +5,12 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.mainquery
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.common.ResourceIri
 /**
  * Tests [[GravsearchMainQueryGenerator]].
  */
-object GravsearchMainQueryGeneratorSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchMainQueryGeneratorSpec extends ZIOSpecDefault {
 
   private val mainResourceVar = QueryVariable("mainRes")
 

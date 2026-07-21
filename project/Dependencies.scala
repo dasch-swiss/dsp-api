@@ -14,7 +14,7 @@ object Dependencies {
   // base image the knora-sipi image is created from
   val sipiImage = "daschswiss/sipi:v5.0.1"
 
-  val ScalaVersion = "3.3.7"
+  val ScalaVersion = "3.8.4"
 
   val MonocleVersion = "3.3.0"
 
@@ -87,6 +87,12 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
+
+  // JUnit: the test-runner module's DspZTestJUnitRunner is a JUnit 4 Runner
+  // (`junit`, compile scope); leaf test modules run specs through it via sbt's
+  // junit-interface adapter (framework `com.novocode.junit.JUnitFramework`).
+  val junit          = "junit"          % "junit"           % "4.13.2"
+  val junitInterface = "com.github.sbt" % "junit-interface" % "0.13.3"
 
   // rdf and graph libraries
   val jenaCore    = "org.apache.jena"   % "jena-core"           % JenaVersion
@@ -173,14 +179,14 @@ object Dependencies {
   ).map(_ % Test)
 
   val bagitDependencies     = Seq(zio, "dev.zio" %% "zio-streams" % ZioVersion, zioNio)
-  val bagitTestDependencies = Seq(zioTest, zioTestSbt).map(_ % Test)
+  val bagitTestDependencies = Seq(zioTest, junitInterface).map(_ % Test)
 
   val TopbraidShaclVersion = "1.5.0"
   val topbraidShacl        = "org.topbraid" % "shacl" % TopbraidShaclVersion
 
   val shaclValidatorDependencies     = Seq(topbraidShacl, zio)
   val slf4jSimple                    = "org.slf4j" % "slf4j-simple" % "2.0.18"
-  val shaclValidatorTestDependencies = Seq(zioTest, zioTestSbt, slf4jSimple).map(_ % Test)
+  val shaclValidatorTestDependencies = Seq(zioTest, junitInterface, slf4jSimple).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, wiremock).map(_ % Test)
 

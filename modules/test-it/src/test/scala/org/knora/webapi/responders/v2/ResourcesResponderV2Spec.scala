@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -378,7 +379,10 @@ object GraphTestData {
   )
 }
 
-object ResourcesResponderV2Spec extends E2EZSpec { self =>
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesResponderV2Spec extends E2EZSpec { self =>
 
   private val resourceResponder = ZIO.serviceWithZIO[ResourcesResponderV2]
 

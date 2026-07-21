@@ -5,12 +5,16 @@
 
 package swiss.dasch.infrastructure
 
+import org.junit.runner.RunWith
 import swiss.dasch.infrastructure.Health.Status
 import zio.Chunk
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object AggregatedHealthSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AggregatedHealthSpec extends ZIOSpecDefault {
   val spec = suite("AggregatedHealth")(test("aggregates Health") {
     assertTrue(
       AggregatedHealth.from(

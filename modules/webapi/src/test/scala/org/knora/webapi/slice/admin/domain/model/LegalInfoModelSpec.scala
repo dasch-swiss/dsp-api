@@ -5,11 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import java.net.URI
 
-object LegalInfoModelSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class LegalInfoModelSpec extends ZIOSpecDefault {
 
   private val authorshipSuite = suite("Authorship")(
     test("pass a valid object and successfully create value object") {

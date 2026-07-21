@@ -5,10 +5,12 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.config.AppConfig
@@ -21,7 +23,8 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 
-object GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

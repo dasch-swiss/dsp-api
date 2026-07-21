@@ -5,9 +5,11 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -17,7 +19,8 @@ import org.knora.webapi.messages.util.search.QueryVariable
 import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 
-object OntologyInferencerE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyInferencerE2ESpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
   private val ontologyInferencer           = ZIO.serviceWithZIO[OntologyInferencer]

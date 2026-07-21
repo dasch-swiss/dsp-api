@@ -5,6 +5,7 @@
 
 package swiss.dasch.infrastructure
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
@@ -13,7 +14,10 @@ import zio.test.check
 
 import java.util.UUID
 
-object Base62Spec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class Base62Spec extends ZIOSpecDefault {
 
   private val genUuid = Gen.fromZIO(ZIO.succeed(UUID.randomUUID()))
 

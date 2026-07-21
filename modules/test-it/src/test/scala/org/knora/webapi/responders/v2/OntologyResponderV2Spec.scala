@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -18,6 +19,7 @@ import dsp.constants.SalsahGui
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.E2EZSpec.failsWithMessageEqualTo
 import org.knora.webapi.messages.IriConversions.*
@@ -61,7 +63,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.OntologyTestHelper
 
-object OntologyResponderV2Spec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyResponderV2Spec extends E2EZSpec { self =>
 
   private val ontologyResponder  = ZIO.serviceWithZIO[OntologyResponderV2]
   private val ontologyCache      = ZIO.serviceWithZIO[OntologyCache]

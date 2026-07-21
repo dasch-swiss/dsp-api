@@ -6,12 +6,14 @@
 package org.knora.webapi.slice.api.v2.ontologies
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
@@ -35,7 +37,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
-object OntologyV2RequestParserSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val parser = ZIO.serviceWithZIO[OntologyV2RequestParser]

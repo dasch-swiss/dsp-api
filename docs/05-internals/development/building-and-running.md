@@ -15,7 +15,7 @@ With Docker installed and configured,
 1. Run the following:
 
    ```bash
-   make init-db-test
+   just init-db-test
    ```
 
    to initialize Fuseki's dsp-repo dataset with loading some test data into the triplestore 
@@ -23,14 +23,14 @@ With Docker installed and configured,
 1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
    ```bash
-   make stack-up
+   just stack-up
    ```
 
 **_Note_**: To delete the existing containers and for a clean start, before creating the knora-test repository explained
 in the first step above, run the following:
 
 ```bash
-make stack-down-delete-volumes
+just stack-down-delete-volumes
 ```
 
 This stops the knora-stack and deletes any created volumes (deletes the database!).
@@ -38,33 +38,22 @@ This stops the knora-stack and deletes any created volumes (deletes the database
 To only shut down the Knora-Stack without deleting the containers:
 
 ```bash
-make stack-down
+just stack-down
 ```
 
 To restart the knora-api use the following command:
 
 ```bash
-make stack-restart-api
+just stack-restart-api
 ```
 
 If a change is made to knora-api code, only its image needs to be rebuilt. In that case, use
 
 ```bash
-make stack-up-fast
+just stack-up-fast
 ```
 
 which starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
-
-To work on Metadata, use
-
-```bash
-make stack-up-with-metadata
-```
-
-which will put three example metadata sets to the projects `anything`, `images` and `dokubib`.
-This data can then be consumed
-from `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001`, `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF`
-and `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0804`.
 
 ## Managing Containers in Docker Dashboard
 
@@ -91,22 +80,22 @@ Note that, you can also print out the log information directly from the command 
 database container can be printed out using the following command:
 
 ```bash
-make stack-logs-db
+just stack-logs-db
 ```
 
-Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api`
-or `stack-logs-sipi`.
+Similarly, the logs of the other containers can be printed out by running `just stack-logs-api`
+or `just stack-logs-sipi`.
 These commands print out and follow the logs, to only print the logs out without following, use
 `-no-follow` version of the commands for example:
 
 ```bash
-make stack-logs-db-no-follow
+just stack-logs-db-no-follow
 ```
 
 Lastly, to print out the entire logs of the running knora-stack, use
 
 ```bash
-make stack-logs
+just stack-logs
 ```
 
 With the Docker plugin installed, you can attach a terminal to the docker container within VS Code. This will stream the
@@ -135,7 +124,7 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 To run all test targets, use the following in the command line:
 
 ```bash
-make test-all
+just test-unit test-it test-e2e
 ```
 
 To run a single test from the command line, for example `SearchV2R2RSpec`,
@@ -152,39 +141,35 @@ _**Note:** to run tests, the api container must be stopped first!_
 First, you need to install the requirements through:
 
 ```bash
-make docs-install-requirements
+just docs-install-requirements
 ```
 
 Then, to build docs into the local `site` folder, run the following command:
 
 ```bash
-make docs-build
+just docs-build
 ```
 
 At this point, you can serve the docs to view them locally using
 
 ```bash
-make docs-serve
+just docs-serve
 ```
 
-Lastly, to build and publish docs to Github Pages, use
-
-```bash
-make docs-publish
-```
+Documentation is published to GitHub Pages automatically by CI (`.github/workflows/publish-docs.yml`) on merge to `main`.
 
 ## Build and Publish Docker Images
 
 To build and publish all Docker images locally
 
 ```bash
-make docker-build
+just docker-build
 ```
 
 To publish all Docker images to Dockerhub
 
 ```bash
-make docker-publish
+just docker-publish
 ```
 
 ## Continuous Integration

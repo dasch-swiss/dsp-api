@@ -102,9 +102,9 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
         .MODIFY()
         .prefix(KB.NS, RDFS.NS, XSD.NS, RDF.NS)
         .`with`(dataGraph)
-        .delete(deletePatterns: _*)
-        .insert(insertPatterns: _*)
-        .where(wherePatterns: _*)
+        .delete(deletePatterns*)
+        .insert(insertPatterns*)
+        .where(wherePatterns*)
 
       (newModificationDate, Update(query))
     }

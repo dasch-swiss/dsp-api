@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.api.admin.service
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import dsp.errors.*
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -26,7 +28,8 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
-object GroupRestServiceSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GroupRestServiceSpec extends E2EZSpec {
 
   private val groupRestService = ZIO.serviceWithZIO[GroupRestService]
   private val groupService     = ZIO.serviceWithZIO[GroupService]

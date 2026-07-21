@@ -64,6 +64,8 @@ modules/ingest/docs/openapi/*.yml
 # Bazel + direnv
 /bazel-*
 .direnv/
+# Local-machine-only Bazel overrides (try-import'd by .bazelrc); never committed.
+/user.bazelrc
 
 # Claude Code
 .claude/settings.local.json

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -17,18 +19,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
-/**
- * E2E tests for the ontology-mapping endpoints:
- *
- *   PUT    /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping
- *   DELETE /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping?mapping=...
- *   PUT    /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping
- *   DELETE /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping?mapping=...
- *
- * sttp's uri interpolator URL-encodes each interpolated value as a path segment or query value,
- * so IRI strings (which contain '/', '#' etc.) are transmitted correctly.
- */
-object OntologyMappingEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyMappingEndpointsE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = anythingRdfOntologyAndData
 

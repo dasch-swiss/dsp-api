@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.security.api
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.StatusCode
 import zio.ZIO
 import zio.json.JsonDecoder
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.*
@@ -21,7 +23,8 @@ import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.To
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
-object AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthenticationEndpointsV2E2ESpec extends E2EZSpec {
 
   private val validPassword = "test"
 

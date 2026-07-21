@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -17,7 +19,8 @@ import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError
 
-object OntologyMappingEndpointsSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyMappingEndpointsSpec extends ZIOSpecDefault {
 
   // Stub authenticator -- routing tests do not exercise security logic.
   // All authenticate methods fail immediately; only the endpoint metadata (method, path) is under test.

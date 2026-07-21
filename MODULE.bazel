@@ -1,7 +1,8 @@
 """dsp-api Bazel module.
 
-Scope today: build the `knora-sipi` OCI image (a thin overlay on the upstream
-Sipi image). The Scala build (knora-api, dsp-ingest) stays on sbt.
+Builds the full Scala build (knora-api, dsp-ingest, and their libraries/tests)
+with rules_scala, and the container images (knora-sipi, knora-api, dsp-ingest,
+apache-jena-fuseki) with rules_oci.
 """
 
 module(
@@ -11,7 +12,268 @@ module(
 
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
+# Already a transitive dep of the graph (resolves to 1.7.0 regardless); declared
+# directly for the hermetic interpreter //tools/deps:maven_versions_match_sbt
+# needs — a py_test, not a host-python3-via-shebang script, so it doesn't break
+# on an RBE worker that has no (or a different) python3 on PATH.
+bazel_dep(name = "rules_python", version = "1.7.0")
+# Native sh_test/sh_binary are gone as of this Bazel version; //tools/oci's
+# image_versions_match_sbt check needs it.
+bazel_dep(name = "rules_shell", version = "0.6.1")
+# rules_oci depends on tar.bzl transitively (for its own oci_load); declaring it
+# directly here too makes `@tar.bzl//tar/toolchain:type` resolvable from our own
+# BUILD/bzl files (//tools/oci:defs.bzl's image_rootfs_extract rule). Same
+# version rules_oci 2.3.0 requests, so bzlmod dedupes to one copy.
+bazel_dep(name = "tar.bzl", version = "0.10.4")
 bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_scala", version = "7.2.6")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_java", version = "9.1.0")  # provides remotejdk_25; matches rules_scala's transitive
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+
+# `llvm` (hermeticbuild/hermetic-llvm) registers a fully-hermetic LLVM C/C++
+# toolchain. dsp-api ships no C/C++ product code, but compiling the Scala build
+# requires the rules_scala worker, which builds protobuf/upb from source and
+# thus needs a C toolchain. We use hermetic-llvm (not Bazel's autodetected host
+# clang) so the build is reproducible and works under remote build execution —
+# it bundles per-target glibc stubs + libc++ + compiler-rt and fetches the macOS
+# SDK from Apple's CDN, with no dependency on host Nix/Xcode tooling.
+bazel_dep(name = "llvm", version = "0.8.10")
+
+# hermetic-llvm hands the Linux kernel + glibc headers to compile actions as a
+# bare source directory; remote execution drops that directory from the action's
+# Merkle tree, breaking cold-cache toolchain-bootstrap compiles. The patch globs
+# those directories into discrete File artifacts so RBE sees every header. Local
+# sandboxed builds work without it, but it is required for RBE. Drop if fixed
+# upstream. (Same patch/version as sipi.)
+single_version_override(
+    module_name = "llvm",
+    patch_strip = 1,
+    patches = ["//bazel/patches:hermetic_llvm_headers_glob.patch"],
+)
+
+#############################################
+# Scala toolchain (rules_scala, Scala 3.8.4)
+#############################################
+
+scala_config = use_extension("@rules_scala//scala/extensions:config.bzl", "scala_config")
+scala_config.settings(scala_version = "3.8.4")
+use_repo(scala_config, "rules_scala_config")
+
+scala_deps = use_extension("@rules_scala//scala/extensions:deps.bzl", "scala_deps")
+scala_deps.settings(fetch_sources = True)
+scala_deps.scala()
+scala_deps.junit()
+use_repo(
+    scala_deps,
+    "rules_scala_toolchains",
+    "scala_compiler_sources",
+    # Compiler/library artifact repos the custom toolchain in //bazel/toolchains
+    # references via setup_scala_toolchain's default_deps. The builtin toolchain
+    # uses these internally; a root-module toolchain must import them explicitly.
+    "io_bazel_rules_scala_scala_asm_3_8_4",
+    "io_bazel_rules_scala_scala_compiler_3_8_4",
+    "io_bazel_rules_scala_scala_interfaces_3_8_4",
+    "io_bazel_rules_scala_scala_library_3_8_4",
+    "io_bazel_rules_scala_scala_library_2_3_8_4",
+    "io_bazel_rules_scala_scala_parser_combinators_3_8_4",
+    "io_bazel_rules_scala_scala_tasty_core_3_8_4",
+    "io_bazel_rules_scala_scala_xml_3_8_4",
+    "org_scala_sbt_compiler_interface_3_8_4",
+)
+
+# Our own toolchain (custom scalacopts + semanticdb) registered from the root
+# module so it wins over the one scala_deps.scala() auto-registers.
+register_toolchains("//bazel/toolchains:dsp_scala_toolchain")
+
+#############################################
+# C/C++ toolchain (hermetic LLVM 22.1.7)
+#############################################
+
+# See the `llvm` bazel_dep note above. `exec` = hosts we build ON, `target` =
+# platforms we build FOR. Declaring all three (macOS-arm64, linux-x86_64,
+# linux-aarch64) covers local dev, CI, and remote build execution; only the
+# host's exec toolchain is materialized for a given build. libc++ is the
+# toolchain default on every target.
+llvm_source = use_extension("@llvm//extensions:llvm_source.bzl", "llvm_source")
+llvm_source.version(llvm_version = "22.1.7")
+use_repo(llvm_source, "llvm-raw", "llvm_config", "llvm_zlib", "llvm_zstd")
+
+toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
+toolchain.exec(
+    arch = "aarch64",
+    os = "macos",
+)
+toolchain.exec(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.exec(
+    arch = "aarch64",
+    os = "linux",
+)
+toolchain.target(
+    arch = "aarch64",
+    os = "macos",
+)
+toolchain.target(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.target(
+    arch = "aarch64",
+    os = "linux",
+)
+use_repo(toolchain, "llvm_toolchains")
+
+register_toolchains("@llvm_toolchains//:all")
+
+#############################################
+# Hermetic Python (rules_python)
+#############################################
+
+# A prebuilt CPython per platform, fetched and registered the same way as the
+# JDK (rules_java) and LLVM above -- RBE-safe, no dependency on whatever (if
+# any) python3 happens to be on a given machine's PATH.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12")
+
+#############################################
+# Third-party JVM dependencies (@maven)
+#############################################
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven",
+    artifacts = [
+        # -- ZIO (Scala 3 `_3`) --
+        "dev.zio:zio_3:2.1.26",
+        "dev.zio:zio-streams_3:2.1.26",
+        "dev.zio:zio-schema_3:1.8.5",
+        "dev.zio:zio-schema-derivation_3:1.8.5",
+        "dev.zio:zio-nio_3:2.0.2",
+        "dev.zio:zio-prelude_3:1.0.0-RC47",
+        "dev.zio:zio-config_3:4.0.7",
+        "dev.zio:zio-config-magnolia_3:4.0.7",
+        "dev.zio:zio-config-typesafe_3:4.0.7",
+        "dev.zio:zio-json_3:0.9.2",
+        "dev.zio:zio-json-interop-refined_3:0.9.2",
+        "dev.zio:zio-logging_3:2.5.3",
+        "dev.zio:zio-logging-slf4j2-bridge_3:2.5.3",
+        "dev.zio:zio-metrics-connectors_3:2.5.6",
+        "dev.zio:zio-metrics-connectors-prometheus_3:2.5.6",
+        "dev.zio:zio-opentelemetry_3:3.1.17",
+        # ZIO test (Test scope in sbt; scoped per-target in BUILD files)
+        "dev.zio:zio-test_3:2.1.26",
+        "dev.zio:zio-test-sbt_3:2.1.26",
+        "dev.zio:zio-test-junit_3:2.1.26",
+        "dev.zio:zio-test-magnolia_3:2.1.26",
+        "dev.zio:zio-mock_3:1.0.0-RC12",
+        # -- sttp client4 (`_3`) --
+        "com.softwaremill.sttp.client4:zio_3:4.0.25",
+        "com.softwaremill.sttp.client4:zio-json_3:4.0.25",
+        "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3:4.0.25",
+        # -- tapir (`_3`) --
+        "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-json-zio_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.19",
+        # -- monocle (`_3`) --
+        "dev.optics:monocle-core_3:3.3.0",
+        "dev.optics:monocle-macro_3:3.3.0",
+        "dev.optics:monocle-refined_3:3.3.0",
+        # -- other Scala (`_3`) --
+        "eu.timepit:refined_3:0.11.3",
+        "org.scala-graph:graph-core_3:2.0.2",
+        "org.scala-lang.modules:scala-xml_3:2.4.0",
+        "com.github.tototoshi:scala-csv_3:2.0.0",
+        # -- RDF / Jena / rdf4j (Java) --
+        "org.apache.jena:jena-core:6.1.0",
+        "org.apache.jena:jena-text:6.1.0",
+        "org.eclipse.rdf4j:rdf4j-client:5.3.1",
+        "org.eclipse.rdf4j:rdf4j-shacl:5.3.1",
+        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.1",
+        "org.topbraid:shacl:1.5.0",
+        # -- OpenTelemetry (Java) --
+        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.62.0",
+        "io.opentelemetry:opentelemetry-exporter-otlp:1.62.0",
+        "io.opentelemetry:opentelemetry-sdk:1.62.0",
+        "io.opentelemetry:opentelemetry-sdk-testing:1.62.0",
+        "io.opentelemetry.semconv:opentelemetry-semconv:1.41.1",
+        # -- misc Java libs --
+        "org.bouncycastle:bcprov-jdk15to18:1.84",
+        "org.ehcache:ehcache:3.12.0",
+        "com.google.gwt:gwt-servlet:2.10.0",
+        "com.ibm.icu:icu4j:78.3",
+        "org.glassfish:jakarta.json:2.0.1",
+        "net.sf.saxon:Saxon-HE:13.0",
+        "com.apicatalog:titanium-json-ld:1.7.0",
+        "org.apache.commons:commons-lang3:3.20.0",
+        "commons-io:commons-io:2.22.0",
+        "org.slf4j:slf4j-api:2.0.18",
+        "org.slf4j:slf4j-simple:2.0.18",
+        # -- dsp-ingest db (Java) --
+        "org.xerial:sqlite-jdbc:3.53.2.0",
+        "org.flywaydb:flyway-core:12.7.0",
+        "com.zaxxer:HikariCP:7.0.2",
+        # -- test-only Java libs --
+        "org.xmlunit:xmlunit-core:2.12.0",
+        "net.datafaker:datafaker:2.5.4",
+        "org.testcontainers:testcontainers:2.0.5",
+        "org.wiremock:wiremock:3.13.2",
+        # JUnit 4: compile-time dep of //modules/test-runner (DspZTestJUnitRunner
+        # implements org.junit.runner.Runner). scala_junit_test targets get JUnit
+        # implicitly, but the runner library needs it explicitly.
+        "junit:junit:4.13.2",
+    ],
+    # The Scala stdlib + compiler artifacts come from the rules_scala toolchain
+    # (Scala 3.8.4). Many maven artifacts also pull them transitively at older
+    # versions (e.g. scala3-library 3.3.7), and with dependency_mode=transitive
+    # both land on the compiler classpath — the 3.3.x/3.8.4 clash surfaces as
+    # "package/object name conflict in favor of package scala.caps". Exclude them
+    # so the toolchain is the sole provider.
+    excluded_artifacts = [
+        "org.scala-lang:scala3-library_3",
+        "org.scala-lang:scala-library",
+        "org.scala-lang:tasty-core_3",
+    ],
+    fetch_sources = True,
+    # rules_scala's transitive deps also contribute to @maven; resolve together.
+    known_contributing_modules = [
+        "bazel_worker_java",
+        "protobuf",
+    ],
+    lock_file = "//:maven_install.json",
+    repositories = ["https://repo1.maven.org/maven2"],
+    version_conflict_policy = "pinned",
+)
+
+# Artifacts needing exclusions, kept in sync with project/Dependencies.scala (enforced by
+# //tools/deps:maven_versions_match_sbt).
+maven.artifact(
+    name = "maven",
+    artifact = "commons-validator",
+    exclusions = ["commons-logging:commons-logging"],
+    group = "commons-validator",
+    version = "1.10.1",
+)
+maven.artifact(
+    name = "maven",
+    artifact = "spring-security-core",
+    exclusions = [
+        "commons-logging:commons-logging",
+        "org.springframework:spring-aop",
+    ],
+    group = "org.springframework.security",
+    version = "7.0.5",
+)
+use_repo(maven, "maven", "unpinned_maven")
+
+#############################################
+# knora-sipi OCI image (unchanged)
+#############################################
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
@@ -23,16 +285,162 @@ oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 # Index digest: sha256:aa9e049e075782cf6ec792668462088dde7e4ec644f419c3a5dca55c404d31e4
 oci.pull(
     name = "sipi_base_amd64",
-    image = "index.docker.io/daschswiss/sipi",
     digest = "sha256:a137157aed6284c789fe9af723beb484e5f5623ebeccd33b62dcabac4964ec56",
+    image = "index.docker.io/daschswiss/sipi",
 )
 oci.pull(
     name = "sipi_base_arm64",
-    image = "index.docker.io/daschswiss/sipi",
     digest = "sha256:9e2e2ee1612d03bbb20746302ddd91a4ad0bc78ce43957710ab6e3f43c9faafe",
+    image = "index.docker.io/daschswiss/sipi",
 )
 use_repo(
     oci,
     "sipi_base_amd64",
     "sipi_base_arm64",
+)
+
+#############################################
+# knora-api / dsp-ingest base image (temurin)
+#############################################
+
+# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest: the
+# arm64 index entry carries a `v8` variant, which a bare linux/arm64 platform
+# request does not match. Bump both arches together.
+# Re-resolve after a base bump:
+#   crane manifest eclipse-temurin:25-jre-noble | jq -r \
+#     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
+#   crane manifest eclipse-temurin:25-jre-noble | jq -r \
+#     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="arm64") | .digest'
+# Index digest: sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+oci.pull(
+    name = "temurin_base_amd64",
+    digest = "sha256:7161e12dbcd2791d1fc8b9cf6f1c1519a84c4acea5706c6a0659bc254a4c55d7",
+    image = "index.docker.io/library/eclipse-temurin",
+)
+oci.pull(
+    name = "temurin_base_arm64",
+    digest = "sha256:06abf087c093e27c71ed507e87f950f055c185d2ddb1eaff8a120f4198be661e",
+    image = "index.docker.io/library/eclipse-temurin",
+)
+use_repo(
+    oci,
+    "temurin_base_amd64",
+    "temurin_base_arm64",
+)
+
+#############################################
+# Prefetched image assets (OTel agent, Pyroscope extension)
+#############################################
+
+# ADDed from a URL in the sbt images (build.sbt webapi + ingest blocks); rules_oci
+# has no ADD-from-URL, so fetch hermetically and pack into a layer instead (see
+# the *_layer pkg_tar targets in modules/webapi and modules/ingest BUILD files).
+# Versions kept in sync with project/Dependencies.scala's otelAgentVersion/otelPyroscopeVersion
+# (enforced by //tools/oci:image_versions_match_sbt).
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "otel_javaagent",
+    downloaded_file_path = "opentelemetry-javaagent.jar",
+    sha256 = "cc4af5966ab72109cacc962ba3b9f99b3e88caf064c3144a451bcfe0f4950f19",
+    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar"],
+)
+
+http_file(
+    name = "pyroscope_otel",
+    downloaded_file_path = "pyroscope-otel.jar",
+    sha256 = "e140bfb8d7f52918e74033cb6c593cf4db4151bf3eb9e0d92392b4aed859ab77",
+    urls = ["https://github.com/grafana/otel-profiling-java/releases/download/v1.1.0/pyroscope-otel.jar"],
+)
+
+#############################################
+# Static curl + jq (knora-api's healthcheck.sh)
+#############################################
+
+# healthcheck.sh (modules/webapi/scripts) shells out to curl and jq; the temurin
+# base has neither, and rules_oci has no ADD-from-URL / apt RUN, so fetch fully
+# static multi-arch binaries hermetically, same pattern as the OTel jars above.
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# stunnel/static-curl: actively maintained fork of moparisthebest/static-curl,
+# which stopped publishing an aarch64 build after its Nov-2024 release -- do not
+# revert to that project. musl variant: fully static-pie, no dynamic linker
+# dependency, so it runs unmodified on the glibc-based temurin base.
+http_archive(
+    name = "static_curl_amd64",
+    build_file_content = 'exports_files(["curl"])',
+    sha256 = "e955f211202ded2536164588331acfc987dc4b7857efa3577717b1ffeab22029",
+    urls = ["https://github.com/stunnel/static-curl/releases/download/8.21.0/curl-linux-x86_64-musl-8.21.0.tar.xz"],
+)
+
+http_archive(
+    name = "static_curl_arm64",
+    build_file_content = 'exports_files(["curl"])',
+    sha256 = "d3f10502a9c6ead9bc3763fde3d12467db03661a263e11fec2ef2edc70e98e9f",
+    urls = ["https://github.com/stunnel/static-curl/releases/download/8.21.0/curl-linux-aarch64-musl-8.21.0.tar.xz"],
+)
+
+# jq's official releases are statically linked with zero runtime deps.
+http_file(
+    name = "jq_amd64",
+    downloaded_file_path = "jq",
+    executable = True,
+    sha256 = "b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f",
+    urls = ["https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64"],
+)
+
+http_file(
+    name = "jq_arm64",
+    downloaded_file_path = "jq",
+    executable = True,
+    sha256 = "8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309",
+    urls = ["https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-arm64"],
+)
+
+#############################################
+# Fuseki dist tarball + tini
+#############################################
+
+# rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
+# here; the sha256 pin below guards its integrity. The dist version must match
+# modules/fuseki/BUILD.bazel's FUSEKI_VERSION (checked by
+# //tools/oci:image_versions_match_sbt); bump both together.
+http_archive(
+    name = "fuseki_dist",
+    build_file_content = "\n".join([
+        # fuseki.war: unused (Fuseki runs standalone via fuseki-server, not a
+        # servlet container), dropped in the Dockerfile too. BUILD.bazel/
+        # REPO.bazel are this repo rule's own synthetic files, not part of the
+        # actual distribution.
+        'exports_files(["fuseki-backup", "fuseki-plain", "fuseki-server"])',
+        'filegroup(',
+        '    name = "dist",',
+        '    srcs = glob(["**"], exclude = ["fuseki.war", "BUILD.bazel", "REPO.bazel"]),',
+        '    visibility = ["//visibility:public"],',
+        ')',
+    ]),
+    sha256 = "a4a845bb602515f66e3397e89b52180ca055f4b240ddb442a1a793a98ce4d280",
+    strip_prefix = "apache-jena-fuseki-6.1.0",
+    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-6.1.0.tar.gz"],
+)
+
+# Static tini (fuseki's ENTRYPOINT, apt-installed in the Dockerfile) -- the
+# temurin base has no package manager, so fetch per-arch like static_curl
+# above. Not sourced from the sipi rootfs extraction (//modules/sipi) since
+# fuseki isn't built on the sipi base.
+http_file(
+    name = "tini_amd64",
+    downloaded_file_path = "tini",
+    executable = True,
+    sha256 = "c5b0666b4cb676901f90dfcb37106783c5fe2077b04590973b885950611b30ee",
+    urls = ["https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-amd64"],
+)
+
+http_file(
+    name = "tini_arm64",
+    downloaded_file_path = "tini",
+    executable = True,
+    sha256 = "eae1d3aa50c48fb23b8cbdf4e369d0910dfc538566bfd09df89a774aa84a48b9",
+    urls = ["https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-arm64"],
 )

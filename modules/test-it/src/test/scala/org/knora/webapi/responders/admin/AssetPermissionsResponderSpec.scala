@@ -5,9 +5,11 @@
 
 package org.knora.webapi.responders.admin
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -15,7 +17,8 @@ import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 
-object AssetPermissionsResponderSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AssetPermissionsResponderSpec extends E2EZSpec {
 
   private val assetPermissionResponder = ZIO.serviceWithZIO[AssetPermissionsResponder]
   private val asset                    = InternalFilename.unsafeFrom("incunabula_0000003328.jp2")

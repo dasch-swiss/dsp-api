@@ -5,6 +5,7 @@
 
 package org.knora.webapi.util
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.Gen
 import zio.test.Spec
@@ -13,7 +14,10 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.checkAll
 
-object ApacheLuceneSupportSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ApacheLuceneSupportSpec extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment & Scope, Any] =
     suite("The ApacheLuceneSupport class")(

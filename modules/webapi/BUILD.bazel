@@ -1,0 +1,298 @@
+load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
+load("//tools/buildinfo:defs.bzl", "buildinfo")
+load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
+
+# Generates the webapi buildinfo source (package org.knora.webapi.http.version).
+# Source reads version, buildCommit, buildTime, fuseki, scalaVersion, sipi;
+# ManagementEndpoints splits fuseki/scala/sipi on ':' so those must carry the full
+# "repo:tag" / version strings.
+buildinfo(
+    name = "buildinfo_gen",
+    out = "BuildInfo.scala",
+    package_name = "org.knora.webapi.http.version",
+    stamp_fields = {
+        "version": "STABLE_GIT_VERSION",
+        "buildCommit": "STABLE_GIT_SHORT",
+        "buildTime": "STABLE_BUILD_TIME",
+        "sipi": "STABLE_SIPI_IMAGE",
+        "fuseki": "STABLE_FUSEKI_IMAGE",
+    },
+    string_fields = {
+        "name": "webapi",
+        "scalaVersion": "3.8.4",
+    },
+)
+
+# BuildInfo lives in its own tiny library so a version/commit change (which
+# rewrites BuildInfo.scala on every push) recompiles only this one file. Its
+# interface jar exposes just getter signatures — the stamped string values are
+# method bodies, stripped from the ijar — so :webapi cache-hits across pushes.
+# Were :buildinfo_gen inlined into :webapi's srcs, the whole module would recompile.
+scala_library(
+    name = "buildinfo",
+    srcs = [":buildinfo_gen"],
+    visibility = ["//visibility:public"],
+)
+
+# The scalac options, dependency_mode=transitive and strict_deps_mode=off come from
+# //bazel/toolchains:dsp_scala_toolchain, so deps below list only webapi's direct
+# third-party deps (the set in project/Dependencies.scala `webapiDependencies`).
+scala_library(
+    name = "webapi",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    resource_strip_prefix = "modules/webapi/src/main/resources",
+    resources = glob(["src/main/resources/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":buildinfo",
+        "//modules/bagit",
+        "//modules/jwt",
+        "//modules/shacl-validator",
+        "@maven//:com_apicatalog_titanium_json_ld",
+        "@maven//:com_github_tototoshi_scala_csv_3",
+        "@maven//:org_gwtproject_gwt_servlet",  # com.google.gwt:gwt-servlet relocates to org.gwtproject
+        "@maven//:com_ibm_icu_icu4j",
+        "@maven//:com_softwaremill_sttp_client4_opentelemetry_tracing_zio_backend_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_json_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_json_zio_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_opentelemetry_tracing_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_refined_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
+        "@maven//:commons_validator_commons_validator",
+        "@maven//:dev_optics_monocle_core_3",
+        "@maven//:dev_optics_monocle_macro_3",
+        "@maven//:dev_optics_monocle_refined_3",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_config_3",
+        "@maven//:dev_zio_zio_config_magnolia_3",
+        "@maven//:dev_zio_zio_config_typesafe_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_json_interop_refined_3",
+        "@maven//:dev_zio_zio_logging_3",
+        "@maven//:dev_zio_zio_logging_slf4j2_bridge_3",
+        "@maven//:dev_zio_zio_metrics_connectors_3",
+        "@maven//:dev_zio_zio_metrics_connectors_prometheus_3",
+        "@maven//:dev_zio_zio_nio_3",
+        "@maven//:dev_zio_zio_opentelemetry_3",
+        "@maven//:dev_zio_zio_prelude_3",
+        "@maven//:eu_timepit_refined_3",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_logging_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_sdk",
+        "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
+        "@maven//:net_sf_saxon_Saxon_HE",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_jena_jena_text",
+        "@maven//:org_bouncycastle_bcprov_jdk15to18",
+        "@maven//:org_ehcache_ehcache",
+        "@maven//:org_eclipse_rdf4j_rdf4j_shacl",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sparqlbuilder",
+        "@maven//:org_glassfish_jakarta_json",
+        "@maven//:org_scala_graph_graph_core_3",
+        "@maven//:org_scala_lang_modules_scala_xml_3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_security_spring_security_core",
+        "@maven//:org_topbraid_shacl",
+    ],
+)
+
+scala_binary(
+    name = "app",
+    main_class = "org.knora.webapi.Main",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":webapi"],
+)
+
+# ExportServiceSpec loads these fixtures by the RdfDataObject path
+# "webapi/src/test/resources/org/knora/...", which is also the getResourceAsStream
+# key. Stripping only "modules" puts them on the classpath at exactly that key, so
+# the in-memory loader resolves them without changing the RdfDataObject paths (whose
+# hashCodes determine the export's ordering against the golden file).
+java_library(
+    name = "export_spec_fixtures",
+    resource_strip_prefix = "modules",
+    resources = glob(["src/test/resources/org/knora/webapi/slice/export/api/service/*.ttl"]),
+)
+
+# One test target for the whole module → one shared JVM. suffixes restricts
+# discovery to *Spec/*IT/*Test, so the ~20 non-spec helper files (fakes,
+# TestDataFactory, the ApplyUpgradePluginToTestData ZIOAppDefault utility) are
+# compiled but not run.
+scala_junit_test(
+    name = "test",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    resource_strip_prefix = "modules/webapi/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    deps = [
+        ":webapi",
+        ":export_spec_fixtures",  # ExportServiceSpec .ttl at the webapi/src/test/resources/... key
+        "//modules/test-runner",
+        "//test_data:fixtures",  # RDF fixtures on the classpath (see test_data/BUILD.bazel)
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_wiremock_wiremock",
+    ],
+)
+
+# --- knora-api image ---------------------------------------------------------
+# Lib-dir classpath, not rules_scala's implicit fat `app_deploy.jar`: a fat jar's
+# last-wins merge silently drops duplicate `META-INF/services/*` (OTel
+# autoconfigure SPI, slf4j) and `reference.conf` entries across ~200 runtime
+# jars. Packing each jar intact under /opt/docker/lib preserves them; the
+# entrypoint uses Java's own `-cp .../*` wildcard expansion (no shell needed).
+runtime_jars(
+    name = "webapi_runtime_jars",
+    deps = [":webapi"],
+)
+
+pkg_files(
+    name = "webapi_lib_files",
+    srcs = [":webapi_runtime_jars"],
+    prefix = "/opt/docker/lib",
+    strip_prefix = strip_prefix.files_only(),
+)
+
+pkg_tar(
+    name = "webapi_lib_layer",
+    srcs = [":webapi_lib_files"],
+)
+
+# healthcheck.sh, fuseki-*.sh, wait-for-*.sh (build.sbt's Universal/mappings).
+pkg_tar(
+    name = "scripts_layer",
+    srcs = glob(["scripts/**"]),
+    package_dir = "/opt/docker/scripts",
+    strip_prefix = "scripts",
+)
+
+# OTel java agent + Grafana Pyroscope extension (were `ADD <url>` in build.sbt;
+# rules_oci has no ADD-from-URL, so these are prefetched in MODULE.bazel).
+pkg_tar(
+    name = "otel_layer",
+    srcs = [
+        "@otel_javaagent//file",
+        "@pyroscope_otel//file",
+    ],
+    package_dir = "/usr/local/lib",
+)
+
+# healthcheck.sh's curl+jq dependency (see MODULE.bazel for sourcing/shas).
+# Per-arch: the fetched binaries are architecture-specific.
+pkg_tar(
+    name = "curl_jq_layer_amd64",
+    files = {
+        "@jq_amd64//file": "/usr/bin/jq",
+        "@static_curl_amd64//:curl": "/usr/bin/curl",
+    },
+    mode = "0755",
+)
+
+pkg_tar(
+    name = "curl_jq_layer_arm64",
+    files = {
+        "@jq_arm64//file": "/usr/bin/jq",
+        "@static_curl_arm64//:curl": "/usr/bin/curl",
+    },
+    mode = "0755",
+)
+
+# org.opencontainers.image.* labels stamped from git — oci_image's dict form
+# can't stamp, so this substitutes workspace-status values.
+oci_stamped_labels(
+    name = "image_labels",
+    labels = {
+        "maintainer": "support@dasch.swiss",
+        "org.opencontainers.image.source": "github.com/dasch-swiss/dsp-api",
+    },
+    stamp_labels = {
+        "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
+        "org.opencontainers.image.version": "STABLE_GIT_VERSION",
+    },
+)
+
+# No `user`: inherits the temurin base's default (root) — ops-deploy expects
+# knora-api to run as root. HEALTHCHECK isn't emitted (rules_oci can't); it's a
+# docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
+# `-javaagent:... -Xmx...` at runtime.
+oci_image(
+    name = "image_amd64",
+    base = "@temurin_base_amd64",
+    entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
+    env = OTEL_DISABLE_ENV,
+    exposed_ports = [
+        "3333",
+        "3339",
+    ],
+    labels = ":image_labels",
+    tars = [
+        ":webapi_lib_layer",
+        ":scripts_layer",
+        ":otel_layer",
+        ":curl_jq_layer_amd64",
+    ],
+)
+
+oci_image(
+    name = "image_arm64",
+    base = "@temurin_base_arm64",
+    entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
+    env = OTEL_DISABLE_ENV,
+    exposed_ports = [
+        "3333",
+        "3339",
+    ],
+    labels = ":image_labels",
+    tars = [
+        ":webapi_lib_layer",
+        ":scripts_layer",
+        ":otel_layer",
+        ":curl_jq_layer_arm64",
+    ],
+)
+
+# Multi-arch index for publishing.
+oci_image_index(
+    name = "index",
+    images = [
+        ":image_amd64",
+        ":image_arm64",
+    ],
+)
+
+# Host-arch image, selected for the local `oci_load` below.
+alias(
+    name = "image",
+    actual = select({
+        "@platforms//cpu:arm64": ":image_arm64",
+        "@platforms//cpu:x86_64": ":image_amd64",
+    }),
+)
+
+# `bazel run //modules/webapi:load` — load the host-arch image into the local
+# Docker daemon as :latest (what docker-compose references).
+oci_load(
+    name = "load",
+    image = ":image",
+    repo_tags = ["daschswiss/knora-api:latest"],
+)
+
+# `bazel run //modules/webapi:push -- -t latest -t <version>` — push the
+# multi-arch index.
+oci_push(
+    name = "push",
+    image = ":index",
+    repository = "index.docker.io/daschswiss/knora-api",
+)

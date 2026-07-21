@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.RIO
 import zio.ZIO
@@ -20,6 +21,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.TestDataFactory.User.*
 import org.knora.webapi.messages.StringFormatter
@@ -44,7 +46,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object KnoraUserRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraUserRepoLiveSpec extends ZIOSpecDefault {
 
   private val KnoraUserRepo = ZIO.serviceWithZIO[KnoraUserRepo]
 

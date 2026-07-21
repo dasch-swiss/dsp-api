@@ -5,13 +5,16 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object GetStandoffTagByUUIDQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetStandoffTagByUUIDQuerySpec extends ZIOSpecDefault {
 
   private val testUuid = UUID.fromString("12345678-1234-1234-1234-123456789abc")
 

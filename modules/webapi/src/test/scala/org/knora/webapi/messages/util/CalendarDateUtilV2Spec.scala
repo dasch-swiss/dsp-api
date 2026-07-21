@@ -5,16 +5,19 @@
 
 package org.knora.webapi.messages.util
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 
 /**
  * Tests [[CalendarDateUtilV2]].
  */
-object CalendarDateUtilV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CalendarDateUtilV2Spec extends ZIOSpecDefault {
 
   private def checkSingleDate(
     calendarDate: CalendarDateV2,

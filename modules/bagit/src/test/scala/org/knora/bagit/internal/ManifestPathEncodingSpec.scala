@@ -5,9 +5,13 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object ManifestPathEncodingSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ManifestPathEncodingSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("ManifestPathEncodingSpec")(
     suite("encode")(

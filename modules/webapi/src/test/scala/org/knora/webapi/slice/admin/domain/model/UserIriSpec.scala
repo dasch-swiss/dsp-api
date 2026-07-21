@@ -5,9 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object UserIriSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class UserIriSpec extends ZIOSpecDefault {
 
   private val validIris = Seq(
     "http://rdfh.ch/users/9CzAcnT0So-k10CTySHnQA",

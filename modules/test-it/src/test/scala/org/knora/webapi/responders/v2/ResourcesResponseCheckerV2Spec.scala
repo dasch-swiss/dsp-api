@@ -5,13 +5,16 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 
-object ResourcesResponseCheckerV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesResponseCheckerV2Spec extends ZIOSpecDefault {
 
   override val spec: Spec[Any, Throwable] = suite("ResourcesResponseCheckerV2")(
     test("not throw an exception if received and expected resource responses are the same") {

@@ -9,7 +9,6 @@ import zio.Task
 import zio.ZLayer
 
 import java.time.Instant
-import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri

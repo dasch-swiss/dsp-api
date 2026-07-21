@@ -1,0 +1,10 @@
+# Root package. Exists so `//:maven_install.json` (the rules_jvm_external lock
+# file label) resolves. Re-pin with `bazel run @unpinned_maven//:pin`.
+exports_files([
+    "maven_install.json",
+    # Cross-package-visible for //tools/oci:image_versions_match_sbt, which
+    # checks MODULE.bazel's temurin base tag / OTel jar versions against these.
+    "MODULE.bazel",
+    "build.sbt",
+    "project/Dependencies.scala",
+])

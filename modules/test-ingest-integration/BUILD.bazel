@@ -1,0 +1,39 @@
+load("@rules_scala//scala:scala.bzl", "scala_junit_test")
+
+# Standalone integration test for the dsp-ingest service: starts the built dsp-ingest image
+# (`bazel run //modules/ingest:load` must have loaded `daschswiss/dsp-ingest:latest` first) via its
+# own testcontainer helpers (independent of testkit's TestContainerLayers) and uploads a file
+# through it. Docker-dependent, no RBE - same rationale as //modules/test-it:BUILD.bazel.
+scala_junit_test(
+    name = "test",
+    # FileUploadSpec's own TestAspect.timeout is already 5 minutes; give real margin above that
+    # rather than relying on "medium" (300s) leaving ~zero headroom on a colder CI runner.
+    size = "large",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    # See //modules/test-it:BUILD.bazel's _JVM_FLAGS comment: keep java.io.tmpdir off Bazel's
+    # ephemeral execroot scratch dir for anything that bind-mounts a host-created temp dir into a
+    # container.
+    jvm_flags = ["-Djava.io.tmpdir=/tmp"],
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    # "exclusive" is required here too even though this spec doesn't use E2EZSpec's fixed-port API
+    # server - see //modules/test-it:BUILD.bazel's _TAGS comment, reason 2 (shared host /tmp via
+    # SharedVolumes.Temp, bind-mounted into a dsp-ingest container by this module's own
+    # testcontainer copy).
+    tags = [
+        "requires-network",
+        "no-sandbox",
+        "no-remote",
+        "exclusive",
+    ],
+    deps = [
+        "//modules/ingest",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_testcontainers_testcontainers",
+    ],
+)

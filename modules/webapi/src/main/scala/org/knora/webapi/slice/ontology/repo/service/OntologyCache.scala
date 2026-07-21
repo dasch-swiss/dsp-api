@@ -364,8 +364,9 @@ object OntologyCache {
       }
 
     // Get the definitions of all the Knora superproperties of the property.
-    val superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - internalPropertyIri).collect {
-      case superPropertyIri if superPropertyIri.isKnoraDefinitionIri =>
+    val superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - internalPropertyIri)
+      .filter(_.isKnoraDefinitionIri)
+      .map { superPropertyIri =>
         cacheData
           .ontologies(superPropertyIri.getOntologyFromEntity)
           .properties
@@ -375,7 +376,7 @@ object OntologyCache {
               s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined",
             ),
           )
-    }
+      }
 
     // For each superproperty definition, get the value of the specified constraint in that definition, if any. Here we
     // make a map of superproperty IRIs to superproperty constraint values.

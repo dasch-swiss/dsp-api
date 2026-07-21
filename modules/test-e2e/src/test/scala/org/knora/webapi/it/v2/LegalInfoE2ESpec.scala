@@ -11,6 +11,7 @@ import com.apicatalog.jsonld.document.JsonDocument
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.vocabulary.RDF
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
@@ -22,8 +23,8 @@ import java.io.ByteArrayInputStream
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 import scala.language.implicitConversions
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.it.v2.LegalInfoE2ESpec.suite
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -46,7 +47,8 @@ import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestDspIngestClient.UploadedFile
 import org.knora.webapi.testservices.TestResourcesApiClient
 
-object LegalInfoE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LegalInfoE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
@@ -254,7 +256,7 @@ object LegalInfoE2ESpec extends E2EZSpec {
             ldType(KA.StillImageFileValue),
             (KA.FileValueHasFilename, Json.Str(filename)),
             (KA.HasCopyrightHolder, Json.Str(copyrightHolder.value)),
-            (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply): _*)),
+            (KA.HasAuthorship, Json.Arr(authorship.map(_.value).map(Json.Str.apply)*)),
             (KA.HasLicense, Json.Obj(ldId(licenseIri.value))),
           ),
         ),

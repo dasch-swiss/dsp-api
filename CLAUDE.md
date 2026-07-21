@@ -17,9 +17,10 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Core Build Tool
 
-- **Primary**: `sbt` (Scala Build Tool) - use `./sbtx` wrapper script
-- **Alternative**: `just` (command runner) for common tasks
-- **Alternative**: `make` for Docker and documentation tasks
+- **Primary**: `just` (command runner) - the canonical entry point for build, test, image, CI, and
+  local-dev tasks (stack lifecycle, DB init, cleanup); it wraps Bazel. Run `just --list`.
+- **Compilation / formatting**: `sbt` - use the `./sbtx` wrapper (still the Scala build of record
+  during the Bazel validation window).
 
 ### Essential Development Commands
 
@@ -28,10 +29,10 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 - Run a single test: `sbt "testOnly *TestClassName*"`
 - Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
 - `sbt test` - Run unit tests
-- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
-- `make test-it` - Run integration tests (requires Docker)
-- `make test-e2e` - Run end-to-end HTTP API tests (requires Docker)
-- `make test-all` - Run all tests
+- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `just docker-build-sipi-image`.
+- `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator)
+- `just test-it` - Run integration tests (requires Docker)
+- `just test-e2e` - Run end-to-end HTTP API tests (requires Docker)
 
 **Code Quality:**
 
@@ -42,8 +43,8 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 **Building:**
 
 - `sbt compile` - Compile the project
-- `make docker-build` - Build Docker images
-- `make docker-build-dsp-api-image` - Build only the API Docker image
+- `just docker-build` - Build the dsp-api/sipi/ingest Docker images (Fuseki excluded)
+- `just docker-build-dsp-api-image` - Build only the API Docker image
 
 **Local Development Stack:**
 
@@ -54,12 +55,25 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Bazel & the Nix dev shell
 
-The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
+All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena-fuseki`) build with
+**Bazel** (`rules_oci`).
+Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
+the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
-- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
-- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //modules/sipi:load`.
-- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //modules/sipi:push`.
-- The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
+- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command just docker-build-sipi-image`.
+- `just docker-build-sipi-image` / `just docker-build-dsp-api-image` / `just docker-build-ingest-image`
+  build the image and load it into the local Docker daemon (`:latest` plus the git-describe
+  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `just docker-publish-*`
+  variants build + push the multi-arch image via `bazel run //modules/<m>:push`.
+- `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
+  dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
+  them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
+- Fuseki's recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) build and
+  publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
+- CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
+  (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
+  sbt is retained only for the formatting check (`just check`) and a temporary tag-drift gate
+  (`just check-docker-image-tag`), both removable once validation closes.
 
 ## Architecture
 
@@ -96,7 +110,7 @@ Each slice typically contains:
 
 ### Technology Stack
 
-- **Language**: Scala 3.3.5
+- **Language**: Scala 3.8.4
 - **Framework**: ZIO 2.x for functional programming
 - **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
@@ -142,12 +156,13 @@ Each slice typically contains:
 
 ### Prerequisites
 
-- JDK Temurin 25
-- sbt
+- [Nix](https://determinate.systems) (with flakes) + `direnv` — the only toolchain install needed;
+  the dev shell it loads provides `bazel`, JDK Temurin 25, `just`, and `crane` (see "Bazel & the Nix
+  dev shell" above)
 - Docker Desktop
-- Nix (with flakes) + direnv — provides the Bazel dev shell used to build the Sipi image (see "Bazel & the Nix dev shell" above)
-- just (optional)
-- Scala 3.3.X
+
+`sbt` is not installed separately — the checked-in `./sbtx` wrapper runs it on the dev shell's JDK,
+and it remains the Scala build of record (Scala 3.8.4) during the Bazel validation window.
 
 ### Local Development
 
@@ -226,9 +241,9 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 
 ### Debugging
 
-- Use `make stack-logs` to view all service logs
-- Check `make stack-health` for API health status
-- Use `make stack-status` to see container status
+- Use `just stack-logs` to view all service logs
+- Check `just stack-health` for API health status
+- Use `just stack-status` to see container status
 
 
 ### Writing SPARQL queries

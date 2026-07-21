@@ -21,7 +21,7 @@ VSCode should be configured so that it austomatically formats (e.g. on file save
 
 ## Running Tests
 
-The tests can be run through make commands or through SBT.
+The tests can be run through `just` recipes or through SBT.
 The most convenient way to run the tests is through VSCode.
 Metals recognizes scalatest suits and lets you run them in the text explorer:
 
