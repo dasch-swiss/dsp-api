@@ -41,6 +41,8 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
 - [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
+- [ ] Selective patterns precede `OPTIONAL` blocks **within the same flat group** — no restriction appended after OPTIONALs, no accidental nesting via `pattern.and(group)` (emits `{ pattern . { … } }`) — see `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance (incident DEV-6796)
+- [ ] Changes that alter a builder's emitted SPARQL — including additions to `AbstractEntityRepo.entityProperties` — are reviewed as query changes and show up in a pinned/golden query spec diff; a hot-path builder without such a spec gets one in the same PR
 
 ### Ontology & RDF
 

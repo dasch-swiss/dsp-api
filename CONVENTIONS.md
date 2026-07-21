@@ -43,6 +43,9 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
 
+- **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance.
+- **Shape-changing inputs are query changes.** Adding a property to `AbstractEntityRepo.entityProperties` adds an OPTIONAL to every generated entity query — review the pinned/golden query diff, not just the mapping code. Hot-path builders without a pinned/golden spec get one.
+
 ### Ontology & RDF
 
 - Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/dsp-api-conventions.md` § Ontology Conventions.

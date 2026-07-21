@@ -310,6 +310,51 @@ val subSelect = GraphPatterns.select()
 // configure the subselect, then use it as a graph pattern in the outer query
 ```
 
+## Pattern Order and Query Performance
+
+Deployed Fuseki runs TDB2 with the union default graph enabled and **no `stats.opt`** — the BGP
+optimizer uses the fixed variable-counting heuristic, and `OPTIONAL` blocks are left-joins
+evaluated in document order. Written pattern order is load-bearing: the store largely executes
+the query in the shape you emit.
+
+### Selective patterns first — always before OPTIONALs
+
+Place the most selective pattern (a bound IRI, a literal lookup such as a shortcode) **first**
+in a group, before required-property triples and especially before any `OPTIONAL` block. A
+restriction placed *after* the OPTIONALs makes the store evaluate every left-join for **every
+entity of the class** — with multi-valued properties multiplying rows per entity — before the
+restriction throws all but one away.
+
+This is not theoretical: the project-by-shortcode lookup on the SIPI tile-permission hot path
+had its `projectShortcode` restriction after the OPTIONALs; adding three more OPTIONALs
+(DEV-6661) took it from ~150ms to ~700ms on prod. With the restriction first, the same query
+runs in single-digit milliseconds (DEV-6796).
+
+### Flat groups, not nested ones
+
+`pattern.and(group)` does **not** splice the group's contents — it emits
+`{ pattern . { ...group... } }`, and the OPTIONALs inside the nested braces keep their own
+scope, away from the binding. Compose the leading pattern into the **same** group: build the
+group starting from the pattern (see `AbstractEntityRepo.graphP(sub, leading)`) or pass all
+patterns to a single `GraphPatterns.and(...)` call.
+
+### Every OPTIONAL multiplies
+
+Each `OPTIONAL` on a multi-valued property multiplies intermediate rows per subject
+(descriptions × keywords × licenses × …), so cost grows superlinearly with OPTIONAL count.
+When the consumer reads an `RdfModel` anyway (as `RdfEntityMapper.toEntity` does), prefer
+fetching the whole subject — `?s ?p ?o` once the subject is bound — over enumerating
+properties in OPTIONALs: over-fetching a few triples of one subject is far cheaper than
+left-joins, and future property additions cannot regress the plan (DEV-6798).
+
+### Shape-changing inputs are query changes
+
+Anything that feeds a query builder shapes its output — adding a property to
+`AbstractEntityRepo.entityProperties` adds an `OPTIONAL` to every generated entity query.
+Review such changes as query changes: look at the pinned/golden query diff and consider the
+plan, not just the mapping code. A builder on a hot path without a pinned or golden spec is a
+blind spot — add one (see [Testing Query Builders](#testing-query-builders)).
+
 ## Literals
 
 ```scala
@@ -427,7 +472,7 @@ The SparqlBuilder does **not** support:
 - DESCRIBE queries
 - ASK queries (use `QueryBuilderHelper.askWhere()` which builds the string manually)
 
-For these, fall back to string interpolation with `.getQueryString` for the parts that _are_ supported.
+For these, fall back to string interpolation with `.getQueryString` for the parts that *are* supported.
 
 ## String Interpolation Fallbacks
 
@@ -470,6 +515,9 @@ val sparql = s"$builderPart\nWHERE { $filterClause }"
 5. **Use `.and()` for combining** — join independent graph patterns
 6. **Use `.optional()` on patterns** that may not match
 7. **Use `zeroOrMore()` / property paths** for transitive relations like `rdfs:subClassOf*`
+8. **Order patterns by selectivity** — the most selective pattern first, always before `OPTIONAL`
+   blocks and within the same flat group (see
+   [Pattern Order and Query Performance](#pattern-order-and-query-performance))
 
 ## Gravsearch Queries
 
@@ -543,13 +591,13 @@ Consequences:
 
 **Prefer golden tests as the default for query builders.** Snapshotting the full
 generated query keeps the entire SPARQL visible and reviewable in one file, verifies
-_clause placement_ (a triple is in DELETE vs INSERT vs WHERE) rather than mere substring
+*clause placement* (a triple is in DELETE vs INSERT vs WHERE) rather than mere substring
 presence, and stays readable as queries grow.
 
 **Avoid scattered `q.contains("...")` / `!q.contains("...")` substring assertions.** They
 are simultaneously brittle (they depend on exact serialization — spacing, escaping) and
 weak (they do not verify where a triple appears, so a query can be structurally wrong and
-still pass). Asserting the _absence_ of a keyword (e.g. `!q.contains("GRAPH")`) is
+still pass). Asserting the *absence* of a keyword (e.g. `!q.contains("GRAPH")`) is
 especially fragile. Use a golden snapshot instead — a regression shows up as an obvious
 diff in the golden file.
 
@@ -574,7 +622,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {
 
 Golden comparison is exact-text, so the builder output must be deterministic; normalise
 any nondeterministic parts (random UUIDs, timestamps) before snapshotting, as
-`replaceUuidPatterns` does above. Triple _order_ is captured verbatim — fine for a
+`replaceUuidPatterns` does above. Triple *order* is captured verbatim — fine for a
 deterministic builder.
 
 ### Direct string comparison
@@ -592,7 +640,7 @@ test("should produce correct DELETE query") {
 
 ### Apache Jena parsing for structural validation
 
-When you need a _semantic_, order-insensitive check rather than an exact snapshot — for
+When you need a *semantic*, order-insensitive check rather than an exact snapshot — for
 example asserting two queries are structurally equal regardless of formatting — parse the
 generated SPARQL with Apache Jena and compare or inspect the parsed structure (see
 `ResourcesRepoLiveSpec.assertUpdateQueriesEqual`):
