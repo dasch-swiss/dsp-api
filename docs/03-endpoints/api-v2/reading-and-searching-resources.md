@@ -53,14 +53,19 @@ geometry and the still image it is part of:
 
 - `knora-api:isRegionPreviewOf` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the region the preview
   represents. On write only the `@id` is required; the `@type` and `rdfs:label` are added on read.
-- `knora-api:hasPreviewUrl` — a IIIF URL of the cropped region, and
-  `knora-api:hasHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). These are present
-  **only when the region's geometry is a rectangle**; for other geometries they are omitted.
-- `knora-api:hasThumbnailUrl` — a IIIF URL of the full page at a fixed height, present for any geometry.
-- `knora-api:hasPreviewColor` — the region's colour (its `knora-base:hasColor`), present for any geometry.
+- `knora-api:hasPreviewUrl` — a IIIF URL of the region's bounding-box crop, and
+  `knora-api:hasHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). A client uses the box to
+  highlight the region within the full-page thumbnail by keeping that rectangle at normal brightness while lightening
+  and desaturating the surrounding area — not by drawing a box outline over it. These are **always present**
+  (exactly one each), computed for **any geometry** at its natural aspect ratio: the tight bounding box of the
+  vertices for a rectangle or polygon, and of the centre ± radius for a circle/ellipse.
+- `knora-api:hasThumbnailUrl` — a IIIF URL of the full page at a fixed height. Always present.
+- `knora-api:hasPreviewColor` — the region's colour (its `knora-base:hasColor`). Always present.
 - `knora-api:hasFullImage` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the still image resource.
+  Always present.
 - `knora-api:hasFullImageCopyrightHolder`, `knora-api:hasFullImageAuthorship`, `knora-api:hasFullImageLicense` —
-  the still image's legal metadata.
+  the still image's legal metadata. Optional, since they are optional on the file itself (copyright holder and
+  license 0–1, authorship 0–n).
 
 Permissions follow a two-tier model. The value's own permission is the master gate: a user who cannot view the
 `RegionPreviewValue` never sees it at all. Once that gate passes, the identity and legal metadata above are always

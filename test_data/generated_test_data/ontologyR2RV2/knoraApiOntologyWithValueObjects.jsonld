@@ -4420,7 +4420,7 @@
                     "owl:onProperty": {
                         "@id": "knora-api:hasFullImage"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -4448,28 +4448,28 @@
                     "owl:onProperty": {
                         "@id": "knora-api:hasHighlightBoxH"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasHighlightBoxW"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasHighlightBoxX"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasHighlightBoxY"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -4484,21 +4484,21 @@
                     "owl:onProperty": {
                         "@id": "knora-api:hasPreviewColor"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasPreviewUrl"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:hasThumbnailUrl"
                     },
-                    "owl:maxCardinality": 1
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -9131,7 +9131,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
-            "rdfs:comment": "Height percentage (0..100) of the region's bounding box (computed on read; rectangle only)."
+            "rdfs:comment": "Height percentage (0..100) of the region's bounding box (computed on read; any geometry)."
         },
         {
             "rdfs:label": "has region preview highlight box width",
@@ -9146,7 +9146,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
-            "rdfs:comment": "Width percentage (0..100) of the region's bounding box (computed on read; rectangle only)."
+            "rdfs:comment": "Width percentage (0..100) of the region's bounding box (computed on read; any geometry)."
         },
         {
             "rdfs:label": "has region preview highlight box X",
@@ -9161,7 +9161,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
-            "rdfs:comment": "X percentage (0..100) of the region's bounding box (computed on read; rectangle only)."
+            "rdfs:comment": "X percentage (0..100) of the region's bounding box (computed on read; any geometry)."
         },
         {
             "rdfs:label": "has region preview highlight box Y",
@@ -9176,7 +9176,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
-            "rdfs:comment": "Y percentage (0..100) of the region's bounding box (computed on read; rectangle only)."
+            "rdfs:comment": "Y percentage (0..100) of the region's bounding box (computed on read; any geometry)."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -9342,7 +9342,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:RegionPreviewValue"
             },
-            "rdfs:comment": "IIIF URL of the cropped region image (computed on read; rectangle geometry only)."
+            "rdfs:comment": "IIIF URL of the region's bounding-box crop image (computed on read; any geometry)."
         },
         {
             "rdfs:label": "has Region preview",

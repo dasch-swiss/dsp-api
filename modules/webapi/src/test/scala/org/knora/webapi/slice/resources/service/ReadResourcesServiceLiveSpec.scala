@@ -219,8 +219,11 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           preview.flatMap(_.legalInfo).contains(LegalInfo(None, None, None)),
         )
       },
-      test("readResourcesSequence omits crop + highlight for a non-rectangle region but keeps thumbnail + identity") {
+      test("readResourcesSequence computes a bounding-box crop + highlight for a polygon region") {
         val host = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonrect-preview-host")
+        // polygon points (0.1,0.1),(0.3,0.1),(0.2,0.4) -> tight bbox pct 10,10,20,30
+        val expectedCropUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:10.000000,10.000000,20.000000,30.000000/max/0/default.jpg"
         for {
           _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           sequence <- ZIO.serviceWithZIO[ReadResourcesService](
@@ -236,22 +239,65 @@ object ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                       .collectFirst { case rp: RegionPreviewValueContentV2 => rp }
         } yield assertTrue(
           preview.isDefined,
-          // rectangle-gate: non-rectangle geometry yields no crop and no highlight box
-          preview.flatMap(_.cropUrl).isEmpty,
-          preview.flatMap(_.highlightBox).isEmpty,
-          // but the geometry-independent fields are still present
+          // a non-rectangle now gets the tight bounding box of its vertices, natural aspect
+          preview.flatMap(_.cropUrl).contains(expectedCropUrl),
+          preview
+            .flatMap(_.highlightBox)
+            .map(b =>
+              (
+                b.x.bigDecimal.toPlainString,
+                b.y.bigDecimal.toPlainString,
+                b.w.bigDecimal.toPlainString,
+                b.h.bigDecimal.toPlainString,
+              ),
+            )
+            .contains(("10.000000", "10.000000", "20.000000", "30.000000")),
           preview
             .flatMap(_.thumbnailUrl)
             .contains(
               "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg",
             ),
           preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
-          // the region label + class are geometry-independent, so they survive the rectangle gate too
           preview.flatMap(_.regionLabel).contains("a non-rectangle test region"),
           preview.flatMap(_.regionResourceClassIri).exists(_.toString.endsWith("#Region")),
-          // colour is geometry-independent, so it survives the rectangle gate
           preview.flatMap(_.color).contains("#ff3333"),
           preview.flatMap(_.legalInfo).isDefined,
+        )
+      },
+      test("readResourcesSequence computes a bounding-box crop + highlight for a circle (ellipse) region") {
+        val host = ResourceIri.unsafeFrom("http://rdfh.ch/0001/circle-preview-host")
+        // circle centre (0.5,0.5), radius (0.2,0.1) -> bbox centre +/- radius = pct 30,40,40,20
+        val expectedCropUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:30.000000,40.000000,40.000000,20.000000/max/0/default.jpg"
+        for {
+          _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(host),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          preview = sequence.resources
+                      .flatMap(_.values.values.flatten)
+                      .map(_.valueContent)
+                      .collectFirst { case rp: RegionPreviewValueContentV2 => rp }
+        } yield assertTrue(
+          preview.isDefined,
+          preview.flatMap(_.cropUrl).contains(expectedCropUrl),
+          preview
+            .flatMap(_.highlightBox)
+            .map(b =>
+              (
+                b.x.bigDecimal.toPlainString,
+                b.y.bigDecimal.toPlainString,
+                b.w.bigDecimal.toPlainString,
+                b.h.bigDecimal.toPlainString,
+              ),
+            )
+            .contains(("30.000000", "40.000000", "40.000000", "20.000000")),
+          preview.flatMap(_.regionLabel).contains("a circle test region"),
+          preview.flatMap(_.color).contains("#00ff00"),
         )
       },
       test("readResourcesSequence renders the computed RegionPreviewValue fields into the JSON-LD response body") {

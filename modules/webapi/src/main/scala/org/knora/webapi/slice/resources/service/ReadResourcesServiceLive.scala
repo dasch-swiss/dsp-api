@@ -293,7 +293,7 @@ final case class ReadResourcesServiceLive(
   /**
    * Builds a `regionIri -> computed fields` map from the fetched region and image resources. The still image is
    * resolved independently of geometry, so thumbnail + full-image identity + legal info are produced for any
-   * geometry; only crop URL + highlight box are gated on the region being a rectangle.
+   * geometry; crop URL + highlight box are the region's bounding box and are likewise produced for any geometry.
    */
   private def regionPreviewComputed(
     regions: ReadResourcesSequenceV2,
@@ -326,7 +326,7 @@ final case class ReadResourcesServiceLive(
             (Some(s"$base/$selector/max/0/default.jpg"), Some(b))
           case None => (None, None)
         }
-        // The region's color (knora-base:hasColor) — geometry-independent, so present even for a non-rectangle.
+        // The region's color (knora-base:hasColor) — geometry-independent.
         val color = region.values.values.flatten
           .map(_.valueContent)
           .collectFirst { case c: ColorValueContentV2 => c.valueHasColor }
@@ -346,24 +346,38 @@ final case class ReadResourcesServiceLive(
   }
 
   /**
-   * The region's bounding box as IIIF percentages (0..100, 6 decimals, HALF_UP), only when its geometry is a
-   * rectangle; `None` for any other geometry so no crop/highlight is emitted.
+   * The region's tight, axis-aligned bounding box as IIIF percentages (0..100, 6 decimals, HALF_UP), computed
+   * for any geometry: from the vertices for a rectangle/polygon, and from centre ± radius for a circle/ellipse.
+   * The corners are clamped to the image ([0, 1]) so a shape touching the edge cannot yield an out-of-range IIIF
+   * selector. `None` only when the region carries no parseable geometry.
    */
   private def regionBoundingBox(region: ReadResourceV2): Option[HighlightBox] =
     region.values.values.flatten
       .map(_.valueContent)
       .collectFirst { case geom: GeomValueContentV2 => geom }
       .flatMap(geom => GeomValueContentV2.parseShape(geom.valueHasGeometry).toOption)
-      .filter(shape => shape.geomType.contains("rectangle") && shape.points.nonEmpty)
-      .map { shape =>
-        val xs                            = shape.points.map(_.x)
-        val ys                            = shape.points.map(_.y)
-        val minX                          = xs.min
-        val minY                          = ys.min
-        val w                             = xs.max - minX
-        val h                             = ys.max - minY
-        def scaled(d: Double): BigDecimal = BigDecimal(d * 100).setScale(6, BigDecimal.RoundingMode.HALF_UP)
-        HighlightBox(scaled(minX), scaled(minY), scaled(w), scaled(h))
+      .flatMap { shape =>
+        // A circle/ellipse is a single centre point plus x/y radii; every other shape is the min/max envelope
+        // of its vertices. (minX, minY, maxX, maxY), all as fractions of the image.
+        val corners: Option[(Double, Double, Double, Double)] = shape.radius match {
+          case Some(r) =>
+            shape.points.headOption.map(c => (c.x - r.x, c.y - r.y, c.x + r.x, c.y + r.y))
+          case None =>
+            Option.when(shape.points.nonEmpty) {
+              val xs = shape.points.map(_.x)
+              val ys = shape.points.map(_.y)
+              (xs.min, ys.min, xs.max, ys.max)
+            }
+        }
+        corners.map { case (minX0, minY0, maxX0, maxY0) =>
+          def clamp(d: Double): Double      = d.max(0.0).min(1.0)
+          def scaled(d: Double): BigDecimal = BigDecimal(d * 100).setScale(6, BigDecimal.RoundingMode.HALF_UP)
+          val minX                          = clamp(minX0)
+          val minY                          = clamp(minY0)
+          val maxX                          = clamp(maxX0)
+          val maxY                          = clamp(maxY0)
+          HighlightBox(scaled(minX), scaled(minY), scaled(maxX - minX), scaled(maxY - minY))
+        }
       }
 
   /** Copies the computed fields onto each [[RegionPreviewValueContentV2]] of `resource`. */

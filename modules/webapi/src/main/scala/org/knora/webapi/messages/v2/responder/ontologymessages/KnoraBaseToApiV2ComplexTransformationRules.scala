@@ -424,7 +424,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview URL")
-    .withRdfCommentEn("IIIF URL of the cropped region image (computed on read; rectangle geometry only).")
+    .withRdfCommentEn("IIIF URL of the region's bounding-box crop image (computed on read; any geometry).")
 
   private val HasThumbnailUrl = makeOwlDatatypeProperty(KA.HasThumbnailUrl, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
@@ -436,25 +436,25 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box X")
-    .withRdfCommentEn("X percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
+    .withRdfCommentEn("X percentage (0..100) of the region's bounding box (computed on read; any geometry).")
 
   private val HasHighlightBoxY = makeOwlDatatypeProperty(KA.HasHighlightBoxY, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box Y")
-    .withRdfCommentEn("Y percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
+    .withRdfCommentEn("Y percentage (0..100) of the region's bounding box (computed on read; any geometry).")
 
   private val HasHighlightBoxW = makeOwlDatatypeProperty(KA.HasHighlightBoxW, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box width")
-    .withRdfCommentEn("Width percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
+    .withRdfCommentEn("Width percentage (0..100) of the region's bounding box (computed on read; any geometry).")
 
   private val HasHighlightBoxH = makeOwlDatatypeProperty(KA.HasHighlightBoxH, XSD.DECIMAL)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.RegionPreviewValue)
     .withRdfLabelEn("has region preview highlight box height")
-    .withRdfCommentEn("Height percentage (0..100) of the region's bounding box (computed on read; rectangle only).")
+    .withRdfCommentEn("Height percentage (0..100) of the region's bounding box (computed on read; any geometry).")
 
   private val HasPreviewColor = makeOwlDatatypeProperty(KA.HasPreviewColor, XSD.STRING)
     .withSubPropertyOf(KA.ValueHas)
@@ -490,15 +490,20 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("has full image license")
     .withRdfCommentEn("The license of the still image the region is part of (computed on read).")
 
+  // All computed fields except the legal metadata are ExactlyOne, because knora-base:Region requires them:
+  // hasGeometry (min 1) => bounding-box crop URL + highlight box; isRegionOf/isRegionOfValue (1) => the still
+  // image always resolves => thumbnail URL + full-image reference; hasColor (1) => the region colour. So on a
+  // complex-schema read they are always present. Only the still image's legal metadata stays optional, because
+  // it is optional on the file value itself (copyright holder / license 0..1, authorship 0..n).
   private val RegionPreviewValueCardinalities = Map(
-    KA.HasPreviewUrl               -> ZeroOrOne,
-    KA.HasThumbnailUrl             -> ZeroOrOne,
-    KA.HasHighlightBoxX            -> ZeroOrOne,
-    KA.HasHighlightBoxY            -> ZeroOrOne,
-    KA.HasHighlightBoxW            -> ZeroOrOne,
-    KA.HasHighlightBoxH            -> ZeroOrOne,
-    KA.HasPreviewColor             -> ZeroOrOne,
-    KA.HasFullImage                -> ZeroOrOne,
+    KA.HasPreviewUrl               -> ExactlyOne,
+    KA.HasThumbnailUrl             -> ExactlyOne,
+    KA.HasHighlightBoxX            -> ExactlyOne,
+    KA.HasHighlightBoxY            -> ExactlyOne,
+    KA.HasHighlightBoxW            -> ExactlyOne,
+    KA.HasHighlightBoxH            -> ExactlyOne,
+    KA.HasPreviewColor             -> ExactlyOne,
+    KA.HasFullImage                -> ExactlyOne,
     KA.HasFullImageCopyrightHolder -> ZeroOrOne,
     KA.HasFullImageAuthorship      -> Unbounded,
     KA.HasFullImageLicense         -> ZeroOrOne,

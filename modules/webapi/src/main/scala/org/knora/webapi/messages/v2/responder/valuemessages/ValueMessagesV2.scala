@@ -1463,18 +1463,20 @@ object GeomValueContentV2 {
 
   final case class Point(x: Double, y: Double)
   // Models the region geometry stored as a JSON string in `knora-base:valueHasGeometry`, e.g.
-  // {"status":"active","lineColor":"#ff3333","lineWidth":2,
-  //  "points":[{"x":0.1,"y":0.1},{"x":0.3,"y":0.4}],"type":"rectangle"}
-  // Only two keys are modelled here:
-  //   - `geomType`: the shape type ("rectangle", "polygon", "circle", ...). The region-preview read surface
-  //     computes the crop URL and highlight box only when this is a rectangle. Its JSON key is `type`, which
+  //   rectangle/polygon: {"points":[{"x":0.1,"y":0.1},{"x":0.3,"y":0.4}],"type":"rectangle",...}
+  //   circle (ellipse):  {"points":[{"x":0.34,"y":0.45}],"radius":{"x":0.05,"y":0.03},"type":"circle",...}
+  // Only the keys the region-preview read surface needs are modelled:
+  //   - `geomType`: the shape type ("rectangle", "polygon", "circle", ...). Its JSON key is `type`, which
   //     `DeriveJsonDecoder` cannot use as a Scala field name, hence the `@jsonField("type")` rename.
-  //   - `points`: the shape's corner points, from which the bounding box is derived.
+  //   - `points`: the shape's vertices. For a rectangle/polygon these are the corners; for a circle it is the
+  //     single centre point. The bounding box is derived from these (plus `radius` for a circle).
+  //   - `radius`: present only for a circle/ellipse — the x/y radii (as fractions) around the centre point.
   // zio-json silently ignores the other geometry keys (status, lineColor, lineWidth, ...) we do not need.
   // The class is public so `ReadResourcesServiceLive` can reuse it when augmenting the preview on read.
   final case class GeomShape(
     @jsonField("type") geomType: Option[String],
     points: List[Point],
+    radius: Option[Point] = None,
   )
 
   private given JsonDecoder[Point]     = DeriveJsonDecoder.gen[Point]
@@ -2570,8 +2572,9 @@ final case class HighlightBox(x: BigDecimal, y: BigDecimal, w: BigDecimal, h: Bi
  * thumbnail URL, highlight box, full-image identity, legal info) are all computed on read in
  * `ReadResourcesServiceLive` and default to absent. On read the region reference (`isRegionPreviewOf`) is
  * expanded into a bounded `{ @id, @type, rdfs:label }` reference, mirroring the full-image reference.
- * `cropUrl` and `highlightBox` stay `None` when the region's geometry is not a rectangle; `thumbnailUrl`,
- * `fullImage`, and `legalInfo` are emitted for any geometry.
+ * `cropUrl` and `highlightBox` are the region's tight, axis-aligned bounding box and are computed for any
+ * geometry (rectangle/polygon from the vertices, circle/ellipse from centre ± radius); like `thumbnailUrl`,
+ * `fullImage`, and `legalInfo` they are present whenever the region carries a geometry.
  *
  * @param ontologySchema         the ontology schema.
  * @param regionIri              the IRI of the Region resource this value points to.
@@ -2579,9 +2582,9 @@ final case class HighlightBox(x: BigDecimal, y: BigDecimal, w: BigDecimal, h: Bi
  * @param regionLabel            the region's `rdfs:label`, computed at read time.
  * @param regionResourceClassIri the region's resource class IRI (for the `@type` of the bounded reference),
  *                               computed at read time.
- * @param cropUrl                IIIF URL of the cropped region image (rectangle geometry only), computed at read time.
+ * @param cropUrl                IIIF URL of the region's bounding-box crop (any geometry), computed at read time.
  * @param thumbnailUrl           IIIF URL of the full-page thumbnail, computed at read time.
- * @param highlightBox           the region's bounding box as percentages (rectangle geometry only), computed at read time.
+ * @param highlightBox           the region's bounding box as percentages (any geometry), computed at read time.
  * @param color                  the region's color (its knora-base:hasColor), computed at read time; geometry-independent.
  * @param fullImage              identity of the still image the region is part of, computed at read time.
  * @param legalInfo              the still image's copyright/authorship/license metadata, computed at read time.

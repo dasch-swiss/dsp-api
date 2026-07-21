@@ -439,7 +439,8 @@ type of `RegionPreviewValue`.
 On read, the API augments each `RegionPreviewValue` with computed fields derived from the referenced region's geometry
 and the still image it is part of. The `isRegionPreviewOf` reference is expanded into a bounded reference carrying the
 region's `@type` and `rdfs:label` (only the `@id` is required on write). The computed fields are: `hasPreviewUrl` and
-the four `hasHighlightBox{X,Y,W,H}` percentages
+the four `hasHighlightBox{X,Y,W,H}` percentages (always present, exactly one each — the region's tight bounding
+box for any geometry: rectangle/polygon vertices, or a circle/ellipse's centre ± radius)
 (rectangle geometry only), a full-page `hasThumbnailUrl`, the region's `hasPreviewColor` (its `hasColor`), a
 bounded `hasFullImage` reference to the still image, and the still image's legal metadata
 (`hasFullImageCopyrightHolder`, `hasFullImageAuthorship`, `hasFullImageLicense`). These fields are computed on the fly
