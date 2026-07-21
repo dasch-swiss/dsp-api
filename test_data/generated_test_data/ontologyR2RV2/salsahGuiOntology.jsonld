@@ -120,6 +120,17 @@
             ]
         },
         {
+            "@id": "salsah-gui:RegionPreview",
+            "rdf:type": [
+                {
+                    "@id": "salsah-gui:Guielement"
+                },
+                {
+                    "@id": "owl:NamedIndividual"
+                }
+            ]
+        },
+        {
             "@id": "salsah-gui:Richtext",
             "rdf:type": [
                 {

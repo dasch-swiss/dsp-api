@@ -44,6 +44,88 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
 `ApiV2WithValueObjects`).
 
+### Region Preview Values
+
+A `knora-api:RegionPreviewValue` (see
+[RegionPreviewValue](../../02-dsp-ontologies/knora-base.md#regionpreviewvalue)) stores only its
+`knora-api:isRegionPreviewOf` target. On read, the API augments it with fields computed from the referenced region's
+geometry and the still image it is part of:
+
+- `knora-api:isRegionPreviewOf` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the region the preview
+  represents. On write only the `@id` is required; the `@type` and `rdfs:label` are added on read.
+- `knora-api:hasPreviewUrl` — a IIIF URL of the region's bounding-box crop, and
+  `knora-api:hasHighlightBoxX/Y/W/H` — the region's bounding box as percentages (0–100). A client uses the box to
+  highlight the region within the full-page thumbnail by keeping that rectangle at normal brightness while lightening
+  and desaturating the surrounding area — not by drawing a box outline over it. These are **always present**
+  (exactly one each), computed for **any geometry** at its natural aspect ratio: the tight bounding box of the
+  vertices for a rectangle or polygon, and of the centre ± radius for a circle/ellipse.
+- `knora-api:hasThumbnailUrl` — a IIIF URL of the full page at a fixed height. Always present.
+- `knora-api:hasPreviewColor` — the region's colour (its `knora-base:hasColor`). Always present.
+- `knora-api:hasFullImage` — a bounded reference (`@id`, `@type`, `rdfs:label`) to the still image resource.
+  Always present.
+- `knora-api:hasFullImageCopyrightHolder`, `knora-api:hasFullImageAuthorship`, `knora-api:hasFullImageLicense` —
+  the still image's legal metadata. Optional, since they are optional on the file itself (copyright holder and
+  license 0–1, authorship 0–n).
+
+For example, reading a `Thing` that carries a region preview (rectangle geometry, and a still image with legal
+metadata) returns:
+
+```json
+{
+  "@id": "http://rdfh.ch/0001/a-thing",
+  "@type": "anything:Thing",
+  "rdfs:label": "A thing with a region preview",
+  "anything:hasRegionPreview": {
+    "@id": "http://rdfh.ch/0001/a-thing/values/preview-value-uuid",
+    "@type": "knora-api:RegionPreviewValue",
+    "knora-api:isRegionPreviewOf": {
+      "@id": "http://rdfh.ch/0001/a-region",
+      "@type": "knora-api:Region",
+      "rdfs:label": "A region on the title page"
+    },
+    "knora-api:hasPreviewUrl": {
+      "@type": "xsd:anyURI",
+      "@value": "http://0.0.0.0:1024/0001/image.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"
+    },
+    "knora-api:hasThumbnailUrl": {
+      "@type": "xsd:anyURI",
+      "@value": "http://0.0.0.0:1024/0001/image.jp2/full/^,256/0/default.jpg"
+    },
+    "knora-api:hasHighlightBoxX": { "@type": "xsd:decimal", "@value": "39.796687" },
+    "knora-api:hasHighlightBoxY": { "@type": "xsd:decimal", "@value": "24.423475" },
+    "knora-api:hasHighlightBoxW": { "@type": "xsd:decimal", "@value": "9.266166" },
+    "knora-api:hasHighlightBoxH": { "@type": "xsd:decimal", "@value": "17.576948" },
+    "knora-api:hasPreviewColor": "#ff3333",
+    "knora-api:hasFullImage": {
+      "@id": "http://rdfh.ch/0001/a-thing-picture",
+      "@type": "anything:ThingPicture",
+      "rdfs:label": "A thing with a picture"
+    },
+    "knora-api:hasFullImageCopyrightHolder": "DaSCH",
+    "knora-api:hasFullImageAuthorship": [ "Jane Doe" ],
+    "knora-api:hasFullImageLicense": {
+      "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+    }
+  },
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The `hasPreviewUrl`/`hasThumbnailUrl` hosts and filename are the media server's; the last three
+`hasFullImage*` legal properties are only present when the still image carries that metadata. All other computed
+fields are always present.
+
+Permissions follow a two-tier model. The value's own permission is the master gate: a user who cannot view the
+`RegionPreviewValue` never sees it at all. Once that gate passes, the identity and legal metadata above are always
+returned (resolved via a bounded elevated read, regardless of the user's permissions on the region or the image), and
+the image URLs are always emitted — the actual image **pixels** are enforced per request by Sipi, not by DSP-API. The
+IIIF URLs are therefore permission-independent; dereferencing them may still be denied or restricted by Sipi.
+
 ### Requesting Text Markup as XML
 
 When requesting a text value with standoff markup, there are three possibilities:

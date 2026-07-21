@@ -850,7 +850,24 @@ object OntologyConstants {
 
     val RegionPreviewValue: IRI = KnoraApiV2PrefixExpansion + "RegionPreviewValue"
     val IsRegionPreviewOf: IRI  = KnoraApiV2PrefixExpansion + "isRegionPreviewOf"
-    val IiifUrl: IRI            = KnoraApiV2PrefixExpansion + "iiifUrl"
+
+    // Runtime (computed-on-read) fields of a region preview value. Declared as knora-api-only
+    // properties in KnoraBaseToApiV2ComplexTransformationRules; never stored in knora-base.
+    val HasPreviewUrl: IRI    = KnoraApiV2PrefixExpansion + "hasPreviewUrl"
+    val HasThumbnailUrl: IRI  = KnoraApiV2PrefixExpansion + "hasThumbnailUrl"
+    val HasHighlightBoxX: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxX"
+    val HasHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxY"
+    val HasHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxW"
+    val HasHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxH"
+    val HasPreviewColor: IRI  = KnoraApiV2PrefixExpansion + "hasPreviewColor"
+    val HasFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasFullImage"
+
+    // Legal metadata of the region preview's full image. Kept distinct from FileValue's
+    // hasCopyrightHolder/hasAuthorship/hasLicense: those state the copyright of the subject file value,
+    // whereas these state the copyright of the linked still image the preview points at.
+    val HasFullImageCopyrightHolder: IRI = KnoraApiV2PrefixExpansion + "hasFullImageCopyrightHolder"
+    val HasFullImageAuthorship: IRI      = KnoraApiV2PrefixExpansion + "hasFullImageAuthorship"
+    val HasFullImageLicense: IRI         = KnoraApiV2PrefixExpansion + "hasFullImageLicense"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 

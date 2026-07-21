@@ -465,8 +465,8 @@ final class ConstructResponseUtilV2(
     valueObject: ValueRdfData,
     valueCommentOption: Option[String],
   ): Task[RegionPreviewValueContentV2] = {
-    // The `iiifUrl` is computed downstream in ReadResourcesServiceLive, where the referenced region's
-    // geometry and the still image's internal filename are available.
+    // The crop/thumbnail/highlight/full-image/legal fields are computed downstream in ReadResourcesServiceLive,
+    // where the referenced region's geometry and the still image's internal filename are available.
     val regionIriStr = valueObject.requireIriObject(OntologyConstants.KnoraBase.IsRegionPreviewOf.toSmartIri)
     ZIO
       .fromEither(ResourceIri.from(regionIriStr))
@@ -477,7 +477,6 @@ final class ConstructResponseUtilV2(
         RegionPreviewValueContentV2(
           ontologySchema = InternalSchema,
           regionIri = regionIri,
-          iiifUrl = None,
           comment = valueCommentOption,
         )
       }

@@ -418,6 +418,97 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       .withRdfLabelEn("External Url to the image")
       .withRdfCommentEn("External Url to the image")
 
+  // Runtime (computed-on-read) fields of a region preview value. They are declared here as knora-api-only
+  // properties (never stored in knora-base), so a read instance validates against the served ontology.
+  private val HasPreviewUrl = makeOwlDatatypeProperty(KA.HasPreviewUrl, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview URL")
+    .withRdfCommentEn("IIIF URL of the region's bounding-box crop image (computed on read; any geometry).")
+
+  private val HasThumbnailUrl = makeOwlDatatypeProperty(KA.HasThumbnailUrl, XSD.ANYURI)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview thumbnail URL")
+    .withRdfCommentEn("IIIF URL of the full-page thumbnail the region is on (computed on read).")
+
+  private val HasHighlightBoxX = makeOwlDatatypeProperty(KA.HasHighlightBoxX, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview highlight box X")
+    .withRdfCommentEn("X percentage (0..100) of the region's bounding box (computed on read; any geometry).")
+
+  private val HasHighlightBoxY = makeOwlDatatypeProperty(KA.HasHighlightBoxY, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview highlight box Y")
+    .withRdfCommentEn("Y percentage (0..100) of the region's bounding box (computed on read; any geometry).")
+
+  private val HasHighlightBoxW = makeOwlDatatypeProperty(KA.HasHighlightBoxW, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview highlight box width")
+    .withRdfCommentEn("Width percentage (0..100) of the region's bounding box (computed on read; any geometry).")
+
+  private val HasHighlightBoxH = makeOwlDatatypeProperty(KA.HasHighlightBoxH, XSD.DECIMAL)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview highlight box height")
+    .withRdfCommentEn("Height percentage (0..100) of the region's bounding box (computed on read; any geometry).")
+
+  private val HasPreviewColor = makeOwlDatatypeProperty(KA.HasPreviewColor, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview color")
+    .withRdfCommentEn("The region's color (its knora-base:hasColor, computed on read; geometry-independent).")
+
+  private val HasFullImage = makeOwlObjectProperty(KA.HasFullImage, KA.Resource)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has region preview full image")
+    .withRdfCommentEn("The still image resource the region is part of (computed on read).")
+
+  // Legal metadata of the full image, dedicated to the region preview value. Unlike FileValue's
+  // hasCopyrightHolder/hasAuthorship/hasLicense (which describe the subject file value), these state the
+  // legal metadata of the linked still image the preview points at. Cardinalities mirror StillImageFileValue's
+  // (copyright holder / license max 1, authorship unbounded).
+  private val HasFullImageCopyrightHolder = makeOwlDatatypeProperty(KA.HasFullImageCopyrightHolder, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image copyright holder")
+    .withRdfCommentEn("The copyright holder of the still image the region is part of (computed on read).")
+
+  private val HasFullImageAuthorship = makeOwlDatatypeProperty(KA.HasFullImageAuthorship, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image authorship")
+    .withRdfCommentEn("The authorship of the still image the region is part of (computed on read).")
+
+  private val HasFullImageLicense = makeOwlObjectProperty(KA.HasFullImageLicense, KA.License)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.RegionPreviewValue)
+    .withRdfLabelEn("has full image license")
+    .withRdfCommentEn("The license of the still image the region is part of (computed on read).")
+
+  // All computed fields except the legal metadata are ExactlyOne, because knora-base:Region requires them:
+  // hasGeometry (min 1) => bounding-box crop URL + highlight box; isRegionOf/isRegionOfValue (1) => the still
+  // image always resolves => thumbnail URL + full-image reference; hasColor (1) => the region colour. So on a
+  // complex-schema read they are always present. Only the still image's legal metadata stays optional, because
+  // it is optional on the file value itself (copyright holder / license 0..1, authorship 0..n).
+  private val RegionPreviewValueCardinalities = Map(
+    KA.HasPreviewUrl               -> ExactlyOne,
+    KA.HasThumbnailUrl             -> ExactlyOne,
+    KA.HasHighlightBoxX            -> ExactlyOne,
+    KA.HasHighlightBoxY            -> ExactlyOne,
+    KA.HasHighlightBoxW            -> ExactlyOne,
+    KA.HasHighlightBoxH            -> ExactlyOne,
+    KA.HasPreviewColor             -> ExactlyOne,
+    KA.HasFullImage                -> ExactlyOne,
+    KA.HasFullImageCopyrightHolder -> ZeroOrOne,
+    KA.HasFullImageAuthorship      -> Unbounded,
+    KA.HasFullImageLicense         -> ZeroOrOne,
+  )
+
   private val ResourceCardinalities = Map(
     KA.HasIncomingLinkValue -> Unbounded,
     KA.ArkUrl               -> ExactlyOne,
@@ -634,6 +725,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.StillImageFileValue         -> StillImageFileValueCardinalities,
     KA.StillImageExternalFileValue -> StillImageExternalFileValueCardinalities,
     KA.StillImageVectorFileValue   -> StillImageVectorFileValueCardinalities,
+    KA.RegionPreviewValue          -> RegionPreviewValueCardinalities,
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
@@ -674,6 +766,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     HasAuthorship,
     HasIncomingLinkValue,
     HasLicense,
+    HasPreviewUrl,
+    HasThumbnailUrl,
+    HasHighlightBoxX,
+    HasHighlightBoxY,
+    HasHighlightBoxW,
+    HasHighlightBoxH,
+    HasPreviewColor,
+    HasFullImage,
+    HasFullImageCopyrightHolder,
+    HasFullImageAuthorship,
+    HasFullImageLicense,
     HasResourceAuthorship,
     IntValueAsInt,
     IntervalValueHasEnd,

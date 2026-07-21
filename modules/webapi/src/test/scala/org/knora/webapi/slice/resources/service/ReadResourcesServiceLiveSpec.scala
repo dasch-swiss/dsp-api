@@ -8,8 +8,6 @@ package org.knora.webapi.slice.resources.service
 import org.junit.runner.RunWith
 import zio.Scope
 import zio.ZIO
-import zio.json.DecoderOps
-import zio.json.ast.Json
 import zio.test.*
 
 import java.time.Instant
@@ -40,6 +38,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
+import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -83,6 +82,10 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
     ),
     RdfDataObject(
       path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything",
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/region-preview-nonrectangle-test-data.ttl",
       name = "http://www.knora.org/data/0001/anything",
     ),
     RdfDataObject(
@@ -172,12 +175,14 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                       )
         } yield assertTrue(sequence.resources == Seq(expected))
       },
-      test("readResourcesSequence augments a RegionPreviewValue with a IIIF URL computed from the region geometry") {
+      test("readResourcesSequence augments a RegionPreviewValue with the fields computed from the region geometry") {
         val regionPreviewHostResourceIri =
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
-        // pct:x,y,w,h is the bounding box of the region's geometry (in percent); /max/ serves it at the largest available size.
-        val expectedIiifUrl =
+        // The region's geometry is a rectangle; crop is pct:x,y,w,h (percent) at /max/, thumbnail is full/^,256.
+        val expectedCropUrl =
           "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"
+        val expectedThumbnailUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg"
         for {
           _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           sequence <- ZIO.serviceWithZIO[ReadResourcesService](
@@ -187,32 +192,120 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                           requestingUser = TestDataFactory.User.rootUser,
                         ),
                       )
-          iiifUrls = sequence.resources
+          previews = sequence.resources
                        .flatMap(_.values.values.flatten)
                        .map(_.valueContent)
-                       .collect { case rp: RegionPreviewValueContentV2 => rp.iiifUrl }
-        } yield assertTrue(iiifUrls == Seq(Some(expectedIiifUrl)))
+                       .collect { case rp: RegionPreviewValueContentV2 => rp }
+          preview = previews.headOption
+        } yield assertTrue(
+          previews.size == 1,
+          preview.flatMap(_.cropUrl).contains(expectedCropUrl),
+          preview.flatMap(_.thumbnailUrl).contains(expectedThumbnailUrl),
+          preview
+            .flatMap(_.highlightBox)
+            .map(b =>
+              (
+                b.x.bigDecimal.toPlainString,
+                b.y.bigDecimal.toPlainString,
+                b.w.bigDecimal.toPlainString,
+                b.h.bigDecimal.toPlainString,
+              ),
+            )
+            .contains(("39.796687", "24.423475", "9.266166", "17.576948")),
+          preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
+          preview.flatMap(_.fullImage).map(_.label).contains("A thing with a picture"),
+          preview.flatMap(_.fullImage).exists(_.resourceClassIri.toString.endsWith("#ThingPicture")),
+          // the region reference is expanded to a bounded { @id, @type, rdfs:label }
+          preview.flatMap(_.regionLabel).contains("A test region"),
+          preview.flatMap(_.regionResourceClassIri).exists(_.toString.endsWith("#Region")),
+          preview.flatMap(_.color).contains("#ff3333"),
+          preview.flatMap(_.legalInfo).contains(LegalInfo(None, None, None)),
+        )
       },
-      test(
-        "readResourcesSequence renders the RegionPreviewValue (including the computed IIIF URL) into the JSON-LD response body",
-      ) {
+      test("readResourcesSequence computes a bounding-box crop + highlight for a polygon region") {
+        val host = ResourceIri.unsafeFrom("http://rdfh.ch/0001/nonrect-preview-host")
+        // polygon points (0.1,0.1),(0.3,0.1),(0.2,0.4) -> tight bbox pct 10,10,20,30
+        val expectedCropUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:10.000000,10.000000,20.000000,30.000000/max/0/default.jpg"
+        for {
+          _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(host),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          preview = sequence.resources
+                      .flatMap(_.values.values.flatten)
+                      .map(_.valueContent)
+                      .collectFirst { case rp: RegionPreviewValueContentV2 => rp }
+        } yield assertTrue(
+          preview.isDefined,
+          // a non-rectangle now gets the tight bounding box of its vertices, natural aspect
+          preview.flatMap(_.cropUrl).contains(expectedCropUrl),
+          preview
+            .flatMap(_.highlightBox)
+            .map(b =>
+              (
+                b.x.bigDecimal.toPlainString,
+                b.y.bigDecimal.toPlainString,
+                b.w.bigDecimal.toPlainString,
+                b.h.bigDecimal.toPlainString,
+              ),
+            )
+            .contains(("10.000000", "10.000000", "20.000000", "30.000000")),
+          preview
+            .flatMap(_.thumbnailUrl)
+            .contains(
+              "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/^,256/0/default.jpg",
+            ),
+          preview.flatMap(_.fullImage).map(_.iri).contains("http://rdfh.ch/0001/a-thing-picture"),
+          preview.flatMap(_.regionLabel).contains("a non-rectangle test region"),
+          preview.flatMap(_.regionResourceClassIri).exists(_.toString.endsWith("#Region")),
+          preview.flatMap(_.color).contains("#ff3333"),
+          preview.flatMap(_.legalInfo).isDefined,
+        )
+      },
+      test("readResourcesSequence computes a bounding-box crop + highlight for a circle (ellipse) region") {
+        val host = ResourceIri.unsafeFrom("http://rdfh.ch/0001/circle-preview-host")
+        // circle centre (0.5,0.5), radius (0.2,0.1) -> bbox centre +/- radius = pct 30,40,40,20
+        val expectedCropUrl =
+          "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:30.000000,40.000000,40.000000,20.000000/max/0/default.jpg"
+        for {
+          _        <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          sequence <- ZIO.serviceWithZIO[ReadResourcesService](
+                        _.readResourcesSequence(
+                          resourceIris = Seq(host),
+                          targetSchema = ApiV2Complex,
+                          requestingUser = TestDataFactory.User.rootUser,
+                        ),
+                      )
+          preview = sequence.resources
+                      .flatMap(_.values.values.flatten)
+                      .map(_.valueContent)
+                      .collectFirst { case rp: RegionPreviewValueContentV2 => rp }
+        } yield assertTrue(
+          preview.isDefined,
+          preview.flatMap(_.cropUrl).contains(expectedCropUrl),
+          preview
+            .flatMap(_.highlightBox)
+            .map(b =>
+              (
+                b.x.bigDecimal.toPlainString,
+                b.y.bigDecimal.toPlainString,
+                b.w.bigDecimal.toPlainString,
+                b.h.bigDecimal.toPlainString,
+              ),
+            )
+            .contains(("30.000000", "40.000000", "40.000000", "20.000000")),
+          preview.flatMap(_.regionLabel).contains("a circle test region"),
+          preview.flatMap(_.color).contains("#00ff00"),
+        )
+      },
+      test("readResourcesSequence renders the computed RegionPreviewValue fields into the JSON-LD response body") {
         val regionPreviewHostResourceIri =
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
-        // `knora-api:iiifUrl` is the only field computed at read time: pct:x,y,w,h is the bounding box of the region's geometry (in percent)
-        val expectedRegionPreview =
-          """{
-            |  "@id": "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w",
-            |  "@type": "knora-api:RegionPreviewValue",
-            |  "knora-api:isRegionPreviewOf": { "@id": "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w" },
-            |  "knora-api:iiifUrl": "http://0.0.0.0:1024/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg",
-            |  "knora-api:valueHasUUID": "Hn3kAqXyTbiB1RkF0r5Q7w",
-            |  "knora-api:valueCreationDate": { "@value": "2026-05-20T10:00:00Z", "@type": "xsd:dateTimeStamp" },
-            |  "knora-api:attachedToUser": { "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q" },
-            |  "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-            |  "knora-api:userHasPermission": "CR",
-            |  "knora-api:arkUrl": { "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/55UrkgTKR2SEQgnsLWI9mgR/Hn3kAqXyTbiB1RkF0r5Q7wB", "@type": "xsd:anyURI" },
-            |  "knora-api:versionArkUrl": { "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/55UrkgTKR2SEQgnsLWI9mgR/Hn3kAqXyTbiB1RkF0r5Q7wB.20260520T100000Z", "@type": "xsd:anyURI" }
-            |}""".stripMargin.fromJson[Json]
         for {
           appConfig <- ZIO.service[AppConfig]
           _         <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
@@ -223,16 +316,26 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
                           requestingUser = TestDataFactory.User.rootUser,
                         ),
                       )
-          regionPreview = sequence
-                            .format(JsonLD, ApiV2Complex, Set.empty, appConfig)
-                            .fromJson[Json]
-                            .flatMap {
-                              case Json.Obj(fields) =>
-                                fields.collectFirst { case ("anything:hasRegionPreview", v) => v }
-                                  .toRight("no anything:hasRegionPreview field in response")
-                              case other => Left(s"expected a JSON object, got: $other")
-                            }
-        } yield assertTrue(regionPreview == expectedRegionPreview)
+          body = sequence.format(JsonLD, ApiV2Complex, Set.empty, appConfig)
+        } yield assertTrue(
+          body.contains("hasPreviewUrl"),
+          body.contains("pct:39.796687,24.423475,9.266166,17.576948/max/0/default.jpg"),
+          body.contains("hasThumbnailUrl"),
+          body.contains("full/^,256/0/default.jpg"),
+          body.contains("hasHighlightBoxX"),
+          body.contains("hasHighlightBoxH"),
+          // precise: #ff3333 is the object of hasPreviewColor (a bare string), not merely present somewhere
+          "\"[^\"]*hasPreviewColor\"\\s*:\\s*\"#ff3333\"".r.findFirstIn(body).isDefined,
+          body.contains("hasFullImage"),
+          body.contains("http://rdfh.ch/0001/a-thing-picture"),
+          // isRegionPreviewOf is now a bounded reference (an object) carrying the region's label
+          body.contains("A test region"),
+          "\"[^\"]*isRegionPreviewOf\"\\s*:\\s*\\{".r.findFirstIn(body).isDefined,
+          // crop/thumbnail must be xsd:anyURI typed literals (Phase 3.1 <-> Phase 7 datatype match)
+          body.contains("xsd:anyURI"),
+          // the v1 computed iiifUrl term is gone
+          !body.contains("iiifUrl"),
+        )
       },
     ).provide(
       AppConfig.layer,

@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
@@ -303,7 +304,7 @@ final case class ExportService(
         .orElse(labelsMap.get(LanguageCode.EN.value))
         .orElse(labelsMap.values.headOption)
         .getOrElse(propertyIri.toString)
-      List(name) ++ (if (info.exists(_.isLinkValueProp) && includeIris) List(s"${name} IRI") else List.empty)
+      List(name) ++ (if (info.exists(isIriBearingProp) && includeIris) List(s"${name} IRI") else List.empty)
     }
       .pipe(hdrs =>
         (if includeArkUrls then List(ArkUrlHeader) else Nil) ++
@@ -346,7 +347,7 @@ final case class ExportService(
 
             val columnKey = propertyIri.smartIri.toString
 
-            info.exists(_.isLinkValueProp) match {
+            info.exists(isIriBearingProp) match {
               case true =>
                 val linkValue = values.asOpt[LinkValue]
                 val labels    = ListMap(columnKey -> linkValue.foldMapK(_.labels).mkString(ValueSep))
@@ -376,6 +377,13 @@ final case class ExportService(
             List(label.getOrElse("")),
             List(stringFormat(vc.valueHasString)).filter(_ => includeIris),
           )
+        case rpvc: RegionPreviewValueContentV2 =>
+          // Crop cell + region IRI, mirroring the link-value case. The crop URL is empty only for non-rectangle
+          // geometry; the row is never dropped (own-permission gate), and Sipi enforces on dereference.
+          LinkValue(
+            List(rpvc.cropUrl.getOrElse("")),
+            List(stringFormat(rpvc.regionIri.value)).filter(_ => includeIris),
+          )
         case gvc: GeonameValueContentV2 =>
           RegularValue(List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
         case lvc: HierarchicalListValueContentV2 =>
@@ -403,6 +411,17 @@ final case class ExportService(
       RegularValue(List(stringFormat(s"$textWithMarkers\n$footnoteList")))
     }
   }
+
+  // A property whose values carry an IRI to emit in the "{name} IRI" column: link-value properties, and
+  // region-preview properties (whose objectClassConstraint is the leaf value type RegionPreviewValue). The
+  // infos here are in the internal schema (resource.values is keyed by .toInternalSchema), so match against
+  // the internal RegionPreviewValue constant. Exact-IRI match is correct and intended: RegionPreviewValue is a
+  // built-in leaf value type with no user subclasses, so this must NOT be turned into a subClassOf* query.
+  private def isIriBearingProp(info: ReadPropertyInfoV2): Boolean =
+    info.isLinkValueProp ||
+      info.entityInfoContent
+        .getPredicateIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)
+        .contains(OntologyConstants.KnoraBase.RegionPreviewValue.toSmartIri)
 
   private def stringFormat(s: String): String =
     s.replaceAll("<[^>]+>", "").replaceAll("\u001e", " ")

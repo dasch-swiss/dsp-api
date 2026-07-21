@@ -79,6 +79,29 @@ object CheckObjectClassConstraints {
                 }
             } yield ()
 
+          case rpvc: RegionPreviewValueContentV2 =>
+            // A region preview is an ordinary value, so its own type must satisfy the property's object class
+            // constraint (RegionPreviewValue). In addition, the resource it points at must be a Region: the
+            // property constraint here is RegionPreviewValue (the value type), so key on knora-base:Region
+            // directly (the objectClassConstraint of isRegionPreviewOf).
+            for {
+              _ <-
+                ZIO.when(!objectConstraints.contains(rpvc.valueType)) {
+                  propertyRequiresValue(resourceIdForErrorMsg, propertyIri, objectConstraints)
+                }
+              regionClass     = Constants.Region.toSmartIri
+              targetClass     = linkTargetClasses(rpvc.regionIri.value)
+              targetClassInfo = entityInfo.classInfoMap(targetClass)
+              _              <-
+                ZIO.when(!targetClassInfo.allBaseClasses.contains(regionClass)) {
+                  ZIO.fail(
+                    OntologyConstraintException(
+                      s"${resourceIdForErrorMsg}The target of the region preview value for property <${propertyIri.toComplexSchema}> must be a <${regionClass.toComplexSchema}>, but resource <${rpvc.regionIri.value}> is not.",
+                    ),
+                  )
+                }
+            } yield ()
+
           case other: ValueContentV2 =>
             // It's not a link value. Check that its type is equal to the property's object class constraint.
             ZIO.when(!objectConstraints.contains(other.valueType)) {

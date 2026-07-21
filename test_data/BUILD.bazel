@@ -17,6 +17,7 @@ java_library(
         "project_data/anything-data.ttl",
         "project_data/books-data.ttl",
         "project_data/permissions-data.ttl",
+        "project_data/region-preview-nonrectangle-test-data.ttl",
         "project_data/system-data.ttl",
         # generated fixtures used by JsonLDUtilSpec
         "generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld",

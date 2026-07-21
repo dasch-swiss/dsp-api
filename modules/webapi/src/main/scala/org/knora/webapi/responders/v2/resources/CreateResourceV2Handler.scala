@@ -492,8 +492,8 @@ final class CreateResourceV2Handler(
                   ZIO.succeed(OtherFileValueInfo(fileValue))
                 case LinkValueContentV2(_, referredResourceIri, _, _, _, _) =>
                   ZIO.succeed(LinkValueInfo(InternalIri(referredResourceIri.value)))
-                case RegionPreviewValueContentV2(_, regionIri, _, _) =>
-                  ZIO.succeed(RegionPreviewValueInfo(InternalIri(regionIri.value)))
+                case rpvc: RegionPreviewValueContentV2 =>
+                  ZIO.succeed(RegionPreviewValueInfo(InternalIri(rpvc.regionIri.value)))
                 case _: DeletedValueContentV2 => ZIO.fail(BadRequestException("Deleted values cannot be created"))
 
           } yield ValueInfo(
@@ -606,6 +606,11 @@ final class CreateResourceV2Handler(
               } else {
                 (accExisting, accNew + linkValueContentV2.referredResourceIri.value)
               }
+
+            // A region preview references an existing Region: collect it as a link-like target so its existence
+            // is checked (getResourcePreviewWithDeletedResource) and its class is loaded for the is-a-Region check.
+            case rpvc: RegionPreviewValueContentV2 =>
+              (accExisting + rpvc.regionIri.value, accNew)
 
             case _ => (accExisting, accNew)
           }
