@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.api.v2.ontologies
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
@@ -16,11 +18,11 @@ import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService
+import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
@@ -35,7 +37,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson
 
-object RestCardinalityServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RestCardinalityServiceSpec extends ZIOSpecDefault {
   private val ontology = OntologyCacheDataBuilder.builder
     .addOntology(
       ReadOntologyV2Builder
@@ -180,7 +183,9 @@ object RestCardinalityServiceSpec extends ZIOSpecDefault {
       StubCardinalitiesService.layer,
       AppConfig.layer,
     )
+}
 
+object RestCardinalityServiceSpec {
   final class StubCardinalitiesService(
     setResponse: Ref[Either[List[CanSetCardinalityCheckResult.Failure], CanSetCardinalityCheckResult.Success.type]],
     replaceResponse: Ref[CanReplaceCardinalityCheckResult.CanReplaceCardinalityCheckResult],

@@ -5,14 +5,17 @@
 
 package org.knora.webapi
 
+import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.ValuesValidator
 
-object ValuesValidatorSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValuesValidatorSpec extends ZIOSpecDefault {
 
   val booleanSuite = suite("validateBoolean")(
     test("parse `true`") {

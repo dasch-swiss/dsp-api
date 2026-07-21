@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.api.v3.export_
 
 import _root_.org.knora.webapi.responders.IriService
+import org.junit.runner.RunWith
 import zio.*
 import zio.Scope
 import zio.ZIO
@@ -15,6 +16,7 @@ import zio.test.*
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.Rendering
@@ -73,7 +75,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNamedGraphs
 
-object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   // override val rewriteAll: Boolean = true
 
   given sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -108,7 +111,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     ),
   ).toSet
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ExportServiceSpec")(
       triplestoreSuite,
       streamingBehaviorSuite,

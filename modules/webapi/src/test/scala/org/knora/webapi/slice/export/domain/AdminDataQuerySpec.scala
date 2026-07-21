@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 
-object AdminDataQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminDataQuerySpec extends ZIOSpecDefault {
 
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val testUser1      = UserIri.unsafeFrom("http://rdfh.ch/users/user001")

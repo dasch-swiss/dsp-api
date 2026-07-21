@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.api.v3.ontology
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
@@ -32,7 +34,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object OntologyMappingRestServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
 
   // Internal-schema IRIs for cache setup
   private val anythingOntologyIriInternal = IriTestConstants.Anything.Ontology.value

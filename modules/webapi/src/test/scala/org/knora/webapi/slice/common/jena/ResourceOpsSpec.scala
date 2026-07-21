@@ -5,18 +5,21 @@
 
 package org.knora.webapi.slice.common.jena
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 import scala.language.implicitConversions
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common
 import org.knora.webapi.slice.common.jena.JenaConversions.given
 import org.knora.webapi.slice.common.jena.ModelOps.*
 import org.knora.webapi.slice.common.jena.ResourceOps.*
 
-object ResourceOpsSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourceOpsSpec extends ZIOSpecDefault {
 
   private val integerValue =
     """

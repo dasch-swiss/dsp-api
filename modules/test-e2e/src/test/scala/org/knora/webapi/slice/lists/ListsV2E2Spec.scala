@@ -4,10 +4,12 @@
  */
 
 package org.knora.webapi.slice.lists
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -22,7 +24,8 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
-object ListsV2E2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListsV2E2Spec extends E2EZSpec {
 
   private def v2listsListIri(iri: ListIri) = uri"/v2/lists/${iri.value}"
   private def v2nodeListIri(iri: ListIri)  = uri"/v2/node/${iri.value}"

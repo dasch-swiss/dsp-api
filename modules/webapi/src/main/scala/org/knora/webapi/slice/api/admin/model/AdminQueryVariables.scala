@@ -22,7 +22,7 @@ object AdminQueryVariables {
     Codec.listHeadOption
 
   private implicit val shortcodeOptionCodec: Codec[List[String], Option[Shortcode], CodecFormat.TextPlain] =
-    Codec.listHeadOption(TapirCodec.shortcode)
+    Codec.listHeadOption(using TapirCodec.shortcode)
 
   val projectIriOption: EndpointInput.Query[Option[ProjectIri]] = query[Option[ProjectIri]]("projectIri")
     .description("The (optional) IRI of the project.")

@@ -6,10 +6,12 @@
 package org.knora.webapi.slice.ontology.domain.service
 
 import org.apache.jena.query.Dataset
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -23,7 +25,8 @@ import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTur
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object PredicateRepositoryLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PredicateRepositoryLiveSpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

@@ -5,15 +5,18 @@
 
 package org.knora.webapi.slice.common
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.KnoraIrisSpec.test
 import org.knora.webapi.slice.common.service.IriConverter
-object KnoraIrisSpec extends ZIOSpecDefault {
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraIrisSpec extends ZIOSpecDefault {
 
   private val converter = ZIO.serviceWithZIO[IriConverter]
 

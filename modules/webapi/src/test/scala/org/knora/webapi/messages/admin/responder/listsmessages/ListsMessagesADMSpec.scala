@@ -5,13 +5,16 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 
-object ListsMessagesADMSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListsMessagesADMSpec extends ZIOSpecDefault {
 
   private val rootIri = "http://rdfh.ch/lists/0001/root"
   private val projIri = "http://rdfh.ch/projects/0001"

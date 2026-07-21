@@ -5,15 +5,18 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
-object FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val user       = TestDataFactory.User.rootUser

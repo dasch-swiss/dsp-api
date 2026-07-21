@@ -5,11 +5,14 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.bagit.domain.BagInfo
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagInfoWriterSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagInfoWriterSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("BagInfoWriterSpec")(
     test("writing duplicate labels in additionalFields produces separate lines for each") {

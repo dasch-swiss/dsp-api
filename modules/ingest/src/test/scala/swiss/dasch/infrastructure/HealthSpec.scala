@@ -5,17 +5,21 @@
 
 package swiss.dasch.infrastructure
 
+import org.junit.runner.RunWith
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object HealthSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class HealthSpec extends ZIOSpecDefault {
   val spec = suite("Health")(test("aggregation") {
     val up   = Health.up
     val down = Health.down
     assertTrue(
-      (up aggregate down) == down,
-      (down aggregate up) == down,
-      (up aggregate up) == up,
+      (up `aggregate` down) == down,
+      (down `aggregate` up) == down,
+      (up `aggregate` up) == up,
     )
   })
 }

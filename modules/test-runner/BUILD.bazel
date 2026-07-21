@@ -1,0 +1,16 @@
+load("@rules_scala//scala:scala.bzl", "scala_library")
+
+# DspZTestJUnitRunner: the single custom JUnit runner both sbt (junit-interface)
+# and Bazel (scala_junit_test) use to run ZIO Test specs. Kept in its own leaf
+# module (zio-test + junit only, no webapi) so every test module can depend on it
+# without the testkit -> webapi -> {bagit,jwt,shacl-validator} cycle.
+scala_library(
+    name = "test-runner",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:junit_junit",
+    ],
+)

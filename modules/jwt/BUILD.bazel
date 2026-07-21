@@ -1,0 +1,29 @@
+load("@rules_scala//scala:scala.bzl", "scala_junit_test", "scala_library")
+
+# Minimal HS256 JWT library. Pure leaf module; consumed by //modules/webapi and
+# the dsp-ingest build in later phases.
+scala_library(
+    name = "jwt",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_json_3",
+        # zio-json's public API references zio.stream.{ZStream,ZPipeline}, so the
+        # compile classpath needs zio-streams even though jwt uses none directly.
+        "@maven//:dev_zio_zio_streams_3",
+    ],
+)
+
+scala_junit_test(
+    name = "test",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    # Discovery is by class-name suffix; a missed suffix silently skips specs.
+    suffixes = ["Spec", "IT", "Test"],
+    deps = [
+        ":jwt",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+    ],
+)

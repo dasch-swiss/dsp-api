@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
@@ -14,13 +15,12 @@ import java.io.BufferedInputStream
 import java.io.FileInputStream
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-/**
- * Tests implementations of [[RdfModel]].
- */
-object RdfModelSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RdfModelSpec extends ZIOSpecDefault {
 
   private val model: RdfModel = JenaModelFactory.makeEmptyModel
 

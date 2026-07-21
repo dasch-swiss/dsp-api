@@ -5,18 +5,18 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.domain.model.User
 
-/**
- * This spec is used to test the [[User]] and [[UserIdentifierADM]] classes.
- */
-object UsersMessagesADMSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UsersMessagesADMSpec extends ZIOSpecDefault {
 
   private val id          = SharedTestDataADM.rootUser.id
   private val username    = SharedTestDataADM.rootUser.username

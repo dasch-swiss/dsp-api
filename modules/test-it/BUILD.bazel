@@ -1,0 +1,102 @@
+load("@rules_scala//scala:scala.bzl", "scala_junit_test")
+
+# Container-backed integration specs (Fuseki/Sipi/dsp-ingest via testcontainers). Requires the
+# `:latest` images preloaded into the local Docker daemon
+# (`bazel run //modules/{sipi,ingest}:load`) and a reachable Docker socket - these targets do not
+# run on the RBE remote executor. `SearchResponderV2GravsearchSpanE2ESpec` asserts on OpenTelemetry
+# spans captured by an in-memory exporter wired as the application's own OTel layer; it must run in
+# its own JVM (own `scala_junit_test` target below) so no other spec's spans land in its exporter.
+_GRAVSEARCH_SPAN_SPEC = "src/test/scala/org/knora/webapi/responders/v2/SearchResponderV2GravsearchSpanE2ESpec.scala"
+
+_DEPS = [
+    "//modules/test-runner",
+    "//modules/testkit",
+    "//modules/webapi",
+    "@maven//:dev_zio_zio_3",
+    "@maven//:dev_zio_zio_test_3",
+    "@maven//:org_wiremock_wiremock",
+    "@maven//:org_xmlunit_xmlunit_core",
+]
+
+# Loose test_data fixtures at their repo-relative runfiles path - see
+# //test_data:integration_fixture_files for why `data`, not a `resources` jar in `deps`. Also
+# includes our own src/test/resources a second time (in addition to the `resources` jar below):
+# GoldenTest's `assertGolden` macro does a raw `Files.exists`/`Files.readAllBytes` filesystem check
+# against a path derived from the compiler's own source-file position (`.../src/test/scala/...`
+# string-replaced to `.../src/test/resources/...`), the same CWD-relative pattern as the test_data
+# reads above - a `resources` jar alone doesn't satisfy it.
+_DATA = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**"])
+
+# "exclusive" is required on every Docker-testcontainers target (test-it,
+# test_gravsearch_span, test-e2e, test-ingest-integration), for two independent reasons - do not
+# drop it from a target just because one of these doesn't apply to it:
+#  1. These specs (via E2EZSpec) start an in-process API server on a fixed port: two targets
+#     running concurrently on the same machine race for that port
+#     (io.netty.channel.unix.Errors$NativeIoException: bind(..) failed with error(-48): Address
+#     already in use). Does not apply to test-ingest-integration (no E2EZSpec there).
+#  2. SharedVolumes.Temp (this module's and test-ingest-integration's copy) is
+#     `ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))` - unlike Images.layer, it is
+#     NOT a freshly-created unique-per-run directory, just the raw tmpdir path. Since every one of
+#     these targets pins java.io.tmpdir to the same literal `/tmp` (see _JVM_FLAGS below), any two
+#     of them running concurrently bind-mount and write to the *same* host /tmp tree through
+#     different dsp-ingest containers - a real race. This DOES apply to test-ingest-integration.
+#
+# "requires-network" + "no-sandbox" + "no-remote": these specs drive Docker testcontainers through
+# the host Docker socket, so they cannot run in the Bazel sandbox or on the RBE remote executor -
+# they must execute locally with network access. "no-remote" also keeps their results OUT of the
+# remote cache: the images they depend on are loaded as a side effect (`//modules/*:load`) that
+# Bazel does not model as a test input, so a cached "pass" could be served after an image changed.
+# Pure-JVM unit-test targets carry none of these tags - they run remotely and result-cache.
+_TAGS = [
+    "requires-network",
+    "no-sandbox",
+    "no-remote",
+    "exclusive",
+]
+
+# Bazel's TEST_TMPDIR (what java.io.tmpdir defaults to for a test action) lives under the
+# execroot's ephemeral _tmp scratch dir. testcontainers' withClasspathResourceMapping extracts the
+# mapped resource to a fresh temp file under java.io.tmpdir on every container start; on macOS
+# Docker Desktop, a container started well into a long-running JVM (SipiIT builds its own
+# independent Sipi container, separately from TestContainerLayers' memoized one) can hit
+# "error while creating mount source path ...: no such file or directory" because that brand-new
+# nested execroot path hasn't propagated through Docker Desktop's file-sharing layer yet. Pointing
+# java.io.tmpdir at a stable, long-lived directory sidesteps it.
+_JVM_FLAGS = ["-Djava.io.tmpdir=/tmp"]
+
+scala_junit_test(
+    name = "test",
+    size = "large",
+    srcs = glob(
+        ["src/test/scala/**/*.scala"],
+        exclude = [_GRAVSEARCH_SPAN_SPEC],
+    ),
+    jvm_flags = _JVM_FLAGS,
+    data = _DATA,
+    resource_strip_prefix = "modules/test-it/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    tags = _TAGS,
+    deps = _DEPS,
+)
+
+scala_junit_test(
+    name = "test_gravsearch_span",
+    size = "medium",
+    srcs = [_GRAVSEARCH_SPAN_SPEC],
+    jvm_flags = _JVM_FLAGS,
+    data = _DATA,
+    resource_strip_prefix = "modules/test-it/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    tags = _TAGS,
+    deps = _DEPS,
+)

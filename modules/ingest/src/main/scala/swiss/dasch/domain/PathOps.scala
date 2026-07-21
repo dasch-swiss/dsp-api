@@ -15,7 +15,7 @@ object PathOps {
   def fromString(str: String, separator: String = "/"): Either[String, Path] =
     str.split(separator).toList match {
       case Nil          => Left("Empty path")
-      case head :: tail => Right(Path(head, tail: _*))
+      case head :: tail => Right(Path(head, tail*))
     }
 
   extension (path: Path) {

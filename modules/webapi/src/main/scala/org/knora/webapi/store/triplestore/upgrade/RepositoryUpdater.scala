@@ -133,7 +133,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
       // Ask the store actor to download the repository to the file.
       graphs = pluginsForNeededUpdates
                  .map(_.plugin.graphsForMigration)
-                 .reduce(_ merge _)
+                 .reduce(_ `merge` _)
       _ <- ZIO.logInfo(
              s"Downloading $graphs repository file. $graphsBeforeMigrationFile, $graphsWithAppliedMigrationsFile",
            )

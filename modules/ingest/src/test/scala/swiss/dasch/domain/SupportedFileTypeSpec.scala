@@ -5,13 +5,17 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import zio.nio.file.Path
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-object SupportedFileTypeSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class SupportedFileTypeSpec extends ZIOSpecDefault {
   private def withUpperCase(lower: Seq[String]): Seq[String] = lower ++ lower.map(_.toUpperCase)
 
   val spec = suite("SupportedFileTypesSpec")(

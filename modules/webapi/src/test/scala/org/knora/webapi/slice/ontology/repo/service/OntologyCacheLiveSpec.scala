@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -17,7 +19,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 /**
  * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].
  */
-object OntologyCacheLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyCacheLiveSpec extends ZIOSpecDefault {
 
   private val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -16,6 +17,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -29,7 +31,8 @@ import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.util.MutableTestIri
 
-object ListsResponderSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListsResponderSpec extends E2EZSpec {
 
   override val rdfDataObjects = List(
     RdfDataObject(

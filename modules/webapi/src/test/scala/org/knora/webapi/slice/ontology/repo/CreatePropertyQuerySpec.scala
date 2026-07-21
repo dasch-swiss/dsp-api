@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
@@ -22,7 +24,8 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreatePropertyQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CreatePropertyQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -76,7 +79,7 @@ object CreatePropertyQuerySpec extends ZIOSpecDefault {
     ),
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("CreatePropertyFactorySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("CreatePropertyFactorySpec")(
     test("should produce the correct query with a link value property") {
       CreatePropertyQuery
         .build(testPropertyDef, testLinkValuePropertyDef, testLastModificationDate)

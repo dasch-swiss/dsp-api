@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
@@ -23,7 +25,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreateClassQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CreateClassQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -72,7 +75,7 @@ object CreateClassQuerySpec extends ZIOSpecDefault {
     ontologySchema = InternalSchema,
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("CreateClassQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("CreateClassQuerySpec")(
     test("should produce the correct query with cardinalities") {
       CreateClassQuery
         .build(testClassDefWithCardinalities, testLastModificationDate)

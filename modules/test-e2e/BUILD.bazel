@@ -1,0 +1,44 @@
+load("@rules_scala//scala:scala.bzl", "scala_junit_test")
+
+# Container-backed e2e specs (Fuseki/Sipi/dsp-ingest via testcontainers) - see
+# //modules/test-it:BUILD.bazel for the shared rationale (Docker prerequisite, no RBE). No
+# span-isolation split here: unlike test-it, no test-e2e spec overrides E2EZSpec's OTel layer.
+scala_junit_test(
+    name = "test",
+    size = "large",
+    srcs = glob(["src/test/scala/**/*.scala"]),
+    # See //modules/test-it:BUILD.bazel's _JVM_FLAGS comment: Bazel's execroot-scoped
+    # java.io.tmpdir default breaks testcontainers' withClasspathResourceMapping mount on macOS
+    # Docker Desktop for containers started well into a long-running JVM.
+    jvm_flags = ["-Djava.io.tmpdir=/tmp"],
+    # Loose test_data fixtures at their repo-relative runfiles path - see
+    # //test_data:integration_fixture_files for why `data`, not a `resources` jar in `deps`. Also
+    # includes our own src/test/resources a second time (in addition to the `resources` jar below):
+    # GoldenTest's `assertGolden` macro (ExportEndpointsE2ESpec) does a raw filesystem check against
+    # a CWD-relative path, the same pattern as the test_data reads - a `resources` jar alone doesn't
+    # satisfy it. See //modules/test-it:BUILD.bazel for the full rationale.
+    data = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**"]),
+    resource_strip_prefix = "modules/test-e2e/src/test/resources",
+    resources = glob(["src/test/resources/**"]),
+    suffixes = [
+        "Spec",
+        "IT",
+        "Test",
+    ],
+    # "exclusive": see //modules/test-it:BUILD.bazel's _TAGS comment - E2EZSpec's in-process API
+    # server binds a fixed port, so this can't run concurrently with test-it/test_gravsearch_span.
+    tags = [
+        "requires-network",
+        "no-sandbox",
+        "no-remote",
+        "exclusive",
+    ],
+    deps = [
+        "//modules/test-runner",
+        "//modules/testkit",
+        "//modules/webapi",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_xmlunit_xmlunit_core",
+    ],
+)

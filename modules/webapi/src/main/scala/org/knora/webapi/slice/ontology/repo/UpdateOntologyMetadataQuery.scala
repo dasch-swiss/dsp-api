@@ -69,10 +69,10 @@ object UpdateOntologyMetadataQuery extends QueryBuilderHelper {
                   .MODIFY()
                   .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
                   .from(ontology)
-                  .delete(deletePatterns: _*)
+                  .delete(deletePatterns*)
                   .into(ontology)
-                  .insert(insertPatterns: _*)
-                  .where(wherePatterns: _*)
+                  .insert(insertPatterns*)
+                  .where(wherePatterns*)
       } yield Update(query)
     }
 

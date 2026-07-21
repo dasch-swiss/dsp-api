@@ -5,16 +5,20 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import org.junit.runner.RunWith
 import scalax.collection.hyperedges.DiHyperEdge
 import scalax.collection.immutable.Graph
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
+
 /**
  * Tests [[TopologicalSortUtil]].
  */
-object TopologicalSortUtilSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class TopologicalSortUtilSpec extends ZIOSpecDefault {
   type GraphT = Graph[Int, DiHyperEdge[Int]]
   type NodeT  = GraphT#NodeT
 

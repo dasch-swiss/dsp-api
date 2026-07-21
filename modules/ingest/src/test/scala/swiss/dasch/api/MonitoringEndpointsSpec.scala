@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.infrastructure.AggregatedHealth
@@ -31,7 +32,10 @@ import zio.test.TestResult
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object MonitoringEndpointsSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class MonitoringEndpointsSpec extends ZIOSpecDefault {
   def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =
     zio.test.test(label)(ZIO.scoped(assertion))
 

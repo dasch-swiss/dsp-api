@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -16,6 +17,7 @@ import zio.test.*
 
 import java.nio.file.Paths
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.*
@@ -30,7 +32,8 @@ import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil
 
-object SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects
 

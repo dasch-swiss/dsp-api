@@ -162,5 +162,5 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
 object OntologyRepoLive {
   val layer: ZLayer[IriConverter & OntologyCache, Nothing, OntologyRepoLive] =
-    ZLayer.fromFunction(OntologyRepoLive.apply _)
+    ZLayer.fromFunction(OntologyRepoLive.apply)
 }

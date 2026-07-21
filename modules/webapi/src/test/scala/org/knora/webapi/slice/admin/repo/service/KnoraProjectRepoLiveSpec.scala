@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.ZIO
@@ -15,6 +16,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.Authorship
@@ -35,7 +37,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
 
   private val someProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234"),

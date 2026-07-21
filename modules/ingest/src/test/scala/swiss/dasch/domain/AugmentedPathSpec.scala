@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.domain.AugmentedPath.*
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile.given
 import swiss.dasch.domain.AugmentedPath.MovingImageDerivativeFile.given
@@ -22,17 +23,13 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-object AugmentedPathSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AugmentedPathSpec extends ZIOSpecDefault {
 
   private val someAssetId   = SpecConstants.AssetIds.existingAsset.value
   private val someProjectId = SpecConstants.Projects.existingProject.value
-
-  object ExpectedErrorMessages {
-    val hiddenFile: String          = "Hidden file."
-    val unsupportedFileType: String = "Unsupported file type."
-    val noAssetIdInFilename: String = "No AssetId in filename."
-    val notAProjectFolder: String   = "Not a project folder."
-  }
 
   private val projectFolderSuite = suite("ProjectFolder")(
     test("can be created from a Path which is a project folder") {
@@ -198,4 +195,13 @@ object AugmentedPathSpec extends ZIOSpecDefault {
     otherDerivativeFileSuite,
     svgDerivativeFileSuite,
   )
+}
+
+object AugmentedPathSpec {
+  object ExpectedErrorMessages {
+    val hiddenFile: String          = "Hidden file."
+    val unsupportedFileType: String = "Unsupported file type."
+    val noAssetIdInFilename: String = "No AssetId in filename."
+    val notAProjectFolder: String   = "Not a project folder."
+  }
 }

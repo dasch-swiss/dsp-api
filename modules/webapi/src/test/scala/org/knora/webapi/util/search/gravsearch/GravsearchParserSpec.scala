@@ -5,6 +5,7 @@
 
 package org.knora.webapi.util.search.gravsearch
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.Assertion.anything
 import zio.test.Assertion.fails
@@ -16,6 +17,7 @@ import zio.test.assert
 import zio.test.assertTrue
 
 import dsp.errors.GravsearchException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.messages.IriConversions.*
@@ -23,7 +25,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 
-object GravsearchParserSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchParserSpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

@@ -36,6 +36,12 @@ services:
       - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
       - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
       - 'OTEL_PYROSCOPE_START_PROFILING=true'
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -117,6 +123,12 @@ services:
       - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
       - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
       - 'OTEL_PYROSCOPE_START_PROFILING=true'
+    healthcheck:
+      test: ["CMD", "/sbin/sipi", "health", "--port", "3340"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -166,6 +178,12 @@ services:
       - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
       - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
       - 'OTEL_PYROSCOPE_START_PROFILING=true'
+    healthcheck:
+      test: ["CMD", "bash", "/opt/docker/scripts/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:

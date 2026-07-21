@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
@@ -24,7 +26,8 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object LegalInfoServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LegalInfoServiceSpec extends ZIOSpecDefault {
 
   private val service     = ZIO.serviceWithZIO[LegalInfoService]
   private val projectRepo = ZIO.serviceWithZIO[KnoraProjectRepo]

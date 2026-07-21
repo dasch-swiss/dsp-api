@@ -36,7 +36,7 @@ object DeletePropertyCommentsQuery extends QueryBuilderHelper {
     Queries
       .MODIFY()
       .prefix(XSD.NS, OWL.NS, RDFS.NS, KnoraBase.NS, NS(propertyIri.ontologyIri))
-      .delete(deletePatterns: _*)
+      .delete(deletePatterns*)
       .from(ontology)
       .insert(ontology.has(KnoraBase.lastModificationDate, toRdfLiteral(now)))
       .into(ontology)

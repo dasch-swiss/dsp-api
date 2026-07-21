@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import org.junit.runner.RunWith
 import zio.Console
 import zio.IO
 import zio.Random
@@ -42,6 +43,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.BadCredentialsException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -55,7 +57,8 @@ import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 
-object DspIngestClientSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DspIngestClientSpec extends ZIOSpecDefault {
 
   private val testShortcode = Shortcode.unsafeFrom("0001")
   private val testContent   = "testContent".getBytes()

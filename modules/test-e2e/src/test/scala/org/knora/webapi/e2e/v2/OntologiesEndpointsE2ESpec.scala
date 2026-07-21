@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import zio.*
 import zio.json.*
@@ -18,6 +19,7 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.e2e.v2.ontology.InputOntologyParsingModeV2.TestResponseParsingModeV2
 import org.knora.webapi.e2e.v2.ontology.InputOntologyV2
@@ -40,7 +42,8 @@ import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.*
 
-object OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologiesEndpointsE2ESpec extends E2EZSpec { self =>
 
   override val rdfDataObjects = List(
     RdfDataObject(

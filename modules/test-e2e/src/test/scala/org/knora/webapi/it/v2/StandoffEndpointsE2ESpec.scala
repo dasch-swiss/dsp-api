@@ -5,6 +5,7 @@
 
 package org.knora.webapi.it.v2
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -18,6 +19,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import dsp.valueobjects.Iri
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
@@ -36,7 +38,8 @@ import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
-object StandoffEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StandoffEndpointsE2ESpec extends E2EZSpec {
 
   private val pathToXMLWithStandardMapping                  = "test_data/test_route/texts/StandardHTML.xml"
   private val pathToLetterMapping                           = "test_data/test_route/texts/mappingForLetter.xml"

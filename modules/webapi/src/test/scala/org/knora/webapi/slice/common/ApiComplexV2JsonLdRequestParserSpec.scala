@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common
 
 import org.apache.jena.vocabulary.RDFS
+import org.junit.runner.RunWith
 import zio.*
 import zio.config.*
 import zio.json.DecoderOps
@@ -16,6 +17,7 @@ import zio.test.Assertion.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -71,7 +73,8 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
 
   private val service = ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser]

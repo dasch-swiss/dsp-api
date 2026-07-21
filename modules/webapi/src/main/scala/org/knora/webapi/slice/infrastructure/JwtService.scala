@@ -76,7 +76,7 @@ final case class JwtServiceLive(
   private val secretBytes    = jwtConfig.secret.getBytes(java.nio.charset.StandardCharsets.UTF_8)
 
   override def createJwt(userIri: UserIri, scope: Scope, content: Map[String, Json] = Map.empty): UIO[Jwt] =
-    createJwtToken(jwtConfig.issuerAsString(), userIri.value, audience, scope, Some(Json.Obj(content.toSeq: _*)))
+    createJwtToken(jwtConfig.issuerAsString(), userIri.value, audience, scope, Some(Json.Obj(content.toSeq*)))
 
   override def createJwtForDspIngest(): UIO[Jwt] =
     createJwtToken(

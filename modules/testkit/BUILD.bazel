@@ -1,0 +1,32 @@
+load("@rules_scala//scala:scala.bzl", "scala_macro_library")
+
+# testkit is a compile-scope support library (base specs, container layers, test services) that
+# webapi's own integration/e2e test modules depend on directly. It has no `src/test`, so no test
+# target here; its two main-scope specs (FileModelsSpec, core/TestContainerLayersSpec) are not run.
+#
+# scala_macro_library (not scala_library): GoldenTest.scala defines a real inline macro
+# (`goldenPath`) whose implementation the Scala 3 compiler must interpret via reflection when it's
+# called from a *different* Bazel target (test-it/test-e2e). A plain scala_library only exposes its
+# ijar (interface jar, method bodies stripped) on downstream compile classpaths, and the macro
+# interpreter needs real bytecode - it fails with
+# `ClassFormatError: Absent Code attribute ... GoldenTest$` otherwise. scala_macro_library marks
+# ScalaInfo.contains_macros=True, which puts testkit's full runtime jar ahead of the ijar on any
+# dependent target's compile classpath (webapi's own GoldenTest.scala copy is compiled in the same
+# target as its callers, so it never crosses this boundary and needs no such fix).
+#
+# The scalac options, dependency_mode=transitive and strict_deps_mode=off come from
+# //bazel/toolchains:dsp_scala_toolchain; deps below list testkit's direct third-party deps (the
+# set in project/Dependencies.scala's `testkit` project block) plus the webapi library it wraps.
+scala_macro_library(
+    name = "testkit",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//modules/webapi:webapi",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:io_opentelemetry_opentelemetry_sdk_testing",
+        "@maven//:net_datafaker_datafaker",
+        "@maven//:org_testcontainers_testcontainers",
+    ],
+)

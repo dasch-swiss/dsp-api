@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangePropertyLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ChangePropertyLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -32,7 +35,7 @@ object ChangePropertyLabelsOrCommentsQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate: LastModificationDate =
     LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("ChangePropertyLabelsOrCommentsQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("ChangePropertyLabelsOrCommentsQuerySpec")(
     suite("build")(
       test("should produce the correct query when changing labels without link value property") {
         val newLabels = Seq(

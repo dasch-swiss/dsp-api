@@ -1,0 +1,16 @@
+load(":defs.bzl", "buildinfo")
+
+# Smoke test: exercises the rule end-to-end (stamp substitution from workspace
+# status) without needing the Scala toolchain. `bazel build //tools/buildinfo:smoke`
+# then inspect bazel-bin/tools/buildinfo/SmokeBuildInfo.scala.
+buildinfo(
+    name = "smoke",
+    package_name = "dsp.buildinfo.smoke",
+    out = "SmokeBuildInfo.scala",
+    string_fields = {"name": "smoke"},
+    stamp_fields = {
+        "version": "STABLE_GIT_VERSION",
+        "commit": "STABLE_GIT_SHORT",
+    },
+    tags = ["manual"],
+)

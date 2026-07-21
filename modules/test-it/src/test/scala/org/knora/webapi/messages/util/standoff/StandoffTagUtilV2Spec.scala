@@ -5,19 +5,22 @@
 
 package org.knora.webapi.messages.util.standoff
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object StandoffTagUtilV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StandoffTagUtilV2Spec extends E2EZSpec {
   private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   val standoff1: Vector[StandoffTagV2] = Vector(

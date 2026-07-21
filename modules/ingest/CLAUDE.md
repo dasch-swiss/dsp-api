@@ -4,32 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-The project uses both SBT and Just for build and development tasks:
+dsp-ingest is a module of dsp-api; build, test, and format it from the **repo root** via the
+dsp-api build (see the root `CLAUDE.md`), not from this directory.
 
-### SBT Commands (via `./sbtx` wrapper)
-- `./sbtx run` - Run the service locally
-- `./sbtx "~run"` - Run with auto-reload on file changes
-- `./sbtx test` - Run unit tests
-- `./sbtx integration/test` - Run integration tests
-- `./sbtx fmt` - Format source code (scalafmt)
-- `./sbtx fmtCheck` - Check code formatting
-- `./sbtx headerCreateAll` - Add copyright headers to all files
-- `./sbtx headerCheckAll` - Check copyright headers
-- `./sbtx Docker/publishLocal` - Build Docker image locally
-
-### Just Commands (modern task runner)
-- `just` - List all available recipes
-- `just localdev-run` - Start service locally with JWT auth disabled
-- `just localdev-cleandb` - Remove SQLite database file
-- `just build-docker` - Build Docker image
-- `just build-and-run-docker` - Build and run with docker-compose
-- `just run-integration-tests` - Run integration tests (builds Docker first)
-- `just docs-serve` - Serve documentation locally with MkDocs
+- `bazel test //modules/ingest:test` (or `just test-ingest`) - unit tests
+- `bazel test //modules/test-ingest-integration:test` (or `just test-ingest-integration`) - integration tests (Docker/testcontainers)
+- `just docker-build-ingest-image` - build the dsp-ingest image (Bazel + load into the local Docker daemon)
+- `sbt fmt` / `sbt check` - format / check formatting (whole repo)
+- `./sbtx "ingest/run"` - run the service locally via sbt
 
 ### Testing
-- Unit tests use ZIO Test framework (`zio.test.sbt.ZTestFramework`)
-- Integration tests are in separate `integration/` project using testcontainers
-- Always run formatting checks before committing: `./sbtx fmtCheck`
+- Unit tests use the ZIO Test framework; run via `bazel test //modules/ingest:test`.
+- Integration tests live in `modules/test-ingest-integration/` and use testcontainers.
 
 ## Architecture Overview
 
@@ -75,8 +61,8 @@ The application follows Domain-Driven Design patterns:
 
 ### File Organization
 - Main source: `src/main/scala/swiss/dasch/`
-- Tests mirror source structure in `src/test/scala/swiss/dasch/`
-- Integration tests in separate `integration/` subproject
+- Unit tests mirror source structure in `src/test/scala/swiss/dasch/`
+- Integration tests in `modules/test-ingest-integration/`
 - Database migrations: `src/main/resources/db/migration/`
 - Configuration: `src/main/resources/application.conf`
 

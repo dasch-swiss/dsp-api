@@ -1,0 +1,23 @@
+# Package marker for //tools/oci:defs.bzl (see that file for the rules).
+
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+# Catches the temurin base tag / OTel+Pyroscope jar versions / fuseki dist version
+# drifting between MODULE.bazel (Bazel image build) and build.sbt /
+# project/Dependencies.scala before they silently diverge.
+sh_test(
+    name = "image_versions_match_sbt",
+    srcs = ["check_image_versions.sh"],
+    args = [
+        "$(location //:MODULE.bazel)",
+        "$(location //:build.sbt)",
+        "$(location //:project/Dependencies.scala)",
+        "$(location //modules/fuseki:BUILD.bazel)",
+    ],
+    data = [
+        "//:MODULE.bazel",
+        "//:build.sbt",
+        "//:project/Dependencies.scala",
+        "//modules/fuseki:BUILD.bazel",
+    ],
+)

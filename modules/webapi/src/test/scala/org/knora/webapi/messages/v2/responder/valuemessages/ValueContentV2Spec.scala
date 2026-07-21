@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
+import org.junit.runner.RunWith
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -12,13 +13,15 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 
-object ValueContentV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValueContentV2Spec extends ZIOSpecDefault {
 
   private val assetId = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
 

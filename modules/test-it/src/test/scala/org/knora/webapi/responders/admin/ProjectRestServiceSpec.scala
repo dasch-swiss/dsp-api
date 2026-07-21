@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -13,6 +14,7 @@ import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
@@ -30,7 +32,8 @@ import org.knora.webapi.slice.api.admin.service.ProjectRestService
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
-object ProjectRestServiceSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectRestServiceSpec extends E2EZSpec {
 
   private val projectRestService = ZIO.serviceWithZIO[ProjectRestService]
 

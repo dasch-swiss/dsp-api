@@ -1,8 +1,80 @@
 # Bazel configuration for dsp-api.
 #
-# Scope today: the `knora-sipi` OCI image build (rules_oci). The Scala build
-# stays on sbt — see build.sbt and the Makefile docker-* targets. Image tags
-# are passed explicitly by the Makefile, so no workspace-status stamping here.
+# Builds the Scala build (rules_scala) and the container images (rules_oci).
 
 common --incompatible_disallow_empty_glob
 build --show_timestamps
+
+# Git version/commit + image tags for stamped rules (//tools/buildinfo, image labels).
+build --workspace_status_command=tools/workspace_status.sh
+
+# ── C/C++ toolchain (hermetic LLVM, see MODULE.bazel) ──────────────────────
+# Strict action env keeps unrelated host env vars out of Bazel's cache keys.
+build --incompatible_strict_action_env
+# Force the resolved hermetic `llvm` toolchain instead of Bazel's autodetected
+# host clang — without this Bazel can silently fall back to the host compiler
+# (system Xcode / Nix clang), breaking hermeticity and RBE.
+build --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+# Strict action env otherwise rebuilds PATH from a small allow-list that omits
+# the Nix dev-shell's /nix/store/…/bin entries; inherit it so tools like `git`
+# (used by tools/workspace_status.sh) stay reachable.
+build --action_env=PATH
+# Auto-apply the :macos / :linux blocks below by detected host platform.
+build --enable_platform_specific_config
+# protobuf/upb (built from source for the rules_scala worker) needs C++17.
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+
+# macOS: hermetic-llvm fetches the SDK from Apple's CDN (no host Xcode CLT).
+# Pin the deployment-target floor so binaries are portable; inherit PATH during
+# repo-rule evaluation so Nix dev-shell tools stay reachable.
+build:macos --copt=-mmacosx-version-min=13.3
+build:macos --linkopt=-mmacosx-version-min=13.3
+build:macos --host_copt=-mmacosx-version-min=13.3
+build:macos --host_linkopt=-mmacosx-version-min=13.3
+build:macos --action_env=MACOSX_DEPLOYMENT_TARGET=13.3
+build:macos --repo_env=PATH
+
+# JDK 25 (matches the runtime base eclipse-temurin:25-jre-noble and sbt's Temurin 25).
+# Requires rules_java >= 8.16 (remotejdk_25). Only resolved when a Java/Scala target builds.
+build --java_language_version=25
+build --java_runtime_version=remotejdk_25
+build --tool_java_runtime_version=remotejdk_25
+
+# --incompatible_strict_action_env (above) strips LANG/LC_ALL from test sandboxes along with
+# everything else not explicitly re-added. On Linux this leaves the test JVM's native filesystem
+# encoding (sun.jnu.encoding) at POSIX/ASCII, so any Unicode filename (even a legitimate one, not
+# just an invalid character) throws InvalidPathException instead of round-tripping — sbt's forked
+# JVM never hits this because it inherits the full host env, which is why this only ever showed up
+# once tests ran through Bazel. C.UTF-8 is a glibc-builtin locale (no locale-gen needed) available
+# on every Linux runner this repo targets.
+test --test_env=LANG=C.UTF-8
+test --test_env=LC_ALL=C.UTF-8
+
+# Surface test stderr on failure (was passed per-command in CI; here so `just` recipes stay clean).
+test --test_output=errors
+
+# ── Remote build execution (shared NativeLink backend) ─────────────────────
+# CI points Bazel at sipi's shared NativeLink backend (dasch-remotebuild-prod-01, :50051, mTLS) for a
+# remote cache (+ executor in Stage 2). The connection + mTLS flags are NOT here — Bazel does not
+# expand env vars in .bazelrc, so the `bazel-rbe` composite action emits them per CI step and each
+# `just` recipe appends them (`{{FLAGS}}`). These backend-agnostic tuning flags are safe no-ops when
+# no remote is configured (local dev never contacts the backend).
+#   --remote_download_toplevel: fetch outputs of explicitly built/run targets locally — needed so
+#     `bazel run //modules/*:load|push` has the image tarball bytes to hand to the Docker daemon.
+#   --remote_local_fallback: a backend outage degrades to a local build instead of failing CI.
+#   --remote_timeout: per-request budget sized for cold compiles on the worker.
+#   --remote_max_connections: raise the gRPC parallelism ceiling for bulk cache lookups.
+build --remote_download_toplevel
+build --remote_local_fallback
+build --remote_timeout=600s
+build --remote_max_connections=200
+
+# Content-addressed cache of external downloads (http_archive tarballs, bzlmod registry files, Maven).
+# Pinning a stable path lets CI persist it across runs via actions/cache (keyed on MODULE.bazel.lock)
+# and gives local dev one shared location across workspaces.
+common --repository_cache=~/.cache/bazel-repo
+
+# Local-machine-only flags (e.g. --disk_cache=...) belong in user.bazelrc; the file is gitignored.
+# This is NOT the CI flag channel — CI threads remote flags through `just` recipes (see above).
+try-import %workspace%/user.bazelrc

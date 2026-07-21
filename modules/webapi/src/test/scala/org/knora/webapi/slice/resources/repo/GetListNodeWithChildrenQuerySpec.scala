@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 
-object GetListNodeWithChildrenQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetListNodeWithChildrenQuerySpec extends ZIOSpecDefault {
 
   private val testNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/test-node")
 

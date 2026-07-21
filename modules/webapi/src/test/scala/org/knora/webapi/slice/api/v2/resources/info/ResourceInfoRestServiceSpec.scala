@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v2.resources.info
 
+import org.junit.runner.RunWith
 import zio.Exit
 import zio.ZIO
 import zio.test.*
@@ -13,6 +14,7 @@ import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -30,7 +32,8 @@ import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownProjectIR
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.knownResourceClass
 import org.knora.webapi.slice.resources.repo.ResourceInfoRepoFake.unknownProjectIRI
 
-object ResourceInfoRestServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
 
   private def findByProjectAndResourceClass(
     projectIri: ProjectIri,

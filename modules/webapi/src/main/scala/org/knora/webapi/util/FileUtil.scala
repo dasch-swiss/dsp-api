@@ -47,7 +47,7 @@ object FileUtil {
    * @return the contents of the file.
    */
   def readTextFile(file: Path): String = {
-    val source = Source.fromFile(file.toFile)(Codec.UTF8)
+    val source = Source.fromFile(file.toFile)(using Codec.UTF8)
     try {
       source.mkString
     } finally {
@@ -71,7 +71,7 @@ object FileUtil {
     var sourceOption = None: Option[BufferedSource]
 
     try {
-      val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
+      val source: BufferedSource = Source.fromResource(filename)(using Codec.UTF8)
 
       if (source.nonEmpty) {
         sourceOption = Some(source)

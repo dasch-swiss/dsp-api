@@ -5,10 +5,12 @@
 
 package org.knora.webapi.util
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.common.domain.LanguageCode.*
@@ -16,7 +18,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.*
 /**
  * Tests [[StringLiteralSequenceV2]].
  */
-object StringLiteralSequenceV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StringLiteralSequenceV2Spec extends ZIOSpecDefault {
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(

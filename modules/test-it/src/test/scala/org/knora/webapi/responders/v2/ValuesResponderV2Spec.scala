@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -16,6 +17,7 @@ import scala.reflect.ClassTag
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -44,7 +46,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 
-object ValuesResponderV2Spec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValuesResponderV2Spec extends E2EZSpec { self =>
 
   private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
   private val valuesResponder = ZIO.serviceWithZIO[ValuesResponderV2]

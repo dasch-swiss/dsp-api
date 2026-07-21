@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -13,10 +14,12 @@ import java.util.Calendar
 import java.util.GregorianCalendar
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util
 import org.knora.webapi.messages.util.DateUtil.DateRange
 
-object DateUtilSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DateUtilSpec extends ZIOSpecDefault {
 
   val spec = suite("The DateUtilV1 class")(
     test("convert a date in YYYY-MM-DD format, in the Julian calendar, into a Julian day count, and back again") {

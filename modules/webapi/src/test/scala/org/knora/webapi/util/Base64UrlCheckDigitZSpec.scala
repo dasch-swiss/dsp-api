@@ -5,14 +5,18 @@
 
 package org.knora.webapi.util
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
+
 /**
  * Tests [[Base64UrlCheckDigit]].
  */
-object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
   val base64UrlCheckDigit         = new Base64UrlCheckDigit
   val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   val correctResourceIDCheckDigit = "n"

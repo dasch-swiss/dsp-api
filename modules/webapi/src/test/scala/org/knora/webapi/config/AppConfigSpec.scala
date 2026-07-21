@@ -5,6 +5,7 @@
 
 package org.knora.webapi.config
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
@@ -12,9 +13,11 @@ import zio.test.assertTrue
 
 import java.time.Duration
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.PasswordStrength
 
-object AppConfigSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AppConfigSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Nothing] = suite("ApplicationConfigSpec")(
     test("successfully provide the application configuration") {

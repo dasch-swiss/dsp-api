@@ -34,7 +34,7 @@ final case class JwtClaim(
    */
   def +(key: String, value: String): JwtClaim = {
     val currentObj = content.fromJson[Json.Obj].getOrElse(Json.Obj())
-    val updated    = Json.Obj(currentObj.fields :+ (key -> Json.Str(value)): _*)
+    val updated    = Json.Obj(currentObj.fields :+ (key -> Json.Str(value))*)
     copy(content = updated.toJson)
   }
 
@@ -47,12 +47,12 @@ final case class JwtClaim(
     val standardFields: List[(String, Json)] = List(
       issuer.map("iss" -> Json.Str(_)),
       subject.map("sub" -> Json.Str(_)),
-      audience.map(a => "aud" -> (if (a.size == 1) Json.Str(a.head) else Json.Arr(a.map(Json.Str(_)).toSeq: _*))),
+      audience.map(a => "aud" -> (if (a.size == 1) Json.Str(a.head) else Json.Arr(a.map(Json.Str(_)).toSeq*))),
       expiration.map("exp" -> Json.Num(_)),
       issuedAt.map("iat" -> Json.Num(_)),
       jwtId.map("jti" -> Json.Str(_)),
     ).flatten
-    Json.Obj((contentFields ++ standardFields): _*).toJson
+    Json.Obj((contentFields ++ standardFields)*).toJson
   }
 }
 
@@ -72,7 +72,7 @@ object JwtClaim {
 
       val standardKeys  = Set("iss", "sub", "aud", "exp", "iat", "jti")
       val contentFields = fields.filterNot { case (k, _) => standardKeys.contains(k) }
-      val contentJson   = if (contentFields.isEmpty) "{}" else Json.Obj(contentFields.toSeq: _*).toJson
+      val contentJson   = if (contentFields.isEmpty) "{}" else Json.Obj(contentFields.toSeq*).toJson
 
       JwtClaim(
         content = contentJson,

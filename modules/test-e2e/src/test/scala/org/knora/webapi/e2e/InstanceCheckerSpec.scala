@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -12,11 +13,13 @@ import zio.test.Assertion.*
 import java.nio.file.Paths
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.util.FileUtil
 
-object InstanceCheckerSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class InstanceCheckerSpec extends E2EZSpec {
 
   private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.make
 
@@ -30,7 +33,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property") {
       jsonLDInstanceChecker
         .check(
-          InstanceCheckerSpec.complexThingWithExtraProperty,
+          complexThingWithExtraProperty,
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
         .exit
@@ -51,7 +54,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property object") {
       jsonLDInstanceChecker
         .check(
-          instanceResponse = InstanceCheckerSpec.complexThingWithExtraPropertyObject,
+          instanceResponse = complexThingWithExtraPropertyObject,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
         .exit
@@ -72,7 +75,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid literal type") {
       jsonLDInstanceChecker
         .check(
-          InstanceCheckerSpec.complexThingWithInvalidLiteralType,
+          complexThingWithInvalidLiteralType,
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
         .exit
@@ -93,7 +96,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid object type") {
       jsonLDInstanceChecker
         .check(
-          instanceResponse = InstanceCheckerSpec.complexThingWithInvalidObjectType,
+          instanceResponse = complexThingWithInvalidObjectType,
           expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
         .exit
@@ -116,7 +119,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     ) {
       jsonLDInstanceChecker
         .check(
-          InstanceCheckerSpec.complexThingWithInvalidUseOfObjectInsteadOfIri,
+          complexThingWithInvalidUseOfObjectInsteadOfIri,
           "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         )
         .exit
@@ -137,7 +140,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the simple schema) with an invalid datatype") {
       jsonLDInstanceChecker
         .check(
-          InstanceCheckerSpec.simpleThingWithInvalidDatatype,
+          simpleThingWithInvalidDatatype,
           "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
         )
         .exit
@@ -158,7 +161,7 @@ object InstanceCheckerSpec extends E2EZSpec {
     test("reject a JSON-LD instance of anything:Thing (in the simple schema) without an rdfs:label") {
       jsonLDInstanceChecker
         .check(
-          InstanceCheckerSpec.simpleThingWithMissingLabel,
+          simpleThingWithMissingLabel,
           "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
         )
         .exit

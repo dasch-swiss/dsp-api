@@ -47,8 +47,8 @@ object CreatePropertyQuery extends QueryBuilderHelper {
       .from(ontology)
       .delete(deletePattern)
       .into(ontology)
-      .insert(insertPatterns: _*)
-      .where(wherePatterns: _*)
+      .insert(insertPatterns*)
+      .where(wherePatterns*)
 
     Update(query),
   )
