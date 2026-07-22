@@ -57,7 +57,8 @@ object FileMetadataSipiResponse {
 trait SipiService {
 
   /**
-   * Asks DSP-Ingest for metadata about a file in permanent location, served from the 'knora.json' route.
+   * Fetches metadata about a file in permanent storage from DSP-Ingest's asset-info endpoint
+   * (`/projects/{shortcode}/assets/{assetId}`).
    *
    * @param shortcode the shortcode of the project.
    * @param assetId for the file.
