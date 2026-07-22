@@ -1,5 +1,28 @@
 # Changelog
 
+## [37.2.0](https://github.com/dasch-swiss/dsp-api/compare/v37.1.0...v37.2.0) (2026-07-22)
+
+
+### Maintenances
+
+* bazelify the build with rules_scala + rules_oci ([#4187](https://github.com/dasch-swiss/dsp-api/issues/4187)) ([045d739](https://github.com/dasch-swiss/dsp-api/commit/045d7392e8c10abcb9aed12e6005293e35368aba))
+* group all scala-steward updates into a single PR ([#4197](https://github.com/dasch-swiss/dsp-api/issues/4197)) ([e1abb9f](https://github.com/dasch-swiss/dsp-api/commit/e1abb9f802b3ba1bc724b254a855efbe2c9a1e90))
+
+
+### Enhancements
+
+* **dsp-api:** implement Region Preview values (DEV-6758) ([#4193](https://github.com/dasch-swiss/dsp-api/issues/4193)) ([9d1080c](https://github.com/dasch-swiss/dsp-api/commit/9d1080cf750a4cbc9dc671003cf0bbe531d19d24))
+
+
+### Bug Fixes
+
+* place selective pattern before OPTIONAL blocks in generated entity queries (DEV-6796) ([#4199](https://github.com/dasch-swiss/dsp-api/issues/4199)) ([8dba714](https://github.com/dasch-swiss/dsp-api/commit/8dba714c0476ab905d70b89979942cd28d30a89c))
+
+
+### Performance Improvements
+
+* skip project lookup in asset-permission check unless restricted view applies (DEV-6797) ([#4200](https://github.com/dasch-swiss/dsp-api/issues/4200)) ([b2c203a](https://github.com/dasch-swiss/dsp-api/commit/b2c203a3174e84361016b9c163baae7ae742e9fb))
+
 ## [37.1.0](https://github.com/dasch-swiss/dsp-api/compare/v37.0.0...v37.1.0) (2026-07-12)
 
 
