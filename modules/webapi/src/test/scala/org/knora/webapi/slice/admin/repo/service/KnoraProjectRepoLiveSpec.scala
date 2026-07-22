@@ -34,6 +34,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
@@ -183,6 +184,54 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
           }
         },
       ),
+    ),
+    suite("findByPatternQuery")(
+      // Pins the generated SPARQL. The selective pattern must precede the OPTIONAL blocks: OPTIONALs are
+      // left-joins evaluated in document order, so a trailing pattern makes the triplestore compute them
+      // for every entity of the class first (DEV-6796, prod tile-loading regression).
+      test("place the selective pattern before the OPTIONAL blocks") {
+        for {
+          repo    <- ZIO.service[KnoraProjectRepoLive]
+          query    = repo.findByPatternQuery(_.has(Vocabulary.KnoraAdmin.projectShortcode, "1234"))
+          expected =
+            """PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              |CONSTRUCT { ?s a knora-admin:knoraProject ;
+              |    knora-admin:hasSelfJoinEnabled ?n0 ;
+              |    knora-admin:projectDescription ?n1 ;
+              |    knora-admin:projectShortcode ?n2 ;
+              |    knora-admin:projectShortname ?n3 ;
+              |    knora-admin:status ?n4 ;
+              |    knora-admin:projectKeyword ?n5 ;
+              |    knora-admin:projectLogo ?n6 ;
+              |    knora-admin:projectLongname ?n7 ;
+              |    knora-admin:projectRestrictedViewSize ?n8 ;
+              |    knora-admin:projectRestrictedViewWatermark ?n9 ;
+              |    knora-admin:hasAllowedCopyrightHolder ?n10 ;
+              |    knora-admin:hasEnabledLicense ?n11 ;
+              |    knora-admin:hasDataLicense ?n12 ;
+              |    knora-admin:hasDataCopyrightHolder ?n13 ;
+              |    knora-admin:hasDefaultDataAuthorship ?n14 . }
+              |WHERE { GRAPH <http://www.knora.org/data/admin> { ?s knora-admin:projectShortcode "1234" .
+              |?s a knora-admin:knoraProject ;
+              |    knora-admin:hasSelfJoinEnabled ?n0 ;
+              |    knora-admin:projectDescription ?n1 ;
+              |    knora-admin:projectShortcode ?n2 ;
+              |    knora-admin:projectShortname ?n3 ;
+              |    knora-admin:status ?n4 .
+              |OPTIONAL { ?s knora-admin:projectKeyword ?n5 . }
+              |OPTIONAL { ?s knora-admin:projectLogo ?n6 . }
+              |OPTIONAL { ?s knora-admin:projectLongname ?n7 . }
+              |OPTIONAL { ?s knora-admin:projectRestrictedViewSize ?n8 . }
+              |OPTIONAL { ?s knora-admin:projectRestrictedViewWatermark ?n9 . }
+              |OPTIONAL { ?s knora-admin:hasAllowedCopyrightHolder ?n10 . }
+              |OPTIONAL { ?s knora-admin:hasEnabledLicense ?n11 . }
+              |OPTIONAL { ?s knora-admin:hasDataLicense ?n12 . }
+              |OPTIONAL { ?s knora-admin:hasDataCopyrightHolder ?n13 . }
+              |OPTIONAL { ?s knora-admin:hasDefaultDataAuthorship ?n14 . } } }
+              |""".stripMargin
+        } yield assertTrue(query.sparql == expected)
+      },
     ),
   ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, CacheManager.layer, StringFormatter.test)
 }
