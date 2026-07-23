@@ -1,6 +1,24 @@
 # Third-Party Dependencies
 
-Third party libraries are managed by SBT.
+Third party libraries are declared for the sbt build in `project/Dependencies.scala`.
+
+## Keeping the Bazel build in sync
+
+The Bazel build (which CI runs) declares the same Maven coordinates independently in `MODULE.bazel`'s
+`maven.install`, pinned in `maven_install.json`. These must agree with `project/Dependencies.scala`, and
+`//tools/deps:maven_versions_match_sbt` fails the build if they drift.
+
+`scala-steward` (the automated dependency-update tooling) is sbt-native and updates **only**
+`project/Dependencies.scala` — it does not touch the Bazel manifests. So after any dependency update the
+Bazel side must be brought back in line. Run:
+
+```shell
+just sync-bazel-maven-versions
+```
+
+which rewrites `MODULE.bazel` to match `project/Dependencies.scala` (via
+`tools/deps/check_maven_versions.py --fix`) and re-pins `maven_install.json` (`bazel run @unpinned_maven//:pin`).
+Commit the resulting `MODULE.bazel` and `maven_install.json` changes alongside the dependency bump.
 
 ## Defining Dependencies in `Dependencies.scala`
 
