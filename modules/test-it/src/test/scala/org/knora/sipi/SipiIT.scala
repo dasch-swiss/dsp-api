@@ -40,8 +40,25 @@ class SipiIT extends ZIOSpecDefault {
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
   private val prefix        = "0001"
 
-  private def requestGet(path: Path, headers: Header*) =
-    SipiTestContainer.resolveUrl(path).map(url => Request.get(url).addHeaders(Headers(headers))).flatMap(Client.batched)
+  // Sipi answers /{prefix}/{identifier}/file with a 303 redirect to the canonical IIIF URL, where the
+  // permission-derived final status (Ok / Unauthorized / Not Found) is produced. zio-http's Client does not follow
+  // redirects, so follow them here. We re-resolve the redirect target's *path* through SipiTestContainer.resolveUrl
+  // so the follow-up always hits the container's mapped port, never any host/port carried in Sipi's Location header.
+  // (The older zio-http transitively pulled in before the Bazel/sbt version sync followed redirects implicitly,
+  // which masked the need for this.)
+  private def requestGet(path: Path, headers: Header*): ZIO[Client & SipiTestContainer, Throwable, Response] = {
+    def loop(p: Path, remaining: Int): ZIO[Client & SipiTestContainer, Throwable, Response] =
+      for {
+        url      <- SipiTestContainer.resolveUrl(p)
+        response <- Client.batched(Request.get(url).addHeaders(Headers(headers)))
+        followed <- response.header(Header.Location) match {
+                      case Some(location) if response.status.isRedirection && remaining > 0 =>
+                        loop(location.url.path, remaining - 1)
+                      case _ => ZIO.succeed(response)
+                    }
+      } yield followed
+    loop(path, 5)
+  }
 
   private def createJwt(scope: AuthScope): UIO[String] = for {
     now  <- Clock.instant
