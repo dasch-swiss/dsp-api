@@ -310,6 +310,131 @@ val subSelect = GraphPatterns.select()
 // configure the subselect, then use it as a graph pattern in the outer query
 ```
 
+## Pattern Order and Query Performance
+
+Deployed Fuseki runs TDB2 with the union default graph enabled and **no `stats.opt`** — the BGP
+optimizer uses the fixed variable-counting heuristic, and `OPTIONAL` blocks are left-joins
+evaluated in document order. Written pattern order is load-bearing: the store largely executes
+the query in the shape you emit.
+
+### Selective patterns first — always before OPTIONALs
+
+Place the most selective pattern (a bound IRI, a literal lookup such as a shortcode) **first**
+in a group, before required-property triples and especially before any `OPTIONAL` block. A
+restriction placed *after* the OPTIONALs makes the store evaluate every left-join for **every
+entity of the class** — with multi-valued properties multiplying rows per entity — before the
+restriction throws all but one away.
+
+This is not theoretical: the project-by-shortcode lookup on the SIPI tile-permission hot path
+had its `projectShortcode` restriction after the OPTIONALs; adding three more OPTIONALs
+(DEV-6661) took it from ~150ms to ~700ms on prod. With the restriction first, the same query
+runs in single-digit milliseconds (DEV-6796).
+
+### Flat groups, not nested ones
+
+`pattern.and(group)` does **not** splice the group's contents — it emits
+`{ pattern . { ...group... } }`, and the OPTIONALs inside the nested braces keep their own
+scope, away from the binding. Compose the leading pattern into the **same** group: build the
+group starting from the pattern (see `AbstractEntityRepo.graphP(sub, leading)`) or pass all
+patterns to a single `GraphPatterns.and(...)` call.
+
+### Every OPTIONAL multiplies
+
+Each `OPTIONAL` on a multi-valued property multiplies intermediate rows per subject
+(descriptions × keywords × licenses × …), so cost grows superlinearly with OPTIONAL count.
+When the consumer reads an `RdfModel` anyway (as `RdfEntityMapper.toEntity` does), prefer
+fetching the whole subject — `?s ?p ?o` once the subject is bound — over enumerating
+properties in OPTIONALs: over-fetching a few triples of one subject is far cheaper than
+left-joins, and future property additions cannot regress the plan (DEV-6798).
+
+### Anchor property paths
+
+An unanchored `*` path is a cartesian join.
+`zeroOrMore()` / `*` / `+` paths are evaluated by a non-indexed traversal, and a path pattern
+splits the BGP — the optimizer never reorders across it. If neither path variable is bound by
+the patterns *before* it, the path cross-joins everything matched so far against the whole
+closure. Both directions of this were measured in the DEV-6803 audit:
+
+- `GetAllResourcesInProjectPrequery` placed `?resourceType rdfs:subClassOf* knora-base:Resource`
+  (both ends unbound at that point) between its anchored patterns: **>60s** (Fuseki-cancelled)
+  on a large project, ~2.8s with the path moved after the `rdf:type` binding, ~0.4s with the
+  redundant closure dropped.
+- `FileValuePermissionsQuery` anchors its `previousValue*` path with a seemingly redundant
+  `{ ?fileValue ?objPred ?objObj . FILTER(?objPred != kb:previousValue) }` group: removing that
+  "cleanup candidate" takes the per-tile query from ~19ms to **~15s**.
+
+Corollary: an odd-looking pattern sitting next to a property path is probably load-bearing.
+Don't remove it without checking the plan — and make sure the golden spec pins it.
+
+### Negation: `FILTER NOT EXISTS`, not `MINUS`, for per-row guards
+
+`MINUS` evaluates its right side *without* bindings from the left, so an un-scoped
+`MINUS { ?x knora-base:isDeleted true }` materializes the deleted-set of the whole union graph
+before subtracting. `FILTER NOT EXISTS` is checked per candidate row instead. Measured
+(DEV-6803): `CountPropertyUsedWithClassQuery` went from **27s** (over its own 20s timeout) to
+~200ms by swapping `MINUS` for `FILTER NOT EXISTS` and GRAPH-scoping — either change alone
+rescues it.
+
+### GRAPH-scope scans, not lookups
+
+With the union default graph, *selective* bound-term lookups (a bound IRI, a literal such as a
+shortcode) cost the same with or without a `GRAPH` clause — TDB2's quad indexes probe across
+graphs. Don't add `GRAPH` to point lookups for performance, and don't expect it to fix a shape
+problem. What does need scoping when the graph is known: *scans* — class extents
+(`?s a <class>`), unbound-predicate patterns, `MINUS` right sides, aggregation inputs
+(measured 55× on the count query above).
+
+Corollary: `GRAPH <projectDataGraph>` **replaces** `?s knora-base:attachedToProject <p>` — the
+project data graph *is* the project, so once a pattern is graph-scoped the membership triple is
+a redundant join, not a belt-and-braces check. Measured (DEV-6827): dropping it from the
+class-browsing prequery, together with its no-op `DISTINCT`, took the largest class in the
+store from 1.66s to 310ms per page (5.4×) with byte-identical results.
+
+### Don't inline large closures as `VALUES`
+
+Replacing a `subClassOf*`-style path with an app-side-expanded `VALUES` list (e.g. from the
+ontology cache) helps only when the closure is **small**. Measured (DEV-6803): inlining the
+`hasValue` subproperty closure (3,107 IRIs — even the 591-class `Resource` closure) into the
+fulltext search prequery took it from 2.1s to **>60s**: the engine joins the whole `VALUES`
+table against a large intermediate instead of walking the path from bound terms. Rule of
+thumb: `VALUES` for small closures that anchor a scan (the `FindResourcesService` pattern);
+anchored property paths otherwise.
+
+### Drop provably redundant `DISTINCT`
+
+`DISTINCT` costs a hash-dedup over every row × every projected variable. It is a **no-op** when
+the pattern structure cannot produce duplicates — one `rdf:type` triple per subject joined with
+single-valued required properties — and it is *always* a no-op on top of `GROUP BY` over the
+same variable. Verify cheaply before removing: run both forms and byte-compare the output
+(`Accept: text/csv`, then diff/checksum) — that is how DEV-6821/DEV-6827 proved their
+`DISTINCT`s dead (identical byte counts on a 221k-row result).
+
+### Min/max per subject: `GROUP BY` + aggregate, not a `FILTER NOT EXISTS` anti-join
+
+"The value for which no smaller value exists" written as a nested `FILTER NOT EXISTS` with a
+`<` comparison is O(k²) probes per subject (k = values per property) and is evaluated for the
+whole extent under `ORDER BY`. `GROUP BY ?s` + `ORDER BY ASC(MIN(?lit))` computes the same
+minimum in one pass. Measured (DEV-6827): 315ms → 141ms on a single-valued property; the gap
+widens with multi-valued ones. Semantics differ on duplicates (the anti-join form can emit a
+row per tied minimum; `GROUP BY` emits one) — pin the intended behavior in the golden spec.
+
+### Slow query ≠ slow plan: split compute from transfer before rewriting
+
+Before rewriting a "slow" query, wrap its WHERE clause in `SELECT (COUNT(*) AS ?c)` and time
+that: it forces full evaluation but returns one row, isolating plan cost from
+serialization/transfer/parse cost. Measured (DEV-6821): the `/v2/metadata` query "took 26s" on
+a 221k-resource project, but compute was 5–7s — the rest was shipping 118MB of SPARQL-JSON.
+No WHERE-clause rewrite can fix a result-size problem; the levers there are projection width,
+row count (paging), response format (CSV ≈ 3× smaller than SPARQL-JSON), and compression.
+
+### Shape-changing inputs are query changes
+
+Anything that feeds a query builder shapes its output — adding a property to
+`AbstractEntityRepo.entityProperties` adds an `OPTIONAL` to every generated entity query.
+Review such changes as query changes: look at the pinned/golden query diff and consider the
+plan, not just the mapping code. A builder on a hot path without a pinned or golden spec is a
+blind spot — add one (see [Testing Query Builders](#testing-query-builders)).
+
 ## Literals
 
 ```scala
@@ -427,7 +552,7 @@ The SparqlBuilder does **not** support:
 - DESCRIBE queries
 - ASK queries (use `QueryBuilderHelper.askWhere()` which builds the string manually)
 
-For these, fall back to string interpolation with `.getQueryString` for the parts that _are_ supported.
+For these, fall back to string interpolation with `.getQueryString` for the parts that *are* supported.
 
 ## String Interpolation Fallbacks
 
@@ -469,7 +594,12 @@ val sparql = s"$builderPart\nWHERE { $filterClause }"
 4. **Use `.andHas()` for readability** — chain multiple predicates on the same subject
 5. **Use `.and()` for combining** — join independent graph patterns
 6. **Use `.optional()` on patterns** that may not match
-7. **Use `zeroOrMore()` / property paths** for transitive relations like `rdfs:subClassOf*`
+7. **Use `zeroOrMore()` / property paths** for transitive relations like `rdfs:subClassOf*` —
+   but only *anchored*: a path variable must be bound by the patterns before it (see
+   [Anchor property paths](#anchor-property-paths))
+8. **Order patterns by selectivity** — the most selective pattern first, always before `OPTIONAL`
+   blocks and within the same flat group (see
+   [Pattern Order and Query Performance](#pattern-order-and-query-performance))
 
 ## Gravsearch Queries
 
@@ -543,13 +673,13 @@ Consequences:
 
 **Prefer golden tests as the default for query builders.** Snapshotting the full
 generated query keeps the entire SPARQL visible and reviewable in one file, verifies
-_clause placement_ (a triple is in DELETE vs INSERT vs WHERE) rather than mere substring
+*clause placement* (a triple is in DELETE vs INSERT vs WHERE) rather than mere substring
 presence, and stays readable as queries grow.
 
 **Avoid scattered `q.contains("...")` / `!q.contains("...")` substring assertions.** They
 are simultaneously brittle (they depend on exact serialization — spacing, escaping) and
 weak (they do not verify where a triple appears, so a query can be structurally wrong and
-still pass). Asserting the _absence_ of a keyword (e.g. `!q.contains("GRAPH")`) is
+still pass). Asserting the *absence* of a keyword (e.g. `!q.contains("GRAPH")`) is
 especially fragile. Use a golden snapshot instead — a regression shows up as an obvious
 diff in the golden file.
 
@@ -574,7 +704,7 @@ object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {
 
 Golden comparison is exact-text, so the builder output must be deterministic; normalise
 any nondeterministic parts (random UUIDs, timestamps) before snapshotting, as
-`replaceUuidPatterns` does above. Triple _order_ is captured verbatim — fine for a
+`replaceUuidPatterns` does above. Triple *order* is captured verbatim — fine for a
 deterministic builder.
 
 ### Direct string comparison
@@ -592,7 +722,7 @@ test("should produce correct DELETE query") {
 
 ### Apache Jena parsing for structural validation
 
-When you need a _semantic_, order-insensitive check rather than an exact snapshot — for
+When you need a *semantic*, order-insensitive check rather than an exact snapshot — for
 example asserting two queries are structurally equal regardless of formatting — parse the
 generated SPARQL with Apache Jena and compare or inspect the parsed structure (see
 `ResourcesRepoLiveSpec.assertUpdateQueriesEqual`):

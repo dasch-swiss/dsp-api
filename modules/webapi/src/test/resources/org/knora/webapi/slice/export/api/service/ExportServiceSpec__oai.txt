@@ -396,7 +396,7 @@
     "keywords" : [],
     "file" : {
       "mimeType" : "image/jp2",
-      "url" : "http://localhost:3340/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original"
+      "url" : "https://ingest.example.org/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original"
     }
   }
 ]

@@ -151,7 +151,13 @@ object DspIngestClientLiveSpecLayers {
   val dspIngestConfigLayer: ZLayer[TestPort, Nothing, DspIngestConfig] = ZLayer.fromZIO(
     ZIO
       .serviceWith[TestPort](_.value)
-      .map(port => DspIngestConfig(baseUrl = s"http://localhost:$port", audience = "audience")),
+      .map(port =>
+        DspIngestConfig(
+          baseUrl = s"http://localhost:$port",
+          externalBaseUrl = s"http://localhost:$port",
+          audience = "audience",
+        ),
+      ),
   )
 }
 

@@ -96,6 +96,9 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
+  // distinct from base-url so the OAI test proves the file link uses external-base-url
+  val publicIngestUrl = "https://ingest.example.org"
+
   val dataSets: Set[RdfDataObject] = builtInNamedGraphs ++ List(
     RdfDataObject(
       path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-onto.ttl",
@@ -250,7 +253,8 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-        } yield assertGolden(json, "oai")
+        } yield assertGolden(json, "oai") &&
+          assertTrue(json.contains(s"$publicIngestUrl/projects/"))
       },
       test("resources are exported in alphabetical label order") {
         for {
@@ -337,7 +341,9 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       },
     ).provide(
       ConstructResponseUtilV2.layer,
-      AppConfig.layer,
+      AppConfig.layer.map(env =>
+        env.update[AppConfig](c => c.copy(dspIngest = c.dspIngest.copy(externalBaseUrl = publicIngestUrl))),
+      ),
       CacheManager.layer,
       CsvService.layer,
       emptyDataset,
