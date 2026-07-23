@@ -232,7 +232,7 @@ class SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.Ok,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -248,7 +248,7 @@ class SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.Unauthorized,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -262,7 +262,7 @@ class SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.NotFound,
             verifySingleGetRequest(server, dspApiPermissionPath),
