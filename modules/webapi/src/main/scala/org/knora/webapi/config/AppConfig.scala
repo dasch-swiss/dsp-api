@@ -71,7 +71,11 @@ final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[
   )
 }
 
-final case class DspIngestConfig(baseUrl: String, audience: String)
+/**
+ * @param baseUrl         internal URL for server-to-server communication with dsp-ingest.
+ * @param externalBaseUrl client-facing URL for download links handed to clients (e.g. OAI file links).
+ */
+final case class DspIngestConfig(baseUrl: String, externalBaseUrl: String, audience: String)
 
 final case class KnoraApi(
   internalHost: String,
