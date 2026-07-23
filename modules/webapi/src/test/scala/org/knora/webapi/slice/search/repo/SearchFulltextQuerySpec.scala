@@ -49,7 +49,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
               |        }
               |    }
               |    OPTIONAL {
@@ -106,7 +106,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
               |        }
               |    }
               |    OPTIONAL {
@@ -168,7 +168,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+               |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
                |        }
                |    }
                |    OPTIONAL {
@@ -229,7 +229,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> "test search" .
+               |            ?matchingSubject <http://jena.apache.org/text#query> ("test search" 1000000) .
                |    ?matchingSubject a knora-base:TextValue ;
                |        knora-base:valueHasString ?literal ;
                |        knora-base:valueHasStandoff ?standoffNode .

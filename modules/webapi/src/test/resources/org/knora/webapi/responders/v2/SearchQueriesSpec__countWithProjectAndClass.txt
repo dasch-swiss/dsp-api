@@ -1,0 +1,11 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+SELECT (count(distinct ?resource) as ?count)
+WHERE {
+    ?resource <http://jena.apache.org/text#query> (rdfs:label "Anton*" 1000000) ;
+        a ?resourceClass .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
+?resourceClass <http://www.w3.org/2000/01/rdf-schema#subClassOf>? <http://www.knora.org/ontology/0001/anything#Thing> .
+    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+}

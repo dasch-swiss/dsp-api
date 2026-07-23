@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v2
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.QueryBuilderHelper
@@ -17,6 +18,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FusekiLucenceQuery
 
 object SearchQueries extends QueryBuilderHelper {
+
+  private val luceneHitLimit = OntologyConstants.Fuseki.luceneHitLimit
 
   def selectCountByLabel(
     luceneQuery: FusekiLucenceQuery,
@@ -28,7 +31,7 @@ object SearchQueries extends QueryBuilderHelper {
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT (count(distinct ?resource) as ?count)
           |WHERE {
-          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
+          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}" $luceneHitLimit) ;
           |        a ?resourceClass .
           |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
           |    ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}
@@ -77,7 +80,7 @@ object SearchQueries extends QueryBuilderHelper {
           |    {
           |        SELECT DISTINCT ?resource ?label
           |        WHERE {
-          |            ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}") ;
+          |            ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}" $luceneHitLimit) ;
           |                a ?resourceClass ;
           |                rdfs:label ?label .
           |            ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}

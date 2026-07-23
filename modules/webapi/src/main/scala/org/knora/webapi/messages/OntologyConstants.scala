@@ -1082,5 +1082,11 @@ object OntologyConstants {
 
   object Fuseki {
     val luceneQueryPredicate = "http://jena.apache.org/text#query"
+
+    // Without an explicit limit, Jena caps text index lookups at 10'000 hits (TextIndexLucene.MAX_N) and
+    // silently discards an arbitrary subset of matches *before* the SPARQL filters apply, making resources
+    // unfindable (DEV-6822). The worst realistic prefix measured on prod-scale data yields ~95k hits, so 1M
+    // leaves ample headroom while still bounding the Lucene collector allocation.
+    val luceneHitLimit: Int = 1000000
   }
 }
