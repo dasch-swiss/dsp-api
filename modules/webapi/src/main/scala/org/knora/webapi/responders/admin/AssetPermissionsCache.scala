@@ -77,6 +77,22 @@ object AssetPermissionsCache {
       case Exit.Failure(_) => Duration.Zero // REQ-1.6: never retain failures
     }
 
+  /**
+   * The miss-path resolution the production cache is built around: re-derive the `User` from the key's `UserIri` via
+   * the same `findUserByIri` path the auth layer uses (`findById`'s built-in fallback resolves the anonymous IRI, so no
+   * special-casing is needed), then delegate to the unchanged responder. The `zio.cache.Lookup` sees only the key, so
+   * this cannot reuse the request's already-hydrated `User`; that introduces a benign TOCTOU divergence from the
+   * uncached path (a user deleted between requests surfaces here as a `NotFoundException` rather than the token `User`).
+   * It depends only on `users`/`responder`, not on the built `Cache`, so it lives here rather than on the instance.
+   */
+  private def resolve(users: UserService, responder: AssetPermissionsResponder)(
+    key: CacheKey,
+  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
+    users
+      .findUserByIri(key.userIri)
+      .someOrFail(NotFoundException(s"No user found for ${key.userIri.value}"))
+      .flatMap(responder.getPermissionCodeAndProjectRestrictedViewSettings(_)(key.shortcode, key.filename))
+
   val layer: URLayer[AppConfig & UserService & AssetPermissionsResponder, AssetPermissionsCache] =
     ZLayer.scoped {
       for {
@@ -85,20 +101,8 @@ object AssetPermissionsCache {
         responder <- ZIO.service[AssetPermissionsResponder]
         cfg        = config.filePermissionCache
         // `zio.Duration` IS `java.time.Duration` in ZIO 2, so `cfg.ttl` needs no conversion.
-        cache <- makeCache(cfg.capacity, cfg.ttl) { key =>
-                   // On a miss the lookup sees only the key, so it re-derives the `User` from the `UserIri` via the
-                   // same `findUserByIri` path the auth layer uses. `findById`'s built-in fallback resolves the
-                   // anonymous IRI, so no special-casing is needed. This introduces a benign TOCTOU divergence from
-                   // the uncached path: the uncached path receives an already-hydrated `User` and never re-checks
-                   // existence, whereas here a user deleted between requests would surface as a `NotFoundException`.
-                   users
-                     .findUserByIri(key.userIri)
-                     .someOrFail(NotFoundException(s"No user found for ${key.userIri.value}"))
-                     .flatMap(
-                       responder.getPermissionCodeAndProjectRestrictedViewSettings(_)(key.shortcode, key.filename),
-                     )
-                 }
-        _ <- registerMetrics(cache)
+        cache <- makeCache(cfg.capacity, cfg.ttl)(resolve(users, responder))
+        _     <- registerMetrics(cache)
       } yield AssetPermissionsCache(cache)
     }
 
