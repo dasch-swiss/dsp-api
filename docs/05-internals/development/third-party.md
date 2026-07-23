@@ -9,8 +9,13 @@ The Bazel build (which CI runs) declares the same Maven coordinates independentl
 `//tools/deps:maven_versions_match_sbt` fails the build if they drift.
 
 `scala-steward` (the automated dependency-update tooling) is sbt-native and updates **only**
-`project/Dependencies.scala` — it does not touch the Bazel manifests. So after any dependency update the
-Bazel side must be brought back in line. Run:
+`project/Dependencies.scala` — it does not touch the Bazel manifests. Because those PRs are opened
+unattended, the sync is automated: the **`Sync Bazel deps with sbt`** workflow
+(`.github/workflows/sync-bazel-deps.yml`) runs on any PR that touches `project/Dependencies.scala`,
+brings `MODULE.bazel` / `maven_install.json` back in line, and commits the result back to the PR branch
+(which then re-runs the build-and-test checks against the synced state).
+
+As a fallback (or when working locally), run the same sync by hand:
 
 ```shell
 just sync-bazel-maven-versions

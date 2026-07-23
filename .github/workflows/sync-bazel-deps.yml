@@ -1,0 +1,68 @@
+name: Sync Bazel deps with sbt
+
+# scala-steward (and any human dependency bump) updates only project/Dependencies.scala; it has no
+# awareness of the Bazel manifests. If MODULE.bazel / maven_install.json aren't kept in step, the Bazel
+# build CI runs fails (//tools/deps:maven_versions_match_sbt, and the actual build). Since those PRs are
+# opened unattended, this workflow does the sync automatically: on any PR that touches Dependencies.scala
+# it runs `just sync-bazel-maven-versions` and commits the resulting MODULE.bazel / maven_install.json
+# changes back to the PR branch (which then re-runs the normal build-and-test checks against the synced
+# state). Manual `just sync-bazel-maven-versions` remains available as a fallback.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - project/Dependencies.scala
+  # Manual trigger for testing / one-off syncs: dispatch it from the branch that has drifted.
+  workflow_dispatch: {}
+
+# Needs write to push the sync commit back to the PR branch.
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-bazel-deps-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync MODULE.bazel to Dependencies.scala
+    runs-on: ubuntu-latest
+    # Same-repo PRs only (we cannot push to a fork's branch); skip release PRs; always allow manual dispatch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       !startsWith(github.head_ref, 'release-please'))
+    steps:
+      - name: Checkout the PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          # PAT (not the default GITHUB_TOKEN) so the pushed sync commit re-triggers the
+          # build-and-test workflow; a push made with GITHUB_TOKEN would not.
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+      - name: Install Nix (provides Bazel + just for the re-pin)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Sync MODULE.bazel + re-pin maven_install.json
+        run: nix develop --command just sync-bazel-maven-versions
+      - name: Commit & push if the Bazel manifests changed
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain MODULE.bazel maven_install.json)" ]; then
+            echo "Bazel manifests already agree with Dependencies.scala — nothing to sync."
+            exit 0
+          fi
+          git config user.name daschbot
+          git config user.email 50987250+daschbot@users.noreply.github.com
+          git add MODULE.bazel maven_install.json
+          git commit -m "build: sync Bazel maven versions with Dependencies.scala"
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
