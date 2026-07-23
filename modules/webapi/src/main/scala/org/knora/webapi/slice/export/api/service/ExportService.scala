@@ -133,15 +133,14 @@ final case class ExportService(
   }
 
   // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
-  // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id
-  // (the internal filename without its extension).
+  // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Option[FileLink] =
     r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
       val internalFilename = fc.fileValue.internalFilename
       val assetId          = internalFilename.takeWhile(_ != '.')
       FileLink(
         mimeType = fc.fileValue.internalMimeType,
-        url = s"${appConfig.dspIngest.baseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
+        url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
       )
     }
 
