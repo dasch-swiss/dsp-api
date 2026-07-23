@@ -381,14 +381,24 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
         executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
       },
       testWithScope("should handle ingest denormalized filenames") {
-        val url = URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "ā.mp3")
+        // A client may send a percent-encoded, Unicode-denormalized (NFD) filename in the path; macOS
+        // clients in particular emit NFD. Here "a%CC%84.mp3" is "a" + COMBINING MACRON (U+0304). Building
+        // the request via URL.decode runs the same path decoder the Netty server uses (Path.decodeRaw),
+        // so this exercises the server-side percent-decode; AssetFilename.from must then normalize the
+        // decoded NFD to NFC, so the stored original filename is the precomposed "ā.mp3" (U+0101).
+        val url = URL.decode("/projects/0666/assets/ingest/a%CC%84.mp3").getOrElse(throw new Exception("Invalid URL"))
         val req = Request
           .post(url, Body.fromString("tegxd"))
           .addHeader("Authorization", "Bearer fakeToken")
 
-        executeRequest(req).map { response =>
-          assertTrue(response.status == Status.Ok)
-        }
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+          info      = body.fromJson[AssetInfoResponse].getOrElse(throw new Exception("Invalid response"))
+        } yield assertTrue(
+          response.status == Status.Ok,
+          info.originalFilename == "\u0101.mp3", // NFC "\u0101" = LATIN SMALL LETTER A WITH MACRON ("a" + U+0304)
+        )
       },
       testWithScope("should refuse ingesting without content") {
         val req = Request
