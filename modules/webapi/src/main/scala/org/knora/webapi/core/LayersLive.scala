@@ -108,6 +108,7 @@ object LayersLive { self =>
       // ZLayer.Debug.mermaid,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
+      AssetPermissionsCache.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
