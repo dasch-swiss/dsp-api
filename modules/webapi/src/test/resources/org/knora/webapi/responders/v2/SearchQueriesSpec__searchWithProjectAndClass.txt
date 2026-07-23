@@ -1,0 +1,50 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+CONSTRUCT {
+    ?resource rdfs:label ?label ;
+        a knora-base:Resource ;
+        knora-base:isMainResource true ;
+        knora-base:isDeleted false ;
+        a ?resourceType ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:attachedToProject ?resourceProject  ;
+        knora-base:creationDate ?creationDate ;
+        knora-base:lastModificationDate ?lastModificationDate ;
+        knora-base:hasValue ?valueObject ;
+        ?resourceValueProperty ?valueObject .
+    ?valueObject ?valueObjectProperty ?valueObjectValue .
+} WHERE {
+    {
+        SELECT DISTINCT ?resource ?label
+        WHERE {
+            ?resource <http://jena.apache.org/text#query> (rdfs:label "Anton*" 1000000) ;
+                a ?resourceClass ;
+                rdfs:label ?label .
+            ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
+?resourceClass <http://www.w3.org/2000/01/rdf-schema#subClassOf>? <http://www.knora.org/ontology/0001/anything#Thing> .
+            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+        }
+        ORDER BY ?resource
+        LIMIT 25
+        OFFSET 0
+    }
+
+    ?resource a ?resourceType ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:attachedToProject ?resourceProject ;
+        knora-base:creationDate ?creationDate ;
+        rdfs:label ?label .
+    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+    OPTIONAL {
+        ?resource ?resourceValueProperty ?valueObject .
+        ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+        ?valueObject a ?valueObjectType ;
+            ?valueObjectProperty ?valueObjectValue .
+        ?valueObjectType rdfs:subClassOf* knora-base:Value .
+        FILTER(?valueObjectType != knora-base:LinkValue)
+        FILTER NOT EXISTS { ?valueObject knora-base:isDeleted true . }
+        FILTER NOT EXISTS { ?valueObjectValue a knora-base:StandoffTag . }
+    }
+}
