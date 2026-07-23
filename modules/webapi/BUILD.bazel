@@ -70,6 +70,7 @@ scala_library(
         "@maven//:dev_optics_monocle_macro_3",
         "@maven//:dev_optics_monocle_refined_3",
         "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_cache_3",
         "@maven//:dev_zio_zio_config_3",
         "@maven//:dev_zio_zio_config_magnolia_3",
         "@maven//:dev_zio_zio_config_typesafe_3",
@@ -141,6 +142,7 @@ scala_junit_test(
         "//modules/test-runner",
         "//test_data:fixtures",  # RDF fixtures on the classpath (see test_data/BUILD.bazel)
         "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_cache_3",
         "@maven//:dev_zio_zio_json_3",
         "@maven//:dev_zio_zio_test_3",
         "@maven//:org_wiremock_wiremock",

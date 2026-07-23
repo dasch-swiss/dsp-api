@@ -29,8 +29,9 @@ object Dependencies {
   val ZioPreludeVersion = "1.0.0-RC47"
   val ZioSchemaVersion  = "1.8.5"
 
-  val ZioMockVersion = "1.0.0-RC12"
-  val ZioVersion     = "2.1.26"
+  val ZioMockVersion  = "1.0.0-RC12"
+  val ZioVersion      = "2.1.26"
+  val ZioCacheVersion = "0.2.4"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
@@ -117,7 +118,8 @@ object Dependencies {
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.85"
 
   // caching
-  val ehcache = "org.ehcache" % "ehcache" % "3.12.0"
+  val ehcache  = "org.ehcache" % "ehcache"   % "3.12.0"
+  val zioCache = "dev.zio"    %% "zio-cache" % ZioCacheVersion
 
   // other
   val gwtServlet     = "com.google.gwt"          % "gwt-servlet"      % "2.10.0"
@@ -218,6 +220,7 @@ object Dependencies {
     zioLoggingSlf4jBridge,
     zioNio,
     zioPrelude,
+    zioCache,
     zio,
   ) ++ zioSttpClient ++ metrics ++ tapir ++ openTelemetryWithSentry
 
