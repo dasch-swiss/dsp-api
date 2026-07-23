@@ -384,6 +384,12 @@ problem. What does need scoping when the graph is known: *scans* — class exten
 (`?s a <class>`), unbound-predicate patterns, `MINUS` right sides, aggregation inputs
 (measured 55× on the count query above).
 
+Corollary: `GRAPH <projectDataGraph>` **replaces** `?s knora-base:attachedToProject <p>` — the
+project data graph *is* the project, so once a pattern is graph-scoped the membership triple is
+a redundant join, not a belt-and-braces check. Measured (DEV-6827): dropping it from the
+class-browsing prequery, together with its no-op `DISTINCT`, took the largest class in the
+store from 1.66s to 310ms per page (5.4×) with byte-identical results.
+
 ### Don't inline large closures as `VALUES`
 
 Replacing a `subClassOf*`-style path with an app-side-expanded `VALUES` list (e.g. from the
@@ -393,6 +399,33 @@ fulltext search prequery took it from 2.1s to **>60s**: the engine joins the who
 table against a large intermediate instead of walking the path from bound terms. Rule of
 thumb: `VALUES` for small closures that anchor a scan (the `FindResourcesService` pattern);
 anchored property paths otherwise.
+
+### Drop provably redundant `DISTINCT`
+
+`DISTINCT` costs a hash-dedup over every row × every projected variable. It is a **no-op** when
+the pattern structure cannot produce duplicates — one `rdf:type` triple per subject joined with
+single-valued required properties — and it is *always* a no-op on top of `GROUP BY` over the
+same variable. Verify cheaply before removing: run both forms and byte-compare the output
+(`Accept: text/csv`, then diff/checksum) — that is how DEV-6821/DEV-6827 proved their
+`DISTINCT`s dead (identical byte counts on a 221k-row result).
+
+### Min/max per subject: `GROUP BY` + aggregate, not a `FILTER NOT EXISTS` anti-join
+
+"The value for which no smaller value exists" written as a nested `FILTER NOT EXISTS` with a
+`<` comparison is O(k²) probes per subject (k = values per property) and is evaluated for the
+whole extent under `ORDER BY`. `GROUP BY ?s` + `ORDER BY ASC(MIN(?lit))` computes the same
+minimum in one pass. Measured (DEV-6827): 315ms → 141ms on a single-valued property; the gap
+widens with multi-valued ones. Semantics differ on duplicates (the anti-join form can emit a
+row per tied minimum; `GROUP BY` emits one) — pin the intended behavior in the golden spec.
+
+### Slow query ≠ slow plan: split compute from transfer before rewriting
+
+Before rewriting a "slow" query, wrap its WHERE clause in `SELECT (COUNT(*) AS ?c)` and time
+that: it forces full evaluation but returns one row, isolating plan cost from
+serialization/transfer/parse cost. Measured (DEV-6821): the `/v2/metadata` query "took 26s" on
+a 221k-resource project, but compute was 5–7s — the rest was shipping 118MB of SPARQL-JSON.
+No WHERE-clause rewrite can fix a result-size problem; the levers there are projection width,
+row count (paging), response format (CSV ≈ 3× smaller than SPARQL-JSON), and compression.
 
 ### Shape-changing inputs are query changes
 

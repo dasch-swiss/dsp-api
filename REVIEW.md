@@ -44,6 +44,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] Selective patterns precede `OPTIONAL` blocks **within the same flat group** — no restriction appended after OPTIONALs, no accidental nesting via `pattern.and(group)` (emits `{ pattern . { … } }`) — see `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance (incident DEV-6796)
 - [ ] Property paths (`zeroOrMore()`, `*`/`+`) are **anchored** — a path variable is bound by preceding patterns; seemingly redundant patterns adjacent to a path are treated as load-bearing anchors (DEV-6803: removing one took a 19ms tile query to ~15s); no large closures inlined as `VALUES`
 - [ ] Per-row guards (e.g. `isDeleted`) use `FILTER NOT EXISTS`, not `MINUS`; scans (class extents, unbound predicates, aggregation inputs) are `GRAPH`-scoped where the graph is known — bound-term lookups need no `GRAPH` clause (DEV-6803)
+- [ ] No redundant per-row work: `GRAPH`-scoped patterns don't also carry an `attachedToProject` join; no `DISTINCT` that provably can't dedup (always dead over `GROUP BY`); per-subject min/max via `GROUP BY` + aggregate, not nested `NOT EXISTS` anti-joins (DEV-6827)
 - [ ] Changes that alter a builder's emitted SPARQL — including additions to `AbstractEntityRepo.entityProperties` — are reviewed as query changes and show up in a pinned/golden query spec diff; a hot-path builder without such a spec gets one in the same PR
 
 ### Ontology & RDF
