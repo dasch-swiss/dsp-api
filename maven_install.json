@@ -25,6 +25,7 @@
     "dev.optics:monocle-core_3": 1598778482,
     "dev.optics:monocle-macro_3": 82206083,
     "dev.optics:monocle-refined_3": 485163608,
+    "dev.zio:zio-cache_3": -1303758854,
     "dev.zio:zio-config-magnolia_3": 712513304,
     "dev.zio:zio-config-typesafe_3": -1204877329,
     "dev.zio:zio-config_3": -469687121,
@@ -250,6 +251,8 @@
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3:jar:sources": 343704133,
     "dev.zio:izumi-reflect_3": -655092843,
     "dev.zio:izumi-reflect_3:jar:sources": -148042695,
+    "dev.zio:zio-cache_3": 1261113174,
+    "dev.zio:zio-cache_3:jar:sources": -1899009973,
     "dev.zio:zio-config-derivation_3": -1870395090,
     "dev.zio:zio-config-derivation_3:jar:sources": -187498114,
     "dev.zio:zio-config-magnolia_3": 1373611703,
@@ -1365,6 +1368,13 @@
         "sources": "3602701b6407c8a46b78fcfb2634d64345e57e3c31b2f0c7d141a5d9b7f813b5"
       },
       "version": "3.0.9"
+    },
+    "dev.zio:zio-cache_3": {
+      "shasums": {
+        "jar": "2ebdf6c106738ffe172703387c62df5e76bfb320b841f7745809986c9f1a8177",
+        "sources": "ac7703325c285e101a054a6c001308baac51d7cc7658c8f541faf5a41b9ba221"
+      },
+      "version": "0.2.4"
     },
     "dev.zio:zio-config-derivation_3": {
       "shasums": {
@@ -3404,6 +3414,10 @@
     "dev.zio:izumi-reflect_3": [
       "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3"
     ],
+    "dev.zio:zio-cache_3": [
+      "dev.zio:zio_3",
+      "org.scala-lang.modules:scala-collection-compat_3"
+    ],
     "dev.zio:zio-config-derivation_3": [
       "dev.zio:zio-config_3"
     ],
@@ -5273,6 +5287,9 @@
       "izumi.reflect.internal.fundamentals.platform.language",
       "izumi.reflect.internal.fundamentals.platform.strings",
       "izumi.reflect.macrortti"
+    ],
+    "dev.zio:zio-cache_3": [
+      "zio.cache"
     ],
     "dev.zio:zio-config-derivation_3": [
       "zio.config.derivation"
@@ -9518,6 +9535,8 @@
       "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3:jar:sources",
       "dev.zio:izumi-reflect_3",
       "dev.zio:izumi-reflect_3:jar:sources",
+      "dev.zio:zio-cache_3",
+      "dev.zio:zio-cache_3:jar:sources",
       "dev.zio:zio-config-derivation_3",
       "dev.zio:zio-config-derivation_3:jar:sources",
       "dev.zio:zio-config-magnolia_3",

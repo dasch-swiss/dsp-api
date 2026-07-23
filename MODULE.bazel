@@ -148,6 +148,7 @@ maven.install(
     artifacts = [
         # -- ZIO (Scala 3 `_3`) --
         "dev.zio:zio_3:2.1.26",
+        "dev.zio:zio-cache_3:0.2.4",
         "dev.zio:zio-streams_3:2.1.26",
         "dev.zio:zio-schema_3:1.8.5",
         "dev.zio:zio-schema-derivation_3:1.8.5",

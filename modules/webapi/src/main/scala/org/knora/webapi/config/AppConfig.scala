@@ -32,6 +32,7 @@ final case class AppConfig(
   dspIngest: DspIngestConfig,
   features: Features,
   `export`: ExportConfig,
+  filePermissionCache: FilePermissionCacheConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -46,6 +47,20 @@ final case class AppConfig(
 final case class ExportConfig(
   batchSize: Int,
   parallelism: Int,
+)
+
+/**
+ * Tuning knobs for the short-lived asset-permission cache on the IIIF tile-serving path (DEV-6806).
+ *
+ * `ttl` is how long a computed decision is retained before it is re-resolved (so staleness lags by at most one `ttl`);
+ * `capacity` is the maximum number of cached decisions before eviction. Both live in config so they can be tuned per
+ * deployment without a code change. Validated at load: `ttl` must be positive and at most 10 minutes (a longer window
+ * would silently widen permission staleness — this is a short-lived burst cache, not a general one), and `capacity`
+ * must be at least 1 (a `capacity` below 1 is undefined for `zio.cache.Cache.makeWith`).
+ */
+final case class FilePermissionCacheConfig(
+  ttl: Duration,
+  capacity: Int,
 )
 
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
@@ -193,6 +208,11 @@ object AppConfig {
       c.copy(jwt = c.jwt.copy(issuer = c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort)))),
     )
     .validate("app.v2.resources.max-batch-size must be >= 1")(_.v2.resources.maxBatchSize >= 1)
+    .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
+    .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(
+      _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
+    )
+    .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
