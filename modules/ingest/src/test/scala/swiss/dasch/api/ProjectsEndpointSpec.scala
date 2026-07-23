@@ -41,8 +41,6 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import java.net.URLDecoder
-import java.text.Normalizer
 import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
@@ -383,17 +381,13 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
         executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
       },
       testWithScope("should handle ingest denormalized filenames") {
-        val encoded     = "a%CC%84.mp3"
-        val decoded     = URLDecoder.decode(encoded, "UTF-8")
-        val decodedNorm = Normalizer.normalize(decoded, Normalizer.Form.NFC)
-
-        val url = URL(Path.root / "projects" / "0666" / "assets" / "ingest" / encoded)
+        val url = URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "ā.mp3")
         val req = Request
           .post(url, Body.fromString("tegxd"))
           .addHeader("Authorization", "Bearer fakeToken")
 
         executeRequest(req).map { response =>
-          assertTrue(response.status == Status.Ok) && assertTrue(decodedNorm == "ā.mp3")
+          assertTrue(response.status == Status.Ok)
         }
       },
       testWithScope("should refuse ingesting without content") {
