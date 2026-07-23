@@ -35,9 +35,31 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build and publish dsp-api/dsp-ingest/sipi image to Dockerhub
+        env:
+          RBE_FLAGS: ${{ steps.rbe.outputs.flags }}
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          nix develop --command just docker-publish ${{ steps.rbe.outputs.flags }}
+          # The Bazel <-> NativeLink RBE mTLS handshake at "query remote execution capabilities"
+          # intermittently drops (General OpenSslEngine problem / handshake timed out) and hard-fails
+          # the whole publish, even though the backend is healthy (concurrent build-and-test runs on
+          # the same commit succeed). --remote_local_fallback does not cover this startup capabilities
+          # query, so retry the publish; a warm remote cache keeps each retry fast and re-pushing
+          # already-published tags is idempotent. See docs/development/dsp-api-rbe.md.
+          attempts=3
+          for attempt in $(seq 1 "$attempts"); do
+            echo "::group::just docker-publish (attempt ${attempt}/${attempts})"
+            if nix develop --command just docker-publish $RBE_FLAGS; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "docker-publish attempt ${attempt}/${attempts} failed"
+            if [ "$attempt" -lt "$attempts" ]; then
+              sleep $((attempt * 15))
+            fi
+          done
+          echo "::error::docker-publish failed after ${attempts} attempts"
+          exit 1
       - name: Output docker image tag
         id: output_docker_image_tag
         run: echo "tag=$(nix develop --command just docker-image-tag | tr -d '\n')" >> "$GITHUB_OUTPUT"
