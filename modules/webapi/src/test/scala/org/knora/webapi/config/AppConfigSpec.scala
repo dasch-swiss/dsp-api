@@ -49,6 +49,10 @@ class AppConfigSpec extends ZIOSpecDefault {
       loadAppConfigWith("app.file-permission-cache.ttl = 0 seconds").exit
         .map(exit => assertTrue(exit.isFailure))
     },
+    test("reject a file-permission-cache ttl above the 10 minute staleness guard") {
+      loadAppConfigWith("app.file-permission-cache.ttl = 11 minutes").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
     test("reject a file-permission-cache capacity below 1") {
       loadAppConfigWith("app.file-permission-cache.capacity = 0").exit
         .map(exit => assertTrue(exit.isFailure))
