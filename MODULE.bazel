@@ -163,7 +163,7 @@ maven.install(
         "dev.zio:zio-logging-slf4j2-bridge_3:2.5.3",
         "dev.zio:zio-metrics-connectors_3:2.5.6",
         "dev.zio:zio-metrics-connectors-prometheus_3:2.5.6",
-        "dev.zio:zio-opentelemetry_3:3.1.17",
+        "dev.zio:zio-opentelemetry_3:3.1.18",
         # ZIO test (Test scope in sbt; scoped per-target in BUILD files)
         "dev.zio:zio-test_3:2.1.26",
         "dev.zio:zio-test-sbt_3:2.1.26",
@@ -175,36 +175,36 @@ maven.install(
         "com.softwaremill.sttp.client4:zio-json_3:4.0.25",
         "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3:4.0.25",
         # -- tapir (`_3`) --
-        "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:1.13.19",
-        "com.softwaremill.sttp.tapir:tapir-json-zio_3:1.13.19",
-        "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.19",
-        "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.19",
-        "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.19",
-        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.19",
+        "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:1.13.25",
+        "com.softwaremill.sttp.tapir:tapir-json-zio_3:1.13.25",
+        "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.25",
+        "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.25",
+        "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.25",
+        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.25",
         # -- monocle (`_3`) --
         "dev.optics:monocle-core_3:3.3.0",
         "dev.optics:monocle-macro_3:3.3.0",
         "dev.optics:monocle-refined_3:3.3.0",
         # -- other Scala (`_3`) --
-        "eu.timepit:refined_3:0.11.3",
+        "eu.timepit:refined_3:0.11.4",
         "org.scala-graph:graph-core_3:2.0.2",
         "org.scala-lang.modules:scala-xml_3:2.4.0",
         "com.github.tototoshi:scala-csv_3:2.0.0",
         # -- RDF / Jena / rdf4j (Java) --
         "org.apache.jena:jena-core:6.1.0",
         "org.apache.jena:jena-text:6.1.0",
-        "org.eclipse.rdf4j:rdf4j-client:5.3.1",
-        "org.eclipse.rdf4j:rdf4j-shacl:5.3.1",
-        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.1",
+        "org.eclipse.rdf4j:rdf4j-client:5.3.2",
+        "org.eclipse.rdf4j:rdf4j-shacl:5.3.2",
+        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.2",
         "org.topbraid:shacl:1.5.0",
         # -- OpenTelemetry (Java) --
-        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.62.0",
-        "io.opentelemetry:opentelemetry-exporter-otlp:1.62.0",
-        "io.opentelemetry:opentelemetry-sdk:1.62.0",
-        "io.opentelemetry:opentelemetry-sdk-testing:1.62.0",
-        "io.opentelemetry.semconv:opentelemetry-semconv:1.41.1",
+        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.63.0",
+        "io.opentelemetry:opentelemetry-exporter-otlp:1.63.0",
+        "io.opentelemetry:opentelemetry-sdk:1.63.0",
+        "io.opentelemetry:opentelemetry-sdk-testing:1.63.0",
+        "io.opentelemetry.semconv:opentelemetry-semconv:1.42.0",
         # -- misc Java libs --
-        "org.bouncycastle:bcprov-jdk15to18:1.84",
+        "org.bouncycastle:bcprov-jdk15to18:1.85",
         "org.ehcache:ehcache:3.12.0",
         "com.google.gwt:gwt-servlet:2.10.0",
         "com.ibm.icu:icu4j:78.3",
@@ -217,11 +217,11 @@ maven.install(
         "org.slf4j:slf4j-simple:2.0.18",
         # -- dsp-ingest db (Java) --
         "org.xerial:sqlite-jdbc:3.53.2.0",
-        "org.flywaydb:flyway-core:12.7.0",
-        "com.zaxxer:HikariCP:7.0.2",
+        "org.flywaydb:flyway-core:12.10.0",
+        "com.zaxxer:HikariCP:7.1.0",
         # -- test-only Java libs --
         "org.xmlunit:xmlunit-core:2.12.0",
-        "net.datafaker:datafaker:2.5.4",
+        "net.datafaker:datafaker:2.7.0",
         "org.testcontainers:testcontainers:2.0.5",
         "org.wiremock:wiremock:3.13.2",
         # JUnit 4: compile-time dep of //modules/test-runner (DspZTestJUnitRunner
@@ -268,7 +268,7 @@ maven.artifact(
         "org.springframework:spring-aop",
     ],
     group = "org.springframework.security",
-    version = "7.0.5",
+    version = "7.0.6",
 )
 use_repo(maven, "maven", "unpinned_maven")
 

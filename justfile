@@ -50,6 +50,13 @@ test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
 check:
     ./sbtx check
 
+# Sync MODULE.bazel's maven.install versions to Dependencies.scala (sbt) + re-pin the lock file.
+# scala-steward updates only the sbt side, so run this after a dependency update to clear the drift that
+# //tools/deps:maven_versions_match_sbt reports.
+sync-bazel-maven-versions:
+    python3 tools/deps/check_maven_versions.py --fix MODULE.bazel project/Dependencies.scala
+    bazel run @unpinned_maven//:pin
+
 ## Docker image build / publish
 
 # Print the docker image tag (git describe via workspace_status.sh; no sbt)

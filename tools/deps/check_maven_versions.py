@@ -14,6 +14,7 @@ elsewhere via `val NAME = "literal"`. Deps present on only one side (e.g.
 sbt-plugin-only or Scala-toolchain-only artifacts) are not an error -- this
 only flags shared coordinates whose versions disagree.
 """
+import argparse
 import re
 import sys
 
@@ -76,20 +77,79 @@ def parse_module_bazel(text):
     return deps
 
 
+def fix_module_bazel(text, sbt_deps, module_deps):
+    """Rewrites MODULE.bazel's version strings to match Dependencies.scala for every shared coordinate that
+    has drifted, handling both the `maven.install` artifacts list ("group:artifact:version") and the
+    standalone `maven.artifact(...)` override blocks. Returns (new_text, changes). Does NOT re-pin the lock
+    file -- that needs Bazel; the `just sync-bazel-maven-versions` recipe runs the re-pin after this."""
+    changes = []
+    new_text = text
+    for (group, artifact), want in sbt_deps.items():
+        have = module_deps.get((group, artifact))
+        if have is None or have == want:
+            continue
+        coord_old = f'"{group}:{artifact}:{have}"'
+        if coord_old in new_text:
+            new_text = new_text.replace(coord_old, f'"{group}:{artifact}:{want}"')
+            changes.append((group, artifact, have, want))
+            continue
+
+        # maven.artifact(...) override block: rewrite only the version= of the block whose group+artifact match.
+        def rewrite_block(m, group=group, artifact=artifact, want=want):
+            body = m.group(0)
+            g = re.search(r'group\s*=\s*"([^"]+)"', body)
+            a = re.search(r'artifact\s*=\s*"([^"]+)"', body)
+            if g and a and g.group(1) == group and a.group(1) == artifact:
+                return re.sub(r'(version\s*=\s*")[^"]+"', lambda vm: vm.group(1) + want + '"', body)
+            return body
+
+        replaced = MAVEN_ARTIFACT_BLOCK_RE.sub(rewrite_block, new_text)
+        if replaced != new_text:
+            new_text = replaced
+            changes.append((group, artifact, have, want))
+    return new_text, changes
+
+
 def main():
-    module_bazel_path, dependencies_scala_path = sys.argv[1], sys.argv[2]
-    with open(module_bazel_path) as f:
-        module_bazel_deps = parse_module_bazel(f.read())
-    with open(dependencies_scala_path) as f:
+    parser = argparse.ArgumentParser(
+        description="Check (or --fix) MODULE.bazel's maven versions against Dependencies.scala.",
+    )
+    parser.add_argument("module_bazel")
+    parser.add_argument("dependencies_scala")
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="rewrite MODULE.bazel versions to match Dependencies.scala (does not re-pin; "
+        "run `just sync-bazel-maven-versions` for the full sync)",
+    )
+    args = parser.parse_args()
+
+    with open(args.module_bazel) as f:
+        module_bazel_text = f.read()
+    module_bazel_deps = parse_module_bazel(module_bazel_text)
+    with open(args.dependencies_scala) as f:
         sbt_deps, unresolved = parse_dependencies_scala(f.read())
 
     if unresolved:
         for group, artifact, ref in unresolved:
             print(
                 f"WARNING: could not resolve version identifier '{ref}' for "
-                f"{group}:{artifact} in {dependencies_scala_path} -- skipped",
+                f"{group}:{artifact} in {args.dependencies_scala} -- skipped",
                 file=sys.stderr,
             )
+
+    if args.fix:
+        new_text, changes = fix_module_bazel(module_bazel_text, sbt_deps, module_bazel_deps)
+        if not changes:
+            print("OK: MODULE.bazel already agrees with Dependencies.scala; nothing to fix.")
+            return 0
+        with open(args.module_bazel, "w") as f:
+            f.write(new_text)
+        print(f"Updated {len(changes)} coordinate(s) in {args.module_bazel} to match Dependencies.scala:")
+        for group, artifact, have, want in sorted(changes):
+            print(f"  {group}:{artifact} -- {have} -> {want}")
+        print("\nNow re-pin the lock file: `bazel run @unpinned_maven//:pin` (or run `just sync-bazel-maven-versions`).")
+        return 0
 
     mismatches = []
     checked = 0
@@ -108,7 +168,11 @@ def main():
                 f"  {group}:{artifact} -- sbt has {sbt_version}, MODULE.bazel has {bazel_version}",
                 file=sys.stderr,
             )
-        print("\nBump both together (MODULE.bazel's maven.install + Dependencies.scala).", file=sys.stderr)
+        print(
+            "\nRun `just sync-bazel-maven-versions` to bring MODULE.bazel in line and re-pin "
+            "(scala-steward updates only the sbt side).",
+            file=sys.stderr,
+        )
         return 1
 
     print(f"OK: {checked} shared Maven coordinates agree between MODULE.bazel and Dependencies.scala.")
