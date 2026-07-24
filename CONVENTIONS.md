@@ -6,6 +6,16 @@ Agent reference card for the **work phase**. Pair with `REVIEW.md` (review phase
 
 Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplestore: Apache Jena Fuseki. Media server: Sipi.
 
+## Compile & feedback loop
+
+- **Use the `metals` MCP tools, not `sbt compile`, for the edit → diagnostics loop.** `compile-file` /
+  `compile-module` are incremental and return structured diagnostics; `get-usages` beats grep for references.
+- **Fresh checkout or worktree: run `just metals-bootstrap` once, then the metals `import-build` tool.**
+  Without it metals never connects and every tool returns empty. Empty results mean "not connected", not
+  "still warming up" — don't silently fall back to sbt. Details: `docs/development/dsp-api-metals-mcp.md`.
+- `sbt` remains the build of record for formatting/linting (`sbt fmt`, `sbt check`) and the Bazel recipes own
+  images and CI test runs.
+
 ## Code Conventions
 
 ### Services
