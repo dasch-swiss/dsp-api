@@ -20,6 +20,7 @@ final case class AppConfig(
   bcryptPasswordStrength: Int,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
+  allowSparqlPassthrough: Boolean,
   fallbackLanguage: String,
   knoraApi: KnoraApi,
   sipi: Sipi,
@@ -172,7 +173,35 @@ final case class Triplestore(
   maintenanceTimeout: Duration,
   fuseki: Fuseki,
   profileQueries: Boolean,
+  sparqlPassthrough: SparqlPassthroughConfig,
   isTestEnv: Boolean = false,
+)
+
+/**
+ * Guardrails for the admin SPARQL passthrough surface (`POST /admin/sparql/query`), which is itself gated by
+ * `app.allow-sparql-passthrough`. All four are operational knobs, living in config so an environment can tune them
+ * without a code change, release and redeploy, and all four bound an interaction with the triplestore -- which is
+ * why they sit under `app.triplestore`.
+ *
+ * `timeout` is sent to the store as its per-request execution timeout, so an over-time query is cancelled by the
+ * store's engine rather than merely abandoned client-side. It also sizes the API-side deadline.
+ *
+ * `maxRequestBodyBytes` bounds the SPARQL text a caller may submit. It is enforced on that one endpoint, never
+ * globally -- a global cap of this size would reject the larger project-import upload.
+ *
+ * `maxResponseBytes` bounds the bytes read back from the store, counted before any response compression. The read
+ * path buffers up to this ceiling and only then responds, so a breach yields a clean error rather than a truncated
+ * body; the consequence is that this value sizes per-request heap use.
+ *
+ * `maxConcurrentCalls` is a surface-wide backstop on calls in flight, so a runaway script or agent cannot multiply
+ * `maxResponseBytes` into heap exhaustion. It is runaway protection, not a throughput or fairness control, hence
+ * deliberately generous; a call arriving while it is saturated is rejected, never queued.
+ */
+final case class SparqlPassthroughConfig(
+  timeout: Duration,
+  maxRequestBodyBytes: Int,
+  maxResponseBytes: Int,
+  maxConcurrentCalls: Int,
 )
 
 final case class Fuseki(
@@ -213,6 +242,18 @@ object AppConfig {
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
     )
     .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
+    .validate("app.triplestore.sparql-passthrough.timeout must be positive")(
+      _.triplestore.sparqlPassthrough.timeout.compareTo(Duration.ZERO) > 0,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-request-body-bytes must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxRequestBodyBytes >= 1,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-response-bytes must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxResponseBytes >= 1,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-concurrent-calls must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxConcurrentCalls >= 1,
+    )
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
