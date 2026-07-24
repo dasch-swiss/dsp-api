@@ -42,6 +42,7 @@ import scala.jdk.CollectionConverters.IterableHasAsJava
 
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
+import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
 
 final class DspApiServer(
   server: Server,
@@ -71,6 +72,28 @@ final class DspApiServer(
   // http.route. Keeps span names low-cardinality per OTel HTTP semantic conventions:
   // https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
   private def spanNameInterceptor: EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
+
+    /**
+     * Records an unauthenticated attempt on the admin SPARQL passthrough. That surface must attribute every call
+     * including rejected ones, and a request rejected by the endpoint's security logic never reaches the service that
+     * does the logging -- security logic runs first -- so this hook is the only place the rejection is observable.
+     *
+     * HARD PROHIBITION: `ctx.securityInput` holds the raw bearer token and `ctx.request` exposes the `Authorization`
+     * header. Neither may be read here. Writing either would put a live credential into stdout and onward into the
+     * log backend. Only the outcome, method and route template are recorded; `trace_id` is attached by the
+     * surrounding middleware's log annotation.
+     */
+    private def logRejectedPassthrough(ep: AnyEndpoint): UIO[Unit] = {
+      val route = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
+      ZIO
+        .logInfo(
+          s"SPARQL passthrough: operation=query outcome=unauthenticated " +
+            s"method=${ep.method.map(_.method).getOrElse("-")} path=$route",
+        )
+        .when(route == SparqlPassthroughEndpoints.pathTemplate)
+        .unit
+    }
+
     private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
       ctxStore.get.flatMap { ctx =>
         ZIO.succeed {
@@ -94,7 +117,8 @@ final class DspApiServer(
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          updateSpanMetadata(ctx.endpoint) *> delegate.onSecurityFailure(ctx)
+          updateSpanMetadata(ctx.endpoint) *> logRejectedPassthrough(ctx.endpoint) *>
+            delegate.onSecurityFailure(ctx)
 
         override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
           monad: MonadError[Task],

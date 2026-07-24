@@ -74,6 +74,31 @@ final case class BaseEndpoints(authenticator: Authenticator) {
       case _                 => ZIO.succeed(AnonymousUser)
     }
 
+  /**
+   * A narrowing of [[securedEndpoint]] that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
+   * endpoint here) no cookie. Use it for a route where accepting basic credentials would be a liability rather than a
+   * convenience.
+   *
+   * Two properties make the narrowing worth having. First, basic authentication runs a bcrypt verification at the
+   * configured strength on **every** call, and because the framework evaluates an endpoint's security logic before its
+   * server logic, that cost sits upstream of any bound the server logic establishes -- so on a route that
+   * deliberately bounds its own work, basic would be the one unbounded part. Second, omitting the basic security
+   * input also omits the `WWW-Authenticate: Basic` challenge, which is worth keeping off a route whose existence the
+   * generated API documentation advertises.
+   *
+   * The absence of a cookie input is what keeps such a route CSRF-safe: this API's CORS is reflected-origin with
+   * credentials allowed, so a cookie credential here would be rideable from any origin. Treat that as a tested
+   * invariant, not a convention.
+   */
+  val bearerSecuredEndpoint: ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
+    endpoint
+      .errorOut(errorOutputs)
+      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+      .zServerSecurityLogic {
+        case Some(jwtToken) => authenticateJwt(jwtToken)
+        case _              => ZIO.fail(BadCredentialsException("No credentials provided."))
+      }
+
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =
     authenticator.authenticate(token).orElseFail(BadCredentialsException("Invalid credentials."))
 

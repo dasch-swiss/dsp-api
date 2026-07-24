@@ -7,6 +7,7 @@ package org.knora.webapi.slice.api.admin
 
 import zio.URLayer
 import zio.ZLayer
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsCache
@@ -30,6 +31,7 @@ import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
 import org.knora.webapi.slice.api.admin.service.ProjectRestService
 import org.knora.webapi.slice.api.admin.service.ProjectsLegalInfoRestService
+import org.knora.webapi.slice.api.admin.service.SparqlPassthroughRestService
 import org.knora.webapi.slice.api.admin.service.StoreRestService
 import org.knora.webapi.slice.api.admin.service.UserRestService
 import org.knora.webapi.slice.common.api.*
@@ -62,6 +64,7 @@ object AdminApiModule { self =>
       ProjectEraseService &
       ProjectExportService &
       ProjectService &
+      Tracing &
       TriplestoreService &
       UserService
       // format: on
@@ -85,13 +88,15 @@ object AdminApiModule { self =>
       PermissionsEndpoints.layer ++ PermissionRestService.layer ++
       ProjectsEndpoints.layer ++ ProjectRestService.layer ++
       ProjectsLegalInfoEndpoints.layer ++ ProjectsLegalInfoRestService.layer ++
+      SparqlPassthroughEndpoints.layer ++ SparqlPassthroughRestService.layer ++
       StoreEndpoints.layer ++ StoreRestService.layer ++
       UsersEndpoints.layer ++ UserRestService.layer) >+>
       // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
       (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
         GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
         PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
-        ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
+        ProjectsLegalInfoServerEndpoints.layer ++ SparqlPassthroughServerEndpoints.layer ++
+        StoreServerEndpoints.layer ++
         UsersServerEndpoints.layer) >+>
       // Layer 3: Top-level aggregator
       AdminApiServerEndpoints.layer
