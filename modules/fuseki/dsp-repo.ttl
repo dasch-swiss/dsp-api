@@ -22,7 +22,27 @@
 
 :text_dataset           rdf:type                            text:TextDataset ;
                         text:dataset                        :tdb_dataset_readwrite ;
-                        text:index                          :indexLucene .
+                        text:index                          :indexLucene ;
+                        # Refuse federated SERVICE calls. Without this, any SELECT can make the *server* issue
+                        # outbound HTTP to a URL the query author chooses -- internal-only services, cloud metadata
+                        # endpoints -- which is reach the query author does not otherwise have. That matters far more
+                        # now that dsp-api can forward a SystemAdmin's raw SPARQL here
+                        # (POST /admin/sparql/query), where such a call would also bypass the response-size ceiling
+                        # and log next to nothing. Nothing in dsp-api uses SERVICE.
+                        #
+                        # It belongs on the dataset the service references (this one), not on the TDB2 dataset it
+                        # wraps. Verified against Fuseki 6.1.0: a SERVICE query is then refused with HTTP 422 and
+                        # "SERVICE execution disabled", while ordinary queries and the Lucene text index are
+                        # unaffected. A JVM system property is not an alternative -- ARQ does not read this symbol
+                        # from one, and neither does this version's fuseki-server have a --set option.
+                        #
+                        # CAVEAT: docker-entrypoint.sh copies this file only when the target does not already exist,
+                        # and /fuseki is a persistent volume, so an environment created before this change keeps its
+                        # old configuration across redeploys. The entrypoint warns when that is the case. Verify per
+                        # host with a live SERVICE probe before enabling the passthrough there; see
+                        # docs/03-endpoints/api-admin/sparql-passthrough.md.
+                        ja:context                          [ ja:cxtName  "arq:httpServiceAllowed" ;
+                                                              ja:cxtValue "false" ] .
 
 # A TDB datset used for RDF storage
 :tdb_dataset_readwrite  a                                   tdb2:DatasetTDB2 ;

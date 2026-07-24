@@ -221,7 +221,7 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 
 1. Define endpoint in the appropriate `*Endpoints.scala`
 2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
-3. Register in `CompleteApiServerEndpoints.scala`
+3. Register in the API's aggregator (`AdminApiServerEndpoints.scala` for admin)
 4. Add unit/integration tests mirroring the main structure
 
 ### Bumping the SIPI version
