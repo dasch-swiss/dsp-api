@@ -123,6 +123,20 @@ class StandoffCanonicalizeEndpointE2ESpec extends E2EZSpec {
         storedXml  <- readTextValueAsXml(ResourceIri.unsafeFrom(resourceIri))
       } yield assertTrue(canonical == storedXml)
     },
+    test("preserves significant whitespace through the full storage round-trip") {
+      // Whitespace inside <pre> is significant; it must survive storage and read-back unchanged, and the
+      // endpoint's canonical form must still equal what a live GET returns for the stored value.
+      val preDoc = "<text documentType=\"html\"><pre>line1\n    indented\nline3</pre></text>"
+      for {
+        canonical  <- canonicalize(preDoc)
+        doc        <- createResourceWithTextValue(preDoc)
+        resourceIri = doc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
+        storedXml  <- readTextValueAsXml(ResourceIri.unsafeFrom(resourceIri))
+      } yield assertTrue(
+        canonical == storedXml,
+        storedXml.contains("line1\n    indented\nline3"),
+      )
+    },
     test("rejects malformed XML with 400") {
       for {
         response <- TestApiClient.postString(canonicalizeUri, "<p>unclosed", xmlMediaType, anythingUser1)

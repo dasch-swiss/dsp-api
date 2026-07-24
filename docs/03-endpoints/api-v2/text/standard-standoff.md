@@ -56,9 +56,17 @@ When a `TextValue` with standard standoff markup is read back,
 the XML that DSP-API returns is semantically equivalent (isomorphic) to the XML that was submitted,
 but not necessarily byte-identical.
 The round-trip from XML to standoff and back normalises the markup:
-attribute order, the form of empty elements (`<br></br>` becomes `<br/>`),
-character-entity encoding and insignificant whitespace may all differ.
+DSP-API prepends an XML declaration (`<?xml version="1.0" encoding="UTF-8"?>`),
+attribute order is not preserved, empty elements are emitted in self-closing form
+(`<br></br>` becomes `<br/>`), and character entities are re-encoded.
 A direct string comparison between the submitted XML and the stored XML is therefore unreliable.
+
+Whitespace, by contrast, is preserved verbatim, including significant whitespace inside `<pre>`.
+The canonical form is therefore whitespace-sensitive:
+re-indenting or otherwise reformatting the source XML changes the canonical form
+and is reported as a change, even when no markup or text content was altered.
+Clients that want purely semantic change detection should keep their source serialisation stable
+(or normalise whitespace on their own side) before comparing.
 
 This matters for clients that keep their own copy of the data
 and want to detect whether a rich-text value has actually changed before syncing an update

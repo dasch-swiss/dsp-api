@@ -62,9 +62,26 @@ class StandoffCanonicalizationIdempotencySpec extends E2EZSpec {
     // Deeply nested inline formatting.
     "nested-inline" ->
       """<text documentType="html"><p><strong><em>bold italic</em></strong> then <sub>a<sup>b</sup></sub> and <u>underlined</u></p></text>""",
-    // Whitespace inside and between block elements.
-    "whitespace" ->
-      """<text documentType="html"><p>   leading   and   inner   spaces   </p><p>second</p></text>""",
+  )
+
+  /** The XML declaration dsp-api prepends to every rendered text value. */
+  private val xmlDeclaration = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+
+  /**
+   * Whitespace-shaped inputs. The round-trip preserves whitespace verbatim (it only prepends the XML
+   * declaration), so canonicalisation is whitespace-SENSITIVE: these documents are already canonical
+   * except for that declaration, which is exactly what [[whitespacePreservationTest]] asserts.
+   */
+  private val whitespaceCorpus: List[(String, String)] = List(
+    "ws-leading-trailing" -> "<text documentType=\"html\"><p>  hello  </p></text>",
+    "ws-inner-runs"       -> "<text documentType=\"html\"><p>a    b</p></text>",
+    "ws-newline-in-text"  -> "<text documentType=\"html\"><p>line1\nline2</p></text>",
+    // indentation / newlines between block elements (the "pretty-printed source" case)
+    "ws-inter-block-indent" -> "<text documentType=\"html\">\n  <p>a</p>\n  <p>b</p>\n</text>",
+    // whitespace between two separator-inserting <p> elements (the separator char must not leak into XML)
+    "ws-separator-adjacent" -> "<text documentType=\"html\"><p>a</p>   <p>b</p></text>",
+    // significant whitespace inside <pre> must be preserved exactly
+    "ws-pre-significant" -> "<text documentType=\"html\"><pre>line1\n    indented\nline3</pre></text>",
   )
 
   /** Human-readable pointer to the first character where two renders diverge (only used on failure). */
@@ -93,13 +110,30 @@ class StandoffCanonicalizationIdempotencySpec extends E2EZSpec {
       } yield assertTrue(pass1 == pass2)
     }
 
+  /**
+   * Asserts that a document which is already canonical (apart from the XML declaration) round-trips to
+   * exactly itself with the declaration prepended -- i.e. whitespace and structure are preserved verbatim,
+   * with no collapsing, trimming or normalisation.
+   */
+  private def whitespacePreservationTest(name: String, xml: String) =
+    test(name) {
+      for {
+        mapping   <- getStandardMapping
+        canonical <- ZIO.attempt(StandoffTagUtilV2.canonicalize(xml, mapping))
+      } yield assertTrue(canonical == xmlDeclaration + xml)
+    }
+
   override val e2eSpec =
     suite("Standard-mapping canonicalisation idempotency (canonicalize(canonicalize(x)) == canonicalize(x))")(
       suite("repo fixtures + hand-built edge cases")(
         (
           fixtureCorpus.map { case (n, p) => idempotencyTest(n, ZIO.attempt(FileUtil.readTextFile(Paths.get(p)))) } ++
-            inlineCorpus.map { case (n, x) => idempotencyTest(n, ZIO.succeed(x)) }
+            inlineCorpus.map { case (n, x) => idempotencyTest(n, ZIO.succeed(x)) } ++
+            whitespaceCorpus.map { case (n, x) => idempotencyTest(n, ZIO.succeed(x)) }
         )*,
+      ),
+      suite("whitespace is preserved verbatim (only the XML declaration is added)")(
+        whitespaceCorpus.map { case (n, x) => whitespacePreservationTest(n, x) }*,
       ),
       // hamlet.xml is very large; the existing hamlet round-trip specs are @@ ignore for memory reasons.
       // Kept here as an opt-in stress case: remove the @@ TestAspect.ignore to run it manually.
