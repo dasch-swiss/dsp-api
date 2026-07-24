@@ -50,6 +50,42 @@ Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML 
 
 Text with standard standoff markup can be transformed to TEI XML as described [in the tei xml documentation](tei-xml.md).
 
+## Canonical Form and Change Detection
+
+When a `TextValue` with standard standoff markup is read back,
+the XML that DSP-API returns is semantically equivalent (isomorphic) to the XML that was submitted,
+but not necessarily byte-identical.
+The round-trip from XML to standoff and back normalises the markup:
+attribute order, the form of empty elements (`<br></br>` becomes `<br/>`),
+character-entity encoding and insignificant whitespace may all differ.
+A direct string comparison between the submitted XML and the stored XML is therefore unreliable.
+
+This matters for clients that keep their own copy of the data
+and want to detect whether a rich-text value has actually changed before syncing an update
+(for example, to avoid creating redundant value versions).
+Because only DSP-API knows its own canonical form,
+the comparison has to be made against that form.
+
+The `POST /v2/standoff/canonicalize` endpoint returns the canonical form of a piece of
+standard-mapping rich-text XML: the exact XML that DSP-API would return when reading such a value back.
+The conversion is idempotent, so a client can canonicalize its own source
+and compare the result against the `textValueAsXml` of the stored value
+to decide whether the value has changed.
+
+```text
+POST http://HOST/v2/standoff/canonicalize
+Content-Type: application/xml
+Authorization: Bearer TOKEN
+
+<text documentType="html"><p>Some <strong>rich</strong> text.</p></text>
+```
+
+The response body is the canonical XML, served as `application/xml`.
+Only the standard mapping is supported, and the request must be authenticated.
+
+This is an experimental feature and may change or be removed without notice.
+It should not be relied upon for production integrations.
+
 ## Footnotes
 
 The `<footnote>` tag is an anchor tag indicating where in the text a footnote should be placed.

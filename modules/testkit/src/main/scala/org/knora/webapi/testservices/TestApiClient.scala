@@ -317,6 +317,21 @@ final case class TestApiClient(
     f: RequestUpdate[String],
   ): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap(jwt => postSparql(relativeUri, sparqlQuery, f.andThen(_.auth.bearer(jwt))))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+  ): Task[Response[Either[String, String]]] =
+    sendRequest(basicRequest.post(relativeUri).body(body).contentType(contentType).response(asString))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+    user: User,
+  ): Task[Response[Either[String, String]]] =
+    sendRequest(basicRequest.post(relativeUri).body(body).contentType(contentType).response(asString), Some(user))
 }
 
 object TestApiClient {
@@ -335,6 +350,21 @@ object TestApiClient {
     f: Request[Either[String, String]] => Request[Either[String, String]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getAsString(relativeUri, f))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postString(relativeUri, body, contentType))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postString(relativeUri, body, contentType, user))
 
   def deleteJson[A: JsonDecoder](
     relativeUri: Uri,
