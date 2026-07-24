@@ -1459,9 +1459,21 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
           projectADM = anythingProject,
         )
 
-        resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID))).exit.map(
-          actual => assert(actual)(failsWithA[OntologyConstraintException]),
-        )
+        // objectClassConstraint of hasOtherThing is anything:Thing, which has subclasses. The error must
+        // list the acceptable classes with each IRI in its own angle brackets (no malformed `<A,B>` token)
+        // and the constraint class must appear only once (it is a subclass of itself in the ontology cache).
+        val thingIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+        resourceResponder(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)),
+        ).exit.map { actual =>
+          val message = actual.causeOption.flatMap(_.failureOption).map(_.getMessage).getOrElse("")
+          assert(actual)(failsWithA[OntologyConstraintException]) &&
+          assertTrue(
+            message.contains("does not belong to any of the following classes:"),
+            !message.contains(",http"),
+            message.split(java.util.regex.Pattern.quote(s"<$thingIri>"), -1).length - 1 == 1,
+          )
+        }
       },
       test("not create a resource with invalid custom permissions") {
         val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
