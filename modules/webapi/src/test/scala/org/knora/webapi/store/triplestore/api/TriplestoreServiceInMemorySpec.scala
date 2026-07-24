@@ -8,11 +8,13 @@ package org.knora.webapi.store.triplestore.api
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
 import org.junit.runner.RunWith
+import sttp.model.StatusCode
 import zio.Ref
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.hasSameElements
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.UUID
 
@@ -29,6 +31,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlRequest
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlResponse
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
@@ -284,6 +288,97 @@ class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
           } yield assertTrue(containsAdmin && doesNotContainBase)
         },
       ),
+      suite("rawQuery")(
+        test("SELECT without an Accept header returns SPARQL-Results JSON") {
+          for {
+            response <- rawQuery(s"SELECT ?s WHERE { ?s a <${Biblio.Class.Article.value}> }")
+            body      = asString(response)
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("application/sparql-results+json"),
+            body.contains("\"s\""),
+            body.contains("http://anArticle"),
+          )
+        },
+        test("SELECT with Accept text/csv returns CSV") {
+          for {
+            response <- rawQuery(s"SELECT ?s WHERE { ?s a <${Biblio.Class.Article.value}> }", Some("text/csv"))
+            body      = asString(response)
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("text/csv"),
+            body.linesIterator.next() == "s",
+            body.contains("http://anArticle"),
+          )
+        },
+        test("SELECT with Accept application/sparql-results+xml returns SPARQL-Results XML") {
+          for {
+            response <- rawQuery("SELECT ?s WHERE { ?s ?p ?o }", Some("application/sparql-results+xml"))
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("application/sparql-results+xml"),
+            asString(response).contains("<sparql"),
+          )
+        },
+        test("ASK returns a boolean result") {
+          for {
+            response <- rawQuery(s"ASK { <http://anArticle> a <${Biblio.Class.Article.value}> }")
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("application/sparql-results+json"),
+            asString(response).contains("true"),
+          )
+        },
+        test("CONSTRUCT returns Turtle by default") {
+          for {
+            response <- rawQuery("CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }")
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("text/turtle"),
+            asString(response).contains("http://anArticle"),
+          )
+        },
+        test("CONSTRUCT with Accept application/rdf+xml returns RDF/XML") {
+          for {
+            response <- rawQuery("CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }", Some("application/rdf+xml"))
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("application/rdf+xml"),
+            asString(response).contains("rdf:RDF"),
+          )
+        },
+        test("DESCRIBE is supported, unlike the typed query overloads") {
+          for {
+            response <- rawQuery("DESCRIBE <http://anArticle>")
+          } yield assertTrue(
+            response.status == StatusCode.Ok,
+            response.contentType.contains("text/turtle"),
+            asString(response).contains("http://anArticle"),
+          )
+        },
+        test("a malformed query is reported as a 400 with the parse message, not as a failure") {
+          for {
+            response <- rawQuery("SELECT ?s WHERE { this is not sparql }")
+          } yield assertTrue(
+            response.status == StatusCode.BadRequest,
+            asString(response).nonEmpty,
+          )
+        },
+        test("an Accept header that does not apply to the result kind yields a 406") {
+          for {
+            response <- rawQuery("SELECT ?s WHERE { ?s ?p ?o }", Some("text/turtle"))
+          } yield assertTrue(response.status == StatusCode.NotAcceptable)
+        },
+        test("Accept parameters and wildcards fall back to the default serialization") {
+          for {
+            withParams <- rawQuery("SELECT ?s WHERE { ?s ?p ?o }", Some("application/sparql-results+json;q=0.9"))
+            wildcard   <- rawQuery("SELECT ?s WHERE { ?s ?p ?o }", Some("*/*"))
+          } yield assertTrue(
+            withParams.contentType.contains("application/sparql-results+json"),
+            wildcard.contentType.contains("application/sparql-results+json"),
+          )
+        },
+      ),
       suite("sparqlHttpGraphFile")(test("sparqlHttpGraphFile should create the file") {
         val tempDir = Files.createTempDirectory(UUID.randomUUID().toString)
         tempDir.toFile.deleteOnExit()
@@ -312,6 +407,11 @@ class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
         }
       }),
     ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)
+
+  private def rawQuery(sparql: String, accept: Option[String] = None) =
+    ZIO.serviceWithZIO[TriplestoreService](_.rawQuery(RawSparqlRequest(sparql, accept, Map.empty)))
+
+  private def asString(response: RawSparqlResponse) = new String(response.body.toArray, StandardCharsets.UTF_8)
 
   private def namedModelExists(ds: Dataset, name: String) = {
     ds.begin(ReadWrite.READ)

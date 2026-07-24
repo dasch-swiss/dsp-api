@@ -176,7 +176,11 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       import org.knora.webapi.slice.common.domain.InternalIri
       import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.*
       import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+      import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
       import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
+
+      override def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse] =
+        ZIO.die(new UnsupportedOperationException("not used in import tests"))
 
       override def uploadNQuads(stream: ZStream[Any, Throwable, Byte]): Task[Unit] =
         stream.runCollect.flatMap(bytes => uploadedRef.set(bytes))

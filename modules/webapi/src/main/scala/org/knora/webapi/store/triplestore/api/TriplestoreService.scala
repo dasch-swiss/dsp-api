@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
+import sttp.model.StatusCode
 import zio.*
 import zio.stream.ZStream
 
@@ -23,11 +24,14 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.RdfModel
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlRequest
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlResponse
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout.Standard
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
@@ -74,6 +78,24 @@ trait TriplestoreService extends QueryBuilderHelper {
   final def select(sparql: SelectQuery): Task[SparqlSelectResult]                                    = query(Select(sparql))
   final def selectWithTimeout(sparql: SelectQuery, timeout: SparqlTimeout): Task[SparqlSelectResult] =
     query(Select(sparql, timeout))
+
+  /**
+   * Forwards a caller-supplied SPARQL query string to the store without inspecting it, and returns the store's raw
+   * response -- status, `Content-Type` and body bytes -- as data.
+   *
+   * This is the seam the admin SPARQL passthrough (`POST /admin/sparql/query`) is built on, and the one an
+   * in-process Jena implementation or a remote client reimplements. It is deliberately the only method on this trait
+   * that accepts an arbitrary query string: every other caller builds a typed query.
+   *
+   * Unlike the typed `query` overloads, a store-side error is **not** a failure here. A malformed query, a `406`, or
+   * the store's own timeout response all come back as a successful [[RawSparqlResponse]] carrying the store's status
+   * and body, so they can be relayed verbatim. The error channel is reserved for failures that are the API's own:
+   * see [[org.knora.webapi.store.triplestore.errors.SparqlPassthroughException]].
+   *
+   * @param request the query text, the caller's `Accept` header, and the SPARQL-protocol dataset parameters.
+   * @return the store's response as data.
+   */
+  def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse]
 
   /**
    * Performs a SPARQL update operation, i.e. an INSERT or DELETE query.
@@ -221,5 +243,38 @@ object TriplestoreService {
       def apply(query: ModifyQuery, timeout: SparqlTimeout): Update = Update(query.getQueryString, timeout)
       def apply(query: InsertDataQuery): Update                     = Update(query.getQueryString)
     }
+
+    /**
+     * An uninspected SPARQL query to forward to the store, as submitted by a caller of the admin passthrough.
+     *
+     * @param sparql         the query text, forwarded byte-for-byte.
+     * @param accept         the caller's `Accept` header, forwarded unchanged; `None` leaves content negotiation to
+     *                       the store's default.
+     * @param protocolParams the SPARQL-protocol dataset parameters (`default-graph-uri`, `named-graph-uri`), already
+     *                       filtered to that pair by the caller. A parameter may repeat, hence the `Seq` values.
+     */
+    final case class RawSparqlRequest(
+      sparql: String,
+      accept: Option[String],
+      protocolParams: Map[String, Seq[String]],
+    )
+
+    /**
+     * A store response captured as data so it can be relayed verbatim.
+     *
+     * `body` is a `Chunk[Byte]` rather than an `Array[Byte]` on purpose: an array field would make this case class's
+     * `==` reference-based, and test assertions comparing responses would then fail silently.
+     *
+     * @param status      the store's HTTP status. Typed as [[sttp.model.StatusCode]] because that is what the tapir
+     *                    output expects, and because building it once at the boundary is where an out-of-range value
+     *                    can still be rejected rather than throwing later.
+     * @param contentType the store's `Content-Type`, or `None` if it sent none.
+     * @param body        the response body bytes, unmodified.
+     */
+    final case class RawSparqlResponse(
+      status: StatusCode,
+      contentType: Option[String],
+      body: Chunk[Byte],
+    )
   }
 }
