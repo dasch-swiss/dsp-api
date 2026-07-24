@@ -23,6 +23,7 @@ import sttp.tapir.server.interceptor.EndpointHandler
 import sttp.tapir.server.interceptor.EndpointInterceptor
 import sttp.tapir.server.interceptor.Responder
 import sttp.tapir.server.interceptor.SecurityFailureContext
+import sttp.tapir.server.interceptor.content.NotAcceptableInterceptor
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.interpreter.BodyListener
@@ -64,8 +65,52 @@ final class DspApiServer(
         ),
       )
       .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+      .notAcceptableInterceptor(new PassthroughAwareNotAcceptableInterceptor)
       .addInterceptor(spanNameInterceptor)
       .options
+
+  /**
+   * Tapir's own `Accept` negotiation, with the admin SPARQL passthrough exempted.
+   *
+   * By default tapir answers `406` with an empty body when none of an endpoint's declared output media types matches
+   * the request's `Accept`, before the server logic runs. For every other endpoint that is what we want. For the
+   * passthrough it is wrong twice over: content negotiation there is the *store's* job, so a caller could otherwise
+   * never ask for anything but the one declared type, and the store's own `406` -- which that surface is required to
+   * relay verbatim -- would be unreachable behind tapir's empty one.
+   *
+   * Declaring the passthrough's body as `*&#47;*` does not help: the matching treats a wildcard as meaningful only on
+   * the requested-range side, so a supported `*&#47;*` matches no concrete `Accept`. Exempting the one route is the
+   * targeted fix; disabling the interceptor globally would silently change every other endpoint's behaviour.
+   */
+  private final class PassthroughAwareNotAcceptableInterceptor extends NotAcceptableInterceptor[Task] {
+    override def apply[B](
+      responder: Responder[Task, B],
+      endpointHandler: EndpointHandler[Task, B],
+    ): EndpointHandler[Task, B] = {
+      val negotiating = super.apply(responder, endpointHandler)
+      new EndpointHandler[Task, B] {
+        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          if (leavesNegotiationToTheStore(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
+          else negotiating.onDecodeSuccess(ctx)
+
+        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] = endpointHandler.onSecurityFailure(ctx)
+
+        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[Option[ServerResponse[B]]] = endpointHandler.onDecodeFailure(ctx)
+      }
+    }
+
+    private def leavesNegotiationToTheStore(ep: AnyEndpoint): Boolean =
+      ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None) == SparqlPassthroughEndpoints.pathTemplate
+  }
 
   // Renames the active HTTP server span to the matched Tapir endpoint's path template
   // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded, and records

@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.api.admin.service
 
 import io.opentelemetry.api.trace.Span
+import sttp.model.MediaType
 import sttp.model.QueryParams
 import sttp.model.StatusCode
 import zio.*
@@ -52,7 +53,16 @@ final class SparqlPassthroughRestService(
     params: QueryParams,
   ): Task[(Option[String], Array[Byte], StatusCode)] =
     observed(user, sparql)(runQuery(user, sparql, accept, params))
-      .map(response => (response.contentType, response.body.toArray, response.status))
+      .map(response =>
+        // A store that sent no Content-Type still needs one on the way out, and the relayed body is declared with a
+        // wildcard media type, which is not a legal Content-Type to emit. Fuseki always sends one, so this is the
+        // defensive branch for a future backend behind the same seam.
+        (
+          response.contentType.orElse(Some(MediaType.ApplicationOctetStream.toString)),
+          response.body.toArray,
+          response.status,
+        ),
+      )
 
   private def runQuery(
     user: User,

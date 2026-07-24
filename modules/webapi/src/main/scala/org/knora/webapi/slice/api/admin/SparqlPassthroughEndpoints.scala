@@ -58,7 +58,7 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints) {
       ),
     )
     .out(header[Option[String]](HeaderNames.ContentType))
-    .out(byteArrayBody)
+    .out(SparqlPassthroughEndpoints.relayedBody)
     .out(statusCode)
     .errorOutVariantsPrepend(
       SparqlPassthroughEndpoints.storeUnavailableVariant,
@@ -96,6 +96,26 @@ object SparqlPassthroughEndpoints {
   /** The media type of the SPARQL 1.1 Protocol direct query form; tapir has no built-in format for it. */
   private final case class SparqlQuery() extends CodecFormat {
     override val mediaType: MediaType = MediaType("application", "sparql-query")
+  }
+
+  /**
+   * Declares the relayed body as `*&#47;*`, which is load-bearing rather than lazy.
+   *
+   * The framework negotiates the request's `Accept` header against the media types an endpoint's output declares, and
+   * answers `406` itself when they do not intersect -- before the server logic runs at all. Declaring a concrete type
+   * such as `application/octet-stream` would therefore make the framework reject `Accept: text/csv` and
+   * `Accept: text/turtle` with an empty `406`, so a caller could never ask the store for any format but one, and the
+   * store's own `406` (which REQ-1.2 requires be relayed) would be unreachable. A wildcard matches every `Accept`, so
+   * negotiation is left entirely to the store, which is the whole point of a passthrough.
+   *
+   * It does not weaken the response: the actual `Content-Type` sent is the store's, relayed through the header output,
+   * which suppresses this codec's own media type.
+   */
+  private val relayedBody: EndpointIO.Body[Array[Byte], Array[Byte]] =
+    EndpointIO.Body(RawBodyType.ByteArrayBody, Codec.byteArray.format(AnyMediaType()), EndpointIO.Info.empty)
+
+  private final case class AnyMediaType() extends CodecFormat {
+    override val mediaType: MediaType = MediaType("*", "*")
   }
 
   /**

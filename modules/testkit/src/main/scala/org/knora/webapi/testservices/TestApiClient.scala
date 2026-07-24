@@ -317,6 +317,35 @@ final case class TestApiClient(
     f: RequestUpdate[String],
   ): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap(jwt => postSparql(relativeUri, sparqlQuery, f.andThen(_.auth.bearer(jwt))))
+
+  /**
+   * Posts a raw body under an explicitly chosen `Content-Type`, without the caller-supplied update function being
+   * overridden afterwards. Needed to exercise how an endpoint reacts to a media type it does not accept.
+   */
+  def postBodyAs(
+    relativeUri: Uri,
+    body: String,
+    contentType: String,
+    user: User,
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap { jwt =>
+      sendRequest(
+        basicRequest.post(relativeUri).body(body).contentType(contentType).auth.bearer(jwt).response(asString),
+      )
+    }
+
+  /**
+   * Posts `application/x-www-form-urlencoded` fields, the request form off-the-shelf SPARQL clients default to.
+   * Encoding is left to the backend, so the test exercises the same wire representation those clients produce.
+   */
+  def postForm(
+    relativeUri: Uri,
+    fields: Seq[(String, String)],
+    user: User,
+  ): Task[Response[Either[String, String]]] =
+    jwtFor(user).flatMap { jwt =>
+      sendRequest(basicRequest.post(relativeUri).body(fields*).auth.bearer(jwt).response(asString))
+    }
 }
 
 object TestApiClient {
@@ -542,6 +571,21 @@ object TestApiClient {
         case None    => http.postSparql(relativeUri, sparqlQuery, f)
       },
     )
+
+  def postForm(
+    relativeUri: Uri,
+    fields: Seq[(String, String)],
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postForm(relativeUri, fields, user))
+
+  def postBodyAs(
+    relativeUri: Uri,
+    body: String,
+    contentType: String,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postBodyAs(relativeUri, body, contentType, user))
 
   val layer = ZLayer.derive[TestApiClient]
 }
