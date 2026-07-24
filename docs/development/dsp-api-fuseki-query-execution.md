@@ -11,7 +11,8 @@ measurements quoted are from that work (local unless marked "stage").
 
 DSP runs Fuseki with **TDB2** storage, `tdb2:unionDefaultGraph true` (queries without a `GRAPH`
 clause span the union of all named graphs), a **Lucene text index** over `rdfs:label`,
-`knora-base:valueHasString`, and `knora-base:valueHasComment` (`modules/fuseki/dsp-repo.ttl`),
+`knora-base:valueHasString`, and `knora-base:valueHasComment` — all three mapped to the *same*
+Lucene field, which has consequences (Fact 10) — (`modules/fuseki/dsp-repo.ttl`),
 and **no `stats.opt` statistics file** — so the BGP optimizer runs on the `fixed`
 variable-counting heuristic, not cost estimates. The API sends every query with a server-side
 `timeout` form parameter in three tiers (Standard 20s, Maintenance 120s, Gravsearch 120s;
@@ -50,7 +51,8 @@ with a seemingly redundant pattern group — removing it: 19ms → **15.3s** (DE
 
 Corollary: a "connected and small" closure evaluated early can be *good* (it drives indexed
 probes — measured on `/v2/metadata`, where "fixing" the order made it 3× slower). The sin is
-**disconnection**, not earliness.
+**disconnection**, not earliness. And the converse of this fact also holds — *removing* a path
+can be far more expensive than keeping it (Fact 11).
 
 ## Fact 4 — `MINUS` evaluates its right side without bindings; `FILTER NOT EXISTS` is per-row
 
@@ -103,7 +105,52 @@ projection width, row count, response format, and compression.
 
 Without an explicit limit argument, Jena caps Lucene results (~10k): broad fulltext terms are
 silently truncated, and the cap also bounds how much post-Lucene work a query can fan out into.
-Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it.
+Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it. Note that once you
+*do* pass a large limit, the fan-out is governed by what the index actually returns — which is not
+what the predicate argument suggests (Fact 10).
+
+## Fact 10 — `text:query`'s predicate argument does not narrow the search
+
+The entity map maps all three indexed predicates to the **same** Lucene field (`text`), and
+jena-text resolves a `text:query` predicate argument to its *field*, not to the predicate. So
+`(rdfs:label "x" N)` and a bare `("x" N)` search the same field and return the same candidates:
+every subject whose label **or** `valueHasString` **or** `valueHasComment` matches. "Search by
+label" is not a label search at the index level.
+
+Measured on stage: `(rdfs:label "der" 1000000)` returned **130,936** subjects, of which **7,245**
+were resources — 94.5% non-resources, mostly `knora-base:TextValue` matched via their
+`valueHasString`. For "und": 86,792 → 13,051 (85% junk).
+
+Results are still correct, because the junk is discarded downstream — `constructSearchByLabel`'s
+inner `SELECT` also requires `rdfs:label ?label`, which drops every value object before the
+`LIMIT`, and what survives (list nodes, ontology entities) sorts after every resource IRI. But
+85–94% of the candidate set is retrieved and joined away, and no query-shape change can remove
+work the index should never have produced (DEV-6851).
+
+Two traps follow. First, the survivors-sort-last property is an accident of IRI grammar (project
+shortcodes are hex, so `http://rdfh.ch/0867/…` < `http://rdfh.ch/lists/…`), not a guarantee.
+Second, because `rdfs:label` shares the *default* field, a predicate-less `text:query` — what
+`SearchFulltextQuery` issues — matches labels today; giving `rdfs:label` its own field would
+silently remove that behaviour.
+
+## Fact 11 — Replacing a property path with a plain pattern can be much slower
+
+A path splits the BGP and pins evaluation to document order (Facts 1, 3). A plain triple pattern
+is reorderable — and on the `fixed` heuristic the optimizer may reorder it into a scan. Fewer
+operators is not less work.
+
+Measured on stage, in the label-count query: `?rc rdfs:subClassOf* knora-base:Resource` took
+**8.6s**; rewriting it to the single-hop `?rc rdfs:subClassOf knora-base:Resource` took
+**73.6s** — 8.6× *slower*. With a bound object and no path, Fuseki enumerated the direct
+subclasses of `Resource` from the POS index and scanned `?resource a ?rc` for each, instead of
+probing the path once per Lucene hit. (That rewrite was not semantically equivalent either —
+4,766 rows vs 13,051, because the subclass closure is not materialized — which is the other half
+of the cautionary tale.) The fastest form was neither: a single bound-subject probe for a
+property present on exactly the wanted subjects (`?resource knora-base:creationDate ?d`) at
+**1.8s** for the correct 13,051 (DEV-6833, DEV-6850).
+
+Rule: benchmark a simplification in place, using the query as actually generated, before trusting
+it. This is the same discipline as the equivalence check below — and for the same reason.
 
 ## Diagnostics toolbox
 
@@ -127,7 +174,9 @@ Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it.
 - Apache Jena: [TDB Optimizer](https://jena.apache.org/documentation/tdb/optimizer.html),
   [Property Paths](https://jena.apache.org/documentation/query/property_paths.html),
   [Explaining queries](https://jena.apache.org/documentation/query/explain.html),
-  [TDB Datasets / union default graph](https://jena.apache.org/documentation/tdb/datasets.html)
+  [TDB Datasets / union default graph](https://jena.apache.org/documentation/tdb/datasets.html),
+  [Text searches (jena-text)](https://jena.apache.org/documentation/query/text-query.html) —
+  entity map, fields, and `text:query` arguments (Facts 9, 10)
 - ARQ vs TDB optimizer interaction:
   [apache/jena discussion #1659](https://github.com/apache/jena/discussions/1659)
 - All measurements: Linear **DEV-6803** (audit report and sub-issues), 2026-07.
