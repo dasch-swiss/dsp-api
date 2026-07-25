@@ -5,13 +5,16 @@
 
 package org.knora.webapi.core
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.sdk.trace.ReadableSpan
 import org.junit.runner.RunWith
 import sttp.model.StatusCode as SttpStatusCode
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import zio.*
 import zio.http.*
-import zio.telemetry.opentelemetry.OpenTelemetry
 import zio.telemetry.opentelemetry.context.ContextStorage
+import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
@@ -78,8 +81,14 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
 
   private def env(user: User) = envWith(SparqlPassthroughTestEnv.tokenAuthenticator(token, user))
 
+  /**
+   * No second `ContextStorage` is appended here, and that is load-bearing. The test env exports the very
+   * `Tracing`/`ContextStorage` pair its services hold; appending `OpenTelemetry.contextZIO` alongside it handed the
+   * interceptor a *different* storage from the one `Tracing` writes spans into, so `updateSpanMetadata` renamed a
+   * span nobody could see and the span assertions below would have passed against an empty context.
+   */
   private def envWith(authenticator: Authenticator) =
-    SparqlPassthroughTestEnv.layerWithAuthenticator(storeAnswersOk, authenticator) ++ OpenTelemetry.contextZIO
+    SparqlPassthroughTestEnv.layerWithAuthenticator(storeAnswersOk, authenticator)
 
   private val routes =
     for {
@@ -90,39 +99,79 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
     } yield ZioHttpInterpreter(DspApiServer.serverOptions(ctxStore))
       .toHttp(new SparqlPassthroughServerEndpoints(appConfig, endpoints, restService).serverEndpoints)
 
+  private val auditEntries: UIO[Chunk[ZTestLogger.LogEntry]] =
+    ZTestLogger.logOutput.map(_.filter(_.message().startsWith("SPARQL passthrough:")))
+
   /** Runs one request through the real interceptor chain, returning the response and the entries it produced. */
   private def run(request: Request) =
     ZIO.scoped {
       for {
         app      <- routes
         response <- app.runZIO(request)
-        entries  <- ZTestLogger.logOutput.map(_.map(_.message()).filter(_.startsWith("SPARQL passthrough:")))
+        entries  <- auditEntries.map(_.map(_.message()))
       } yield (response, entries)
     }
+
+  /** As [[run]], but with the server's tracing middleware in front, so entries carry the trace annotations. */
+  private def runTraced(request: Request) =
+    ZIO.scoped {
+      for {
+        app      <- routes
+        ctxStore <- ZIO.service[ContextStorage]
+        tracing  <- ZIO.service[Tracing]
+        _        <- (app @@ DspApiServer.otelMiddleWare(ctxStore, tracing)).runZIO(request)
+        entries  <- auditEntries
+      } yield entries
+    }
+
+  /**
+   * Runs one request inside a SERVER span opened on the same `Tracing` the interceptor reads, and returns the name
+   * and `http.route` the interceptor left on it. Stands in for the tracing middleware, which opens exactly such a
+   * span; reading them back needs the span still open, which is why they are read here rather than after the fact.
+   */
+  private def runInSpan(request: Request) =
+    ZIO.scoped {
+      for {
+        app     <- routes
+        tracing <- ZIO.service[Tracing]
+        named   <- tracing.span("POST", SpanKind.SERVER) {
+                   app.runZIO(request) *> tracing.getCurrentSpanUnsafe.map {
+                     case readable: ReadableSpan =>
+                       (readable.getName, Option(readable.toSpanData.getAttributes.get(httpRoute)))
+                     case _ => ("", None)
+                   }
+                 }
+      } yield named
+    }
+
+  private val httpRoute = AttributeKey.stringKey("http.route")
 
   private def outcomeOf(entry: String): String =
     entry.split(' ').collectFirst { case kv if kv.startsWith("outcome=") => kv.drop("outcome=".length) }.getOrElse("")
 
   private def url(p: String): URL = URL.decode(p).getOrElse(throw new IllegalArgumentException(p))
 
+  /** A well-formed request: a real client's `Content-Length`, which an in-memory `Request` does not get for free. */
+  private def post(body: String, contentType: String, bearer: Option[String]): Request =
+    postDeclaring(Some(body.length.toLong))(body, contentType, bearer)
+
   /**
-   * `declareLength` is load-bearing rather than incidental: whether a rejection closes the connection is decided
-   * from the request's `Content-Length`, since that is what says whether the server had already aggregated the body.
-   * A real client sends one; an in-memory `Request` does not get one for free, so it is set explicitly. Omitting it
-   * is how this spec models the chunked case, where nothing guarantees the body was read.
+   * `contentLength` is load-bearing rather than incidental: whether a rejection closes the connection is decided from
+   * the *declared* length, because that is the only thing zio-http's hybrid streaming switches on. `None` models a
+   * chunked request, and a value above the aggregation threshold the one case where the body may really be unread.
    */
-  private def post(
-    body: String,
-    contentType: String,
-    bearer: Option[String],
-    declareLength: Boolean = true,
-  ): Request = {
+  private def postDeclaring(
+    contentLength: Option[Long],
+  )(body: String, contentType: String, bearer: Option[String]): Request = {
     val base = Request
       .post(url(path), Body.fromString(body))
       .addHeader(Header.Custom("Content-Type", contentType))
-    val sized = if (declareLength) base.addHeader(Header.ContentLength(body.length.toLong)) else base
+    val sized = contentLength.fold(base)(length => base.addHeader(Header.ContentLength(length)))
     bearer.fold(sized)(t => sized.addHeader(Header.Custom("Authorization", s"Bearer $t")))
   }
+
+  /** A declared length above the server's aggregation threshold, i.e. a body zio-http would have streamed. */
+  private val aboveAggregationThreshold = Some(DspApiServer.maxAggregatedRequestBodySize.toLong + 1)
 
   private def headerValue(response: Response, name: String): Option[String] =
     response.headers.collectFirst { case h if h.headerName.equalsIgnoreCase(name) => h.renderedValue }
@@ -206,26 +255,61 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
         .map((response, _) => assertTrue(headerValue(response, "Connection").isEmpty))
         .provide(env(systemAdmin))
     },
-    test("a rejection on a body of unknown length still closes it") {
-      // The other half of the gate: without a Content-Length the body may be streamed, so it may be sitting unread.
-      run(post(selectQuery, "text/plain", Some(token), declareLength = false))
+    test("a rejection on a chunked body does not close it either, because that body was aggregated too") {
+      // The finding this pins. zio-http's hybrid streaming switches on the *declared* Content-Length alone: an
+      // absent one reads as -1, which is not above the threshold, so Netty's aggregator stays installed and the
+      // chunked body is fully read before tapir runs. Treating "no Content-Length" as unread closed healthy
+      // connections, and let an unauthenticated caller force one upstream-connection churn per chunked POST.
+      run(postDeclaring(None)(selectQuery, "text/plain", Some(token)))
+        .map((response, _) => assertTrue(headerValue(response, "Connection").isEmpty))
+        .provide(env(systemAdmin))
+    },
+    test("a rejection on a body declared above the aggregation threshold does close it") {
+      // The case the header actually exists for, and the only one left: above the threshold zio-http streams the
+      // body, so a rejection that answers without consuming it leaves bytes in the channel.
+      run(postDeclaring(aboveAggregationThreshold)(selectQuery, "text/plain", Some(token)))
         .map((response, _) => assertTrue(headerValue(response, "Connection").contains("close")))
         .provide(env(systemAdmin))
     },
-    test("a defect in the security logic is answered through the same hook, and closes the connection too") {
-      // A defect used to escape the security logic entirely and be answered by tapir's outer exception handling,
-      // which knows nothing about this route -- so the 500 went out without `Connection: close` and left the same
-      // unread body behind. Converting it to a typed failure puts it back on the hook that does know.
+    test("a defect in the security logic is answered through the same hook, and is attributed as one entry") {
+      // Two findings in one. A defect used to escape the security logic entirely and be answered by tapir's outer
+      // exception handling, which knows nothing about this route -- so the 500 went out without `Connection: close`
+      // and left an unread body behind. And `onRejected` is wired through `tapError`, which does not fire for a
+      // `Cause.Die`, so the call produced *no* entry at all: a 500 on the one surface whose purpose is attributing
+      // every call, invisible to an operator querying the documented prefix.
       run(
-        post(selectQuery, "application/sparql-query", Some(token), declareLength = false),
-      ).map((response, _) =>
+        postDeclaring(aboveAggregationThreshold)(selectQuery, "application/sparql-query", Some(token)),
+      ).map((response, entries) =>
         assertTrue(
           response.status == Status.InternalServerError,
           headerValue(response, "Connection").contains("close"),
+          entries.size == 1,
+          outcomeOf(entries.head) == "defect",
         ),
       ).provide(
         envWith(SparqlPassthroughTestEnv.authenticatorAnswering(_ => ZIO.die(new IllegalStateException("boom")))),
       )
+    },
+    test("the matched route renames the request's span and is recorded as http.route") {
+      // Keeps span names low-cardinality per the OTel HTTP semconv: the middleware opens the span as the bare
+      // method, and this interceptor narrows it to the path template once routing has succeeded.
+      runInSpan(post(selectQuery, "application/sparql-query", Some(token)))
+        .map((name, route) => assertTrue(name == "POST /admin/sparql/query", route.contains("/admin/sparql/query")))
+        .provide(env(systemAdmin))
+    },
+    test("an audit entry carries the trace and span ids, which is the log-to-trace jump on this surface") {
+      // Asserted through the server's real tracing middleware rather than a rebuilt one: the annotations are its
+      // behaviour, and nothing else pinned that a passthrough entry can be followed into a trace.
+      runTraced(post(selectQuery, "application/sparql-query", Some(token)))
+        .map(entries =>
+          assertTrue(
+            entries.size == 1,
+            entries.head.annotations.get("trace_id").exists(_.matches("[0-9a-f]{32}")),
+            entries.head.annotations.get("span_id").exists(_.matches("[0-9a-f]{16}")),
+            !entries.head.annotations.get("trace_id").contains("0" * 32),
+          ),
+        )
+        .provide(env(systemAdmin))
     },
   ) @@ TestAspect.sequential
 }

@@ -9,6 +9,8 @@ import zio.*
 import zio.config.*
 import zio.nio.file.Path as NioPath
 import zio.stream.ZStream
+import zio.telemetry.opentelemetry.context.ContextStorage
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import java.nio.file.Path
 
@@ -140,11 +142,19 @@ object SparqlPassthroughTestEnv {
   def tokenAuthenticator(token: String, user: User): Authenticator =
     authenticatorAnswering(jwt => if (jwt == token) ZIO.succeed(user) else ZIO.fail(AuthenticatorError.BadCredentials))
 
+  /**
+   * What [[make]] hands out.
+   *
+   * `Tracing` and `ContextStorage` are exported rather than kept internal because a spec that drives the endpoint
+   * through the server's interceptor chain needs *the same* pair the services behind it got. Appending a second
+   * `OpenTelemetry.contextZIO` alongside this layer instead gives the interceptor a different `ContextStorage` from
+   * the one `Tracing` writes to, so `updateSpanMetadata` silently renames nothing and the spec passes without
+   * covering anything.
+   */
+  type Env = AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints & Tracing & ContextStorage
+
   /** [[layer]] with the in-memory triplestore replaced by a programmed [[stubStore]]. */
-  def layerWithStore(
-    store: ULayer[TriplestoreService],
-    overrides: (String, Any)*,
-  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+  def layerWithStore(store: ULayer[TriplestoreService], overrides: (String, Any)*): ULayer[Env] =
     make(store, stubAuthenticator, overrides*)
 
   /** [[layerWithStore]] with an authenticator that can succeed, for specs that go through the endpoint. */
@@ -152,12 +162,10 @@ object SparqlPassthroughTestEnv {
     store: ULayer[TriplestoreService],
     authenticator: Authenticator,
     overrides: (String, Any)*,
-  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+  ): ULayer[Env] =
     make(store, authenticator, overrides*)
 
-  def layer(
-    overrides: (String, Any)*,
-  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+  def layer(overrides: (String, Any)*): ULayer[Env] =
     make(
       TriplestoreServiceInMemory.emptyLayer.map(env => ZEnvironment[TriplestoreService](env.get)),
       stubAuthenticator,
@@ -168,8 +176,8 @@ object SparqlPassthroughTestEnv {
     store: ZLayer[StringFormatter, Nothing, TriplestoreService],
     authenticator: Authenticator,
     overrides: (String, Any)*,
-  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
-    ZLayer.make[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints](
+  ): ULayer[Env] =
+    ZLayer.make[Env](
       appConfigLayer(overrides*),
       AuthorizationRestService.layer,
       BaseEndpoints.layer,
