@@ -116,20 +116,57 @@ object SparqlPassthroughTestEnv {
     override def compact(): Task[Boolean]                                                         = unused
   })
 
+  /**
+   * An authenticator whose token authentication is whatever a spec programs, and whose other methods refuse.
+   *
+   * [[stubAuthenticator]] is right for a spec that drives the rest service directly, since nothing there
+   * authenticates. A spec that goes through the endpoint has to be able to get *past* the security logic to reach
+   * anything behind it -- body decoding, in particular -- or to make it fail in a specific way, and needs this.
+   */
+  def authenticatorAnswering(answer: String => IO[AuthenticatorError, User]): Authenticator = new Authenticator {
+    def calculateCookieName(): String                                                         = "stub"
+    def invalidateToken(jwt: String): IO[AuthenticatorError, Unit]                            = ZIO.fail(AuthenticatorError.BadCredentials)
+    def parseToken(jwt: String): IO[AuthenticatorError, Jwt]                                  = ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(userIri: UserIri, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(username: Username, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(email: Email, password: String): IO[AuthenticatorError, (User, Jwt)] =
+      ZIO.fail(AuthenticatorError.BadCredentials)
+    def authenticate(jwtToken: String): IO[AuthenticatorError, User] = answer(jwtToken)
+  }
+
+  /** Accepts exactly one bearer token, as one user, and refuses everything else. */
+  def tokenAuthenticator(token: String, user: User): Authenticator =
+    authenticatorAnswering(jwt => if (jwt == token) ZIO.succeed(user) else ZIO.fail(AuthenticatorError.BadCredentials))
+
   /** [[layer]] with the in-memory triplestore replaced by a programmed [[stubStore]]. */
   def layerWithStore(
     store: ULayer[TriplestoreService],
     overrides: (String, Any)*,
   ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
-    make(store, overrides*)
+    make(store, stubAuthenticator, overrides*)
+
+  /** [[layerWithStore]] with an authenticator that can succeed, for specs that go through the endpoint. */
+  def layerWithAuthenticator(
+    store: ULayer[TriplestoreService],
+    authenticator: Authenticator,
+    overrides: (String, Any)*,
+  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+    make(store, authenticator, overrides*)
 
   def layer(
     overrides: (String, Any)*,
   ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
-    make(TriplestoreServiceInMemory.emptyLayer.map(env => ZEnvironment[TriplestoreService](env.get)), overrides*)
+    make(
+      TriplestoreServiceInMemory.emptyLayer.map(env => ZEnvironment[TriplestoreService](env.get)),
+      stubAuthenticator,
+      overrides*,
+    )
 
   private def make(
     store: ZLayer[StringFormatter, Nothing, TriplestoreService],
+    authenticator: Authenticator,
     overrides: (String, Any)*,
   ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
     ZLayer.make[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints](
@@ -153,6 +190,6 @@ object SparqlPassthroughTestEnv {
       SparqlPassthroughRestService.layer,
       StringFormatter.test,
       store,
-      ZLayer.succeed(stubAuthenticator),
+      ZLayer.succeed(authenticator),
     )
 }

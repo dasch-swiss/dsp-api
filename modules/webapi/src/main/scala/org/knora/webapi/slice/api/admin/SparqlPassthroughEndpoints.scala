@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.admin
 
+import sttp.model.Header
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
@@ -39,9 +40,12 @@ import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
  *
  * Authorization is part of the **security logic** rather than the server logic, via
  * [[BaseEndpoints.bearerSystemAdminEndpoint]]: the framework decodes the request body between the two, so authorizing
- * in the server logic would let any holder of a valid token make the server buffer a request first. The request body
- * is additionally bounded by the framework itself, so even an authorized caller cannot make it buffer past the
- * configured cap.
+ * in the server logic would let any holder of a valid token drive body decoding and everything after it before being
+ * refused. Be precise about what that does and does not bound, because operators size deployments from it: the
+ * zio-http server runs `RequestStreaming.Hybrid` and aggregates request bodies up to
+ * `DspApiServer.maxAggregatedRequestBodySize` (1 MiB) *before any tapir logic runs at all*, for every caller
+ * including an unauthenticated one. That buffering is server-wide, pre-existing, and unchanged by this endpoint.
+ * What is SystemAdmin-only is decode and everything downstream of it.
  *
  * The **success channel carries the store's outcome** as `(Content-Type, body, status)`. A store `400` for malformed
  * SPARQL, a `406`, a `200` -- from this endpoint's point of view all are successes, relayed byte for byte, so
@@ -76,16 +80,27 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: 
       ),
     )
     .out(header[Option[String]](HeaderNames.ContentType))
+    // The relayed Content-Type is the store's and is not validated here, so tell the browser not to second-guess it.
+    // Not reachable as an XSS pivot today -- the route is bearer-only, so nothing a browser navigates to can carry
+    // credentials to it -- but it is one header on the one route in this API that returns a body it did not compose.
+    .out(header(SparqlPassthroughEndpoints.noSniff))
     .out(SparqlPassthroughEndpoints.relayedBody)
     .out(statusCode)
     .errorOutVariantsPrepend(
       SparqlPassthroughEndpoints.errorVariants.head._2,
       SparqlPassthroughEndpoints.errorVariants.tail.map(_._2)*,
     )
-    // The framework's own bound on the request body, and the one that makes the cap a memory bound rather than a
-    // policy: it limits the body *stream*, so an over-cap request is refused after at most this many bytes have been
-    // read instead of after the whole body has been materialised. Because the check sits in body decoding it runs
-    // after the security logic above, so only an authorized SystemAdmin gets even this far.
+    // The framework's own bound on the request body: it limits the body *stream*, so an over-cap request is refused
+    // after at most this many bytes have been read instead of after the whole body has been materialised. Because
+    // the check sits in body decoding it runs after the security logic above, so only an authorized SystemAdmin
+    // gets this far.
+    //
+    // Its relation to the server's 1 MiB aggregation threshold is what an operator has to know, and it is not the
+    // obvious one. Setting this cap *below* 1 MiB does not reduce actual peak buffering: zio-http has already read
+    // and buffered up to 1 MiB before decoding starts, so the lower cap only changes the status the caller gets.
+    // Setting it *above* 1 MiB does raise peak buffering, and with no concurrency bound on it: the surface's
+    // concurrency backstop lives in the server logic, downstream of body decoding, so N simultaneous callers can
+    // each be holding a body of this size before any of them is counted.
     .maxRequestBodyLength(appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes.toLong)
     // Lets the server's interceptors recognise this route -- to exempt it from tapir's Accept negotiation, and to
     // attribute a request its security or decode logic rejected -- without matching on its path or method.
@@ -128,6 +143,9 @@ object SparqlPassthroughEndpoints {
    */
   private def logRejected(user: Option[User]) =
     SparqlPassthroughAudit(if (user.isDefined) "forbidden" else "unauthenticated", user).log
+
+  /** `sttp.model.HeaderNames` has no constant for this one. */
+  private[admin] val noSniff: Header = Header("X-Content-Type-Options", "nosniff")
 
   /** The media type of the SPARQL 1.1 Protocol direct query form; tapir has no built-in format for it. */
   private final case class SparqlQuery() extends CodecFormat {

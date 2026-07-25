@@ -21,6 +21,7 @@ import sttp.model.Method.*
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.DecodeResult
+import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.interceptor.DecodeFailureContext
 import sttp.tapir.server.interceptor.DecodeSuccessContext
 import sttp.tapir.server.interceptor.EndpointHandler
@@ -58,146 +59,10 @@ final class DspApiServer(
   tracing: Tracing,
 ) {
 
-  private val serverOptions: ZioHttpServerOptions[Any] =
-    ZioHttpServerOptions.customiseInterceptors
-      .corsInterceptor(
-        CORSInterceptor.customOrThrow(
-          CORSConfig.default.allowCredentials
-            .allowMethods(GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH)
-            .allowMatchingOrigins(_ => true)
-            .exposeAllHeaders
-            .maxAge(30.minutes.asScala),
-        ),
-      )
-      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
-      .notAcceptableInterceptor(new PassthroughAwareNotAcceptableInterceptor)
-      .addInterceptor(spanNameInterceptor)
-      .options
-
-  /**
-   * Tapir's own `Accept` negotiation, with the admin SPARQL passthrough exempted.
-   *
-   * By default tapir answers `406` with an empty body when none of an endpoint's declared output media types matches
-   * the request's `Accept`, before the server logic runs. For every other endpoint that is what we want. For the
-   * passthrough it is wrong twice over: content negotiation there is the *store's* job, so a caller could otherwise
-   * never ask for anything but the one declared type, and the store's own `406` -- which that surface is required to
-   * relay verbatim -- would be unreachable behind tapir's empty one.
-   *
-   * Declaring the passthrough's body as `*&#47;*` does not help: the matching treats a wildcard as meaningful only on
-   * the requested-range side, so a supported `*&#47;*` matches no concrete `Accept`. Exempting the one route is the
-   * targeted fix; disabling the interceptor globally would silently change every other endpoint's behaviour.
-   */
-  private final class PassthroughAwareNotAcceptableInterceptor extends NotAcceptableInterceptor[Task] {
-    override def apply[B](
-      responder: Responder[Task, B],
-      endpointHandler: EndpointHandler[Task, B],
-    ): EndpointHandler[Task, B] = {
-      val negotiating = super.apply(responder, endpointHandler)
-      new EndpointHandler[Task, B] {
-        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[ServerResponse[B]] =
-          if (leavesNegotiationToTheStore(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
-          else negotiating.onDecodeSuccess(ctx)
-
-        // These two are pass-throughs in the interceptor being wrapped, so delegating past it would be
-        // behaviour-identical today. They go through it anyway: the exemption above is meant to be the only
-        // difference from stock negotiation, and skipping the wrapped handler on the other two hooks would make a
-        // future change to either silently not apply to this server.
-        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[ServerResponse[B]] = negotiating.onSecurityFailure(ctx)
-
-        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[Option[ServerResponse[B]]] = negotiating.onDecodeFailure(ctx)
-      }
-    }
-
-    private def leavesNegotiationToTheStore(ep: AnyEndpoint): Boolean =
-      SparqlPassthroughEndpoints.isPassthroughRoute(ep)
-  }
-
-  // Renames the active HTTP server span to the matched Tapir endpoint's path template
-  // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded, and records
-  // http.route. Keeps span names low-cardinality per OTel HTTP semantic conventions:
-  // https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
-  private def spanNameInterceptor: EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
-
-    /**
-     * Attributes a passthrough request the framework refused while decoding it: an over-cap request body, an
-     * unsupported `Content-Type`, a form body with no `query` field. None of these reach the rest service either, so
-     * without this they would be the one class of call the surface does not account for. The caller is authenticated
-     * and authorized by this point -- decoding runs after the security logic -- but the principal is not carried into
-     * this hook, so the entry has no identity.
-     */
-    private def logRejectedPassthroughDecode(ctx: DecodeFailureContext): UIO[Unit] = {
-      val outcome = ctx.failure match {
-        case DecodeResult.Error(_, StreamMaxLengthExceededException(_)) => "request-cap-exceeded"
-        case _                                                          => "malformed-request"
-      }
-      SparqlPassthroughAudit(outcome).log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ctx.endpoint)).unit
-    }
-
-    /**
-     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
-     *
-     * Two rejections on this route answer without consuming the body: the security logic's `401`/`403`, which runs
-     * before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`. Bodies
-     * above the server's aggregation threshold are streamed, and zio-http leaves such a connection with
-     * `autoRead=false` when the handler answers without consuming it -- the next keep-alive request on that connection
-     * is then silently dropped and the client hangs until its own timeout. `Connection: close` takes the connection out
-     * of the client's pool instead, which is the same remedy tapir applies to its own over-cap `413`; the header is
-     * added only once, since that `413` already carries it.
-     */
-    private def closeConnectionIfPassthrough[B](ep: AnyEndpoint, response: ServerResponse[B]): ServerResponse[B] =
-      if (SparqlPassthroughEndpoints.isPassthroughRoute(ep) && !response.headers.exists(closesConnection))
-        response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
-      else response
-
-    private def closesConnection(header: Header): Boolean =
-      header.name.equalsIgnoreCase(HeaderNames.Connection) && header.value.equalsIgnoreCase("close")
-
-    private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
-      ctxStore.get.flatMap { ctx =>
-        ZIO.succeed {
-          val method = ep.method.map(_.method).getOrElse("HTTP")
-          val route  = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
-          val span   = Span.fromContext(ctx)
-          val _      = span.updateName(s"$method $route")
-          val _      = span.setAttribute(HttpAttributes.HTTP_ROUTE, route)
-        }
-      }
-
-    override def apply[B](responder: Responder[Task, B], delegate: EndpointHandler[Task, B]): EndpointHandler[Task, B] =
-      new EndpointHandler[Task, B] {
-        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[ServerResponse[B]] =
-          updateSpanMetadata(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
-
-        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[ServerResponse[B]] =
-          // The passthrough's own security-logic rejections (401 and 403) are attributed there, where the identity
-          // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
-          // cannot tell the two apart.
-          updateSpanMetadata(ctx.endpoint) *>
-            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, _))
-
-        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
-          monad: MonadError[Task],
-          bodyListener: BodyListener[Task, B],
-        ): Task[Option[ServerResponse[B]]] =
-          logRejectedPassthroughDecode(ctx) *>
-            delegate.onDecodeFailure(ctx).map(_.map(closeConnectionIfPassthrough(ctx.endpoint, _)))
-      }
-  }
+  // The interceptor chain lives on the companion so a spec can interpret endpoints through exactly the chain
+  // this server runs -- the passthrough's Accept exemption, its audit entries and its Connection handling are
+  // all interceptor behaviour, and testing a re-created chain would test a copy.
+  private val serverOptions: ZioHttpServerOptions[Any] = DspApiServer.serverOptions(ctxStore)
 
   def startup(): UIO[Unit] = for {
     _                         <- ZIO.logInfo("Starting DSP API server...")
@@ -267,6 +132,190 @@ object DspApiServer {
 
   def startup: RIO[DspApiServer, Unit] = ZIO.serviceWithZIO[DspApiServer](_.startup())
 
+  /**
+   * The server's interceptor chain, as a value rather than a field, so a spec can interpret a set of endpoints
+   * through the exact chain production runs. Three of this branch's behaviours -- the passthrough's exemption from
+   * Accept negotiation, its decode-failure audit entries, and marking a rejection as the last response on its
+   * connection -- live only here, and a spec that rebuilt an equivalent chain would be asserting on its own copy.
+   */
+  private[core] def serverOptions(ctxStore: ContextStorage): ZioHttpServerOptions[Any] =
+    ZioHttpServerOptions.customiseInterceptors
+      .corsInterceptor(
+        CORSInterceptor.customOrThrow(
+          CORSConfig.default.allowCredentials
+            .allowMethods(GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH)
+            .allowMatchingOrigins(_ => true)
+            .exposeAllHeaders
+            .maxAge(30.minutes.asScala),
+        ),
+      )
+      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+      .notAcceptableInterceptor(new PassthroughAwareNotAcceptableInterceptor)
+      .addInterceptor(spanNameInterceptor(ctxStore))
+      .options
+
+  /**
+   * Tapir's own `Accept` negotiation, with the admin SPARQL passthrough exempted.
+   *
+   * By default tapir answers `406` with an empty body when none of an endpoint's declared output media types matches
+   * the request's `Accept`, before the server logic runs. For every other endpoint that is what we want. For the
+   * passthrough it is wrong twice over: content negotiation there is the *store's* job, so a caller could otherwise
+   * never ask for anything but the one declared type, and the store's own `406` -- which that surface is required to
+   * relay verbatim -- would be unreachable behind tapir's empty one.
+   *
+   * Declaring the passthrough's body as `*&#47;*` does not help: the matching treats a wildcard as meaningful only on
+   * the requested-range side, so a supported `*&#47;*` matches no concrete `Accept`. Exempting the one route is the
+   * targeted fix; disabling the interceptor globally would silently change every other endpoint's behaviour.
+   */
+  private final class PassthroughAwareNotAcceptableInterceptor extends NotAcceptableInterceptor[Task] {
+    override def apply[B](
+      responder: Responder[Task, B],
+      endpointHandler: EndpointHandler[Task, B],
+    ): EndpointHandler[Task, B] = {
+      val negotiating = super.apply(responder, endpointHandler)
+      new EndpointHandler[Task, B] {
+        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          if (leavesNegotiationToTheStore(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
+          else negotiating.onDecodeSuccess(ctx)
+
+        // These two are pass-throughs in the interceptor being wrapped, so delegating past it would be
+        // behaviour-identical today. They go through it anyway: the exemption above is meant to be the only
+        // difference from stock negotiation, and skipping the wrapped handler on the other two hooks would make a
+        // future change to either silently not apply to this server.
+        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] = negotiating.onSecurityFailure(ctx)
+
+        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[Option[ServerResponse[B]]] = negotiating.onDecodeFailure(ctx)
+      }
+    }
+
+    private def leavesNegotiationToTheStore(ep: AnyEndpoint): Boolean =
+      SparqlPassthroughEndpoints.isPassthroughRoute(ep)
+  }
+
+  // Renames the active HTTP server span to the matched Tapir endpoint's path template
+  // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded, and records
+  // http.route. Keeps span names low-cardinality per OTel HTTP semantic conventions:
+  // https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
+  private def spanNameInterceptor(ctxStore: ContextStorage): EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
+
+    /**
+     * Attributes a passthrough request the framework refused while decoding it: an over-cap request body, an
+     * unsupported `Content-Type`, a form body with no `query` field. None of these reach the rest service either, so
+     * without this they would be the one class of call the surface does not account for. The caller is authenticated
+     * and authorized by this point -- decoding runs after the security logic -- but the principal is not carried into
+     * this hook, so the entry has no identity.
+     *
+     * Only ever called for a decode failure the delegate actually *answered*. A decode failure that returns `None`
+     * is not a rejected call at all: tapir groups endpoints by path template and tries each with `Method.ANY`, so an
+     * anonymous `GET /admin/sparql/query` is routed into this endpoint's group, fails the method decode, returns
+     * `None` and falls through to a `404`. Logging before consulting the delegate invented a
+     * `malformed-request user_iri=-` entry for every such request -- one that never was a call, from a caller who
+     * never authenticated -- which both contradicts "exactly one entry per call" and hands an unauthenticated
+     * stranger an amplifier for the surface's own audit channel.
+     */
+    private def logRejectedPassthroughDecode(ctx: DecodeFailureContext): UIO[Unit] = {
+      val outcome = ctx.failure match {
+        case DecodeResult.Error(_, StreamMaxLengthExceededException(_)) => "request-cap-exceeded"
+        case _                                                          => "malformed-request"
+      }
+      SparqlPassthroughAudit(outcome).log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ctx.endpoint)).unit
+    }
+
+    /**
+     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     *
+     * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
+     * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
+     * Bodies above the server's aggregation threshold are streamed, and zio-http leaves such a connection with
+     * `autoRead=false` when the handler answers without consuming it -- the next keep-alive request on that connection
+     * is then silently dropped and the client hangs until its own timeout. `Connection: close` takes the connection out
+     * of the client's pool instead, which is the same remedy tapir applies to its own over-cap `413`; the header is
+     * added only once, since that `413` already carries it.
+     *
+     * It is applied only when the body plausibly went unread, which is a property of the *request*, not of the
+     * rejection: see [[bodyPlausiblyUnread]]. Closing on every rejection also killed healthy connections -- a missing
+     * `query` form field or an unsupported `Content-Type` on a small body is answered after zio-http has already read
+     * the whole thing, so there is nothing left in the channel and nothing to fix.
+     */
+    private def closeConnectionIfPassthrough[B](
+      ep: AnyEndpoint,
+      request: ServerRequest,
+      response: ServerResponse[B],
+    ): ServerResponse[B] =
+      if (
+        SparqlPassthroughEndpoints.isPassthroughRoute(ep) && bodyPlausiblyUnread(request) &&
+        !response.headers.exists(closesConnection)
+      )
+        response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
+      else response
+
+    /**
+     * True when this request's body may still be sitting unread in the channel.
+     *
+     * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, so zio-http fully reads any body it
+     * can aggregate and streams only larger ones. A declared `Content-Length` at or under that threshold therefore
+     * means the body was already consumed whatever the handler did with it. An absent `Content-Length` -- a chunked
+     * body -- gives no such assurance, so it counts as unread.
+     */
+    private def bodyPlausiblyUnread(request: ServerRequest): Boolean =
+      request.contentLength.forall(_ > DspApiServer.maxAggregatedRequestBodySize)
+
+    private def closesConnection(header: Header): Boolean =
+      header.name.equalsIgnoreCase(HeaderNames.Connection) && header.value.equalsIgnoreCase("close")
+
+    private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
+      ctxStore.get.flatMap { ctx =>
+        ZIO.succeed {
+          val method = ep.method.map(_.method).getOrElse("HTTP")
+          val route  = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
+          val span   = Span.fromContext(ctx)
+          val _      = span.updateName(s"$method $route")
+          val _      = span.setAttribute(HttpAttributes.HTTP_ROUTE, route)
+        }
+      }
+
+    override def apply[B](responder: Responder[Task, B], delegate: EndpointHandler[Task, B]): EndpointHandler[Task, B] =
+      new EndpointHandler[Task, B] {
+        override def onDecodeSuccess[A, U, I](ctx: DecodeSuccessContext[Task, A, U, I])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          updateSpanMetadata(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
+
+        override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[ServerResponse[B]] =
+          // The passthrough's own security-logic rejections (401 and 403) are attributed there, where the identity
+          // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
+          // cannot tell the two apart.
+          updateSpanMetadata(ctx.endpoint) *>
+            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, _))
+
+        // The delegate is consulted first and the entry written only if it answered. `None` means this endpoint
+        // did not claim the request at all -- see logRejectedPassthroughDecode.
+        override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
+          monad: MonadError[Task],
+          bodyListener: BodyListener[Task, B],
+        ): Task[Option[ServerResponse[B]]] =
+          delegate.onDecodeFailure(ctx).flatMap {
+            case Some(response) =>
+              logRejectedPassthroughDecode(ctx)
+                .as(Some(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, response)))
+            case None => ZIO.none
+          }
+      }
+  }
+
   // With fully streamed request bodies (RequestStreaming.Enabled), zio-http (<= 3.11.3) leaves the
   // connection with autoRead=false when a handler responds without consuming the body — e.g. a
   // tapir security failure (401/403), an unmatched route, or an endpoint that declares no body
@@ -274,7 +323,13 @@ object DspApiServer {
   // the next keep-alive request on it is silently dropped (the client times out). Hybrid mode
   // aggregates bodies up to this size so they are always fully read, and streams only larger ones
   // (the project-import zip upload); this was the root cause of the recurring e2e CI timeouts.
-  private val maxAggregatedRequestBodySize: Int = 1024 * 1024
+  //
+  // Two consequences worth stating, because they are easy to get wrong. Aggregation happens before any
+  // tapir logic runs — before the security logic, let alone body decoding — so a body up to this size is
+  // buffered for *any* caller, authenticated or not. And the passthrough's own `Connection: close`
+  // handling keys off this threshold (see `bodyPlausiblyUnread`): at or under it the body is provably
+  // read, above it or with no Content-Length it may not be.
+  private[core] val maxAggregatedRequestBodySize: Int = 1024 * 1024
 
   private val serverLayer = ZLayer
     .service[KnoraApi]

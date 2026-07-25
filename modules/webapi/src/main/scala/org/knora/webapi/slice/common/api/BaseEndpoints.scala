@@ -84,9 +84,11 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * body is decoded, and its server logic only afterwards.
    *
    *   - Authorizing here rather than in the server logic, as every other admin route does, is what makes the refusal
-   *     land before a single body byte has been read. In the server logic the body has already been materialised, so
-   *     any caller holding a valid token could make the server buffer an arbitrary request first and be told `403`
-   *     only after.
+   *     land before the framework has *decoded* a single body byte. Note the bound this does and does not give: the
+   *     zio-http server aggregates request bodies up to its own threshold before any tapir logic runs at all, so a
+   *     body up to that size is buffered for every caller regardless. What moving the check here removes is
+   *     everything downstream of it -- decoding, the endpoint's own body cap, and the server logic -- for a caller
+   *     who is not a SystemAdmin. See `DspApiServer.maxAggregatedRequestBodySize`.
    *   - Basic authentication runs a bcrypt verification at the configured strength on **every** call, and that cost
    *     would likewise sit upstream of any bound the server logic establishes -- so on a route that deliberately
    *     bounds its own work, basic would be the one unbounded part. Omitting the basic security input also omits the
@@ -111,11 +113,30 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic {
         case Some(jwtToken) =>
-          authenticateJwt(jwtToken)
-            .tapError(_ => onRejected(None))
-            .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onRejected(Some(user))).as(user))
+          asTypedFailure(
+            authenticateJwt(jwtToken)
+              .tapError(_ => onRejected(None))
+              .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onRejected(Some(user))).as(user)),
+          )
         case _ => onRejected(None) *> ZIO.fail(BadCredentialsException("No credentials provided."))
       }
+
+  /**
+   * Turns a defect thrown out of the security logic into a typed failure, so it is answered through the endpoint's
+   * own error output instead of escaping to the server's outer exception handling.
+   *
+   * The status is a `500` either way -- both render the shared "Internal server error" body -- but the route the
+   * response takes is not the same. A defect bypasses `onSecurityFailure`, and with it the interceptor that marks a
+   * response produced before the request body was read as the last on its connection; on a streamed body that leaves
+   * the connection unreadable and the client's next request on it hangs. Failing typed keeps the rejection inside the
+   * hook that knows about that. The defect is logged here because it is a genuine bug and must not become quieter for
+   * having been converted.
+   */
+  private def asTypedFailure(zio: IO[Throwable, User]): IO[Throwable, User] =
+    zio.catchAllDefect(defect =>
+      ZIO.logErrorCause("Defect in the security logic", Cause.die(defect)) *>
+        ZIO.fail(AssertionException("Defect in the security logic", defect)),
+    )
 
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =
     authenticator.authenticate(token).orElseFail(BadCredentialsException("Invalid credentials."))
