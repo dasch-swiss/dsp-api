@@ -191,7 +191,8 @@ final case class Triplestore(
  *
  * `maxResponseBytes` bounds the bytes read back from the store, counted before any response compression. The read
  * path buffers up to this ceiling and only then responds, so a breach yields a clean error rather than a truncated
- * body; the consequence is that this value sizes per-request heap use.
+ * body; the consequence is that this value sizes per-request heap use. It is one copy, not two: the relay carries the
+ * response as the array the HTTP layer needs, collected once at the point it is read.
  *
  * `maxConcurrentCalls` is a surface-wide backstop on calls in flight, so a runaway script or agent cannot multiply
  * `maxResponseBytes` into heap exhaustion. It is runaway protection, not a throughput or fairness control, hence

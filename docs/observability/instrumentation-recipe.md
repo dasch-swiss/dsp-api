@@ -134,6 +134,22 @@ the shape label stays bounded. Set the shape on the root immediately after parse
 
 ## 6. Errors and interruptions without leaks
 
+**Use `SanitizedSpan.withSpan` rather than writing this yourself.**
+`org.knora.webapi.slice.infrastructure.SanitizedSpan` implements everything in this section — the
+`UNSET` failure mapper, the sanitized `ERROR` status, `error.type`, and the interruption branch — and
+hands your effect the raw span so it can attach its own bounded attributes:
+
+```scala
+SanitizedSpan.withSpan(tracing, "admin.sparql.query", "sparql_passthrough.exit_reason") { span =>
+  effect // attach bounded attributes to `span`; failures and interruptions are handled for you
+}
+```
+
+The exit-reason key is the caller's, because it belongs to the caller's attribute namespace and is
+what its own TraceQL queries select on. `SearchResponderV2.stageSpan` is a two-line wrapper over this
+that supplies `gravsearch.exit_reason`. The rest of this section explains what the helper does and
+why, so that a change to it is made knowingly — it is not an invitation to copy the snippets.
+
 The error handling has one load-bearing invariant. `zio-telemetry` writes `cause.prettyPrint` into
 the span status description on the `ERROR` branch — and for a SPARQL failure that string echoes the
 offending FILTER literal (user data). To prevent the leak, the failure status mapper **must** map to
@@ -155,9 +171,10 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 
 - **Typed failure** → status `ERROR`, description exactly `"<stage>: <ClassName>"` (e.g.
   `gravsearch.prequery.execute: TriplestoreException`), plus `error.type`. No message, no stacktrace.
-- **Interruption** → `gravsearch.exit_reason = interrupted` + status `ERROR "interrupted"` (set in
-  `stageSpan`'s `onExit`). OTel has no `cancelled` status, so this attribute is what distinguishes an
-  interrupted query from a typed failure and from a benign empty result.
+- **Interruption** → `<vertical>.exit_reason = interrupted` + status `ERROR "interrupted"` (set in
+  `SanitizedSpan.withSpan`'s `onExit`, which is uninterruptible and so still runs during teardown).
+  OTel has no `cancelled` status, so this attribute is what distinguishes an interrupted query from a
+  typed failure and from a benign empty result.
 
 !!! danger "Do not relax the status mapper"
     Changing `unsetOnFailure` to map failures to `ERROR` re-introduces the `cause.prettyPrint` leak
@@ -170,5 +187,5 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 - [ ] Stages that may not run are wrapped *inside* their conditional (no placeholder spans).
 - [ ] A bounded shape on the root; no raw text / instance IRIs / user IDs as attributes.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
-- [ ] Failure mapper maps to `UNSET`; sanitized `ERROR` + `error.type` set explicitly; interruption sets `exit_reason`.
+- [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
 - [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message).

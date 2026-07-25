@@ -16,6 +16,12 @@ and how to add new instrumentation.
 - **Per-stage Gravsearch spans** — the `SearchResponderV2` is instrumented at responder granularity:
   a `gravsearch` root span with one child span per pipeline stage. This is the first vertical
   instrumented this deeply and the worked example for the rest of this section.
+- **Admin SPARQL passthrough** — `POST /admin/sparql/query` emits one `admin.sparql.query` span per
+  call, carrying `sparql_passthrough.operation`, `.outcome`, `.duration_ms`, `.request_bytes` and —
+  when the store answered — `.response_bytes` and `.store_status`, plus `.exit_reason` when the call
+  was interrupted. The attribute set is deliberately bounded: the SPARQL text goes to the (truncated)
+  log entry, never onto the span. See
+  [SPARQL passthrough](../03-endpoints/api-admin/sparql-passthrough.md).
 
 ## Where to look
 

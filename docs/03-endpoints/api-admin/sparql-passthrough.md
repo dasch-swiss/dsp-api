@@ -38,6 +38,9 @@ TOKEN=$(curl -s -X POST https://api.example.org/v2/authentication \
 | Authenticated, but not a `SystemAdmin` | `403` |
 | Route not enabled on this deployment | `404` |
 
+Both checks run **before the request body is read**, so an unauthorized caller cannot make the server buffer a request
+at all.
+
 ## Request forms
 
 Both forms of the SPARQL 1.1 Protocol POST are accepted. Any other request `Content-Type`, including none at all, is
@@ -63,16 +66,16 @@ curl -X POST https://api.example.org/admin/sparql/query \
 ```
 
 Sending the query as a `?query=` **query-string parameter is rejected with `400`.** This is deliberate rather than an
-omission: a query string is written to the edge proxy's access log and recorded as a span attribute, so a query sent
-that way would have leaked its text before this API ever saw it. The rejection makes the mistake visible; the `GET`
-form of the protocol is unsupported for the same reason.
+omission: a query string is written to the edge proxy's access log, so a query sent that way would have leaked its text
+before this API ever saw it. The rejection makes the mistake visible; the `GET` form of the protocol is unsupported for
+the same reason.
 
 ## Guardrails
 
 | Guardrail | Default | What happens when it trips |
 | --- | --- | --- |
 | Store-side execution timeout | 120s | The store cancels the query at its own engine and its timeout response is relayed |
-| Request-body size | 1 MiB | `413` with a distinct body |
+| Request-body size | 1 MiB | `413`; the framework stops reading at the cap, so an over-cap body is never buffered whole |
 | Response size | 64 MiB | `500` with a distinct body, and no partial response -- deliberately not `413`, which describes a request |
 | Concurrent calls across the surface | 8 | `503`; the call is rejected, never queued |
 | Store unreachable | -- | `503` |
@@ -88,10 +91,32 @@ To page through a large result, use `LIMIT` and `OFFSET` rather than raising the
 
 ## Logging
 
-Every call produces one log entry -- including rejected ones -- recording the user IRI and username, the operation, the
-full SPARQL text, the outcome, the duration and, for a completed read, the response size in bytes. Result payloads are
-never logged, and neither are credentials or request headers. The entry carries the trace id when a trace context is
-present.
+Every call produces exactly one log entry -- including a rejected one, and including a call abandoned part-way --
+recording the operation, the outcome, the user IRI and username where they are known, the duration, the request size in
+bytes and, for a completed read, the response size and the store's status. Result payloads are never logged, and
+neither are credentials or request headers. The entry carries the trace id when a trace context is present.
+
+The SPARQL text is recorded, because it is the audit trail of what was run, but bounded: it is truncated to 4096
+characters (flagged with `sparql_truncated=true`), stripped of control characters so a statement cannot forge a second
+entry, and omitted entirely -- leaving only `request_bytes` -- for an outcome decided before anything reached the
+store, where the text is unbounded caller input with nothing to attribute.
+
+| `outcome` | When |
+| --- | --- |
+| `ok` | The store answered with a success status |
+| `store-error` | The store answered with an error status, relayed verbatim |
+| `unauthenticated` | No or invalid credentials; emitted by the server's security-failure hook |
+| `forbidden` | Authenticated but not a `SystemAdmin` |
+| `bad-request` | The statement was sent as a query-string parameter |
+| `malformed-request` | The framework could not decode the request (e.g. an unsupported `Content-Type`) |
+| `request-cap-exceeded` | The request body exceeded the cap |
+| `response-cap-exceeded` | The store's response exceeded the ceiling |
+| `overloaded` | The concurrency backstop was saturated |
+| `store-unavailable` | The store could not be reached |
+| `upstream-rejected` | The store refused this API's own credentials |
+| `timed-out` | The overall deadline elapsed |
+| `interrupted` | The call was abandoned before it finished |
+| `defect` | An unexpected failure behind the seam |
 
 ## Configuration
 
