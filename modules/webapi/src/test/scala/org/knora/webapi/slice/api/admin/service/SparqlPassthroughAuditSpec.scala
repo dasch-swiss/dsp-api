@@ -12,6 +12,7 @@ import zio.*
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
+import scala.annotation.tailrec
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -34,9 +35,11 @@ import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
  * Driving the outcomes needs a store that can be told what to do, because most of them -- an unreachable store, a
  * rejected credential, the deadline, an abandoned call -- are precisely the ones a working store does not produce.
  *
- * Two outcomes are not covered here because the service never sees them: `unauthenticated`, raised by the server's
- * security-failure hook, and the `forbidden` raised by the endpoint's security logic. Both are exercised over HTTP by
- * `SparqlPassthroughE2ESpec`; the `forbidden` asserted below is the service's own backstop check.
+ * Three outcomes are not covered here because the service never sees them: `unauthenticated` and the `forbidden`
+ * raised by the endpoint's security logic, and `malformed-request` / `request-cap-exceeded` from the server's
+ * decode-failure hook. Those are asserted -- as entries, not just as status codes -- by
+ * `org.knora.webapi.core.SparqlPassthroughInterceptorSpec`, which runs requests through the real interceptor chain.
+ * The `forbidden` asserted below is the service's own backstop check.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class SparqlPassthroughAuditSpec extends ZIOSpecDefault {
@@ -75,8 +78,29 @@ class SparqlPassthroughAuditSpec extends ZIOSpecDefault {
 
   private def outcomeOf(entry: String): String = field(entry, "outcome")
 
-  private def field(entry: String, name: String): String =
-    entry.split(' ').collectFirst { case kv if kv.startsWith(s"$name=") => kv.drop(name.length + 1) }.getOrElse("")
+  /**
+   * Reads one field the way a correct log query has to read it: fields are space-separated `k=v`, but a value that
+   * opens with `"` runs to the next unescaped `"`. That matters because the quoted `sparql` field is the only place
+   * in the entry where bytes a caller chose can appear, and a naive splitter would happily read `outcome=ok` out of
+   * the middle of one.
+   */
+  private def field(entry: String, name: String): String = {
+    val at = entry.indexOf(s" $name=")
+    if (at < 0) ""
+    else {
+      val value = entry.substring(at + name.length + 2)
+      if (value.startsWith("\"")) unquote(value.tail.toList, new StringBuilder)
+      else value.takeWhile(_ != ' ')
+    }
+  }
+
+  @tailrec
+  private def unquote(rest: List[Char], acc: StringBuilder): String = rest match {
+    case '\\' :: escaped :: tail => unquote(tail, acc.append(escaped))
+    case '"' :: _                => acc.toString
+    case c :: tail               => unquote(tail, acc.append(c))
+    case Nil                     => acc.toString
+  }
 
   private def storeAnswering(answer: IO[SparqlPassthroughException, RawSparqlResponse]): ULayer[TriplestoreService] =
     SparqlPassthroughTestEnv.stubStore(_ => answer)
@@ -209,6 +233,64 @@ class SparqlPassthroughAuditSpec extends ZIOSpecDefault {
         val forged = "ASK{}\nSPARQL passthrough: operation=query outcome=ok user_iri=root"
         entriesFor(storeAnswering(ZIO.succeed(ok("{}"))), query(sparql = forged))
           .map(entries => assertTrue(entries.size == 1, !entries.head.contains("\n")))
+      },
+      test("a line separator or a bidi format character cannot forge one either") {
+        // U+2028/U+2029 are line terminators to several log pipelines and viewers but are not `Char.isControl`, and
+        // the Cf bidi overrides can make the rendered text read in an order its bytes do not have. Both would have
+        // survived the control-character strip on their own.
+        val forged = "ASK{}\u2028SPARQL passthrough: outcome=ok\u2029x\u202Ereversed"
+        entriesFor(storeAnswering(ZIO.succeed(ok("{}"))), query(sparql = forged)).map { entries =>
+          val entry = entries.head
+          assertTrue(
+            entries.size == 1,
+            !entry.contains("\u2028"),
+            !entry.contains("\u2029"),
+            !entry.contains("\u202E"),
+          )
+        }
+      },
+      test("a quote in the statement cannot forge a second field, so the entry still attributes the real caller") {
+        // The finding this pins: the entry is space-separated `k=v` and `sparql=` was written bare, so a SystemAdmin
+        // could embed `outcome=ok user_iri=<someone else>` in the statement and have it read as the entry's own
+        // fields -- forging an attribution away from themselves on the one control that attributes them.
+        val forged = """ASK{} # " outcome=ok user_iri=http://rdfh.ch/users/someone-else"""
+        entriesFor(storeAnswering(ZIO.fail(SparqlStoreUnavailableException.make)), query(sparql = forged)).map {
+          entries =>
+            val entry = entries.head
+            assertTrue(
+              entries.size == 1,
+              // Parsed as the quoting requires, the outcome and the identity are the real ones.
+              outcomeOf(entry) == "store-unavailable",
+              field(entry, "user_iri") == systemAdmin.id,
+              // The forged text is not censored -- it is contained. It round-trips out of the quoted value intact.
+              field(entry, "sparql") == forged,
+              // And the quote that would have closed the value early is escaped instead.
+              entry.contains("""\" outcome=ok"""),
+            )
+        }
+      },
+      test("a call that was admitted and then abandoned or crashed still records its statement") {
+        // The counterpart of the refusal case above, and the reason `interrupted` and `defect` are not in
+        // `refusedOutcomes`: both belong to a call this surface accepted and began running, so what was running is
+        // exactly what the entry has to say. Pinned so the choice cannot drift back without a decision.
+        for {
+          onDefect    <- entriesFor(storeAnswering(ZIO.die(new IllegalStateException("boom"))))
+          reached     <- Promise.make[Nothing, Unit]
+          onInterrupt <- (for {
+                           fiber    <- query().fork
+                           _        <- reached.await
+                           _        <- fiber.interrupt
+                           recorded <- auditEntries
+                         } yield recorded)
+                           .provide(
+                             SparqlPassthroughTestEnv.layerWithStore(
+                               SparqlPassthroughTestEnv.stubStore(_ => reached.succeed(()) *> ZIO.never),
+                             ),
+                           )
+        } yield assertTrue(
+          field(onDefect.head, "sparql") == selectQuery,
+          field(onInterrupt.head, "sparql") == selectQuery,
+        )
       },
       test("the identity is recorded, which is what makes the entry an attribution") {
         entriesFor(storeAnswering(ZIO.succeed(ok("{}")))).map { entries =>
