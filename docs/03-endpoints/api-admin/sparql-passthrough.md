@@ -220,13 +220,18 @@ open, and an alert on the startup warning (`ALLOW_SPARQL_PASSTHROUGH is turned O
   dropped after a rejected passthrough request are therefore deliberate, not a fault. Every other rejection leaves the
   connection alone, including one on a chunked body: the server aggregates anything it has not been *told* is large,
   so that body was already fully read.
-- **A crash also produces a second, unprotected log line.** tapir's default server log is left in place, so a defect
-  reaching the server logic emits an ERROR line of its own alongside the `defect` audit entry, carrying the
-  exception's raw message and stacktrace and the request line. That line has none of the containment this surface
-  applies to its own entry — it is unbounded, not stripped of line-breaking characters, and not quoted. It is
-  API-wide and pre-existing rather than a property of this route, but it is the one path that bypasses the entry
-  hardening, so a deployment treating the passthrough's log as sensitive should know the `defect` outcome has a
-  companion line in the same stream.
+- **A crash also produces a second, unprotected log line.** Both stages that can raise a defect emit one, from
+  different places. A defect reaching the **server logic** is logged by tapir's default server log, which is left in
+  place, carrying the exception's raw message and stacktrace and the request line. A defect in the **security logic**
+  is logged by this API itself — `ZIO.logErrorCause("Defect in the security logic", cause)` in `BaseEndpoints` —
+  carrying the raw message and stacktrace; tapir's own server log records a security failure at DEBUG, so the ERROR
+  line there is ours, not the framework's. The realistic trigger for the second on this route is a store outage
+  during the token's user lookup (`findUserByIri(...).orDie` in `Authenticator`), whose message can embed the lookup
+  query dsp-api sent — dsp-api's own text, not the caller's. Either way the `defect` audit entry has a companion
+  ERROR line with none of the containment this surface applies to its own entry — unbounded, not stripped of
+  line-breaking characters, and not quoted. It is API-wide and pre-existing rather than a property of this route, but
+  it is the one path that bypasses the entry hardening, so a deployment treating the passthrough's log as sensitive
+  should know the `defect` outcome has a companion line in the same stream.
 - **Two honest caveats to "exactly one entry per call".** An interruption *inside the security logic* -- a client
   disconnecting during authentication -- produces no entry, because the audit emitter for a rejection is on the
   rejection path and an interrupt takes neither branch. And the `ok` entry is written when the store's response has
