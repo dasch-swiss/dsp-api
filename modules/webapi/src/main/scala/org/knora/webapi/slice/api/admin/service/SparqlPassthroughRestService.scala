@@ -53,7 +53,8 @@ final class SparqlPassthroughRestService(
     accept: Option[String],
     params: QueryParams,
   ): Task[(Option[String], Array[Byte], StatusCode)] =
-    observed(user, sparql)(runQuery(user, sparql, accept, params))
+    SparqlPassthroughRestService
+      .observed(tracing, user, sparql)(runQuery(user, sparql, accept, params))
       .map(response =>
         // A store that sent no Content-Type still needs one on the way out, and the relayed body is declared with a
         // wildcard media type, which is not a legal Content-Type to emit. Fuseki always sends one, so this is the
@@ -126,7 +127,7 @@ final class SparqlPassthroughRestService(
   private def ensureWithinRequestCap(sparql: String): IO[SparqlRequestTooLargeException, Unit] =
     ZIO
       .fail(SparqlRequestTooLargeException.make(config.maxRequestBodyBytes))
-      .when(utf8Bytes(sparql) > config.maxRequestBodyBytes)
+      .when(SparqlPassthroughRestService.utf8Bytes(sparql) > config.maxRequestBodyBytes)
       .unit
 
   /** Only the two SPARQL-protocol dataset parameters are relayed; anything else the caller sent is dropped. */
@@ -154,6 +155,11 @@ final class SparqlPassthroughRestService(
 
   private val tryEnter: UIO[Boolean] =
     inFlight.modify(current => if (current < config.maxConcurrentCalls) (true, current + 1) else (false, current))
+}
+
+object SparqlPassthroughRestService {
+
+  private val spanName = "admin.sparql.query"
 
   /**
    * Wraps a call in its span and its single log entry.
@@ -170,15 +176,16 @@ final class SparqlPassthroughRestService(
    * observable here -- neither request reaches this service -- and are attributed by the server's hooks and the
    * security logic itself.
    */
-  private def observed(user: User, sparql: String)(effect: Task[RawSparqlResponse]): Task[RawSparqlResponse] =
-    SanitizedSpan.withSpan(tracing, SparqlPassthroughRestService.spanName, SparqlPassthroughRestService.exitReasonKey) {
-      span =>
-        Clock.nanoTime.flatMap { started =>
-          effect.onExit {
-            case Exit.Success(response) => report(span, user, sparql, started, outcomeOf(response), Some(response))
-            case Exit.Failure(cause)    => report(span, user, sparql, started, outcomeOf(cause), None)
-          }
+  private[service] def observed(tracing: Tracing, user: User, sparql: String)(
+    effect: Task[RawSparqlResponse],
+  ): Task[RawSparqlResponse] =
+    SanitizedSpan.withSpan(tracing, spanName, exitReasonKey) { span =>
+      Clock.nanoTime.flatMap { started =>
+        effect.onExit {
+          case Exit.Success(response) => report(span, user, sparql, started, outcomeOf(response), Some(response))
+          case Exit.Failure(cause)    => report(span, user, sparql, started, outcomeOf(cause), None)
         }
+      }
     }
 
   private def report(
@@ -193,7 +200,7 @@ final class SparqlPassthroughRestService(
       val durationMs    = (finishedNanos - startedNanos) / 1000000
       val requestBytes  = utf8Bytes(sparql)
       val responseBytes = response.map(_.body.length)
-      val attributes    = SparqlPassthroughRestService.spanAttributes(outcome, durationMs, requestBytes, response)
+      val attributes    = spanAttributes(outcome, durationMs, requestBytes, response)
       ZIO.succeed {
         attributes.strings.foreach { case (key, value) => val _ = span.setAttribute(key, value) }
         attributes.longs.foreach { case (key, value) => val _ = span.setAttribute(key, value) }
@@ -204,10 +211,10 @@ final class SparqlPassthroughRestService(
         storeStatus = response.map(_.status.code),
         responseBytes = responseBytes,
         requestBytes = Some(requestBytes),
-        // The statement is the audit trail of what was run, so it is recorded -- but only for a call that actually
-        // reached the store. For one refused before then it is unbounded caller-supplied text with nothing to
-        // attribute, so only its size is kept.
-        statement = Option.when(!SparqlPassthroughRestService.outcomesBeforeForwarding.contains(outcome))(sparql),
+        // The statement is the audit trail of what was run, so it is recorded for every call this surface
+        // *admitted* -- including one that was abandoned or crashed part-way, which is the call an audit trail
+        // most needs. It is omitted only for a call the surface refused outright; see refusedOutcomes.
+        statement = Option.when(!refusedOutcomes.contains(outcome))(sparql),
       ).log
     }
 
@@ -227,11 +234,6 @@ final class SparqlPassthroughRestService(
     case _: BadRequestException        => "bad-request"
     case _                             => "error"
   }
-}
-
-object SparqlPassthroughRestService {
-
-  private val spanName = "admin.sparql.query"
 
   /** The attribute an interrupted passthrough span carries; the counterpart of Gravsearch's own exit reason. */
   private[service] val exitReasonKey = "sparql_passthrough.exit_reason"
@@ -242,8 +244,19 @@ object SparqlPassthroughRestService {
   /** The SPARQL-protocol query dataset parameters, the only query-string parameters relayed to the store. */
   private val datasetParams: Set[String] = Set("default-graph-uri", "named-graph-uri")
 
-  /** Outcomes decided before anything was forwarded to the store, for which the statement text is not logged. */
-  private[service] val outcomesBeforeForwarding: Set[String] =
+  /**
+   * The outcomes for which the entry records only the statement's size, never its text.
+   *
+   * These four are refusals: the surface turned the call away on a guardrail and never forwarded it, so the text is
+   * caller-supplied input with nothing to attribute -- and for `request-cap-exceeded` it is by definition input the
+   * surface has just declared too large to accept.
+   *
+   * `interrupted` and `defect` are deliberately **not** here even though neither necessarily reached the store. Both
+   * belong to a call this surface admitted and began running, from an authenticated SystemAdmin, and what was being
+   * run when it went wrong is exactly what the entry is for. The text is bounded on both sides regardless: by the
+   * endpoint's request-body cap on the way in, and by the audit's own truncation on the way out.
+   */
+  private[service] val refusedOutcomes: Set[String] =
     Set("forbidden", "bad-request", "request-cap-exceeded", "overloaded")
 
   /** The span's attributes, split by type because OpenTelemetry attributes are typed. */
