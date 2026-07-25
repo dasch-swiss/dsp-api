@@ -220,6 +220,24 @@ open, and an alert on the startup warning (`ALLOW_SPARQL_PASSTHROUGH is turned O
   dropped after a rejected passthrough request are therefore deliberate, not a fault. Every other rejection leaves the
   connection alone, including one on a chunked body: the server aggregates anything it has not been *told* is large,
   so that body was already fully read.
+- **That same rejection can reach the caller as a reset rather than as a status.** The statuses on this page are what
+  the server *sends*; on a request closed as described above, they are not necessarily what the client *reads*. The
+  response is written while the caller is still uploading and the connection is then closed with bytes still in
+  flight, so depending on the client and on timing the caller may observe a broken pipe or `Connection reset by peer`
+  instead of the `401`, `403` or `413`. This is inherent to refusing an upload before reading it — the alternative is
+  reading a body that has already been refused, which is the cost the early rejection exists to avoid. The audit
+  entry and the status are unaffected: this is about what survives the trip back, not about what the surface decided.
+
+    `Expect: 100-continue` is not a way around it. This API's HTTP server leaves zio-http's `acceptContinue` at its
+    default of `false`, so Netty's expect-continue handler is never installed and no `100 Continue` is ever sent; a
+    client that waits for one waits out its own timeout and then uploads anyway. Enabling it would not help either:
+    that handler answers `100 Continue` unconditionally, before any of this API's logic runs, so it would wave
+    through precisely the request that is about to be refused. Verified against zio-http 3.11.3.
+
+    A caller that needs the status reliably should keep the request body **under the 1 MiB aggregation threshold and
+    declare a `Content-Length`**. Below the threshold the server reads the whole body before any per-endpoint logic
+    runs, so the rejection is written to a connection with nothing left in flight, carries no `Connection: close`,
+    and the status arrives intact.
 - **A crash also produces a second, unprotected log line.** Both stages that can raise a defect emit one, from
   different places. A defect reaching the **server logic** is logged by tapir's default server log, which is left in
   place, carrying the exception's raw message and stacktrace and the request line. A defect in the **security logic**
