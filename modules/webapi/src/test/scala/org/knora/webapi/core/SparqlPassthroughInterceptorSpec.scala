@@ -87,8 +87,8 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
    * interceptor a *different* storage from the one `Tracing` writes spans into, so `updateSpanMetadata` renamed a
    * span nobody could see and the span assertions below would have passed against an empty context.
    */
-  private def envWith(authenticator: Authenticator) =
-    SparqlPassthroughTestEnv.layerWithAuthenticator(storeAnswersOk, authenticator)
+  private def envWith(authenticator: Authenticator, overrides: (String, Any)*) =
+    SparqlPassthroughTestEnv.layerWithAuthenticator(storeAnswersOk, authenticator, overrides*)
 
   private val routes =
     for {
@@ -221,6 +221,27 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
           ),
         )
         .provide(env(systemAdmin))
+    },
+    test("a body over the endpoint's request cap is attributed as request-cap-exceeded, not malformed-request") {
+      // The `request-cap-exceeded` branch of the decode hook was the one outcome nothing pinned. The e2e spec
+      // asserts only the 413, which tapir's own decode-failure handler produces whether or not our hook recognised
+      // the failure -- so a tapir change reshaping `DecodeResult.Error(_, StreamMaxLengthExceededException(_))`
+      // would silently degrade the entry to `malformed-request` with every test still green. The audit spec covers
+      // the *rest service's* own cap, a different path: this one never reaches the server logic at all.
+      run(post(selectQuery, "application/sparql-query", Some(token)))
+        .map((response, entries) =>
+          assertTrue(
+            response.status == Status.RequestEntityTooLarge,
+            entries.size == 1,
+            outcomeOf(entries.head) == "request-cap-exceeded",
+          ),
+        )
+        .provide(
+          envWith(
+            SparqlPassthroughTestEnv.tokenAuthenticator(token, systemAdmin),
+            "app.triplestore.sparql-passthrough.max-request-body-bytes" -> 10,
+          ),
+        )
     },
     test("a form body with no query field is a decode failure, and is attributed as one") {
       run(post("notquery=x", "application/x-www-form-urlencoded", Some(token)))
