@@ -180,7 +180,9 @@ case class TriplestoreServiceLive(
     sttpRequest
       .send(backend)
       .foldZIO(mapRawQueryFailure(sttpRequest.uri.toString), toRawSparqlResponse)
-      .timeoutFail(SparqlPassthroughTimedOutException.make(deadline.toSeconds))(deadline)
+      // The *configured* timeout is reported, not the deadline: the grace below is an internal implementation
+      // detail, and naming it would tell a caller a limit no operator set.
+      .timeoutFail(SparqlPassthroughTimedOutException.make(config.timeout.toSeconds))(deadline)
   }
 
   /** Grace added to the configured timeout so the store's own timeout response wins over the API-side deadline. */
@@ -208,10 +210,12 @@ case class TriplestoreServiceLive(
    * response byte is ever emitted to the client. Abandoning the remainder of the upstream stream is safe here: this
    * is the outbound response side, inside sttp's own scope for the connection.
    */
-  private def readCappedBody(stream: ZStream[Any, Throwable, Byte], maxBytes: Int): Task[Chunk[Byte]] =
+  private def readCappedBody(stream: ZStream[Any, Throwable, Byte], maxBytes: Int): Task[Array[Byte]] =
     stream.take(maxBytes.toLong + 1).runCollect.flatMap { bytes =>
       if (bytes.length > maxBytes) ZIO.fail(SparqlResponseTooLargeException.make(maxBytes))
-      else ZIO.succeed(bytes)
+      // Converted here, where the collected chunk is discarded immediately afterwards, rather than at the relay
+      // boundary, where it would still be reachable and the copy would double this call's peak heap.
+      else ZIO.succeed(bytes.toArray)
     }
 
   private def mapRawQueryFailure(storeUri: String)(error: Throwable): IO[SparqlPassthroughException, Nothing] =
@@ -225,7 +229,7 @@ case class TriplestoreServiceLive(
     }
 
   private def toRawSparqlResponse(
-    response: Response[Chunk[Byte]],
+    response: Response[Array[Byte]],
   ): IO[SparqlPassthroughException, RawSparqlResponse] =
     if (rawQueryUpstreamRejectedCodes.contains(response.code.code)) {
       ZIO.logError(

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.errors
 
+import sttp.model.StatusCode
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
@@ -24,15 +25,19 @@ import zio.json.JsonCodec
  * Note that a SPARQL error *from* the store is not one of these: a malformed query, a `406`, or the store's own
  * timeout response all travel back as ordinary success values so they can be relayed verbatim.
  *
- * `outcome` is the stable token recorded as the `outcome` field of the per-call log entry.
+ * `outcome` is the stable token recorded as the `outcome` field of the per-call log entry. `statusCode` is the status
+ * the API answers with, and it lives here rather than in the endpoint so that the two cannot be declared apart: the
+ * endpoint builds its error variants from these values, and a test holds that variant list against this hierarchy.
  */
 sealed abstract class SparqlPassthroughException(message: String) extends Exception(message) {
   def outcome: String
+  def statusCode: StatusCode
 }
 
 /** The triplestore could not be reached, or the connection failed before any response arrived. Maps to `503`. */
 final case class SparqlStoreUnavailableException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "store-unavailable"
+  override val outcome: String        = "store-unavailable"
+  override val statusCode: StatusCode = StatusCode.ServiceUnavailable
 }
 object SparqlStoreUnavailableException {
   val make: SparqlStoreUnavailableException = SparqlStoreUnavailableException("The triplestore is unavailable.")
@@ -43,7 +48,8 @@ object SparqlStoreUnavailableException {
 
 /** The submitted SPARQL text exceeded the configured request-body ceiling. Maps to `413`. */
 final case class SparqlRequestTooLargeException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "request-cap-exceeded"
+  override val outcome: String        = "request-cap-exceeded"
+  override val statusCode: StatusCode = StatusCode.PayloadTooLarge
 }
 object SparqlRequestTooLargeException {
   def make(maxBytes: Int): SparqlRequestTooLargeException =
@@ -58,7 +64,8 @@ object SparqlRequestTooLargeException {
  * to `413`, which describes a too-large request: no standard status denotes a too-large response.
  */
 final case class SparqlResponseTooLargeException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "response-cap-exceeded"
+  override val outcome: String        = "response-cap-exceeded"
+  override val statusCode: StatusCode = StatusCode.InternalServerError
 }
 object SparqlResponseTooLargeException {
   def make(maxBytes: Int): SparqlResponseTooLargeException =
@@ -72,13 +79,14 @@ object SparqlResponseTooLargeException {
 }
 
 /**
- * The store rejected the API's own credentials (`401`, `403` or `407`), or returned a status outside the valid HTTP
- * range. Maps to a `502`-class status with this scrubbed message rather than relaying the store's response, because
+ * The store rejected the API's own credentials (`401`, `403` or `407`). Maps to a `502`-class status with this
+ * scrubbed message rather than relaying the store's response, because
  * relaying it would present a server misconfiguration -- typically a rotated database password -- as the caller's
  * own authentication failure and invite credential-confusion retries.
  */
 final case class SparqlUpstreamRejectedException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "upstream-rejected"
+  override val outcome: String        = "upstream-rejected"
+  override val statusCode: StatusCode = StatusCode.BadGateway
 }
 object SparqlUpstreamRejectedException {
   val make: SparqlUpstreamRejectedException = SparqlUpstreamRejectedException(
@@ -95,7 +103,8 @@ object SparqlUpstreamRejectedException {
  * queued: queueing would keep heap bounded but let fibers and connections accumulate instead.
  */
 final case class SparqlPassthroughOverloadedException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "overloaded"
+  override val outcome: String        = "overloaded"
+  override val statusCode: StatusCode = StatusCode.ServiceUnavailable
 }
 object SparqlPassthroughOverloadedException {
   def make(maxConcurrentCalls: Int): SparqlPassthroughOverloadedException =
@@ -116,7 +125,8 @@ object SparqlPassthroughOverloadedException {
  * slowly enough that no single read times out.
  */
 final case class SparqlPassthroughTimedOutException(message: String) extends SparqlPassthroughException(message) {
-  override val outcome: String = "timed-out"
+  override val outcome: String        = "timed-out"
+  override val statusCode: StatusCode = StatusCode.GatewayTimeout
 }
 object SparqlPassthroughTimedOutException {
   def make(seconds: Long): SparqlPassthroughTimedOutException =

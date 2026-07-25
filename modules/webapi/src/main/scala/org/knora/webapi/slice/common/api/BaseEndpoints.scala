@@ -23,7 +23,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.Authenticator
 
-final case class BaseEndpoints(authenticator: Authenticator) {
+final case class BaseEndpoints(authenticator: Authenticator, authorization: AuthorizationRestService) {
 
   private val errorOutputs: EndpointOutput.OneOf[Throwable, Throwable] =
     oneOf[Throwable](
@@ -76,27 +76,42 @@ final case class BaseEndpoints(authenticator: Authenticator) {
 
   /**
    * A narrowing of [[securedEndpoint]] that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
-   * endpoint here) no cookie. Use it for a route where accepting basic credentials would be a liability rather than a
-   * convenience.
+   * endpoint here) no cookie -- and that authorizes the caller as a SystemAdmin **in the security logic**. Use it for a
+   * route where accepting basic credentials would be a liability rather than a convenience, and where an unauthorized
+   * caller must not be able to cause work.
    *
-   * Two properties make the narrowing worth having. First, basic authentication runs a bcrypt verification at the
-   * configured strength on **every** call, and because the framework evaluates an endpoint's security logic before its
-   * server logic, that cost sits upstream of any bound the server logic establishes -- so on a route that
-   * deliberately bounds its own work, basic would be the one unbounded part. Second, omitting the basic security
-   * input also omits the `WWW-Authenticate: Basic` challenge, which is worth keeping off a route whose existence the
-   * generated API documentation advertises.
+   * Both narrowings turn on the same framework ordering: an endpoint's security logic is evaluated before its request
+   * body is decoded, and its server logic only afterwards.
+   *
+   *   - Authorizing here rather than in the server logic, as every other admin route does, is what makes the refusal
+   *     land before a single body byte has been read. In the server logic the body has already been materialised, so
+   *     any caller holding a valid token could make the server buffer an arbitrary request first and be told `403`
+   *     only after.
+   *   - Basic authentication runs a bcrypt verification at the configured strength on **every** call, and that cost
+   *     would likewise sit upstream of any bound the server logic establishes -- so on a route that deliberately
+   *     bounds its own work, basic would be the one unbounded part. Omitting the basic security input also omits the
+   *     `WWW-Authenticate: Basic` challenge, worth keeping off a route whose existence the generated API documentation
+   *     advertises.
    *
    * The absence of a cookie input is what keeps such a route CSRF-safe: this API's CORS is reflected-origin with
    * credentials allowed, so a cookie credential here would be rideable from any origin. Treat that as a tested
    * invariant, not a convention.
+   *
+   * @param onForbidden run with the authenticated user when the SystemAdmin check fails. A failure in the security
+   *                    logic carries only the exception onwards, so a surface that must attribute rejected attempts
+   *                    would otherwise lose the identity; this is where it is still in scope.
    */
-  val bearerSecuredEndpoint: ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
+  def bearerSystemAdminEndpoint(
+    onForbidden: User => UIO[Unit],
+  ): ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
     endpoint
       .errorOut(errorOutputs)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic {
-        case Some(jwtToken) => authenticateJwt(jwtToken)
-        case _              => ZIO.fail(BadCredentialsException("No credentials provided."))
+        case Some(jwtToken) =>
+          authenticateJwt(jwtToken)
+            .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onForbidden(user)).as(user))
+        case _ => ZIO.fail(BadCredentialsException("No credentials provided."))
       }
 
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =

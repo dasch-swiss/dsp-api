@@ -15,7 +15,6 @@ import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import sttp.model.StatusCode
-import zio.Chunk
 import zio.Console
 import zio.IO
 import zio.RIO
@@ -228,7 +227,12 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
    * lazily-consumed `ResultSet` escaping `withTx` would read outside the transaction that produced it.
    */
   override def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse] =
-    withTx(ReadWrite.READ)(executeRawQuery(_, request)).orDie
+    withTx(ReadWrite.READ)(executeRawQuery(_, request))
+      .orDieWith(e =>
+        // Not `orDie`: `executeRawQuery` already turns a malformed query into a 400 response, so anything reaching
+        // here is a broken double rather than something a test query can provoke, and the message says so.
+        new IllegalStateException("The in-memory triplestore double failed to run a raw SPARQL query", e),
+      )
 
   private def executeRawQuery(ds: Dataset, request: RawSparqlRequest): RawSparqlResponse =
     try {
@@ -238,7 +242,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       finally qExec.close()
     } catch {
       case e: QueryParseException =>
-        RawSparqlResponse(StatusCode.BadRequest, Some("text/plain"), Chunk.fromArray(utf8(e.getMessage)))
+        RawSparqlResponse(StatusCode.BadRequest, Some("text/plain"), utf8(e.getMessage))
     }
 
   private def serializeRawResult(query: Query, qExec: QueryExecution, accept: Option[String]): RawSparqlResponse = {
@@ -250,9 +254,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       else if (query.isConstructType) rdfFormat(requested).map(lang => writeModel(os, qExec.execConstruct(), lang))
       else if (query.isDescribeType) rdfFormat(requested).map(lang => writeModel(os, qExec.execDescribe(), lang))
       else None
-    contentType.fold(notAcceptable(requested))(ct =>
-      RawSparqlResponse(StatusCode.Ok, Some(ct), Chunk.fromArray(os.toByteArray)),
-    )
+    contentType.fold(notAcceptable(requested))(ct => RawSparqlResponse(StatusCode.Ok, Some(ct), os.toByteArray))
   }
 
   /** The first media type in the `Accept` header, without parameters; `None` for absent, empty or wildcard values. */
@@ -312,7 +314,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
 
   private def notAcceptable(requested: Option[String]): RawSparqlResponse = {
     val body = s"No serialization available for ${requested.getOrElse("the requested media type")}"
-    RawSparqlResponse(StatusCode.NotAcceptable, Some("text/plain"), Chunk.fromArray(utf8(body)))
+    RawSparqlResponse(StatusCode.NotAcceptable, Some("text/plain"), utf8(body))
   }
 
   private def utf8(s: String): Array[Byte] = s.getBytes(StandardCharsets.UTF_8)

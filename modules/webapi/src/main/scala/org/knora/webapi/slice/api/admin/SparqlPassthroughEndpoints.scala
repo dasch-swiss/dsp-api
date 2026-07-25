@@ -7,15 +7,23 @@ package org.knora.webapi.slice.api.admin
 
 import sttp.model.HeaderNames
 import sttp.model.MediaType
-import sttp.model.StatusCode
 import sttp.tapir.*
+import sttp.tapir.EndpointOutput.OneOfVariant
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.server.model.EndpointExtensions.RichServerEndpoint
+import sttp.tapir.typelevel.ErasureSameAsType
 import zio.ZLayer
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 import java.nio.charset.StandardCharsets
+import scala.reflect.ClassTag
 
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughOverloadedException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughTimedOutException
 import org.knora.webapi.store.triplestore.errors.SparqlRequestTooLargeException
@@ -27,7 +35,13 @@ import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
  * The admin SPARQL passthrough surface: a SPARQL 1.1 Protocol query endpoint that forwards a SystemAdmin's query text
  * to the triplestore untouched and relays the store's response verbatim.
  *
- * Two shapes here differ from the rest of the admin API, both deliberately.
+ * Three shapes here differ from the rest of the admin API, all deliberately.
+ *
+ * Authorization is part of the **security logic** rather than the server logic, via
+ * [[BaseEndpoints.bearerSystemAdminEndpoint]]: the framework decodes the request body between the two, so authorizing
+ * in the server logic would let any holder of a valid token make the server buffer a request first. The request body
+ * is additionally bounded by the framework itself, so even an authorized caller cannot make it buffer past the
+ * configured cap.
  *
  * The **success channel carries the store's outcome** as `(Content-Type, body, status)`. A store `400` for malformed
  * SPARQL, a `406`, a `200` -- from this endpoint's point of view all are successes, relayed byte for byte, so
@@ -38,12 +52,16 @@ import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
  * The **error channel is extended per endpoint** with `errorOutVariantsPrepend`. Adding these variants to
  * `BaseEndpoints.errorOutputs` instead would be an API-wide information leak: a typed variant serializes the
  * exception's message verbatim, so every endpoint -- including unauthenticated public ones -- would start returning
- * these bodies. All six outcomes are enumerated here, because an outcome without a variant falls through to the
- * shared default variant and is reported as a generic `500`, which is precisely the bug this arrangement prevents.
+ * these bodies. The variants are built from [[SparqlPassthroughEndpoints.errorVariants]], which pairs each with a
+ * representative of the failure it covers so a test can hold the list against the sealed
+ * [[SparqlPassthroughException]] hierarchy: an outcome without a variant falls through to the shared default variant
+ * and is reported as a generic `500`, which is precisely the bug this arrangement prevents.
  */
-final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints) {
+final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: AppConfig) {
 
-  val postAdminSparqlQuery = baseEndpoints.bearerSecuredEndpoint.post
+  val postAdminSparqlQuery = baseEndpoints
+    .bearerSystemAdminEndpoint(SparqlPassthroughEndpoints.logForbidden)
+    .post
     .in("admin" / "sparql" / "query")
     .in(SparqlPassthroughEndpoints.queryBody)
     .in(
@@ -61,13 +79,17 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints) {
     .out(SparqlPassthroughEndpoints.relayedBody)
     .out(statusCode)
     .errorOutVariantsPrepend(
-      SparqlPassthroughEndpoints.storeUnavailableVariant,
-      SparqlPassthroughEndpoints.requestTooLargeVariant,
-      SparqlPassthroughEndpoints.responseTooLargeVariant,
-      SparqlPassthroughEndpoints.upstreamRejectedVariant,
-      SparqlPassthroughEndpoints.overloadedVariant,
-      SparqlPassthroughEndpoints.timedOutVariant,
+      SparqlPassthroughEndpoints.errorVariants.head._2,
+      SparqlPassthroughEndpoints.errorVariants.tail.map(_._2)*,
     )
+    // The framework's own bound on the request body, and the one that makes the cap a memory bound rather than a
+    // policy: it limits the body *stream*, so an over-cap request is refused after at most this many bytes have been
+    // read instead of after the whole body has been materialised. Because the check sits in body decoding it runs
+    // after the security logic above, so only an authorized SystemAdmin gets even this far.
+    .maxRequestBodyLength(appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes.toLong)
+    // Lets the server's interceptors recognise this route -- to exempt it from tapir's Accept negotiation, and to
+    // attribute a request its security or decode logic rejected -- without matching on its path or method.
+    .attribute(SparqlPassthroughEndpoints.routeMarker, SparqlPassthroughRoute)
     .description(
       "Run a read-only SPARQL 1.1 query against the triplestore and receive the store's response unchanged. " +
         "Requires SystemAdmin permissions and a bearer token; HTTP basic and session cookies are not accepted. " +
@@ -80,18 +102,31 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints) {
     )
 }
 
+/** The value of [[SparqlPassthroughEndpoints.routeMarker]]; a dedicated type so the attribute key cannot collide. */
+case object SparqlPassthroughRoute
+
 object SparqlPassthroughEndpoints {
 
   val layer = ZLayer.derive[SparqlPassthroughEndpoints]
 
   /**
-   * The route's path template, as the framework renders it.
+   * Marks the passthrough route, so a server-side interceptor can recognise it from the endpoint it was handed.
    *
-   * The server needs this to recognise a rejected passthrough request at its security-failure hook, which is the only
-   * place a `401` on this route is observable -- the request never reaches the service. It is asserted against the
-   * endpoint's own rendered template by test, so the two cannot drift apart silently.
+   * The alternative -- comparing the rendered path template -- was method-blind (a future `GET` on the same path would
+   * silently inherit the exemptions) and broke on a rename unless a separate constant was kept in step. This is
+   * neither, and it costs a map lookup rather than rebuilding the template on every request.
    */
-  val pathTemplate: String = "/admin/sparql/query"
+  val routeMarker: AttributeKey[SparqlPassthroughRoute.type] = AttributeKey[SparqlPassthroughRoute.type]
+
+  /** True for the one endpoint carrying [[routeMarker]]. */
+  def isPassthroughRoute(ep: AnyEndpoint): Boolean = ep.attribute(routeMarker).isDefined
+
+  /**
+   * Attributes a request refused by the security logic's SystemAdmin check. The rejection never reaches the rest
+   * service that does the per-call logging -- security logic runs before server logic -- so this is the only place it
+   * is observable with the identity still in hand.
+   */
+  private def logForbidden(user: User) = SparqlPassthroughAudit("forbidden", user = Some(user)).log
 
   /** The media type of the SPARQL 1.1 Protocol direct query form; tapir has no built-in format for it. */
   private final case class SparqlQuery() extends CodecFormat {
@@ -136,31 +171,30 @@ object SparqlPassthroughEndpoints {
       fields.get("query").fold[DecodeResult[String]](DecodeResult.Missing)(DecodeResult.Value(_)),
     )(query => Map("query" -> query))
 
-  private val storeUnavailableVariant = oneOfVariant(
-    statusCode(StatusCode.ServiceUnavailable).and(jsonBody[SparqlStoreUnavailableException]),
-  )
-
-  private val requestTooLargeVariant = oneOfVariant(
-    statusCode(StatusCode.PayloadTooLarge).and(jsonBody[SparqlRequestTooLargeException]),
-  )
-
   /**
-   * A too-large *response* is a `500`-class outcome with its own body, explicitly not a `413`: `413` describes the
-   * request, and no standard status denotes a response that would have been too large.
+   * Every failure this endpoint declares an error variant for, each paired with a representative instance.
+   *
+   * The representative serves two purposes: its `statusCode` is the one the variant maps to, so the status lives with
+   * the failure rather than being restated here, and it lets a test check this list against the sealed
+   * [[SparqlPassthroughException]] hierarchy -- which is what would catch a seventh subtype being added without a
+   * variant, the case that otherwise falls through to a generic `500`.
+   *
+   * A too-large *response* deliberately maps to `500` rather than `413`: `413` describes the request, and no standard
+   * status denotes a response that would have been too large. A store credential rejection maps to `502` with a
+   * scrubbed body rather than relaying the store's own `401`, which would present a server misconfiguration as the
+   * caller's authentication failure.
    */
-  private val responseTooLargeVariant = oneOfVariant(
-    statusCode(StatusCode.InternalServerError).and(jsonBody[SparqlResponseTooLargeException]),
+  val errorVariants: List[(SparqlPassthroughException, OneOfVariant[? <: Throwable])] = List(
+    variant(SparqlStoreUnavailableException.make),
+    variant(SparqlRequestTooLargeException.make(0)),
+    variant(SparqlResponseTooLargeException.make(0)),
+    variant(SparqlUpstreamRejectedException.make),
+    variant(SparqlPassthroughOverloadedException.make(0)),
+    variant(SparqlPassthroughTimedOutException.make(0)),
   )
 
-  private val upstreamRejectedVariant = oneOfVariant(
-    statusCode(StatusCode.BadGateway).and(jsonBody[SparqlUpstreamRejectedException]),
-  )
-
-  private val overloadedVariant = oneOfVariant(
-    statusCode(StatusCode.ServiceUnavailable).and(jsonBody[SparqlPassthroughOverloadedException]),
-  )
-
-  private val timedOutVariant = oneOfVariant(
-    statusCode(StatusCode.GatewayTimeout).and(jsonBody[SparqlPassthroughTimedOutException]),
-  )
+  private def variant[E <: SparqlPassthroughException: JsonEncoder: JsonDecoder: Schema: ClassTag: ErasureSameAsType](
+    e: E,
+  ): (SparqlPassthroughException, OneOfVariant[? <: Throwable]) =
+    e -> oneOfVariant(statusCode(e.statusCode).and(jsonBody[E]))
 }

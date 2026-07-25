@@ -411,7 +411,7 @@ class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
   private def rawQuery(sparql: String, accept: Option[String] = None) =
     ZIO.serviceWithZIO[TriplestoreService](_.rawQuery(RawSparqlRequest(sparql, accept, Map.empty)))
 
-  private def asString(response: RawSparqlResponse) = new String(response.body.toArray, StandardCharsets.UTF_8)
+  private def asString(response: RawSparqlResponse) = new String(response.body, StandardCharsets.UTF_8)
 
   private def namedModelExists(ds: Dataset, name: String) = {
     ds.begin(ReadWrite.READ)

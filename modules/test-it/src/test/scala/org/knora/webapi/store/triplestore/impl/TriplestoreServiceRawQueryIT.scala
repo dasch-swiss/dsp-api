@@ -22,6 +22,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSpar
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlResponse
 import org.knora.webapi.store.triplestore.errors.SparqlResponseTooLargeException
 import org.knora.webapi.store.triplestore.errors.SparqlStoreUnavailableException
+import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
 
 /**
  * `rawQuery` against a real Fuseki: the cases whose whole point is how the *store* behaves, and which the in-memory
@@ -132,24 +133,56 @@ class TriplestoreServiceRawQueryIT extends E2EZSpec {
             )
           }
       },
+      test("a store that refuses this API's own credentials yields a scrubbed failure, not the store's 401") {
+        // A rotated database password looks exactly like this from the store's side. Relaying its 401 would present a
+        // server misconfiguration as the caller's own authentication failure and invite credential-confusion retries,
+        // so the failure handed back names neither the store nor its status.
+        tunedStore(identity, cfg => cfg.copy(fuseki = cfg.fuseki.copy(password = "not-the-configured-password")))
+          .flatMap(store => store.rawQuery(RawSparqlRequest(selectQuery, None, Map.empty)).exit)
+          .map { exit =>
+            val failure = exit.causeOption.flatMap(_.failureOption)
+            assertTrue(
+              failure.exists(_.isInstanceOf[SparqlUpstreamRejectedException]),
+              failure.map(_.getMessage).contains(SparqlUpstreamRejectedException.make.message),
+              // Nothing about the store leaks into what the caller is told.
+              failure.forall(e => !e.getMessage.contains("401") && !e.getMessage.toLowerCase.contains("fuseki")),
+            )
+          }
+      },
       test("a response within the ceiling is returned intact") {
         tunedStore(_.copy(maxResponseBytes = 1024 * 1024))
           .flatMap(store => store.rawQuery(RawSparqlRequest("ASK { ?s ?p ?o }", None, Map.empty)))
           .map(response => assertTrue(response.status.code == 200, asString(response).contains("true")))
       },
     ),
+    suite("the store's own configuration")(
+      test("a federated SERVICE call is refused, so a query cannot make the store issue outbound HTTP") {
+        // The precondition the passthrough rests on, asserted against the image this build ships rather than against
+        // the documentation: `modules/fuseki/dsp-repo.ttl` sets arq:httpServiceAllowed to false, and the container
+        // here runs that file because `just test-it` loads the locally built fuseki image at the pinned tag before
+        // the tests run. Without the setting, any SELECT could make the *store* fetch a URL the query author chose --
+        // reach the caller does not otherwise have, bypassing the response ceiling and logging almost nothing.
+        rawQuery("SELECT * WHERE { SERVICE <http://127.0.0.1:1/sparql> { ?s ?p ?o } }").map { response =>
+          assertTrue(
+            response.status.code == 422,
+            asString(response).contains("SERVICE execution disabled"),
+          )
+        }
+      },
+    ),
   )
 
-  private def asString(response: RawSparqlResponse) = new String(response.body.toArray, StandardCharsets.UTF_8)
+  private def asString(response: RawSparqlResponse) = new String(response.body, StandardCharsets.UTF_8)
 
   /** A second store client against the same container, with one guardrail (or the connection details) changed. */
   private def tunedStore(
     tuneGuardrails: SparqlPassthroughConfig => SparqlPassthroughConfig,
     tuneConnection: Triplestore => Triplestore = identity,
-  ): ZIO[Triplestore, Throwable, TriplestoreService] =
+  ): ZIO[Triplestore & Scope, Throwable, TriplestoreService] =
     for {
-      config  <- ZIO.service[Triplestore]
-      backend <- HttpClientZioBackend()
+      config <- ZIO.service[Triplestore]
+      // Scoped, so the extra client is closed with the test rather than left to the garbage collector.
+      backend <- HttpClientZioBackend.scoped()
     } yield TriplestoreServiceLive(
       tuneConnection(config).copy(sparqlPassthrough = tuneGuardrails(config.sparqlPassthrough)),
       backend,

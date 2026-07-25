@@ -14,9 +14,11 @@ import io.opentelemetry.context.propagation.TextMapGetter
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
+import sttp.capabilities.StreamMaxLengthExceededException
 import sttp.model.Method.*
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
+import sttp.tapir.DecodeResult
 import sttp.tapir.server.interceptor.DecodeFailureContext
 import sttp.tapir.server.interceptor.DecodeSuccessContext
 import sttp.tapir.server.interceptor.EndpointHandler
@@ -43,6 +45,7 @@ import scala.jdk.CollectionConverters.IterableHasAsJava
 
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
+import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
 
 final class DspApiServer(
@@ -96,20 +99,24 @@ final class DspApiServer(
           if (leavesNegotiationToTheStore(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
           else negotiating.onDecodeSuccess(ctx)
 
+        // These two are pass-throughs in the interceptor being wrapped, so delegating past it would be
+        // behaviour-identical today. They go through it anyway: the exemption above is meant to be the only
+        // difference from stock negotiation, and skipping the wrapped handler on the other two hooks would make a
+        // future change to either silently not apply to this server.
         override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
-        ): Task[ServerResponse[B]] = endpointHandler.onSecurityFailure(ctx)
+        ): Task[ServerResponse[B]] = negotiating.onSecurityFailure(ctx)
 
         override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
-        ): Task[Option[ServerResponse[B]]] = endpointHandler.onDecodeFailure(ctx)
+        ): Task[Option[ServerResponse[B]]] = negotiating.onDecodeFailure(ctx)
       }
     }
 
     private def leavesNegotiationToTheStore(ep: AnyEndpoint): Boolean =
-      ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None) == SparqlPassthroughEndpoints.pathTemplate
+      SparqlPassthroughEndpoints.isPassthroughRoute(ep)
   }
 
   // Renames the active HTTP server span to the matched Tapir endpoint's path template
@@ -128,15 +135,22 @@ final class DspApiServer(
      * log backend. Only the outcome, method and route template are recorded; `trace_id` is attached by the
      * surrounding middleware's log annotation.
      */
-    private def logRejectedPassthrough(ep: AnyEndpoint): UIO[Unit] = {
-      val route = ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)
-      ZIO
-        .logInfo(
-          s"SPARQL passthrough: operation=query outcome=unauthenticated " +
-            s"method=${ep.method.map(_.method).getOrElse("-")} path=$route",
-        )
-        .when(route == SparqlPassthroughEndpoints.pathTemplate)
-        .unit
+    private def logRejectedPassthrough(ep: AnyEndpoint): UIO[Unit] =
+      SparqlPassthroughAudit("unauthenticated").log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ep)).unit
+
+    /**
+     * Attributes a passthrough request the framework refused while decoding it: an over-cap request body, an
+     * unsupported `Content-Type`, a form body with no `query` field. None of these reach the rest service either, so
+     * without this they would be the one class of call the surface does not account for. The caller is authenticated
+     * and authorized by this point -- decoding runs after the security logic -- but the principal is not carried into
+     * this hook, so the entry has no identity.
+     */
+    private def logRejectedPassthroughDecode(ctx: DecodeFailureContext): UIO[Unit] = {
+      val outcome = ctx.failure match {
+        case DecodeResult.Error(_, StreamMaxLengthExceededException(_)) => "request-cap-exceeded"
+        case _                                                          => "malformed-request"
+      }
+      SparqlPassthroughAudit(outcome).log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ctx.endpoint)).unit
     }
 
     private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
@@ -169,7 +183,7 @@ final class DspApiServer(
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[Option[ServerResponse[B]]] =
-          delegate.onDecodeFailure(ctx)
+          logRejectedPassthroughDecode(ctx) *> delegate.onDecodeFailure(ctx)
       }
   }
 

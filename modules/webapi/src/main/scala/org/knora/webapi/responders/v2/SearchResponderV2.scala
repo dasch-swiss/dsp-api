@@ -5,11 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.api.trace.StatusCode
 import zio.*
-import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import dsp.errors.AssertionException
@@ -56,6 +52,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.infrastructure.SanitizedSpan
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
@@ -1374,55 +1371,24 @@ object SearchResponderV2 {
   // ---- span helpers (Decision 3: uniform interrupt + sanitized-error handling) ----------------------
 
   /**
-   * LOAD-BEARING: this MUST map to UNSET, never ERROR. zio-telemetry's `setFailureStatus` does
-   * {{{
-   *   if (statusCode == ERROR) span.setStatus(ERROR, cause.prettyPrint) // would leak the FILTER literal
-   *   else                     span.setStatus(statusCode)               // UNSET, which the OTel SDK no-ops
-   * }}}
-   * so mapping to UNSET is the ONLY reason `cause.prettyPrint` (the error string + stacktrace, which for a
-   * SPARQL parse failure echoes the offending FILTER literal) never reaches the span status description.
-   * The OTel-Java SDK has no ERROR-immutability guard: if this mapper is ever changed to ERROR, the
-   * library's `setStatus(ERROR, prettyPrint)` runs after ours and overwrites our sanitized description, so
-   * the leak returns silently. Locked by the description-equality regression test, not by run ordering.
+   * The attribute an interrupted Gravsearch stage span carries (REQ-1.6, REQ-1.11).
+   *
+   * The literal name is load-bearing beyond this file: the trace runbook, the TraceQL recipes and the span
+   * assertions in the tests all select on it.
    */
-  private val unsetOnFailure: StatusMapper[Throwable, Any] =
-    StatusMapper.failureNoException[Throwable](_ => StatusCode.UNSET)
-
-  /** Writes the sanitized ERROR status (`"<stage>: <Class>"`, no message) + `error.type` onto the raw span. */
-  private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable]): Unit = {
-    val kind = cause.failureOption.map(_.getClass.getSimpleName).getOrElse("defect")
-    val _    = span.setStatus(StatusCode.ERROR, s"$stage: $kind")
-    cause.failureOption.foreach { e =>
-      val _ = span.setAttribute("error.type", e.getClass.getSimpleName)
-    }
-  }
+  val GravsearchExitReasonKey: String = "gravsearch.exit_reason"
 
   /**
-   * Opens an INTERNAL span named `name`, applying uniform interrupt + sanitized-error handling so a stage
-   * failure yields an ERROR span whose description is exactly `"<stage>: <ClassName>"` (no raw
-   * message/stacktrace), and an interruption carries `gravsearch.exit_reason=interrupted` (REQ-1.6, REQ-1.11).
+   * Opens an INTERNAL span named `name` with the shared sanitized-span handling: a stage failure yields an ERROR
+   * span whose description is exactly `"<stage>: <ClassName>"` -- no raw message or stacktrace, which for a SPARQL
+   * parse failure would echo the offending FILTER literal -- and an interruption carries
+   * `gravsearch.exit_reason=interrupted`.
    *
-   * The raw OTel span is captured up front (inside the span's context) and written to directly in the
-   * `tapErrorCause`/`onExit` finalizers — rather than resolved via `getCurrentSpanUnsafe` at finalizer time,
-   * which during interruption teardown no longer points at this span. Both finalizers run before the
-   * library's span-end (release), so the writes land; the library's own status-setter then runs with the
-   * `unsetOnFailure` mapper (a no-op `setStatus(UNSET)`), leaving our sanitized status intact.
+   * The behaviour, and the reason the failure status mapper must stay `UNSET`, live in [[SanitizedSpan]]; this
+   * supplies only the Gravsearch-specific exit-reason key.
    */
   def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
-    tracing.span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
-      tracing.getCurrentSpanUnsafe.flatMap { span =>
-        effect
-          .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
-          .onExit {
-            case Exit.Failure(cause) if cause.isInterrupted =>
-              ZIO.succeed {
-                val _ = span.setAttribute("gravsearch.exit_reason", "interrupted")
-                val _ = span.setStatus(StatusCode.ERROR, "interrupted")
-              }
-            case _ => ZIO.unit
-          }
-      }
-    }
+    SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey)(_ => effect)
 
   // ---- query shape (Decision 4: bounded, human-readable, literal-invariant) ------------------------
 

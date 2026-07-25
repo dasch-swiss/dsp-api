@@ -29,19 +29,18 @@ class SparqlPassthroughServerEndpointsSpec extends ZIOSpecDefault {
         .map(registered =>
           assertTrue(
             registered.size == 1,
-            registered.head.showShort.contains(SparqlPassthroughEndpoints.pathTemplate),
+            registered.head.showShort.contains("/admin/sparql/query"),
           ),
         )
         .provide(SparqlPassthroughTestEnv.layer())
     },
-    test("the published path template matches the endpoint's own, so the server's 401 hook cannot drift") {
-      // The server recognises a rejected passthrough request by comparing the rendered route to this constant. If the
-      // route were renamed and the constant not, the rejection would silently stop being logged.
+    test("the route carries the marker the server's interceptors recognise it by") {
+      // The server exempts this route from Accept negotiation and attributes requests its security or decode logic
+      // rejected, both keyed off this attribute. If it were dropped, the exemption and the log entries would silently
+      // stop applying -- with no compile error, since both sides would still be well-typed.
       ZIO
-        .serviceWith[SparqlPassthroughEndpoints](
-          _.postAdminSparqlQuery.endpoint.showPathTemplate(showQueryParam = None, showQueryParamsAs = None),
-        )
-        .map(rendered => assertTrue(rendered == SparqlPassthroughEndpoints.pathTemplate))
+        .serviceWith[SparqlPassthroughEndpoints](_.postAdminSparqlQuery.endpoint)
+        .map(ep => assertTrue(SparqlPassthroughEndpoints.isPassthroughRoute(ep)))
         .provide(SparqlPassthroughTestEnv.layer())
     },
     test("registers nothing when the passthrough is disabled, so the route answers 404") {

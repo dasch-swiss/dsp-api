@@ -31,8 +31,8 @@ import zio.telemetry.opentelemetry.tracing.Tracing
  * changed to `ERROR` it silently overwrites the sanitized description and the leak returns. That is why the guard is a
  * test asserting the description's exact value, rather than a comment.
  *
- * See `docs/observability/instrumentation-recipe.md`. `SearchResponderV2` implements the same pattern inline for the
- * Gravsearch stage spans, with a vertical-specific interruption attribute.
+ * See `docs/observability/instrumentation-recipe.md`. `SearchResponderV2.stageSpan` delegates here for the Gravsearch
+ * stage spans, passing its own `gravsearch.exit_reason` key.
  */
 object SanitizedSpan {
 
@@ -48,13 +48,31 @@ object SanitizedSpan {
    * attributes. A failure leaves the span with status `ERROR`, a description of exactly `"<name>: <ClassName>"`, and
    * an `error.type` attribute -- no message, no stacktrace, and no exception event.
    *
+   * An interruption is marked separately, with `exitReasonKey` set to `interrupted` and status `ERROR "interrupted"`.
+   * It needs its own branch because an interrupted effect produces no typed failure, so without this an abandoned
+   * call would be indistinguishable from one that simply finished -- and OpenTelemetry has no `cancelled` status to
+   * express the difference. The key is the caller's, because it belongs to the caller's attribute namespace and is
+   * what its trace queries select on.
+   *
    * The span is captured up front rather than resolved in the finalizer, because during interruption teardown the
-   * current span no longer points at this one.
+   * current span no longer points at this one. Both finalizers run before the library's span-end, so their writes
+   * land, and the library's own status setter then runs with `unsetOnFailure` (a no-op) and leaves them intact.
    */
-  def withSpan[R, A](tracing: Tracing, name: String)(f: Span => ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
+  def withSpan[R, A](tracing: Tracing, name: String, exitReasonKey: String)(
+    f: Span => ZIO[R, Throwable, A],
+  ): ZIO[R, Throwable, A] =
     tracing.span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
       tracing.getCurrentSpanUnsafe.flatMap { span =>
-        f(span).tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+        f(span)
+          .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+          .onExit {
+            case Exit.Failure(cause) if cause.isInterrupted =>
+              ZIO.succeed {
+                val _ = span.setAttribute(exitReasonKey, "interrupted")
+                val _ = span.setStatus(StatusCode.ERROR, "interrupted")
+              }
+            case _ => ZIO.unit
+          }
       }
     }
 

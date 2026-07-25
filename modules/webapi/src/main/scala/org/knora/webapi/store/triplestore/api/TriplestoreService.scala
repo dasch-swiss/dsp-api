@@ -15,6 +15,7 @@ import zio.*
 import zio.stream.ZStream
 
 import java.nio.file.Path
+import java.util.Arrays
 
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
@@ -262,8 +263,13 @@ object TriplestoreService {
     /**
      * A store response captured as data so it can be relayed verbatim.
      *
-     * `body` is a `Chunk[Byte]` rather than an `Array[Byte]` on purpose: an array field would make this case class's
-     * `==` reference-based, and test assertions comparing responses would then fail silently.
+     * `body` is an `Array[Byte]`, which is what the tapir output the passthrough relays through ultimately needs. Any
+     * other collection type would be copied into an array at that boundary while the original is still reachable, so
+     * peak heap for a call would be twice the configured response ceiling rather than once -- the ceiling is what
+     * sizes this surface's memory budget, so that factor is worth the array.
+     *
+     * `equals` and `hashCode` are therefore written out: a case class with an array field compares that field by
+     * reference, which would make an assertion over two responses pass or fail for the wrong reason.
      *
      * @param status      the store's HTTP status. Typed as [[sttp.model.StatusCode]] because that is what the tapir
      *                    output expects, and because building it once at the boundary is where an out-of-range value
@@ -274,7 +280,15 @@ object TriplestoreService {
     final case class RawSparqlResponse(
       status: StatusCode,
       contentType: Option[String],
-      body: Chunk[Byte],
-    )
+      body: Array[Byte],
+    ) {
+      override def equals(other: Any): Boolean = other match {
+        case that: RawSparqlResponse =>
+          status == that.status && contentType == that.contentType && Arrays.equals(body, that.body)
+        case _ => false
+      }
+
+      override def hashCode(): Int = (status, contentType, Arrays.hashCode(body)).hashCode()
+    }
   }
 }

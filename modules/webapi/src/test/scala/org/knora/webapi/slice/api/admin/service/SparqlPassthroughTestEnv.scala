@@ -7,10 +7,18 @@ package org.knora.webapi.slice.api.admin.service
 
 import zio.*
 import zio.config.*
+import zio.nio.file.Path as NioPath
+import zio.stream.ZStream
+
+import java.nio.file.Path
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.util.rdf.QuadFormat
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
@@ -27,6 +35,7 @@ import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.Jwt
@@ -34,7 +43,17 @@ import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoInMemory
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlRequest
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlResponse
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
+import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
 /**
  * The layer stack the SPARQL passthrough specs run against: an in-memory triplestore, in-memory repositories, and an
@@ -65,7 +84,52 @@ object SparqlPassthroughTestEnv {
       read(AppConfig.config from TestAppConfig.provider(("app.allow-sparql-passthrough" -> true) +: overrides*)).orDie,
     )
 
+  /**
+   * A `TriplestoreService` whose `rawQuery` answers with whatever a spec programmed, so the passthrough can be driven
+   * to each of its outcomes -- including the ones a working store never produces -- without a container.
+   *
+   * Every other member dies: nothing on this surface calls them, and a defect is louder than a plausible stub value
+   * if that ever stops being true.
+   */
+  def stubStore(
+    answer: RawSparqlRequest => IO[SparqlPassthroughException, RawSparqlResponse],
+  ): ULayer[TriplestoreService] = ZLayer.succeed(new TriplestoreService {
+    private def unused = ZIO.die(new UnsupportedOperationException("not used by the SPARQL passthrough specs"))
+
+    override def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse] =
+      answer(request)
+    override def uploadNQuads(stream: ZStream[Any, Throwable, Byte]): Task[Unit]                  = unused
+    override def query(sparql: Ask): Task[Boolean]                                                = unused
+    override def query(sparql: Construct): Task[SparqlConstructResponse]                          = unused
+    override def queryRdf(sparql: Construct): Task[String]                                        = unused
+    override def query(sparql: Select): Task[SparqlSelectResult]                                  = unused
+    override def query(sparql: Update): Task[Unit]                                                = unused
+    override def queryToFile(s: Construct, g: InternalIri, o: NioPath, f: QuadFormat): Task[Unit] = unused
+    override def downloadGraph(g: InternalIri, out: NioPath, f: QuadFormat): Task[Unit]           = unused
+    override def resetTripleStoreContent(r: List[RdfDataObject], prepend: Boolean): Task[Unit]    = unused
+    override def dropDataGraphByGraph(): Task[Unit]                                               = unused
+    override def insertDataIntoTriplestore(r: List[RdfDataObject], prepend: Boolean): Task[Unit]  = unused
+    override def checkTriplestore(): Task[TriplestoreStatus]                                      = unused
+    override def downloadRepository(out: Path, graphs: GraphsForMigration): Task[Unit]            = unused
+    override def uploadRepository(inputFile: Path): Task[Unit]                                    = unused
+    override def dropGraph(graphName: String): Task[Unit]                                         = unused
+    override def compact(): Task[Boolean]                                                         = unused
+  })
+
+  /** [[layer]] with the in-memory triplestore replaced by a programmed [[stubStore]]. */
+  def layerWithStore(
+    store: ULayer[TriplestoreService],
+    overrides: (String, Any)*,
+  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+    make(store, overrides*)
+
   def layer(
+    overrides: (String, Any)*,
+  ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
+    make(TriplestoreServiceInMemory.emptyLayer.map(env => ZEnvironment[TriplestoreService](env.get)), overrides*)
+
+  private def make(
+    store: ZLayer[StringFormatter, Nothing, TriplestoreService],
     overrides: (String, Any)*,
   ): ULayer[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints] =
     ZLayer.make[AppConfig & SparqlPassthroughRestService & SparqlPassthroughEndpoints](
@@ -88,7 +152,7 @@ object SparqlPassthroughTestEnv {
       SparqlPassthroughEndpoints.layer,
       SparqlPassthroughRestService.layer,
       StringFormatter.test,
-      TriplestoreServiceInMemory.emptyLayer,
+      store,
       ZLayer.succeed(stubAuthenticator),
     )
 }
