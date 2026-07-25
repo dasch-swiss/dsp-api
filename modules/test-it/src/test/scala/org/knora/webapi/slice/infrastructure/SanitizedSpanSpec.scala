@@ -91,6 +91,31 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
             .exists(_.getStatus.getStatusCode != StatusCode.ERROR),
         )).provide(InMemoryTracing.layer)
       },
+      test("a defect yields the same sanitized description as a typed failure, and does not leak the message") {
+        // The gap this pins. zio-telemetry's own status setter reads `cause.failureOption`, which a defect does not
+        // have, so the mapper below is never consulted for one and the library falls back to
+        // `ERROR + cause.prettyPrint` -- overwriting the sanitized description with the defect's message and
+        // stacktrace. On this path the message can be anything a caller-supplied string reached, which is the exact
+        // leak the helper exists to prevent, so the defect is converted to a typed failure for the span's lifetime.
+        (for {
+          tracing <- ZIO.service[Tracing]
+          exit    <- SanitizedSpan
+                    .withSpan(tracing, spanName, exitReasonKey)(_ => ZIO.die(new IllegalStateException(sentinel)))
+                    .exit
+          spans <- InMemoryTracing.finishedSpans
+        } yield {
+          val span = SpanAssertions.findSpan(spans, spanName)
+          SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: defect") &&
+          assertTrue(
+            span.exists(s => !s.toString.contains(sentinel)),
+            span.exists(_.getEvents.isEmpty),
+            // The defect must still reach the caller as a defect: converting it inside the span is an
+            // implementation detail of the status handling, not a change to what the effect means.
+            exit.causeOption.exists(_.dieOption.exists(_.getMessage == sentinel)),
+          )
+        }).provide(InMemoryTracing.layer)
+      },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
         // produces no typed failure, so the sanitized-error path above never runs, and OpenTelemetry has no

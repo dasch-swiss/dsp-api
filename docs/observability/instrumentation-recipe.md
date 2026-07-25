@@ -171,10 +171,19 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 
 - **Typed failure** → status `ERROR`, description exactly `"<stage>: <ClassName>"` (e.g.
   `gravsearch.prequery.execute: TriplestoreException`), plus `error.type`. No message, no stacktrace.
+- **Defect** → status `ERROR`, description exactly `"<stage>: defect"`, no `error.type`. The status
+  mapper alone does *not* achieve this: `zio-telemetry` reaches the mapper through
+  `cause.failureOption`, which a `Cause.Die` does not have, so a defect falls through to the same
+  `ERROR` + `cause.prettyPrint` default. `SanitizedSpan.withSpan` therefore carries a defect across
+  the span boundary as a typed failure and re-throws it as a defect once the span has closed. Callers
+  still observe a defect; the span never sees its message.
 - **Interruption** → `<vertical>.exit_reason = interrupted` + status `ERROR "interrupted"` (set in
   `SanitizedSpan.withSpan`'s `onExit`, which is uninterruptible and so still runs during teardown).
   OTel has no `cancelled` status, so this attribute is what distinguishes an interrupted query from a
-  typed failure and from a benign empty result.
+  typed failure and from a benign empty result. This is the one cause whose status *description* is
+  still the library's, because a cause cannot be converted without swallowing the interrupt — safe
+  rather than accepted, since an interrupt cause carries no message. Select on the attribute, not the
+  description.
 
 !!! danger "Do not relax the status mapper"
     Changing `unsetOnFailure` to map failures to `ERROR` re-introduces the `cause.prettyPrint` leak
@@ -188,4 +197,5 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 - [ ] A bounded shape on the root; no raw text / instance IRIs / user IDs as attributes.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
 - [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
-- [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message).
+- [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message), and one
+      asserting a **defect** yields `"<stage>: defect"` — the two go through different mechanisms.

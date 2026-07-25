@@ -70,18 +70,22 @@ class SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
         } yield assertTrue(names.contains("x")))
           .provide(InMemoryTracing.layerFor(exporter))
       },
-      test("a defect (die) yields an ERROR span and records no exception event") {
-        // User-supplied data (e.g. a FILTER literal) reaches the responder through the typed error channel
-        // (parse/triplestore failures), which the test above proves is sanitized. A defect is an unexpected
-        // code-level throw; the guaranteed invariant here is that no `recordException` event is attached
-        // (so the message is not leaked as a span event). The status description for a defect carries the
-        // library's `cause.prettyPrint` (a code stacktrace, not user query text) — an accepted residual.
+      test("a defect (die) is sanitized the same way, and still reaches the caller as a defect") {
+        // This used to be an accepted residual: a defect does not go through the status mapper at all (the library
+        // reaches it via `cause.failureOption`), so its description carried `cause.prettyPrint`. `SanitizedSpan` now
+        // closes that, which matters here too — a defect thrown from code holding a FILTER literal is not a message
+        // this stage can vouch for.
         (for {
           tracing <- ZIO.service[Tracing]
-          _       <- SearchResponderV2.stageSpan(tracing, stage)(ZIO.die(new RuntimeException(sentinel))).exit
+          exit    <- SearchResponderV2.stageSpan(tracing, stage)(ZIO.die(new RuntimeException(sentinel))).exit
           spans   <- InMemoryTracing.finishedSpans
         } yield SpanAssertions.hasErrorStatus(spans, stage) &&
-          assertTrue(SpanAssertions.findSpan(spans, stage).exists(_.getEvents.isEmpty))).provide(InMemoryTracing.layer)
+          SpanAssertions.hasStatusDescription(spans, stage, s"$stage: defect") &&
+          assertTrue(
+            SpanAssertions.findSpan(spans, stage).exists(_.getEvents.isEmpty),
+            SpanAssertions.findSpan(spans, stage).exists(s => !s.toString.contains(sentinel)),
+            exit.causeOption.exists(_.dieOption.exists(_.getMessage == sentinel)),
+          )).provide(InMemoryTracing.layer)
       },
     )
 }

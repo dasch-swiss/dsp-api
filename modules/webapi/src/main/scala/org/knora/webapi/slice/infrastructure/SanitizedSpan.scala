@@ -31,6 +31,18 @@ import zio.telemetry.opentelemetry.tracing.Tracing
  * changed to `ERROR` it silently overwrites the sanitized description and the leak returns. That is why the guard is a
  * test asserting the description's exact value, rather than a comment.
  *
+ * A **defect** does not go through the mapper at all: the library reaches it via `cause.failureOption`, which a
+ * `Cause.Die` does not have, so it falls back to the same `ERROR` + `cause.prettyPrint` default and overwrites the
+ * sanitized description with the defect's message and stacktrace. A defect on these paths is an unexpected throw from
+ * code holding caller-supplied text, so its message is not something this helper can vouch for. It is therefore
+ * carried across the span boundary as a typed failure -- which the mapper *does* see -- and re-thrown as a defect
+ * once the span has closed, so callers still observe a defect.
+ *
+ * Interruption is the one cause left with the library's own description, because a cause cannot be converted without
+ * swallowing the interrupt. That is safe rather than accepted: an interrupt cause carries no message, only fiber ids
+ * and a ZIO trace. The durable signal for an abandoned call is the `exitReasonKey` attribute, which nothing
+ * overwrites.
+ *
  * See `docs/observability/instrumentation-recipe.md`. `SearchResponderV2.stageSpan` delegates here for the Gravsearch
  * stage spans, passing its own `gravsearch.exit_reason` key.
  */
@@ -61,20 +73,35 @@ object SanitizedSpan {
   def withSpan[R, A](tracing: Tracing, name: String, exitReasonKey: String)(
     f: Span => ZIO[R, Throwable, A],
   ): ZIO[R, Throwable, A] =
-    tracing.span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
-      tracing.getCurrentSpanUnsafe.flatMap { span =>
-        f(span)
-          .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
-          .onExit {
-            case Exit.Failure(cause) if cause.isInterrupted =>
-              ZIO.succeed {
-                val _ = span.setAttribute(exitReasonKey, "interrupted")
-                val _ = span.setStatus(StatusCode.ERROR, "interrupted")
-              }
-            case _ => ZIO.unit
-          }
+    tracing
+      .span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
+        tracing.getCurrentSpanUnsafe.flatMap { span =>
+          f(span)
+            .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+            .onExit {
+              case Exit.Failure(cause) if cause.isInterrupted =>
+                ZIO.succeed {
+                  val _ = span.setAttribute(exitReasonKey, "interrupted")
+                  val _ = span.setStatus(StatusCode.ERROR, "interrupted")
+                }
+              case _ => ZIO.unit
+            }
+            // Last inside the span, so the two writes above still see the defect as a defect and describe it as one.
+            // From here on it travels as a typed failure purely so `unsetOnFailure` applies to it; see the object
+            // documentation.
+            .catchAllDefect(defect => ZIO.fail(new SpanScopedDefect(defect)))
+        }
       }
-    }
+      // Outside the span, and therefore after the library's status setter and span-end have run: the defect is
+      // restored, so nothing downstream can tell it was ever anything else.
+      .catchSome { case carried: SpanScopedDefect => ZIO.die(carried.defect) }
+
+  /**
+   * Carries a defect across the span boundary as a typed failure. Never escapes [[withSpan]]: it exists only so
+   * zio-telemetry's `cause.failureOption` lookup finds something, and is unwrapped back into a defect immediately
+   * after the span has ended.
+   */
+  private final class SpanScopedDefect(val defect: Throwable) extends Exception(defect)
 
   /** Writes the sanitized `ERROR` status (`"<name>: <ClassName>"`, no message) and `error.type` onto the span. */
   private def markSanitizedError(span: Span, name: String, cause: Cause[Throwable]): Unit = {
