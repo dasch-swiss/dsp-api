@@ -9,12 +9,19 @@ import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.HeaderNames
 import sttp.model.StatusCode
+import zio.Task
 import zio.ZIO
 import zio.json.ast.Json
 import zio.test.*
 
+import java.io.ByteArrayOutputStream
+import java.net.Socket
+import java.net.SocketTimeoutException
+import java.nio.charset.StandardCharsets
+
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.security.Authenticator
@@ -39,10 +46,80 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
 
   private val endpoint = uri"/admin/sparql/query"
 
+  /** The same path as [[endpoint]], spelled out because the raw request below is assembled as text. */
+  private val endpointPath = "/admin/sparql/query"
+
   private val selectQuery = "SELECT ?s WHERE { ?s ?p ?o } LIMIT 1"
 
   /** Comfortably past both the request cap and the 1 MiB point at which the server stops aggregating bodies. */
   private val oversized = "# " + ("x" * (1024 * 1024 + 1024)) + "\n" + selectQuery
+
+  /**
+   * What a raw socket read back after a request head was sent: the response text, and whether the server then hung
+   * up. `serverClosed` is `false` when the read ran out its own timeout instead of reaching EOF, so a server that
+   * answered but kept the connection open fails as a readable assertion rather than as an exception.
+   */
+  private final case class RawExchange(text: String, serverClosed: Boolean) {
+
+    def statusLine: String = text.linesIterator.nextOption().getOrElse("").trim
+
+    def header(name: String): Option[String] =
+      text.linesIterator
+        .drop(1)
+        .takeWhile(_.trim.nonEmpty)
+        .collectFirst {
+          case line if line.toLowerCase.startsWith(s"${name.toLowerCase}:") => line.split(":", 2)(1).trim
+        }
+  }
+
+  /** Long enough that a slow answer is not mistaken for a connection left open, short enough to fail a suite fast. */
+  private val rawReadTimeoutMillis = 10_000
+
+  /**
+   * Sends only the head of a `POST` declaring `contentLength` bytes of `application/sparql-query`, then reads the
+   * connection to EOF without ever sending that body.
+   *
+   * Hand-rolled and blocking on purpose. An HTTP client owns the decision of when to write a request body relative
+   * to reading the response, and on this route that decision is the thing under test: the server answers before the
+   * body arrives, and nothing else here can hold the body back to show it.
+   */
+  private def headOnlyPost(host: String, port: Int, contentLength: Int, bearer: String): Task[RawExchange] = {
+    val head =
+      s"POST $endpointPath HTTP/1.1\r\n" +
+        s"Host: $host:$port\r\n" +
+        s"Authorization: Bearer $bearer\r\n" +
+        "Content-Type: application/sparql-query\r\n" +
+        s"Content-Length: $contentLength\r\n" +
+        "\r\n"
+    ZIO.scoped {
+      ZIO
+        .acquireRelease(ZIO.attemptBlocking(new Socket(connectHost(host), port)))(s => ZIO.attempt(s.close()).ignore)
+        .flatMap { socket =>
+          ZIO.attemptBlocking {
+            socket.setSoTimeout(rawReadTimeoutMillis)
+            val out = socket.getOutputStream
+            out.write(head.getBytes(StandardCharsets.US_ASCII))
+            out.flush()
+            val in         = socket.getInputStream
+            val received   = new ByteArrayOutputStream()
+            val chunk      = new Array[Byte](4096)
+            var reachedEof = false
+            try {
+              var read = in.read(chunk)
+              while (read >= 0) {
+                received.write(chunk, 0, read)
+                read = in.read(chunk)
+              }
+              reachedEof = true
+            } catch { case _: SocketTimeoutException => () }
+            RawExchange(received.toString(StandardCharsets.UTF_8), reachedEof)
+          }
+        }
+    }
+  }
+
+  /** `0.0.0.0` is the configured *bind* address; as a connect target loopback says the same thing unambiguously. */
+  private def connectHost(host: String): String = if (host == "0.0.0.0") "127.0.0.1" else host
 
   val e2eSpec: Spec[env, Any] = suite("POST /admin/sparql/query")(
     suite("authentication and authorization")(
@@ -222,12 +299,25 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
         // materialised the body by the time the caller was told 403 -- so any holder of a valid token could make the
         // server buffer an arbitrary request. A 403 here rather than a 413 is what shows the check now runs first,
         // since the body cap is only consulted during decoding, which the rejection precedes.
+        //
+        // Driven over a raw socket rather than the HTTP client, and that is what makes it deterministic. Sending the
+        // whole body and leaving the interleaving to the client is a race: the server answers early, marks the
+        // response as the last on its connection and closes while the client is still writing, and the JDK client
+        // loses the response to the reset often enough to fail about one run in five. That race is real for
+        // production callers too -- see the endpoint documentation's known limitations -- but it is not what this
+        // case is about. Here the body is never sent at all: only the head, declaring an over-cap `Content-Length`.
+        // That removes the write a reset could land on, and proves the claim more directly than the old spelling
+        // did, since a 403 arriving with zero body bytes on the wire cannot have been produced after reading one.
         for {
-          rejected  <- TestApiClient.postSparql(endpoint, oversized, normalUser)
-          following <- TestApiClient.postSparql(endpoint, selectQuery, rootUser)
+          api      <- ZIO.service[KnoraApi]
+          jwt      <- ZIO.serviceWithZIO[TestApiClient](_.jwtFor(normalUser))
+          rejected <- headOnlyPost(api.externalHost, api.externalPort, oversized.length, jwt)
         } yield assertTrue(
-          rejected.code == StatusCode.Forbidden,
-          following.code == StatusCode.Ok,
+          rejected.statusLine == "HTTP/1.1 403 Forbidden",
+          rejected.header(HeaderNames.Connection).exists(_.equalsIgnoreCase("close")),
+          // Reading to EOF rather than to a declared length is the other half of what that header announces, and
+          // the only thing that makes sending it worth anything.
+          rejected.serverClosed,
         )
       },
     ),
