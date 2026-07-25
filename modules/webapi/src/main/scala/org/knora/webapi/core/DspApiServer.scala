@@ -98,11 +98,30 @@ object DspApiServer {
     // Nearly everything reaches this mapper as a *response*, failures included: ztapir's `zServerLogic` /
     // `zServerSecurityLogic` wrap the logic in `.either.resurrect`, so even a defect becomes a typed failure
     // before the interpreter sees it, is answered as a 500 by tapir's exception handler, and is matched here
-    // -- ERROR, with no description. Only what is left in the routes' error channel (an interrupt, a
-    // non-`NonFatal` throwable) reaches zio-telemetry's own default, which writes `Cause.prettyPrint` into
-    // the description; the failure value there is a `zio.http.Response`, so its rendered body lands in it.
-    // Narrow and API-wide rather than specific to any route, but it is the reason this stays a Success
-    // mapper: adding a failure mapping here would change that path's status without removing the leak.
+    // -- ERROR, with no description.
+    //
+    // What is left in the routes' error channel reaches zio-telemetry's own default instead, which writes
+    // `Cause.prettyPrint` into the span status description. Two shapes get there:
+    //
+    //   - `Cause.Fail(Response)`. `ZioHttpInterpreter.toHttp` folds *every* cause into
+    //     `ZIO.fail(Response.internalServerError(...))`, so this is not only the non-`NonFatal` throwable that
+    //     escapes ztapir's `resurrect`: any defect raised *outside* the ztapir-wrapped logic lands here too --
+    //     the interceptor hooks below (`updateSpanMetadata`, `logRejectedPassthroughDecode`), request-body
+    //     reading, response building. `Response` is a case class, so `prettyPrint` renders its body.
+    //   - `Cause.Interrupt`, with no failure value at all: ZIO re-raises an external interrupt after tapir's
+    //     `foldCauseZIO` has handled it, so an abandoned request can reach the middleware as a bare interrupt.
+    //
+    // Neither rendering is caller data. The body is the constant `"Request interrupted"` or
+    // `cause.squash.getMessage` of a defect from one of the classes above -- none of which is an application
+    // error path holding caller-supplied text -- and an interrupt cause carries only fiber ids and a ZIO trace.
+    //
+    // This stays a Success mapper by choice, not because a failure mapping would not work. zio-telemetry writes
+    // `cause.prettyPrint` only when the *mapped* status is ERROR, so composing in
+    // `StatusMapper.Failure[Response](_ => Result(StatusCode.UNSET))` -- the same `unsetOnFailure` remedy
+    // `SanitizedSpan` relies on -- would suppress the description on the first shape. It would not reach the
+    // second, which has no failure value for the mapper to match, and there is no way to keep ERROR *and* drop
+    // the description: the mapper's only lever is the status code. That trade costs every escaped-defect 500 in
+    // the API its error span, which is worth more than suppressing a description that is not caller data.
     private val httpStatusMapper: StatusMapper.Success[Response] =
       StatusMapper.Success[Response] {
         case resp if resp.status.code >= 500 => StatusMapper.Result(StatusCode.ERROR)
