@@ -88,20 +88,25 @@ object SanitizedSpan {
             }
             // Last inside the span, so the two writes above still see the defect as a defect and describe it as one.
             // From here on it travels as a typed failure purely so `unsetOnFailure` applies to it; see the object
-            // documentation.
-            .catchAllDefect(defect => ZIO.fail(new SpanScopedDefect(defect)))
+            // documentation. The whole `Cause` is carried rather than just the `Throwable`, so that restoring it
+            // below reproduces the original failure exactly -- handing on the throwable alone replaced the ZIO fiber
+            // trace of the original die with the trace at this line, which is the one thing a defect is debugged by.
+            .foldCauseZIO(
+              cause => if (cause.isDie) ZIO.fail(new SpanScopedDefect(cause)) else ZIO.refailCause(cause),
+              ZIO.succeed(_),
+            )
         }
       }
-      // Outside the span, and therefore after the library's status setter and span-end have run: the defect is
-      // restored, so nothing downstream can tell it was ever anything else.
-      .catchSome { case carried: SpanScopedDefect => ZIO.die(carried.defect) }
+      // Outside the span, and therefore after the library's status setter and span-end have run: the original cause
+      // is refailed, so nothing downstream can tell it was ever anything else.
+      .catchSome { case carried: SpanScopedDefect => ZIO.refailCause(carried.cause) }
 
   /**
    * Carries a defect across the span boundary as a typed failure. Never escapes [[withSpan]]: it exists only so
-   * zio-telemetry's `cause.failureOption` lookup finds something, and is unwrapped back into a defect immediately
-   * after the span has ended.
+   * zio-telemetry's `cause.failureOption` lookup finds something, and is unwrapped back into the cause it came from
+   * immediately after the span has ended.
    */
-  private final class SpanScopedDefect(val defect: Throwable) extends Exception(defect)
+  private final class SpanScopedDefect(val cause: Cause[Throwable]) extends Exception(cause.squash)
 
   /** Writes the sanitized `ERROR` status (`"<name>: <ClassName>"`, no message) and `error.type` onto the span. */
   private def markSanitizedError(span: Span, name: String, cause: Cause[Throwable]): Unit = {
