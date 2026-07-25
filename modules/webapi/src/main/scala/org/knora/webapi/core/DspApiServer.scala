@@ -15,6 +15,8 @@ import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import sttp.capabilities.StreamMaxLengthExceededException
+import sttp.model.Header
+import sttp.model.HeaderNames
 import sttp.model.Method.*
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
@@ -126,19 +128,6 @@ final class DspApiServer(
   private def spanNameInterceptor: EndpointInterceptor[Task] = new EndpointInterceptor[Task] {
 
     /**
-     * Records an unauthenticated attempt on the admin SPARQL passthrough. That surface must attribute every call
-     * including rejected ones, and a request rejected by the endpoint's security logic never reaches the service that
-     * does the logging -- security logic runs first -- so this hook is the only place the rejection is observable.
-     *
-     * HARD PROHIBITION: `ctx.securityInput` holds the raw bearer token and `ctx.request` exposes the `Authorization`
-     * header. Neither may be read here. Writing either would put a live credential into stdout and onward into the
-     * log backend. Only the outcome, method and route template are recorded; `trace_id` is attached by the
-     * surrounding middleware's log annotation.
-     */
-    private def logRejectedPassthrough(ep: AnyEndpoint): UIO[Unit] =
-      SparqlPassthroughAudit("unauthenticated").log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ep)).unit
-
-    /**
      * Attributes a passthrough request the framework refused while decoding it: an over-cap request body, an
      * unsupported `Content-Type`, a form body with no `query` field. None of these reach the rest service either, so
      * without this they would be the one class of call the surface does not account for. The caller is authenticated
@@ -152,6 +141,25 @@ final class DspApiServer(
       }
       SparqlPassthroughAudit(outcome).log.when(SparqlPassthroughEndpoints.isPassthroughRoute(ctx.endpoint)).unit
     }
+
+    /**
+     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     *
+     * Two rejections on this route answer without consuming the body: the security logic's `401`/`403`, which runs
+     * before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`. Bodies
+     * above the server's aggregation threshold are streamed, and zio-http leaves such a connection with
+     * `autoRead=false` when the handler answers without consuming it -- the next keep-alive request on that connection
+     * is then silently dropped and the client hangs until its own timeout. `Connection: close` takes the connection out
+     * of the client's pool instead, which is the same remedy tapir applies to its own over-cap `413`; the header is
+     * added only once, since that `413` already carries it.
+     */
+    private def closeConnectionIfPassthrough[B](ep: AnyEndpoint, response: ServerResponse[B]): ServerResponse[B] =
+      if (SparqlPassthroughEndpoints.isPassthroughRoute(ep) && !response.headers.exists(closesConnection))
+        response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
+      else response
+
+    private def closesConnection(header: Header): Boolean =
+      header.name.equalsIgnoreCase(HeaderNames.Connection) && header.value.equalsIgnoreCase("close")
 
     private def updateSpanMetadata(ep: AnyEndpoint): UIO[Unit] =
       ctxStore.get.flatMap { ctx =>
@@ -176,14 +184,18 @@ final class DspApiServer(
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          updateSpanMetadata(ctx.endpoint) *> logRejectedPassthrough(ctx.endpoint) *>
-            delegate.onSecurityFailure(ctx)
+          // The passthrough's own security-logic rejections (401 and 403) are attributed there, where the identity
+          // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
+          // cannot tell the two apart.
+          updateSpanMetadata(ctx.endpoint) *>
+            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, _))
 
         override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[Option[ServerResponse[B]]] =
-          logRejectedPassthroughDecode(ctx) *> delegate.onDecodeFailure(ctx)
+          logRejectedPassthroughDecode(ctx) *>
+            delegate.onDecodeFailure(ctx).map(_.map(closeConnectionIfPassthrough(ctx.endpoint, _)))
       }
   }
 

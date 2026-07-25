@@ -97,12 +97,14 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * credentials allowed, so a cookie credential here would be rideable from any origin. Treat that as a tested
    * invariant, not a convention.
    *
-   * @param onForbidden run with the authenticated user when the SystemAdmin check fails. A failure in the security
-   *                    logic carries only the exception onwards, so a surface that must attribute rejected attempts
-   *                    would otherwise lose the identity; this is where it is still in scope.
+   * @param onRejected run when the caller is turned away, with `Some(user)` if authentication succeeded and only the
+   *                   SystemAdmin check failed, and `None` if authentication itself did. A failure in the security
+   *                   logic carries only the exception onwards, so a surface that must attribute rejected attempts
+   *                   would otherwise lose both the identity and the distinction; this is where it still has them.
+   *                   The raw token is deliberately not passed: it is a live credential and must not reach a log.
    */
   def bearerSystemAdminEndpoint(
-    onForbidden: User => UIO[Unit],
+    onRejected: Option[User] => UIO[Unit],
   ): ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
     endpoint
       .errorOut(errorOutputs)
@@ -110,8 +112,9 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       .zServerSecurityLogic {
         case Some(jwtToken) =>
           authenticateJwt(jwtToken)
-            .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onForbidden(user)).as(user))
-        case _ => ZIO.fail(BadCredentialsException("No credentials provided."))
+            .tapError(_ => onRejected(None))
+            .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onRejected(Some(user))).as(user))
+        case _ => onRejected(None) *> ZIO.fail(BadCredentialsException("No credentials provided."))
       }
 
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =

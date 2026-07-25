@@ -60,7 +60,7 @@ import org.knora.webapi.store.triplestore.errors.SparqlUpstreamRejectedException
 final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: AppConfig) {
 
   val postAdminSparqlQuery = baseEndpoints
-    .bearerSystemAdminEndpoint(SparqlPassthroughEndpoints.logForbidden)
+    .bearerSystemAdminEndpoint(SparqlPassthroughEndpoints.logRejected)
     .post
     .in("admin" / "sparql" / "query")
     .in(SparqlPassthroughEndpoints.queryBody)
@@ -122,11 +122,12 @@ object SparqlPassthroughEndpoints {
   def isPassthroughRoute(ep: AnyEndpoint): Boolean = ep.attribute(routeMarker).isDefined
 
   /**
-   * Attributes a request refused by the security logic's SystemAdmin check. The rejection never reaches the rest
-   * service that does the per-call logging -- security logic runs before server logic -- so this is the only place it
-   * is observable with the identity still in hand.
+   * Attributes a request the security logic turned away. Neither rejection reaches the rest service that does the
+   * per-call logging -- security logic runs before server logic -- so this is the only place they are observable, and
+   * the only place a `403` still has the identity that makes it an attribution.
    */
-  private def logForbidden(user: User) = SparqlPassthroughAudit("forbidden", user = Some(user)).log
+  private def logRejected(user: Option[User]) =
+    SparqlPassthroughAudit(if (user.isDefined) "forbidden" else "unauthenticated", user).log
 
   /** The media type of the SPARQL 1.1 Protocol direct query form; tapir has no built-in format for it. */
   private final case class SparqlQuery() extends CodecFormat {

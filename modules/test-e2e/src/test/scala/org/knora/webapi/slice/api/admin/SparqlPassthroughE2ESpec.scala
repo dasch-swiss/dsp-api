@@ -41,6 +41,9 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
 
   private val selectQuery = "SELECT ?s WHERE { ?s ?p ?o } LIMIT 1"
 
+  /** Comfortably past both the request cap and the 1 MiB point at which the server stops aggregating bodies. */
+  private val oversized = "# " + ("x" * (1024 * 1024 + 1024)) + "\n" + selectQuery
+
   val e2eSpec: Spec[env, Any] = suite("POST /admin/sparql/query")(
     suite("authentication and authorization")(
       test("returns 401 when no credentials are provided") {
@@ -202,15 +205,28 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
     suite("request-body cap")(
       test("rejects an over-cap body with 413 and leaves the connection usable for the next request") {
         // The body must exceed 1 MiB: at or below that size the server aggregates it, and the case would prove nothing
-        // about the streamed path, which is where an undrained body poisons the next keep-alive request.
-        val oversized = "# " + ("x" * (1024 * 1024 + 1024)) + "\n" + selectQuery
+        // about the streamed path. The framework refuses this while reading, so it never buffers the whole body, and
+        // answers with Connection: close because the unread remainder makes the connection unusable.
         for {
           rejected <- TestApiClient.postSparql(endpoint, oversized, rootUser)
-          // Same client, hence the same connection pool: if the over-cap request had left the connection unreadable,
-          // this second request would hang until its timeout instead of answering.
+          // Same client, hence the same connection pool: if the rejected request had left a connection in the pool in
+          // an unreadable state, this second request would hang until its timeout instead of answering.
           following <- TestApiClient.postSparql(endpoint, selectQuery, rootUser)
         } yield assertTrue(
           rejected.code == StatusCode.PayloadTooLarge,
+          following.code == StatusCode.Ok,
+        )
+      },
+      test("refuses an over-cap body from a non-SystemAdmin with 403, before any of it is read") {
+        // The regression this exists for: with the authorization check in the server logic, the framework had already
+        // materialised the body by the time the caller was told 403 -- so any holder of a valid token could make the
+        // server buffer an arbitrary request. A 403 here rather than a 413 is what shows the check now runs first,
+        // since the body cap is only consulted during decoding, which the rejection precedes.
+        for {
+          rejected  <- TestApiClient.postSparql(endpoint, oversized, normalUser)
+          following <- TestApiClient.postSparql(endpoint, selectQuery, rootUser)
+        } yield assertTrue(
+          rejected.code == StatusCode.Forbidden,
           following.code == StatusCode.Ok,
         )
       },

@@ -34,13 +34,15 @@ class SparqlPassthroughServerEndpointsSpec extends ZIOSpecDefault {
         )
         .provide(SparqlPassthroughTestEnv.layer())
     },
-    test("the route carries the marker the server's interceptors recognise it by") {
+    test("the registered route carries the marker the server's interceptors recognise it by") {
       // The server exempts this route from Accept negotiation and attributes requests its security or decode logic
       // rejected, both keyed off this attribute. If it were dropped, the exemption and the log entries would silently
-      // stop applying -- with no compile error, since both sides would still be well-typed.
-      ZIO
-        .serviceWith[SparqlPassthroughEndpoints](_.postAdminSparqlQuery.endpoint)
-        .map(ep => assertTrue(SparqlPassthroughEndpoints.isPassthroughRoute(ep)))
+      // stop applying -- with no compile error, since both sides would still be well-typed. Asserted on the endpoint
+      // as *registered*, which is the value the interceptors are handed.
+      serverEndpoints
+        .map(registered =>
+          assertTrue(registered.forall(se => SparqlPassthroughEndpoints.isPassthroughRoute(se.endpoint))),
+        )
         .provide(SparqlPassthroughTestEnv.layer())
     },
     test("registers nothing when the passthrough is disabled, so the route answers 404") {
