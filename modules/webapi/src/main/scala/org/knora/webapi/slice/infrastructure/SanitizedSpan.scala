@@ -91,8 +91,18 @@ object SanitizedSpan {
             // documentation. The whole `Cause` is carried rather than just the `Throwable`, so that restoring it
             // below reproduces the original failure exactly -- handing on the throwable alone replaced the ZIO fiber
             // trace of the original die with the trace at this line, which is the one thing a defect is debugged by.
+            //
+            // The condition is "no typed failure *and* a defect", not a bare `cause.isDie`, which is tree-wide: on a
+            // composite `Cause.Then(Fail(e), Die(t))` the library's `cause.failureOption` already finds the `Fail`,
+            // so the mapper applies and there is nothing to carry. Both spellings end at `UNSET` there, so this is
+            // the invariant made explicit rather than a behaviour change: carry exactly the causes the mapper cannot
+            // see. A pure interrupt is excluded by the `isDie` half and keeps the library's own description, as
+            // above; a defect that an interrupt tore down alongside it is still carried, which is what keeps the
+            // defect's message off the span in that shape too.
             .foldCauseZIO(
-              cause => if (cause.isDie) ZIO.fail(new SpanScopedDefect(cause)) else ZIO.refailCause(cause),
+              cause =>
+                if (cause.failureOption.isEmpty && cause.isDie) ZIO.fail(new SpanScopedDefect(cause))
+                else ZIO.refailCause(cause),
               ZIO.succeed(_),
             )
         }

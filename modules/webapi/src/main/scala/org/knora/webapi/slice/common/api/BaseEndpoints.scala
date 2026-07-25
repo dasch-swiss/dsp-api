@@ -150,8 +150,15 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       // The original `Cause` is logged rather than a `Cause.die` rebuilt from the throwable: the rebuilt one carries
       // the ZIO fiber trace of this line instead of the one where the defect was actually raised, which is the only
       // part of the report that says where to look.
+      //
+      // The predicate is shape-precise rather than a bare `cause.dieOption`, which is tree-wide (`find { case Die =>
+      // }`). On a composite `Cause.Then(Fail(e), Die(t))` -- a finalizer dying alongside a typed rejection -- the
+      // bare lookup matched, so `tapError` fired *and* this branch fired: two entries for one call, and the typed
+      // `401`/`403` swallowed into an `AssertionException` and answered as a `500`. A typed failure wins whenever the
+      // cause carries one; only a cause with a defect and no failure at all is a defect here. An interrupt-only or
+      // empty cause takes neither branch, which is the documented "an interrupted call produces no entry".
       cause =>
-        cause.dieOption match {
+        (if (cause.failureOption.isEmpty) cause.dieOption else None) match {
           case None         => ZIO.refailCause(cause)
           case Some(defect) =>
             ZIO.logErrorCause("Defect in the security logic", cause) *>

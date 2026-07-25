@@ -116,6 +116,27 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           )
         }).provide(InMemoryTracing.layer)
       },
+      test("a composite failure-and-defect cause is described from its failure, and reaches the caller intact") {
+        // `cause.isDie` is tree-wide, so a `Cause.Then(Fail, Die)` -- a finalizer dying alongside a typed failure --
+        // used to be carried across the span boundary even though zio-telemetry's `cause.failureOption` could
+        // already see the `Fail` and apply the mapper. Both spellings end at UNSET here; what this pins is the
+        // property that has to hold for either: the description stays the sanitized class name, the defect's message
+        // never reaches the span, and the caller still observes the original composite cause.
+        val composite = Cause.fail(new IllegalStateException("typed")) ++ Cause.die(new IllegalStateException(sentinel))
+        (for {
+          tracing <- ZIO.service[Tracing]
+          exit    <- SanitizedSpan.withSpan(tracing, spanName, exitReasonKey)(_ => ZIO.failCause(composite)).exit
+          spans   <- InMemoryTracing.finishedSpans
+        } yield {
+          val span = SpanAssertions.findSpan(spans, spanName)
+          SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalStateException") &&
+          assertTrue(
+            span.exists(s => !s.toString.contains(sentinel)),
+            exit.causeOption.exists(c => c.failureOption.isDefined && c.dieOption.exists(_.getMessage == sentinel)),
+          )
+        }).provide(InMemoryTracing.layer)
+      },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
         // produces no typed failure, so the sanitized-error path above never runs, and OpenTelemetry has no
