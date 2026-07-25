@@ -155,7 +155,9 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       // }`). On a composite `Cause.Then(Fail(e), Die(t))` -- a finalizer dying alongside a typed rejection -- the
       // bare lookup matched, so `tapError` fired *and* this branch fired: two entries for one call, and the typed
       // `401`/`403` swallowed into an `AssertionException` and answered as a `500`. A typed failure wins whenever the
-      // cause carries one; only a cause with a defect and no failure at all is a defect here. An interrupt-only or
+      // cause carries one; only a cause with a defect and no failure at all is a defect here. That the two can no
+      // longer both fire is a property rather than an observation: `tapError` fires exactly when
+      // `cause.failureOption.isDefined`, so the `isEmpty` guard here is precisely its negation. An interrupt-only or
       // empty cause takes neither branch, which is the documented "an interrupted call produces no entry".
       cause =>
         (if (cause.failureOption.isEmpty) cause.dieOption else None) match {
