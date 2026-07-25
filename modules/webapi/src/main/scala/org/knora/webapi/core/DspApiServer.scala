@@ -119,9 +119,12 @@ object DspApiServer {
     // `cause.prettyPrint` only when the *mapped* status is ERROR, so composing in
     // `StatusMapper.Failure[Response](_ => Result(StatusCode.UNSET))` -- the same `unsetOnFailure` remedy
     // `SanitizedSpan` relies on -- would suppress the description on the first shape. It would not reach the
-    // second, which has no failure value for the mapper to match, and there is no way to keep ERROR *and* drop
-    // the description: the mapper's only lever is the status code. That trade costs every escaped-defect 500 in
-    // the API its error span, which is worth more than suppressing a description that is not caller data.
+    // second, which has no failure value for the mapper to match, and there is no way to keep ERROR *and* drop the
+    // description *with the mapper alone*: its only lever is the status code. Doing both would mean replicating
+    // `SanitizedSpan`'s write-then-suppress here -- setting `ERROR` with a description of our own on the span and
+    // mapping to `UNSET` so the library's setter leaves it alone -- for a description that is not caller data.
+    // Suppressing it through the mapper instead costs every escaped-defect 500 in the API its error span, which is
+    // worth more than the suppression buys.
     private val httpStatusMapper: StatusMapper.Success[Response] =
       StatusMapper.Success[Response] {
         case resp if resp.status.code >= 500 => StatusMapper.Result(StatusCode.ERROR)
