@@ -72,10 +72,16 @@ object SparqlPassthroughAudit {
    * `outcome=ok user_iri=someone-else` would satisfy a naive field match and attribute the call to another
    * principal -- and the adversary here is precisely the party the entry exists to attribute.
    *
-   * Quoting makes the boundary unambiguous rather than making the text disappear, so a log query must respect it:
-   * anchor on the entry prefix (`SPARQL passthrough: operation=query outcome=`), which no field value can reach,
-   * rather than grepping for a bare `outcome=` anywhere in the line. `sparql` is deliberately the last field, so
-   * everything a parser needs precedes the only value that can contain arbitrary text.
+   * Quoting makes the boundary unambiguous rather than making the text disappear, so a log query must respect it.
+   * What the entry's unforgeability rests on is *position* plus *parsing*, not the prefix: nothing here strips
+   * letters, spaces, `:` or `=`, so a statement can contain `SPARQL passthrough: operation=query outcome=` verbatim.
+   * `sparql` is deliberately the last field, so every field a reader needs precedes the only value that can carry
+   * arbitrary text -- which means a logfmt-aware parse that honours the quoting reads the real values, and so does
+   * taking the *first* match for a field. Taking any match anywhere in the line does not.
+   *
+   * A literal line filter (Loki's `|= "... outcome=forbidden"`) is the one query shape this does not protect: it can
+   * match text a caller planted. That is a false-positive alert rather than a misattribution -- parsed as above, the
+   * outcome and the identity are still the real ones -- but an alert built that way will fire on demand.
    */
   private def quoted(statement: String): String = {
     val safe = statement.take(maxStatementChars).map(c => if (isLogUnsafe(c)) ' ' else c)

@@ -189,6 +189,17 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
     Changing `unsetOnFailure` to map failures to `ERROR` re-introduces the `cause.prettyPrint` leak
     in one edit. It is guarded by a description-equality test — keep that test.
 
+!!! note "What this covers, and what it does not"
+    The helper protects the span it opens. Two things outside it are worth knowing, both API-wide and
+    pre-existing. The outer HTTP SERVER span in `DspApiServer` uses a `StatusMapper.Success[Response]`,
+    and nearly every failure arrives there as a 500 *response* — ztapir's `zServerLogic` wraps the logic
+    in `.either.resurrect`, promoting a defect to a typed failure before the interpreter — so that span
+    gets `ERROR` with no description. Only what stays in the routes' error channel (an interrupt, a
+    non-`NonFatal` throwable) still takes zio-telemetry's `cause.prettyPrint` default. And tapir's
+    default `serverLog` is not customised, so a defect reaching the server logic is additionally written
+    to the **log** at ERROR with its raw message and stacktrace. Sanitizing the span does not sanitize
+    that line.
+
 ## Checklist for a new vertical
 
 - [ ] `tracing` is an abstract member of the trait; `Tracing` added to the module `Dependencies`.

@@ -105,6 +105,11 @@ deployment). The interaction is not what the numbers suggest, and it matters in 
   the table above is applied in the server logic, which runs *after* body decoding, so N callers can each be holding a
   body of this size before any of them is counted against it. Worst-case request-side heap is therefore
   `max-request-body-bytes` times the number of simultaneous callers the deployment admits, not times the backstop.
+- **Above 1 MiB it is unreachable for a chunked caller.** The server switches to streaming on the *declared*
+  `Content-Length` alone, so a request with `Transfer-Encoding: chunked` keeps the aggregator — whose own limit is
+  that same 1 MiB. A chunked body that outgrows it is answered by the HTTP layer with a bare `413`, below this API:
+  no audit entry, no error envelope, and this cap never consulted. Clients that must send more than 1 MiB have to
+  declare a `Content-Length`.
 
 Raising it above 1 MiB is a decision about the whole process's memory, not about this route.
 
@@ -126,13 +131,18 @@ The SPARQL text is recorded, because it is the audit trail of what was run, but 
   second entry or disguise how the entry renders.
 - Written as the last field and **quoted** (`sparql="..."`, with `"` and `\` escaped), so a statement cannot forge a
   *field* either. Every other field is machine-generated or a validated value type, so this is the only value in the
-  entry that can contain text a caller chose. **Anchor log queries on the entry prefix**
-  (`SPARQL passthrough: operation=query outcome=`) rather than grepping for a bare `outcome=`; the quoting makes the
-  boundary unambiguous, it does not stop the characters from appearing inside the value.
+  entry that can contain text a caller chose — including the entry's own prefix, which is not stripped and so is not
+  a safe anchor. What keeps the real fields readable is position plus parsing: `sparql` is last, so every other field
+  precedes it. **Use a logfmt-aware parse that honours the quoting, or take the first match for a field** — never any
+  match anywhere in the line. A literal line filter (`|= "... outcome=forbidden"` in Loki) can still match a statement
+  a caller planted; that is a false-positive alert, not a misattribution, since parsed properly the outcome and the
+  identity are still the real ones.
 - Omitted entirely -- leaving only `request_bytes` -- for `forbidden`, `bad-request`, `request-cap-exceeded` and
   `overloaded`. Those are calls the surface refused outright, where the text is caller input with nothing to
   attribute. A call that was admitted and then abandoned or crashed (`interrupted`, `defect`) **does** carry its
-  statement: what was running when it went wrong is exactly what the entry is for.
+  statement: what was running when it went wrong is exactly what the entry is for. The exception is a `defect` raised
+  in the *security logic*, which happens before the body is decoded — that entry has neither a statement nor a
+  `request_bytes`.
 
 | `outcome` | When |
 | --- | --- |
@@ -149,7 +159,7 @@ The SPARQL text is recorded, because it is the audit trail of what was run, but 
 | `upstream-rejected` | The store refused this API's own credentials |
 | `timed-out` | The overall deadline elapsed |
 | `interrupted` | The call was abandoned before it finished |
-| `defect` | An unexpected failure behind the seam |
+| `defect` | A bug in this API: either in the security logic, or behind the store seam. Always a `500` |
 
 ## Configuration
 
@@ -204,11 +214,19 @@ open, and an alert on the startup warning (`ALLOW_SPARQL_PASSTHROUGH is turned O
   its default serialization. The relay carries whatever the store answers, so what a client sees for an odd `Accept` is
   the store's choice, not this API's.
 - **A rejection can close the connection, so pool churn on this route is expected.** When a request is refused before
-  its body was necessarily read -- a `401`, a `403`, or a decode failure on a body larger than the server's 1 MiB
-  aggregation threshold or one sent chunked -- the response carries `Connection: close`. Without it, zio-http leaves
-  such a connection unreadable and the client's *next* request on it hangs until its own timeout. Connections dropped
-  after a rejected passthrough request are therefore deliberate, not a fault. A rejection on a small body does not
-  close the connection, because that body was already fully read.
+  its body was necessarily read -- a `401`, a `403`, or a decode failure on a request declaring a `Content-Length`
+  above the server's 1 MiB aggregation threshold -- the response carries `Connection: close`. Without it, zio-http
+  leaves such a connection unreadable and the client's *next* request on it hangs until its own timeout. Connections
+  dropped after a rejected passthrough request are therefore deliberate, not a fault. Every other rejection leaves the
+  connection alone, including one on a chunked body: the server aggregates anything it has not been *told* is large,
+  so that body was already fully read.
+- **A crash also produces a second, unprotected log line.** tapir's default server log is left in place, so a defect
+  reaching the server logic emits an ERROR line of its own alongside the `defect` audit entry, carrying the
+  exception's raw message and stacktrace and the request line. That line has none of the containment this surface
+  applies to its own entry — it is unbounded, not stripped of line-breaking characters, and not quoted. It is
+  API-wide and pre-existing rather than a property of this route, but it is the one path that bypasses the entry
+  hardening, so a deployment treating the passthrough's log as sensitive should know the `defect` outcome has a
+  companion line in the same stream.
 - **Two honest caveats to "exactly one entry per call".** An interruption *inside the security logic* -- a client
   disconnecting during authentication -- produces no entry, because the audit emitter for a rejection is on the
   rejection path and an interrupt takes neither branch. And the `ok` entry is written when the store's response has
