@@ -38,8 +38,12 @@ TOKEN=$(curl -s -X POST https://api.example.org/v2/authentication \
 | Authenticated, but not a `SystemAdmin` | `403` |
 | Route not enabled on this deployment | `404` |
 
-Both checks run **before the request body is read**, so an unauthorized caller cannot make the server buffer a request
-at all.
+Both checks run **before the request body is decoded**, so an unauthorized caller cannot drive body decoding, the
+request-body cap, or any of the server logic behind them.
+
+They do not stop the server from *buffering*. The HTTP server aggregates request bodies up to 1 MiB before any
+per-endpoint logic runs at all, for every caller including an unauthenticated one. That is a server-wide property of
+this API, not of this route, and it is what the sizing note under [Guardrails](#guardrails) is about.
 
 ## Request forms
 
@@ -75,7 +79,7 @@ the same reason.
 | Guardrail | Default | What happens when it trips |
 | --- | --- | --- |
 | Store-side execution timeout | 120s | The store cancels the query at its own engine and its timeout response is relayed |
-| Request-body size | 1 MiB | `413`; the framework stops reading at the cap, so an over-cap body is never buffered whole |
+| Request-body size | 1 MiB | `413`; the framework stops reading at the cap, so an over-cap body is never decoded whole |
 | Response size | 64 MiB | `500` with a distinct body, and no partial response -- deliberately not `413`, which describes a request |
 | Concurrent calls across the surface | 8 | `503`; the call is rejected, never queued |
 | Store unreachable | -- | `503` |
@@ -85,9 +89,24 @@ the same reason.
 Two notes on the response ceiling. It counts the bytes read **from the store**, before any compression this API
 applies on the way out, so a compressed response on the wire may be much smaller than the ceiling. And because the
 response is buffered to the ceiling before anything is sent, the ceiling multiplied by the concurrency backstop is the
-worst-case heap this surface can occupy: raising either raises that bound.
+worst-case heap this surface can occupy on the response side: raising either raises that bound.
 
 To page through a large result, use `LIMIT` and `OFFSET` rather than raising the ceiling.
+
+### Sizing the request-body cap
+
+`max-request-body-bytes` interacts with the HTTP server's own 1 MiB aggregation threshold
+(`maxAggregatedRequestBodySize`, which the server applies to every route and which is not configurable per
+deployment). The interaction is not what the numbers suggest, and it matters in both directions:
+
+- **Below 1 MiB it does not reduce peak buffering.** The server has already read and buffered up to 1 MiB before this
+  cap is consulted at all, so lowering it changes which status a large request gets, not how much memory it costs.
+- **Above 1 MiB it raises peak buffering, and nothing bounds the concurrency of that.** The concurrency backstop in
+  the table above is applied in the server logic, which runs *after* body decoding, so N callers can each be holding a
+  body of this size before any of them is counted against it. Worst-case request-side heap is therefore
+  `max-request-body-bytes` times the number of simultaneous callers the deployment admits, not times the backstop.
+
+Raising it above 1 MiB is a decision about the whole process's memory, not about this route.
 
 ## Logging
 
@@ -96,16 +115,30 @@ recording the operation, the outcome, the user IRI and username where they are k
 bytes and, for a completed read, the response size and the store's status. Result payloads are never logged, and
 neither are credentials or request headers. The entry carries the trace id when a trace context is present.
 
-The SPARQL text is recorded, because it is the audit trail of what was run, but bounded: it is truncated to 4096
-characters (flagged with `sparql_truncated=true`), stripped of control characters so a statement cannot forge a second
-entry, and omitted entirely -- leaving only `request_bytes` -- for an outcome decided before anything reached the
-store, where the text is unbounded caller input with nothing to attribute.
+"Call" means a request this route actually claimed. A request to `/admin/sparql/query` with a method the route does not
+serve -- `GET`, say -- is not routed here at all and produces no entry; it is a `404`, the same as any unrouted path.
+Two further caveats to "exactly one" are listed under [Known limitations](#known-limitations).
+
+The SPARQL text is recorded, because it is the audit trail of what was run, but bounded and contained:
+
+- Truncated to 4096 characters, flagged with `sparql_truncated=true`.
+- Stripped of control characters, `U+2028`/`U+2029` and Unicode format characters, so a statement cannot forge a
+  second entry or disguise how the entry renders.
+- Written as the last field and **quoted** (`sparql="..."`, with `"` and `\` escaped), so a statement cannot forge a
+  *field* either. Every other field is machine-generated or a validated value type, so this is the only value in the
+  entry that can contain text a caller chose. **Anchor log queries on the entry prefix**
+  (`SPARQL passthrough: operation=query outcome=`) rather than grepping for a bare `outcome=`; the quoting makes the
+  boundary unambiguous, it does not stop the characters from appearing inside the value.
+- Omitted entirely -- leaving only `request_bytes` -- for `forbidden`, `bad-request`, `request-cap-exceeded` and
+  `overloaded`. Those are calls the surface refused outright, where the text is caller input with nothing to
+  attribute. A call that was admitted and then abandoned or crashed (`interrupted`, `defect`) **does** carry its
+  statement: what was running when it went wrong is exactly what the entry is for.
 
 | `outcome` | When |
 | --- | --- |
 | `ok` | The store answered with a success status |
 | `store-error` | The store answered with an error status, relayed verbatim |
-| `unauthenticated` | No or invalid credentials; emitted by the server's security-failure hook |
+| `unauthenticated` | No or invalid credentials; emitted by the endpoint's security logic, which is the last place the distinction is in scope |
 | `forbidden` | Authenticated but not a `SystemAdmin` |
 | `bad-request` | The statement was sent as a query-string parameter |
 | `malformed-request` | The framework could not decode the request (e.g. an unsupported `Content-Type`) |
@@ -170,3 +203,14 @@ open, and an alert on the startup warning (`ALLOW_SPARQL_PASSTHROUGH is turned O
 - **Store errors depend on the store.** Fuseki 6.1.0 does not refuse an `Accept` it cannot satisfy; it falls back to
   its default serialization. The relay carries whatever the store answers, so what a client sees for an odd `Accept` is
   the store's choice, not this API's.
+- **A rejection can close the connection, so pool churn on this route is expected.** When a request is refused before
+  its body was necessarily read -- a `401`, a `403`, or a decode failure on a body larger than the server's 1 MiB
+  aggregation threshold or one sent chunked -- the response carries `Connection: close`. Without it, zio-http leaves
+  such a connection unreadable and the client's *next* request on it hangs until its own timeout. Connections dropped
+  after a rejected passthrough request are therefore deliberate, not a fault. A rejection on a small body does not
+  close the connection, because that body was already fully read.
+- **Two honest caveats to "exactly one entry per call".** An interruption *inside the security logic* -- a client
+  disconnecting during authentication -- produces no entry, because the audit emitter for a rejection is on the
+  rejection path and an interrupt takes neither branch. And the `ok` entry is written when the store's response has
+  been received, before it is serialized back to the client, so a call recorded as `ok` may still have failed to reach
+  the caller. The entry attributes what was *run*, which is what an audit trail is for; it is not a delivery receipt.
