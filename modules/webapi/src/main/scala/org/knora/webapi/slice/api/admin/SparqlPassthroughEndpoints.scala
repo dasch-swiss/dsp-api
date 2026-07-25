@@ -14,6 +14,7 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.model.EndpointExtensions.RichServerEndpoint
 import sttp.tapir.typelevel.ErasureSameAsType
+import zio.UIO
 import zio.ZLayer
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
@@ -22,8 +23,8 @@ import java.nio.charset.StandardCharsets
 import scala.reflect.ClassTag
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.BaseEndpoints.Rejection
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughOverloadedException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughTimedOutException
@@ -137,12 +138,19 @@ object SparqlPassthroughEndpoints {
   def isPassthroughRoute(ep: AnyEndpoint): Boolean = ep.attribute(routeMarker).isDefined
 
   /**
-   * Attributes a request the security logic turned away. Neither rejection reaches the rest service that does the
-   * per-call logging -- security logic runs before server logic -- so this is the only place they are observable, and
-   * the only place a `403` still has the identity that makes it an attribution.
+   * Attributes a request the security logic turned away. None of these rejections reaches the rest service that does
+   * the per-call logging -- security logic runs before server logic -- so this is the only place they are observable,
+   * and the only place a `403` still has the identity that makes it an attribution.
+   *
+   * The `defect` case shares its outcome with a defect behind the store seam, which the rest service reports: from an
+   * operator's side both are "this call ended in a bug of ours", and splitting them would only make the log query
+   * that finds them longer. It carries no statement, because a defect here happens before the body is decoded.
    */
-  private def logRejected(user: Option[User]) =
-    SparqlPassthroughAudit(if (user.isDefined) "forbidden" else "unauthenticated", user).log
+  private def logRejected(rejection: Rejection): UIO[Unit] = rejection match {
+    case Rejection.Unauthenticated      => SparqlPassthroughAudit("unauthenticated").log
+    case Rejection.NotSystemAdmin(user) => SparqlPassthroughAudit("forbidden", Some(user)).log
+    case Rejection.Defect(user)         => SparqlPassthroughAudit("defect", user).log
+  }
 
   /** `sttp.model.HeaderNames` has no constant for this one. */
   private[admin] val noSniff: Header = Header("X-Content-Type-Options", "nosniff")

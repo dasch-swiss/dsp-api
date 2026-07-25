@@ -99,31 +99,37 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * credentials allowed, so a cookie credential here would be rideable from any origin. Treat that as a tested
    * invariant, not a convention.
    *
-   * @param onRejected run when the caller is turned away, with `Some(user)` if authentication succeeded and only the
-   *                   SystemAdmin check failed, and `None` if authentication itself did. A failure in the security
+   * @param onRejected run exactly once when the caller is turned away, with the reason. A failure in the security
    *                   logic carries only the exception onwards, so a surface that must attribute rejected attempts
    *                   would otherwise lose both the identity and the distinction; this is where it still has them.
    *                   The raw token is deliberately not passed: it is a live credential and must not reach a log.
    */
   def bearerSystemAdminEndpoint(
-    onRejected: Option[User] => UIO[Unit],
+    onRejected: BaseEndpoints.Rejection => UIO[Unit],
   ): ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
     endpoint
       .errorOut(errorOutputs)
       .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
       .zServerSecurityLogic {
         case Some(jwtToken) =>
-          asTypedFailure(
-            authenticateJwt(jwtToken)
-              .tapError(_ => onRejected(None))
-              .flatMap(user => authorization.ensureSystemAdmin(user).tapError(_ => onRejected(Some(user))).as(user)),
-          )
-        case _ => onRejected(None) *> ZIO.fail(BadCredentialsException("No credentials provided."))
+          attributingDefect(onRejected, None)(
+            authenticateJwt(jwtToken).tapError(_ => onRejected(BaseEndpoints.Rejection.Unauthenticated)),
+          ).flatMap { user =>
+            attributingDefect(onRejected, Some(user))(
+              authorization
+                .ensureSystemAdmin(user)
+                .tapError(_ => onRejected(BaseEndpoints.Rejection.NotSystemAdmin(user)))
+                .as(user),
+            )
+          }
+        case _ =>
+          onRejected(BaseEndpoints.Rejection.Unauthenticated) *>
+            ZIO.fail(BadCredentialsException("No credentials provided."))
       }
 
   /**
-   * Turns a defect thrown out of the security logic into a typed failure, so it is answered through the endpoint's
-   * own error output instead of escaping to the server's outer exception handling.
+   * Attributes a defect thrown out of the security logic and turns it into a typed failure, so it is answered through
+   * the endpoint's own error output instead of escaping to the server's outer exception handling.
    *
    * The status is a `500` either way -- both render the shared "Internal server error" body -- but the route the
    * response takes is not the same. A defect bypasses `onSecurityFailure`, and with it the interceptor that marks a
@@ -131,11 +137,28 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * the connection unreadable and the client's next request on it hangs. Failing typed keeps the rejection inside the
    * hook that knows about that. The defect is logged here because it is a genuine bug and must not become quieter for
    * having been converted.
+   *
+   * `onRejected` runs here as well, and that is the point of splitting this per stage rather than wrapping the whole
+   * chain. `tapError` does not fire for a `Cause.Die`, so a defect used to answer `500` with no entry at all on a
+   * surface whose entire purpose is attributing every call -- and the wrapping conversion then hid which stage it
+   * came from. Wrapping each stage keeps the identity a defect in the authorization check still has.
    */
-  private def asTypedFailure(zio: IO[Throwable, User]): IO[Throwable, User] =
-    zio.catchAllDefect(defect =>
-      ZIO.logErrorCause("Defect in the security logic", Cause.die(defect)) *>
-        ZIO.fail(AssertionException("Defect in the security logic", defect)),
+  private def attributingDefect[A](onRejected: BaseEndpoints.Rejection => UIO[Unit], user: Option[User])(
+    zio: IO[Throwable, A],
+  ): IO[Throwable, A] =
+    zio.foldCauseZIO(
+      // The original `Cause` is logged rather than a `Cause.die` rebuilt from the throwable: the rebuilt one carries
+      // the ZIO fiber trace of this line instead of the one where the defect was actually raised, which is the only
+      // part of the report that says where to look.
+      cause =>
+        cause.dieOption match {
+          case None         => ZIO.refailCause(cause)
+          case Some(defect) =>
+            ZIO.logErrorCause("Defect in the security logic", cause) *>
+              onRejected(BaseEndpoints.Rejection.Defect(user)) *>
+              ZIO.fail(AssertionException("Defect in the security logic", defect))
+        },
+      ZIO.succeed(_),
     )
 
   private def authenticateJwt(token: String): IO[BadCredentialsException, User] =
@@ -158,6 +181,23 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
 
 object BaseEndpoints {
   val layer = ZLayer.derive[BaseEndpoints]
+
+  /**
+   * Why [[BaseEndpoints.bearerSystemAdminEndpoint]] turned a caller away, for a surface that has to attribute the
+   * attempt. Deliberately not an outcome vocabulary: the naming and the log shape belong to the surface, this only
+   * carries the distinctions the security logic is the last place to know.
+   */
+  enum Rejection {
+
+    /** No credentials, or credentials that did not authenticate. No identity to attribute. */
+    case Unauthenticated
+
+    /** Authenticated, but not a SystemAdmin -- the one rejection that still knows who was refused. */
+    case NotSystemAdmin(user: User)
+
+    /** A bug in the security logic itself, answered as a `500`. The user is known if authentication had passed. */
+    case Defect(user: Option[User])
+  }
 
   private[api] final case class ErrorResponse(message: String)
   private[api] object ErrorResponse {
