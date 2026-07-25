@@ -234,6 +234,15 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
             response.status == Status.RequestEntityTooLarge,
             entries.size == 1,
             outcomeOf(entries.head) == "request-cap-exceeded",
+            // The outcome pins the classification but not the *emitter*, which would leave this case with the same
+            // hole it criticises in the e2e spec above: `SparqlRequestTooLargeException.outcome` is the same literal
+            // and maps to the same 413, so dropping `.maxRequestBodyLength` from the endpoint would hand the call to
+            // the rest service's own cap and produce an entry this test could not tell apart. The two differ in the
+            // fields the framework hook has no way to know: it emits `SparqlPassthroughAudit(outcome)` alone, while
+            // the rest service always fills the identity and the request size. The empty ones are what say the entry
+            // came from the boundary.
+            entries.head.contains("user_iri=-"),
+            entries.head.contains("request_bytes=-"),
           ),
         )
         .provide(
