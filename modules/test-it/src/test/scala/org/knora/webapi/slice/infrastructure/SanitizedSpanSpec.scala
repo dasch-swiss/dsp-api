@@ -137,6 +137,30 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           )
         }).provide(InMemoryTracing.layer)
       },
+      test("a defect torn down by an interrupt is still carried, so the interrupt does not readmit the message") {
+        // The other half of the predicate, and the shape the argument for it turns on. `Cause.Then(Die, Interrupt)`
+        // has no failure value, so zio-telemetry's `cause.failureOption` finds nothing and its fallback would write
+        // `cause.prettyPrint` -- the defect's message and stacktrace -- over whatever description this helper set.
+        // The `isDie` half is what still carries this cause across the boundary; a predicate that excluded any
+        // interrupted cause would leak the sentinel here while every other case stayed green.
+        val torn = Cause.die(new IllegalStateException(sentinel)) ++ Cause.interrupt(FiberId.None)
+        (for {
+          tracing <- ZIO.service[Tracing]
+          exit    <- SanitizedSpan.withSpan(tracing, spanName, exitReasonKey)(_ => ZIO.failCause(torn)).exit
+          spans   <- InMemoryTracing.finishedSpans
+        } yield {
+          val span = SpanAssertions.findSpan(spans, spanName)
+          SpanAssertions.hasErrorStatus(spans, spanName) &&
+          // The interrupt branch runs last of the two writers, so it is its description that survives -- which is
+          // the point: whichever of them wins, neither is the defect's message.
+          SpanAssertions.hasStatusDescription(spans, spanName, "interrupted") &&
+          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted") &&
+          assertTrue(
+            span.exists(s => !s.toString.contains(sentinel)),
+            exit.causeOption.exists(c => c.isInterrupted && c.dieOption.exists(_.getMessage == sentinel)),
+          )
+        }).provide(InMemoryTracing.layer)
+      },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
         // produces no typed failure, so the sanitized-error path above never runs, and OpenTelemetry has no
