@@ -129,7 +129,7 @@ oci_stamped_labels(
         "org.opencontainers.image.source": "https://github.com/dasch-swiss/dsp-api",
         "org.opencontainers.image.title": "Apache Jena Fuseki",
         "org.opencontainers.image.url": "https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki",
-        "org.opencontainers.image.version": "6.1.0-0",
+        "org.opencontainers.image.version": "6.1.0-1",
     },
     stamp_labels = {
         "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
@@ -152,7 +152,7 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-0",
+        "IMAGE_VERSION": "6.1.0-1",
         "FUSEKI_VERSION": "6.1.0",
     },
     exposed_ports = ["3030"],
@@ -182,7 +182,7 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-0",
+        "IMAGE_VERSION": "6.1.0-1",
         "FUSEKI_VERSION": "6.1.0",
     },
     exposed_ports = ["3030"],
@@ -222,10 +222,10 @@ alias(
 oci_load(
     name = "load",
     image = ":image",
-    repo_tags = ["daschswiss/apache-jena-fuseki:6.1.0-0"],
+    repo_tags = ["daschswiss/apache-jena-fuseki:6.1.0-1"],
 )
 
-# `bazel run //modules/fuseki:push -- -t 6.1.0-0` — push the multi-arch index.
+# `bazel run //modules/fuseki:push -- -t 6.1.0-1` — push the multi-arch index.
 oci_push(
     name = "push",
     image = ":index",
