@@ -283,7 +283,10 @@ jobs:
           # Guards the derivation itself: re-hardcoding a version literal at any of the derived
           # sites would take it back outside this gate's reach, which is exactly how the partial
           # bump happened. Anything but the two constants above carrying an x.y.z literal fails.
+          # Whole-line comments are exempt -- a literal there is inert, and the file's own docs have
+          # every reason to quote an example version without failing the build over it.
           STRAY=$(grep -nE '"[0-9]+\.[0-9]+\.[0-9]+' modules/fuseki/BUILD.bazel \
+                  | grep -vE '^[0-9]+:[[:space:]]*#' \
                   | grep -vE '^[0-9]+:(FUSEKI_VERSION|IMAGE_REVISION) = ' || true)
           if [ -n "$STRAY" ]; then
             echo "ERROR: version literal outside the FUSEKI_VERSION/IMAGE_REVISION constants in modules/fuseki/BUILD.bazel:"

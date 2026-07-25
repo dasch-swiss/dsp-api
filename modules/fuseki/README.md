@@ -31,9 +31,11 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 2. Update `MODULE.bazel`'s `@fuseki_dist` `http_archive`:
    - the tarball `urls` — new `apache-jena-fuseki-<version>.tar.gz`
    - `sha256` — the checksum of that tarball
-3. Update `modules/fuseki/BUILD.bazel`:
-   - `FUSEKI_VERSION` (in the image `env`) — new Apache Jena Fuseki version (e.g. `5.6.0`)
-   - `IMAGE_VERSION` (image `env` + `.version` label) and the `:load` `repo_tags` — new image tag (e.g. `5.6.0-1`, increment the `-N` suffix for DaSCH revisions)
+3. Update the two constants at the top of `modules/fuseki/BUILD.bazel`:
+   - `FUSEKI_VERSION` — the upstream Apache Jena Fuseki version (e.g. `5.6.0`). Bump it for an upstream Jena change, and restart `IMAGE_REVISION` when you do (the last bump went `5.5.0-3` → `6.1.0-0`).
+   - `IMAGE_REVISION` — the DaSCH repackaging revision (e.g. `1`). Bump it on its own for a rebuild that changes the image but not Fuseki.
+
+   Edit nothing else in that file: the published tag is `<FUSEKI_VERSION>-<IMAGE_REVISION>`, and every version-bearing site (both `IMAGE_VERSION` env entries, the `.version` label, the `:load` `repo_tags`) is derived from these two constants. Re-hardcoding a literal at any of them fails CI's stray-literal check.
 4. Update `docker-compose.yml`: bump the `db` service image tag to match `IMAGE_VERSION`
 5. Update `project/Dependencies.scala`: bump `fusekiImage` to match `IMAGE_VERSION`
 

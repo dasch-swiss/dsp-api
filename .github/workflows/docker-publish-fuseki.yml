@@ -28,7 +28,13 @@ jobs:
         id: fuseki_version
         run: |
           set -euo pipefail
-          V=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
+          # Compose the tag from BUILD.bazel's two constants -- it derives every version-bearing
+          # site from them, so no `apache-jena-fuseki:<tag>` literal exists in the file to grep
+          # for. Must stay in step with the derivation in build-and-test.yml's
+          # check-fuseki-version-consistency job and the docker-publish-fuseki-image recipe.
+          FUSEKI_VER=$(grep -oE '^FUSEKI_VERSION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+          IMAGE_REV=$(grep -oE '^IMAGE_REVISION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+          V="${FUSEKI_VER}-${IMAGE_REV}"
           [[ "$V" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "fuseki image version invalid: $V"; exit 1; }
           echo "version=$V" >> "$GITHUB_OUTPUT"
       - name: Install Nix (Bazel drives the image build)

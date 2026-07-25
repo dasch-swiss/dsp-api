@@ -139,7 +139,12 @@ docker-build-fuseki-image *FLAGS='':
 docker-publish-fuseki-image *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
+    # Compose the tag from BUILD.bazel's two constants -- it derives every version-bearing
+    # site from them, so no `apache-jena-fuseki:<tag>` literal exists in the file to grep for.
+    # `oci_push` carries no tag of its own, so the `-t` below is the image's only tag source.
+    FUSEKI_VER=$(grep -oE '^FUSEKI_VERSION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+    IMAGE_REV=$(grep -oE '^IMAGE_REVISION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+    VER="${FUSEKI_VER}-${IMAGE_REV}"
     bazel run {{FLAGS}} //modules/fuseki:push -- -t "$VER"
 
 # Start stack
