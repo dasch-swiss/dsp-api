@@ -49,7 +49,11 @@ fi
 # tarball URL wasn't updated to match. (The image tag IMAGE_VERSION is checked
 # against Dependencies.scala + docker-compose.yml by the check-fuseki-version-consistency
 # CI job.)
-bazel_fuseki="$(grep -oE '"FUSEKI_VERSION": "[^"]+"' "$fuseki_build_bazel" | head -1 | cut -d'"' -f4)"
+bazel_fuseki="$(grep -oE '^FUSEKI_VERSION = "[^"]+"' "$fuseki_build_bazel" | head -1 | cut -d'"' -f2)"
+if [ -z "$bazel_fuseki" ]; then
+  echo "MISMATCH: modules/fuseki/BUILD.bazel has no top-level FUSEKI_VERSION constant to read" >&2
+  fail=1
+fi
 if ! grep -qF "apache-jena-fuseki-${bazel_fuseki}.tar.gz" "$module_bazel"; then
   echo "MISMATCH: MODULE.bazel's fuseki_dist URL doesn't match modules/fuseki/BUILD.bazel's FUSEKI_VERSION ($bazel_fuseki)" >&2
   fail=1

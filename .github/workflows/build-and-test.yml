@@ -261,7 +261,18 @@ jobs:
       - name: Assert modules/fuseki/BUILD.bazel, Dependencies.scala, and docker-compose.yml agree
         run: |
           set -euo pipefail
-          BUILD_VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
+          # modules/fuseki/BUILD.bazel derives every version-bearing site (both IMAGE_VERSION env
+          # entries, the org.opencontainers.image.version label, the oci_load repo tag and the
+          # oci_push repository) from the two constants read here. Reading the constants rather
+          # than one rendered site is what makes this gate cover all of them: the previous version
+          # of this job compared only the repo-tag string, so a partial bump that left the label
+          # and IMAGE_VERSION behind passed CI silently.
+          FUSEKI_VER=$(grep -oE '^FUSEKI_VERSION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+          IMAGE_REV=$(grep -oE '^IMAGE_REVISION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
+          if [ -z "$FUSEKI_VER" ] || [ -z "$IMAGE_REV" ]; then
+            echo "ERROR: modules/fuseki/BUILD.bazel is missing the FUSEKI_VERSION / IMAGE_REVISION constants"; exit 1
+          fi
+          BUILD_VER="${FUSEKI_VER}-${IMAGE_REV}"
           DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
           COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
           echo "modules/fuseki/BUILD.bazel: $BUILD_VER"
@@ -269,6 +280,15 @@ jobs:
           echo "docker-compose.yml:         $COMPOSE_VER"
           [ "$BUILD_VER" = "$DEPS_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
           [ "$BUILD_VER" = "$COMPOSE_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
+          # Guards the derivation itself: re-hardcoding a version literal at any of the derived
+          # sites would take it back outside this gate's reach, which is exactly how the partial
+          # bump happened. Anything but the two constants above carrying an x.y.z literal fails.
+          STRAY=$(grep -nE '"[0-9]+\.[0-9]+\.[0-9]+' modules/fuseki/BUILD.bazel \
+                  | grep -vE '^[0-9]+:(FUSEKI_VERSION|IMAGE_REVISION) = ' || true)
+          if [ -n "$STRAY" ]; then
+            echo "ERROR: version literal outside the FUSEKI_VERSION/IMAGE_REVISION constants in modules/fuseki/BUILD.bazel:"
+            echo "$STRAY"; exit 1
+          fi
           echo "All Fuseki versions match: $BUILD_VER"
 
   check-formatting:

@@ -3,9 +3,35 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefi
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//tools/oci:defs.bzl", "oci_stamped_labels")
 
-# //tools/oci:image_versions_match_sbt reads this file's FUSEKI_VERSION against
-# MODULE.bazel's fuseki_dist tarball pin, to catch a dist-version bump that the
-# tarball URL wasn't updated to match.
+# --- Versions: the single source of truth for this image ---------------------
+#
+# Every version-bearing site in this file derives from these two constants -- the
+# two `IMAGE_VERSION` env entries, the `org.opencontainers.image.version` label,
+# the `oci_load` repo tag and the `oci_push` repository. Deriving them rather
+# than repeating the literal is what makes a *partial* bump impossible: before
+# this, five independent literals had to be edited together and CI only compared
+# one of them, so bumping the repo tag alone shipped an image whose label and
+# `IMAGE_VERSION` still claimed the previous release.
+#
+# FUSEKI_VERSION is the upstream Apache Jena Fuseki distribution version. It must
+# match MODULE.bazel's @fuseki_dist tarball URL --
+# //tools/oci:image_versions_match_sbt reads the constant below and checks that.
+#
+# IMAGE_VERSION is the published image tag: the dist version plus a repackaging
+# revision, bumped when the image changes but Fuseki does not. It must match
+# project/Dependencies.scala's `fusekiImage` and docker-compose.yml -- CI's
+# check-fuseki-version-consistency job reads both constants below and checks that.
+#
+# Do not write a version literal anywhere else in this file; that job fails if
+# one appears.
+FUSEKI_VERSION = "6.1.0"
+
+IMAGE_REVISION = "1"
+
+IMAGE_VERSION = "%s-%s" % (FUSEKI_VERSION, IMAGE_REVISION)
+
+IMAGE_REPOSITORY = "daschswiss/apache-jena-fuseki"
+
 exports_files([
     "BUILD.bazel",
 ])
@@ -117,7 +143,8 @@ pkg_tar(
 # with Dependencies.scala's fusekiImage and docker-compose.yml by CI's
 # check-fuseki-version-consistency job -- NOT stamped from git, since it isn't a
 # git-versioned artifact like knora-api/dsp-ingest, it's a pinned upstream release
-# repackaged.
+# repackaged. It reads IMAGE_VERSION rather than restating it; see the constants
+# at the top of this file.
 oci_stamped_labels(
     name = "image_labels",
     labels = {
@@ -129,7 +156,7 @@ oci_stamped_labels(
         "org.opencontainers.image.source": "https://github.com/dasch-swiss/dsp-api",
         "org.opencontainers.image.title": "Apache Jena Fuseki",
         "org.opencontainers.image.url": "https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki",
-        "org.opencontainers.image.version": "6.1.0-1",
+        "org.opencontainers.image.version": IMAGE_VERSION,
     },
     stamp_labels = {
         "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
@@ -152,8 +179,8 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-1",
-        "FUSEKI_VERSION": "6.1.0",
+        "IMAGE_VERSION": IMAGE_VERSION,
+        "FUSEKI_VERSION": FUSEKI_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -182,8 +209,8 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-1",
-        "FUSEKI_VERSION": "6.1.0",
+        "IMAGE_VERSION": IMAGE_VERSION,
+        "FUSEKI_VERSION": FUSEKI_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -222,12 +249,13 @@ alias(
 oci_load(
     name = "load",
     image = ":image",
-    repo_tags = ["daschswiss/apache-jena-fuseki:6.1.0-1"],
+    repo_tags = ["%s:%s" % (IMAGE_REPOSITORY, IMAGE_VERSION)],
 )
 
-# `bazel run //modules/fuseki:push -- -t 6.1.0-1` — push the multi-arch index.
+# `bazel run //modules/fuseki:push -- -t $IMAGE_VERSION` — push the multi-arch
+# index (pass the tag from the IMAGE_VERSION constant at the top of this file).
 oci_push(
     name = "push",
     image = ":index",
-    repository = "index.docker.io/daschswiss/apache-jena-fuseki",
+    repository = "index.docker.io/" + IMAGE_REPOSITORY,
 )
