@@ -59,19 +59,32 @@ final class DspApiServer(
   tracing: Tracing,
 ) {
 
-  // The interceptor chain lives on the companion so a spec can interpret endpoints through exactly the chain
-  // this server runs -- the passthrough's Accept exemption, its audit entries and its Connection handling are
-  // all interceptor behaviour, and testing a re-created chain would test a copy.
+  // Both the interceptor chain and the tracing middleware live on the companion so a spec can run requests through
+  // exactly what this server runs -- the passthrough's Accept exemption, its audit entries, its Connection handling
+  // and the trace/span annotations those entries carry are all behaviour of these two, and testing a re-created
+  // copy would test the copy.
   private val serverOptions: ZioHttpServerOptions[Any] = DspApiServer.serverOptions(ctxStore)
 
   def startup(): UIO[Unit] = for {
     _                         <- ZIO.logInfo("Starting DSP API server...")
     app: Routes[Any, Response] = ZioHttpInterpreter(serverOptions).toHttp(endpoints.serverEndpoints)
-    actualPort                <- Server.install(app @@ otelMiddleWare).provide(ZLayer.succeed(server))
-    _                         <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
+    actualPort                <-
+      Server.install(app @@ DspApiServer.otelMiddleWare(ctxStore, tracing)).provide(ZLayer.succeed(server))
+    _ <- ZIO.logInfo(s"API available at http://${c.externalHost}:$actualPort/version")
   } yield ()
+}
 
-  private def otelMiddleWare: Middleware[Any] = new Middleware[Any] {
+object DspApiServer {
+
+  def startup: RIO[DspApiServer, Unit] = ZIO.serviceWithZIO[DspApiServer](_.startup())
+
+  /**
+   * The server's tracing middleware, as a function rather than a field, for the same reason as [[serverOptions]]: it
+   * opens the SERVER span every request runs inside, and it is what annotates that request's log entries with
+   * `trace_id` and `span_id`. Those annotations are the log-to-trace jump an operator uses, so a spec that wants to
+   * pin them has to run the real middleware rather than assert on a rebuilt one.
+   */
+  private[core] def otelMiddleWare(ctxStore: ContextStorage, tracing: Tracing): Middleware[Any] = new Middleware[Any] {
 
     private val propagator: W3CTraceContextPropagator      = W3CTraceContextPropagator.getInstance()
     private val getter: TextMapGetter[Map[String, String]] = new TextMapGetter[Map[String, String]] {
@@ -80,9 +93,16 @@ final class DspApiServer(
     }
 
     // Map 5xx responses to span status ERROR per OTel HTTP semconv. 2xx/3xx/4xx stay UNSET
-    // (4xx are client errors and must not be surfaced as server-side failures). Typed
-    // failures and defects are handled by zio-telemetry's default and produce ERROR
-    // automatically, with `Cause.prettyPrint` captured as the status description.
+    // (4xx are client errors and must not be surfaced as server-side failures).
+    //
+    // Nearly everything reaches this mapper as a *response*, failures included: ztapir's `zServerLogic` /
+    // `zServerSecurityLogic` wrap the logic in `.either.resurrect`, so even a defect becomes a typed failure
+    // before the interpreter sees it, is answered as a 500 by tapir's exception handler, and is matched here
+    // -- ERROR, with no description. Only what is left in the routes' error channel (an interrupt, a
+    // non-`NonFatal` throwable) reaches zio-telemetry's own default, which writes `Cause.prettyPrint` into
+    // the description; the failure value there is a `zio.http.Response`, so its rendered body lands in it.
+    // Narrow and API-wide rather than specific to any route, but it is the reason this stays a Success
+    // mapper: adding a failure mapping here would change that path's status without removing the leak.
     private val httpStatusMapper: StatusMapper.Success[Response] =
       StatusMapper.Success[Response] {
         case resp if resp.status.code >= 500 => StatusMapper.Result(StatusCode.ERROR)
@@ -126,11 +146,6 @@ final class DspApiServer(
         }
       }
   }
-}
-
-object DspApiServer {
-
-  def startup: RIO[DspApiServer, Unit] = ZIO.serviceWithZIO[DspApiServer](_.startup())
 
   /**
    * The server's interceptor chain, as a value rather than a field, so a spec can interpret a set of endpoints
@@ -235,7 +250,8 @@ object DspApiServer {
      *
      * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
      * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
-     * Bodies above the server's aggregation threshold are streamed, and zio-http leaves such a connection with
+     * Bodies declaring a length above the server's aggregation threshold are streamed, and zio-http leaves such a
+     * connection with
      * `autoRead=false` when the handler answers without consuming it -- the next keep-alive request on that connection
      * is then silently dropped and the client hangs until its own timeout. `Connection: close` takes the connection out
      * of the client's pool instead, which is the same remedy tapir applies to its own over-cap `413`; the header is
@@ -261,13 +277,21 @@ object DspApiServer {
     /**
      * True when this request's body may still be sitting unread in the channel.
      *
-     * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, so zio-http fully reads any body it
-     * can aggregate and streams only larger ones. A declared `Content-Length` at or under that threshold therefore
-     * means the body was already consumed whatever the handler did with it. An absent `Content-Length` -- a chunked
-     * body -- gives no such assurance, so it counts as unread.
+     * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, and zio-http's
+     * `HybridContentLengthHandler` decides from the *declared* `Content-Length` alone: only a value above the
+     * threshold swaps Netty's `HttpObjectAggregator` out for streaming. Everything else keeps the aggregator, which
+     * reads the whole body before any handler runs. An absent `Content-Length` -- a chunked body -- reads there as
+     * `-1`, which is not above the threshold, so it takes the aggregating branch and is fully read as well. (A
+     * chunked body that then exceeds the aggregator's own `maxContentLength` never reaches this API at all: Netty
+     * answers it with a bare `413` below us.)
+     *
+     * A declared `Content-Length` above the threshold is therefore the only case where bytes can still be in the
+     * channel. Counting an absent one as unread instead was wrong in the expensive direction: it closed connections
+     * that were fine, and gave an unauthenticated caller one upstream-connection churn per `POST` sent with
+     * `Transfer-Encoding: chunked` -- an empty body being enough.
      */
     private def bodyPlausiblyUnread(request: ServerRequest): Boolean =
-      request.contentLength.forall(_ > DspApiServer.maxAggregatedRequestBodySize)
+      request.contentLength.exists(_ > DspApiServer.maxAggregatedRequestBodySize)
 
     private def closesConnection(header: Header): Boolean =
       header.name.equalsIgnoreCase(HeaderNames.Connection) && header.value.equalsIgnoreCase("close")
@@ -303,6 +327,11 @@ object DspApiServer {
 
         // The delegate is consulted first and the entry written only if it answered. `None` means this endpoint
         // did not claim the request at all -- see logRejectedPassthroughDecode.
+        //
+        // Uninterruptible from the delegate's answer onwards: the request has been rejected by the time we get here,
+        // so an interrupt landing between the answer and the write would drop the entry for a call that *was*
+        // answered -- the one way this hook could still break "exactly one entry per call". The rest service's own
+        // report is on an `onExit` finalizer, which is uninterruptible for the same reason.
         override def onDecodeFailure(ctx: DecodeFailureContext)(implicit
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
@@ -311,6 +340,7 @@ object DspApiServer {
             case Some(response) =>
               logRejectedPassthroughDecode(ctx)
                 .as(Some(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, response)))
+                .uninterruptible
             case None => ZIO.none
           }
       }
@@ -324,11 +354,12 @@ object DspApiServer {
   // aggregates bodies up to this size so they are always fully read, and streams only larger ones
   // (the project-import zip upload); this was the root cause of the recurring e2e CI timeouts.
   //
-  // Two consequences worth stating, because they are easy to get wrong. Aggregation happens before any
+  // Three consequences worth stating, because they are easy to get wrong. Aggregation happens before any
   // tapir logic runs — before the security logic, let alone body decoding — so a body up to this size is
-  // buffered for *any* caller, authenticated or not. And the passthrough's own `Connection: close`
-  // handling keys off this threshold (see `bodyPlausiblyUnread`): at or under it the body is provably
-  // read, above it or with no Content-Length it may not be.
+  // buffered for *any* caller, authenticated or not. The switch is made on the *declared* Content-Length
+  // alone, so a chunked body is aggregated too — and one that then outgrows this size is answered by Netty
+  // with a bare 413 that never reaches tapir. And the passthrough's own `Connection: close` handling keys
+  // off this threshold (see `bodyPlausiblyUnread`): only a declared length above it can leave a body unread.
   private[core] val maxAggregatedRequestBodySize: Int = 1024 * 1024
 
   private val serverLayer = ZLayer
