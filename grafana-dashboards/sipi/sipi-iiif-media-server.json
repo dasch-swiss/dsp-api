@@ -349,7 +349,7 @@
         "kind": "Panel",
         "spec": {
           "id": 7,
-          "title": "Request Rate by Instance (primary host)",
+          "title": "Request Rate",
           "description": "Scoped to the primary VRE host dasch-vre-$environment-01.",
           "links": [],
           "data": {
@@ -366,7 +366,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(instance) (rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01.*\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01.*\"}[$__rate_interval]))", "instant": false, "legendFormat": "requests", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1204,7 +1204,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(instance) (rate(container_cpu_usage_seconds_total{service=\"DSP_iiif_iiif\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(container_cpu_usage_seconds_total{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "cpu", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1245,7 +1245,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(instance) (container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\"})", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "memory", "queryType": "range", "range": true }
                     }
                   }
                 }
