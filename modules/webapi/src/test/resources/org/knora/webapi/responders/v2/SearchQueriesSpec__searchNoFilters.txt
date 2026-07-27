@@ -20,9 +20,7 @@ CONSTRUCT {
         WHERE {
             ?resource <http://jena.apache.org/text#query> (rdfs:label "Anton*" 1000000) ;
                 rdfs:label ?label .
-            ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
-?resource a ?resourceClass .
-?resourceClass <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/0001/anything#Thing> .
+            
             FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
         }
         ORDER BY ?resource
