@@ -354,12 +354,17 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build images locally
-        # Build both knora-api and knora-sipi so docker compose picks up the
+        # Build knora-api, knora-sipi and fuseki so docker compose picks up the
         # PR's images. The registry's :latest for knora-sipi lags by a merge,
         # which matters across major Sipi base-image bumps (e.g. v4 -> v5
         # changed CLI surface and the compose `command:`).
+        #
+        # Fuseki is pinned by an exact tag rather than :latest, and that tag is only
+        # published on merge -- so a PR that bumps it has no pullable image and compose
+        # cannot start `db` unless we load the PR's own build here first.
         run: |
           nix develop --command just docker-build-dsp-api-image ${{ steps.rbe.outputs.flags }}
           nix develop --command just docker-build-sipi-image ${{ steps.rbe.outputs.flags }}
+          nix develop --command just docker-build-fuseki-image ${{ steps.rbe.outputs.flags }}
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api
