@@ -65,7 +65,21 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run all unit tests
-        run: nix develop --command just test-unit ${{ steps.rbe.outputs.flags }}
+        run: nix develop --command just test-unit ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-unit.json
+      # Attach the Build Event Protocol JSON so the remote/action cache hit
+      # rate on the NativeLink RBE backend can be analyzed offline. Bazel
+      # emits one BuildMetrics event per invocation whose
+      # actionSummary.runnerCount[] breaks actions down by runner type
+      # (total / remote cache hit / remote / local / internal). `always()`
+      # so a failed build's breakdown (often the most interesting) is still
+      # captured.
+      - name: Upload build event JSON (cache-hit-rate analysis)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bep-unit
+          path: bep-unit.json
+          retention-days: 30
       - name: Collect Bazel test XML
         if: success() || failure()
         run: |
@@ -118,7 +132,17 @@ jobs:
         # `just test-it` loads the PR's sipi/ingest/fuseki images (via its
         # docker-load-test-images prerequisite) before running the Bazel tests,
         # so the PR's own images are exercised, not the registry's lagging :latest.
-        run: nix develop --command just test-it ${{ steps.rbe.outputs.flags }}
+        run: nix develop --command just test-it ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-it.json
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
+      # The `:load` prerequisites overwrite this file in turn, so it ends up
+      # holding the `bazel test` invocation's metrics — the one that matters.
+      - name: Upload build event JSON (cache-hit-rate analysis)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bep-it
+          path: bep-it.json
+          retention-days: 30
       - name: Collect Bazel test XML
         if: success() || failure()
         run: |
@@ -167,7 +191,17 @@ jobs:
       - name: Run end-to-end tests
         # `just test-e2e` loads the PR's sipi/ingest/fuseki images (via its
         # docker-load-test-images prerequisite) before running the Bazel tests.
-        run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }}
+        run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-e2e.json
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
+      # The `:load` prerequisites overwrite this file in turn, so it ends up
+      # holding the `bazel test` invocation's metrics — the one that matters.
+      - name: Upload build event JSON (cache-hit-rate analysis)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bep-e2e
+          path: bep-e2e.json
+          retention-days: 30
       - name: Collect Bazel test XML
         if: success() || failure()
         run: |
@@ -216,7 +250,17 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run integration tests
-        run: nix develop --command just test-ingest-integration ${{ steps.rbe.outputs.flags }}
+        run: nix develop --command just test-ingest-integration ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-ingest-integration.json
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
+      # The `:load` prerequisites overwrite this file in turn, so it ends up
+      # holding the `bazel test` invocation's metrics — the one that matters.
+      - name: Upload build event JSON (cache-hit-rate analysis)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bep-ingest-integration
+          path: bep-ingest-integration.json
+          retention-days: 30
       - name: Collect Bazel test XML
         if: success() || failure()
         run: |
