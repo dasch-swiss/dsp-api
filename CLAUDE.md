@@ -194,6 +194,17 @@ instead of grep. It is much faster (incremental, no JVM/sbt startup per call) an
 diagnostics, type-aware navigation). For setup, the full tool list, usage pattern, and the worktree/LOOM
 caveats see `docs/development/dsp-api-metals-mcp.md`.
 
+**In a fresh checkout or worktree, metals needs a one-time bootstrap (~15s) or it will not work at all:**
+
+1. Run `just metals-bootstrap` (generates `.bloop/`; without it Metals cannot pick between `build.sbt` and
+   `MODULE.bazel` and never connects to a build server).
+2. Call the metals `import-build` tool once — a server that started before `.bloop/` existed does not
+   reconnect on its own.
+
+**If metals returns empty results, that means it is not connected — it does not mean it is still warming up.**
+Read `.metals/metals.log`, then bootstrap. Do not quietly fall back to `sbt compile`; if metals is genuinely
+unavailable, say so and why.
+
 ## API Structure
 
 ### Endpoint Definition
