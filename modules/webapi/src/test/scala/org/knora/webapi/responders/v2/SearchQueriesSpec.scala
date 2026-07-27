@@ -26,9 +26,19 @@ class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
   private val resourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
 
-  // The golden outputs must contain an explicit hit limit in the text:query list — without one, Jena
-  // caps the Lucene lookup at 10'000 hits and silently drops matches before the project/class filters
-  // apply, making resources unfindable (DEV-6822).
+  // Invariants these goldens exist to protect. All were once broken silently, because a golden pins the query
+  // text and cannot tell a correct query from a plausible one — check them by eye when regenerating:
+  //
+  //  - The text:query list must carry an explicit hit limit. Without one Jena caps the Lucene lookup at 10'000
+  //    hits and silently drops matches before the project/class filters apply (DEV-6822).
+  //  - The class restriction must use rdfs:subClassOf* — never subClassOf?. The subclass closure is not
+  //    materialised and there is no query-time inference, so zero-or-one silently excluded every class more than
+  //    one hop below the target, returning no results at all for deeper hierarchies (DEV-6833).
+  //  - Standoff must be excluded by predicate (?valueObjectProperty != knora-base:valueHasStandoff), not by the
+  //    object's type. `?valueObjectValue a knora-base:StandoffTag` matches nothing: standoff nodes carry concrete
+  //    subclass types and nothing infers the base class (DEV-6833).
+  //  - The count query asserts resource-ness via knora-base:creationDate rather than a subClassOf* walk to
+  //    knora-base:Resource; see the note on selectCountByLabel and DEV-6850.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchQueriesSpec")(
     test("selectCountByLabel should produce the correct query with project and resource class filters") {
       val query = SearchQueries.selectCountByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri))
@@ -42,6 +52,10 @@ class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
       val query =
         SearchQueries.constructSearchByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri), 25, 0)
       assertGolden(query.sparql, "searchWithProjectAndClass")
+    },
+    test("constructSearchByLabel should produce the correct query without filters") {
+      val query = SearchQueries.constructSearchByLabel(luceneQuery, None, None, 25, 0)
+      assertGolden(query.sparql, "searchNoFilters")
     },
   )
 }

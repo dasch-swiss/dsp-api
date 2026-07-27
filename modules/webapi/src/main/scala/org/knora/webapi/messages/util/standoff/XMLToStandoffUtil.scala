@@ -6,11 +6,13 @@
 package org.knora.webapi.messages.util.standoff
 
 import org.apache.commons.text.StringEscapeUtils
+import org.xml.sax.InputSource
 
 import java.io.StringReader
 import java.io.StringWriter
 import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.sax.SAXSource
 import javax.xml.transform.stream.StreamSource
 import scala.util.control.NonFatal
 import scala.xml.*
@@ -359,7 +361,12 @@ class XMLToStandoffUtil(
       val exp    = comp.compile(new StreamSource(new StringReader(XSLT)))
       val source =
         try {
-          proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
+          // Parse the untrusted input through the hardened SAX parser (external general entities disabled,
+          // DOCTYPE disallowed) instead of Saxon's default DocumentBuilder, which would otherwise resolve
+          // external entities / DTDs (XXE, SSRF, billion-laughs). The hardened parser runs before Saxon
+          // builds the tree, so no entity is ever resolved.
+          val hardenedReader = saxParserFactory.newSAXParser().getXMLReader()
+          proc.newDocumentBuilder().build(new SAXSource(hardenedReader, new InputSource(new StringReader(xmlStr))))
         } catch {
           case e: Exception =>
             throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
