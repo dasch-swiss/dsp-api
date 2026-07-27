@@ -13,17 +13,19 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 final class StandoffServerEndpoints(endpoints: StandoffEndpoints, restService: StandoffRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMapping.serverLogic(restService.createMapping),
+    endpoints.postCanonicalize.serverLogic(restService.canonicalize),
   )
 }
 object StandoffServerEndpoints {
 
   type Dependencies =
     AuthorizationRestService & BaseEndpoints & KnoraResponseRenderer & ApiComplexV2JsonLdRequestParser &
-      StandoffResponderV2
+      StandoffResponderV2 & StandoffMappingService
 
   type Provided = StandoffServerEndpoints
 
