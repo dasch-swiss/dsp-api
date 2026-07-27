@@ -1289,7 +1289,7 @@
         "spec": {
           "id": 41,
           "title": "Decode Memory Estimate (p95)",
-          "description": "sipi_decode_memory_estimate_bytes. Histogram buckets are skipped when the estimate is 0, so this stays empty until non-zero decode estimates are recorded.",
+          "description": "p95 of the per-request estimated decode memory (sipi_decode_memory_estimate_bytes). Feeds the decode-memory budget admission control that rate-limits heavy requests.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1649,7 +1649,8 @@
                   "items": [
                     { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-28" } } },
                     { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-29" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-33" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-33" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-41" } } }
                   ]
                 }
               }
@@ -1696,12 +1697,11 @@
                 "spec": {
                   "items": [
                     { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 3, "element": { "kind": "ElementReference", "name": "panel-40" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-41" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-42" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-43" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-44" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-45" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-46" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-42" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-43" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-44" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-45" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-46" } } }
                   ]
                 }
               }
