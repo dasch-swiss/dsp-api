@@ -1,17 +1,18 @@
 # Grafana Dashboards (Git Sync)
 
-Selected Grafana dashboards for the DaSCH Ops Platform, kept under version control and synced into Grafana Cloud via **Git Sync** (native provisioning).
+Selected Grafana dashboards for DSP, kept under version control in `dsp-api` and synced into
+Grafana Cloud via **Git Sync** (native provisioning).
 
 ## How it's wired
 
 - **Source of truth:** this folder. Grafana Cloud pulls from it.
 - **Mode:** **read-only** — dashboards synced from here are locked in the Grafana UI. Change them by editing the JSON here and pushing to `main`, not in Grafana.
-- **Placement:** **folderless** — each subdirectory below becomes a **top-level folder** in Grafana (no wrapper folder). `claude/` → the "Claude Dashboards" folder.
+- **Placement:** **folderless** — each subdirectory below becomes a **top-level folder** in Grafana (no wrapper folder). `sipi/` → the "SIPI" folder.
 - **Scope:** only files under this path (`grafana-dashboards/`) are synced; the rest of the monorepo is ignored.
 
 ## Layout convention
 
-```
+```text
 grafana-dashboards/
 └── <category>/
     ├── _folder.json      # sets the Grafana folder's display name
@@ -28,6 +29,11 @@ grafana-dashboards/
   "spec": { "title": "<Display Name>" }
 }
 ```
+
+Dashboards use the **v2 dashboard schema** (`dashboard.grafana.app/v2`): panels live under
+`spec.elements` (keyed by name), are arranged by `spec.layout`, and template variables under
+`spec.variables`. `metadata.name` is the dashboard **UID** and must stay stable. Datasources
+are referenced by **UID** in `datasource.name` (e.g. `grafanacloud-prom`).
 
 ### Adding a category
 
@@ -63,10 +69,10 @@ secure:
 apiVersion: provisioning.grafana.app/v0alpha1
 kind: Repository
 metadata:
-  name: dasch-ops-dashboards
+  name: dsp-api-dashboards
   namespace: stacks-726087
 spec:
-  title: DaSCH Ops Dashboards
+  title: DSP-API Dashboards
   type: github
   # No `workflows` → read-only (Grafana UI cannot write back to Git).
   sync:
@@ -74,7 +80,7 @@ spec:
     target: folderless
     intervalSeconds: 60
   github:
-    url: https://github.com/dasch-swiss/dasch-ops-platform
+    url: https://github.com/dasch-swiss/dsp-api
     branch: main
     path: grafana-dashboards
   connection:

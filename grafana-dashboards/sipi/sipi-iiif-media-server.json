@@ -1,0 +1,1684 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "sipi-iiif-media-server"
+  },
+  "spec": {
+    "annotations": [],
+    "cursorSync": "Off",
+    "description": "SIPI IIIF media server: latency, throughput, caching, decode-memory and pool saturation, rate limiting, errors, and the dsp-api /admin/files permission route SIPI calls on every request. Switchable across environments.",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "SIPI Overview",
+          "description": "",
+          "links": [],
+          "data": { "kind": "QueryGroup", "spec": { "queries": [], "queryOptions": {}, "transformations": [] } },
+          "vizConfig": {
+            "kind": "",
+            "group": "text",
+            "version": "",
+            "spec": {
+              "options": {
+                "mode": "markdown",
+                "content": "IIIF / media-server health for the **$environment** environment. Leading indicators of degraded image serving: **p95/p99 latency**, **cache hit ratio**, and **pool load-shedding**. Every IIIF request also triggers a permission check against dsp-api at `/admin/files/{projectShortcode}/{filename}` — see the **dsp-api auth route** row."
+              },
+              "fieldConfig": { "defaults": {}, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-13": {
+        "kind": "Panel",
+        "spec": {
+          "id": 13,
+          "title": "Environment",
+          "description": "Canonical VRE host for the selected environment.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "label_replace(label_replace(label_replace(count by(environment) (sipi_build_info{environment=~\"$environment\"}), \"environment\", \"dasch-vre-dev-01\", \"environment\", \"dev\"), \"environment\", \"dasch-vre-stage-01\", \"environment\", \"stage\"), \"environment\", \"dasch-vre-prod-01\", \"environment\", \"prod\")",
+                        "instant": true,
+                        "legendFormat": "{{environment}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "name",
+                "reduceOptions": { "calcs": ["lastNotNull"] }
+              },
+              "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-14": {
+        "kind": "Panel",
+        "spec": {
+          "id": 14,
+          "title": "SIPI Version",
+          "description": "Running SIPI build (from sipi_build_info).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "count by(version) (sipi_build_info{environment=~\"$environment\"})",
+                        "instant": true,
+                        "legendFormat": "{{version}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "name",
+                "reduceOptions": { "calcs": ["lastNotNull"] }
+              },
+              "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Request Rate",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(sipi_request_duration_seconds_count{environment=~\"$environment\"}[$__rate_interval]))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "P95 Latency",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "s",
+                  "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 3 } ] }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Cache Hit Ratio",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(sipi_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{environment=~\"$environment\"}[$__rate_interval])))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percentunit",
+                  "min": 0,
+                  "max": 1,
+                  "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.7 }, { "color": "green", "value": 0.9 } ] }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Rejected Connections",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(sipi_rejected_connections_total{environment=~\"$environment\"}[$__rate_interval]))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "reqps",
+                  "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.1 } ] }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Latency Percentiles (p50/p95/p99)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" }, "tooltip": { "mode": "multi" } },
+              "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Request Rate by Instance (Top 10)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "topk(10, sum by(instance) (rate(sipi_request_duration_seconds_count{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-16": {
+        "kind": "Panel",
+        "spec": {
+          "id": 16,
+          "title": "Auth route request rate by status (/admin/files)",
+          "description": "dsp-api permission check SIPI calls on every IIIF request. 4xx = auth denials, 5xx = errors.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(status) (rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{status}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-17": {
+        "kind": "Panel",
+        "spec": {
+          "id": 17,
+          "title": "Auth route avg latency (/admin/files)",
+          "description": "Average latency of the dsp-api permission check (rate of sum / rate of count). No histogram buckets are exported for this route, so percentiles are unavailable.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "avg latency", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "Cache Usage vs Limit",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_cache_size_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-20": {
+        "kind": "Panel",
+        "spec": {
+          "id": 20,
+          "title": "Cache Files vs Limit",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_cache_files{environment=~\"$environment\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_cache_files_limit{environment=~\"$environment\"})", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-21": {
+        "kind": "Panel",
+        "spec": {
+          "id": 21,
+          "title": "Cache Evictions & Skips (rate)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-22": {
+        "kind": "Panel",
+        "spec": {
+          "id": 22,
+          "title": "Preflight Cache Hit Ratio",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "id": 9,
+          "title": "Decode Memory Used vs Budget",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-23": {
+        "kind": "Panel",
+        "spec": {
+          "id": 23,
+          "title": "Decode Memory Admission (rate)",
+          "description": "Admission-control decisions on the decode-memory budget.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-24": {
+        "kind": "Panel",
+        "spec": {
+          "id": 24,
+          "title": "Decode Memory Estimate (p95)",
+          "description": "p95 of per-request estimated decode memory.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-25": {
+        "kind": "Panel",
+        "spec": {
+          "id": 25,
+          "title": "Worker Pool Permits (in use vs total)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_pool_permits_in_use{environment=~\"$environment\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_pool_permits_total{environment=~\"$environment\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-26": {
+        "kind": "Panel",
+        "spec": {
+          "id": 26,
+          "title": "Waiting (pool & connections)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_pool_waiting{environment=~\"$environment\"})", "instant": false, "legendFormat": "pool waiting", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_waiting_connections{environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-27": {
+        "kind": "Panel",
+        "spec": {
+          "id": 27,
+          "title": "Pool Load-Shed & Queue Timeout (rate)",
+          "description": "Overload signals: requests shed or timed out waiting for a worker.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "Rate Limit Decisions",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-28": {
+        "kind": "Panel",
+        "spec": {
+          "id": 28,
+          "title": "Rate Limit: Allowed vs Rejected (rate)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-29": {
+        "kind": "Panel",
+        "spec": {
+          "id": 29,
+          "title": "Rate Limit: Near-Limit & Shadow-Rejected (rate)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-30": {
+        "kind": "Panel",
+        "spec": {
+          "id": 30,
+          "title": "Errors & Integrity (rate)",
+          "description": "Image-too-large rejections, essentials hash mismatches, memory allocation failures, and client disconnects.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "id": 11,
+          "title": "SIPI Container CPU Usage",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(instance) (rate(container_cpu_usage_seconds_total{service=~\"DSP_iiif.*\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-12": {
+        "kind": "Panel",
+        "spec": {
+          "id": 12,
+          "title": "SIPI Container Memory Usage",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(instance) (container_memory_usage_bytes{service=~\"DSP_iiif.*\",environment=~\"$environment\"})", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-31": {
+        "kind": "Panel",
+        "spec": {
+          "id": 31,
+          "title": "Host CPU Utilisation",
+          "description": "Node-level CPU for the hosts running SIPI in the selected environment. Node metrics carry no environment label, so hosts are selected by joining on sipi_build_info.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "(1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))) and on(instance) (max by(instance) (sipi_build_info{environment=~\"$environment\"}))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-32": {
+        "kind": "Panel",
+        "spec": {
+          "id": 32,
+          "title": "Host Memory Available",
+          "description": "Node-level available memory as % of total, for the hosts running SIPI in the selected environment (joined on sipi_build_info).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "(100 * node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) and on(instance) (max by(instance) (sipi_build_info{environment=~\"$environment\"}))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "min"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "RowsLayout",
+      "spec": {
+        "rows": [
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Overview & SLIs",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 4, "element": { "kind": "ElementReference", "name": "panel-1" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-13" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 4, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-14" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-2" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-3" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-4" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 20, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-5" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Latency & Throughput",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-6" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-7" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "dsp-api Auth Route (/admin/files)",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-16" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-17" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Cache",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-8" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-20" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-21" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-22" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Decode Memory",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-9" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-23" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-24" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Pool Saturation",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-25" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-26" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-27" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Rate Limiting",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-10" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-28" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-29" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Errors & Integrity",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 8, "element": { "kind": "ElementReference", "name": "panel-30" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Resources",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-11" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-12" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-31" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 8, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-32" } } }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "preload": false,
+    "tags": ["sipi", "iiif"],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-6h",
+      "to": "now",
+      "autoRefresh": "1m",
+      "autoRefreshIntervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "SIPI IIIF Media Server",
+    "variables": [
+      {
+        "kind": "CustomVariable",
+        "spec": {
+          "name": "environment",
+          "label": "Environment",
+          "description": "",
+          "query": "dev,stage,prod",
+          "current": { "text": "dev", "value": "dev" },
+          "options": [
+            { "text": "dev", "value": "dev", "selected": true },
+            { "text": "stage", "value": "stage", "selected": false },
+            { "text": "prod", "value": "prod", "selected": false }
+          ],
+          "multi": false,
+          "includeAll": false,
+          "allowCustomValue": false,
+          "hide": "dontHide",
+          "skipUrlSync": false
+        }
+      }
+    ]
+  }
+}

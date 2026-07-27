@@ -2,9 +2,9 @@
   "apiVersion": "folder.grafana.app/v1",
   "kind": "Folder",
   "metadata": {
-    "name": "claude-dashboards"
+    "name": "sipi-dashboards"
   },
   "spec": {
-    "title": "Claude Dashboards"
+    "title": "SIPI"
   }
 }
