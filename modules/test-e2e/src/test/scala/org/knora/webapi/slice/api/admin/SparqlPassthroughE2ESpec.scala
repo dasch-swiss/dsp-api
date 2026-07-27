@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api.admin
 import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.HeaderNames
+import sttp.model.MediaType
 import sttp.model.StatusCode
 import zio.Task
 import zio.ZIO
@@ -193,7 +194,7 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
         // Neither request-body variant can claim text/plain, so the framework rejects it before the endpoint runs.
         // The same happens for a request carrying no Content-Type at all.
         TestApiClient
-          .postBodyAs(endpoint, selectQuery, "text/plain", rootUser)
+          .postString(endpoint, selectQuery, MediaType.TextPlain, rootUser)
           .map(response => assertTrue(response.code == StatusCode.UnsupportedMediaType))
       },
       test("rejects the statement in the query string with 400, rather than leaking it into logs unnoticed") {

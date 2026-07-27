@@ -318,21 +318,20 @@ final case class TestApiClient(
   ): Task[Response[Either[String, String]]] =
     jwtFor(user).flatMap(jwt => postSparql(relativeUri, sparqlQuery, f.andThen(_.auth.bearer(jwt))))
 
-  /**
-   * Posts a raw body under an explicitly chosen `Content-Type`, without the caller-supplied update function being
-   * overridden afterwards. Needed to exercise how an endpoint reacts to a media type it does not accept.
-   */
-  def postBodyAs(
+  def postString(
     relativeUri: Uri,
     body: String,
-    contentType: String,
+    contentType: MediaType,
+  ): Task[Response[Either[String, String]]] =
+    sendRequest(basicRequest.post(relativeUri).body(body).contentType(contentType).response(asString))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
     user: User,
   ): Task[Response[Either[String, String]]] =
-    jwtFor(user).flatMap { jwt =>
-      sendRequest(
-        basicRequest.post(relativeUri).body(body).contentType(contentType).auth.bearer(jwt).response(asString),
-      )
-    }
+    sendRequest(basicRequest.post(relativeUri).body(body).contentType(contentType).response(asString), Some(user))
 
   /**
    * Posts `application/x-www-form-urlencoded` fields, the request form off-the-shelf SPARQL clients default to.
@@ -343,9 +342,7 @@ final case class TestApiClient(
     fields: Seq[(String, String)],
     user: User,
   ): Task[Response[Either[String, String]]] =
-    jwtFor(user).flatMap { jwt =>
-      sendRequest(basicRequest.post(relativeUri).body(fields*).auth.bearer(jwt).response(asString))
-    }
+    sendRequest(basicRequest.post(relativeUri).body(fields*).response(asString), Some(user))
 }
 
 object TestApiClient {
@@ -364,6 +361,21 @@ object TestApiClient {
     f: Request[Either[String, String]] => Request[Either[String, String]] = identity,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.getAsString(relativeUri, f))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postString(relativeUri, body, contentType))
+
+  def postString(
+    relativeUri: Uri,
+    body: String,
+    contentType: MediaType,
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postString(relativeUri, body, contentType, user))
 
   def deleteJson[A: JsonDecoder](
     relativeUri: Uri,
@@ -578,14 +590,6 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postForm(relativeUri, fields, user))
-
-  def postBodyAs(
-    relativeUri: Uri,
-    body: String,
-    contentType: String,
-    user: User,
-  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
-    ZIO.serviceWithZIO[TestApiClient](_.postBodyAs(relativeUri, body, contentType, user))
 
   val layer = ZLayer.derive[TestApiClient]
 }

@@ -57,6 +57,38 @@ sync-bazel-maven-versions:
     python3 tools/deps/check_maven_versions.py --fix MODULE.bazel project/Dependencies.scala
     bazel run @unpinned_maven//:pin
 
+## Scala language intelligence (Metals MCP)
+
+# dsp-api has both build.sbt and MODULE.bazel, so Metals finds two build definitions, cannot decide which to
+# import from, and has no way to ask over MCP stdio: it never connects and every metals tool returns empty.
+# Generating .bloop/ sidesteps the question, because Metals then connects to the Bloop build server directly.
+# `clean-metals` removes .bloop again, so re-run this afterwards.
+# See docs/development/dsp-api-metals-mcp.md.
+
+# Bootstrap Metals/Bloop so the `metals` MCP server can connect (run once per fresh checkout or worktree)
+metals-bootstrap:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Metals normally generates this itself right before running bloopInstall, but it never gets that far
+    # here. Gitignored via `**/metals.sbt`. Keep sbt-bloop in step with the Metals release in use.
+    if [ ! -f project/metals.sbt ]; then
+      printf '%s\n' \
+        '// format: off' \
+        '// DO NOT EDIT! This file is auto-generated.' \
+        '' \
+        '// This file enables sbt-bloop to create bloop config files.' \
+        '' \
+        'addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "2.0.18")' \
+        '' \
+        '// format: on' \
+        > project/metals.sbt
+      echo "wrote project/metals.sbt"
+    fi
+    ./sbtx -Dbloop.export-jar-classifiers=sources bloopInstall
+    echo
+    echo "Generated $(ls .bloop/*.json | wc -l | tr -d ' ') Bloop targets."
+    echo "If a metals MCP session is already running, call its 'import-build' tool once to reconnect."
+
 ## Docker image build / publish
 
 # Print the docker image tag (git describe via workspace_status.sh; no sbt)
