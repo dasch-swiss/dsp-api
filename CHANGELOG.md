@@ -1,5 +1,17 @@
 # Changelog
 
+## [37.4.0](https://github.com/dasch-swiss/dsp-api/compare/v37.3.0...v37.4.0) (2026-07-27)
+
+
+### Enhancements
+
+* add experimental /v2/standoff/canonicalize endpoint for rich-text change detection ([#4215](https://github.com/dasch-swiss/dsp-api/issues/4215)) ([6cb36e3](https://github.com/dasch-swiss/dsp-api/commit/6cb36e3329aa98d3d3f79947324f61c8734f6b27))
+
+
+### Bug Fixes
+
+* correct search-by-label class restriction, standoff filter and count query (DEV-6833) ([#4216](https://github.com/dasch-swiss/dsp-api/issues/4216)) ([9501462](https://github.com/dasch-swiss/dsp-api/commit/9501462eef99a01973761e787732d12f920870ab))
+
 ## [37.3.0](https://github.com/dasch-swiss/dsp-api/compare/v37.2.0...v37.3.0) (2026-07-27)
 
 
