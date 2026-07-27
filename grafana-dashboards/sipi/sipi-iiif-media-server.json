@@ -7,37 +7,15 @@
   "spec": {
     "annotations": [],
     "cursorSync": "Off",
-    "description": "SIPI IIIF media server: latency, throughput, caching, decode-memory and pool saturation, rate limiting, errors, and the dsp-api /admin/files permission route SIPI calls on every request. Switchable across environments.",
+    "description": "SIPI IIIF media server, driven by SIPI's OpenTelemetry (OTLP) metrics (service_name=sipi). Latency, throughput, caching, decode-memory and pool saturation, rate limiting, errors, plus the dsp-api /admin/files permission route SIPI calls on every request. The legacy Prometheus scrape (service DSP_iiif_iiif) is intentionally excluded.",
     "editable": true,
     "elements": {
-      "panel-1": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1,
-          "title": "SIPI Overview",
-          "description": "",
-          "links": [],
-          "data": { "kind": "QueryGroup", "spec": { "queries": [], "queryOptions": {}, "transformations": [] } },
-          "vizConfig": {
-            "kind": "",
-            "group": "text",
-            "version": "",
-            "spec": {
-              "options": {
-                "mode": "markdown",
-                "content": "IIIF / media-server health for the **$environment** environment. Leading indicators of degraded image serving: **p95/p99 latency**, **cache hit ratio**, and **pool load-shedding**. Every IIIF request also triggers a permission check against dsp-api at `/admin/files/{projectShortcode}/{filename}` — see the **dsp-api auth route** row."
-              },
-              "fieldConfig": { "defaults": {}, "overrides": [] }
-            }
-          }
-        }
-      },
       "panel-13": {
         "kind": "Panel",
         "spec": {
           "id": 13,
           "title": "Environment",
-          "description": "Canonical VRE host for the selected environment.",
+          "description": "OTLP deployment.environment.name for the selected environment.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -53,13 +31,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "label_replace(label_replace(label_replace(count by(environment) (sipi_build_info{environment=~\"$environment\"}), \"environment\", \"dasch-vre-dev-01\", \"environment\", \"dev\"), \"environment\", \"dasch-vre-stage-01\", \"environment\", \"stage\"), \"environment\", \"dasch-vre-prod-01\", \"environment\", \"prod\")",
-                        "instant": true,
-                        "legendFormat": "{{environment}}",
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\".*$environment.*\"}))", "instant": true, "legendFormat": "{{deployment_environment_name}}", "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -73,13 +45,7 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": {
-                "colorMode": "background",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "textMode": "name",
-                "reduceOptions": { "calcs": ["lastNotNull"] }
-              },
+              "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } },
               "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] }
             }
           }
@@ -90,7 +56,7 @@
         "spec": {
           "id": 14,
           "title": "SIPI Version",
-          "description": "Running SIPI build (from sipi_build_info).",
+          "description": "service.version from the OTLP resource (attached to all spans and metrics), most recently reported.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -106,13 +72,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "count by(version) (sipi_build_info{environment=~\"$environment\"})",
-                        "instant": true,
-                        "legendFormat": "{{version}}",
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\".*$environment.*\"}))", "instant": true, "legendFormat": "{{service_version}}", "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -126,13 +86,7 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "textMode": "name",
-                "reduceOptions": { "calcs": ["lastNotNull"] }
-              },
+              "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } },
               "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] }
             }
           }
@@ -159,12 +113,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "sum(rate(sipi_request_duration_seconds_count{environment=~\"$environment\"}[$__rate_interval]))",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -205,12 +154,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -257,12 +201,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "sum(rate(sipi_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{environment=~\"$environment\"}[$__rate_interval])))",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "sum(rate(sipi_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -294,8 +233,8 @@
         "kind": "Panel",
         "spec": {
           "id": 5,
-          "title": "Rejected Connections",
-          "description": "",
+          "title": "5xx Rate",
+          "description": "Server-error responses per second (HTTP 5xx).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -311,12 +250,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": {
-                        "expr": "sum(rate(sipi_rejected_connections_total{environment=~\"$environment\"}[$__rate_interval]))",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
-                      }
+                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",http_response_status_code=~\"5..\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -363,7 +297,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -377,7 +311,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -391,7 +325,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(sipi_request_duration_seconds_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -415,8 +349,8 @@
         "kind": "Panel",
         "spec": {
           "id": 7,
-          "title": "Request Rate by Instance (Top 10)",
-          "description": "",
+          "title": "Request Rate by Instance (primary host)",
+          "description": "Scoped to the primary VRE host dasch-vre-$environment-01.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -432,7 +366,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "topk(10, sum by(instance) (rate(sipi_request_duration_seconds_count{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(instance) (rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01.*\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -555,7 +489,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_size_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -569,7 +503,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{service_name=\"sipi\",environment=~\"$environment\"} > 0)", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -610,7 +544,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files{environment=~\"$environment\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_files{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -624,7 +558,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files_limit{environment=~\"$environment\"})", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_files_limit{service_name=\"sipi\",environment=~\"$environment\"} > 0)", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -665,7 +599,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -679,7 +613,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -720,7 +654,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -761,7 +695,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -775,7 +709,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{environment=~\"$environment\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -816,7 +750,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -830,7 +764,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -844,7 +778,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -858,7 +792,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -874,47 +808,6 @@
             "spec": {
               "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
               "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-24": {
-        "kind": "Panel",
-        "spec": {
-          "id": 24,
-          "title": "Decode Memory Estimate (p95)",
-          "description": "p95 of per-request estimated decode memory.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
             }
           }
         }
@@ -940,7 +833,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_in_use{environment=~\"$environment\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_permits_in_use{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -954,7 +847,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_total{environment=~\"$environment\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_permits_total{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -978,8 +871,8 @@
         "kind": "Panel",
         "spec": {
           "id": 26,
-          "title": "Waiting (pool & connections)",
-          "description": "",
+          "title": "Worker Pool Waiting",
+          "description": "Requests queued waiting for a worker permit.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -995,21 +888,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_waiting{environment=~\"$environment\"})", "instant": false, "legendFormat": "pool waiting", "queryType": "range", "range": true }
-                    }
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "B",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(sipi_waiting_connections{environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_waiting{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1050,7 +929,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1064,7 +943,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1080,47 +959,6 @@
             "spec": {
               "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
               "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-10": {
-        "kind": "Panel",
-        "spec": {
-          "id": 10,
-          "title": "Rate Limit Decisions",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
             }
           }
         }
@@ -1146,7 +984,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1160,7 +998,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1201,7 +1039,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1215,7 +1053,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1235,12 +1073,12 @@
           }
         }
       },
-      "panel-30": {
+      "panel-33": {
         "kind": "Panel",
         "spec": {
-          "id": 30,
-          "title": "Errors & Integrity (rate)",
-          "description": "Image-too-large rejections, essentials hash mismatches, memory allocation failures, and client disconnects.",
+          "id": 33,
+          "title": "Rate Limit: Clients Tracked",
+          "description": "Active client entries in the rate limiter.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1256,7 +1094,48 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_rate_limit_clients_tracked{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "clients tracked", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-30": {
+        "kind": "Panel",
+        "spec": {
+          "id": 30,
+          "title": "Errors (rate)",
+          "description": "Image-too-large rejections, memory allocation failures, and client disconnects. (essentials hash mismatch and rejected connections are not exported over OTLP.)",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1270,7 +1149,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1284,21 +1163,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
-                    }
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "D",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1323,7 +1188,7 @@
         "spec": {
           "id": 11,
           "title": "SIPI Container CPU Usage",
-          "description": "",
+          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1339,7 +1204,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(instance) (rate(container_cpu_usage_seconds_total{service=~\"DSP_iiif.*\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(instance) (rate(container_cpu_usage_seconds_total{service=\"DSP_iiif_iiif\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1364,7 +1229,7 @@
         "spec": {
           "id": 12,
           "title": "SIPI Container Memory Usage",
-          "description": "",
+          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1380,7 +1245,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(instance) (container_memory_usage_bytes{service=~\"DSP_iiif.*\",environment=~\"$environment\"})", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(instance) (container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\"})", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1400,12 +1265,31 @@
           }
         }
       },
-      "panel-31": {
+      "panel-40": {
         "kind": "Panel",
         "spec": {
-          "id": 31,
-          "title": "Host CPU Utilisation",
-          "description": "Node-level CPU for the hosts running SIPI in the selected environment. Node metrics carry no environment label, so hosts are selected by joining on sipi_build_info.",
+          "id": 40,
+          "title": "Empty on OTLP — investigate",
+          "description": "",
+          "links": [],
+          "data": { "kind": "QueryGroup", "spec": { "queries": [], "queryOptions": {}, "transformations": [] } },
+          "vizConfig": {
+            "kind": "",
+            "group": "text",
+            "version": "",
+            "spec": {
+              "options": { "mode": "markdown", "content": "The panels below query SIPI instruments that currently return **no series over OTLP** (`service_name=\"sipi\"`). Either the instrument is not bridged from the C++ engine to the Rust OTLP path, or it only emits under specific conditions (e.g. non-zero decode estimates). Use this row to spot gaps and decide what still needs to be bridged. If a panel here starts showing data, move it into the relevant section above." },
+              "fieldConfig": { "defaults": {}, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-41": {
+        "kind": "Panel",
+        "spec": {
+          "id": 41,
+          "title": "Decode Memory Estimate (p95)",
+          "description": "sipi_decode_memory_estimate_bytes. Histogram buckets are skipped when the estimate is 0, so this stays empty until non-zero decode estimates are recorded.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1421,7 +1305,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "(1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))) and on(instance) (max by(instance) (sipi_build_info{environment=~\"$environment\"}))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1436,17 +1320,17 @@
             "version": "",
             "spec": {
               "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
             }
           }
         }
       },
-      "panel-32": {
+      "panel-42": {
         "kind": "Panel",
         "spec": {
-          "id": 32,
-          "title": "Host Memory Available",
-          "description": "Node-level available memory as % of total, for the hosts running SIPI in the selected environment (joined on sipi_build_info).",
+          "id": 42,
+          "title": "Rejected Connections (rate)",
+          "description": "sipi_rejected_connections_total. Not bridged to OTLP (always zero on the FFI serve path). Use Pool Waiting / Load-Shed instead.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1462,7 +1346,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "(100 * node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) and on(instance) (max by(instance) (sipi_build_info{environment=~\"$environment\"}))", "instant": false, "legendFormat": "{{instance}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rejected_connections_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected connections", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1476,8 +1360,172 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "min"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-43": {
+        "kind": "Panel",
+        "spec": {
+          "id": 43,
+          "title": "Waiting Connections",
+          "description": "sipi_waiting_connections. Not bridged to OTLP. Use sipi.pool.waiting instead.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_waiting_connections{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-44": {
+        "kind": "Panel",
+        "spec": {
+          "id": 44,
+          "title": "Rate Limit Decisions by action (rate)",
+          "description": "sipi_rate_limit_decisions_total{action}. Legacy single-family counter; the OTLP path splits this into allowed / rejected / near_limit / shadow_rejected instead.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-45": {
+        "kind": "Panel",
+        "spec": {
+          "id": 45,
+          "title": "Essentials Hash Mismatch (rate)",
+          "description": "sipi_essentials_hash_mismatch_total. Not bridged to OTLP today (C++/Prometheus-only integrity tripwire).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-46": {
+        "kind": "Panel",
+        "spec": {
+          "id": 46,
+          "title": "Read-shape Fast Path (rate)",
+          "description": "sipi_read_shape_fast_path_total{format,outcome}. Not bridged to OTLP today (C++/Prometheus-only).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum by(outcome) (rate(sipi_read_shape_fast_path_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{outcome}}", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
             }
           }
         }
@@ -1496,13 +1544,12 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 4, "element": { "kind": "ElementReference", "name": "panel-1" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-13" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 4, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-14" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-2" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-3" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-4" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 20, "y": 4, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-5" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-13" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 4, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-14" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-2" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-3" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-4" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 20, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-5" } } }
                   ]
                 }
               }
@@ -1567,9 +1614,8 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-9" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-23" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-24" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-9" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-23" } } }
                   ]
                 }
               }
@@ -1601,9 +1647,9 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-10" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-28" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-29" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-28" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-29" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-33" } } }
                   ]
                 }
               }
@@ -1612,7 +1658,7 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Errors & Integrity",
+              "title": "Errors",
               "collapse": false,
               "layout": {
                 "kind": "GridLayout",
@@ -1634,9 +1680,28 @@
                 "spec": {
                   "items": [
                     { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-11" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-12" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-31" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 8, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-32" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-12" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Empty on OTLP (investigate)",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 3, "element": { "kind": "ElementReference", "name": "panel-40" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-41" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-42" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-43" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-44" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-45" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-46" } } }
                   ]
                 }
               }
@@ -1647,7 +1712,7 @@
     },
     "links": [],
     "preload": false,
-    "tags": ["sipi", "iiif"],
+    "tags": ["sipi", "iiif", "otlp"],
     "timeSettings": {
       "timezone": "browser",
       "from": "now-6h",
