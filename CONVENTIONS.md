@@ -47,6 +47,7 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 ### Error handling
 
 - Recoverable failures travel in the ZIO error channel (`ZIO.fail`, `.someOrFail`); invariant violations use the `die` family with a message (`ZIO.dieMessage`, `.orDieWith`); `throw` only inside non-effectful code wrapped by an upstream `ZIO.attempt`.
+- **Never add a variant to the shared `BaseEndpoints.errorOutputs`.** It is attached to every endpoint in the API, and a typed variant serializes the exception's `message` verbatim — so one added line makes that message readable from every route, including unauthenticated public ones (the `oneOfDefaultVariant` catch-all discards it). Declare the variants on the endpoint that produces them with `errorOutVariantsPrepend` (precedent `V3BaseEndpoint.scala`), and enumerate **every** outcome: one without a variant falls through to the catch-all and is answered as a generic `500`.
 - Full rules — fail vs die, typed `IO[E, A]` vs `Task[A]`, V3 typed errors, the legacy `throw` carve-out — in `docs/development/dsp-api-error-handling.md`.
 
 ### SPARQL

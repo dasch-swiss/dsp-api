@@ -33,6 +33,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] Recoverable errors travel in the ZIO error channel (`ZIO.fail`, `.someOrFail`, `.orElseFail`) — not `throw`
 - [ ] `ZIO.die` / `.orDie` carries information: prefer `ZIO.dieMessage("invariant statement")` and `.orDieWith(e => …)` over the bare forms. The message documents the invariant — applies at config / boot time too
+- [ ] **No new variant added to the shared `BaseEndpoints.errorOutputs`** — it is on every endpoint, and a typed variant serializes the exception `message` verbatim, so one line exposes it on unauthenticated public routes too. Variants belong on the producing endpoint via `errorOutVariantsPrepend` (precedent `V3BaseEndpoint.scala`), with **every** outcome enumerated (an unenumerated one is answered as a generic `500`)
 - [ ] New v3 endpoints use typed `IO[V3ErrorInfo, A]` with error variants declared on the endpoint
 - [ ] Admin / v2 code uses the existing `RequestRejectedException` / `InternalServerException` hierarchy (`BadRequestException`, `NotFoundException`, …) — not bespoke error types
 - [ ] New `throw` only appears inside non-effectful code wrapped by an upstream `ZIO.attempt`; new code does not introduce non-effectful chunks just to keep throwing
