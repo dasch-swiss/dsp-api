@@ -6,11 +6,11 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ### Build & history
 
-- [ ] `sbt check` passes (formatting + linting)
-- [ ] `sbt test` passes; integration / E2E tests cover changed behaviour
+- [ ] `just check` passes (scalafmt formatting + license headers, via Bazel)
+- [ ] `bazel test` (or `just test-unit` / `test-it` / `test-e2e`) passes; integration / E2E tests cover changed behaviour
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) — see `CONVENTIONS.md` for the prefix → changelog mapping enforced by `release-please`
 - [ ] "Knora" not used in free-form human-readable text (commit messages, PR titles, docs prose, comments) — exempt: legacy packages, class names, and identifiers naming the `knora-base` / `knora-admin` ontologies
-- [ ] Every new source file has the Apache-2.0 + SPDX header (`sbt headerCheckAll`)
+- [ ] Every new source file has the Apache-2.0 + SPDX header (`//tools/license:spdx_header_check`; insert via `just header-fix`)
 
 ### Services & API layering
 
@@ -78,7 +78,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ## Skip
 
-- Scalafmt-only diffs (enforced by `sbt check`)
+- Scalafmt-only diffs (enforced by `just check`)
 - `CHANGELOG.md` and version-bump commits (managed by `release-please`)
 - Generated / vendored sources
 - Legacy `responders/` and pre-slice code paths, unless the PR is explicitly migrating them

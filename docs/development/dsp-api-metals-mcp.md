@@ -21,16 +21,16 @@ It runs over **stdio**, so each agent session spawns and manages its own `metals
 long-lived HTTP server or hardcoded port to go stale. `${CLAUDE_PROJECT_DIR:-.}` resolves to the repo root
 that Claude Code was launched from.
 
-## Prerequisites (one-time human setup)
+## Prerequisites
 
-- **Install the server** via [Coursier](https://get-coursier.io/): `cs install metals-mcp`. This puts a
-  `metals-mcp` launcher on your PATH (typically under the Coursier bin dir).
-- **Minimum version: Metals ≥ 1.6.6** (Osmium, 2025) — the release that first shipped the standalone MCP
-  server. Anything older will not have `metals-mcp`. Check with `metals-mcp --version`.
-- Confirm it is on your PATH: `which metals-mcp`.
+- **The server ships in the Nix dev shell** — `flake.nix` includes the `metals` package (which provides
+  the `metals-mcp` binary, currently Metals 1.6.7). With `direnv`/`nix develop` active, `metals-mcp` is on
+  your PATH automatically; no separate `cs install` is needed. (Metals bootstraps bazel-bsp itself via its
+  embedded coursier.)
+- Confirm it resolves: `nix develop --command which metals-mcp` (or just `which metals-mcp` inside the shell).
 
-If `metals-mcp` is not on your PATH, the `metals` server will simply fail to start and agents fall back to
-grep/read — the repo still works, you just lose the language intelligence.
+If `metals-mcp` is not on your PATH, the `metals` MCP server simply fails to start and agents fall back to
+grep/read — the repo still builds/tests fine, you just lose (the currently-degraded) language intelligence.
 
 ### First-use approval
 
@@ -39,39 +39,47 @@ team. On recent Claude Code versions, checked-in approvals are still ignored in 
 as trusted, so you may see a one-time folder-trust / MCP-approval prompt the first time you launch Claude
 Code here. Approve it once.
 
-## Required per checkout: `just metals-bootstrap`
+## ⚠️ Known limitation (post-sbt): Scala intelligence is currently degraded
 
-**In a fresh checkout or git worktree, metals will not work until you run `just metals-bootstrap`.** This is
-not a warmup delay — the build server never connects at all, and every tool that needs a build target returns
-empty or errors.
-
-The cause is the Bazel migration. dsp-api now has **both** `build.sbt` and `MODULE.bazel`/`BUILD.bazel`, so
-Metals detects two build definitions and has to ask which one to import from. In an editor you answer that
-prompt once and it is remembered. Over MCP stdio there is no channel to ask, so the request is dropped:
+sbt has been removed, so Metals no longer connects via Bloop — it connects to the **Bazel** build via
+**bazel-bsp**. Metals bootstraps bazel-bsp itself (its embedded coursier; no `cs` needed) and imports the
+workspace, **but bazel-bsp's Scala aspect does not yet support rules_scala 7.x**. The import runs and then
+the Scala targets fail aspect analysis:
 
 ```text
-ERROR [MCP Request not handled] Multiple build definitions found. Which would you like to use?
-WARN  Build server is not auto-connectable.
+compilation of module 'aspects/rules/scala/scala_info.bzl' failed
+... command succeeded, but not all targets were analyzed
 ```
 
-`just metals-bootstrap` sidesteps the question rather than answering it. It generates `project/metals.sbt`
-(the sbt-bloop plugin, which Metals would normally write itself) and runs `sbt bloopInstall` to produce
-`.bloop/`. With `.bloop/` present, Metals finds the **Bloop build server** and connects to that directly,
-never needing to resolve the build-tool ambiguity. The "Multiple build definitions found" line still appears
-in the log afterwards — it is no longer fatal, so do not read it as failure on its own.
+Consequence: Metals connects and indexes, but `list-modules` comes back empty and the type-aware tools
+(`compile-file`, `get-usages`) don't resolve Scala targets yet. **Until bazel-bsp's aspect supports
+rules_scala 7.x, fall back to `grep`/read for navigation and `bazel build //modules/<m>:<target>` for
+compile diagnostics.** Track bazel-bsp / the JetBrains Bazel plugin for rules_scala 7 support, then revisit.
 
-On dsp-api the bootstrap takes ~15s and generates 23 Bloop targets. There is still a genuine one-time cold
-compile after it (webapi alone is ~438 sources), but that now happens with a *connected* build server.
+The rest of this document describes the intended Bazel-BSP workflow (correct once the aspect is fixed).
+
+## Required per checkout: `just metals-bootstrap`
+
+**In a fresh checkout or git worktree, metals needs a one-time bootstrap.** Metals connects to Bazel via
+bazel-bsp, driven by the committed **`.bazelproject`** (the projectview listing which targets to import). A
+fresh worktree has no `.bsp/` yet, so:
+
+1. Run `just metals-bootstrap` — it verifies `.bazelproject` is present and warms the Bazel repo cache.
+2. Call the metals `import-build` tool once. Metals then fetches bazel-bsp (embedded coursier), writes
+   `.bsp/bazelbsp.json` + `.bazelbsp/`, and imports the build. A healthy import ends with
+   `Imported build` / `indexed workspace` in `.metals/metals.log`.
+
+`.bazelproject` is committed (do **not** delete or gitignore it — a missing projectview makes the bazel-bsp
+import fail). `.bsp/` and `.bazelbsp/` are per-worktree generated state and are gitignored.
 
 ### If a session is already running: call `import-build`
 
-A `metals-mcp` process that started before `.bloop/` existed **does not recover on its own** — the filesystem
-watcher will not rescue it. After running the bootstrap mid-session, call the metals `import-build` tool once:
+A `metals-mcp` process that started before `.bsp/` existed **does not recover on its own** — the filesystem
+watcher will not rescue it. After running the bootstrap mid-session, call the metals `import-build` tool once
+to make the running server connect to bazel-bsp. (Note the rules_scala-7 aspect limitation above: even a
+successful `import-build`/`Reconnected to build server` currently leaves `list-modules` empty.)
 
-- before the bootstrap, `import-build` returns `No changes detected` (there is no build server to import into)
-- after it, `import-build` returns `Reconnected to build server`, and `list-modules` starts returning modules
-
-This is why the bootstrap cannot be fully automated away in a `just` recipe alone: the recipe fixes the
+This is why the bootstrap cannot be fully automated away in a `just` recipe alone: the recipe warms the
 filesystem, `import-build` fixes the running server. Agents that create their own worktree at session start
 should run both, in that order.
 
@@ -93,9 +101,10 @@ Also available: `format-file`, `find-dep`, `test`, `import-build`, and scalafix 
 
 ## How agents should use it
 
-**Prefer `compile-file` over shelling out to `sbt compile` for the tight edit → feedback loop.** A single-file
-incremental compile through Metals is far faster than a fresh sbt invocation and returns structured
-diagnostics.
+**When Metals is working, prefer `compile-file` over shelling out to `bazel build` for the tight edit →
+feedback loop.** A single-file incremental compile through Metals is faster than a fresh Bazel invocation and
+returns structured diagnostics. (Currently degraded — see the rules_scala-7 limitation at the top; until it
+is fixed, `bazel build //modules/<m>:<target>` is the reliable diagnostics path.)
 
 Recommended pattern:
 
@@ -105,23 +114,23 @@ Recommended pattern:
 > `compile-file` / `compile-module` first, then query. A compile is guaranteed to refresh the index and is
 > cheap incrementally.
 
-### If metals returns nothing, diagnose it — do not fall back to sbt
+### If metals returns nothing, diagnose it
 
-Empty results are **not** a warmup symptom. Distinguish the two states before deciding anything:
+Distinguish the states before deciding anything (and note: with the current rules_scala-7 aspect
+limitation, empty `list-modules` is *expected* even after a healthy import):
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| `list-modules` returns an empty list | The build server never connected. | Run `just metals-bootstrap`, then `import-build`. |
-| `compile-file` → `Compilation cancelled or incorrect file path` | Same — no build target exists for that file. | Same. |
+| `list-modules` empty, `.metals/metals.log` shows `scala_info.bzl` aspect errors | The known rules_scala-7 / bazel-bsp incompatibility. | Expected for now — use `grep`/read + `bazel build`. |
+| `list-modules` empty, no import in the log | The build server never connected. | Run `just metals-bootstrap`, then `import-build`. |
 | `no build target for: <path>` in `.metals/metals.log` | The file is outside this server's workspace (see the worktree note below). | Check which directory the server was launched against. |
 | `list-modules` works but a compile is slow | Genuine cold compile. | Wait; it is doing real work. |
 
-`.metals/metals.log` in the workspace root is authoritative — read it rather than guessing. A healthy start
-reads `Connected to Build server: Bloop vX.Y.Z` → `Imported build in …` → `indexed workspace in …`.
+`.metals/metals.log` in the workspace root is authoritative — read it rather than guessing. A healthy Bazel
+import reads `Imported build in …` → `indexed workspace in …` (with the aspect errors noted above until
+bazel-bsp supports rules_scala 7.x).
 
-**Do not silently switch to `sbt compile` when metals returns nothing.** That converts a five-second fix into
-a permanently slower workflow and hides the breakage from everyone else. Diagnose, bootstrap, or say plainly
-that metals is unavailable and why.
+**When metals is genuinely unavailable, say so and use `bazel build` / `grep`** — don't pretend it worked.
 
 ### Staleness on a large codebase
 
@@ -145,25 +154,27 @@ buffer or recompile step needed).
 
 Each Claude session spawns its own stdio `metals-mcp`. Two sessions pointed at the **same directory** both try
 to open the same embedded H2 database (`.metals/metals.mv.db`), which takes an exclusive file lock → the
-classic "another Metals server is already running" failure, and both sessions stomp each other's Bloop
-compiles.
+classic "another Metals server is already running" failure, and both sessions stomp each other's bazel-bsp
+imports.
 
 **Never run two agent sessions against the same checkout.** Use separate git worktrees instead.
 
 ### Separate worktrees each need their own bootstrap
 
-Distinct directories get their own `.metals/` and `.bloop/`, so there is no DB lock and Bloop just treats each
-as another project. Correctness is fine **because** the config uses the repo-relative `${CLAUDE_PROJECT_DIR:-.}`
-rather than a hardcoded absolute path — an absolute path would funnel every worktree's session back onto one
-directory and reintroduce the H2-lock problem. **Do not hardcode an absolute `--workspace` path.**
+Distinct directories get their own `.metals/`, `.bsp/`, and `.bazelbsp/`, so there is no DB lock and bazel-bsp
+treats each as its own project. Correctness is fine **because** the config uses the repo-relative
+`${CLAUDE_PROJECT_DIR:-.}` rather than a hardcoded absolute path — an absolute path would funnel every
+worktree's session back onto one directory and reintroduce the H2-lock problem. **Do not hardcode an absolute
+`--workspace` path.** (`.bazelproject` is committed, so every worktree shares the same projectview.)
 
-But because `.bloop/` and `.metals/` are gitignored (`.gitignore` lines 4–5 and 46), a new worktree starts with
-neither. **Every fresh worktree needs its own `just metals-bootstrap`** — nothing about metals carries over
-from the main checkout, and this is the single most common reason metals "works on main but not here."
+But because `.bsp/`, `.bazelbsp/`, and `.metals/` are gitignored, a new worktree starts without them.
+**Every fresh worktree needs its own `just metals-bootstrap`** (plus one `import-build` call) — nothing about
+metals carries over from the main checkout, and this is the single most common reason metals "works on main
+but not here."
 
-The resource cost is real too: all worktrees share one global Bloop daemon on the machine. N concurrent cold
-imports and N× JVM heap / concurrent full compiles can exhaust RAM/CPU, and Bloop serializes compile requests.
-**Keep the number of simultaneously metals-active worktrees small.**
+The resource cost is real too: each worktree runs its own bazel-bsp server + JVM. N concurrent cold imports
+and N× JVM heap / concurrent full compiles can exhaust RAM/CPU. **Keep the number of simultaneously
+metals-active worktrees small.**
 
 ### The server is pinned to the launch directory
 

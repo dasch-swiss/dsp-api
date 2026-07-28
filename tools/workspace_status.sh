@@ -23,17 +23,14 @@ fi
 version="${describe}${suffix}"
 version="${version//+/-}"
 
-# Single-source the image coordinates from project/Dependencies.scala.
-sipi="$(sed -n 's/.*val sipiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
-fuseki="$(sed -n 's/.*val fusekiImage *= *"\(.*\)".*/\1/p' project/Dependencies.scala)"
-
 # A fixed value per build (CI sets BUILD_TIME; local dev falls back to "dev"), so it
 # stays stable within a build and does not needlessly bust the buildinfo cache.
 build_time="${BUILD_TIME:-dev}"
 
+# Image versions are NOT emitted here: fuseki comes from MODULE.bazel via the
+# @dsp_image_versions module extension, and sipi is read from the pinned base
+# image's OCI label (//tools/buildinfo:oci_config_label). This script is pure git.
 echo "STABLE_GIT_VERSION ${version}"
 echo "STABLE_GIT_COMMIT ${commit}"
 echo "STABLE_GIT_SHORT ${short}"
-echo "STABLE_SIPI_IMAGE ${sipi}"
-echo "STABLE_FUSEKI_IMAGE ${fuseki}"
 echo "STABLE_BUILD_TIME ${build_time}"

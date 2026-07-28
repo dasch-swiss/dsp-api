@@ -2,14 +2,25 @@ load("@rules_java//java:defs.bzl", "java_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_scala//scala:scala.bzl", "scala_binary", "scala_junit_test", "scala_library")
-load("//tools/buildinfo:defs.bzl", "buildinfo")
+load("@dsp_image_versions//:defs.bzl", "FUSEKI_IMAGE")
+load("//tools/scalafmt:defs.bzl", "scala_binary", "scala_junit_test", "scala_library")
+load("//tools/buildinfo:defs.bzl", "buildinfo", "oci_config_label")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
+# Extracts the upstream Sipi version from the pinned base image's OCI label, so
+# the MODULE.bazel digest is the sole source of the sipi version (no duplicated
+# tag string). ManagementEndpoints reports BuildInfo.sipi at /version.
+oci_config_label(
+    name = "sipi_version",
+    image = "@sipi_base_amd64//:sipi_base_amd64",
+    label = "org.opencontainers.image.version",
+)
+
 # Generates the webapi buildinfo source (package org.knora.webapi.http.version).
-# Source reads version, buildCommit, buildTime, fuseki, scalaVersion, sipi;
-# ManagementEndpoints splits fuseki/scala/sipi on ':' so those must carry the full
-# "repo:tag" / version strings.
+# Sources: version/buildCommit/buildTime from git (workspace status); fuseki from
+# MODULE.bazel via @dsp_image_versions; sipi from the pinned base image's OCI
+# label (:sipi_version). ManagementEndpoints splits fuseki/scala/sipi on ':' to
+# report the /version fields — a value without a ':' is reported as-is.
 buildinfo(
     name = "buildinfo_gen",
     out = "BuildInfo.scala",
@@ -18,13 +29,13 @@ buildinfo(
         "version": "STABLE_GIT_VERSION",
         "buildCommit": "STABLE_GIT_SHORT",
         "buildTime": "STABLE_BUILD_TIME",
-        "sipi": "STABLE_SIPI_IMAGE",
-        "fuseki": "STABLE_FUSEKI_IMAGE",
     },
     string_fields = {
         "name": "webapi",
         "scalaVersion": "3.8.4",
+        "fuseki": FUSEKI_IMAGE,
     },
+    file_fields = {":sipi_version": "sipi"},
 )
 
 # BuildInfo lives in its own tiny library so a version/commit change (which
@@ -44,6 +55,7 @@ scala_library(
 scala_library(
     name = "webapi",
     srcs = glob(["src/main/scala/**/*.scala"]),
+    format = True,
     resource_strip_prefix = "modules/webapi/src/main/resources",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
@@ -129,6 +141,7 @@ java_library(
 scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
+    format = True,
     resource_strip_prefix = "modules/webapi/src/test/resources",
     resources = glob(["src/test/resources/**"]),
     suffixes = [
@@ -305,4 +318,12 @@ oci_push(
     name = "push",
     image = ":index",
     repository = "index.docker.io/daschswiss/knora-api",
+)
+
+# Scala sources for the Apache-2.0 SPDX header check (//tools/license). Globs
+# don't cross package boundaries, so each module exposes its own sources.
+filegroup(
+    name = "license_srcs",
+    srcs = glob(["src/**/*.scala"]),
+    visibility = ["//tools/license:__pkg__"],
 )

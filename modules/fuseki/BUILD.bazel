@@ -1,3 +1,4 @@
+load("@dsp_image_versions//:defs.bzl", "FUSEKI_DIST_VERSION", "FUSEKI_IMAGE", "FUSEKI_IMAGE_TAG")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -113,8 +114,8 @@ pkg_tar(
 )
 
 # org.opencontainers.image.* labels + stamped revision (see oci_stamped_labels'
-# doc in //tools/oci:defs.bzl). `.version` is the human image tag, kept in sync
-# with Dependencies.scala's fusekiImage and docker-compose.yml by CI's
+# doc in //tools/oci:defs.bzl). `.version` is FUSEKI_IMAGE_TAG (from MODULE.bazel
+# via @dsp_image_versions); docker-compose.yml is kept in step by CI's
 # check-fuseki-version-consistency job -- NOT stamped from git, since it isn't a
 # git-versioned artifact like knora-api/dsp-ingest, it's a pinned upstream release
 # repackaged.
@@ -129,7 +130,7 @@ oci_stamped_labels(
         "org.opencontainers.image.source": "https://github.com/dasch-swiss/dsp-api",
         "org.opencontainers.image.title": "Apache Jena Fuseki",
         "org.opencontainers.image.url": "https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki",
-        "org.opencontainers.image.version": "6.1.0-0",
+        "org.opencontainers.image.version": FUSEKI_IMAGE_TAG,
     },
     stamp_labels = {
         "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
@@ -152,8 +153,8 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-0",
-        "FUSEKI_VERSION": "6.1.0",
+        "IMAGE_VERSION": FUSEKI_IMAGE_TAG,
+        "FUSEKI_VERSION": FUSEKI_DIST_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -182,8 +183,8 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": "6.1.0-0",
-        "FUSEKI_VERSION": "6.1.0",
+        "IMAGE_VERSION": FUSEKI_IMAGE_TAG,
+        "FUSEKI_VERSION": FUSEKI_DIST_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -222,7 +223,7 @@ alias(
 oci_load(
     name = "load",
     image = ":image",
-    repo_tags = ["daschswiss/apache-jena-fuseki:6.1.0-0"],
+    repo_tags = [FUSEKI_IMAGE],
 )
 
 # `bazel run //modules/fuseki:push -- -t 6.1.0-0` — push the multi-arch index.

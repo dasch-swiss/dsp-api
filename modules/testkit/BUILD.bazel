@@ -1,4 +1,4 @@
-load("@rules_scala//scala:scala.bzl", "scala_macro_library")
+load("//tools/scalafmt:defs.bzl", "scala_macro_library")
 
 # testkit is a compile-scope support library (base specs, container layers, test services) that
 # webapi's own integration/e2e test modules depend on directly. It has no `src/test`, so no test
@@ -19,6 +19,7 @@ load("@rules_scala//scala:scala.bzl", "scala_macro_library")
 # set in project/Dependencies.scala's `testkit` project block) plus the webapi library it wraps.
 scala_macro_library(
     name = "testkit",
+    format = True,
     srcs = glob(["src/main/scala/**/*.scala"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -29,4 +30,12 @@ scala_macro_library(
         "@maven//:net_datafaker_datafaker",
         "@maven//:org_testcontainers_testcontainers",
     ],
+)
+
+# Scala sources for the Apache-2.0 SPDX header check (//tools/license). Globs
+# don't cross package boundaries, so each module exposes its own sources.
+filegroup(
+    name = "license_srcs",
+    srcs = glob(["src/**/*.scala"]),
+    visibility = ["//tools/license:__pkg__"],
 )

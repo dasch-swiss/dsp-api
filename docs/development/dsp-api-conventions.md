@@ -4,7 +4,7 @@ Project-specific conventions for the dsp-api repository. These supplement the ge
 
 ## Stack
 
-- Scala 3, ZIO 2, Tapir, zio-json, sbt
+- Scala 3, ZIO 2, Tapir, zio-json, Bazel
 - Package root: `org.knora.webapi.slice`
 
 ## Service Pattern
@@ -318,5 +318,7 @@ Note the argument order: `fold` takes the empty-case value first, then the mappi
 
 ## Formatting 
 
-Run `sbt fmt` before pushing to the remote branch. Scalafmt reformats all Scala sources in-place.
-CI runs `sbt check` and will fail if formatting is off.
+Run `just fmt` before pushing to the remote branch. This runs Scalafmt (via Bazel) to reformat all
+Scala sources in-place and applies license headers. CI runs `just check` and will fail if formatting
+is off. Import organization is handled by Scalafmt (see `.scalafmt.conf`); unused imports are caught
+by the compiler (`-Wunused:all -Werror`).

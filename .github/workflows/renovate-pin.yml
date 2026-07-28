@@ -1,0 +1,67 @@
+name: Renovate re-pin maven lock
+
+# Renovate bumps maven artifact versions in MODULE.bazel, but its hosted app does
+# not run postUpgradeTasks, so it cannot regenerate the rules_jvm_external lock
+# (maven_install.json). Without a matching lock the Bazel build fails. This
+# workflow re-pins on any Renovate PR that touches MODULE.bazel and commits the
+# refreshed maven_install.json back to the PR branch (which then re-runs the
+# normal build-and-test checks against the pinned state). Manual fallback:
+# `bazel run @unpinned_maven//:pin`.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - MODULE.bazel
+  workflow_dispatch: {}
+
+# Needs write to push the re-pin commit back to the PR branch.
+permissions:
+  contents: write
+
+concurrency:
+  group: renovate-pin-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  pin:
+    name: Re-pin maven_install.json
+    runs-on: ubuntu-latest
+    # Renovate branches only (its PRs are opened unattended); same-repo; allow manual dispatch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       startsWith(github.head_ref, 'renovate/'))
+    steps:
+      - name: Checkout the PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          # PAT (not the default GITHUB_TOKEN) so the pushed re-pin commit re-triggers
+          # the build-and-test workflow; a push made with GITHUB_TOKEN would not.
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+      - name: Install Nix (provides Bazel for the re-pin)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Re-pin maven_install.json
+        run: nix develop --command bazel run @unpinned_maven//:pin
+      - name: Commit & push if the lock changed
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain maven_install.json)" ]; then
+            echo "maven_install.json already in sync — nothing to re-pin."
+            exit 0
+          fi
+          git config user.name daschbot
+          git config user.email 50987250+daschbot@users.noreply.github.com
+          git add maven_install.json
+          git commit -m "build: re-pin maven_install.json for Renovate update"
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}

@@ -5,14 +5,19 @@
 
 package org.knora.webapi.testcontainers
 
+import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.testcontainers.TestContainerOps.toLayer
+
 import org.testcontainers.containers.GenericContainer
 import zio.ULayer
 import zio.http.URL
 
-import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.toLayer
-
-final class FusekiTestContainer extends GenericContainer[FusekiTestContainer](BuildInfo.fuseki) {
+// The Fuseki image ref is injected by Bazel via the test target's `env`
+// (FUSEKI_IMAGE, sourced from @dsp_image_versions in MODULE.bazel), so the test
+// launches exactly the image Bazel knows about. Falls back to BuildInfo.fuseki
+// for IDE / non-Bazel runs.
+final class FusekiTestContainer
+    extends GenericContainer[FusekiTestContainer](sys.env.getOrElse("FUSEKI_IMAGE", BuildInfo.fuseki)) {
 
   def baseUrl: URL = {
     val urlString = s"http://$getHost:$getFirstMappedPort"

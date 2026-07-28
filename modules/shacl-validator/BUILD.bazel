@@ -1,8 +1,9 @@
-load("@rules_scala//scala:scala.bzl", "scala_junit_test", "scala_library")
+load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
 # SHACL validator. Pure leaf module; consumed by //modules/webapi in a later phase.
 scala_library(
     name = "shacl-validator",
+    format = True,
     srcs = glob(["src/main/scala/**/*.scala"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -17,6 +18,7 @@ scala_library(
 
 scala_junit_test(
     name = "test",
+    format = True,
     srcs = glob(["src/test/scala/**/*.scala"]),
     # Discovery is by class-name suffix; a missed suffix silently skips specs.
     suffixes = ["Spec", "IT", "Test"],
@@ -29,4 +31,12 @@ scala_junit_test(
         "@maven//:dev_zio_zio_test_3",
         "@maven//:org_slf4j_slf4j_simple",
     ],
+)
+
+# Scala sources for the Apache-2.0 SPDX header check (//tools/license). Globs
+# don't cross package boundaries, so each module exposes its own sources.
+filegroup(
+    name = "license_srcs",
+    srcs = glob(["src/**/*.scala"]),
+    visibility = ["//tools/license:__pkg__"],
 )

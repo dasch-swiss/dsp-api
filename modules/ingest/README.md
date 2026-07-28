@@ -24,7 +24,8 @@ Once the necessary software is installed you can use `mkdocs serve` for a live p
 
 Our commit messages follow the [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0/).
 
-Source code must be formatted with `sbt fmt`.
+Source code must be formatted with `just fmt` (Scalafmt via Bazel, which also inserts license headers).
 
-Copyright headers must be added with `sbt headerCreateAll`.
+Copyright headers are inserted with `just header-fix` and checked via
+`bazel test //tools/license:spdx_header_check`.
 

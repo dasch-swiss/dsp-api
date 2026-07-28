@@ -18,3 +18,6 @@ d911f56ed4fed536751e32a93437c51bac52aa39
 
 # refactor(build): move fuseki, ingest, sipi, webapi under modules/
 61d0e1bef26c0911d3968e6b8456583dbbbd7163
+
+# style: reformat Scala with scalafmt 3.10.7 (import regrouping, sbt -> Bazel scalafmt)
+315877940f85a027b9c62bc48588cf3173041c09

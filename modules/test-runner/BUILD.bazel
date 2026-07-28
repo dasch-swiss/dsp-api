@@ -1,4 +1,4 @@
-load("@rules_scala//scala:scala.bzl", "scala_library")
+load("//tools/scalafmt:defs.bzl", "scala_library")
 
 # DspZTestJUnitRunner: the single custom JUnit runner both sbt (junit-interface)
 # and Bazel (scala_junit_test) use to run ZIO Test specs. Kept in its own leaf
@@ -6,6 +6,7 @@ load("@rules_scala//scala:scala.bzl", "scala_library")
 # without the testkit -> webapi -> {bagit,jwt,shacl-validator} cycle.
 scala_library(
     name = "test-runner",
+    format = True,
     srcs = glob(["src/main/scala/**/*.scala"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -13,4 +14,12 @@ scala_library(
         "@maven//:dev_zio_zio_test_3",
         "@maven//:junit_junit",
     ],
+)
+
+# Scala sources for the Apache-2.0 SPDX header check (//tools/license). Globs
+# don't cross package boundaries, so each module exposes its own sources.
+filegroup(
+    name = "license_srcs",
+    srcs = glob(["src/**/*.scala"]),
+    visibility = ["//tools/license:__pkg__"],
 )

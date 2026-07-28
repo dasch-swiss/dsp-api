@@ -128,10 +128,10 @@ just test-unit test-it test-e2e
 ```
 
 To run a single test from the command line, for example `SearchV2R2RSpec`,
-run the following:
+use Bazel's test filter:
 
 ```bash
-sbt " webapi / testOnly *SearchV2R2RSpec* "
+bazel test //modules/webapi:test --test_filter=*SearchV2R2RSpec*
 ```
 
 _**Note:** to run tests, the api container must be stopped first!_

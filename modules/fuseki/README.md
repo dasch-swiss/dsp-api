@@ -35,9 +35,11 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
    - `FUSEKI_VERSION` (in the image `env`) — new Apache Jena Fuseki version (e.g. `5.6.0`)
    - `IMAGE_VERSION` (image `env` + `.version` label) and the `:load` `repo_tags` — new image tag (e.g. `5.6.0-1`, increment the `-N` suffix for DaSCH revisions)
 4. Update `docker-compose.yml`: bump the `db` service image tag to match `IMAGE_VERSION`
-5. Update `project/Dependencies.scala`: bump `fusekiImage` to match `IMAGE_VERSION`
 
-CI guards this: `//tools/oci:image_versions_match_sbt` fails if `FUSEKI_VERSION` doesn't match the `@fuseki_dist` tarball URL, and `check-fuseki-version-consistency` fails if the image tag is out of sync across `BUILD.bazel`, `docker-compose.yml`, and `Dependencies.scala`.
+The Fuseki version lives entirely in `MODULE.bazel` (via `image_versions.fuseki` / `FUSEKI_DIST_VERSION`)
+and `modules/fuseki/BUILD.bazel`; there is no longer a separate sbt pin to keep in sync. CI's
+`check-fuseki-version-consistency` fails if the image tag is out of sync across `BUILD.bazel` and
+`docker-compose.yml`.
 
 ## Publishing
 
