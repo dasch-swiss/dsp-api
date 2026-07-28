@@ -1229,7 +1229,7 @@
         "spec": {
           "id": 12,
           "title": "SIPI Container Memory Usage",
-          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif).",
+          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif). 'working set' is the real, non-reclaimable memory the cgroup OOM killer acts on; 'usage (incl. page cache)' additionally counts reclaimable page cache from reading image files, so it climbs under load and stays elevated after load without indicating a leak. Watch the working set for actual memory health.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1245,7 +1245,21 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "memory", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(container_memory_working_set_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "working set", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "usage (incl. page cache)", "queryType": "range", "range": true }
                     }
                   }
                 }
