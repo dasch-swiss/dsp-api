@@ -54,13 +54,14 @@ spent *in the triplestore* from time spent generating SPARQL or transforming res
 A **count** query (`/v2/searchextended/count`) runs only the prequery side: `gravsearch.parse`,
 `gravsearch.type_inspection`, `gravsearch.prequery.generate`, `gravsearch.prequery.execute` under
 the root — four prequery-side stages, no main-query or result-transform spans. This is expected
-(see [§6](#6-absent-spans-four-normal-topologies)), not a truncated trace.
+(see [§7](#7-absent-spans-four-normal-topologies)), not a truncated trace.
 
 ## 4. Root-span attributes
 
 The `gravsearch` root span carries a **query shape** — a bounded fingerprint of *what kind* of query
-this was, with no user data in it. Use it to group "queries like this one" without leaking FILTER
-literals or instance IRIs.
+this was, with no user data in any attribute. Use it to group "queries like this one" without
+aggregating over FILTER literals or instance IRIs. For the query *itself*, see
+[§5](#5-read-the-submitted-query) — it is on the same span, as an event.
 
 | Attribute | Example | Use |
 | --- | --- | --- |
@@ -74,9 +75,43 @@ On a failed or interrupted stage span you may also see:
 | --- | --- |
 | span status `ERROR`, description `"<stage>: <ClassName>"` | A typed stage failure, e.g. `gravsearch.prequery.execute: TriplestoreException`. The message is sanitized — never the raw SPARQL or FILTER literal |
 | `error.type` | The exception class simple name |
-| `gravsearch.exit_reason = interrupted` | The fiber was interrupted (client disconnect / timeout / cancellation) — see [§6](#6-absent-spans-four-normal-topologies) |
+| `gravsearch.exit_reason = interrupted` | The fiber was interrupted (client disconnect / timeout / cancellation) — see [§7](#7-absent-spans-four-normal-topologies) |
 
-## 5. Reading the time decomposition
+## 5. Read the submitted query
+
+The root `gravsearch` span carries the **query the client submitted, verbatim**, as a span **event**:
+
+| Field | Value |
+| --- | --- |
+| Event name | `gravsearch.query` |
+| Event attribute | `db.query.text` — the query string exactly as submitted, unredacted and untruncated |
+
+In the Grafana trace view, select the `gravsearch` root span and open its **Events** section (next to
+Attributes). Copy the text and re-run it against dev or prod to reproduce the slow query — this is
+the step that turns "this trace was slow" into "this query is slow".
+
+In TraceQL, events have their own scope — `event:name` for the event name, `event.<key>` for its
+attributes:
+
+```traceql
+{ span:name = "gravsearch" && event:name = "gravsearch.query" }
+{ span:name = "gravsearch" && event.db.query.text =~ ".*incunabula:title.*" }
+```
+
+Regex matches are fully anchored, hence the leading and trailing `.*`.
+
+The event is recorded **before** the parse stage, so it is present even when the query is malformed.
+That is deliberate: the parse-failure and shape-less-early-interrupt topologies in
+[§7](#7-absent-spans-four-normal-topologies) have almost nothing else on them, and the query text is
+what makes those traces diagnosable at all.
+
+!!! note "Why an event and not a span attribute"
+    Query text is unbounded user input. The Alloy `otelcol.connector.spanmetrics` dimension list reads
+    **span attributes**, so an attribute is one config line away from becoming an unbounded Prometheus
+    label. An event attribute is not reachable that way, and stays fully searchable in Tempo via the
+    event scope — nothing is lost for diagnosis. Keep query text in the event.
+
+## 6. Reading the time decomposition
 
 1. Note the **root `gravsearch` duration** — that is the responder's total.
 2. Walk the stage spans in order; the one with the largest duration is the dominant stage.
@@ -86,7 +121,7 @@ On a failed or interrupted stage span you may also see:
 4. Stage durations do not perfectly sum to the root (there is glue between stages), but one stage
    normally dominates. `gravsearch.prequery.execute` is the most common hotspot.
 
-## 6. Absent spans: four normal topologies
+## 7. Absent spans: four normal topologies
 
 The instrumentation deliberately **omits** spans for work that did not happen rather than emitting
 zero-duration placeholders. So a trace with fewer than eight spans is usually *correct*. Four
@@ -104,12 +139,22 @@ How to tell them apart quickly:
 
 - **Later stages missing + everything `OK` + shape present** → empty result. Benign.
 - **Only the parse span + it is `ERROR`** → parse failure. Look at the client's query, not the
-  instrumentation.
+  instrumentation — read it off the root span's `gravsearch.query` event ([§5](#5-read-the-submitted-query)).
 - **Later stages missing + an `ERROR` span carrying `exit_reason = interrupted`** → interruption.
   The query was probably slow and got cancelled — this is exactly the trace you are hunting; read
   the stages that *did* run to see where the time went before the cut.
 - **Root has no shape attributes at all** → shape-less early interrupt. The interruption happened so
   early that parse/shape never ran; the absence of shape is expected, not a bug.
+
+### A fifth absent-data case: no `gravsearch.query` event
+
+A `gravsearch` root span with **no** `gravsearch.query` event is also normal, and means something
+specific: the search did not come from a client-submitted query string. Only the two string entry
+points — `/v2/searchextended` and `/v2/searchextended/count` — receive one. Searches that build a
+`ConstructQuery` in code have no submitted text to record: incoming links, still-image
+representations, incoming regions, and resources-by-project-and-class. Those traces still carry the
+full stage breakdown and the shape attributes; only the event is absent. Do not read it as broken
+instrumentation.
 
 !!! note "Why interruption is called out separately"
     OTel span status has no `cancelled` value (only `Unset`/`Ok`/`Error`). Without the
