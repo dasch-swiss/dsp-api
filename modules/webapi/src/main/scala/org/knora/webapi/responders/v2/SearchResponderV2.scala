@@ -5,9 +5,11 @@
 
 package org.knora.webapi.responders.v2
 
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.semconv.DbAttributes
 import zio.*
 import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
@@ -107,6 +109,10 @@ trait SearchResponderV2 {
   protected final def setShapeOnRoot(query: ConstructQuery, resultType: SearchResponderV2.QueryResultType): UIO[Unit] =
     SearchResponderV2.setShapeOnRoot(tracing, query, resultType)
 
+  /** Records the submitted Gravsearch query as a `gravsearch.query` event on the root span. */
+  protected final def recordQueryOnRoot(query: IRI): UIO[Unit] =
+    SearchResponderV2.recordQueryOnRoot(tracing, query)
+
   /**
    * Performs a search using a Gravsearch query provided by the client.
    *
@@ -129,6 +135,7 @@ trait SearchResponderV2 {
   ): Task[ReadResourcesSequenceV2] =
     stageSpan("gravsearch") {
       for {
+        _ <- recordQueryOnRoot(query)
         q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.ResourceList)
         r <- gravsearchV2(q, rendering, user, limitToProject)
@@ -146,6 +153,7 @@ trait SearchResponderV2 {
   def gravsearchCountV2(query: IRI, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2] =
     stageSpan("gravsearch") {
       for {
+        _ <- recordQueryOnRoot(query)
         q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.Count)
         r <- gravsearchCountV2(q, user, limitToProject)
@@ -1422,6 +1430,26 @@ object SearchResponderV2 {
             case _ => ZIO.unit
           }
       }
+    }
+
+  // ---- submitted query capture (DEV-6858) ---------------------------------------------------------
+
+  /**
+   * Records the submitted Gravsearch query verbatim as a `gravsearch.query` **event** on the current
+   * (root) span, so a slow trace can be traced back to the query that produced it.
+   *
+   * An event, never a span attribute: the Alloy `otelcol.connector.spanmetrics` dimension list reads
+   * span attributes, so an attribute is one config line away from becoming an unbounded Prometheus
+   * label. An event attribute is not reachable that way, while staying searchable in Tempo via
+   * TraceQL's event scope. For the same reason this must not be called inside a `stageSpan` — stage
+   * spans are asserted to carry no events at all (the REQ-1.6 sanitized-error lock).
+   *
+   * Called before `gravsearch.parse`, so a query that fails to parse — the case that never reaches
+   * `setShapeOnRoot` and therefore carries the least information today — also gets its text.
+   */
+  def recordQueryOnRoot(tracing: Tracing, query: IRI): UIO[Unit] =
+    tracing.getCurrentSpanUnsafe.map { span =>
+      val _ = span.addEvent("gravsearch.query", Attributes.of(DbAttributes.DB_QUERY_TEXT, query))
     }
 
   // ---- query shape (Decision 4: bounded, human-readable, literal-invariant) ------------------------
