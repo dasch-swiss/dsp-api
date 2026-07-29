@@ -2,7 +2,7 @@ load("@rules_java//java:defs.bzl", "java_library")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@dsp_image_versions//:defs.bzl", "FUSEKI_IMAGE")
+load("@dsp_image_versions//:defs.bzl", "FUSEKI_DIST_VERSION")
 load("//tools/scalafmt:defs.bzl", "scala_binary", "scala_junit_test", "scala_library")
 load("//tools/buildinfo:defs.bzl", "buildinfo", "oci_config_label")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
@@ -17,10 +17,11 @@ oci_config_label(
 )
 
 # Generates the webapi buildinfo source (package org.knora.webapi.http.version).
-# Sources: version/buildCommit/buildTime from git (workspace status); fuseki from
-# MODULE.bazel via @dsp_image_versions; sipi from the pinned base image's OCI
-# label (:sipi_version). ManagementEndpoints splits fuseki/scala/sipi on ':' to
-# report the /version fields — a value without a ':' is reported as-is.
+# Sources: version/buildCommit/buildTime from git (workspace status); fuseki is
+# the Jena engine (dist) version from MODULE.bazel via @dsp_image_versions; sipi
+# from the pinned base image's OCI label (:sipi_version). ManagementEndpoints
+# splits fuseki/scala/sipi on ':' to report the /version fields — a value without
+# a ':' (like the bare Jena version) is reported as-is.
 buildinfo(
     name = "buildinfo_gen",
     out = "BuildInfo.scala",
@@ -33,7 +34,7 @@ buildinfo(
     string_fields = {
         "name": "webapi",
         "scalaVersion": "3.8.4",
-        "fuseki": FUSEKI_IMAGE,
+        "fuseki": FUSEKI_DIST_VERSION,
     },
     file_fields = {":sipi_version": "sipi"},
 )

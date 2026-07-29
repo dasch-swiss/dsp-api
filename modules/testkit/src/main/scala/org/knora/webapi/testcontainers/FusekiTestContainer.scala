@@ -9,15 +9,17 @@ import org.testcontainers.containers.GenericContainer
 import zio.ULayer
 import zio.http.URL
 
-import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.toLayer
 
 // The Fuseki image ref is injected by Bazel via the test target's `env`
-// (FUSEKI_IMAGE, sourced from @dsp_image_versions in MODULE.bazel), so the test
-// launches exactly the image Bazel knows about. Falls back to BuildInfo.fuseki
-// for IDE / non-Bazel runs.
+// (FUSEKI_IMAGE), so the test launches exactly the image Bazel knows about. The
+// image is versioned by release-please and loaded locally at :latest, so the
+// fallback for IDE / non-Bazel runs is that same :latest tag (BuildInfo.fuseki
+// is the bare Jena engine version now, not a pullable image ref).
 final class FusekiTestContainer
-    extends GenericContainer[FusekiTestContainer](sys.env.getOrElse("FUSEKI_IMAGE", BuildInfo.fuseki)) {
+    extends GenericContainer[FusekiTestContainer](
+      sys.env.getOrElse("FUSEKI_IMAGE", "daschswiss/apache-jena-fuseki:latest"),
+    ) {
 
   def baseUrl: URL = {
     val urlString = s"http://$getHost:$getFirstMappedPort"

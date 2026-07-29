@@ -32,17 +32,6 @@
       ],
       "datasourceTemplate": "maven",
       "registryUrlTemplate": "https://repo1.maven.org/maven2"
-    },
-    {
-      "customType": "regex",
-      "description": "Fuseki image tag declared in MODULE.bazel (image_versions.fuseki)",
-      "managerFilePatterns": [
-        "/(^|/)MODULE\\.bazel$/"
-      ],
-      "matchStrings": [
-        "image\\s*=\\s*\"(?<depName>daschswiss/apache-jena-fuseki):(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

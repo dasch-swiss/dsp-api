@@ -282,24 +282,22 @@ use_repo(maven, "maven", "unpinned_maven")
 # Image version coordinates
 #############################################
 
-# Single source of truth for the upstream Apache Jena Fuseki dist version. Used
-# below for both the image_versions.fuseki tag AND the fuseki_dist http_archive
-# (strip_prefix + url), so the dist version lives in exactly one place. The
-# `image` tag carries an independent build-revision suffix (`-N`) and is kept
-# literal because Renovate bumps it via a regex on that line (.github/renovate.json).
+# Single source of truth for the Apache Jena Fuseki dist (jar) version — the one
+# thing we actually download and pack into the image. Used in two places, both
+# below: the @fuseki_dist tarball (strip_prefix + url) and the image_versions
+# extension. The Fuseki OCI *image* is versioned by release-please (git version,
+# stamped into the image label), like knora-api/dsp-ingest — it is NOT derived
+# from this value. This dist version reaches BUILD files via the generated
+# @dsp_image_versions//:defs.bzl (BUILD files can't load() MODULE.bazel): it
+# feeds the /version report (modules/webapi buildinfo) and the OTLP
+# service.version resource attribute (modules/fuseki), which surfaces the
+# deployed engine version in Grafana. The sipi tag has no entry here — its
+# version is read from the pulled image's OCI label, so its digest is its sole
+# source.
 FUSEKI_DIST_VERSION = "6.1.0"
 
-# Single source of truth for the Fuseki image tag. Exposed to BUILD files via
-# the generated @dsp_image_versions//:defs.bzl (BUILD files can't load()
-# MODULE.bazel). Consumed by modules/fuseki/BUILD.bazel (labels/env/repo_tags)
-# and modules/webapi buildinfo (the /version report). The upstream sipi tag has
-# no entry here — its version is read from the pulled image's OCI label, so the
-# digest below is its sole source.
 image_versions = use_extension("//tools/image_versions:extension.bzl", "image_versions")
-image_versions.fuseki(
-    image = "daschswiss/apache-jena-fuseki:6.1.0-0",
-    dist_version = FUSEKI_DIST_VERSION,
-)
+image_versions.fuseki(dist_version = FUSEKI_DIST_VERSION)
 use_repo(image_versions, "dsp_image_versions")
 
 #############################################
@@ -436,9 +434,9 @@ http_file(
 #############################################
 
 # rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
-# here; the sha256 pin below guards its integrity. Version is single-sourced from
-# FUSEKI_DIST_VERSION above (same value fed to image_versions.fuseki); on a bump,
-# change FUSEKI_DIST_VERSION and this sha256.
+# here; the sha256 pin below guards its integrity. Version single-sourced from
+# FUSEKI_DIST_VERSION above (strip_prefix + url) — bump that one value and update
+# the sha256 to match the new tarball.
 http_archive(
     name = "fuseki_dist",
     build_file_content = "\n".join([

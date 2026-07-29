@@ -1,4 +1,3 @@
-load("@dsp_image_versions//:defs.bzl", "FUSEKI_IMAGE")
 load("//tools/scalafmt:defs.bzl", "scala_junit_test")
 
 # Container-backed e2e specs (Fuseki/Sipi/dsp-ingest via testcontainers) - see
@@ -14,8 +13,9 @@ scala_junit_test(
     # Docker Desktop for containers started well into a long-running JVM.
     jvm_flags = ["-Djava.io.tmpdir=/tmp"],
     # FusekiTestContainer (testkit) launches this image; injected through the build
-    # graph (from @dsp_image_versions) rather than read from compiled BuildInfo.
-    env = {"FUSEKI_IMAGE": FUSEKI_IMAGE},
+    # graph rather than read from compiled BuildInfo. Versioned by release-please,
+    # loaded locally at :latest by `just docker-load-test-images`.
+    env = {"FUSEKI_IMAGE": "daschswiss/apache-jena-fuseki:latest"},
     # Loose test_data fixtures at their repo-relative runfiles path - see
     # //test_data:integration_fixture_files for why `data`, not a `resources` jar in `deps`. Also
     # includes our own src/test/resources a second time (in addition to the `resources` jar below):

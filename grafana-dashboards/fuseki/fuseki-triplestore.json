@@ -1,0 +1,92 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "fuseki-triplestore"
+  },
+  "spec": {
+    "annotations": [],
+    "cursorSync": "Off",
+    "description": "Apache Jena Fuseki triplestore. Shows the deployed Jena engine version per host, from the OTLP service.version resource attribute the Fuseki JVM's OTel agent reports (service_name=DSP_db_db), baked into the image from FUSEKI_DIST_VERSION (MODULE.bazel). Built on target_info (OTLP-only, carries host_name + service_version); JVM/HTTP metric panels are intentionally omitted for now — those names collide with a legacy Prometheus scrape (job=service/metrics) and carry no host_name, so they need the same careful pipeline-scoping sipi's dashboard documents.",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "Fuseki Engine Version (per host)",
+          "description": "Jena engine version deployed on each host, from the OTLP service.version resource attribute (target_info service_version), most recently reported. Empty until an image carrying the baked service.version attribute is deployed.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "timestamp(target_info{service_name=\"DSP_db_db\"})", "instant": true, "legendFormat": "{{host_name}} — {{service_version}}", "queryType": "instant", "range": false }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "RowsLayout",
+      "spec": {
+        "rows": [
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Overview",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 6, "element": { "kind": "ElementReference", "name": "panel-1" } } }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "preload": false,
+    "tags": ["fuseki", "triplestore", "otlp"],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-6h",
+      "to": "now",
+      "autoRefresh": "1m",
+      "autoRefreshIntervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "Fuseki Triplestore",
+    "variables": []
+  }
+}
