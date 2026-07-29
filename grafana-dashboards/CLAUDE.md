@@ -45,12 +45,16 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
 - **Version is a resource attribute, not a metric.** There is no `sipi_build_info` on OTLP. Use
   `target_info{service_name="sipi"}` → `service_version` (e.g. `topk(1, timestamp(target_info{…}))`
   with `legendFormat={{service_version}}`, `textMode=name` for "last seen"). `target_info` carries
-  **only** `deployment_environment_name`, not `environment` — filter it with
-  `deployment_environment_name=~".*$environment.*"`.
-- **Env variable** is a fixed custom list `dev,stage,prod` (value = short name). SIPI OTLP metrics
-  filter by `environment=~"$environment"`; `target_info` by `deployment_environment_name`. As of this
-  writing **prod is not yet on OTLP** (only `vre-dev-01`, `vre-stage-01`, a `dsp-ls-test-01` box), so
-  selecting prod shows no SIPI data until it migrates.
+  **only** `deployment_environment_name`, not `environment`.
+- **SIPI runs on every `dsp`-group host, all on OTLP**: the primary VRE boxes (`vre-dev-01`,
+  `vre-stage-01`, `vre-prod-01`) plus LS/demo/test and ~30 RDU boxes — and the RDU boxes inherit
+  `environment="prod"` through the Ansible group hierarchy. Filtering only by
+  `environment=~"$environment"` silently sums many hosts, and a fuzzy
+  `deployment_environment_name=~".*prod.*"` matches both `vre-prod-01` and `dsp-ls-prod-01`.
+- **Scope every SIPI OTLP query to the primary VRE host** with
+  `deployment_environment_name=~"vre-$environment-01"` — the resource attribute is the Ansible
+  inventory hostname (injected via `SIPI_SENTRY_ENVIRONMENT` in ops-deploy). The env variable is a
+  fixed custom list `dev,stage,prod` (value = short name) and only feeds that host pattern.
 - **Not bridged to OTLP** (deliberately, per the Rust source — permanently empty on the OTLP path):
   `sipi_rejected_connections_total`, `sipi_waiting_connections`, `sipi_rate_limit_decisions_total`
   (the `{action}` family; OTLP splits it into `allowed`/`rejected`/`near_limit`/`shadow_rejected`),
@@ -66,8 +70,9 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
 
 - **dsp-api auth route** (`tapir_request_duration_seconds_*`, service DSP_svc_api): SIPI calls
   `/admin/files/{projectShortcode}/{filename}` for a permission check on every IIIF request. This
-  metric has **no `_bucket`** (only `count`/`sum`) → average latency only, no percentiles. Filter by
-  `environment=~"$environment"` (it uses `environment`, dev/stage/prod).
+  metric has **no `_bucket`** (only `count`/`sum`) → average latency only, no percentiles. It has no
+  `deployment_environment_name`; scope it by `instance=~"dasch-vre-$environment-01"` (dsp-api also
+  answers on the LS box, so `environment` alone over-counts).
 - **Container CPU/mem** (cAdvisor, `container_*`, `job=integrations/docker`): use exact
   `service="DSP_iiif_iiif"` — `service=~"DSP_iiif.*"` also matches `DSP_iiif_ingest`. These carry
   `environment` and short `instance` names (`dasch-vre-dev-01`). Panels are scoped to the primary VRE
