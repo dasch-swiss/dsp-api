@@ -6,10 +6,14 @@
 package org.knora.webapi.slice.search.repo
 
 import org.junit.runner.RunWith
+import zio.IO
+import zio.Runtime
+import zio.Unsafe
 import zio.test.*
 
 import dsp.errors.SparqlGenerationException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -17,7 +21,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class SearchFulltextQuerySpec extends ZIOSpecDefault {
+class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -26,263 +30,94 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
   private val testResourceIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testStandoffIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag".toSmartIri
+  private val separator       = '\u001F'
 
+  // `build` is effectful but pure for valid arguments; render it to a String and pass that expression straight to
+  // `assertGolden`. A bare local val bound to the result collides with `assertGolden`'s own `actual` parameter during
+  // inlining and makes its `assertTrue` macro lose the source position (a None.get in zio-test's showExpr).
+  private def render(query: IO[SparqlGenerationException, String]): String =
+    Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(query).getOrThrow())
+
+  // Invariants these goldens exist to protect. A golden pins the query text and cannot tell a correct query from a
+  // plausible one — check them by eye when regenerating:
+  //
+  //  - The text:query list must carry an explicit hit limit (1000000). Without one Jena caps the Lucene lookup at
+  //    10'000 hits and silently drops matches before the project/class filters apply (DEV-6716, DEV-6822).
+  //  - The class restriction must use rdfs:subClassOf* — never subClassOf?. The subclass closure is not materialised
+  //    and there is no query-time inference, so zero-or-one silently excludes every class more than one hop below the
+  //    target (DEV-6833). `?resource a ?resourceClass` is emitted only when a class restriction is requested.
+  //  - Resource-ness is asserted via knora-base:creationDate, not a subClassOf* walk to knora-base:Resource; the
+  //    value branch asserts value-ness via knora-base:valueCreationDate. Both replace per-hit property-path walks
+  //    that DEV-6864 measured at 2.2-6.3x their cost for identical results. See SearchFulltextQuery and DEV-6850.
+  //  - There is no outer SELECT DISTINCT: GROUP BY ?resource already deduplicates. The inner SELECT DISTINCT
+  //    ?matchingSubject and the count branch's COUNT(DISTINCT ?resource) stay (DEV-6809 (d)).
   override def spec: Spec[TestEnvironment, Any] = suite("SearchFulltextQuery")(
     suite("count query")(
       test("minimal count query") {
-        val actual = SearchFulltextQuery.build(
-          searchTerms = searchTerms,
-          limitToProject = None,
-          limitToResourceClass = None,
-          limitToStandoffClass = None,
-          returnFiles = false,
-          separator = None,
-          limit = 1,
-          offset = 0,
-          countQuery = true,
-        )
-        assertZIO(actual)(
-          Assertion.equalTo(
-            """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |SELECT (COUNT(DISTINCT ?resource) AS ?count)
-              |WHERE {
-              |    {
-              |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
-              |        }
-              |    }
-              |    OPTIONAL {
-              |        ?matchingSubject a ?valueObjectType .
-              |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-              |        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
-              |        ?containingResource ?property ?matchingSubject .
-              |        ?property rdfs:subPropertyOf* knora-base:hasValue .
-              |        FILTER NOT EXISTS {
-              |            ?matchingSubject knora-base:isDeleted true .
-              |        }
-              |        BIND(?matchingSubject AS ?valueObject)
-              |    }
-              |    OPTIONAL {
-              |        ?matchingSubject a knora-base:ListNode .
-              |        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
-              |        ?listValue knora-base:valueHasListNode ?subListNode .
-              |        ?subjectWithListValue ?predicate ?listValue .
-              |        FILTER NOT EXISTS {
-              |            ?matchingSubject knora-base:isDeleted true .
-              |        }
-              |        BIND(?listValue AS ?valueObject)
-              |    }
-              |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-              |    ?resource a ?resourceClass .
-              |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-              |    FILTER NOT EXISTS {
-              |        ?resource knora-base:isDeleted true .
-              |    }
-              |}
-              |
-              |LIMIT 1
-              |""".stripMargin,
+        val sparql = render(
+          SearchFulltextQuery.build(
+            searchTerms = searchTerms,
+            limitToProject = None,
+            limitToResourceClass = None,
+            limitToStandoffClass = None,
+            returnFiles = false,
+            separator = None,
+            limit = 1,
+            offset = 0,
+            countQuery = true,
           ),
         )
+        assertGolden(sparql, "countNoFilters")
       },
       test("count query with project and resource class limit") {
-        val actual = SearchFulltextQuery.build(
-          searchTerms = searchTerms,
-          limitToProject = Some(testProjectIri),
-          limitToResourceClass = Some(testResourceIri),
-          limitToStandoffClass = None,
-          returnFiles = false,
-          separator = None,
-          limit = 1,
-          offset = 0,
-          countQuery = true,
-        )
-        assertZIO(actual)(
-          Assertion.equalTo(
-            """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |SELECT (COUNT(DISTINCT ?resource) AS ?count)
-              |WHERE {
-              |    {
-              |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
-              |        }
-              |    }
-              |    OPTIONAL {
-              |        ?matchingSubject a ?valueObjectType .
-              |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-              |        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
-              |        ?containingResource ?property ?matchingSubject .
-              |        ?property rdfs:subPropertyOf* knora-base:hasValue .
-              |        FILTER NOT EXISTS {
-              |            ?matchingSubject knora-base:isDeleted true .
-              |        }
-              |        BIND(?matchingSubject AS ?valueObject)
-              |    }
-              |    OPTIONAL {
-              |        ?matchingSubject a knora-base:ListNode .
-              |        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
-              |        ?listValue knora-base:valueHasListNode ?subListNode .
-              |        ?subjectWithListValue ?predicate ?listValue .
-              |        FILTER NOT EXISTS {
-              |            ?matchingSubject knora-base:isDeleted true .
-              |        }
-              |        BIND(?listValue AS ?valueObject)
-              |    }
-              |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-              |    ?resource a ?resourceClass .
-              |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-              |    ?resourceClass rdfs:subClassOf* <http://www.knora.org/ontology/0001/anything#Thing> .
-              |    ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
-              |    FILTER NOT EXISTS {
-              |        ?resource knora-base:isDeleted true .
-              |    }
-              |}
-              |
-              |LIMIT 1
-              |""".stripMargin,
+        val sparql = render(
+          SearchFulltextQuery.build(
+            searchTerms = searchTerms,
+            limitToProject = Some(testProjectIri),
+            limitToResourceClass = Some(testResourceIri),
+            limitToStandoffClass = None,
+            returnFiles = false,
+            separator = None,
+            limit = 1,
+            offset = 0,
+            countQuery = true,
           ),
         )
+        assertGolden(sparql, "countWithProjectAndClass")
       },
     ),
     suite("regular query")(
       test("minimal regular query") {
-        val actual = SearchFulltextQuery.build(
-          searchTerms = searchTerms,
-          limitToProject = None,
-          limitToResourceClass = None,
-          limitToStandoffClass = None,
-          returnFiles = false,
-          separator = Some('\u001F'),
-          limit = 25,
-          offset = 0,
-          countQuery = false,
-        )
-        assertZIO(actual)(
-          Assertion.equalTo(
-            s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-               |SELECT DISTINCT ?resource
-               |       (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); SEPARATOR="\u001F") AS ?valueObjectConcat)
-               |WHERE {
-               |    {
-               |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
-               |        }
-               |    }
-               |    OPTIONAL {
-               |        ?matchingSubject a ?valueObjectType .
-               |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-               |        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
-               |        ?containingResource ?property ?matchingSubject .
-               |        ?property rdfs:subPropertyOf* knora-base:hasValue .
-               |        FILTER NOT EXISTS {
-               |            ?matchingSubject knora-base:isDeleted true .
-               |        }
-               |        BIND(?matchingSubject AS ?valueObject)
-               |    }
-               |    OPTIONAL {
-               |        ?matchingSubject a knora-base:ListNode .
-               |        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
-               |        ?listValue knora-base:valueHasListNode ?subListNode .
-               |        ?subjectWithListValue ?predicate ?listValue .
-               |        FILTER NOT EXISTS {
-               |            ?matchingSubject knora-base:isDeleted true .
-               |        }
-               |        BIND(?listValue AS ?valueObject)
-               |    }
-               |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-               |    ?resource a ?resourceClass .
-               |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-               |    FILTER NOT EXISTS {
-               |        ?resource knora-base:isDeleted true .
-               |    }
-               |}
-               |
-               |GROUP BY ?resource
-               |ORDER BY ?resource
-               |OFFSET 0
-               |LIMIT 25
-               |""".stripMargin,
+        val sparql = render(
+          SearchFulltextQuery.build(
+            searchTerms = searchTerms,
+            limitToProject = None,
+            limitToResourceClass = None,
+            limitToStandoffClass = None,
+            returnFiles = false,
+            separator = Some(separator),
+            limit = 25,
+            offset = 0,
+            countQuery = false,
           ),
         )
+        assertGolden(sparql, "searchNoFilters")
       },
       test("regular query with all filters") {
-        val actual = SearchFulltextQuery.build(
-          searchTerms = LuceneQueryString("test search"),
-          limitToProject = Some(testProjectIri),
-          limitToResourceClass = Some(testResourceIri),
-          limitToStandoffClass = Some(testStandoffIri),
-          returnFiles = true,
-          separator = Some('\u001F'),
-          limit = 25,
-          offset = 50,
-          countQuery = false,
-        )
-        assertZIO(actual)(
-          Assertion.equalTo(
-            s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-               |SELECT DISTINCT ?resource
-               |       (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); SEPARATOR="\u001F") AS ?valueObjectConcat)
-               |WHERE {
-               |    {
-               |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> ("test search" 1000000) .
-               |    ?matchingSubject a knora-base:TextValue ;
-               |        knora-base:valueHasString ?literal ;
-               |        knora-base:valueHasStandoff ?standoffNode .
-               |    ?standoffNode a <http://www.knora.org/ontology/standoff#StandoffBoldTag> ;
-               |        knora-base:standoffTagHasStart ?start ;
-               |        knora-base:standoffTagHasEnd ?end .
-               |    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
-               |    FILTER REGEX(?markedup, "test", "i")
-               |    FILTER REGEX(?markedup, "search", "i")
-               |        }
-               |    }
-               |    OPTIONAL {
-               |        ?matchingSubject a ?valueObjectType .
-               |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-               |        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
-               |        ?containingResource ?property ?matchingSubject .
-               |        ?property rdfs:subPropertyOf* knora-base:hasValue .
-               |        FILTER NOT EXISTS {
-               |            ?matchingSubject knora-base:isDeleted true .
-               |        }
-               |        BIND(?matchingSubject AS ?valueObject)
-               |    }
-               |    OPTIONAL {
-               |        ?matchingSubject a knora-base:ListNode .
-               |        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
-               |        ?listValue knora-base:valueHasListNode ?subListNode .
-               |        ?subjectWithListValue ?predicate ?listValue .
-               |        FILTER NOT EXISTS {
-               |            ?matchingSubject knora-base:isDeleted true .
-               |        }
-               |        BIND(?listValue AS ?valueObject)
-               |    }
-               |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-               |    ?resource a ?resourceClass .
-               |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-               |    ?resourceClass rdfs:subClassOf* <http://www.knora.org/ontology/0001/anything#Thing> .
-               |    ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
-               |    OPTIONAL {
-               |        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
-               |        ?resource ?fileValueProp ?valueObject .
-               |    }
-               |    FILTER NOT EXISTS {
-               |        ?resource knora-base:isDeleted true .
-               |    }
-               |}
-               |
-               |GROUP BY ?resource
-               |ORDER BY ?resource
-               |OFFSET 50
-               |LIMIT 25
-               |""".stripMargin,
+        val sparql = render(
+          SearchFulltextQuery.build(
+            searchTerms = LuceneQueryString("test search"),
+            limitToProject = Some(testProjectIri),
+            limitToResourceClass = Some(testResourceIri),
+            limitToStandoffClass = Some(testStandoffIri),
+            returnFiles = true,
+            separator = Some(separator),
+            limit = 25,
+            offset = 50,
+            countQuery = false,
           ),
         )
+        assertGolden(sparql, "searchWithAllFilters")
       },
     ),
     suite("escaping of user input")(

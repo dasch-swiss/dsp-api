@@ -1,0 +1,43 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?resource
+       (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); SEPARATOR="") AS ?valueObjectConcat)
+WHERE {
+    {
+        SELECT DISTINCT ?matchingSubject WHERE {
+            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
+        }
+    }
+    OPTIONAL {
+        ?matchingSubject a ?valueObjectType .
+        ?valueObjectType rdfs:subClassOf* knora-base:Value .
+        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
+        ?containingResource ?property ?matchingSubject .
+        ?property rdfs:subPropertyOf* knora-base:hasValue .
+        FILTER NOT EXISTS {
+            ?matchingSubject knora-base:isDeleted true .
+        }
+        BIND(?matchingSubject AS ?valueObject)
+    }
+    OPTIONAL {
+        ?matchingSubject a knora-base:ListNode .
+        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
+        ?listValue knora-base:valueHasListNode ?subListNode .
+        ?subjectWithListValue ?predicate ?listValue .
+        FILTER NOT EXISTS {
+            ?matchingSubject knora-base:isDeleted true .
+        }
+        BIND(?listValue AS ?valueObject)
+    }
+    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
+    ?resource a ?resourceClass .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
+    }
+}
+
+GROUP BY ?resource
+ORDER BY ?resource
+OFFSET 0
+LIMIT 25
