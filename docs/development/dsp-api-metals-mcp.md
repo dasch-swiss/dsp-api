@@ -39,49 +39,38 @@ team. On recent Claude Code versions, checked-in approvals are still ignored in 
 as trusted, so you may see a one-time folder-trust / MCP-approval prompt the first time you launch Claude
 Code here. Approve it once.
 
-## ⚠️ Known limitation: Scala intelligence is degraded on Bazel 9
+## Bazel-9 support: how it works (a local bazel-bsp patch)
 
 sbt has been removed, so Metals no longer connects via Bloop — it connects to the **Bazel** build via
-**bazel-bsp** (Metals bootstraps it via its embedded coursier; no `cs` needed). The import runs, but the
-Scala targets fail aspect analysis and `list-modules` comes back empty:
+**bazel-bsp** (Metals bootstraps it via its embedded coursier; no `cs` needed). bazel-bsp 4.0.x (the server
+Metals 1.6.7 downloads) predates Bazel 9 and its sync aspect is not Bazel-9-compatible out of the box; two
+breakages, each fixed locally so Metals works on Bazel 9.1.1:
 
-```text
-scala_info.bzl: name 'JavaInfo' is not defined
-core.bzl: Returning a struct from an aspect implementation function is deprecated
-compilation of module 'aspects/rules/scala/scala_info.bzl' failed
-... command succeeded, but not all targets were analyzed
-```
+1. **Removed Starlark globals.** The aspect uses bare `JavaInfo` / `java_common` / `CcInfo`, which Bazel 8+
+   moved out of the global namespace into `@rules_java` / `@rules_cc` behind `--incompatible_autoload_externally`
+   (symptom: `name 'JavaInfo' is not defined`, `scala_info.bzl` fails to compile). **Fix:** the macOS-scoped
+   `build:macos --incompatible_autoload_externally=+JavaInfo,+JavaPluginInfo,+java_common,+CcInfo,+cc_common`
+   in `.bazelrc`. macOS-only because all local dev is macOS and CI (Linux) never runs bazel-bsp; harmless for
+   our own build (our rules load these explicitly).
+2. **Struct-returning aspect.** `core.bzl`'s sync aspect does `return struct(bsp_info=…, output_groups=…)`,
+   which Bazel 9 removed with **no re-enable flag** (symptom: `Returning a struct from an aspect implementation
+   function is deprecated`). **Fix:** a small struct→provider rewrite in `tools/metals/patch_bazelbsp_core.py`
+   (define a real `BspInfo` provider, return `[OutputGroupInfo(**…), BspInfo(**…)]`, read it on deps as
+   `dep[BspInfo]`). bazel-bsp re-copies its bundled aspects into `.bazelbsp/` on every import, so the patch
+   can't be applied durably in place — instead `.bazelproject` sets `bazel_binary: tools/metals/bazel-bsp-wrapper.sh`,
+   a shim that re-applies the (idempotent) patch at each bazel-bsp invocation, then execs the real bazel
+   (directly if it's on PATH, else via `nix develop` — Metals is often launched without the dev-shell PATH).
 
-**Root cause: bazel-bsp 4.0.x (the server Metals 1.6.7 downloads) is not compatible with Bazel 9.1.1**
-(pinned in `.bazelversion`). This is **not** a rules_scala 7.x problem — rules_scala 7.2.6 + Scala 3.8.4
-build fine, and Metals 1.6.7 already carries the ruleset-name fix (scalameta/metals#8265). There are two
-distinct Bazel-9 breakages in bazel-bsp's aspect:
+**Net: `list-modules`, `compile-file`/`compile-module`, and type-aware navigation all work on Bazel 9.**
+This is **not** a rules_scala 7.x issue (rules_scala 7.2.6 + Scala 3.8.4 build fine; Metals 1.6.7 already
+carries the ruleset-name fix, scalameta/metals#8265).
 
-1. **Removed Starlark globals.** The aspect uses bare `JavaInfo` / `java_common` / `CcInfo`; Bazel 8+ moved
-   these out of the global namespace into `@rules_java` / `@rules_cc` behind
-   `--incompatible_autoload_externally`. This half *can* be mitigated with
-   `--incompatible_autoload_externally=+JavaInfo,+JavaPluginInfo,+java_common,+CcInfo,+cc_common` (verified:
-   the `JavaInfo` errors disappear and `scala_info.bzl` compiles).
-2. **Struct-returning aspect.** `core.bzl` does `return struct(...)` from its aspect impl, which Bazel 9
-   removed **with no re-enable flag**. This one cannot be worked around by configuration.
-
-Because of (2) there is **no config-only fix on Bazel 9** today — the autoload flag alone is not enough, so
-we deliberately do **not** carry it in `.bazelrc` (it would add build-wide risk without making Metals work).
-A full fix needs bazel-bsp to modernize its aspects for Bazel 8/9. We stay on Bazel 9 (every other repo does
-too); downgrading Bazel to satisfy an IDE tool is not on the table.
-
-**Workaround until then: fall back to `grep`/read for navigation and `bazel build //modules/<m>:<target>`
-for compile diagnostics.** Metals' non-Bazel features (formatting, etc.) still work; only the Bazel-backed
-Scala index is affected.
-
-**Monitor:** [scalameta/metals#8268](https://github.com/scalameta/metals/issues/8268) — "Bazel 8 breaks
-bazelbsp due to missing rules_java providers" — is the upstream tracking issue (same error; the maintainers
-say they are working on a native approach, no date). That issue is filed against Bazel 8, which has only
-breakage #1; Bazel 9 adds breakage #2. The standalone `JetBrains/bazel-bsp` repo is **archived**, so the live
-target is Metals itself, which owns the bundled bazel-bsp version. Re-verify when Metals ships a
-Bazel-9-aware bazel-bsp, then remove this note.
-
-The rest of this document describes the intended Bazel-BSP workflow (correct once bazel-bsp supports Bazel 9).
+**This is a vendored patch to bazel-bsp 4.0.x — remove it once bazel-bsp supports Bazel 9 upstream.** Track
+[scalameta/metals#8268](https://github.com/scalameta/metals/issues/8268) ("Bazel 8 breaks bazelbsp due to
+missing rules_java providers"; the standalone `JetBrains/bazel-bsp` repo is archived, so Metals — which owns
+the bundled bazel-bsp version — is the live target). If a Metals upgrade bumps bazel-bsp and the aspect layout
+changes, `patch_bazelbsp_core.py` fails loudly (its anchor snippets won't match) — update it, or drop the
+whole shim if upstream has fixed it.
 
 ## Required per checkout: `just metals-bootstrap`
 
@@ -101,8 +90,9 @@ import fail). `.bsp/` and `.bazelbsp/` are per-worktree generated state and are 
 
 A `metals-mcp` process that started before `.bsp/` existed **does not recover on its own** — the filesystem
 watcher will not rescue it. After running the bootstrap mid-session, call the metals `import-build` tool once
-to make the running server connect to bazel-bsp. (Note the Bazel-9 bazel-bsp limitation above: even a
-successful `import-build`/`Reconnected to build server` currently leaves `list-modules` empty.)
+to make the running server connect to bazel-bsp. A successful `import-build` reports `Reconnected to build
+server` and `list-modules` then returns the build targets — the Bazel-9 aspect patch above is applied
+automatically by the `bazel_binary` wrapper during the import.
 
 This is why the bootstrap cannot be fully automated away in a `just` recipe alone: the recipe warms the
 filesystem, `import-build` fixes the running server. Agents that create their own worktree at session start
@@ -126,10 +116,9 @@ Also available: `format-file`, `find-dep`, `test`, `import-build`, and scalafix 
 
 ## How agents should use it
 
-**When Metals is working, prefer `compile-file` over shelling out to `bazel build` for the tight edit →
-feedback loop.** A single-file incremental compile through Metals is faster than a fresh Bazel invocation and
-returns structured diagnostics. (Currently degraded — see the Bazel-9 limitation at the top; until it
-is fixed, `bazel build //modules/<m>:<target>` is the reliable diagnostics path.)
+**Prefer `compile-file` over shelling out to `bazel build` for the tight edit → feedback loop.** A
+single-file incremental compile through Metals is faster than a fresh Bazel invocation and returns
+structured diagnostics.
 
 Recommended pattern:
 
@@ -141,12 +130,11 @@ Recommended pattern:
 
 ### If metals returns nothing, diagnose it
 
-Distinguish the states before deciding anything (and note: with the current Bazel-9 bazel-bsp
-limitation, empty `list-modules` is *expected* even after a healthy import):
+Distinguish the states before deciding anything:
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| `list-modules` empty, `.metals/metals.log` shows `scala_info.bzl` / `JavaInfo` / "struct from an aspect" errors | The known bazel-bsp / Bazel-9 incompatibility. | Expected for now — use `grep`/read + `bazel build`. |
+| `list-modules` empty, `.metals/metals.log` shows `scala_info.bzl` / `JavaInfo` / "struct from an aspect" errors | The Bazel-9 aspect patch didn't apply: the `bazel_binary` wrapper wasn't used, or `patch_bazelbsp_core.py`'s anchors no longer match (bazel-bsp bumped). | Confirm `.bazelproject` has `bazel_binary:` and `.bazelbsp/aspects/core.bzl` contains `BspInfo`; see the Bazel-9 section at the top. |
 | `list-modules` empty, no import in the log | The build server never connected. | Run `just metals-bootstrap`, then `import-build`. |
 | `no build target for: <path>` in `.metals/metals.log` | The file is outside this server's workspace (see the worktree note below). | Check which directory the server was launched against. |
 | `list-modules` works but a compile is slow | Genuine cold compile. | Wait; it is doing real work. |

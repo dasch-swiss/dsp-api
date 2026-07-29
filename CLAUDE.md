@@ -195,14 +195,14 @@ the `metals` MCP tools over shelling out to `bazel build`** — `compile-file` /
 `get-usages` are incremental and return structured results. For setup, the full tool list, and the
 worktree/LOOM caveats see `docs/development/dsp-api-metals-mcp.md`.
 
-**KNOWN LIMITATION (Bazel 9):** Metals connects to Bazel via **bazel-bsp**, but **bazel-bsp 4.0.x (the
-server Metals 1.6.7 ships) is not compatible with Bazel 9.1.1** — its aspect uses removed Starlark globals
-(`JavaInfo`) and a struct-returning aspect impl that Bazel 9 dropped, so the import runs but Scala targets
-fail aspect analysis, `list-modules` is empty and type-aware navigation does not work. This is **not** a
-rules_scala 7.x issue (that builds fine). There is no config-only fix on Bazel 9, so **fall back to
-`grep`/read and `bazel build` for Scala work.** Tracked upstream at scalameta/metals#8268. See
-`docs/development/dsp-api-metals-mcp.md` for the full root cause, the workaround, and the bootstrap flow
-(`just metals-bootstrap` then the metals `import-build` tool; `.bazelproject` drives the import).
+**Bazel-9 note:** Metals connects to Bazel via **bazel-bsp**, whose bundled aspect (in bazel-bsp 4.0.x)
+isn't Bazel-9-compatible out of the box. Two local fixes make it work: a macOS-scoped
+`--incompatible_autoload_externally` flag in `.bazelrc` (restores the `JavaInfo`/`CcInfo` globals Bazel 9
+removed) and a `bazel_binary` wrapper (`tools/metals/bazel-bsp-wrapper.sh`) that re-applies a struct→provider
+patch to bazel-bsp's `core.bzl` on each invocation. So `compile-file`/`compile-module`/`get-usages` all work.
+This is **not** a rules_scala 7.x issue. It's a vendored patch to bazel-bsp — track scalameta/metals#8268 and
+remove it once upstream supports Bazel 9. Bootstrap in a fresh worktree: `just metals-bootstrap`, then the
+metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp.md`.
 
 ## API Structure
 

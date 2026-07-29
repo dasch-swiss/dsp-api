@@ -8,13 +8,13 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 
 ## Compile & feedback loop
 
-- **Bazel is the only build tool (sbt was removed).** Compile via the `metals` MCP tools when they work
+- **Bazel is the only build tool (sbt was removed).** Compile via the `metals` MCP tools
   (`compile-file` / `compile-module`, incremental + structured diagnostics; `get-usages` beats grep), else
   `bazel build //modules/<m>:<target>`.
-- **Metals is currently degraded on Bazel 9:** it connects to Bazel via bazel-bsp, but bazel-bsp 4.0.x
-  (bundled with Metals 1.6.7) isn't compatible with Bazel 9.1.1 (removed Starlark globals + struct-returning
-  aspect), so type-aware navigation / `list-modules` don't work. Not a rules_scala 7.x issue. No config-only
-  fix; fall back to `grep`/read + `bazel build`. Tracked at scalameta/metals#8268. Root cause + workaround:
+- **Metals works on Bazel 9 via a local bazel-bsp patch:** a macOS-scoped `--incompatible_autoload_externally`
+  flag in `.bazelrc` plus a `bazel_binary` wrapper (`tools/metals/`) that patches bazel-bsp's struct-returning
+  aspect. Fresh worktree: `just metals-bootstrap` then the metals `import-build` tool. It's a vendored patch to
+  bazel-bsp (not a rules_scala issue); tracked at scalameta/metals#8268. Details:
   `docs/development/dsp-api-metals-mcp.md`.
 - Formatting/linting and CI test runs all go through Bazel (`just fmt` / `just check`, `bazel test`).
 

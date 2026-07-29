@@ -3,5 +3,12 @@ directories:
 
 derive_targets_from_directories: true
 
+# Route bazel-bsp's bazel invocations through a wrapper that re-applies the Bazel-9
+# struct->provider patch to its copied-in aspect (.bazelbsp/aspects/core.bzl) on every
+# invocation — bazel-bsp re-copies the unpatched aspect on each import, so an in-place
+# patch alone doesn't stick. The JavaInfo/CcInfo global fix is the macOS autoload flag in
+# .bazelrc. Together these make Metals work on Bazel 9. See docs/development/dsp-api-metals-mcp.md.
+bazel_binary: tools/metals/bazel-bsp-wrapper.sh
+
 targets:
   //modules/...
