@@ -72,6 +72,13 @@ the bundled bazel-bsp version — is the live target). If a Metals upgrade bumps
 changes, `patch_bazelbsp_core.py` fails loudly (its anchor snippets won't match) — update it, or drop the
 whole shim if upstream has fixed it.
 
+**Performance — launch from inside the dev shell.** The wrapper execs bazel directly when `bazel` is on
+PATH, else falls back to `nix develop --command bazel` (adds shell-eval overhead to *every* bazel-bsp call,
+so the first import and each compile are noticeably slower). Metals launched outside the Nix dev shell
+(e.g. Claude Code started from a plain login shell) takes the slow path — the first `compile-file` can run
+well over a minute (cold compile + `nix develop` warmup). For the fast path, start Metals/Claude Code from
+inside the dev shell (`direnv`/`nix develop`) so `bazel` is on PATH and the fallback is never used.
+
 ## Required per checkout: `just metals-bootstrap`
 
 **In a fresh checkout or git worktree, metals needs a one-time bootstrap.** Metals connects to Bazel via
