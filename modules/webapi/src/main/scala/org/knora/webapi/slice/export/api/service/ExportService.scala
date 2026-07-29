@@ -58,7 +58,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.util.WithAsIs
 
-import ExportService.Internals.*
+import org.knora.webapi.slice.api.v3.export_.ExportService.Internals.*
 
 /* ExportService gathers data from IRIs and converts them to CSV rows.
  *

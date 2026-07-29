@@ -16,7 +16,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
-import OntologyConstants.KnoraBase as Constants
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as Constants
 
 object CheckObjectClassConstraints {
 

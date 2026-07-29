@@ -41,7 +41,7 @@ import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-import TestHelper.ResourceWithValues
+import org.knora.webapi.responders.v2.TestHelper.ResourceWithValues
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValuesEraseSpec extends E2EZSpec {

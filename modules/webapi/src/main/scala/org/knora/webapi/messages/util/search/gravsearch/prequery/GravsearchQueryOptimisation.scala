@@ -18,7 +18,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
 
-import GravsearchQueryOptimisation.StringHyperGraph
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation.StringHyperGraph
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
