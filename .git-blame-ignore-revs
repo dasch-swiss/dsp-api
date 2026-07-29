@@ -20,4 +20,4 @@ d911f56ed4fed536751e32a93437c51bac52aa39
 61d0e1bef26c0911d3968e6b8456583dbbbd7163
 
 # style: reformat Scala with Bazel scalafmt (sbt scalafix/scalafmt -> rules_scala scalafmt)
-c929b9d34413dfaed9b91d8f82fa2e8a2fd87afe
+ccfc0fcc3f91bbf3c4e04960aca5db24b55961e7
