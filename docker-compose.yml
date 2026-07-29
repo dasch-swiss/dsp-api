@@ -9,12 +9,7 @@ services:
       - knora-net
 
   db:
-    # must match the Fuseki tag declared in MODULE.bazel (image_versions.fuseki);
-    # gated by CI's check-fuseki-version-consistency job.
-    # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-    image: daschswiss/apache-jena-fuseki:6.1.0-0
-    build:
-      context: ./modules/fuseki
+    image: daschswiss/apache-jena-fuseki:latest
     ports:
       - "3030:3030"
     volumes:

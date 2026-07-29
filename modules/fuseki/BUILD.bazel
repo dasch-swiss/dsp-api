@@ -1,15 +1,8 @@
-load("@dsp_image_versions//:defs.bzl", "FUSEKI_DIST_VERSION", "FUSEKI_IMAGE", "FUSEKI_IMAGE_TAG")
+load("@dsp_image_versions//:defs.bzl", "FUSEKI_DIST_VERSION")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_load", "oci_push")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//tools/oci:defs.bzl", "oci_stamped_labels")
-
-# //tools/oci:image_versions_match_sbt reads this file's FUSEKI_VERSION against
-# MODULE.bazel's fuseki_dist tarball pin, to catch a dist-version bump that the
-# tarball URL wasn't updated to match.
-exports_files([
-    "BUILD.bazel",
-])
 
 # rules_oci has no ADD-from-URL or apt-install, so the Fuseki tarball and tini/curl
 # are prefetched hermetically in MODULE.bazel (@fuseki_dist, @tini_{amd64,arm64},
@@ -113,12 +106,12 @@ pkg_tar(
     package_dir = "/usr/local/lib",
 )
 
-# org.opencontainers.image.* labels + stamped revision (see oci_stamped_labels'
-# doc in //tools/oci:defs.bzl). `.version` is FUSEKI_IMAGE_TAG (from MODULE.bazel
-# via @dsp_image_versions); docker-compose.yml is kept in step by CI's
-# check-fuseki-version-consistency job -- NOT stamped from git, since it isn't a
-# git-versioned artifact like knora-api/dsp-ingest, it's a pinned upstream release
-# repackaged.
+# org.opencontainers.image.* labels + stamped version/revision (see
+# oci_stamped_labels' doc in //tools/oci:defs.bzl). `.version`/`.revision` are
+# stamped from git (STABLE_GIT_VERSION / STABLE_GIT_COMMIT), so the Fuseki image
+# is versioned by release-please exactly like knora-api/dsp-ingest. The Jena
+# engine (jar) version is NOT the image version — it's carried separately in the
+# image env (FUSEKI_VERSION + the OTLP service.version resource attribute).
 oci_stamped_labels(
     name = "image_labels",
     labels = {
@@ -130,10 +123,10 @@ oci_stamped_labels(
         "org.opencontainers.image.source": "https://github.com/dasch-swiss/dsp-api",
         "org.opencontainers.image.title": "Apache Jena Fuseki",
         "org.opencontainers.image.url": "https://github.com/dasch-swiss/dsp-api/tree/main/modules/fuseki",
-        "org.opencontainers.image.version": FUSEKI_IMAGE_TAG,
     },
     stamp_labels = {
         "org.opencontainers.image.revision": "STABLE_GIT_COMMIT",
+        "org.opencontainers.image.version": "STABLE_GIT_VERSION",
     },
 )
 
@@ -153,8 +146,13 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": FUSEKI_IMAGE_TAG,
         "FUSEKI_VERSION": FUSEKI_DIST_VERSION,
+        # Surfaces the deployed Jena engine version in Grafana: the OTel Java
+        # agent (run at runtime via JAVA_TOOL_OPTIONS) attaches this as an OTLP
+        # resource attribute -> target_info{service_name="DSP_db_db"}
+        # service_version, the same channel sipi's version panel reads.
+        # Single-sourced from FUSEKI_DIST_VERSION (MODULE.bazel).
+        "OTEL_RESOURCE_ATTRIBUTES": "service.version=" + FUSEKI_DIST_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -183,8 +181,13 @@ oci_image(
         "FUSEKI_HOME": "/jena-fuseki",
         "FUSEKI_BASE": "/fuseki",
         "INDEX_BASE": "/fuseki/lucene",
-        "IMAGE_VERSION": FUSEKI_IMAGE_TAG,
         "FUSEKI_VERSION": FUSEKI_DIST_VERSION,
+        # Surfaces the deployed Jena engine version in Grafana: the OTel Java
+        # agent (run at runtime via JAVA_TOOL_OPTIONS) attaches this as an OTLP
+        # resource attribute -> target_info{service_name="DSP_db_db"}
+        # service_version, the same channel sipi's version panel reads.
+        # Single-sourced from FUSEKI_DIST_VERSION (MODULE.bazel).
+        "OTEL_RESOURCE_ATTRIBUTES": "service.version=" + FUSEKI_DIST_VERSION,
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -218,15 +221,16 @@ alias(
 )
 
 # `bazel run //modules/fuseki:load` — load the host-arch image into the local
-# Docker daemon at the version tag docker-compose.yml consumes (fuseki is
-# referenced by version, not :latest, unlike the other three images).
+# Docker daemon at :latest (what docker-compose.yml and the test containers
+# reference), same as the other three images.
 oci_load(
     name = "load",
     image = ":image",
-    repo_tags = [FUSEKI_IMAGE],
+    repo_tags = ["daschswiss/apache-jena-fuseki:latest"],
 )
 
-# `bazel run //modules/fuseki:push -- -t 6.1.0-0` — push the multi-arch index.
+# `bazel run //modules/fuseki:push -- -t latest -t <version>` — push the
+# multi-arch index (see `just docker-publish-fuseki-image`).
 oci_push(
     name = "push",
     image = ":index",

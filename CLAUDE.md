@@ -258,8 +258,11 @@ docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z | grep -i digest   # ind
 from this base), not a pinned version. After bumping, remember to sync the same version in the
 **ops-deploy** repo when deploying the DSP release.
 
-(The **Fuseki** image tag is likewise single-sourced — in `MODULE.bazel` via `image_versions.fuseki`,
-consumed by `modules/fuseki/BUILD.bazel` and the `/version` report through `@dsp_image_versions`.)
+(The **Fuseki** image is versioned by release-please like knora-api/dsp-ingest — its tag is the DSP
+release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist version**
+(`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the `/version`
+report, and the image's OTLP `service.version` resource attribute — see "Updating Jena/Fuseki" in
+`modules/fuseki/README.md`.)
 
 ### Code Style
 

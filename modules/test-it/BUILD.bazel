@@ -1,4 +1,3 @@
-load("@dsp_image_versions//:defs.bzl", "FUSEKI_IMAGE")
 load("//tools/scalafmt:defs.bzl", "scala_junit_test")
 
 # Container-backed integration specs (Fuseki/Sipi/dsp-ingest via testcontainers). Requires the
@@ -66,10 +65,10 @@ _TAGS = [
 _JVM_FLAGS = ["-Djava.io.tmpdir=/tmp"]
 
 # FusekiTestContainer (in testkit) launches this image; inject it through the
-# build graph (sourced from @dsp_image_versions in MODULE.bazel) rather than
-# reading a compiled version-report. The image is loaded by
+# build graph rather than reading a compiled version-report. The Fuseki image is
+# versioned by release-please and loaded locally at :latest by
 # `just docker-load-test-images` before these run.
-_ENV = {"FUSEKI_IMAGE": FUSEKI_IMAGE}
+_ENV = {"FUSEKI_IMAGE": "daschswiss/apache-jena-fuseki:latest"}
 
 scala_junit_test(
     name = "test",

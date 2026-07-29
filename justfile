@@ -148,23 +148,20 @@ docker-publish-ingest-image *FLAGS='':
     TAG=$(just docker-image-tag)
     bazel run {{FLAGS}} //modules/ingest:push -- -t latest -t "$TAG"
 
-# Publish dsp-api/sipi/ingest images to Docker Hub (Fuseki excluded: published separately)
-docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS)
+# Publish all images (dsp-api/sipi/ingest/fuseki) to Docker Hub
+docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS) (docker-publish-fuseki-image FLAGS)
 
-# Build the Fuseki image with Bazel + load it into the local Docker daemon (at its version tag)
+# Build the Fuseki image with Bazel + load it into the local Docker daemon (at :latest)
 docker-build-fuseki-image *FLAGS='':
     bazel run {{FLAGS}} //modules/fuseki:load
 
-# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel
+# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
+# The Fuseki image is versioned by release-please (git version), same as the other three images.
 docker-publish-fuseki-image *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    # Read the tag from its single source (MODULE.bazel's image_versions.fuseki);
-    # modules/fuseki/BUILD.bazel no longer holds the literal (it loads FUSEKI_IMAGE
-    # from @dsp_image_versions), so grepping it there would yield an empty tag.
-    VER=$(grep -oE 'daschswiss/apache-jena-fuseki:[^"]+' MODULE.bazel | head -1 | cut -d: -f2)
-    test -n "$VER" || { echo "ERROR: could not read fuseki image tag from MODULE.bazel"; exit 1; }
-    bazel run {{FLAGS}} //modules/fuseki:push -- -t "$VER"
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/fuseki:push -- -t latest -t "$TAG"
 
 # Start stack
 stack-start:

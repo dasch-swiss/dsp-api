@@ -81,6 +81,25 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
   can't be filtered by the env variable directly — join via `and on(instance)` against a
   SIPI-present series, or match the host by name. (No node panels are on the dashboard currently.)
 
+## Fuseki metrics gotchas
+
+The Fuseki triplestore emits OTLP through its JVM's OTel agent under **`service_name="DSP_db_db"`**
+(`fuseki/` dashboard). Unlike sipi:
+
+- **No `deployment_environment_name`** on `target_info` (and no `environment` either) — instances are
+  distinguished only by **`host_name`** (`dasch-vre-{dev,stage,prod}-01`, plus dev-02/03 and an
+  `its-bs-dasch-ls-test-01` box). Key/legend version panels by `host_name`, not an env variable.
+- **Version** is the OTLP `service.version` resource attribute, baked into the image from
+  `FUSEKI_DIST_VERSION` (`MODULE.bazel`). Read it the sipi way:
+  `topk(1, timestamp(target_info{service_name="DSP_db_db"}))` / `timestamp(target_info{…})` with
+  `legendFormat={{host_name}} — {{service_version}}`, `textMode=name`. It is **empty until an image
+  carrying the attribute is deployed** (this feature's first deploy).
+- **Dual-pipeline collision (same as sipi):** `jvm_*` / `http_server_request_duration_seconds_*` for
+  this service exist on both the OTLP path (`job="DSP_db_db"`) and a legacy scrape
+  (`job="service/metrics"`), and carry **no `host_name`** (only `instance`/`job`/`environment`). Scope
+  by `job="DSP_db_db"` and key by `instance`/`environment` if you add JVM/HTTP panels — the current
+  dashboard is version-only to avoid this.
+
 ## Conventions
 
 - Do not use "Knora" in human-readable text (titles/descriptions) — repo-wide convention.

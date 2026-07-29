@@ -97,9 +97,13 @@ target's `env`), not by reading a version-report object.
 - Prefer deriving a value from the artifact itself over a redundant copy: the **sipi** version is read
   from the pinned base image's `org.opencontainers.image.version` OCI label
   (`//tools/buildinfo:oci_config_label`); the MODULE.bazel digest is its sole source.
-- A value we must declare in-repo (e.g. the **fuseki** image tag, with DaSCH's `-0` build suffix) lives
-  in `MODULE.bazel` and reaches BUILD files via a module extension → generated `@dsp_image_versions//:defs.bzl`
-  (BUILD files can't `load()` MODULE.bazel directly).
+- The **fuseki** image is versioned by **release-please** (git version, stamped into
+  `org.opencontainers.image.version`), exactly like knora-api/dsp-ingest — not by a hand-typed tag.
+  The one thing declared in-repo is the **Jena dist (jar) version** (`FUSEKI_DIST_VERSION` in
+  `MODULE.bazel`), which drives the `@fuseki_dist` tarball URL, the `/version` report, and the image's
+  OTLP `service.version` resource attribute (which surfaces the deployed engine version in Grafana). It
+  reaches BUILD files via a module extension → generated `@dsp_image_versions//:defs.bzl` (BUILD files
+  can't `load()` MODULE.bazel directly).
 - Dependency versions: `MODULE.bazel`'s `maven.install` is the sole source; Renovate updates it
   (`.github/renovate.json`); the lock is re-pinned by `bazel run @unpinned_maven//:pin`.
 
