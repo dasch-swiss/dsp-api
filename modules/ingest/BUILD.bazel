@@ -232,5 +232,5 @@ oci_push(
 filegroup(
     name = "license_srcs",
     srcs = glob(["src/**/*.scala"]),
-    visibility = ["//tools/license:__pkg__"],
+    visibility = ["//tools:__subpackages__"],
 )

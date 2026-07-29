@@ -60,7 +60,7 @@ check *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
     for t in {{scalafmt_targets}}; do bazel run {{FLAGS}} "$t.format-test"; done
-    bazel test {{FLAGS}} //tools/license:spdx_header_check
+    bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
 
 # Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
 header-fix:
