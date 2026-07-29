@@ -5,8 +5,10 @@
 
 package swiss.dasch.integration.testcontainers
 
-import zio.nio.file.{Files, Path}
-import zio.{ULayer, ZLayer}
+import zio.ULayer
+import zio.ZLayer
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.attribute.PosixFilePermissions.asFileAttribute

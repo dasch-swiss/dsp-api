@@ -13,7 +13,6 @@ import zio.json.ast.*
 import java.time.Instant
 
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-
 import org.knora.webapi.testservices.ResponseOps.assert200
 
 case class TestOntologyApiClient(private val apiClient: TestApiClient) {

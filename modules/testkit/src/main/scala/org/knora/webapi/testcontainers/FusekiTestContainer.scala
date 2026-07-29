@@ -5,12 +5,12 @@
 
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.toLayer
-
 import org.testcontainers.containers.GenericContainer
 import zio.ULayer
 import zio.http.URL
+
+import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.testcontainers.TestContainerOps.toLayer
 
 // The Fuseki image ref is injected by Bazel via the test target's `env`
 // (FUSEKI_IMAGE, sourced from @dsp_image_versions in MODULE.bazel), so the test

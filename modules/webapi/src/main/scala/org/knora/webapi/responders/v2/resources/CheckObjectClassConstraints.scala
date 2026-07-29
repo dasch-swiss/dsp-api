@@ -11,12 +11,11 @@ import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as Constants
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-
-import org.knora.webapi.messages.OntologyConstants.KnoraBase as Constants
 
 object CheckObjectClassConstraints {
 

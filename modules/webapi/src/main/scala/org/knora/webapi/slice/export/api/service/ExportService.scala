@@ -46,6 +46,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v3.`export`.FileLink
 import org.knora.webapi.slice.api.v3.`export`.LegalInfo
 import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
+import org.knora.webapi.slice.api.v3.export_.ExportService.Internals.*
 import org.knora.webapi.slice.api.v3.export_.ExportedResource
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -57,8 +58,6 @@ import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.util.WithAsIs
-
-import org.knora.webapi.slice.api.v3.export_.ExportService.Internals.*
 
 /* ExportService gathers data from IRIs and converts them to CSV rows.
  *
