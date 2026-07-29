@@ -74,5 +74,15 @@ object ApacheLuceneSupport {
      */
     def getSingleTerms: Seq[String] =
       queryString.split(' ').toSeq
+
+    /**
+     * Splits the query into terms and quoted phrases, keeping a quoted phrase (e.g. `"down the rabbit hole"`)
+     * as a single element instead of chopping it on spaces the way [[getSingleTerms]] does. This is the one
+     * place the fulltext input validation and the breadth probe agree on what a "term" is (DEV-6864).
+     *
+     * @return the terms and quoted phrases contained in a Lucene query.
+     */
+    def termsAndPhrases: Seq[String] =
+      ApacheLuceneSupport.separateTermsAndPhrasesRegex.findAllIn(queryString).toList
   }
 }

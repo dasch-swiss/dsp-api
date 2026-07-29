@@ -62,6 +62,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.search.FulltextSearchTerms
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -548,6 +549,7 @@ final class SearchResponderV2Live(
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       _                    <- validateSearchString(searchValue)
+      _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql          <- SearchFulltextQuery.build(
                        searchTerms = LuceneQueryString(searchValue),
@@ -597,6 +599,7 @@ final class SearchResponderV2Live(
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       _                    <- validateSearchString(searchValue)
+      _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql         <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
@@ -1215,6 +1218,24 @@ final class SearchResponderV2Live(
           )
           .when(searchStr.length < searchValueMinLength)
     } yield ()
+  }
+
+  // Fulltext-only rule (LITERAL-LENGTH, DEV-6864): a wildcard term must carry at least the same number of
+  // *literal* characters as the whole-string minimum. `de*` matches 374k candidates and blows the timeout; the
+  // literal-length floor is a cheap, explainable proxy that rejects it before any query runs. Deliberately not in
+  // validateSearchString, whose other two call sites are searchbylabel, where a typed `*` is an escaped literal.
+  private def ensureWildcardTermsLongEnough(searchStr: String): Task[Unit] = {
+    val minLength = appConfig.v2.fulltextSearch.searchValueMinLength
+    val tooShort  = FulltextSearchTerms.tooShortWildcardTerms(LuceneQueryString(searchStr), minLength)
+    ZIO
+      .fail(
+        BadRequestException(
+          s"A wildcard search term must contain at least $minLength characters besides the wildcard, " +
+            s"but the following do not: ${tooShort.mkString(", ")}.",
+        ),
+      )
+      .when(tooShort.nonEmpty)
+      .unit
   }
 
   override def searchResourcesByLabelV2(
