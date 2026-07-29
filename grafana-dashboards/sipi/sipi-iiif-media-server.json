@@ -15,7 +15,7 @@
         "spec": {
           "id": 13,
           "title": "Environment",
-          "description": "OTLP deployment.environment.name for the selected environment.",
+          "description": "Ansible host (OTLP resource attribute deployment.environment.name) the dashboard is reading: the primary VRE box vre-$environment-01. SIPI also runs on LS/RDU hosts; all panels here are scoped to this host only.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -31,7 +31,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\".*$environment.*\"}))", "instant": true, "legendFormat": "{{deployment_environment_name}}", "queryType": "instant", "range": false }
+                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))", "instant": true, "legendFormat": "{{deployment_environment_name}}", "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -56,7 +56,7 @@
         "spec": {
           "id": 14,
           "title": "SIPI Version",
-          "description": "service.version from the OTLP resource (attached to all spans and metrics), most recently reported.",
+          "description": "service.version from the OTLP resource (attached to all spans and metrics), most recently reported by the primary VRE host.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -72,7 +72,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\".*$environment.*\"}))", "instant": true, "legendFormat": "{{service_version}}", "queryType": "instant", "range": false }
+                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))", "instant": true, "legendFormat": "{{service_version}}", "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -97,7 +97,7 @@
         "spec": {
           "id": 2,
           "title": "Request Rate",
-          "description": "",
+          "description": "HTTP requests per second served by SIPI (OTLP http.server.request.duration count), all routes, primary VRE host.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -113,7 +113,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -138,7 +138,7 @@
         "spec": {
           "id": 3,
           "title": "P95 Latency",
-          "description": "",
+          "description": "95th-percentile HTTP request latency across all SIPI routes (OTLP http.server.request.duration), primary VRE host.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -154,7 +154,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -185,7 +185,7 @@
         "spec": {
           "id": 4,
           "title": "Cache Hit Ratio",
-          "description": "",
+          "description": "Share of serves answered from the file-based image cache: hits / (hits + misses). A falling ratio means more full decodes, i.e. higher CPU and latency.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -201,7 +201,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": { "expr": "sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -234,7 +234,7 @@
         "spec": {
           "id": 5,
           "title": "5xx Rate",
-          "description": "Server-error responses per second (HTTP 5xx).",
+          "description": "Server-error responses per second (HTTP 5xx), all SIPI routes, primary VRE host.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -250,7 +250,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",http_response_status_code=~\"5..\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\",http_response_status_code=~\"5..\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
                     }
                   }
                 }
@@ -281,7 +281,7 @@
         "spec": {
           "id": 6,
           "title": "Latency Percentiles (p50/p95/p99)",
-          "description": "",
+          "description": "p50/p95/p99 HTTP request latency across all SIPI routes (OTLP http.server.request.duration histogram), primary VRE host.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -297,7 +297,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -311,7 +311,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -325,7 +325,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -345,53 +345,12 @@
           }
         }
       },
-      "panel-7": {
-        "kind": "Panel",
-        "spec": {
-          "id": 7,
-          "title": "Request Rate",
-          "description": "Scoped to the primary VRE host dasch-vre-$environment-01.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01.*\"}[$__rate_interval]))", "instant": false, "legendFormat": "requests", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] }
-            }
-          }
-        }
-      },
       "panel-16": {
         "kind": "Panel",
         "spec": {
           "id": 16,
           "title": "Auth route request rate by status (/admin/files)",
-          "description": "dsp-api permission check SIPI calls on every IIIF request. 4xx = auth denials, 5xx = errors.",
+          "description": "dsp-api permission check SIPI calls on every IIIF request (tapir_request_duration_seconds, scoped by instance to the primary VRE host). 4xx = auth denials, 5xx = errors.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -407,7 +366,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(status) (rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{status}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(status) (rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{status}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -432,7 +391,7 @@
         "spec": {
           "id": 17,
           "title": "Auth route avg latency (/admin/files)",
-          "description": "Average latency of the dsp-api permission check (rate of sum / rate of count). No histogram buckets are exported for this route, so percentiles are unavailable.",
+          "description": "Average latency of the dsp-api permission check (rate of sum / rate of count; the tapir metric has no histogram buckets, so no percentiles). Adds directly to every IIIF request.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -448,7 +407,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "avg latency", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "avg latency", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -473,7 +432,7 @@
         "spec": {
           "id": 8,
           "title": "Cache Usage vs Limit",
-          "description": "",
+          "description": "Bytes in the file-based image cache vs the configured size limit (sipi.cache.size_bytes / size_limit_bytes). LRU eviction starts when a limit is reached; an unlimited cache (-1) hides the limit series.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -489,7 +448,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_size_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -503,7 +462,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{service_name=\"sipi\",environment=~\"$environment\"} > 0)", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -528,7 +487,7 @@
         "spec": {
           "id": 20,
           "title": "Cache Files vs Limit",
-          "description": "",
+          "description": "Files in the image cache vs the configured file-count limit. Dual-limit LRU: eviction triggers on size or file count, whichever is hit first.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -544,7 +503,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_files{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -558,7 +517,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files_limit{service_name=\"sipi\",environment=~\"$environment\"} > 0)", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_cache_files_limit{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -583,7 +542,7 @@
         "spec": {
           "id": 21,
           "title": "Cache Evictions & Skips (rate)",
-          "description": "",
+          "description": "Cache maintenance per second: entries evicted by the LRU, and writes skipped because the file was too large to cache.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -599,7 +558,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -613,7 +572,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -638,7 +597,7 @@
         "spec": {
           "id": 22,
           "title": "Preflight Cache Hit Ratio",
-          "description": "",
+          "description": "Share of preflight authorization decisions served from the in-shell access cache (a hit skips the Lua preflight hook entirely).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -654,7 +613,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -679,7 +638,7 @@
         "spec": {
           "id": 9,
           "title": "Decode Memory Used vs Budget",
-          "description": "",
+          "description": "Decode-memory admission control: bytes currently reserved by in-flight decodes vs the configured budget. Decodes whose estimate would exceed the budget are rejected. The gauge is sampled at export interval, so short spikes between exports are not visible.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -695,7 +654,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -709,7 +668,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -734,7 +693,7 @@
         "spec": {
           "id": 23,
           "title": "Decode Memory Admission (rate)",
-          "description": "Admission-control decisions on the decode-memory budget.",
+          "description": "Admission-control decisions on the decode-memory budget: acquired = admitted; rejected = would exceed the budget; near_limit = usage crossed 80% of budget; shadow_rejected = would have been rejected while the budget runs in non-enforcing shadow mode.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -750,7 +709,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -764,7 +723,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -778,7 +737,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -792,7 +751,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -817,7 +776,7 @@
         "spec": {
           "id": 25,
           "title": "Worker Pool Permits (in use vs total)",
-          "description": "",
+          "description": "Engine worker-pool permits held vs total (SIPI_NTHREADS). In use = total means every worker is busy and new requests queue.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -833,7 +792,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_in_use{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_permits_in_use{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -847,7 +806,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_total{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_permits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -872,7 +831,7 @@
         "spec": {
           "id": 26,
           "title": "Worker Pool Waiting",
-          "description": "Requests queued waiting for a worker permit.",
+          "description": "Requests queued waiting for a worker permit. Sustained non-zero means the pool is saturated; see load-shed/timeout for the overflow.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -888,7 +847,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_waiting{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_pool_waiting{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "waiting", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -913,7 +872,7 @@
         "spec": {
           "id": 27,
           "title": "Pool Load-Shed & Queue Timeout (rate)",
-          "description": "Overload signals: requests shed or timed out waiting for a worker.",
+          "description": "Overload signals per second: requests shed with 503 because the queue was full, and requests that timed out waiting for a permit.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -929,7 +888,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -943,7 +902,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -968,7 +927,7 @@
         "spec": {
           "id": 28,
           "title": "Rate Limit: Allowed vs Rejected (rate)",
-          "description": "",
+          "description": "Per-client rate limiter: requests allowed vs rejected, per second.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -984,7 +943,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -998,7 +957,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1023,7 +982,7 @@
         "spec": {
           "id": 29,
           "title": "Rate Limit: Near-Limit & Shadow-Rejected (rate)",
-          "description": "",
+          "description": "Rate-limiter early warnings per second: near_limit = a client crossed 80% of its budget; shadow_rejected = would have been rejected while the limiter runs in non-enforcing shadow mode.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1039,7 +998,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1053,7 +1012,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1078,7 +1037,7 @@
         "spec": {
           "id": 33,
           "title": "Rate Limit: Clients Tracked",
-          "description": "Active client entries in the rate limiter.",
+          "description": "Active client entries in the rate limiter (distinct clients seen within the tracking window).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1094,7 +1053,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_rate_limit_clients_tracked{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "clients tracked", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_rate_limit_clients_tracked{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "clients tracked", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1119,7 +1078,7 @@
         "spec": {
           "id": 30,
           "title": "Errors (rate)",
-          "description": "Image-too-large rejections, memory allocation failures, and client disconnects. (essentials hash mismatch and rejected connections are not exported over OTLP.)",
+          "description": "Engine error signals per second: requests rejected by the output pixel limit (image too large), allocation failures during image processing, and requests aborted by client disconnect.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1135,7 +1094,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1149,7 +1108,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
                     }
                   }
                 },
@@ -1163,7 +1122,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1188,7 +1147,7 @@
         "spec": {
           "id": 11,
           "title": "SIPI Container CPU Usage",
-          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif).",
+          "description": "cAdvisor CPU usage of the SIPI container (service DSP_iiif_iiif) on the primary VRE host, in cores.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1229,7 +1188,7 @@
         "spec": {
           "id": 12,
           "title": "SIPI Container Memory Usage",
-          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif). 'working set' is the real, non-reclaimable memory the cgroup OOM killer acts on; 'usage (incl. page cache)' additionally counts reclaimable page cache from reading image files, so it climbs under load and stays elevated after load without indicating a leak. Watch the working set for actual memory health.",
+          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif) on the primary VRE host. 'working set' is the real, non-reclaimable memory the cgroup OOM killer acts on; 'usage (incl. page cache)' additionally counts reclaimable page cache from reading image files, so it saturates at the limit under load without indicating a problem. 'limit' is the container memory limit - working set approaching it risks an OOM kill. On images before SIPI 6.2.3 the working set ratchets up to a concurrency x peak-decode watermark and plateaus (glibc malloc arenas retain freed decode buffers); that is expected, not a leak.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1260,6 +1219,20 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": { "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "usage (incl. page cache)", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(container_spec_memory_limit_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "limit", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1319,7 +1292,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
+                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1360,7 +1333,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rejected_connections_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected connections", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_rejected_connections_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected connections", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1401,7 +1374,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_waiting_connections{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(sipi_waiting_connections{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1442,7 +1415,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1483,7 +1456,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1524,7 +1497,7 @@
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(outcome) (rate(sipi_read_shape_fast_path_total{service_name=\"sipi\",environment=~\"$environment\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{outcome}}", "queryType": "range", "range": true }
+                      "spec": { "expr": "sum by(outcome) (rate(sipi_read_shape_fast_path_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{outcome}}", "queryType": "range", "range": true }
                     }
                   }
                 }
@@ -1578,8 +1551,7 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-6" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-7" } } }
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 8, "element": { "kind": "ElementReference", "name": "panel-6" } } }
                   ]
                 }
               }
