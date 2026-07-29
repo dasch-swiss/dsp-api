@@ -1516,6 +1516,116 @@
             }
           }
         }
+      },
+      "panel-47": {
+        "kind": "Panel",
+        "spec": {
+          "id": 47,
+          "title": "Allocator: In Use vs Retained",
+          "description": "Process-allocator accounting (sipi_malloc_* gauges, SIPI > 6.2.3; empty until that release is deployed). In use = allocated and not yet freed — grows without bound only under a true leak. Retained = freed but held by the allocator instead of returned to the OS — the series that explains an RSS ratchet with no leak (the 2026-07-29 OOM). See sipi docs/adr/0019-mimalloc-production-allocator.md.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_malloc_in_use_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "In use", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_malloc_retained_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Retained (freed, not returned)", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
+      },
+      "panel-48": {
+        "kind": "Panel",
+        "spec": {
+          "id": 48,
+          "title": "Allocator: Held from OS",
+          "description": "Bytes the allocator holds from the OS backing RSS (arena) and the mmap-served share outside the regular heap (sipi_malloc_* gauges, SIPI > 6.2.3). The gap between Held-from-OS and the Resources row's container working set is non-allocator memory (thread stacks, code, page tables).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_malloc_arena_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Held from OS", "queryType": "range", "range": true }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "grafanacloud-prom" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": { "expr": "sum(sipi_malloc_mmap_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "mmap-served", "queryType": "range", "range": true }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+            }
+          }
+        }
       }
     },
     "layout": {
@@ -1602,6 +1712,22 @@
                   "items": [
                     { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-9" } } },
                     { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-23" } } }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Allocator",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-47" } } },
+                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-48" } } }
                   ]
                 }
               }
