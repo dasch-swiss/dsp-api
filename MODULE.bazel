@@ -278,21 +278,21 @@ use_repo(maven, "maven", "unpinned_maven")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
-# Upstream Sipi image (daschswiss/sipi:v6.2.2), pinned per-arch by manifest
+# Upstream Sipi image (daschswiss/sipi:v6.2.3), pinned per-arch by manifest
 # digest. Pulling each platform's single image manifest directly avoids
-# index/variant matching — the arm64 entry of the v6.2.2 index carries a `v8`
+# index/variant matching — the arm64 entry of the v6.2.3 index carries a `v8`
 # variant, which a bare `linux/arm64` platform request does not match. The tag
 # is recorded in `Dependencies.sipiImage` (project/Dependencies.scala); bump both
 # together — see "Bumping the SIPI version" in CLAUDE.md.
-# Index digest: sha256:379f2a19a193bef907c4d99b4bfa49c2b76c62c44fa06cf52844aeaf14e63eac
+# Index digest: sha256:6d1d176a231eb4bcd368afe326d82e0b5008c692166a5ea57ecf284f3b6e05c8
 oci.pull(
     name = "sipi_base_amd64",
-    digest = "sha256:113450308ca60ec302e3dbbd4b7678a9be2509e4cadd68f4b77158fdce9c9676",
+    digest = "sha256:6342a952a1e956a5b973201f520c05b28b38ee674359367a18045ee103d98783",
     image = "index.docker.io/daschswiss/sipi",
 )
 oci.pull(
     name = "sipi_base_arm64",
-    digest = "sha256:b7280d932e381718cc3a2dd70f8475320d01143e697af94a4ea8a1dadb55c2d9",
+    digest = "sha256:ec5eee0d6dbec845ee1e40bfcb38d9d770a672337cbe8a828a39d0172aee7278",
     image = "index.docker.io/daschswiss/sipi",
 )
 use_repo(
