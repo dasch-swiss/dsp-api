@@ -11,9 +11,10 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 - **Bazel is the only build tool (sbt was removed).** Compile via the `metals` MCP tools when they work
   (`compile-file` / `compile-module`, incremental + structured diagnostics; `get-usages` beats grep), else
   `bazel build //modules/<m>:<target>`.
-- **Metals is currently degraded post-sbt:** it connects to Bazel via bazel-bsp, but bazel-bsp's Scala
-  aspect doesn't yet support rules_scala 7.x, so type-aware navigation / `list-modules` don't work.
-  Fall back to `grep`/read + `bazel build` until it catches up. Bootstrap flow + status:
+- **Metals is currently degraded on Bazel 9:** it connects to Bazel via bazel-bsp, but bazel-bsp 4.0.x
+  (bundled with Metals 1.6.7) isn't compatible with Bazel 9.1.1 (removed Starlark globals + struct-returning
+  aspect), so type-aware navigation / `list-modules` don't work. Not a rules_scala 7.x issue. No config-only
+  fix; fall back to `grep`/read + `bazel build`. Tracked at scalameta/metals#8268. Root cause + workaround:
   `docs/development/dsp-api-metals-mcp.md`.
 - Formatting/linting and CI test runs all go through Bazel (`just fmt` / `just check`, `bazel test`).
 

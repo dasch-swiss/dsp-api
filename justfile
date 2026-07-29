@@ -74,10 +74,12 @@ header-fix:
 # prerequisites and warms Bazel; the running MCP server connects when you call its
 # `import-build` tool once. See docs/development/dsp-api-metals-mcp.md.
 #
-# KNOWN LIMITATION: bazel-bsp's Scala aspect does not yet support rules_scala 7.x, so
-# type-aware Scala intelligence (compile diagnostics, get-usages) is currently degraded
-# — Metals connects and imports, but Scala targets fail the aspect analysis. Agents fall
-# back to grep/read for Scala navigation until bazel-bsp catches up.
+# KNOWN LIMITATION: bazel-bsp 4.0.x (bundled with Metals 1.6.7) is not compatible with Bazel
+# 9.1.1 (removed Starlark globals like JavaInfo + a struct-returning aspect impl), so type-aware
+# Scala intelligence (compile diagnostics, get-usages) is currently degraded — Metals connects
+# and imports, but Scala targets fail the aspect analysis. Not a rules_scala 7.x issue. Agents
+# fall back to grep/read + bazel build. Tracked at scalameta/metals#8268; see
+# docs/development/dsp-api-metals-mcp.md.
 metals-bootstrap:
     #!/usr/bin/env bash
     set -euo pipefail
