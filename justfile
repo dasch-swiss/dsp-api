@@ -59,7 +59,10 @@ test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
 check *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    for t in {{scalafmt_targets}}; do bazel run {{FLAGS}} "$t.format-test"; done
+    # scalafmt format-test runs LOCALLY (no {{FLAGS}}): `bazel run <t>.format-test` diffs the
+    # source against a generated `.fmt.output`, which under RBE build-without-the-bytes is never
+    # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
+    for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
     bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
 
 # Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
