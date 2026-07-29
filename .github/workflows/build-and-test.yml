@@ -37,8 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release-please') }}
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Install Nix (Bazel drives the build)
@@ -105,8 +107,10 @@ jobs:
       group: ${{ github.ref }}-it
       cancel-in-progress: true
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Install Nix (Bazel drives the build and image loads)
@@ -165,8 +169,10 @@ jobs:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Install Nix (Bazel drives the build and image loads)
@@ -229,7 +235,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 25
-          cache: sbt
       - name: Install Nix (Bazel drives the build and image loads)
         uses: DeterminateSystems/determinate-nix-action@v3
       - name: Enable Nix build cache
@@ -279,8 +284,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Checkout source
@@ -302,57 +309,61 @@ jobs:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - uses: actions/checkout@v5
-      - name: Assert modules/fuseki/BUILD.bazel, Dependencies.scala, and docker-compose.yml agree
+      - name: Assert MODULE.bazel (image_versions.fuseki) and docker-compose.yml agree
         run: |
           set -euo pipefail
-          BUILD_VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
-          DEPS_VER=$(grep 'val fusekiImage' project/Dependencies.scala | sed 's/.*:\([^"]*\)".*/\1/' | tr -d '[:space:]')
+          # MODULE.bazel is the single source (image_versions.fuseki image=...);
+          # modules/fuseki/BUILD.bazel loads it, so it can't drift. docker-compose.yml
+          # is an un-loadable mirror, so it stays gated here.
+          MODULE_VER=$(grep -oE 'apache-jena-fuseki:[^"]+' MODULE.bazel | head -1 | cut -d: -f2)
           COMPOSE_VER=$(grep 'image: daschswiss/apache-jena-fuseki:' docker-compose.yml | sed 's/.*apache-jena-fuseki://' | tr -d '[:space:]')
-          echo "modules/fuseki/BUILD.bazel: $BUILD_VER"
-          echo "project/Dependencies.scala: $DEPS_VER"
-          echo "docker-compose.yml:         $COMPOSE_VER"
-          [ "$BUILD_VER" = "$DEPS_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != Dependencies.scala ($DEPS_VER)"; exit 1; }
-          [ "$BUILD_VER" = "$COMPOSE_VER" ] || { echo "ERROR: BUILD.bazel ($BUILD_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
-          echo "All Fuseki versions match: $BUILD_VER"
+          echo "MODULE.bazel:       $MODULE_VER"
+          echo "docker-compose.yml: $COMPOSE_VER"
+          [ "$MODULE_VER" = "$COMPOSE_VER" ] || { echo "ERROR: MODULE.bazel ($MODULE_VER) != docker-compose.yml ($COMPOSE_VER)"; exit 1; }
+          echo "All Fuseki versions match: $MODULE_VER"
 
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: extractions/setup-just@v2
-      - name: Check formatting
-        run: just check
-
-  # Temporary drift gate: asserts tools/workspace_status.sh's STABLE_GIT_VERSION
-  # byte-matches sbt's `print dockerImageTag` on every PR. Relies on `preparation`'s
-  # `fetch-depth: 0` checkout (full history + tags) — without tags, both sides fall
-  # back identically to the bare short hash and the gate passes vacuously. Remove
-  # when sbt is retired from the build.
-  check-docker-image-tag:
-    name: Check docker-image-tag (workspace_status vs sbt)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Install Nix (Bazel drives scalafmt + the header check)
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Enable Nix build cache
+        uses: DeterminateSystems/magic-nix-cache-action@v14
+      - name: Restore Bazel repository cache
+        uses: actions/cache@v5
         with:
-          java-version: ${{ env.JAVA_VERSION }}
-      - uses: extractions/setup-just@v2
-      - name: Assert workspace_status.sh matches sbt's dockerImageTag
-        run: just check-docker-image-tag
+          path: ~/.cache/bazel-repo
+          key: bazel-repo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('MODULE.bazel.lock') }}
+          restore-keys: bazel-repo-${{ runner.os }}-${{ runner.arch }}-
+      - name: Set up Remote Build Execution (mTLS + flags)
+        id: rbe
+        uses: ./.github/actions/bazel-rbe
+        with:
+          stage: full
+          runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
+          ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
+          client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
+          client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
+      - name: Check formatting (scalafmt) + license headers
+        run: nix develop --command just check ${{ steps.rbe.outputs.flags }}
 
   docker-healthcheck:
     name: Run the healthcheck from the container
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
+      - name: Checkout (bootstrap so the local preparation action resolves)
+        uses: actions/checkout@v5
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
       - name: Install Nix (Bazel drives the image builds)

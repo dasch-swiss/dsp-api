@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.v2.TestHelper.ResourceWithValues
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -40,8 +41,6 @@ import org.knora.webapi.slice.resources.repo.service.ValueModel
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-
-import TestHelper.ResourceWithValues
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValuesEraseSpec extends E2EZSpec {

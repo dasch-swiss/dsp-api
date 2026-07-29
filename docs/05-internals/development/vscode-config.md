@@ -21,7 +21,8 @@ VSCode should be configured so that it austomatically formats (e.g. on file save
 
 ## Running Tests
 
-The tests can be run through `just` recipes or through SBT.
+The tests can be run through `just` recipes (e.g. `just test-unit`) or directly with Bazel
+(e.g. `bazel test //modules/webapi:test`).
 The most convenient way to run the tests is through VSCode.
 Metals recognizes scalatest suits and lets you run them in the text explorer:
 

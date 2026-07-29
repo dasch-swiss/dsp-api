@@ -330,6 +330,22 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "//tools/image_versions:extension.bzl%image_versions": {
+      "general": {
+        "bzlTransitiveDigest": "IFy8L5UXhgD0npXHRliVrdb9rZzdsbDw1DGzWh8dSpc=",
+        "usagesDigest": "BBliS9y3qR87ERQ2MdvH2rjSe99DMV48MFo/w6v1BB0=",
+        "recordedInputs": [],
+        "generatedRepoSpecs": {
+          "dsp_image_versions": {
+            "repoRuleId": "@@//tools/image_versions:extension.bzl%_defs_repo",
+            "attributes": {
+              "fuseki_image": "daschswiss/apache-jena-fuseki:6.1.0-0",
+              "fuseki_dist_version": "6.1.0"
+            }
+          }
+        }
+      }
+    },
     "@@pybind11_bazel+//:internal_configure.bzl%internal_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "b+RP7Sgl8KN0VHamrgTqzGLuYPcQ/Mo4ptNkkHUIIlA=",

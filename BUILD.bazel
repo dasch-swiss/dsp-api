@@ -2,9 +2,7 @@
 # file label) resolves. Re-pin with `bazel run @unpinned_maven//:pin`.
 exports_files([
     "maven_install.json",
-    # Cross-package-visible for //tools/oci:image_versions_match_sbt, which
-    # checks MODULE.bazel's temurin base tag / OTel jar versions against these.
-    "MODULE.bazel",
-    "build.sbt",
-    "project/Dependencies.scala",
+    # Default scalafmt config for the rules_scala scalafmt toolchain
+    # (referenced as //:.scalafmt.conf by scala_deps.scalafmt in MODULE.bazel).
+    ".scalafmt.conf",
 ])

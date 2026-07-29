@@ -64,8 +64,8 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
   }
 
-  import zio.test.TestResult
   import zio.Scope
+  import zio.test.TestResult
 
   def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =
     zio.test.test(label)(ZIO.scoped(assertion))

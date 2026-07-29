@@ -17,10 +17,8 @@ for the base trait — your query builders should extend or mix in `QueryBuilder
 
 ## Dependency
 
-```scala
-// sbt
-"org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % rdf4jVersion
-```
+The `org.eclipse.rdf4j:rdf4j-sparqlbuilder` artifact is provided through the Bazel `maven.install`
+in `MODULE.bazel` (the version is managed there); no manual dependency wiring is needed to use it.
 
 ## Core Imports
 

@@ -1,4 +1,5 @@
-load("@rules_scala//scala:scala.bzl", "scala_junit_test")
+load("@dsp_image_versions//:defs.bzl", "FUSEKI_IMAGE")
+load("//tools/scalafmt:defs.bzl", "scala_junit_test")
 
 # Container-backed integration specs (Fuseki/Sipi/dsp-ingest via testcontainers). Requires the
 # `:latest` images preloaded into the local Docker daemon
@@ -64,14 +65,22 @@ _TAGS = [
 # java.io.tmpdir at a stable, long-lived directory sidesteps it.
 _JVM_FLAGS = ["-Djava.io.tmpdir=/tmp"]
 
+# FusekiTestContainer (in testkit) launches this image; inject it through the
+# build graph (sourced from @dsp_image_versions in MODULE.bazel) rather than
+# reading a compiled version-report. The image is loaded by
+# `just docker-load-test-images` before these run.
+_ENV = {"FUSEKI_IMAGE": FUSEKI_IMAGE}
+
 scala_junit_test(
     name = "test",
     size = "large",
+    format = True,
     srcs = glob(
         ["src/test/scala/**/*.scala"],
         exclude = [_GRAVSEARCH_SPAN_SPEC],
     ),
     jvm_flags = _JVM_FLAGS,
+    env = _ENV,
     data = _DATA,
     resource_strip_prefix = "modules/test-it/src/test/resources",
     resources = glob(["src/test/resources/**"]),
@@ -89,6 +98,7 @@ scala_junit_test(
     size = "medium",
     srcs = [_GRAVSEARCH_SPAN_SPEC],
     jvm_flags = _JVM_FLAGS,
+    env = _ENV,
     data = _DATA,
     resource_strip_prefix = "modules/test-it/src/test/resources",
     resources = glob(["src/test/resources/**"]),
@@ -99,4 +109,12 @@ scala_junit_test(
     ],
     tags = _TAGS,
     deps = _DEPS,
+)
+
+# Scala sources for the Apache-2.0 SPDX header check (//tools/license). Globs
+# don't cross package boundaries, so each module exposes its own sources.
+filegroup(
+    name = "license_srcs",
+    srcs = glob(["src/**/*.scala"]),
+    visibility = ["//tools:__subpackages__"],
 )

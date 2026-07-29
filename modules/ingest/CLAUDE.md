@@ -10,8 +10,8 @@ dsp-api build (see the root `CLAUDE.md`), not from this directory.
 - `bazel test //modules/ingest:test` (or `just test-ingest`) - unit tests
 - `bazel test //modules/test-ingest-integration:test` (or `just test-ingest-integration`) - integration tests (Docker/testcontainers)
 - `just docker-build-ingest-image` - build the dsp-ingest image (Bazel + load into the local Docker daemon)
-- `sbt fmt` / `sbt check` - format / check formatting (whole repo)
-- `./sbtx "ingest/run"` - run the service locally via sbt
+- `just fmt` / `just check` - format / check formatting (whole repo)
+- `bazel run //modules/ingest:app` - run the service locally
 
 ### Testing
 - Unit tests use the ZIO Test framework; run via `bazel test //modules/ingest:test`.

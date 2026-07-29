@@ -1,0 +1,72 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "schedule": [
+    "on the 1st and 15th day of the month"
+  ],
+  "commitMessagePrefix": "chore:",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Maven coordinate strings in MODULE.bazel maven.install(artifacts = [...])",
+      "managerFilePatterns": [
+        "/(^|/)MODULE\\.bazel$/"
+      ],
+      "matchStrings": [
+        "\"(?<depName>[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+):(?<currentValue>[0-9][^\"]*)\""
+      ],
+      "datasourceTemplate": "maven",
+      "registryUrlTemplate": "https://repo1.maven.org/maven2"
+    },
+    {
+      "customType": "regex",
+      "description": "maven.artifact(...) override blocks in MODULE.bazel",
+      "managerFilePatterns": [
+        "/(^|/)MODULE\\.bazel$/"
+      ],
+      "matchStrings": [
+        "artifact\\s*=\\s*\"(?<packageName>[^\"]+)\"[\\s\\S]*?group\\s*=\\s*\"(?<depName>[^\"]+)\"[\\s\\S]*?version\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "maven",
+      "registryUrlTemplate": "https://repo1.maven.org/maven2"
+    },
+    {
+      "customType": "regex",
+      "description": "Fuseki image tag declared in MODULE.bazel (image_versions.fuseki)",
+      "managerFilePatterns": [
+        "/(^|/)MODULE\\.bazel$/"
+      ],
+      "matchStrings": [
+        "image\\s*=\\s*\"(?<depName>daschswiss/apache-jena-fuseki):(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Single 'all deps' PR, mirroring the retired scala-steward grouping",
+      "matchDatasources": [
+        "maven"
+      ],
+      "groupName": "all deps",
+      "commitMessageTopic": "Dependency updates"
+    },
+    {
+      "description": "Pin org.apache.jena (topbraid/shacl compatibility, from .scala-steward.conf)",
+      "matchPackageNames": [
+        "org.apache.jena:**"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Ignore graph-core (breaking changes, from .scala-steward.conf)",
+      "matchPackageNames": [
+        "org.scala-graph:graph-core_3"
+      ],
+      "enabled": false
+    }
+  ]
+}

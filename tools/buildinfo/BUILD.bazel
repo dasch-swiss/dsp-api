@@ -1,4 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_binary")
 load(":defs.bzl", "buildinfo")
+
+# Extracts an OCI config label from a pinned image layout (used by
+# oci_config_label). py_binary resolves the hermetic interpreter, like //tools/deps.
+py_binary(
+    name = "extract_label",
+    srcs = ["extract_label.py"],
+    main = "extract_label.py",
+    visibility = ["//visibility:public"],
+)
 
 # Smoke test: exercises the rule end-to-end (stamp substitution from workspace
 # status) without needing the Scala toolchain. `bazel build //tools/buildinfo:smoke`
