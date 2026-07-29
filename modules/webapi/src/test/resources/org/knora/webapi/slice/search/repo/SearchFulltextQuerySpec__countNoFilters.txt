@@ -8,11 +8,10 @@ WHERE {
         }
     }
     OPTIONAL {
-        ?matchingSubject a ?valueObjectType .
-        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
+        ?matchingSubject knora-base:valueCreationDate ?valueCreationDate .
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:LinkValue . }
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:ListValue . }
         ?containingResource ?property ?matchingSubject .
-        ?property rdfs:subPropertyOf* knora-base:hasValue .
         FILTER NOT EXISTS {
             ?matchingSubject knora-base:isDeleted true .
         }
@@ -29,8 +28,8 @@ WHERE {
         BIND(?listValue AS ?valueObject)
     }
     BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-    ?resource a ?resourceClass .
-    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?resource knora-base:creationDate ?resourceCreationDate .
+    
     FILTER NOT EXISTS {
         ?resource knora-base:isDeleted true .
     }

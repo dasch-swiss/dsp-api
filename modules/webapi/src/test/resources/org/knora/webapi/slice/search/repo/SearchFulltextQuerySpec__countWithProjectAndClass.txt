@@ -8,11 +8,10 @@ WHERE {
         }
     }
     OPTIONAL {
-        ?matchingSubject a ?valueObjectType .
-        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
+        ?matchingSubject knora-base:valueCreationDate ?valueCreationDate .
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:LinkValue . }
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:ListValue . }
         ?containingResource ?property ?matchingSubject .
-        ?property rdfs:subPropertyOf* knora-base:hasValue .
         FILTER NOT EXISTS {
             ?matchingSubject knora-base:isDeleted true .
         }
@@ -29,10 +28,10 @@ WHERE {
         BIND(?listValue AS ?valueObject)
     }
     BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
-    ?resource a ?resourceClass .
-    ?resourceClass rdfs:subClassOf* knora-base:Resource .
-    ?resourceClass rdfs:subClassOf* <http://www.knora.org/ontology/0001/anything#Thing> .
-    ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+    ?resource knora-base:creationDate ?resourceCreationDate .
+    ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
+?resource a ?resourceClass .
+?resourceClass <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/0001/anything#Thing> .
     FILTER NOT EXISTS {
         ?resource knora-base:isDeleted true .
     }
