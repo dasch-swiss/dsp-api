@@ -157,7 +157,11 @@ docker-build-fuseki-image *FLAGS='':
 docker-publish-fuseki-image *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    VER=$(grep -oE 'apache-jena-fuseki:[^"]+' modules/fuseki/BUILD.bazel | head -1 | cut -d: -f2)
+    # Read the tag from its single source (MODULE.bazel's image_versions.fuseki);
+    # modules/fuseki/BUILD.bazel no longer holds the literal (it loads FUSEKI_IMAGE
+    # from @dsp_image_versions), so grepping it there would yield an empty tag.
+    VER=$(grep -oE 'daschswiss/apache-jena-fuseki:[^"]+' MODULE.bazel | head -1 | cut -d: -f2)
+    test -n "$VER" || { echo "ERROR: could not read fuseki image tag from MODULE.bazel"; exit 1; }
     bazel run {{FLAGS}} //modules/fuseki:push -- -t "$VER"
 
 # Start stack

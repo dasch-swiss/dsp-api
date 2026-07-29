@@ -282,6 +282,13 @@ use_repo(maven, "maven", "unpinned_maven")
 # Image version coordinates
 #############################################
 
+# Single source of truth for the upstream Apache Jena Fuseki dist version. Used
+# below for both the image_versions.fuseki tag AND the fuseki_dist http_archive
+# (strip_prefix + url), so the dist version lives in exactly one place. The
+# `image` tag carries an independent build-revision suffix (`-N`) and is kept
+# literal because Renovate bumps it via a regex on that line (.github/renovate.json).
+FUSEKI_DIST_VERSION = "6.1.0"
+
 # Single source of truth for the Fuseki image tag. Exposed to BUILD files via
 # the generated @dsp_image_versions//:defs.bzl (BUILD files can't load()
 # MODULE.bazel). Consumed by modules/fuseki/BUILD.bazel (labels/env/repo_tags)
@@ -291,7 +298,7 @@ use_repo(maven, "maven", "unpinned_maven")
 image_versions = use_extension("//tools/image_versions:extension.bzl", "image_versions")
 image_versions.fuseki(
     image = "daschswiss/apache-jena-fuseki:6.1.0-0",
-    dist_version = "6.1.0",
+    dist_version = FUSEKI_DIST_VERSION,
 )
 use_repo(image_versions, "dsp_image_versions")
 
@@ -429,9 +436,9 @@ http_file(
 #############################################
 
 # rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
-# here; the sha256 pin below guards its integrity. The dist version must match
-# the dist_version declared via image_versions.fuseki above (consumed as
-# FUSEKI_DIST_VERSION by modules/fuseki/BUILD.bazel); bump both together.
+# here; the sha256 pin below guards its integrity. Version is single-sourced from
+# FUSEKI_DIST_VERSION above (same value fed to image_versions.fuseki); on a bump,
+# change FUSEKI_DIST_VERSION and this sha256.
 http_archive(
     name = "fuseki_dist",
     build_file_content = "\n".join([
@@ -447,8 +454,8 @@ http_archive(
         ')',
     ]),
     sha256 = "a4a845bb602515f66e3397e89b52180ca055f4b240ddb442a1a793a98ce4d280",
-    strip_prefix = "apache-jena-fuseki-6.1.0",
-    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-6.1.0.tar.gz"],
+    strip_prefix = "apache-jena-fuseki-" + FUSEKI_DIST_VERSION,
+    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-" + FUSEKI_DIST_VERSION + ".tar.gz"],
 )
 
 # Static tini (fuseki's ENTRYPOINT, apt-installed in the Dockerfile) -- the
