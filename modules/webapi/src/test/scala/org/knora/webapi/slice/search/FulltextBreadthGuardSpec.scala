@@ -27,7 +27,8 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   private val single   = LuceneQueryString("der")  // shouldProbe = false
 
   override def spec: Spec[TestEnvironment, Any] = suite("FulltextBreadthGuard")(
-    // The probe runs before the query and refuses over-cap, so the query is never reached — ZIO.never proves it.
+    // An over-cap probe refuses the search and interrupts the query; ZIO.never as the query proves it is
+    // interrupted rather than awaited (the raced-guard property — a serial guard would hang here).
     test("refuses a query whose probed breadth exceeds the cap") {
       for {
         guard <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
@@ -53,6 +54,25 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         result <- guard.guarded(single, None, None, None)(ZIO.succeed("ok"))
         count  <- probes.get
       } yield assertTrue(result == "ok", count == 0)
+    },
+    // The raced guard must not serialise: an admitted query returns as soon as it succeeds, without waiting for
+    // the probe. The probe here never returns a breadth, so a serial guard would block on it forever.
+    test("an admitted query does not wait for the probe to finish (raced, not serial)") {
+      for {
+        guard  <- guardWith(_ => ZIO.never) // probe never completes
+        result <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok"))
+      } yield assertTrue(result == "ok")
+    },
+    // A refused search must free its in-flight query, not leave it running until it times out. The query's
+    // onInterrupt fulfils the promise; awaiting it proves the loser was actually interrupted.
+    test("a refused query interrupts the in-flight real query (frees the request)") {
+      for {
+        interrupted <- Promise.make[Nothing, Unit]
+        guard       <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
+        query        = ZIO.never.onInterrupt(interrupted.succeed(()))
+        exit        <- guard.guarded(wildcard, None, None, None)(query).exit
+        _           <- interrupted.await
+      } yield assert(exit)(failsWithA[BadRequestException])
     },
   )
 }
