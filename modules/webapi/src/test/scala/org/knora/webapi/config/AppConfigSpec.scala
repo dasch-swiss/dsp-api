@@ -35,6 +35,8 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
           appConfig.triplestore.searchTimeout == Duration.ofSeconds(60),
           appConfig.v2.fulltextSearch.probe.cap == 250000,
+          appConfig.v2.fulltextSearch.probe.cacheCapacity == 1024,
+          appConfig.v2.fulltextSearch.probe.cacheTtl == Duration.ofMinutes(10),
           appConfig.v2.fulltextSearch.probe.maxConcurrent == 8,
           appConfig.bcryptPasswordStrength == PasswordStrength.unsafeFrom(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
