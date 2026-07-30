@@ -239,13 +239,19 @@ object AppConfig {
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
     )
     .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
-    // The probe knobs feed FulltextBreadthGuard's cap check, Cache.makeWith and Semaphore.make. cap is
-    // env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP), so a bad value refuses every probed search (cap < 1),
-    // hangs it (max-concurrent = 0 -> a zero-permit semaphore) or is undefined (cache-capacity < 1); guard all
-    // three, as the sibling file-permission-cache.capacity guard does (DEV-6864).
+    // The probe knobs feed FulltextBreadthGuard's cap check, Cache.makeWith and Semaphore.make, so guard each
+    // against a value that silently breaks the guard. cap is env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP):
+    // cap < 1 refuses every probed search; cache-capacity < 1 is undefined; max-concurrent = 0 is a zero-permit
+    // semaphore, so the probe never completes and — because `guarded` races it against the query — the query
+    // always wins and every probed search silently runs unguarded (plus a per-request daemon leaks); cache-ttl
+    // <= 0 expires each result instantly, defeating the single-flight cache so every request re-probes. Guard all
+    // four, as the sibling file-permission-cache guards do (DEV-6864).
     .validate("app.v2.fulltext-search.probe.cap must be >= 1")(_.v2.fulltextSearch.probe.cap >= 1)
     .validate("app.v2.fulltext-search.probe.cache-capacity must be >= 1")(
       _.v2.fulltextSearch.probe.cacheCapacity >= 1,
+    )
+    .validate("app.v2.fulltext-search.probe.cache-ttl must be positive")(
+      _.v2.fulltextSearch.probe.cacheTtl.compareTo(Duration.ZERO) > 0,
     )
     .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,

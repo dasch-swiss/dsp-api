@@ -77,6 +77,10 @@ class AppConfigSpec extends ZIOSpecDefault {
       loadAppConfigWith("app.v2.fulltext-search.probe.cache-capacity = 0").exit
         .map(exit => assertTrue(exit.isFailure))
     },
+    test("reject a probe cache-ttl that is not positive") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cache-ttl = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
     test("reject a probe max-concurrent below 1") {
       loadAppConfigWith("app.v2.fulltext-search.probe.max-concurrent = 0").exit
         .map(exit => assertTrue(exit.isFailure))

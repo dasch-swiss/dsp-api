@@ -26,6 +26,9 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   private val wildcard = LuceneQueryString("der*") // shouldProbe = true
   private val single   = LuceneQueryString("der")  // shouldProbe = false
 
+  // A query failure unrelated to the breadth cap (stands in for e.g. a TriplestoreTimeoutException).
+  private final class QueryBoom extends Exception("boom")
+
   override def spec: Spec[TestEnvironment, Any] = suite("FulltextBreadthGuard")(
     // An over-cap probe refuses with a 400 even though the query never completes: the refusal comes from the
     // probe decision winning the race, so a never-ending query does not block it. (That the losing query is
@@ -96,6 +99,16 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         exit  <- guard.guarded(wildcard, None, None, None)(ZIO.never).exit
         count <- probes.get
       } yield assert(exit)(failsWithA[BadRequestException]) && assertTrue(first == "first", count == 1)
+    },
+    // `raceFirst` (not `race`) is load-bearing: a query that fails while the decision is still parked on
+    // `ZIO.never` (under the cap, or the probe still pending) must propagate promptly. Under `race`, a
+    // first-completing failure waits for the other side — here the never-resolving decision — so the request
+    // would hang instead of surfacing the error. This pins that the query failure wins the race and surfaces.
+    test("propagates a query failure while the probe decision is still pending (raceFirst, not race)") {
+      for {
+        guard <- guardWith(_ => ZIO.never) // decision never resolves -> the query must decide the race
+        exit  <- guard.guarded(wildcard, None, None, None)(ZIO.fail(new QueryBoom)).exit
+      } yield assert(exit)(failsWithA[QueryBoom])
     },
   )
 }
