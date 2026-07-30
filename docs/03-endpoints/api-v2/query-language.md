@@ -703,9 +703,13 @@ FILTER knora-api:matchLabel(?book, "Zeitglöcklein")
 The function `knora-api:matchFulltext` searches for matching words anywhere the
 full-text index covers for a resource: its `rdfs:label`, any of its text values, any
 of its value comments, or a list node (including sub-nodes) referenced by one of its
-list values. It gives the same result set as the `GET /v2/search/{term}` endpoint,
-expressed as a Gravsearch function so it can be combined with structured criteria in
-one query.
+list values. It is expressed as a Gravsearch function so it can be combined with
+structured criteria in one query.
+
+`matchFulltext` covers the same fields as the `GET /v2/search/{term}` endpoint, but the
+two do not necessarily return the same result set on large data: `matchFulltext` still
+inherits Jena's silent ~10,000-hit Lucene cap, whereas `/v2/search` passes an explicit
+hit limit and returns the full set (DEV-6824). For a term below the cap the results match.
 
 The first argument is a variable representing a resource (main or linked). The
 second argument is a string literal containing the search terms, with the same
