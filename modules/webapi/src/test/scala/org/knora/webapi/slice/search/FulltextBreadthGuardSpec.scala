@@ -27,8 +27,9 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   private val single   = LuceneQueryString("der")  // shouldProbe = false
 
   override def spec: Spec[TestEnvironment, Any] = suite("FulltextBreadthGuard")(
-    // An over-cap probe refuses the search and interrupts the query; ZIO.never as the query proves it is
-    // interrupted rather than awaited (the raced-guard property — a serial guard would hang here).
+    // An over-cap probe refuses with a 400 even though the query never completes: the refusal comes from the
+    // probe decision winning the race, so a never-ending query does not block it. (That the losing query is
+    // actually interrupted is asserted separately below.)
     test("refuses a query whose probed breadth exceeds the cap") {
       for {
         guard <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
@@ -73,6 +74,28 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         exit        <- guard.guarded(wildcard, None, None, None)(query).exit
         _           <- interrupted.await
       } yield assert(exit)(failsWithA[BadRequestException])
+    },
+    // Forking the probe (rather than racing `cache.get` directly) must populate the single-flight cache even when
+    // the query wins the race first — the load-bearing reason `guarded` uses `forkDaemon`. Were it reverted to
+    // racing the lookup directly, the losing lookup would be interrupted and zio-cache evicts the entry on
+    // interruption, so the same key would re-probe. This asserts it does not: the probe runs exactly once across
+    // a query-wins call and a following same-key call that refuses from the cached breadth.
+    test("forking populates the single-flight cache even when the query wins the race") {
+      for {
+        probes  <- Ref.make(0)
+        started <- Promise.make[Nothing, Unit]
+        finish  <- Promise.make[Nothing, Unit]
+        // Over-cap probe, gated: count the call, signal it started, block until released, then report over-cap.
+        guard <- guardWith(_ => probes.update(_ + 1) *> started.succeed(()) *> finish.await.as(cap.toLong + 1))
+        // The query wins while the probe is still blocked, so this first call is admitted by timing.
+        first <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("first"))
+        _     <- started.await // the forked probe is running (lookup in flight)
+        _     <- finish.succeed(())
+        // A second call for the same key must refuse from the cached over-cap breadth, not re-probe; ZIO.never as
+        // the query makes the cached decision win deterministically.
+        exit  <- guard.guarded(wildcard, None, None, None)(ZIO.never).exit
+        count <- probes.get
+      } yield assert(exit)(failsWithA[BadRequestException]) && assertTrue(first == "first", count == 1)
     },
   )
 }

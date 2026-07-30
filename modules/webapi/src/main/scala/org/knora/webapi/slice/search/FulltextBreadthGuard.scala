@@ -64,6 +64,9 @@ final case class FulltextBreadthGuard(
       // (refuse) only when the probe reports over the cap — every other outcome, including a probe error, becomes
       // `ZIO.never`, so the query wins the race untouched (fail open). `raceFirst` lets the decision's *failure*
       // win and interrupt the loser; the sttp canceller then frees the abandoned query in ~6 ms (Spike A).
+      // Being a daemon, the probe outlives interruption of the calling request (a deliberate trade-off: it still
+      // finishes and warms the cache when the client cancels), so its Fuseki round-trip is bounded by the probe's
+      // own semaphore and timeout tier rather than by the request's lifetime.
       for {
         probe  <- cache.get(key).either.forkDaemon
         result <- probe.join.flatMap {
