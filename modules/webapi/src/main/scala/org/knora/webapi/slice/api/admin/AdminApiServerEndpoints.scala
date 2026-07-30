@@ -19,6 +19,7 @@ final class AdminApiServerEndpoints(
   projectsLegalInfoServerEndpoints: ProjectsLegalInfoServerEndpoints,
   storeServerEndpoints: StoreServerEndpoints,
   usersServerEndpoints: UsersServerEndpoints,
+  viewRestrictionsServerEndpoints: ViewRestrictionsServerEndpoints,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
@@ -30,7 +31,8 @@ final class AdminApiServerEndpoints(
       projectsLegalInfoServerEndpoints.serverEndpoints ++
       projectsServerEndpoints.serverEndpoints ++
       storeServerEndpoints.serverEndpoints ++
-      usersServerEndpoints.serverEndpoints)
+      usersServerEndpoints.serverEndpoints ++
+      viewRestrictionsServerEndpoints.serverEndpoints)
       .map(_.tag("Admin API"))
 }
 

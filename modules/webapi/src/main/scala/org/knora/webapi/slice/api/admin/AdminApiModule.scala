@@ -24,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.service.GroupRestService
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
@@ -32,6 +33,7 @@ import org.knora.webapi.slice.api.admin.service.ProjectRestService
 import org.knora.webapi.slice.api.admin.service.ProjectsLegalInfoRestService
 import org.knora.webapi.slice.api.admin.service.StoreRestService
 import org.knora.webapi.slice.api.admin.service.UserRestService
+import org.knora.webapi.slice.api.admin.service.ViewRestrictionsRestService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -63,7 +65,8 @@ object AdminApiModule { self =>
       ProjectExportService &
       ProjectService &
       TriplestoreService &
-      UserService
+      UserService &
+      ViewRestrictionsService
       // format: on
 
   type Provided =
@@ -86,13 +89,14 @@ object AdminApiModule { self =>
       ProjectsEndpoints.layer ++ ProjectRestService.layer ++
       ProjectsLegalInfoEndpoints.layer ++ ProjectsLegalInfoRestService.layer ++
       StoreEndpoints.layer ++ StoreRestService.layer ++
-      UsersEndpoints.layer ++ UserRestService.layer) >+>
+      UsersEndpoints.layer ++ UserRestService.layer ++
+      ViewRestrictionsEndpoints.layer ++ ViewRestrictionsRestService.layer) >+>
       // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
       (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
         GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
         PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
         ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
-        UsersServerEndpoints.layer) >+>
+        UsersServerEndpoints.layer ++ ViewRestrictionsServerEndpoints.layer) >+>
       // Layer 3: Top-level aggregator
       AdminApiServerEndpoints.layer
 }

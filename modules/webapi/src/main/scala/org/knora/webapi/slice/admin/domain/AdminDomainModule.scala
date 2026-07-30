@@ -17,6 +17,7 @@ import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceServic
 import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriAction
 import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriInProjectAction
 import org.knora.webapi.slice.admin.repo.LicenseRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -53,7 +54,8 @@ object AdminDomainModule { self =>
       PasswordService &
       ProjectEraseService &
       ProjectService &
-      UserService
+      UserService &
+      ViewRestrictionsService
       // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
@@ -64,5 +66,6 @@ object AdminDomainModule { self =>
       KnoraGroupService.layer >+>
       (ProjectEraseService.layer ++ GroupService.layer) >+>
       KnoraUserToUserConverter.layer >+>
+      (ViewRestrictionsRepo.layer >+> ViewRestrictionsService.layer) >+>
       UserService.layer
 }
