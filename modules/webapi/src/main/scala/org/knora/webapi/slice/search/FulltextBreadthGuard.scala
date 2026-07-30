@@ -21,15 +21,15 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Refuses a fulltext search whose Lucene candidate set is too broad to run efficiently (DEV-6864, PROBE). It
- * measures breadth with a fast `COUNT` — [[SearchFulltextQuery.buildProbe]] — raced against the real query, and
- * refuses with a 400 when the count exceeds the cap. The probe fails open — any probe error leaves the real query
- * untouched — and measured breadth is cached (single-flight) so a repeated term does not re-probe.
+ * measures breadth with a fast `COUNT` — [[SearchFulltextQuery.buildProbe]] — concurrently with the real query,
+ * and refuses with a 400 when the count exceeds the cap. The probe fails open — any probe error leaves the real
+ * query untouched — and measured breadth is cached (single-flight) so a repeated term does not re-probe.
  *
  * Only queries that can be broad are probed ([[FulltextSearchTerms.shouldProbe]] — a wildcard or more than one
- * term); a single plain term runs unguarded. Racing (not serialising) is what Spike A measured and mandated: an
- * admitted term pays no measurable tax because the probe and the real query run concurrently, and a refused term
- * is rejected at probe speed while its in-flight query is interrupted in ~6 ms (the sttp backend's canceller is
- * non-blocking). See the Spike A outcomes in the DEV-6864 plan.
+ * term); a single plain term runs unguarded. Running the probe concurrently with (not before) the query is what
+ * keeps an admitted term tax-free: the probe's COUNT is far cheaper than the real query, so awaiting its verdict
+ * adds nothing to the latency of the queries this guard exists for. A refused term interrupts its still-running
+ * query (the sttp canceller is non-blocking, ~6 ms — Spike A). See the Spike A outcomes in the DEV-6864 plan.
  */
 final case class FulltextBreadthGuard(
   private val cap: Int,
@@ -38,10 +38,10 @@ final case class FulltextBreadthGuard(
   import FulltextBreadthGuard.BreadthKey
 
   /**
-   * Races the term's Lucene candidate-count probe against `query`: refuses with a 400 as soon as the probe reports
-   * a count over the cap (interrupting the in-flight query), and otherwise returns the query's result — within the
-   * cap, or the probe errored (fail open). Because the two run concurrently, an admitted term pays no serial probe
-   * tax (Spike A).
+   * Runs `query` concurrently with the term's Lucene candidate-count probe, then decides on the probe's verdict:
+   * refuses with a 400 (interrupting the still-running query) when the count is over the cap, and otherwise returns
+   * the query's result — within the cap, or the probe errored (fail open). Because the two run concurrently, an
+   * admitted term pays no serial probe tax (Spike A).
    */
   def guarded[A](
     searchTerms: LuceneQueryString,
@@ -58,22 +58,20 @@ final case class FulltextBreadthGuard(
         limitToProject.map(_.value),
         limitToResourceClass.map(_.toString),
       )
-      // Fork the probe as a daemon and race only its result against the query. Forking (rather than racing the
-      // lookup directly) guarantees the single-flight cache is populated even when the query wins and this effect
-      // returns first; `.either` means the daemon never ends as an unobserved failure. The decision effect fails
-      // (refuse) only when the probe reports over the cap — every other outcome, including a probe error, becomes
-      // `ZIO.never`, so the query wins the race untouched (fail open). `raceFirst` lets the decision's *failure*
-      // win and interrupt the loser; the sttp canceller then frees the abandoned query in ~6 ms (Spike A).
-      // Being a daemon, the probe outlives interruption of the calling request (a deliberate trade-off: it still
-      // finishes and warms the cache when the client cancels), so its Fuseki round-trip is bounded by the probe's
-      // own semaphore and timeout tier rather than by the request's lifetime.
+      // Start the real query immediately (as a structured child fiber), then await the breadth probe and decide on
+      // its verdict. The query and probe run concurrently, so an admitted term pays no serial probe tax on the
+      // queries this guard exists for: the probe's COUNT is far cheaper than the real query, so awaiting its verdict
+      // adds nothing to a slow query's latency. Over the cap → interrupt the still-running query and refuse; within
+      // the cap → return the query's result; a probe error is swallowed (`.either`), so the guard fails open.
+      // Awaiting the probe rather than racing it keeps the outcome decided by effects this fiber owns — the query is
+      // a structured child, cleaned up on any exit — and means an over-cap term is always refused (a fast query can
+      // never resolve the request before the probe's verdict is known).
       for {
-        probe  <- cache.get(key).either.forkDaemon
-        result <- probe.join.flatMap {
-                    case Right(breadth) if breadth > cap => ZIO.fail(tooBroad(searchTerms))
-                    case _                               => ZIO.never
+        queryFib <- query.fork
+        result   <- cache.get(key).either.flatMap {
+                    case Right(breadth) if breadth > cap => queryFib.interrupt *> ZIO.fail(tooBroad(searchTerms))
+                    case _                               => queryFib.join
                   }
-                    .raceFirst(query)
       } yield result
     }
 

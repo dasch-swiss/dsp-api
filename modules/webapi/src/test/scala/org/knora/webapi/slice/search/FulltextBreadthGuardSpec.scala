@@ -30,13 +30,15 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   private final class QueryBoom extends Exception("boom")
 
   override def spec: Spec[TestEnvironment, Any] = suite("FulltextBreadthGuard")(
-    // An over-cap probe refuses with a 400 even though the query never completes: the refusal comes from the
-    // probe decision winning the race, so a never-ending query does not block it. (That the losing query is
-    // actually interrupted is asserted separately below.)
-    test("refuses a query whose probed breadth exceeds the cap") {
+    // An over-cap probe refuses with a 400 and interrupts the still-running query — a query that never completes
+    // on its own does not hold the refusal up, and its onInterrupt firing proves it was actually freed.
+    test("refuses an over-cap term and interrupts the in-flight query") {
       for {
-        guard <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
-        exit  <- guard.guarded(wildcard, None, None, None)(ZIO.never).exit
+        interrupted <- Promise.make[Nothing, Unit]
+        guard       <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
+        query        = ZIO.never.onInterrupt(interrupted.succeed(()))
+        exit        <- guard.guarded(wildcard, None, None, None)(query).exit
+        _           <- interrupted.await
       } yield assert(exit)(failsWithA[BadRequestException])
     },
     test("admits a query whose probed breadth is exactly at the cap") {
@@ -59,56 +61,38 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         count  <- probes.get
       } yield assertTrue(result == "ok", count == 0)
     },
-    // The raced guard must not serialise: an admitted query returns as soon as it succeeds, without waiting for
-    // the probe. The probe here never returns a breadth, so a serial guard would block on it forever.
-    test("an admitted query does not wait for the probe to finish (raced, not serial)") {
+    // The guard must not serialise: the query starts immediately, concurrently with the probe, rather than only
+    // after it. The probe here is gated open, yet the query still runs (signals `queryStarted`) — a serial guard
+    // that ran the probe first would block on the gate forever and `queryStarted.await` would deadlock.
+    test("starts the query concurrently with the probe (the query is not delayed by the probe)") {
       for {
-        guard  <- guardWith(_ => ZIO.never) // probe never completes
-        result <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok"))
+        queryStarted <- Promise.make[Nothing, Unit]
+        probeGate    <- Promise.make[Nothing, Unit]
+        guard        <- guardWith(_ => probeGate.await.as(cap.toLong)) // probe blocks until released
+        query         = queryStarted.succeed(()) *> ZIO.succeed("ok")
+        fib          <- guard.guarded(wildcard, None, None, None)(query).fork
+        _            <- queryStarted.await                             // the query ran while the probe was still gated
+        _            <- probeGate.succeed(())
+        result       <- fib.join
       } yield assertTrue(result == "ok")
     },
-    // A refused search must free its in-flight query, not leave it running until it times out. The query's
-    // onInterrupt fulfils the promise; awaiting it proves the loser was actually interrupted.
-    test("a refused query interrupts the in-flight real query (frees the request)") {
+    // A query failure unrelated to the cap (a timeout, say) is surfaced once the probe admits the term.
+    test("propagates a query failure for an admitted term") {
       for {
-        interrupted <- Promise.make[Nothing, Unit]
-        guard       <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
-        query        = ZIO.never.onInterrupt(interrupted.succeed(()))
-        exit        <- guard.guarded(wildcard, None, None, None)(query).exit
-        _           <- interrupted.await
-      } yield assert(exit)(failsWithA[BadRequestException])
-    },
-    // Forking the probe (rather than racing `cache.get` directly) must populate the single-flight cache even when
-    // the query wins the race first — the load-bearing reason `guarded` uses `forkDaemon`. Were it reverted to
-    // racing the lookup directly, the losing lookup would be interrupted and zio-cache evicts the entry on
-    // interruption, so the same key would re-probe. This asserts it does not: the probe runs exactly once across
-    // a query-wins call and a following same-key call that refuses from the cached breadth.
-    test("forking populates the single-flight cache even when the query wins the race") {
-      for {
-        probes  <- Ref.make(0)
-        started <- Promise.make[Nothing, Unit]
-        finish  <- Promise.make[Nothing, Unit]
-        // Over-cap probe, gated: count the call, signal it started, block until released, then report over-cap.
-        guard <- guardWith(_ => probes.update(_ + 1) *> started.succeed(()) *> finish.await.as(cap.toLong + 1))
-        // The query wins while the probe is still blocked, so this first call is admitted by timing.
-        first <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("first"))
-        _     <- started.await // the forked probe is running (lookup in flight)
-        _     <- finish.succeed(())
-        // A second call for the same key must refuse from the cached over-cap breadth, not re-probe; ZIO.never as
-        // the query makes the cached decision win deterministically.
-        exit  <- guard.guarded(wildcard, None, None, None)(ZIO.never).exit
-        count <- probes.get
-      } yield assert(exit)(failsWithA[BadRequestException]) && assertTrue(first == "first", count == 1)
-    },
-    // `raceFirst` (not `race`) is load-bearing: a query that fails while the decision is still parked on
-    // `ZIO.never` (under the cap, or the probe still pending) must propagate promptly. Under `race`, a
-    // first-completing failure waits for the other side — here the never-resolving decision — so the request
-    // would hang instead of surfacing the error. This pins that the query failure wins the race and surfaces.
-    test("propagates a query failure while the probe decision is still pending (raceFirst, not race)") {
-      for {
-        guard <- guardWith(_ => ZIO.never) // decision never resolves -> the query must decide the race
+        guard <- guardWith(_ => ZIO.succeed(cap.toLong))
         exit  <- guard.guarded(wildcard, None, None, None)(ZIO.fail(new QueryBoom)).exit
       } yield assert(exit)(failsWithA[QueryBoom])
+    },
+    // Measured breadth is cached single-flight: a repeated term for the same key reuses the cached verdict and
+    // does not re-probe. The probe function is invoked exactly once across two calls.
+    test("caches the probed breadth so a repeated term does not re-probe") {
+      for {
+        probes <- Ref.make(0)
+        guard  <- guardWith(_ => probes.update(_ + 1).as(cap.toLong))
+        first  <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("a"))
+        second <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("b"))
+        count  <- probes.get
+      } yield assertTrue(first == "a", second == "b", count == 1)
     },
   )
 }
