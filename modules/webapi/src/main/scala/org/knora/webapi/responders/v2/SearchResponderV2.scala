@@ -562,7 +562,7 @@ final class SearchResponderV2Live(
                        offset = 0,
                        countQuery = true, // do not get the resources themselves, but the sum of results
                      )
-      bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
+      bindings <- triplestore.query(Select.search(countSparql)).map(_.results.bindings)
       count    <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
@@ -613,7 +613,7 @@ final class SearchResponderV2Live(
                         countQuery = false,
                       )
 
-      prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
+      prequeryResponseNotMerged <- triplestore.query(Select.search(searchSparql))
 
       mainResourceVar = QueryVariable("resource")
 

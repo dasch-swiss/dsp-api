@@ -377,6 +377,7 @@ case class TriplestoreServiceLive(
     case SparqlTimeout.Standard    => triplestoreConfig.queryTimeout
     case SparqlTimeout.Maintenance => triplestoreConfig.maintenanceTimeout
     case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
+    case SparqlTimeout.Search      => triplestoreConfig.searchTimeout
   }
 
   private def executeSparqlQuery(
@@ -441,7 +442,7 @@ case class TriplestoreServiceLive(
     request
       .send(backend)
       .catchSome {
-        case e: java.net.SocketTimeoutException =>
+        case e: SttpClientException.TimeoutException =>
           val msg = s"$context: triplestore timeout"
           ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg, e))
         case e: Exception =>
@@ -492,7 +493,7 @@ case class TriplestoreServiceLive(
     request
       .send(backend)
       .catchSome {
-        case e: java.net.SocketTimeoutException =>
+        case e: SttpClientException.TimeoutException =>
           val msg = "The triplestore took too long to process the NQuads upload."
           ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg, e))
         case e: Exception =>
@@ -513,10 +514,13 @@ case class TriplestoreServiceLive(
   ): Task[Response[Either[String, String]]] = {
     def executeQuery(request: Request[Either[String, String]]): Task[Response[Either[String, String]]] = {
       request.send(backend).catchSome {
-        case socketTimeoutException: java.net.SocketTimeoutException =>
+        // sttp maps a read timeout to SttpClientException.TimeoutException (a ReadException), never a bare
+        // java.net.SocketTimeoutException, so matching the latter was dead code and a client read timeout fell
+        // through to the connection-failure branch below and reached the client as a bare 500 (DEV-6864, Spike B).
+        case timeout: SttpClientException.TimeoutException =>
           val message =
             "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-          val error = TriplestoreTimeoutException(message, socketTimeoutException)
+          val error = TriplestoreTimeoutException(message, timeout)
           ZIO.logError(error.toString) *> ZIO.fail(error)
         case e: Exception =>
           val message = s"Failed to connect to triplestore: ${request.uri.toString}"

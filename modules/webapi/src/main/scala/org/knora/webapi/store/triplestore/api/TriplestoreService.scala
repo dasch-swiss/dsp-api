@@ -189,6 +189,11 @@ object TriplestoreService {
       case Standard
       case Maintenance
       case Gravsearch
+      // The fulltext prequery and count run on this tier. It is longer than Standard (the inverted budget
+      // DEV-6864 fixes: the prequery preceded a 120s Gravsearch main query on the 20s Standard tier) but
+      // shorter than Gravsearch, so a broad query still sheds load well before two minutes. Kept distinct
+      // from Gravsearch so fulltext queries are not filed into Gravsearch dashboards (D3, D7).
+      case Search
     }
 
     sealed trait SparqlQuery {
@@ -204,6 +209,7 @@ object TriplestoreService {
       def apply(sparql: SelectQuery, timeout: SparqlTimeout): Select = Select(sparql.getQueryString, timeout)
 
       def gravsearch(sparql: String): Select = Select(sparql, SparqlTimeout.Gravsearch)
+      def search(sparql: String): Select     = Select(sparql, SparqlTimeout.Search)
     }
 
     case class Construct(sparql: String, override val timeout: SparqlTimeout = SparqlTimeout.Standard)
