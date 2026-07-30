@@ -62,6 +62,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.slice.search.FulltextSearchTerms
 import org.knora.webapi.slice.search.SearchTimeoutException
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
@@ -328,6 +329,7 @@ trait SearchResponderV2 {
 final class SearchResponderV2Live(
   appConfig: AppConfig,
   triplestore: TriplestoreService,
+  fulltextBreadthGuard: FulltextBreadthGuard,
   constructResponseUtilV2: ConstructResponseUtilV2,
   ontologyCacheHelpers: OntologyCacheHelpers,
   queryTraverser: QueryTraverser,
@@ -546,8 +548,12 @@ final class SearchResponderV2Live(
   // 500 via BaseEndpoints' catch-all. Translate it into a search-specific 503 with a hedged message so the residue
   // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied at the Select.search call sites — the
   // search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the prequery.
-  private val translateSearchTimeout: PartialFunction[Throwable, Task[Nothing]] = {
-    case _: TriplestoreTimeoutException => ZIO.fail(SearchTimeoutException())
+  private def translateSearchTimeout(searchValue: String): PartialFunction[Throwable, Task[Nothing]] = {
+    // Only TriplestoreTimeoutException matches, so a query the breadth guard interrupts (a fast refusal winning
+    // the race) never triggers this — the interruption propagates as such and is not logged as a failure.
+    case _: TriplestoreTimeoutException =>
+      ZIO.logWarning(s"Fulltext search for '$searchValue' exceeded the search timeout tier") *>
+        ZIO.fail(SearchTimeoutException())
   }
 
   override def fulltextSearchCountV2(
@@ -573,7 +579,11 @@ final class SearchResponderV2Live(
                        countQuery = true, // do not get the resources themselves, but the sum of results
                      )
       bindings <-
-        triplestore.query(Select.search(countSparql)).catchSome(translateSearchTimeout).map(_.results.bindings)
+        fulltextBreadthGuard
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+            triplestore.query(Select.search(countSparql)).catchSome(translateSearchTimeout(searchValue)),
+          )
+          .map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
@@ -624,7 +634,11 @@ final class SearchResponderV2Live(
                         countQuery = false,
                       )
 
-      prequeryResponseNotMerged <- triplestore.query(Select.search(searchSparql)).catchSome(translateSearchTimeout)
+      prequeryResponseNotMerged <-
+        fulltextBreadthGuard
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+            triplestore.query(Select.search(searchSparql)).catchSome(translateSearchTimeout(searchValue)),
+          )
 
       mainResourceVar = QueryVariable("resource")
 

@@ -155,6 +155,22 @@ final case class Resources(
 
 final case class FulltextSearch(
   searchValueMinLength: Int,
+  probe: FulltextSearchProbe,
+)
+
+/**
+ * Tuning knobs for the fulltext breadth probe (DEV-6864, PROBE).
+ *
+ * `cap` is the Lucene candidate count above which a fulltext search is refused (raced against the real query so
+ * an admitted term pays no tax). `cacheCapacity` / `cacheTtl` bound the measured-breadth cache, and `maxConcurrent`
+ * bounds how many probes run against Fuseki at once. All live in config so they can be tuned per deployment
+ * without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP` override.
+ */
+final case class FulltextSearchProbe(
+  cap: Int,
+  cacheCapacity: Int,
+  cacheTtl: Duration,
+  maxConcurrent: Int,
 )
 
 final case class GraphRoute(

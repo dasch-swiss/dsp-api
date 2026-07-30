@@ -39,5 +39,17 @@ class FulltextSearchTermsSpec extends ZIOSpecDefault {
     test("admits a short plain term, which the whole-string minimum governs, not this rule") {
       assertTrue(tooShort("is Alice").isEmpty)
     },
+    test("does not probe a single plain term") {
+      assertTrue(!FulltextSearchTerms.shouldProbe(LuceneQueryString("der")))
+    },
+    test("does not probe a single quoted phrase") {
+      assertTrue(!FulltextSearchTerms.shouldProbe(LuceneQueryString(""""down the rabbit hole"""")))
+    },
+    test("probes a wildcard term") {
+      assertTrue(FulltextSearchTerms.shouldProbe(LuceneQueryString("der*")))
+    },
+    test("probes a multi-term query") {
+      assertTrue(FulltextSearchTerms.shouldProbe(LuceneQueryString("der und")))
+    },
   )
 }

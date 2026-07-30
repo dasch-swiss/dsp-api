@@ -22,6 +22,55 @@ object SearchFulltextQuery extends QueryBuilderHelper {
 
   private val luceneHitLimit = OntologyConstants.Fuseki.luceneHitLimit
 
+  // Escape user-supplied search terms via rdf4j to prevent SPARQL injection.
+  private def searchLiteralOf(searchTerms: LuceneQueryString): String =
+    Rdf.literalOf(searchTerms.getQueryString).getQueryString
+
+  // The standoff restriction, mirrored inside the inner Lucene subquery. Shared by build and buildProbe so the
+  // breadth probe measures exactly the candidate set the real query starts from and cannot drift from it.
+  private def standoffFilterClause(searchTerms: LuceneQueryString, limitToStandoffClass: Option[SmartIri]): String =
+    limitToStandoffClass.fold("") { standoffClassIri =>
+      val standoffIri = toRdfIri(standoffClassIri).getQueryString
+      // Escape each individual term via rdf4j before embedding in REGEX
+      val regexFilters = searchTerms.getSingleTerms.map { term =>
+        val termLiteral = Rdf.literalOf(term).getQueryString
+        s"""    FILTER REGEX(?markedup, $termLiteral, "i")"""
+      }.mkString("\n")
+
+      s"""
+         |    ?matchingSubject a knora-base:TextValue ;
+         |        knora-base:valueHasString ?literal ;
+         |        knora-base:valueHasStandoff ?standoffNode .
+         |    ?standoffNode a $standoffIri ;
+         |        knora-base:standoffTagHasStart ?start ;
+         |        knora-base:standoffTagHasEnd ?end .
+         |    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
+         |$regexFilters""".stripMargin
+    }
+
+  /**
+   * The breadth probe (DEV-6864, PROBE): a `COUNT(*)` over the exact inner Lucene subquery of [[build]] — the
+   * post-Lucene candidate count, before the value/list/resource joins the real query pays. It mirrors only the
+   * standoff filter, which lives inside that subquery; `limitToProject` / `limitToResourceClass` live in the outer
+   * query and are not mirrored (they filter after the joins and do not reduce the candidate count — see the plan).
+   * Run raced against the real query, this measures how broad a term is without paying the joins.
+   */
+  def buildProbe(searchTerms: LuceneQueryString, limitToStandoffClass: Option[SmartIri]): String = {
+    val searchLiteral  = searchLiteralOf(searchTerms)
+    val standoffFilter = standoffFilterClause(searchTerms, limitToStandoffClass)
+    s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |SELECT (COUNT(*) AS ?count)
+       |WHERE {
+       |    {
+       |        SELECT DISTINCT ?matchingSubject WHERE {
+       |            ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .$standoffFilter
+       |        }
+       |    }
+       |}
+       |""".stripMargin
+  }
+
   // The overall query structure (SELECT with GROUP_CONCAT, subqueries, BIND/COALESCE, SUBSTR)
   // is assembled via string interpolation because these features are not supported by the
   // rdf4j SparqlBuilder. Individual values — especially user-supplied search terms and dynamic
@@ -72,27 +121,8 @@ object SearchFulltextQuery extends QueryBuilderHelper {
           s"""SELECT ?resource
              |       (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); SEPARATOR="${separator.get}") AS ?valueObjectConcat)""".stripMargin
 
-      // Escape user-supplied search terms via rdf4j to prevent SPARQL injection
-      val searchLiteral = Rdf.literalOf(searchTerms.getQueryString).getQueryString
-
-      val standoffFilter = limitToStandoffClass.fold("") { standoffClassIri =>
-        val standoffIri = toRdfIri(standoffClassIri).getQueryString
-        // Escape each individual term via rdf4j before embedding in REGEX
-        val regexFilters = searchTerms.getSingleTerms.map { term =>
-          val termLiteral = Rdf.literalOf(term).getQueryString
-          s"""    FILTER REGEX(?markedup, $termLiteral, "i")"""
-        }.mkString("\n")
-
-        s"""
-           |    ?matchingSubject a knora-base:TextValue ;
-           |        knora-base:valueHasString ?literal ;
-           |        knora-base:valueHasStandoff ?standoffNode .
-           |    ?standoffNode a $standoffIri ;
-           |        knora-base:standoffTagHasStart ?start ;
-           |        knora-base:standoffTagHasEnd ?end .
-           |    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
-           |$regexFilters""".stripMargin
-      }
+      val searchLiteral  = searchLiteralOf(searchTerms)
+      val standoffFilter = standoffFilterClause(searchTerms, limitToStandoffClass)
 
       val fileValuesBlock =
         if (returnFiles)

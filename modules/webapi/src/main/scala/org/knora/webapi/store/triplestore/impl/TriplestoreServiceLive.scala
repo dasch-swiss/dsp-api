@@ -378,6 +378,8 @@ case class TriplestoreServiceLive(
     case SparqlTimeout.Maintenance => triplestoreConfig.maintenanceTimeout
     case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
     case SparqlTimeout.Search      => triplestoreConfig.searchTimeout
+    // The probe reuses the search-timeout value; the distinct tier exists only for metric separation (PROBE).
+    case SparqlTimeout.SearchProbe => triplestoreConfig.searchTimeout
   }
 
   private def executeSparqlQuery(
@@ -401,6 +403,11 @@ case class TriplestoreServiceLive(
                   .tagged("type", query.getClass.getSimpleName)
                   .tagged("isGravsearch", s"${query.timeout == SparqlTimeout.Gravsearch}")
                   .tagged("isMaintenance", s"${query.timeout == SparqlTimeout.Maintenance}")
+                  // A third boolean rather than a replacement (D7): existing dashboards keep isGravsearch/
+                  // isMaintenance. isSearch isolates the fulltext prequery/count on the 60s tier; the breadth
+                  // probe (SparqlTimeout.SearchProbe) is deliberately isSearch=false so its cheap samples do not
+                  // pollute the search-tier duration the regression watch depends on (DEV-6864).
+                  .tagged("isSearch", s"${query.timeout == SparqlTimeout.Search}")
                   .trackDuration
       _ <- {
              val endTime  = java.lang.System.nanoTime()

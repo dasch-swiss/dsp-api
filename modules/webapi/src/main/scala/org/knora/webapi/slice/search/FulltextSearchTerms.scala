@@ -34,4 +34,15 @@ object FulltextSearchTerms {
       !booleanOperators.contains(term) &&
       term.count(!wildcardChars.contains(_)) < minLength
     }
+
+  /**
+   * Whether the breadth probe should race this query. Only queries that can be broad are worth the extra Fuseki
+   * round-trip: a wildcard term (matches many distinct index terms) or more than one term (Lucene ORs them). A
+   * single plain term is the cheap common case and is left unprobed — its residual exposure (a high-frequency
+   * single term above the cap gets a slow timeout rather than a fast refusal) is accepted (DEV-6864, Spike A).
+   */
+  def shouldProbe(query: LuceneQueryString): Boolean = {
+    val terms = query.termsAndPhrases
+    terms.sizeIs > 1 || terms.exists(hasWildcard)
+  }
 }

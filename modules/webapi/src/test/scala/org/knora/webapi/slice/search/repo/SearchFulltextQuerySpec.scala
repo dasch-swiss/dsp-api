@@ -120,6 +120,16 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertGolden(sparql, "searchWithAllFilters")
       },
     ),
+    suite("probe query")(
+      test("probe query without standoff") {
+        val sparql = SearchFulltextQuery.buildProbe(searchTerms, None)
+        assertGolden(sparql, "probeNoStandoff")
+      },
+      test("probe query with standoff") {
+        val sparql = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri))
+        assertGolden(sparql, "probeWithStandoff")
+      },
+    ),
     suite("escaping of user input")(
       test("apostrophe in search term is correctly escaped") {
         // The caller passes the raw user input — Rdf.literalOf handles SPARQL escaping.
