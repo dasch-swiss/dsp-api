@@ -69,6 +69,18 @@ class AppConfigSpec extends ZIOSpecDefault {
       loadAppConfigWith("app.triplestore.search-timeout = 121 seconds").exit
         .map(exit => assertTrue(exit.isFailure))
     },
+    test("reject a probe cap below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cap = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe cache-capacity below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cache-capacity = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe max-concurrent below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.max-concurrent = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
   )
 
   // Loads the full application.conf, overriding the given HOCON keys, so a validation failure isolates to the override.

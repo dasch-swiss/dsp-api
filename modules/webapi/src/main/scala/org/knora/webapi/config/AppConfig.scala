@@ -239,6 +239,17 @@ object AppConfig {
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
     )
     .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
+    // The probe knobs feed FulltextBreadthGuard's cap check, Cache.makeWith and Semaphore.make. cap is
+    // env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP), so a bad value refuses every probed search (cap < 1),
+    // hangs it (max-concurrent = 0 -> a zero-permit semaphore) or is undefined (cache-capacity < 1); guard all
+    // three, as the sibling file-permission-cache.capacity guard does (DEV-6864).
+    .validate("app.v2.fulltext-search.probe.cap must be >= 1")(_.v2.fulltextSearch.probe.cap >= 1)
+    .validate("app.v2.fulltext-search.probe.cache-capacity must be >= 1")(
+      _.v2.fulltextSearch.probe.cacheCapacity >= 1,
+    )
+    .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
+      _.v2.fulltextSearch.probe.maxConcurrent >= 1,
+    )
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
