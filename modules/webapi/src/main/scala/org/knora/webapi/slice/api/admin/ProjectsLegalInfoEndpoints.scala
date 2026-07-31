@@ -67,7 +67,7 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
 
-  private final val licenseIriPath = path[LicenseIri](TapirCodec.stringCodec(LicenseIri.from))
+  private final val licenseIriPath = path[LicenseIri](using TapirCodec.stringCodec(LicenseIri.from))
     .name("licenseIri")
     .description("The IRI of the license. Must be URL-encoded.")
     .example(LicenseIri.CC_BY_NC_4_0)

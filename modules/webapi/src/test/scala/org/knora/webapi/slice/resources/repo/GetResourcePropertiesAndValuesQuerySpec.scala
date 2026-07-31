@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import java.time.Instant
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 
-object GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
 
   private val sf = StringFormatter.getInitializedTestInstance
 

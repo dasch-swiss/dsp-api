@@ -8,13 +8,16 @@ package org.knora.webapi.slice.`export`.domain
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.ResourceFactory
 import org.apache.jena.vocabulary.RDF
+import org.junit.runner.RunWith
 import zio.test.*
 
 import scala.jdk.CollectionConverters.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 
-object AdminModelScopingSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminModelScopingSpec extends ZIOSpecDefault {
 
   private val projectIri      = "http://rdfh.ch/projects/0001"
   private val otherProjectIri = "http://rdfh.ch/projects/9999"

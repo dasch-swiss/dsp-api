@@ -5,11 +5,15 @@
 
 package org.knora.webapi.slice.common.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.json.*
 import zio.test.*
 
-object LanguageCodeSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class LanguageCodeSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("LanguageCodeSpec")(
     test("from should create LanguageCode from valid string") {

@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.StandoffMappingElementIri
 import org.knora.webapi.slice.resources.repo.model.MappingElement
 import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
 import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 
-object CreateNewMappingQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CreateNewMappingQuerySpec extends ZIOSpecDefault {
 
   private val dataNamedGraph = "http://www.knora.org/data/0001/anything"
   private val mappingIri     = "http://rdfh.ch/projects/0001/mappings/testMapping"

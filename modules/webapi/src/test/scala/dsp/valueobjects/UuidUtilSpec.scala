@@ -5,12 +5,16 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
 import java.util.UUID
 
-object UuidUtilSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class UuidUtilSpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Any] = suite("UuidUtil")(base64EncodeAndBase64Decode + hasSupportedVersion)
 
   private val base64EncodeAndBase64Decode = test("encode UUID to Base64 and decode again") {

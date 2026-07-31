@@ -1,0 +1,2 @@
+# Package marker so //tools/scalafmt:defs.bzl resolves. The scalafmt-enabled
+# rule wrappers live in defs.bzl; there are no targets here.

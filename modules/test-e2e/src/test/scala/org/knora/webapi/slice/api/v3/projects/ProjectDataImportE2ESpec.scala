@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.projects
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
@@ -13,6 +14,7 @@ import zio.test.*
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -23,7 +25,8 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.testservices.TestApiClient
 
-object ProjectDataImportE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectDataImportE2ESpec extends E2EZSpec {
 
   // The incunabula project with its ontology but WITHOUT any project data — the data graph must not exist yet
   // for the create-only import to succeed.

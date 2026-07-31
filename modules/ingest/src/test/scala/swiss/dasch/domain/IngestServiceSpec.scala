@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.api.SipiClientMock
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.CommandExecutorLive
@@ -16,7 +17,10 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object IngestServiceSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class IngestServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("IngestService")(
     test("should ingest a simple csv file") {
       val shortcode = ProjectShortcode.unsafeFrom("0001")

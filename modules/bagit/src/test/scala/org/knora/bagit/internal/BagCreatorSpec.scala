@@ -5,6 +5,7 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -16,8 +17,10 @@ import java.util.zip.ZipInputStream
 
 import org.knora.bagit.ChecksumAlgorithm
 import org.knora.bagit.domain.*
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagCreatorSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagCreatorSpec extends ZIOSpecDefault {
 
   private def createTempSetup: ZIO[Scope, Throwable, (Path, Path, Path)] =
     for {

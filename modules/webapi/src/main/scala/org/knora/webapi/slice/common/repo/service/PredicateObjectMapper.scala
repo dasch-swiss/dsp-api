@@ -119,5 +119,5 @@ final case class PredicateObjectMapper(private val iriConverter: IriConverter) {
 }
 
 object PredicateObjectMapper {
-  val layer: URLayer[IriConverter, PredicateObjectMapper] = ZLayer.fromFunction(PredicateObjectMapper.apply _)
+  val layer: URLayer[IriConverter, PredicateObjectMapper] = ZLayer.fromFunction(PredicateObjectMapper.apply)
 }

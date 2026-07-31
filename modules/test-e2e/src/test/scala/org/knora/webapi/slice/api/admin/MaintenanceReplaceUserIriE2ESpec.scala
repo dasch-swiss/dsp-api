@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.ZIO
@@ -12,6 +13,7 @@ import zio.durationInt
 import zio.json.ast.Json
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.AdminConstants
@@ -21,7 +23,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.testservices.TestApiClient
 
-object MaintenanceReplaceUserIriE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class MaintenanceReplaceUserIriE2ESpec extends E2EZSpec {
 
   private val endpoint   = uri"/admin/maintenance/users/replace-iri"
   private val adminGraph = AdminConstants.adminDataNamedGraph.value

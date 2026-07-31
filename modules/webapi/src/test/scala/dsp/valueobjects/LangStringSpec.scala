@@ -5,18 +5,21 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.prelude.Validation
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import dsp.errors.ValidationException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 /**
  * This spec is used to test the [[dsp.valueobjects.LangString]] value objects creation.
  */
-object LangStringSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LangStringSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, ValidationException] = suite("LangStringSpec")(
     langStringTest,

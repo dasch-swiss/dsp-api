@@ -5,12 +5,16 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.infrastructure.ProcessOutput
 import zio.nio.file.Path
 import zio.test.*
 
-object SipiClientSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class SipiClientSpec extends ZIOSpecDefault {
 
   private val fileIn  = Path("/tmp/in.jpg")
   private val fileOut = Path("/tmp/out.jp2")

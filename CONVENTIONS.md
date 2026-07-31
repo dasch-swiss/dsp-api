@@ -4,7 +4,19 @@ Agent reference card for the **work phase**. Pair with `REVIEW.md` (review phase
 
 ## Stack
 
-Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplestore: Apache Jena Fuseki. Media server: Sipi.
+Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triplestore: Apache Jena Fuseki. Media server: Sipi.
+
+## Compile & feedback loop
+
+- **Bazel is the only build tool (sbt was removed).** Compile via the `metals` MCP tools
+  (`compile-file` / `compile-module`, incremental + structured diagnostics; `get-usages` beats grep), else
+  `bazel build //modules/<m>:<target>`.
+- **Metals works on Bazel 9 via a local bazel-bsp patch:** a macOS-scoped `--incompatible_autoload_externally`
+  flag in `.bazelrc` plus a `bazel_binary` wrapper (`tools/metals/`) that patches bazel-bsp's struct-returning
+  aspect. Fresh worktree: `just metals-bootstrap` then the metals `import-build` tool. It's a vendored patch to
+  bazel-bsp (not a rules_scala issue); tracked at scalameta/metals#8268. Details:
+  `docs/development/dsp-api-metals-mcp.md`.
+- Formatting/linting and CI test runs all go through Bazel (`just fmt` / `just check`, `bazel test`).
 
 ## Code Conventions
 
@@ -43,6 +55,12 @@ Scala 3, ZIO 2, Tapir, zio-json, sbt. Package root: `org.knora.webapi`. Triplest
 
 Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
 
+- **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance.
+- **Anchor property paths.** A `*`/`+` path whose variables are not bound by *preceding* patterns cross-joins everything matched so far against the whole closure (audit DEV-6803: >60s vs 0.4s). Odd-looking patterns next to a path are usually the anchor — load-bearing, don't "clean up" (measured: 19ms → ~15s). Don't inline large closures as `VALUES` either (measured: 2s → >60s).
+- **`FILTER NOT EXISTS` for per-row guards; GRAPH-scope scans, not lookups.** Un-scoped `MINUS` materializes union-wide sets (DEV-6803: 27s → ~200ms). Bound-term lookups don't need a `GRAPH` clause; class extents, unbound-predicate scans, and aggregation inputs do. `GRAPH <projectDataGraph>` **replaces** `attachedToProject` — drop the join (DEV-6827: 5.4×).
+- **No redundant per-row work.** Drop `DISTINCT` that provably can't dedup (always a no-op over `GROUP BY`; verify by byte-comparing outputs). Per-subject min/max: `GROUP BY` + aggregate, not a nested `NOT EXISTS` anti-join (O(k) vs O(k²), DEV-6827). Before rewriting a slow query, isolate compute with a `COUNT(*)` wrapper — result size can't be fixed in the WHERE clause (DEV-6821: 5s compute inside a "26s" query).
+- **Shape-changing inputs are query changes.** Adding a property to `AbstractEntityRepo.entityProperties` adds an OPTIONAL to every generated entity query — review the pinned/golden query diff, not just the mapping code. Hot-path builders without a pinned/golden spec get one.
+
 ### Ontology & RDF
 
 - Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/dsp-api-conventions.md` § Ontology Conventions.
@@ -61,17 +79,42 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 ### Imports & formatting
 
 - No fully-qualified class names in code bodies — import at the top of the file.
-- Import order is handled automatically by `sbt fmt`; don't hand-order imports.
-- Scalafmt via `sbt fmt`; CI runs `sbt check`.
-- Every source file carries the Apache-2.0 + SPDX header (managed by `sbt headerCreateAll` / `headerCheckAll`).
+- Import order is handled automatically by scalafmt (`.scalafmt.conf` `rewrite.imports`); don't hand-order
+  imports. Groups: java/scala, then dsp/org.knora, then everything else (third-party last — a scalafmt
+  behavior; scalafix, which put third-party first, was removed). Unused imports fail the compiler
+  (`-Wunused:all -Werror`).
+- Format with `just fmt`; CI runs `just check` (both scalafmt via the Bazel rules_scala toolchain).
+- Every source file carries the Apache-2.0 + SPDX header (checked by `//tools/license:spdx_header_check`,
+  inserted by `just header-fix`).
 
-### Static analysis (Codacy)
+### Versions single-sourced (image tags, deps)
 
-CI runs Codacy and reports new issues (pre-existing ones are grandfathered). It is **advisory** — not a required check — but keep new/changed **production** source (`src/main`) clear of its common triggers. Test sources are excluded (`.codacy.yml`), so test-only idioms never trip it.
+Surface version values through the build graph, not duplicated strings or compiled `BuildInfo`.
+`BuildInfo` is for cosmetic reporting (the `/version` endpoint); a *functional* consumer (e.g.
+`FusekiTestContainer`, which launches the image) gets its value via a normal Bazel dependency (the test
+target's `env`), not by reading a version-report object.
+
+- Prefer deriving a value from the artifact itself over a redundant copy: the **sipi** version is read
+  from the pinned base image's `org.opencontainers.image.version` OCI label
+  (`//tools/buildinfo:oci_config_label`); the MODULE.bazel digest is its sole source.
+- The **fuseki** image is versioned by **release-please** (git version, stamped into
+  `org.opencontainers.image.version`), exactly like knora-api/dsp-ingest — not by a hand-typed tag.
+  The one thing declared in-repo is the **Jena dist (jar) version** (`FUSEKI_DIST_VERSION` in
+  `MODULE.bazel`), which drives the `@fuseki_dist` tarball URL, the `/version` report, and the image's
+  OTLP `service.version` resource attribute (which surfaces the deployed engine version in Grafana). It
+  reaches BUILD files via a module extension → generated `@dsp_image_versions//:defs.bzl` (BUILD files
+  can't `load()` MODULE.bazel directly).
+- Dependency versions: `MODULE.bazel`'s `maven.install` is the sole source; Renovate updates it
+  (`.github/renovate.json`); the lock is re-pinned by `bazel run @unpinned_maven//:pin`.
+
+### Code style (formerly Codacy-enforced)
+
+These conventions apply to new/changed **production** source (`src/main`); they are no longer
+CI-enforced (Codacy static analysis was removed from this repo), but keep following them.
 
 - **ASCII only** in source — no smart punctuation (`…`, `→`, `≥`, curly quotes); write `...`, `->`, `>=`. (The `©` in the licence header is exempt.)
-- **Prefer immutable `val`s and recursion / collection combinators** over `var` and `while`. This isn't an absolute ban — a mutable loop is fine where it is genuinely the clearest option (e.g. a tight byte-copy loop) — but Codacy flags every *new* occurrence, so reach for `@tailrec` / folds first and only keep a `var`/`while` when it really reads better.
-- **Methods ≤ 50 lines** in production source — split long ones. (This rule is intentionally **not** applied to tests: long ZIO `spec` methods are fine, which is why `src/test/**` is excluded from Codacy.)
+- **Prefer immutable `val`s and recursion / collection combinators** over `var` and `while`. This isn't an absolute ban — a mutable loop is fine where it is genuinely the clearest option (e.g. a tight byte-copy loop) — but reach for `@tailrec` / folds first and only keep a `var`/`while` when it really reads better.
+- **Methods ≤ 50 lines** in production source — split long ones. (This rule is intentionally **not** applied to tests: long ZIO `spec` methods are fine.)
 
 ### Naming in human-readable text
 

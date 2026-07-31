@@ -5,16 +5,19 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.prelude.Validation
 import zio.test.*
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.*
+import org.knora.testrunner.DspZTestJUnitRunner
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
  */
-object IriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class IriSpec extends ZIOSpecDefault {
   private val uuidVersion3  = "cCmdcpn2MO211YYOplR1hQ"
   private val supportedUuid = "jDEEitJESRi3pDaDjjQ1WQ"
 

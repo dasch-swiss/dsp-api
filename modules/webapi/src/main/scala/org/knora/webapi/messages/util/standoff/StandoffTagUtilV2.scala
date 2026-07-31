@@ -9,7 +9,6 @@ import zio.Task
 import zio.ZLayer
 
 import java.time.Instant
-import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
@@ -565,6 +564,20 @@ object StandoffTagUtilV2 {
       standoffTagV2 = standoffTagsV2,
       mapping = mapping,
     )
+  }
+
+  /**
+   * Canonicalizes rich-text XML by round-tripping it through standoff markup and back (parse, then
+   * re-serialize). The result is the exact XML dsp-api returns when reading such a value, and the
+   * transform is idempotent, so it is comparable across submissions for change detection.
+   *
+   * @param xml     the rich-text XML to canonicalize.
+   * @param mapping the standoff-to-XML mapping to interpret the XML with.
+   * @return the canonical XML.
+   */
+  def canonicalize(xml: String, mapping: GetMappingResponseV2): String = {
+    val tws = convertXMLtoStandoffTagV2(xml, mapping, acceptStandoffLinksToClientIDs = false)
+    convertStandoffTagV2ToXML(tws.text, tws.standoffTagV2, mapping.mapping)
   }
 
   /**

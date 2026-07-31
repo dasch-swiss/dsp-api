@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import swiss.dasch.api.AuthenticationError.*
 import swiss.dasch.api.SpecJwtTokens.*
 import swiss.dasch.config.Configuration.JwtConfig
@@ -17,7 +18,10 @@ import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object AuthServiceLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthServiceLiveSpec extends ZIOSpecDefault {
   val spec = suite("AuthServiceLive")(
     test("Should extract AuthScope from contents") {
       for {

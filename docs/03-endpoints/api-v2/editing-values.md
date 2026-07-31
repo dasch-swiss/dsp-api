@@ -161,6 +161,34 @@ The response is a JSON-LD document containing:
   point to a different resource, in which case it is considered a new link and gets a new UUID. Changing a link's
   metadata, without changing its target, creates a new version of the link value with the same UUID.
 
+### Creating a Region Preview
+
+A `knora-api:RegionPreviewValue` references a `Region` directly, without link-value reification (see
+[RegionPreviewValue](../../02-dsp-ontologies/knora-base.md#regionpreviewvalue)). The target region is given on
+`knora-api:isRegionPreviewOf`:
+
+```json
+{
+  "@id": "http://rdfh.ch/0001/a-thing",
+  "@type": "anything:Thing",
+  "anything:hasRegionPreview": {
+    "@type": "knora-api:RegionPreviewValue",
+    "knora-api:isRegionPreviewOf": {
+      "@id": "http://rdfh.ch/0001/a-region"
+    }
+  },
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The target must exist, be a `Region`, and belong to the same project as the referencing resource, otherwise the request
+is rejected. Only the target reference (and any other generic properties that are used by all values) is stored; the crop/thumbnail/
+highlight/full-image/legal fields are computed on read and must not be submitted. Updating the value follows the same
+shape and payload; re-pointing it to a different region is subject to the same referential-integrity checks.
+
 ### Creating a Text Value Without Standoff Markup
 
 Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:

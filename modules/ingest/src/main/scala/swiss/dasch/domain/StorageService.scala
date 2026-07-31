@@ -24,7 +24,6 @@ import zio.stream.ZStream
 import java.io.IOException
 import java.nio.file.CopyOption
 import java.nio.file.DirectoryNotEmptyException
-import java.nio.file.OpenOption
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.attribute.FileAttribute
 import java.text.ParseException
@@ -59,7 +58,7 @@ trait StorageService {
 
   def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit]
 
-  def createDirectories(path: Path, attrs: FileAttribute[_]*): IO[IOException, Unit]
+  def createDirectories(path: Path, attrs: FileAttribute[?]*): IO[IOException, Unit]
 
   /**
    * Deletes a regular file.
@@ -102,17 +101,17 @@ object StorageService {
     ZIO.serviceWithZIO[StorageService](_.getAssetsBaseFolder())
   def getTempFolder(): RIO[StorageService, TempFolder] =
     ZIO.serviceWithZIO[StorageService](_.getTempFolder())
-  def createDirectories(path: AugmentedFolder, attrs: FileAttribute[_]*): ZIO[StorageService, IOException, Unit] =
-    ZIO.serviceWithZIO[StorageService](_.createDirectories(path, attrs: _*))
+  def createDirectories(path: AugmentedFolder, attrs: FileAttribute[?]*): ZIO[StorageService, IOException, Unit] =
+    ZIO.serviceWithZIO[StorageService](_.createDirectories(path, attrs*))
   def createTempDirectoryScoped(
     directoryName: String,
     prefix: Option[String] = None,
-  ): ZIO[Scope with StorageService, IOException, Path] =
+  ): ZIO[Scope & StorageService, IOException, Path] =
     ZIO.serviceWithZIO[StorageService](_.createTempDirectoryScoped(directoryName, prefix))
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A] =
-    ZIO.serviceWithZIO[StorageService](_.loadJsonFile(file)(decoder))
+    ZIO.serviceWithZIO[StorageService](_.loadJsonFile(file)(using decoder))
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): ZIO[StorageService, Throwable, Unit] =
-    ZIO.serviceWithZIO[StorageService](_.saveJsonFile(file, content)(encoder))
+    ZIO.serviceWithZIO[StorageService](_.saveJsonFile(file, content)(using encoder))
 }
 
 final case class StorageServiceLive(config: StorageConfig) extends StorageService {
@@ -139,7 +138,7 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
     directoryName: String,
     prefix: Option[String],
   ): ZIO[Scope, IOException, Path] = {
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss") withZone ZoneId.from(ZoneOffset.UTC)
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss") `withZone` ZoneId.from(ZoneOffset.UTC)
     Clock.instant.flatMap { now =>
       val basePath      = prefix.map(config.tempPath / _).getOrElse(config.tempPath)
       val directoryPath = basePath / s"${formatter.format(now)}" / directoryName
@@ -164,10 +163,10 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
   }
 
   override def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit] =
-    Files.copy(source, target, copyOption: _*)
+    Files.copy(source, target, copyOption*)
 
-  override def createDirectories(dir: Path, attrs: FileAttribute[_]*): IO[IOException, Unit] =
-    Files.createDirectories(dir, attrs: _*)
+  override def createDirectories(dir: Path, attrs: FileAttribute[?]*): IO[IOException, Unit] =
+    Files.createDirectories(dir, attrs*)
 
   override def delete(file: Path): IO[IOException, Unit] =
     Files

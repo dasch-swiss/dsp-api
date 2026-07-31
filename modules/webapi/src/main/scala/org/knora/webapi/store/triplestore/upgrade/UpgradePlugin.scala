@@ -58,5 +58,5 @@ object MigrateSpecificGraphs {
 
   def from(iris: Iterable[InternalIri]): MigrateSpecificGraphs =
     // We have to add the builtIn graphs to all [[MigrateSpecificGraphs]], because the [[RepositoryUpdater]] requires them for automatic upgrade of builtIn graphs, e.g. ontologies.
-    MigrateSpecificGraphs(iris.toSet) merge builtIn
+    MigrateSpecificGraphs(iris.toSet) `merge` builtIn
 }

@@ -5,17 +5,20 @@
 
 package org.knora.webapi.slice.admin.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.net.URI
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.slice.admin.domain.model.IsDaschRecommended
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 
-object LicenseRepositorySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class LicenseRepositorySpec extends ZIOSpecDefault {
   private val repo = ZIO.serviceWithZIO[LicenseRepo]
 
   private def configLayer(allowPlaceholder: Boolean): ULayer[Unit] =

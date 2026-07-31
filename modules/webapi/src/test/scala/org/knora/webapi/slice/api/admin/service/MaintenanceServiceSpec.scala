@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.api.admin.service
 
 import eu.timepit.refined.auto.*
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.ZIO
 import zio.test.Spec
@@ -13,6 +14,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
@@ -31,7 +33,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.emptyDatasetRefLayer
 
-object MaintenanceServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class MaintenanceServiceSpec extends ZIOSpecDefault {
 
   private val testProject              = TestDataFactory.someProject
   private val createProject            = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))

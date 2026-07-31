@@ -9,11 +9,13 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
@@ -30,7 +32,8 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
   private val repo       = ZIO.serviceWithZIO[DefaultObjectAccessPermissionRepo]
   private val db         = ZIO.serviceWithZIO[TriplestoreService]
   private val shortcode  = Shortcode.unsafeFrom("0001")

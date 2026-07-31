@@ -11,5 +11,5 @@ brew install adr-tools
 Run the following command from the root directory to start the C4 model browser:
 
 ```bash
-make structurizer
+just structurizer
 ```

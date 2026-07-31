@@ -17,33 +17,35 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Core Build Tool
 
-- **Primary**: `sbt` (Scala Build Tool) - use `./sbtx` wrapper script
-- **Alternative**: `just` (command runner) for common tasks
-- **Alternative**: `make` for Docker and documentation tasks
+- **Primary**: `just` (command runner) - the canonical entry point for build, test, image, CI, and
+  local-dev tasks (stack lifecycle, DB init, cleanup); it wraps Bazel. Run `just --list`.
+- **Build of record**: `bazel` (via the Nix dev shell). sbt has been removed; everything (compile,
+  test, images, formatting, linting) runs through Bazel. For the fast edit → diagnostics loop, prefer
+  the `metals` MCP tools (see below) over shelling out to `bazel build`.
 
 ### Essential Development Commands
 
 **Testing:**
 
-- Run a single test: `sbt "testOnly *TestClassName*"`
-- Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
-- `sbt test` - Run unit tests
-- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `make docker-build-sipi-image`.
-- `make test-it` - Run integration tests (requires Docker)
-- `make test-e2e` - Run end-to-end HTTP API tests (requires Docker)
-- `make test-all` - Run all tests
+- Run a single test target: `bazel test //modules/webapi:test` (filter with `--test_filter=*TestClassName*`)
+- Run one module's tests: `bazel test //modules/webapi:test`
+- Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `just docker-build-sipi-image`.
+- `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator)
+- `just test-it` - Run integration tests (requires Docker)
+- `just test-e2e` - Run end-to-end HTTP API tests (requires Docker)
 
 **Code Quality:**
 
-- `sbt fmt` - Format code with Scalafmt
-- `sbt check` - Check code formatting and linting
-- `sbt "scalafixAll --check"` - Check Scalafix rules
+- `just fmt` - Format Scala (scalafmt via Bazel) and apply Apache-2.0 SPDX headers
+- `just check` - Check formatting + license headers (the CI gate; no writes)
+- Import organization is handled by scalafmt (`.scalafmt.conf`); unused imports are caught by the
+  compiler (`-Wunused:all -Werror`). scalafix was removed with sbt.
 
 **Building:**
 
-- `sbt compile` - Compile the project
-- `make docker-build` - Build Docker images
-- `make docker-build-dsp-api-image` - Build only the API Docker image
+- `bazel build //modules/webapi:webapi` - Compile a module (or use the metals `compile-module` tool)
+- `just docker-build` - Build the dsp-api/sipi/ingest Docker images (Fuseki excluded)
+- `just docker-build-dsp-api-image` - Build only the API Docker image
 
 **Local Development Stack:**
 
@@ -54,12 +56,26 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ### Bazel & the Nix dev shell
 
-The custom Sipi Docker image is built with **Bazel** (`rules_oci`), not sbt. Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper; the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
+All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena-fuseki`) build with
+**Bazel** (`rules_oci`).
+Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
+the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
-- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command make docker-build-sipi-image`.
-- `make docker-build-sipi-image` - build the Sipi image and load it into the local Docker daemon (`:latest` plus the git-describe version tag); runs `bazel run //modules/sipi:load`.
-- `make docker-publish-sipi-image` - build and push the multi-arch image; runs `bazel run //modules/sipi:push`.
-- The dsp-api and dsp-ingest images stay on sbt. `make docker-build` / `make docker-publish` build all three in order (Sipi first, since dsp-ingest derives from it).
+- **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command just docker-build-sipi-image`.
+- `just docker-build-sipi-image` / `just docker-build-dsp-api-image` / `just docker-build-ingest-image`
+  build the image and load it into the local Docker daemon (`:latest` plus the git-describe
+  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `just docker-publish-*`
+  variants build + push the multi-arch image via `bazel run //modules/<m>:push`.
+- `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
+  dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
+  them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
+- Fuseki's recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) build and
+  publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
+- CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
+  (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
+  sbt has been fully removed: formatting/linting is the rules_scala scalafmt toolchain, license
+  headers are `//tools/license`, and dependency updates run through Renovate (`.github/renovate.json`)
+  with `MODULE.bazel` as the sole version source.
 
 ## Architecture
 
@@ -96,7 +112,7 @@ Each slice typically contains:
 
 ### Technology Stack
 
-- **Language**: Scala 3.3.5
+- **Language**: Scala 3.8.4
 - **Framework**: ZIO 2.x for functional programming
 - **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
 - **Database**: Apache Jena Fuseki (RDF triplestore)
@@ -142,18 +158,19 @@ Each slice typically contains:
 
 ### Prerequisites
 
-- JDK Temurin 25
-- sbt
+- [Nix](https://determinate.systems) (with flakes) + `direnv` — the only toolchain install needed;
+  the dev shell it loads provides `bazel`, JDK Temurin 25, `just`, and `crane` (see "Bazel & the Nix
+  dev shell" above)
 - Docker Desktop
-- Nix (with flakes) + direnv — provides the Bazel dev shell used to build the Sipi image (see "Bazel & the Nix dev shell" above)
-- just (optional)
-- Scala 3.3.X
+
+Bazel (via the Nix dev shell) is the only build tool — sbt has been removed. Scala 3.8.4 is pinned in
+`MODULE.bazel` (`scala_config`).
 
 ### Local Development
 
 1. Start the development stack: `just stack-start-dev`
 2. This provides Fuseki (port 3030) and Sipi (port 1024)
-3. Run the API locally via IDE or `sbt run`
+3. Run the API locally via IDE or `bazel run //modules/webapi:app`
 4. API will be available at <http://localhost:3333>
 
 ### Testing Against the Dev Database
@@ -172,12 +189,20 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 
 ### Scala language intelligence (Metals MCP)
 
-This repo ships a checked-in `metals` MCP server giving agents real Scala language intelligence (compiler
-diagnostics, type-aware usage search, symbol docs and lookup). **Prefer the `metals` MCP tools over direct
-`sbt`/`sbtx` calls** — e.g. use `compile-file` / `compile-module` instead of `sbt compile`, and `get-usages`
-instead of grep. It is much faster (incremental, no JVM/sbt startup per call) and more capable (structured
-diagnostics, type-aware navigation). For setup, the full tool list, usage pattern, and the worktree/LOOM
-caveats see `docs/development/dsp-api-metals-mcp.md`.
+This repo ships a checked-in `metals` MCP server intended to give agents Scala language intelligence
+(compiler diagnostics, type-aware usage search, symbol docs and lookup). **When it is working, prefer
+the `metals` MCP tools over shelling out to `bazel build`** — `compile-file` / `compile-module` and
+`get-usages` are incremental and return structured results. For setup, the full tool list, and the
+worktree/LOOM caveats see `docs/development/dsp-api-metals-mcp.md`.
+
+**Bazel-9 note:** Metals connects to Bazel via **bazel-bsp**, whose bundled aspect (in bazel-bsp 4.0.x)
+isn't Bazel-9-compatible out of the box. Two local fixes make it work: a macOS-scoped
+`--incompatible_autoload_externally` flag in `.bazelrc` (restores the `JavaInfo`/`CcInfo` globals Bazel 9
+removed) and a `bazel_binary` wrapper (`tools/metals/bazel-bsp-wrapper.sh`) that re-applies a struct→provider
+patch to bazel-bsp's `core.bzl` on each invocation. So `compile-file`/`compile-module`/`get-usages` all work.
+This is **not** a rules_scala 7.x issue. It's a vendored patch to bazel-bsp — track scalameta/metals#8268 and
+remove it once upstream supports Bazel 9. Bootstrap in a fresh worktree: `just metals-bootstrap`, then the
+metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp.md`.
 
 ## API Structure
 
@@ -209,6 +234,36 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 3. Register in `CompleteApiServerEndpoints.scala`
 4. Add unit/integration tests mirroring the main structure
 
+### Bumping the SIPI version
+
+The sipi version lives in **one place**: the two `oci.pull` digests in `MODULE.bazel`. There is no
+duplicated tag string — the `/version` endpoint reads the tag from the pulled image's own
+`org.opencontainers.image.version` OCI label (`//tools/buildinfo:oci_config_label`).
+
+When applying a new `daschswiss/sipi` release, update `MODULE.bazel`: the two `oci.pull` blocks
+(`sipi_base_amd64`, `sipi_base_arm64`) are pinned by **per-arch single-manifest digest**, not the tag.
+The arm64 index entry carries a `v8` variant that a bare `linux/arm64` request does not match, so pull
+each platform's manifest directly. Also update the tag and the index digest in the comment above them
+(the comment tag is documentation + a Renovate anchor; the digests are what the build uses).
+
+Get the digests for the target tag with:
+
+```bash
+docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z --raw \
+  | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(.platform.variant // "") \(.digest)"'
+docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z | grep -i digest   # index digest
+```
+
+`docker-compose.yml` needs no change — it uses `daschswiss/knora-sipi:latest` (the derived image built
+from this base), not a pinned version. After bumping, remember to sync the same version in the
+**ops-deploy** repo when deploying the DSP release.
+
+(The **Fuseki** image is versioned by release-please like knora-api/dsp-ingest — its tag is the DSP
+release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist version**
+(`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the `/version`
+report, and the image's OTLP `service.version` resource attribute — see "Updating Jena/Fuseki" in
+`modules/fuseki/README.md`.)
+
 ### Code Style
 
 - Use Scalafmt for formatting
@@ -226,9 +281,9 @@ caveats see `docs/development/dsp-api-metals-mcp.md`.
 
 ### Debugging
 
-- Use `make stack-logs` to view all service logs
-- Check `make stack-health` for API health status
-- Use `make stack-status` to see container status
+- Use `just stack-logs` to view all service logs
+- Check `just stack-health` for API health status
+- Use `just stack-status` to see container status
 
 
 ### Writing SPARQL queries

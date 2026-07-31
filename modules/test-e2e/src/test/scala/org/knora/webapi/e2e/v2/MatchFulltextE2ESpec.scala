@@ -5,10 +5,12 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.SearchEndpointE2ESpecHelper.postGravsearchQuery
 import org.knora.webapi.messages.OntologyConstants
@@ -17,14 +19,8 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
 
-/**
- * E2E tests for the `knora-api:matchFulltext` Gravsearch function (DEV-6715). Uses a dedicated,
- * self-contained fixture (matchfulltext-data.ttl) rather than extending anything-data.ttl, per
- * CLAUDE.md: shared datasets are loaded by many tests, so a new record there risks cascading
- * failures in unrelated specs. The fixture reuses the existing "anything" project/ontology, so no
- * new project/user registration is needed.
- */
-object MatchFulltextE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class MatchFulltextE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects :+
     RdfDataObject(

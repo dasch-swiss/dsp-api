@@ -5,15 +5,18 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-object UpgradePluginPR2094Spec extends ZIOSpecDefault with UpgradePluginSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpgradePluginPR2094Spec extends ZIOSpecDefault with UpgradePluginSpec {
 
   val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR2094")(
     test("fix the missing valueHasUri datatype") {

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.api.management
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
@@ -20,7 +22,8 @@ import org.knora.webapi.slice.api.management.VersionResponse
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object ManagementEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ManagementEndpointsE2ESpec extends E2EZSpec {
 
   // load just a single small set even though it is not used.
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)

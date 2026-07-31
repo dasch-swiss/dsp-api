@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.common
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
-object ValueIriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValueIriSpec extends ZIOSpecDefault {
 
   private val validValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
 

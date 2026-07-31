@@ -11,12 +11,11 @@ import dsp.errors.*
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as Constants
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-
-import OntologyConstants.KnoraBase as Constants
 
 object CheckObjectClassConstraints {
 
@@ -79,6 +78,29 @@ object CheckObjectClassConstraints {
                 }
             } yield ()
 
+          case rpvc: RegionPreviewValueContentV2 =>
+            // A region preview is an ordinary value, so its own type must satisfy the property's object class
+            // constraint (RegionPreviewValue). In addition, the resource it points at must be a Region: the
+            // property constraint here is RegionPreviewValue (the value type), so key on knora-base:Region
+            // directly (the objectClassConstraint of isRegionPreviewOf).
+            for {
+              _ <-
+                ZIO.when(!objectConstraints.contains(rpvc.valueType)) {
+                  propertyRequiresValue(resourceIdForErrorMsg, propertyIri, objectConstraints)
+                }
+              regionClass     = Constants.Region.toSmartIri
+              targetClass     = linkTargetClasses(rpvc.regionIri.value)
+              targetClassInfo = entityInfo.classInfoMap(targetClass)
+              _              <-
+                ZIO.when(!targetClassInfo.allBaseClasses.contains(regionClass)) {
+                  ZIO.fail(
+                    OntologyConstraintException(
+                      s"${resourceIdForErrorMsg}The target of the region preview value for property <${propertyIri.toComplexSchema}> must be a <${regionClass.toComplexSchema}>, but resource <${rpvc.regionIri.value}> is not.",
+                    ),
+                  )
+                }
+            } yield ()
+
           case other: ValueContentV2 =>
             // It's not a link value. Check that its type is equal to the property's object class constraint.
             ZIO.when(!objectConstraints.contains(other.valueType)) {
@@ -113,7 +135,10 @@ object CheckObjectClassConstraints {
           .orElseFail(objectTypeMissing(propertyInfoLinked.entityInfoContent.propertyIri))
 
       objectConstraintInfos <- ontologyRepo.findDirectSubclassesBy(objectConstraint.toInternalIri)
-    } yield objectConstraint +: (objectConstraintInfos.map(_.entityInfoContent.classIri))
+      // `findDirectSubclassesBy` already includes the class itself (a class is a subclass of itself in
+      // the ontology cache), so prepending `objectConstraint` would list it twice. Dedup to keep the
+      // list of acceptable classes free of duplicates.
+    } yield (objectConstraint +: objectConstraintInfos.map(_.entityInfoContent.classIri)).distinct
   }
 
   private def invalidPropUseLinkProp(
@@ -129,18 +154,19 @@ object CheckObjectClassConstraints {
   ): InconsistentRepositoryDataException =
     InconsistentRepositoryDataException(s"Property <$property> has no knora-api:objectType")
 
+  private[resources] def formatObjectClassConstraints(objectClassConstraints: List[SmartIri]): String =
+    objectClassConstraints.map(iri => s"<${iri.toComplexSchema}>").mkString(", ")
+
   private def propertyRequiresValue(
     resourceIdForErrorMsg: IRI,
     propertyIri: SmartIri,
     objectClassConstraints: List[SmartIri],
-  ): Task[OntologyConstraintException] = {
-    val constraints = objectClassConstraints.map(_.toComplexSchema).mkString(",")
+  ): Task[OntologyConstraintException] =
     ZIO.fail(
       OntologyConstraintException(
-        s"${resourceIdForErrorMsg}Property <${propertyIri.toComplexSchema}> requires a value of types: <${constraints}>",
+        s"${resourceIdForErrorMsg}Property <${propertyIri.toComplexSchema}> requires a value of one of the following types: ${formatObjectClassConstraints(objectClassConstraints)}",
       ),
     )
-  }
 
   private def propertyInvalid(
     resourceIdForErrorMsg: IRI,
@@ -155,9 +181,8 @@ object CheckObjectClassConstraints {
       s"'${clientResourceIDs.apply(linkValueContentV2.referredResourceIri.value)}'" // unsafe apply, present before refactoring
     }
 
-    val constraints = objectClassConstraints.map(_.toComplexSchema).mkString(",")
     OntologyConstraintException(
-      s"${resourceIdForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toComplexSchema}>, because it does not belong to class <$constraints>",
+      s"${resourceIdForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toComplexSchema}>, because it does not belong to any of the following classes: ${formatObjectClassConstraints(objectClassConstraints)}",
     )
   }
 }

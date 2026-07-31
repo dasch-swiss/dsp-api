@@ -1,123 +1,166 @@
 # Ubiquitous Language
 
-Consolidated cross-context glossary for dsp-api. **Complements — does not replace —
-[`CONTEXT-MAP.md`](./CONTEXT-MAP.md)**, which holds the full context map, boundaries, and
-target dependency structure. This file rolls up the terms that matter across contexts, with
-ambiguities and synonyms flagged.
+Cross-context glossary for dsp-api. It complements [`CONTEXT-MAP.md`](./CONTEXT-MAP.md), which
+records ownership, relationships, and the target dependency graph.
 
-## Data Model
+## Product context
 
-The user-authored schema — the reason dsp-api is not just a triplestore with a REST wrapper.
+| Term | Definition | Aliases or interpretations to avoid |
+| --- | --- | --- |
+| **VRE** | Virtual Research Environment in which researchers and data stewards create, edit, organise, query, and manage research data | Archive |
+| **dsp-api** | Backend of the VRE and its transitional source of truth | Archive, Repository |
+| **Repository** | The downstream environment for preserving and presenting published data | VRE |
+| **Archive** | The separate long-term preservation system within the Repository architecture | dsp-api, Assets, Project Migration |
+
+The VRE's transitional retention of data does not give dsp-api archival custody. Project Migration
+hands data between the VRE and other systems; the Archive remains an external context.
+
+## Projects
 
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Data Model** | A project's user-authored schema: the classes, properties, cardinalities, and controlled vocabularies its data must conform to | Ontology (RDF-implementation word) |
-| **Class** | A user-defined type of resource within a data model | Resource class¹ |
-| **Property** | A user-defined attribute or relationship a class may carry | Predicate |
-| **Cardinality** | A constraint on how many values of a property a resource may/must have | |
-| **List** | A hierarchical controlled vocabulary authored as part of a data model; defining one is a *modelling* act | Taxonomy, node tree |
-| **Standoff class / mapping** | The schema face of rich text: standoff tag classes (ontology entities) and the XML↔standoff mapping that structures markup — practically near-static (one encouraged standard mapping) | |
+| **Project** | The ownership and scoping unit for Data Models, Resources, settings, and access administration | Tenant |
+| **Project settings** | Project-owned configuration such as legal defaults, licences, and Restricted View policy | User settings |
+| **Shortcode** | Stable short identifier used to scope a Project's data and identifiers | Project IRI |
+| **Restricted View** | Project policy for reduced-resolution or watermarked asset serving; configuration belongs to Projects and enforcement to Assets | Object-access permission |
 
-¹ *"Resource class" is fine informally, but the modelled type is a **Class** in the data model.*
-
-## Resources & Values
-
-The instance data — resources and their values, conforming to a data model.
-
-| Term | Definition | Aliases to avoid |
-| --- | --- | --- |
-| **Resource** | An instance of a data-model class; the **aggregate root** and consistency boundary | Record, entity, object |
-| **Value** | A versioned entity holding one property value *inside* a resource; never exists without its resource | Property value (when it implies independence) |
-| **File value** | A value type representing an asset (image, document, audio, …) by metadata + internal filename — the bytes live in Assets/Media, not here | |
-| **Standoff markup** | The instance face of rich text: standoff tags attached to a text value | Annotation (overloaded) |
-
-## Search
-
-Retrieval of resources, including dsp-api's own query language.
-
-| Term | Definition | Aliases to avoid |
-| --- | --- | --- |
-| **Gravsearch** | dsp-api's custom query language; data-model-aware retrieval of resources | |
-| **Full-text search** | Text-only retrieval with zero data-model knowledge (converging with Gravsearch in a redesign) | |
-| **Type inspection** | Inferring the data-model type of each variable in a Gravsearch query | |
-| **Prequery / main query** | The two-phase SPARQL Gravsearch generates (paged IRIs, then full data) | |
-
-## Assets / Media
-
-A thin integration context: the ports to the external **Sipi** and **dsp-ingest** services.
-
-| Term | Definition | Aliases to avoid |
-| --- | --- | --- |
-| **Asset** | A binary file (image, document, AV) whose bytes live in Sipi/dsp-ingest; dsp-api stores only its metadata | File (when bytes are implied) |
-| **Sipi** | External IIIF media server that stores and serves asset bytes | |
-| **dsp-ingest** | External service that ingests assets; planned to merge into dsp-api | Ingest service |
-| **Restricted View** | A per-project policy for serving reduced-resolution/watermarked images (setting owned by Identity, enforcement by Assets) | |
+Projects is a context separate from Identity & Access. Memberships refer to a Project but remain
+owned by Identity & Access.
 
 ## Identity & Access
 
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Project** | The ownership and scoping unit; owns data models, resources, and settings | |
-| **User** | An authentication identity that acts within projects | Account |
-| **Group** | A named set of users used to grant permissions | |
-| **Permission profile** | A user's effective groups + admin flags, computed by Identity and carried on the authenticated request | |
-| **Administrative permission** | A project/group-scoped grant of what a user may do by default | |
-| **Default object-access permission** | The default access granted on objects created in a project (a.k.a. DOAP) | |
+| **User** | An authenticated identity that acts within Projects | Account |
+| **Group** | A named set of Users used to grant permissions | Role |
+| **Membership** | Association of a User with a Project or Group | Project ownership |
+| **Permission profile** | A User's effective Groups and administration flags, computed by Identity & Access and carried on the authenticated request | JWT scope |
+| **Administrative permission** | A Project/Group-scoped grant governing administrative actions | Object-access permission |
+| **Default object-access permission** | Default access assigned to objects created in a Project, also called DOAP | Administrative permission |
 
-## Export / Migration
+## Data Model
 
-| Term | Definition | Aliases to avoid |
-| --- | --- | --- |
-| **Migration** | Bulk export/import of a whole project (data model + resources + admin + permissions) at the RDF named-graph level | |
-| **Data Task** | A tracked long-running async operation with a status lifecycle | Job (informal) |
-
-## Shared Kernel & cross-cutting
-
-Genuine cross-context vocabulary (see `CONTEXT-MAP.md` § Shared Kernel).
+The user-authored model that VRE data must conform to.
 
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Data IRI** | A **schema-invariant** identifier — same string in every schema (resource, value, project, user, list). Lives in the shared-identifiers kernel | |
-| **Definition IRI** | A **schema-variant** identifier for a data-model entity (class, property, ontology); has internal + API forms and genuinely converts. Owned by Data Model | Entity IRI (acceptable synonym) |
-| **Schema** | Which representation an IRI/entity is in — *internal* vs *API v2 Complex/Simple* | |
-| **Permission policy primitive** | The pure permission-level model (RV < V < M < D < CR) + `hasPermissions` parse/compare; a kernel value object | |
-| **Object-access permission** | Fine-grained per-object access stored as a literal on the data and enforced at point of use | |
-| **Scope** | Coarse API-layer JWT authorization gating endpoints (distinct from object-access permission) | |
-| **Shared kernel / substrate** | The RDF graph + triplestore access + identifiers + policy primitive that contexts share — *not* a per-context store | |
-| **InstanceUsage** | Target published capability by which Data Model asks Resources "is this class/property used in data?" instead of raw cross-context SPARQL | |
-| **Ratchet** | The rule: existing cross-context SPARQL stays, but no *new* cross-context SPARQL — new cross-boundary reads go through a published capability | |
-| **Intrinsic substrate user** | A context (Search, Export) whose job legitimately requires operating directly on the RDF substrate; exempt from the ratchet | |
+| **Data Model** | A Project's Classes, Properties, Cardinalities, controlled vocabularies, and related definitions | Ontology in domain prose |
+| **Class** | A user-defined type of Resource within a Data Model | Predicate |
+| **Property** | A user-defined attribute or relationship a Class may carry | Field, predicate in domain prose |
+| **Cardinality** | Constraint on how many Values of a Property a Resource may or must have | Multiplicity when speaking to domain experts |
+| **List** | Hierarchical controlled vocabulary authored as part of a Data Model | Standalone administration tree |
+| **Standoff class / mapping** | Definition face of rich text: standoff tag Classes and XML-to-standoff mappings | Standoff markup |
+
+“Ontology” remains valid as an RDF implementation term and in existing code names such as
+`OntologyIri`. Use **Data Model** for domain meaning.
+
+## Resources & Values
+
+Active VRE instance data conforming to a Data Model.
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Resource** | Instance of a Data Model Class; aggregate root and consistency scope | Record, generic entity |
+| **Value** | Versioned entity holding one Property Value inside a Resource; it has no independent lifecycle | Standalone field |
+| **File Value** | Value representing an Asset through metadata and an internal filename | Asset bytes |
+| **Standoff markup** | Instance face of rich text: tags attached to a Text Value | Standoff definition |
+| **Object-access permission** | Fine-grained access carried by a Resource or Value and evaluated against a Permission profile | Scope, administrative permission |
+
+## Search
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Gravsearch** | dsp-api's Data-Model-aware query language for retrieving Resources | SPARQL public interface |
+| **Full-text retrieval** | Text-oriented Resource retrieval that currently requires little Data Model knowledge | Gravsearch |
+| **Type inspection** | Inferring the Data Model type of each variable in a Gravsearch query | Validation only |
+| **Prequery / main query** | Two-phase internal query process: identify paged Resource IRIs, then retrieve complete Resources | Two public searches |
+| **Data Model projection** | Stable published view of Classes and Properties that retrieval can consume without importing Data Model implementation details | Raw ontology cache |
+
+Search remains one provisional context while full-text, Gravsearch, filtering, and faceting converge.
+
+## Assets
+
+| Term | Definition | Aliases or interpretations to avoid |
+| --- | --- | --- |
+| **Asset** | Binary file represented in the VRE by metadata and an identifier; bytes are handled by Sipi and ingest infrastructure | File Value, archival record |
+| **Sipi** | IIIF image system used to transform and serve asset bytes | Archive |
+| **dsp-ingest** | Ingest module currently handling asset ingestion and storage operations; planned to move into dsp-api | Project Migration, Archive |
+| **Serving-policy enforcement** | Applying Project settings such as Restricted View when Assets are served | Permission administration |
+
+## Project Migration
+
+| Term | Definition | Aliases or interpretations to avoid |
+| --- | --- | --- |
+| **Project Migration** | Whole-Project import/export and handoff, including Data Model, Resources, and required administration data | Archiving |
+| **Migration bundle** | Portable representation used to transfer a Project | Archival package unless it conforms to the separate Archive contract |
+| **Data Task** | Tracked long-running operation with a lifecycle and status | Untracked background job |
+| **Bulk graph movement** | Intentional whole-graph transfer using the RDF platform | General permission for cross-context SPARQL |
+
+## Operations
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Operations** | Genuine cross-context maintenance workflows that cannot remain with one owning context | Admin dumping ground |
+| **Maintenance workflow** | Deliberate repair or migration operation; it belongs to Operations only when it coordinates multiple contexts | Any admin endpoint |
+
+## Technical language
+
+| Term | Definition | Aliases to avoid |
+| --- | --- | --- |
+| **Data IRI** | Schema-invariant identifier such as a Resource, Value, Project, User, Group, List, or Permission IRI | Definition IRI |
+| **Definition IRI** | Schema-variant identifier for a Data Model entity, with internal and public forms | Generic Data IRI |
+| **Schema** | Representation of a Definition IRI or entity: internal, v2 Complex, or v2 Simple | Data Model |
+| **Foundation primitive** | Universal validation or value with no domain dependency | Every cross-context identifier |
+| **Permission policy** | Pure permission levels plus `hasPermissions` parsing and comparison | Permission administration |
+| **RDF platform** | Generic triplestore execution, transactions, and RDF library integration | Shared domain model, shared kernel |
+| **Context-owned RDF adapter** | Adapter containing the triples and queries whose meaning belongs to one context | Global repository layer |
+| **Authentication** | Credential, JWT, Scope, and request-authentication concerns | Object-access authorization |
+| **Scope** | Coarse JWT grant used to gate an endpoint | Object-access permission |
+| **InstanceUsage** | Data Model-owned interface for asking whether a Class or Property is used by Resources | Raw cross-context SPARQL |
+| **Ratchet** | Existing cross-context SPARQL may remain temporarily; new cross-context reads use published interfaces | Big-bang rewrite |
+| **Intrinsic RDF-platform user** | Search query translation or Project Migration bulk movement where low-level RDF execution is part of the implementation | Any context that can reach the triplestore |
+
+Data IRIs are not automatically globally owned. A Project IRI normally belongs to a small Projects
+contract, a User IRI to Identity & Access, and a Resource IRI to Resources & Values. The Data IRI /
+Definition IRI distinction describes behaviour; context ownership describes dependency direction.
 
 ## Relationships
 
-- A **Project** owns one or more **Data Models** and the **Resources** conforming to them.
-- A **Data Model** defines **Classes**, **Properties** (with **Cardinalities**), and **Lists**.
-- A **Resource** is an instance of a **Class** and contains **Values**; a **Value** belongs to exactly one **Resource**.
-- A **Value** may be a **File value** referencing an **Asset**; the **Asset**'s bytes live in **Sipi/dsp-ingest**.
-- A **Resource** references a **List** node through a list **Value**.
-- **Gravsearch** queries are expressed against the **Data Model** and return **Resources**.
-- Every **Resource**/**Value** carries an **object-access permission**, evaluated against the requesting user's **permission profile**.
-- A **Definition IRI** converts between **Schemas**; a **Data IRI** does not.
+- A **Project** owns one or more **Data Models**, the **Resources** conforming to them, and Project
+  settings.
+- **Identity & Access** owns Project and Group **Memberships** and computes a User's **Permission
+  profile**.
+- A **Data Model** defines **Classes**, **Properties**, **Cardinalities**, and **Lists**.
+- A **Resource** is an instance of a **Class** and contains **Values**; each Value belongs to exactly
+  one Resource.
+- A **File Value** references an **Asset** but does not contain its bytes.
+- **Gravsearch** is expressed against a Data Model and returns Resources.
+- **Project Migration** transfers VRE data; it does not preserve it as the Archive.
+- A **Definition IRI** may convert between Schemas; a **Data IRI** may not.
+- Context-specific RDF meaning remains in a **context-owned RDF adapter** even when several adapters
+  use the same **RDF platform**.
 
 ## Example dialogue
 
-> **Dev:** "When a user tightens a **Cardinality** in their **Data Model**, do we just update the schema?"
+> **Developer:** “When a user tightens a Cardinality in their Data Model, can we update it directly?”
 >
-> **Domain expert:** "Only if no **Resource** already violates it. The **Data Model** has to ask whether the **Property** is used in data first."
+> **Domain expert:** “Only if existing Resources remain valid. Data Model asks `InstanceUsage`
+> whether the Property or Class is already used.”
 >
-> **Dev:** "And today it does that with SPARQL straight against the resource data?"
+> **Developer:** “Does Data Model query the Resource triples itself?”
 >
-> **Domain expert:** "Right — that's the accidental coupling we're ratcheting away. The target is **InstanceUsage**: Data Model asks Resources through a published capability, so it never touches a **Data IRI**'s storage directly. Note that's a **Definition IRI** it's constraining, but the resources it checks are addressed by **Data IRIs**."
+> **Domain expert:** “Not for new work. Resources & Values implements the `InstanceUsage` interface
+> through its own RDF adapter, so the Resource representation keeps locality.”
 >
-> **Dev:** "So `toInternalSchema` makes sense on the **Property**'s IRI but not on the **Resource**'s?"
+> **Developer:** “And schema conversion belongs only to the Definition IRI?”
 >
-> **Domain expert:** "Exactly. A **Definition IRI** is schema-variant; a **Data IRI** is schema-invariant. Converting a **Data IRI** should be a compile error, not a silent no-op."
+> **Domain expert:** “Exactly. Converting a Resource IRI or Project IRI should be a compile error.”
 
 ## Flagged ambiguities
 
-- **"Ontology" vs "Data Model"** — the same concept. *Data model* is the domain term (use in prose, docs, APIs); *ontology* is the RDF-implementation word (acceptable in code: package names, `OntologyIri`). Don't use "ontology" when speaking to domain experts.
-- **"IRI" is not one thing** — a **Data IRI** (schema-invariant, kernel) and a **Definition IRI** (schema-variant, Data Model) behave differently. The legacy `SmartIri` conflates them and hands schema-conversion to both; the type system should keep them distinct.
-- **"Permission" spans two layers** — coarse API-layer **Scope** (JWT, endpoint gating) vs. fine-grained **object-access permission** (per-object, stored on data). Always say which you mean.
-- **"List"** — refers to the *definition* (a controlled vocabulary, part of the Data Model), while a list **Value** is the instance reference from a resource. Don't call the value "a list."
-- **"Value"** — a domain entity inside a **Resource**, not a generic "field" or standalone object; it has identity, versioning, and its own permission, but no independent lifecycle.
-- **"Standoff"** — has a Data Model face (classes/mappings) and a Resources face (markup on a text value); it is a cross-cutting *feature*, not a context.
+- **Search:** the context is stable enough to name, but its internal split remains provisional.
+- **Operations:** create the module only for proven cross-context workflows.
+- **Published identifier contracts:** decide case by case whether a consumer needs a tiny contract
+  or a dependency on the owning domain module.
+- **Migration bundle versus archival package:** do not use the terms interchangeably unless a
+  bundle is explicitly made to satisfy the future Archive contract.

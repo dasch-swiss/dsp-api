@@ -9,16 +9,19 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object TriplestoreServiceLiveSpec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class TriplestoreServiceLiveSpec extends E2EZSpec { self =>
 
   private val triplestore = ZIO.serviceWithZIO[TriplestoreService]
 

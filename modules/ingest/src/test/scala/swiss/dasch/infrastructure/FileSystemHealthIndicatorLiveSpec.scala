@@ -5,6 +5,7 @@
 
 package swiss.dasch.infrastructure
 
+import org.junit.runner.RunWith
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import zio.Exit
@@ -16,7 +17,10 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
-object FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
 
   val createOnlyAssetAndTempFolder: ZIO[Scope, Throwable, (String, String)] = for {
     tempStorage          <- Files.createTempDirectoryScoped(None, List.empty)

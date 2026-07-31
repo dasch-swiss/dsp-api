@@ -130,7 +130,7 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
   private def execute(command: SipiCommand): IO[IOException, ProcessOutput] =
     for {
       sipiParams <- command.render()
-      cmd        <- executor.buildCommand(sipiPrefix, sipiParams: _*)
+      cmd        <- executor.buildCommand(sipiPrefix, sipiParams*)
       timerTagged = timer.tagged("command", command.subcommand())
       out        <- (
                if (command.emitsJson) runWithJsonReport(cmd)

@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v52" .
+    :ontologyVersion   "knora-base v53" .
 
 
 #################################################################
@@ -2849,19 +2849,3 @@
     rdfs:subPropertyOf      :valueHas ;
     :subjectClassConstraint :RegionPreviewValue ;
     :objectClassConstraint  :Region .
-
-
-###  http://www.knora.org/ontology/knora-base#iiifUrl
-
-# This property is generated on the fly and not present in the database
-
-:iiifUrl
-    rdf:type                owl:DatatypeProperty ;
-    rdfs:label              "IIIF-URL"@de,
-                            "is an IIIF URL"@en,
-                            "URL IIIF"@fr,
-                            "URL IIIF"@it ;
-    rdfs:comment            "IIIF URL for the region preview"@en ;
-    rdfs:subPropertyOf      :valueHas ;
-    :subjectClassConstraint :RegionPreviewValue ;
-    :objectDatatypeConstraint  xsd:string .

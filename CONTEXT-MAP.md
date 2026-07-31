@@ -1,301 +1,317 @@
 # Context Map — dsp-api
 
-Working map of the bounded contexts in dsp-api, built during a domain-modelling
-session. The goal is to let **domain meaning drive code structure** (and, downstream,
-small Bazel compilation units) — not the reverse.
+Working map of the bounded contexts and technical modules in dsp-api. Domain meaning drives code
+ownership and, downstream, Bazel target ownership. Current package names and RDF graph placement do
+not determine the model.
 
-Status: **draft, in progress.** Boundaries and relationships are still being sharpened.
+Status: **draft, with the principal ownership decisions settled.** Search, Operations, and the
+smallest useful public contracts remain deliberately provisional.
 
-> Code paths below are relative to `modules/webapi/src/main/scala/org/knora/webapi/` unless
-> otherwise prefixed (post-#4183 the `webapi` sources live under `modules/webapi/`).
+> Code paths are relative to `modules/webapi/src/main/scala/org/knora/webapi/` unless otherwise
+> prefixed.
 
-## Contexts
+## Product framing
 
-Core (the heart — the reason dsp-api is not just "a triplestore with a REST wrapper":
-users author their own **data model** at runtime, and everything else stores/retrieves
-instances against it):
+dsp-api is the backend of the **Virtual Research Environment (VRE)**: the environment in which
+researchers and data stewards create, edit, organise, query, and manage research data.
 
-- **Data Model** — the user-authored schema: classes, properties, cardinalities, and
-  controlled vocabularies (**Lists**). Currently split across `slice/ontology`
-  and legacy `responders/v2/ontology` + `messages/v2/ontologymessages`/`listsmessages`.
-    - Domain term is **"data model"**, _not_ "ontology" (ontology is the RDF-implementation word).
-    - **Lists belong to Data Model** (confirmed). A list is a hierarchical controlled vocabulary;
-    defining one is a _modelling_ act (it constrains valid data), exactly parallel to
-    classes/properties. Resources reference list nodes via `HierarchicalListValue`
-    (`valueHasListNode`) — the same upstream/downstream shape as Data Model → Resources.
-    - **Two mismatches to correct** (code/infra structure ≠ domain meaning; meaning wins):
-    1. Lists are managed today via the **admin API** (`ListsMessagesADM`), grouped with project
-       administration. Domain says they are Data Model.
-    2. List nodes are **physically stored in the data graph**, not the ontology graph — yet they
-       are Data Model, not data. Reinforces that the RDF graph is _not_ a per-context boundary.
-- **Resources & Values** — the instance data: resources and their values, conforming to a
-  data model. Text-with-markup (**standoff**) folds in here as a kind of value. Currently
-  mostly legacy `responders/v2` (`ResourcesResponderV2`, `ValuesResponderV2`,
-  `StandoffResponderV2`) + `messages/v2`.
-    - **One bounded context, confirmed** (not two). **Resource is the aggregate root**; **Value**
-    is a versioned entity _inside_ the resource's consistency boundary. Tell: every standalone
-    value operation locks on the _resource_ IRI (`IriLocker.runWithIriLock(..., resourceIri)`),
-    and the two responders never call each other — the resource/value responder split is legacy
-    verb-axis decomposition, not a language boundary. No value exists independently of a resource.
+During the transition to the VRE / Repository architecture, the VRE remains the source of truth
+and operationally retains data that will ultimately be handed to the Repository. This does **not**
+make dsp-api the Archive. The target Archive is a separate long-term preservation system within
+the Repository architecture.
 
-Significant satellites:
+The contexts below therefore describe VRE capabilities. **Project Migration** owns export and
+handoff from the VRE; it does not own archival custody or long-term preservation.
 
-- **Search** — retrieval of resources, including **Gravsearch**, dsp-api's own custom query
-  language. Its own bounded context with distinctive vocabulary (Gravsearch query, _type
-  inspection_, _prequery_ vs _main query_, _transformers_, _inference optimisation_ —
-  `messages/util/search/gravsearch/...`). Downstream (Customer) of Data Model and Resources.
-    - **The one legitimate heavy user of the shared RDF kernel:** translating a query into SPARQL
-    over the data graph _is_ its domain, so it permanently knows the resource RDF encoding. The
-    "no new cross-context SPARQL" ratchet does **not** apply to Search — its substrate access is
-    by design, unlike Data Model's accidental peek into instance data.
-    - **Two sub-models today, converging (redesign in progress):**
-        - _Full-text search_ — **zero** data-model knowledge; queries text only.
-        - _Gravsearch_ — **lives off** data-model knowledge (type inference, inference optimisation).
-        - A redesign is bringing these closer together.
-    - **Boundary in flux — do NOT harden prematurely:** filtering/facets are planned for data
-    retrieval, which will pull Search and Resources _closer_. Treat the Search↔Resources seam as
-    intentionally soft for now.
-    - **Emerging shared contract:** unified/faceted retrieval increasingly needs a stable,
-    _published_ view of the data model (facet = filter by property/class ⇒ must know
-    properties). Suggests **Data Model should publish a schema-projection capability** that
-    Search (and future faceted retrieval) consume — a candidate key piece of ubiquitous language.
+## Core VRE contexts
 
-Supporting / generic:
+### Projects
 
-- **Assets / Media** — today a **thin integration context** (anti-corruption layer / ports to the
-  external **Sipi** and **dsp-ingest** services). dsp-api stores only metadata + `InternalFilename`,
-  never bytes. Domain is small (filename, mime/dimensions, IIIF URL construction, ingest
-  orchestration) — hence "important but not complex." Code is **scattered** (`store/iiif`
-  `SipiService`; `slice/admin` `DspIngestClient`/`InternalFilename`/`RestrictedView`) — a
-  code-vs-domain mismatch to consolidate.
-    - **File-value types** (`StillImageFileValueContentV2`, `DocumentFileValueContentV2`, …) are
-    **values → they belong to Resources & Values**, not here. Assets owns the ports + metadata,
-    not the value representation.
-    - **`RestrictedView`** (reduced-res/watermark serving policy): _setting_ owned by Identity &
-    Access (project config); _enforcement_ owned by Assets (applied when serving). Mirrors the
-    authz config-vs-enforcement split.
-    - **Forward-looking (planned):** dsp-ingest may be **merged into dsp-api as one service**, which
-    would **drastically expand this context** — from a thin ACL into a real ingest domain (upload,
-    storage, checksums, BagIt/archival — cf. `modules/bagit`, derivative generation). Sipi
-    integration may also deepen. ⇒ Design the Assets boundary cleanly _now_ so the merge lands as
-    growth _inside_ an existing seam rather than a re-carve.
-- **Identity & Access** — User, Group, Project, Permission, RestrictedView. Most mature
-  slice (`slice/admin`).
-- **Security / Auth** — authentication, JWT, scopes (`slice/security`).
-- **Export / Migration** — project data import/export and migration (`slice/export`). A distinct
-  supporting context: owns its own model (`DataTask`/`DataTaskStatus` async-job lifecycle,
-  migration bundle format, import validator, `AdminModelScoping`). Sits at the **top** of the
-  dependency graph (depends on many, depended-on by none) — broad coupling is its job. Works
-  mostly at the **shared-substrate (named-graph) level** for bulk copy (intrinsic, like Search),
-  so the SPARQL ratchet is relaxed for the bulk move — but its reads of _admin domain data_
-  (users, permissions for scoping) are accidental coupling and should go through Identity's
-  published capabilities.
+Owns project identity, metadata, lifecycle, legal defaults, licences, and project-level settings.
+Today this is mixed into `slice/admin`, but administrative delivery is not a domain seam.
+
+Projects is separate from Identity & Access. Enriched HTTP responses that combine project data
+with users or data-model IRIs are query composition above the domain modules, not evidence that
+Projects owns those concepts.
+
+### Identity & Access
+
+Owns Users, Groups, memberships, permission administration, and effective permission profiles.
+It depends on Projects because memberships and administrative permissions are project-scoped.
+
+Authentication, JWT handling, and request scopes are a separate technical module. Fine-grained
+object-access enforcement stays with the context that owns the protected object.
+
+### Data Model
+
+Owns the user-authored model: Classes, Properties, Cardinalities, controlled vocabularies
+(**Lists**), Definition IRIs, schema conversion, and standoff definitions/mappings. Current code is
+spread across `slice/ontology`, `slice/lists`, `slice/admin`, legacy ontology responders/messages,
+and shared IRI machinery.
+
+- The domain term is **Data Model**. “Ontology” is the RDF implementation term and remains valid in
+  code names.
+- Lists belong to Data Model. Defining a controlled vocabulary is a modelling act, regardless of
+  its current admin route or storage in the data graph.
+- Standoff classes and XML mappings are definitions and belong here. Standoff markup on a Text
+  Value belongs to Resources & Values.
+- Schema-variant Definition IRIs and their conversion belong here, not in a global identifier
+  module.
+
+### Resources & Values
+
+Owns active VRE instance data: the Resource aggregate, Values, resource metadata, file-value
+references, and standoff markup. Current code is mostly in legacy resource/value/standoff
+responders and messages, with newer work in `slice/resources`.
+
+Resource is the aggregate root. A Value is a versioned entity inside the Resource's consistency
+scope and has no independent lifecycle. The current responder split is a technical decomposition,
+not a domain seam.
+
+File Values remain here because they are Values. They reference Assets but do not transfer Resource
+ownership to the Assets context.
+
+### Search
+
+Owns retrieval of Resources, including Gravsearch, full-text retrieval, type inspection, prequery
+and main-query construction, inference optimisation, and result assembly.
+
+Search is one provisional context. Its relationship with Resources is changing as filtering and
+faceted retrieval evolve, so its internal seams should not be hardened prematurely. Data Model
+should eventually publish the stable projection Search needs.
+
+Search is an intrinsic user of low-level RDF execution because query translation is part of its
+implementation. That exception does not give Search ownership of another context's RDF meaning.
+
+## Supporting VRE contexts
+
+### Assets
+
+Owns Sipi and ingest integration, asset metadata, byte-serving interfaces, serving-policy
+enforcement, and the natural home for future ingest functionality. dsp-api currently retains asset
+metadata and identifiers while Sipi and ingest handle bytes.
+
+- File Values belong to Resources & Values.
+- Restricted View configuration is a Project setting; enforcement belongs to Assets.
+- Consolidating ingest into dsp-api expands Assets inside an existing seam. It does not make Assets
+  responsible for archival custody.
+
+### Project Migration
+
+Owns VRE import/export, migration bundles, bulk graph movement, validation, and the Data Task
+lifecycle. It coordinates many upstream contexts and is intentionally near the top of the graph.
+
+Bulk named-graph movement may use the RDF platform directly. Reads of Projects, Users, Groups, or
+permissions must use their published interfaces. Project Migration hands data out of or into the
+VRE; it is not the Archive.
+
+### Operations
+
+Owns only genuine cross-context maintenance workflows. Maintenance that concerns one context stays
+with that owner. Operations must not become a replacement dumping ground for the current `admin`,
+`store`, or root packages.
+
+Whether a dedicated Operations module is needed remains conditional on identifying enough real
+cross-context workflows.
+
+## Technical modules
+
+These are technical ownership, not additional VRE domains:
+
+| Module | Responsibility |
+| --- | --- |
+| **Foundation primitives** | Universal validation and values with no domain dependencies |
+| **Permission policy** | Pure permission levels, parsing, and comparison |
+| **RDF platform** | Generic triplestore execution, transactions, and RDF library integration |
+| **Authentication** | Credentials, JWTs, scopes, and request authentication |
+| **HTTP delivery** | Versioned DTOs, codecs, endpoints, and translation to domain commands/results |
+| **Application composition** | Configuration, concrete adapter selection, ZIO assembly, startup, and routes |
+
+The table is not an instruction to create one target per row. A domain normally begins as one deep
+production module. Additional targets are justified only by real adapters, published contracts, or
+cross-domain test support.
 
 ## Relationships
 
-Relationships below are tentative and still being sharpened.
+- **Identity & Access → Projects**: membership and permission administration are project-scoped.
+- **Data Model → Projects**: a project owns one or more Data Models.
+- **Assets → Projects**: asset settings and policies are project-scoped.
+- **Resources & Values → Projects + Identity & Access + Data Model + Assets**: Resources are
+  project-owned, conform to a Data Model, are protected by permission profiles/policy, and may
+  reference Assets.
+- **Search → Data Model + Resources & Values + RDF platform**: queries use model meaning and return
+  Resources; query translation legitimately uses generic RDF execution.
+- **Project Migration → Projects + Identity & Access + Data Model + Resources & Values + Assets +
+  RDF platform**: migration coordinates the VRE contexts and may move whole named graphs.
+- **Operations → published interfaces of the contexts it coordinates**.
+- **Authentication → Identity & Access**: authenticated requests carry an effective identity and
+  permission profile.
+- **HTTP delivery → domain interfaces**: delivery translates but does not define domain meaning.
+- **Application composition → domain interfaces and concrete adapters**: only composition chooses
+  implementations.
 
-- **Data Model → Resources & Values**: Data Model is _nominally_ upstream/supplier — Resources
-  conform to the classes/properties/cardinalities it defines. **But the dependency is not
-  clean:** to protect schema evolution, Data Model reaches _into instance data_ (e.g.
-  `OntologyResponderV2.isEntityUsed`, `CardinalityHandler.isPropertyUsedInResources` →
-  `IsPropertyUsedInResourcesQuery`). It does this via **raw SPARQL against the shared
-  triplestore**, not by calling the Resources domain. This is the single most important
-  boundary in the system.
-    - **Decision (current):** treat the RDF triplestore/graph as an explicit **shared kernel**;
-    each context may write its own SPARQL against it (pattern "2"). Pragmatic — formalizes what
-    exists. Cost: resource-encoding knowledge is duplicated in both contexts, uncaught by the
-    compiler.
-    - **Decision (target, future):** invert to **published capabilities** (pattern "3") — e.g. a
-    Resources-owned `InstanceUsage` contract (`isClassUsed` / `isPropertyUsed`); no context
-    writes SPARQL against another context's data. Encapsulates instance-encoding in one place;
-    gives a compiler-enforced seam. To be adopted later, not now.
-    - **Rule going forward (the "ratchet"):** existing cross-context SPARQL stays for now, but
-    **no _new_ cross-context SPARQL** — any new cross-boundary read goes through a published
-    capability. Stops the coupling accreting while allowing incremental migration toward the
-    target. (Recorded as a map note by choice; not promoted to an ADR.)
-- **Resources & Values → Assets**: a resource may represent a file/asset.
-- **Search → Data Model + Resources**: Gravsearch queries are expressed in terms of the data
-  model and return resources.
-- **Identity & Access → everything**: projects own data models and resources; permissions
-  gate access.
+### Data Model asking about instance use
+
+Protecting model evolution requires Data Model to ask whether a Class or Property is used by any
+Resource. Today this is raw cross-context SPARQL.
+
+The target is a consumer-owned `InstanceUsage` interface defined by Data Model and implemented by a
+Resources & Values adapter. Application composition wires the adapter. The compile-time edge
+remains Resources & Values → Data Model, so the graph stays acyclic.
+
+**Ratchet:** existing cross-context SPARQL may be migrated incrementally, but new cross-context
+reads use published interfaces. Search query translation and Project Migration bulk graph movement
+are explicit intrinsic RDF-platform uses, not a general exemption.
 
 ## Target dependency structure
 
-The payoff for the modularization/Bazel goal: a **DAG** where every edge points from a dependent
-to its dependency, and each context is a candidate compilation unit. Layers (bottom = most
-depended-upon, no domain dependencies):
+Arrows point from consumer to dependency:
 
 ```mermaid
 graph TD
-    subgraph L0["Shared kernel (split into small units)"]
-        IDS["identifiers<br/>(schema-invariant typed IRIs)"]
-        RDF["rdf-access<br/>(Jena wrappers, query infra, TriplestoreService)"]
-        POL["permission-policy<br/>(levels, hasPermissions parse/compare)"]
-        PRIM["value primitives<br/>(LanguageCode, …)"]
-    end
+    FP["Foundation primitives"]
+    PP["Permission policy"]
+    RDF["RDF platform"]
 
-    IAM["Identity & Access<br/>(User, Group, Project, permission admin + profile)"]
-    DM["Data Model<br/>(classes, properties, cardinalities, lists,<br/>standoff classes/mappings; definition IRIs + schema conversion)"]
-    ASSET["Assets / Media<br/>(Sipi + dsp-ingest ports, file metadata)"]
-    RV["Resources & Values<br/>(Resource aggregate, Value entity, file-values,<br/>standoff markup; object-access enforcement)"]
-    SEARCH["Search<br/>(Gravsearch, fulltext, type inspection)"]
-    EXPORT["Export / Migration<br/>(DataTask, bundles, bulk graph move)"]
-    SEC["Security (API auth / JWT scopes)"]
+    PROJECTS["Projects"]
+    IAM["Identity & Access"]
+    DM["Data Model"]
+    ASSETS["Assets"]
+    RV["Resources & Values"]
+    SEARCH["Search"]
+    MIGRATION["Project Migration"]
+    OPS["Operations"]
 
-    IAM --> L0
-    DM --> L0
-    DM --> IAM
-    ASSET --> L0
-    ASSET --> IAM
-    RV --> L0
+    AUTHN["Authentication"]
+    HTTP["HTTP delivery"]
+    APP["Application composition"]
+
+    PROJECTS --> FP
+    IAM --> PROJECTS
+    IAM --> FP
+    IAM --> PP
+    DM --> PROJECTS
+    DM --> FP
+    ASSETS --> PROJECTS
+    ASSETS --> FP
+    RV --> PROJECTS
     RV --> IAM
     RV --> DM
-    RV --> ASSET
-    RV -. "implements InstanceUsage<br/>(interface owned by DM)" .-> DM
-    SEARCH --> L0
+    RV --> ASSETS
+    RV --> PP
     SEARCH --> DM
     SEARCH --> RV
-    EXPORT --> L0
-    EXPORT --> IAM
-    EXPORT --> DM
-    EXPORT --> RV
-    EXPORT --> ASSET
-    SEC --> L0
-    SEC --> IAM
+    SEARCH --> RDF
+    MIGRATION --> PROJECTS
+    MIGRATION --> IAM
+    MIGRATION --> DM
+    MIGRATION --> RV
+    MIGRATION --> ASSETS
+    MIGRATION --> RDF
+    OPS --> PROJECTS
+    OPS --> IAM
+    OPS --> DM
+    OPS --> RV
+    AUTHN --> IAM
+    HTTP --> PROJECTS
+    HTTP --> IAM
+    HTTP --> DM
+    HTTP --> RV
+    HTTP --> SEARCH
+    HTTP --> MIGRATION
+    APP --> AUTHN
+    APP --> HTTP
+    APP --> RDF
 ```
 
-**Layering (dependencies point downward only):**
+Context-owned RDF adapters depend on the owning domain interface and the RDF platform. Domain
+implementations do not depend on concrete triplestore code.
 
-1. **Shared kernel** — no domain deps. Deliberately split into _several small units_ (identifiers /
-   rdf-access / permission-policy / primitives) so a context can depend on `identifiers` without
-   pulling in `rdf-access`. This split is the highest-leverage move for small Bazel units.
-2. **Identity & Access** — foundational; projects scope everything, so every domain context sits
-   above it.
-3. **Data Model** and **Assets/Media** — depend on kernel + Identity. Data Model owns the
-   schema-variant definition IRIs + schema conversion relocated out of `SmartIri`.
-4. **Resources & Values** — depends on kernel + Identity + Data Model + Assets.
-5. **Search** — depends on Data Model (type inference) + Resources.
-6. **Export/Migration** — top of graph; depends on all.
-7. **Security** — API-layer auth gate, depends on Identity.
+## The false foundation
 
-**The one non-obvious edge (cycle avoidance).** The Data Model → Resources "is this entity used?"
-check would create a cycle (Resources already depends on Data Model). Resolve by **Dependency
-Inversion**: the `InstanceUsage` contract is **defined in Data Model** (the Customer states what it
-needs); **Resources implements it** and is wired in at the composition root. Compile-time edge stays
-`Resources → Data Model`; Data Model calls the interface at runtime. No cycle. (This is the "pattern
-3 / ratchet target" from the Shared Kernel section, expressed as a graph edge.)
+The current blocker is not merely target declaration. Several high-fanout files look foundational
+while importing domain or delivery meaning:
 
-**Intrinsic substrate users.** Search and Export legitimately operate at the `rdf-access` level
-(query translation; bulk named-graph copy). Their broad substrate coupling is by design — the "no
-new cross-context SPARQL" ratchet targets _accidental_ peeking (Data Model→instances,
-Export→admin-data), not these.
+- `messages/StringFormatter.scala` combines formatting, validation, identifiers, and schema-aware
+  `SmartIri` behaviour;
+- `messages/OntologyConstants.scala` combines generic RDF vocabulary with context-specific
+  Data Model, Resources, and administration vocabulary;
+- `dsp.errors.Errors` gives context-specific errors global ownership;
+- root and `slice/common` values import higher-level domain types.
 
-**What this means for Bazel:** contexts become compilation units; the kernel splits into a few tiny
-units at the bottom. The current blocker is not the boundaries above — it's that `StringFormatter`
+A single large `common` target would hide these cycles rather than fix them. The target foundation
+is intentionally small:
 
-+ `SmartIri` + `OntologyConstants` collapse the kernel + Data Model + validation into one ~2500-line
-floor that everything imports. **Decomposing that floor is the prerequisite; the context boundaries
-above are already close to right.**
+- universal validation and primitive values;
+- the deliberately shared permission policy;
+- generic RDF execution in the separate RDF platform module.
 
-## Shared Kernel
+### Identifier ownership
 
-The genuine cross-context foundation. **Today it is a false floor:** `StringFormatter.scala`
-(1453 lines, defines both `StringFormatter` _and_ `SmartIri`; ~72–96 dependent files) and
-`OntologyConstants` (1067 lines, ~92 dependent files) sit at the bottom of the dependency graph
-and conflate identifier primitives + Data Model semantics + string validation + RDF vocabulary.
-**This — not the domain boundaries — is the primary blocker to small compilation units:** every
-context that touches an IRI implicitly pulls in Data Model's schema machinery.
+Two IRI families must be explicit:
 
-Key distinction: **identity vs. behavior.**
+- **Data IRI** — schema-invariant identifiers such as Resource, Value, Project, User, Group, List,
+  and Permission IRIs. Schema conversion is unavailable.
+- **Definition IRI** — schema-variant Data Model identifiers such as Class, Property, and Data Model
+  IRIs. Data Model owns their conversion.
 
-- A typed IRI as a **pure identifier** (validated string + which kind of entity it points at) is
-  kernel-safe. dsp-api already has these: `ResourceIri`, `ResourceClassIri`, `PropertyIri`,
-  `OntologyIri`, `ProjectIri`, `UserIri`, `ListIri`, `ValueIri`, `GroupIri`, `PermissionIri`.
-- `SmartIri`'s problem is **behavior that requires the Data Model** (`toOntologySchema`,
-  `getEntityName`, `getOntologyFromEntity`, `fromLinkValuePropToLinkProp`). A value object that
-  converts itself between ontology schemas has swallowed the Data Model.
+This distinction does **not** place every Data IRI in one global identifiers target. A Project IRI
+is normally a small published contract owned by Projects; a User IRI belongs to Identity & Access;
+a Resource IRI belongs to Resources & Values. Context-owned contracts keep semantic dependencies
+visible in Bazel. Only genuinely universal identifiers belong in Foundation primitives.
 
-**Decisions:**
+`SmartIri` remains a temporary compatibility implementation while callers move to the explicit
+families and context-owned contracts.
 
-1. **Keep typed IRIs** — the model is right, not "dumb IRIs".
-2. **Strip `SmartIri`'s schema-aware behavior out and relocate it to the Data Model context** as
-   explicit operations over IRIs. Typing stays; embedded ontology logic leaves the kernel.
-3. **Domicile: option (B) — a thin shared-identifiers kernel** of pure typed IRIs, so a context
-   can _mention_ another context's entity by ID without depending on that context's module (and
-   without cycle risk). Context-internal-only IRIs may still live in their context. (Chosen over
-   (A) domicile-in-owning-context; user had no strong preference, (B) better serves small units.)
-4. Fix today's inconsistency: Identity's IRIs are correctly domiciled in-context, but Data
-   Model's (`ResourceClassIri`/`PropertyIri`/`OntologyIri`) and Resources' (`ResourceIri`/
-   `ValueIri`) reference IDs sit in `common` while `ListIri` is stranded in `admin`. Consolidate
-   the cross-context reference IDs into the shared-identifiers kernel.
+## Authorization
 
-5. **Two IRI families, made first-class — not all IRIs are schema-variant.**
-   - **Schema-invariant data IRIs** (resource instances, values, projects, users, lists):
-     `ResourceIri`, `ValueIri`, `ProjectIri`, `UserIri`, `ListIri`, `GroupIri`, `PermissionIri`.
-     Same string in every schema; schema conversion is meaningless. → **shared-identifiers
-     kernel**, pure identity, _not_ backed by `SmartIri`.
-   - **Schema-variant definition IRIs** (data-model entities): `PropertyIri`, `ResourceClassIri`,
-     `OntologyIri` — have internal + API (Complex/Simple) forms and genuinely convert. The
-     `toOntologySchema`/`toInternalSchema` operations exist **only** on this family (converting a
-     data IRI should be a _compile error_, not a silent no-op). Because schema-variance _is_ Data
-     Model knowledge, these types + their conversion → **Data Model context**. Downstream
-     contexts naming a class/property depend on Data Model (legitimate upstream direction).
-   - Today's state: a `KnoraIri` trait in `slice/common/KnoraIris.scala` already groups the
-     definition IRIs and grants schema conversion — but (a) the invariant family has no explicit
-     counterpart type, (b) `KnoraIri.equals`/`hashCode` are defined _through_ `toInternalSchema`
-     (identity via conversion), and (c) every typed IRI wraps a `SmartIri` internally, so the
-     typed layer is a veneer over the god-object rather than a replacement for it.
-   - **`ListIri` resolution:** Lists (entity) belong to Data Model, but a `ListIri` is a
-     schema-invariant reference token → it lives in the kernel. Entity in its context, bare
-     reference-ID in the kernel = the shared-identifiers pattern.
+Authorization is deliberately distributed:
 
-Genuine kernel contents (target): pure schema-invariant typed identifiers + value primitives
-(`LanguageCode`) + raw RDF/triplestore access (Jena wrappers, query infra) + the **permission
-policy primitive** (see Authorization below).
+| Piece | Ownership |
+| --- | --- |
+| Permission levels and `hasPermissions` parsing/comparison | Permission policy |
+| Administrative/default permissions and effective profile | Identity & Access |
+| Restricted View configuration | Projects |
+| Object-access enforcement | Context owning the protected object |
+| Asset-serving enforcement | Assets |
+| JWT authentication and endpoint scopes | Authentication |
 
-## Cross-cutting: Authorization
+This keeps the shared policy module deep and small while preserving locality for enforcement.
 
-Authorization is **not** a bounded context of its own — it decomposes into three pieces that
-belong in three places (confirmed). Today it is tangled: `PermissionUtilADM` (`messages/util`) is
-a shared utility used directly by Values/Resources/Ontology/Search; object-access permissions
-live as `knora-base:hasPermissions` literals on the data; admin/default permissions are owned by
-`PermissionsResponder` in admin.
+## Guardrails
 
-| Piece | What it is | Belongs in |
-| --- | --- | --- |
-| **Permission policy primitive** | permission-level model (RV < V < M < D < CR), `hasPermissions` parse + compare. Pure, universal. | **Shared kernel** (policy value object) |
-| **Permission administration + user profile** | managing administrative & default-object-access permissions; computing a user's permission profile (groups, admin flags). | **Identity & Access** |
-| **Enforcement at point of use** | read an object's permission literal off _your own_ data, compare to the user profile via the kernel primitive; Search folds it into query generation. | **each context** |
+1. Domain implementations do not import HTTP delivery, application composition, or concrete RDF
+   implementations.
+2. Context-specific identifiers normally live in small contracts owned by their context.
+3. Context-specific RDF meaning stays in an adapter owned by that context.
+4. `messages`, `responders`, `store`, and `common` are migration locations, not target modules.
+5. New cross-context reads use published interfaces.
+6. Visibility is private by default.
+7. Tests cross the same public interface as production callers unless deliberate test support is
+   published.
+8. The aggregate `webapi` targets remain compatibility entrypoints, not dependencies of new
+   internal targets.
 
-Two distinct authz layers — do not conflate: (1) coarse API-layer JWT **scopes** (authentication +
-endpoint gate, `slice/security`); (2) fine-grained **object-access** permissions (the table above).
+## Settled decisions and open questions
 
-## Flagged ambiguities / open questions
+Settled:
 
-Resolved:
-
-- "Ontology" (code) vs "data model" (domain) — same concept, domain term wins in prose.
-- **Lists** are part of Data Model (not a context of their own). ✓
-- **Resources & Values** is one context; Resource aggregate root, Value entity. ✓
-- The RDF **graph is a shared kernel**, not a per-context store (list nodes + resources share the
-  data graph; Data Model queries instance data via shared SPARQL). ✓
-
-Resolved (cont.):
-
-- **Standoff** is a **cross-cutting feature, not a context.** Same definition/instance split as
-  everything else: standoff tag _classes_ + XML↔standoff _mappings_ (+XSLT) are the schema face →
-  **Data Model**; standoff _markup on a text value_ + conversion machinery
-  (`XMLToStandoffUtil`, `StandoffTagUtilV2`) are the instance face → **Resources & Values**.
-    - **Practical note:** projects almost never define their own standoff classes/mappings — there
-    is one encouraged standard mapping, custom definitions are discouraged. So the Data Model face
-    of standoff is **near-static / low-churn**; don't over-invest in the custom-standoff-definition
-    machinery when modularizing.
+- Projects is separate from Identity & Access.
+- Lists belongs to Data Model.
+- Resources & Values is one context with Resource as aggregate root.
+- Standoff splits by definition and instance meaning.
+- Assets is explicit; File Values remain in Resources & Values.
+- Authorization is distributed.
+- RDF access is a technical platform with context-owned adapters, not a shared domain kernel.
+- Project Migration is VRE handoff, not archival custody.
 
 Still open:
 
-- Does **Search** stay one context, or split (Gravsearch language vs. simple/fulltext search)?
-  How does it relate to Data Model + Resources?
-- What is in the **shared kernel / `common`** — genuine cross-context vocabulary (IRI, project
-  ref, RDF value, SmartIri) vs. things that leaked in? (Linchpin for small compilation units.)
-- **Assets/Media** boundary — where does it sit relative to Resources (file values) and to Sipi/ingest?
+- What stable Data Model projection should Search consume as faceted retrieval develops?
+- Which maintenance workflows justify a dedicated Operations module?
+- Which context identifiers need a tiny published contract rather than a direct dependency on the
+  whole domain module?
+- Should Project Migration remain one deep module once interactive export and whole-project
+  migration interfaces are visible?
+
+The current implementation sequence is recorded in [`MODULARIZATION-PLAN.md`](./MODULARIZATION-PLAN.md).

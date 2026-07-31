@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
@@ -18,7 +20,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 /**
  * This spec is used to test the [[List]] value objects creation.
  */
-object ListPropertiesSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListPropertiesSpec extends ZIOSpecDefault {
   def spec: Spec[Any, Any] =
     suite("ListProperties")(listIriSuite, listNameSuite, positionSuite, labelsTest, commentsTest)
 

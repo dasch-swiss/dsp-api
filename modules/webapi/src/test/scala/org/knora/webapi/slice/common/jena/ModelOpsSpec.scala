@@ -5,12 +5,15 @@
 
 package org.knora.webapi.slice.common.jena
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.jena.ModelOps.*
 
-object ModelOpsSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ModelOpsSpec extends ZIOSpecDefault {
 
   private val jsonLd = """{
                      "@id" : "http://rdfh.ch/0001/a-thing",

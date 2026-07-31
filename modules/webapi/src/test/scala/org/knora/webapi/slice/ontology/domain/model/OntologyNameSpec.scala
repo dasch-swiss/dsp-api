@@ -4,9 +4,14 @@
  */
 
 package org.knora.webapi.slice.ontology.domain.model
+
+import org.junit.runner.RunWith
 import zio.test.*
 
-object OntologyNameSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyNameSpec extends ZIOSpecDefault {
   val spec = suite("OntologyName")(
     test("should create a valid OntologyName") {
       val validNames = List("anything", "beol", "limc", "test", "AVeryVeryVeryVeryLongLongName", "another-onto")

@@ -850,7 +850,24 @@ object OntologyConstants {
 
     val RegionPreviewValue: IRI = KnoraApiV2PrefixExpansion + "RegionPreviewValue"
     val IsRegionPreviewOf: IRI  = KnoraApiV2PrefixExpansion + "isRegionPreviewOf"
-    val IiifUrl: IRI            = KnoraApiV2PrefixExpansion + "iiifUrl"
+
+    // Runtime (computed-on-read) fields of a region preview value. Declared as knora-api-only
+    // properties in KnoraBaseToApiV2ComplexTransformationRules; never stored in knora-base.
+    val HasPreviewUrl: IRI    = KnoraApiV2PrefixExpansion + "hasPreviewUrl"
+    val HasThumbnailUrl: IRI  = KnoraApiV2PrefixExpansion + "hasThumbnailUrl"
+    val HasHighlightBoxX: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxX"
+    val HasHighlightBoxY: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxY"
+    val HasHighlightBoxW: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxW"
+    val HasHighlightBoxH: IRI = KnoraApiV2PrefixExpansion + "hasHighlightBoxH"
+    val HasPreviewColor: IRI  = KnoraApiV2PrefixExpansion + "hasPreviewColor"
+    val HasFullImage: IRI     = KnoraApiV2PrefixExpansion + "hasFullImage"
+
+    // Legal metadata of the region preview's full image. Kept distinct from FileValue's
+    // hasCopyrightHolder/hasAuthorship/hasLicense: those state the copyright of the subject file value,
+    // whereas these state the copyright of the linked still image the preview points at.
+    val HasFullImageCopyrightHolder: IRI = KnoraApiV2PrefixExpansion + "hasFullImageCopyrightHolder"
+    val HasFullImageAuthorship: IRI      = KnoraApiV2PrefixExpansion + "hasFullImageAuthorship"
+    val HasFullImageLicense: IRI         = KnoraApiV2PrefixExpansion + "hasFullImageLicense"
 
     val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
@@ -1065,5 +1082,11 @@ object OntologyConstants {
 
   object Fuseki {
     val luceneQueryPredicate = "http://jena.apache.org/text#query"
+
+    // Without an explicit limit, Jena caps text index lookups at 10'000 hits (TextIndexLucene.MAX_N) and
+    // silently discards an arbitrary subset of matches *before* the SPARQL filters apply, making resources
+    // unfindable (DEV-6822). The worst realistic prefix measured on prod-scale data yields ~95k hits, so 1M
+    // leaves ample headroom while still bounding the Lucene collector allocation.
+    val luceneHitLimit: Int = 1000000
   }
 }

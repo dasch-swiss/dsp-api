@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import swiss.dasch.domain.AuthScope
 import swiss.dasch.domain.AuthScope.ScopeValue.*
 import swiss.dasch.domain.ProjectShortcode
@@ -12,7 +13,10 @@ import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.test.*
 
-object AuthorizationHandlerSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthorizationHandlerSpec extends ZIOSpecDefault {
   val sessionWith       = Principal("blank subject", _)
   val projectShortcode1 = ProjectShortcode.unsafeFrom("1234")
   val projectShortcode2 = ProjectShortcode.unsafeFrom("5678")

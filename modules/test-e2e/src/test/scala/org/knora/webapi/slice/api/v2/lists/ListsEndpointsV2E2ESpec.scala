@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.api.v2.lists
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import zio.test.*
 
 import java.nio.file.Paths
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
@@ -21,7 +23,8 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil.*
 
-object ListsEndpointsV2E2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListsEndpointsV2E2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData, imagesRdfData, anythingRdfData)
 

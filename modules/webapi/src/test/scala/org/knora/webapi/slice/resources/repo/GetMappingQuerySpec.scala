@@ -5,9 +5,13 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object GetMappingQuerySpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetMappingQuerySpec extends ZIOSpecDefault {
 
   private val testMappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 

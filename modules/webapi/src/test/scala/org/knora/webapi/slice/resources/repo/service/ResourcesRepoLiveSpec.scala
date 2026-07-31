@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.update.UpdateFactory
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
@@ -13,6 +14,7 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -444,7 +446,8 @@ object TestData {
     )
 }
 
-object ResourcesRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesRepoLiveSpec extends ZIOSpecDefault {
   import TestData.*
 
   private def assertUpdateQueriesEqual(expected: Update, actual: Update) = {
@@ -1353,10 +1356,10 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
           _      <- TestTripleStore.setEmptyDataset()
           repo   <- ZIO.service[ResourcesRepoLive]
           counts <- repo.countByResourceClasses(
-                      List(classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)),
+                      List(classIri("http://www.knora.org/ontology/0001/anything#Thing")(using sf)),
                       project,
                     )
-        } yield assertTrue(counts == Map(classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf) -> 0))
+        } yield assertTrue(counts == Map(classIri("http://www.knora.org/ontology/0001/anything#Thing")(using sf) -> 0))
       },
       test("should not count deleted resources") {
         for {
@@ -1385,7 +1388,7 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                     |""".stripMargin,
                )
           repo   <- ZIO.service[ResourcesRepoLive]
-          thing   = classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)
+          thing   = classIri("http://www.knora.org/ontology/0001/anything#Thing")(using sf)
           counts <- repo.countByResourceClasses(List(thing), project)
         } yield assertTrue(counts.getOrElse(thing, 0) == 2)
       },
@@ -1416,8 +1419,8 @@ object ResourcesRepoLiveSpec extends ZIOSpecDefault {
                     |""".stripMargin,
                )
           repo    <- ZIO.service[ResourcesRepoLive]
-          thing    = classIri("http://www.knora.org/ontology/0001/anything#Thing")(sf)
-          subThing = classIri("http://www.knora.org/ontology/0001/anything#SubThing")(sf)
+          thing    = classIri("http://www.knora.org/ontology/0001/anything#Thing")(using sf)
+          subThing = classIri("http://www.knora.org/ontology/0001/anything#SubThing")(using sf)
           counts  <- repo.countByResourceClasses(List(thing, subThing), project)
         } yield assertTrue(
           counts.getOrElse(thing, 0) == 1,

@@ -10,7 +10,7 @@ import zio.*
 
 object ZioTestContainers {
 
-  def toZio[T <: GenericContainer[_]](self: T): URIO[Scope, T] = {
+  def toZio[T <: GenericContainer[?]](self: T): URIO[Scope, T] = {
     val acquire = ZIO
       .attemptBlocking(self.start())
       .orDie
@@ -20,11 +20,11 @@ object ZioTestContainers {
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def toLayer[T <: GenericContainer[_]: Tag](self: T): ULayer[T] = ZLayer.scoped(toZio(self))
+  def toLayer[T <: GenericContainer[?]: Tag](self: T): ULayer[T] = ZLayer.scoped(toZio(self))
 }
 
 object TestContainerOps {
-  extension [T <: GenericContainer[_]](self: T) {
+  extension [T <: GenericContainer[?]](self: T) {
     def toZio: URIO[Scope, T]                   = ZioTestContainers.toZio(self)
     def toLayer(implicit ev: Tag[T]): ULayer[T] = ZioTestContainers.toLayer(self)
   }

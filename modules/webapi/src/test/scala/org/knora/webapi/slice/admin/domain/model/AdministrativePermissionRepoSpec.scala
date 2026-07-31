@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object AdministrativePermissionRepoSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdministrativePermissionRepoSpec extends ZIOSpecDefault {
 
   private val permissionIri: PermissionIri  = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/1234567890")
   private val permissionIri2: PermissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/0987654321")

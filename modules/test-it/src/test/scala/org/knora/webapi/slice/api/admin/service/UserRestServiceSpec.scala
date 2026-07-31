@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.admin.service
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.ZIO
 import zio.test.*
@@ -14,6 +15,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
@@ -26,7 +28,8 @@ import org.knora.webapi.slice.api.admin.model.UserDto
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.Authenticator
 
-object UserRestServiceSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UserRestServiceSpec extends E2EZSpec {
 
   private val groupRestService   = ZIO.serviceWithZIO[GroupRestService]
   private val projectRestService = ZIO.serviceWithZIO[ProjectRestService]

@@ -5,11 +5,15 @@
 
 package org.knora.webapi.testservices
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
 
-object InMemoryTracingSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class InMemoryTracingSpec extends ZIOSpecDefault {
 
   private val tracing = ZIO.serviceWithZIO[Tracing]
 

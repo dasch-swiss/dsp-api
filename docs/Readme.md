@@ -6,13 +6,13 @@ under <https://docs.dasch.swiss/> and managed by
 
 ## Build and serve the docs locally
 
-Documentation can be build by invoking the following make commands from
+Documentation can be built by invoking the following `just` recipes from
 the project root directory:
 
 ```shell
-make docs-install-requirements: ## install requirements
-make docs-build # build the documentation
-make docs-serve # serve it locally
+just docs-install-requirements  # install requirements
+just docs-build                 # build the documentation
+just docs-serve                 # serve it locally
 ```
 
 ### Prerequisites

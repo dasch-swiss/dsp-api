@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.test.Gen
 import zio.test.Spec
@@ -12,9 +13,11 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 
-object GroupIriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GroupIriSpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("GroupIri should")(
     test("not be created from an empty value") {
       assertTrue(GroupIri.from("") == Left("Group IRI cannot be empty."))

@@ -1683,6 +1683,14 @@ final class ValuesResponderV2(
               requestingUser,
             )
 
+          // We're referencing a Region through a region preview. The value's own type must satisfy the
+          // property's object class constraint (as for any non-link value), AND the referenced resource must
+          // exist, be viewable, and be a Region. The generic non-link check covers the former but never looks
+          // at the target, so we run both.
+          case regionPreview: RegionPreviewValueContentV2 =>
+            checkNonLinkPropertyObjectClassConstraint(propertyIri, objectClassConstraint, regionPreview) *>
+              checkRegionPreviewTarget(propertyIri, regionPreview, requestingUser)
+
           // We're creating an ordinary value.
           case otherValue =>
             // Check that its type is valid for the property's object class constraint.
@@ -1690,6 +1698,43 @@ final class ValuesResponderV2(
         }
     } yield result
   }
+
+  /**
+   * Checks that a region preview value points to a resource that exists, is viewable by the user, and is a Region.
+   * The relevant object class constraint is `isRegionPreviewOf`'s (knora-base:Region), which is what we check
+   * here; the region-preview property's own object constraint is the value type RegionPreviewValue, not Region.
+   *
+   * @param propertyIri    the IRI of the region-preview property.
+   * @param regionPreview  the region preview value.
+   * @param requestingUser the user making the request.
+   */
+  private def checkRegionPreviewTarget(
+    propertyIri: SmartIri,
+    regionPreview: RegionPreviewValueContentV2,
+    requestingUser: User,
+  ): Task[Unit] =
+    for {
+      // A preview of the target resource is enough: we only need its class and whether the user may view it.
+      resourcePreviewResponse <- readResources.getResourcePreviewWithDeletedResource(
+                                   resourceIris = Seq(regionPreview.regionIri),
+                                   targetSchema = ApiV2Complex,
+                                   requestingUser = requestingUser,
+                                 )
+      resource         <- resourcePreviewResponse.toResource(regionPreview.regionIri)
+      regionClass       = OntologyConstants.KnoraBase.Region.toSmartIri
+      subClassResponse <- ontologyResponder.checkSubClassV2(
+                            subClassIri = resource.resourceClassIri.toOntologySchema(InternalSchema),
+                            superClassIri = regionClass,
+                          )
+      _ <-
+        ZIO.when(!subClassResponse.isSubClass)(
+          ZIO.fail(
+            OntologyConstraintException(
+              s"Resource <${regionPreview.regionIri}> cannot be referenced by property <$propertyIri>, because it is not a member of class <$regionClass>",
+            ),
+          ),
+        )
+    } yield ()
 
   /**
    * Given a [[ReadResourceV2]], finds a link that uses the specified property and points to the specified target

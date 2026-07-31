@@ -5,17 +5,20 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.NonEmptyChunk
 import zio.prelude.Validation
 import zio.test.*
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
+import org.knora.testrunner.DspZTestJUnitRunner
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
  */
-object SchemaSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SchemaSpec extends ZIOSpecDefault {
 
   private val guiAttributeSize  = Schema.GuiAttribute.make("size=80").fold(e => throw e.head, v => v)
   private val guiAttributeHlist =

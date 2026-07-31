@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.rdf.model.Resource
-import org.eclipse.rdf4j.model.Namespace
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
@@ -323,7 +322,7 @@ object ResourcesRepoLive {
     val valuePatterns       = resourceToCreate.valueInfos.flatMap(
       CreateResourceQueryBuilder.buildValuePattern(_, resourceIriInternal),
     )
-    query.insertData(valuePatterns: _*)
+    query.insertData(valuePatterns*)
 
     val standoffLinkPatterns = resourceToCreate.standoffLinks.flatMap { standoffLink =>
       CreateResourceQueryBuilder.buildStandoffLinkPattern(
@@ -332,7 +331,7 @@ object ResourcesRepoLive {
         resourceToCreate.creationDate,
       )
     }
-    query.insertData(standoffLinkPatterns: _*)
+    query.insertData(standoffLinkPatterns*)
 
     Update(query.getQueryString())
   }
@@ -493,7 +492,7 @@ object ResourcesRepoLive {
           .andHasOptional(KB.standoffTagHasStartParent, standoffTagInfo.startParentIri.map(v => iri(v.value)))
           .andHasOptional(KB.standoffTagHasEndParent, standoffTagInfo.endParentIri.map(v => iri(v.value)))
           .andHasOptional(KB.standoffTagHasOriginalXMLID, standoffTagInfo.originalXMLID.map(literalOf))
-          .andHas(standoffAttributeLiterals(standoffTagInfo.attributes): _*)
+          .andHas(standoffAttributeLiterals(standoffTagInfo.attributes)*)
           .andHas(KB.standoffTagHasStartIndex, literalOf(standoffTagInfo.startIndex))
           .andHas(KB.standoffTagHasUUID, literalOf(UuidUtil.base64Encode(standoffTagInfo.uuid)))
           .andHas(KB.standoffTagHasStart, literalOf(standoffTagInfo.startPosition))

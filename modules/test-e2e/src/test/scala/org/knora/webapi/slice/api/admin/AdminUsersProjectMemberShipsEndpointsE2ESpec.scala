@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.*
 import zio.json.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectAdminMembershipsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserProjectMembershipsGetResponseADM
@@ -18,7 +20,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.api.admin.AdminUsersProjectMemberShipsEndpointsE2ESpec.faker
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
@@ -26,7 +27,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
 
   private val multiUserIri = UserIri.unsafeFrom(SharedTestDataADM2.multiuserUser.userData.user_id.get)
 

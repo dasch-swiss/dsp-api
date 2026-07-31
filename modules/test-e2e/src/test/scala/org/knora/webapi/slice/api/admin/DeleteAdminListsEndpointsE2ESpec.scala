@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -18,7 +20,8 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects = List(
     RdfDataObject(

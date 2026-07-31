@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -12,9 +13,9 @@ import zio.test.Assertion.*
 import java.time.Instant
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.e2e.v2.ontology
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -28,7 +29,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 
-object InputOntologyV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class InputOntologyV2Spec extends E2EZSpec {
 
   private val PropertyDef = InputOntologyV2(
     ontologyMetadata = OntologyMetadataV2(

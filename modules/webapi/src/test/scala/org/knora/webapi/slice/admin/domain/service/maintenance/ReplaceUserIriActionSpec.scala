@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
 import dsp.errors.ConflictException
 import dsp.errors.NotFoundException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
@@ -19,7 +21,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object ReplaceUserIriActionSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ReplaceUserIriActionSpec extends ZIOSpecDefault {
 
   private val adminGraph    = AdminConstants.adminDataNamedGraph.value
   private val oldIri        = UserIri.unsafeFrom("http://rdfh.ch/users/old-user")

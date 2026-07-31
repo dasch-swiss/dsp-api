@@ -1,5 +1,11 @@
 openapiDir := "./docs/03-endpoints/generated-openapi"
 
+# Scala targets with scalafmt enabled (format = True). The implicit .format /
+# .format-test outputs aren't discovered by `bazel test //...`, so fmt/check
+# drive them explicitly. Keep in sync with the `format = True` targets in the
+# module BUILD files.
+scalafmt_targets := "//modules/bagit:bagit //modules/bagit:test //modules/jwt:jwt //modules/jwt:test //modules/shacl-validator:shacl-validator //modules/shacl-validator:test //modules/test-runner:test-runner //modules/testkit:testkit //modules/webapi:webapi //modules/webapi:test //modules/ingest:ingest //modules/ingest:test //modules/test-it:test //modules/test-e2e:test //modules/test-ingest-integration:test"
+
 # List all recipies
 default:
     @just --list
@@ -8,29 +14,154 @@ alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
 
-# Format code
+# Format Scala (scalafmt via Bazel) and apply license headers
 fmt:
-    ./sbtx fmt
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for t in {{scalafmt_targets}}; do bazel run "$t.format"; done
+    just header-fix
 
-# Run unit tests for dsp-api
-test:
-    ./sbtx "webapi/test"
+# CI threads the RBE flag string emitted by the bazel-rbe composite action into these recipes as a
+# trailing `*FLAGS` argument (`just <recipe> "$FLAGS"`); each bazel command appends `{{FLAGS}}`.
+# Locally FLAGS is empty (dev never contacts the remote backend) and the recipes run as before.
+
+# Run unit tests for dsp-api (webapi only; use `test-unit` for the full pure-JVM suite)
+test *FLAGS='':
+    bazel test //modules/webapi:test {{FLAGS}}
+
+# Run all pure-JVM unit tests (matches the CI `unit-tests` job; RBE-safe: runs remotely + result-caches)
+test-unit *FLAGS='':
+    bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test {{FLAGS}}
+
+# Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
+docker-load-test-images *FLAGS='':
+    bazel run {{FLAGS}} //modules/sipi:load
+    bazel run {{FLAGS}} //modules/ingest:load
+    bazel run {{FLAGS}} //modules/fuseki:load
 
 # Run integration tests for dsp-api
-test-it:
-    ./sbtx "test-it/test"
+test-it *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span {{FLAGS}}
 
 # Run End-2-End tests for dsp-api
-test-e2e:
-    ./sbtx "test-e2e/test"
+test-e2e *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-e2e:test {{FLAGS}}
 
 # Run unit tests for ingest
-test-ingest:
-    ./sbtx ingest/test
+test-ingest *FLAGS='':
+    bazel test //modules/ingest:test {{FLAGS}}
 
 # Run integration tests for ingest
-test-ingest-integration:
-    ./sbtx ingestIntegration/test
+test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
+    bazel test //modules/test-ingest-integration:test {{FLAGS}}
+
+# Check Scala formatting (scalafmt via Bazel) + license headers (CI gate, no writes)
+check *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # scalafmt format-test runs LOCALLY (no {{FLAGS}}): `bazel run <t>.format-test` diffs the
+    # source against a generated `.fmt.output`, which under RBE build-without-the-bytes is never
+    # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
+    for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
+    bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
+
+# Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
+header-fix:
+    bazel run //tools/license:fix
+
+## Scala language intelligence (Metals MCP)
+
+# With sbt gone, Metals connects to the Bazel build via bazel-bsp. Metals bootstraps
+# bazel-bsp itself (its embedded coursier; no `cs` needed) and writes .bsp/bazelbsp.json,
+# driven by the committed .bazelproject (projectview). This recipe just checks the
+# prerequisites and warms Bazel; the running MCP server connects when you call its
+# `import-build` tool once. See docs/development/dsp-api-metals-mcp.md.
+#
+# BAZEL 9: bazel-bsp 4.0.x (bundled with Metals 1.6.7) isn't Bazel-9-compatible out of the box.
+# Two local fixes make it work: a macOS-scoped --incompatible_autoload_externally flag in .bazelrc,
+# and a bazel_binary wrapper (tools/metals/bazel-bsp-wrapper.sh, set in .bazelproject) that patches
+# bazel-bsp's struct-returning aspect on each invocation. So compile/get-usages work. Vendored patch,
+# not a rules_scala issue; tracked at scalameta/metals#8268. See docs/development/dsp-api-metals-mcp.md.
+metals-bootstrap:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    test -f .bazelproject || { echo "ERROR: .bazelproject missing (should be committed)"; exit 1; }
+    # Warm the repo cache so bazel-bsp's import is fast when Metals triggers it.
+    bazel query //modules/... >/dev/null 2>&1 || true
+    echo "Metals connects to Bazel via bazel-bsp (auto-bootstrapped from .bazelproject)."
+    echo "In your session, call the metals 'import-build' tool once to connect (writes .bsp/)."
+
+## Docker image build / publish
+
+# Print the docker image tag (git describe via workspace_status.sh)
+docker-image-tag:
+    @tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}'
+
+# Build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-dsp-api-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/webapi:load
+    docker tag daschswiss/knora-api:latest "daschswiss/knora-api:$TAG"
+    echo "Loaded daschswiss/knora-api: latest + $TAG"
+
+# Build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-sipi-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/sipi:load
+    docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$TAG"
+    echo "Loaded daschswiss/knora-sipi: latest + $TAG"
+
+# Build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
+docker-build-ingest-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/ingest:load
+    docker tag daschswiss/dsp-ingest:latest "daschswiss/dsp-ingest:$TAG"
+    echo "Loaded daschswiss/dsp-ingest: latest + $TAG"
+
+# Build dsp-api/sipi/ingest images locally (Fuseki excluded: use docker-build-fuseki-image)
+docker-build *FLAGS='': (docker-build-dsp-api-image FLAGS) (docker-build-sipi-image FLAGS) (docker-build-ingest-image FLAGS)
+
+# Build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
+docker-publish-dsp-api-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/webapi:push -- -t latest -t "$TAG"
+
+# Build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
+docker-publish-sipi-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/sipi:push -- -t latest -t "$TAG"
+
+# Build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
+docker-publish-ingest-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/ingest:push -- -t latest -t "$TAG"
+
+# Publish all images (dsp-api/sipi/ingest/fuseki) to Docker Hub
+docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS) (docker-publish-fuseki-image FLAGS)
+
+# Build the Fuseki image with Bazel + load it into the local Docker daemon (at :latest)
+docker-build-fuseki-image *FLAGS='':
+    bazel run {{FLAGS}} //modules/fuseki:load
+
+# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
+# The Fuseki image is versioned by release-please (git version), same as the other three images.
+docker-publish-fuseki-image *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/fuseki:push -- -t latest -t "$TAG"
 
 # Start stack
 stack-start:
@@ -76,7 +207,7 @@ stack-destroy:
 # Initialize the db with a set of test data
 [confirm]
 stack-init-test: && stack-start
-    make init-db-test
+    just init-db-test
 
 # Run API locally against the dev Fuseki (requires VPN)
 run-with-dev-db:
@@ -95,7 +226,7 @@ run-with-dev-db:
     export KNORA_WEBAPI_SIPI_INTERNAL_HOST=iiif.dev.dasch.swiss                                                             
     export KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL=https                                                                        
     export KNORA_WEBAPI_SIPI_INTERNAL_PORT=443
-    ./sbtx "webapi/run"
+    bazel run //modules/webapi:app
 
 ## Documentation
 
@@ -126,3 +257,189 @@ markdownlint:
     --config .markdownlint.yml \
     --disable MD013 MD040 -- \
     "docs/**/*.md"
+
+## Architecture docs
+
+# starts the structurizer and serves c4 architecture docs
+structurizer:
+    docker pull structurizr/lite
+    docker run -it --rm -p 8080:8080 -v {{justfile_directory()}}/docs/architecture:/usr/local/structurizr structurizr/lite
+
+## DSP stack (local dev)
+
+# starts the dsp-stack: fuseki, sipi, api and app
+stack-up: docker-build
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+    docker compose -f docker-compose.yml up -d
+    ./modules/webapi/scripts/wait-for-api.sh
+
+# starts the dsp-stack, rebuilding only the api image
+stack-up-fast: docker-build-dsp-api-image
+    docker compose -f docker-compose.yml up -d
+
+# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, api
+stack-up-ci: docker-build
+    docker compose -f docker-compose.yml up -d
+
+# re-starts the api (usually after loading data into fuseki)
+stack-restart-api:
+    docker compose -f docker-compose.yml restart api
+    ./modules/webapi/scripts/wait-for-api.sh
+
+# prints out and follows the logs of the running dsp-stack
+stack-logs:
+    docker compose -f docker-compose.yml logs -f
+
+# prints out and follows the logs of the 'db' container
+stack-logs-db:
+    docker compose -f docker-compose.yml logs -f db
+
+# prints out the logs of the 'db' container (no follow)
+stack-logs-db-no-follow:
+    docker compose -f docker-compose.yml logs db
+
+# prints out and follows the logs of the 'sipi' container
+stack-logs-sipi:
+    docker compose -f docker-compose.yml logs -f sipi
+
+# prints out the logs of the 'sipi' container (no follow)
+stack-logs-sipi-no-follow:
+    docker compose -f docker-compose.yml logs sipi
+
+# prints out and follows the logs of the 'api' container
+stack-logs-api:
+    docker compose -f docker-compose.yml logs -f api
+
+# prints out the logs of the 'api' container (no follow)
+stack-logs-api-no-follow:
+    docker compose -f docker-compose.yml logs api
+
+# checks the api health endpoint
+stack-health:
+    curl -f 0.0.0.0:3333/health
+
+# shows the status of the stack containers
+stack-status:
+    docker compose -f docker-compose.yml ps
+
+# stops the dsp-stack (removes containers)
+stack-down:
+    docker compose -f docker-compose.yml down
+
+# stops the dsp-stack and deletes any created volumes (deletes the database!)
+stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp
+    docker compose -f docker-compose.yml down --volumes
+
+# prints the resolved docker-compose config
+stack-config:
+    docker compose -f docker-compose.yml config
+
+# starts the dsp-stack without dsp-api: fuseki and sipi only
+stack-without-api: stack-up
+    docker compose -f docker-compose.yml stop api
+
+# starts the dsp-stack without dsp-app
+stack-without-app: stack-up
+    docker compose -f docker-compose.yml stop app
+
+# starts the dsp-stack without dsp-api and sipi: fuseki only
+stack-without-api-and-sipi: stack-up
+    docker compose -f docker-compose.yml stop api
+    docker compose -f docker-compose.yml stop sipi
+
+# starts only fuseki
+stack-db-only:
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+
+## Database management
+
+# initializes the dsp-repo repository
+init-db-test: stack-down-delete-volumes stack-db-only
+    cd modules/webapi/scripts && ./fuseki-init-knora-test.sh
+
+# initializes the dsp-repo repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only
+    cd modules/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
+
+# initializes an empty dsp-repo repository
+init-db-test-empty: stack-down-delete-volumes stack-db-only
+    @echo init-db-test-empty
+
+# init local database with data from test server. Use as `just init-db-from-test <password>`
+init-db-from-test PW: (init-db-from-env PW "db.test.dasch.swiss")
+
+# init local database with data from a local dump file of test server
+init-db-from-test-dump: (init-db-from-dump-file "db.test.dasch.swiss.trig")
+
+# init local database with data from stage server. Use as `just init-db-from-stage <password>`
+init-db-from-stage PW: (init-db-from-env PW "db.stage.dasch.swiss")
+
+# init local database with data from a local dump file of stage server
+init-db-from-stage-dump: (init-db-from-dump-file "db.stage.dasch.swiss.trig")
+
+# init local database with data from prod server. Use as `just init-db-from-prod <password>`
+init-db-from-prod PW: (init-db-from-env PW "db.dasch.swiss")
+
+# init local database with data from a local dump file of prod server
+init-db-from-prod-dump: (init-db-from-dump-file "db.dasch.swiss.trig")
+
+# init local database with data from dev server. Use as `just init-db-from-dev <password>`
+init-db-from-dev PW: (init-db-from-env PW "db.dev.dasch.swiss")
+
+# init local database with data from a local dump file of dev server
+init-db-from-dev-dump: (init-db-from-dump-file "db.dev.dasch.swiss.trig")
+
+# init local database with data from ls-test-server. Use as `just init-db-from-ls-test-server <password>`
+init-db-from-ls-test-server PW: (init-db-from-env PW "db.ls-test-server.dasch.swiss")
+
+# init local database with data from a local dump file of ls-test-server
+init-db-from-ls-test-server-dump: (init-db-from-dump-file "db.ls-test-server.dasch.swiss.trig")
+
+# dump data from an env. Use as `just db-dump <password> <env>` e.g. db.0000-test-server.dasch.swiss
+db-dump PW ENV:
+    @echo "dumping environment {{ENV}}"
+    curl -f -X GET -H "Accept: application/trig" -u "admin:{{PW}}" "https://{{ENV}}/dsp-repo" > "{{ENV}}.trig"
+
+# init local database from a specified dump file. Use as `just init-db-from-dump-file <dump-file.trig>`
+init-db-from-dump-file DUMP: init-db-test-empty
+    @echo "dump file: {{DUMP}}"
+    curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/dsp-repo"
+    curl -X POST -H "Content-Type: application/trig" -T "{{justfile_directory()}}/{{DUMP}}" -u "admin:test" "http://localhost:3030/dsp-repo"
+
+# dump data from an env and upload it to the local DB. Use as `just init-db-from-env <password> <env>`
+init-db-from-env PW ENV: (db-dump PW ENV) (init-db-from-dump-file (ENV + ".trig"))
+
+## Clean
+
+# cleans the docker installation
+clean-docker:
+    docker system prune -af
+    docker volume prune -f
+
+clean-local-tmp:
+    rm -rf .tmp
+    mkdir .tmp
+
+# clean Metals/BSP state (re-run `just metals-bootstrap` afterwards)
+clean-metals:
+    rm -rf .bloop
+    rm -rf .bsp
+    rm -rf .metals
+    rm -rf target
+
+# clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp
+    rm -rf .env
+
+# deletes all files in Sipi's tmp folder
+clean-sipi-tmp:
+    mkdir empty_folder_for_clean_sipi_tmp
+    cp modules/sipi/images/tmp/.gitignore empty_folder_for_clean_sipi_tmp/.gitignore
+    rsync -a --delete empty_folder_for_clean_sipi_tmp/ modules/sipi/images/tmp/
+    rm -r empty_folder_for_clean_sipi_tmp
+
+# deletes all files uploaded within a project
+clean-sipi-projects:
+    rm -rf modules/sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]

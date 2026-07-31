@@ -10,6 +10,7 @@ import zio.*
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -37,35 +38,46 @@ final class AssetPermissionsResponder(
       row    <- ZIO
                .fromOption(result.getFirstRow)
                .orElseFail(NotFoundException(s"No file value was found for filename $filename"))
+      projectIri     = row.getRequired("project", ProjectIri.from)
       permissionCode = PermissionUtilADM
                          .getUserPermissionADM(
                            entityCreator = row.getRequired("creator"),
-                           entityProject = row.getRequired("project"),
+                           entityProject = projectIri.value,
                            entityPermissionLiteral = row.getRequired("permissions"),
                            requestingUser = user,
                          )
                          .map(_.code)
                          .getOrElse(0)
-      response <- buildResponse(shortcode, permissionCode)
+      response <- buildResponse(projectIri, shortcode, filename, permissionCode)
     } yield response
 
+  // The project is only needed for its restricted-view settings, i.e. for permission code 1; every other
+  // code answers without any project lookup. When it is needed, the project is resolved by the IRI already
+  // returned from the permission query so the lookup is served by the EntityCache (findById);
+  // findByShortcode would query the triplestore on every tile request.
   private def buildResponse(
+    projectIri: ProjectIri,
     shortcode: Shortcode,
+    filename: InternalFilename,
     permissionCode: Int,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
-    knoraProjectService
-      .findByShortcode(shortcode)
-      .someOrFail(NotFoundException(s"No project found for shortcode ${shortcode.value}"))
-      .map(project =>
-        permissionCode match {
-          case 1 =>
+    permissionCode match {
+      case 1 =>
+        knoraProjectService
+          .findById(projectIri)
+          .someOrFail(NotFoundException(s"No project found for IRI ${projectIri.value}"))
+          .filterOrFail(_.shortcode == shortcode)(
+            NotFoundException(s"No file value was found for filename $filename in project ${shortcode.value}"),
+          )
+          .map(project =>
             PermissionCodeAndProjectRestrictedViewSettings(
               permissionCode,
               restrictedViewSettings = Some(ProjectRestrictedViewSettingsADM.from(project.restrictedView)),
-            )
-          case _ => PermissionCodeAndProjectRestrictedViewSettings(permissionCode, restrictedViewSettings = None)
-        },
-      )
+            ),
+          )
+      case _ =>
+        ZIO.succeed(PermissionCodeAndProjectRestrictedViewSettings(permissionCode, restrictedViewSettings = None))
+    }
 }
 
 object AssetPermissionsResponder {

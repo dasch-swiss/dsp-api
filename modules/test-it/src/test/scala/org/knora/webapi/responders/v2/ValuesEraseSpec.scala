@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.json.ast.*
 import zio.test.*
@@ -13,6 +14,7 @@ import java.util.UUID
 import scala.annotation.unused
 import scala.collection.SortedSet
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.SmartIri
@@ -22,18 +24,17 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.v2.TestHelper.ResourceWithValues
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
-import org.knora.webapi.slice.resources.repo.service.ResourceModel
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ValueModel
@@ -41,9 +42,8 @@ import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-import TestHelper.ResourceWithValues
-
-object ValuesEraseSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValuesEraseSpec extends E2EZSpec {
   import TestHelper.DiffLib._
 
   override val e2eSpec: Spec[env, Any] = suite("ValuesEraseSpec")(

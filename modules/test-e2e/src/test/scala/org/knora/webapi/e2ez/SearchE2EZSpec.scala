@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2ez
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import zio.*
 import zio.json.*
@@ -12,6 +13,7 @@ import zio.json.ast.Json
 import zio.json.ast.JsonCursor
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 
-object SearchE2EZSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

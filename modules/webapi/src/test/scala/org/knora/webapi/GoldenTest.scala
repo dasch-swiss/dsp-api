@@ -31,11 +31,16 @@ trait GoldenTest {
     suffix: String, // NOTE: as of right now, adding a default breaks the macros, so no default
     rewrite: Boolean = false,
   ): TestResult = {
-    val (name, store)            = GoldenTest.goldenPath(suffix)
-    val path                     = Paths.get(store)
-    val expected: Option[String] = Option.when(Files.exists(path)) {
-      new String(Files.readAllBytes(path), "UTF-8")
-    }
+    val (name, store, resource) = GoldenTest.goldenPath(suffix)
+    val path                    = Paths.get(store)
+    // Read the golden file from the classpath first (works under both sbt and Bazel, where the
+    // source tree is not available at runtime), falling back to the filesystem path used by rewrite.
+    val expected: Option[String] =
+      Option(getClass.getClassLoader.getResourceAsStream(resource)).map { is =>
+        try new String(is.readAllBytes(), "UTF-8")
+        finally is.close()
+      }
+        .orElse(Option.when(Files.exists(path))(new String(Files.readAllBytes(path), "UTF-8")))
 
     if (rewrite || rewriteAll) {
       // NOTE: this should prevent infinite loops, if the output is stable
@@ -53,7 +58,7 @@ trait GoldenTest {
 }
 
 object GoldenTest {
-  inline def goldenPath(suffix: String): (String, String) = ${ goldenPathImpl('suffix) }
+  inline def goldenPath(suffix: String): (String, String, String) = ${ goldenPathImpl('suffix) }
 
   // NOTE: the suffixExpr.valueOrAbort was failing in the IDE, so ALL `.get`s were eliminated in the macro code
 
@@ -71,7 +76,11 @@ object GoldenTest {
       s"${absPath.map(_.getParent).getOrElse("")}/$name.txt"
         .pipe(_.replace("/src/test/scala/", "/src/test/resources/"))
 
+    // Classpath-relative path (the portion after the resources root) so the golden file can be read
+    // as a resource at runtime, independent of the working directory or source-tree layout.
+    val resourcePath = outPath.split("/src/test/resources/", 2).lift(1).getOrElse(s"$name.txt")
+
     Files.createDirectories(Paths.get(outPath).getParent)
 
-    Expr((name, outPath))
+    Expr((name, outPath, resourcePath))
 }

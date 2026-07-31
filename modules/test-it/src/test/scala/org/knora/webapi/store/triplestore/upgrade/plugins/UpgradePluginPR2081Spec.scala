@@ -5,15 +5,18 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import dsp.errors.AssertionException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.*
 
-object UpgradePluginPR2081Spec extends ZIOSpecDefault with UpgradePluginSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpgradePluginPR2081Spec extends ZIOSpecDefault with UpgradePluginSpec {
 
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {
     val statement = model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet.head

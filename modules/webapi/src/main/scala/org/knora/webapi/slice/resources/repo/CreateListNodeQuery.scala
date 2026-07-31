@@ -76,7 +76,7 @@ object CreateListNodeQuery extends QueryBuilderHelper {
     Queries
       .MODIFY()
       .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
-      .insert(insertPatterns: _*)
+      .insert(insertPatterns*)
       .into(graphName)
   }
 }

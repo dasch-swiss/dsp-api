@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages
 
+import org.junit.runner.RunWith
 import zio.Runtime
 import zio.Unsafe
 import zio.ZIO
@@ -18,6 +19,7 @@ import java.time.Instant
 
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
@@ -26,7 +28,8 @@ import org.knora.webapi.slice.common.ResourceIri
 /**
  * Tests [[StringFormatter]].
  */
-object StringFormatterSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StringFormatterSpec extends ZIOSpecDefault {
   private implicit val stringFormatter: StringFormatter = {
     val config = Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(AppConfig.parseConfig).getOrThrowFiberFailure())
     StringFormatter.init(config)

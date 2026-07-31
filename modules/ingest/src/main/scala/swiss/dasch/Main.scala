@@ -18,7 +18,7 @@ import zio.*
 
 object Main extends ZIOAppDefault {
 
-  override val bootstrap: Layer[Config.Error, ServiceConfig with JwtConfig with StorageConfig] =
+  override val bootstrap: Layer[Config.Error, ServiceConfig & JwtConfig & StorageConfig] =
     Configuration.layer >+> Logger.layer
 
   override val run: ZIO[Any, Any, Nothing] =

@@ -50,11 +50,11 @@ object DeletePropertyQuery extends QueryBuilderHelper {
         Queries
           .MODIFY()
           .prefix(KnoraBase.NS, XSD.NS, OWL.NS, NS(propertyIri.ontologyIri))
-          .delete(deletePatterns: _*)
+          .delete(deletePatterns*)
           .from(ontology)
           .insert(ontology.has(KnoraBase.lastModificationDate, toRdfLiteral(now)))
           .into(ontology)
-          .where(wherePatterns: _*),
+          .where(wherePatterns*),
       )
     }
 }

@@ -5,31 +5,21 @@
 
 package org.knora.webapi.it.v2
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import zio.test.*
 
 import scala.language.implicitConversions
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-/**
- * End-to-end coverage for the `urn:dasch:placeholder` sentinel on file-value writes.
- *
- * The parser-level unit tests in `ApiComplexV2JsonLdRequestParserSpec` feed JSON-LD strings
- * directly into the parser and never traverse the actual HTTP edge. They therefore cannot
- * catch regressions where pre-parser validation (e.g. the `AssetId` regex on
- * `fileValueHasFilename`) rejects the sentinel before the placeholder short-circuit fires,
- * or where the request path still reaches out to dsp-ingest.
- *
- * Each test POSTs to `/v2/resources` without registering any asset in dsp-ingest. If the
- * placeholder support is broken and the request reaches the ingest lookup, the test fails
- * with a non-200 response.
- */
-object PlaceholderFileValueE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PlaceholderFileValueE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 

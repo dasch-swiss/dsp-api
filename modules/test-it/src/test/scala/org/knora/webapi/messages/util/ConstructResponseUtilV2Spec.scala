@@ -5,11 +5,13 @@
 
 package org.knora.webapi.messages.util
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.nio.file.Paths
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
@@ -17,7 +19,8 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.util.FileUtil
 
-object ConstructResponseUtilV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ConstructResponseUtilV2Spec extends E2EZSpec {
 
   private val constructResponseUtilV2ZIO = ZIO.serviceWithZIO[ConstructResponseUtilV2]
 

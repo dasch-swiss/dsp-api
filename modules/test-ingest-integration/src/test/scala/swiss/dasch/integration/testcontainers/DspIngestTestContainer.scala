@@ -6,12 +6,12 @@
 package swiss.dasch.integration.testcontainers
 
 import com.github.dockerjava.api.command.CreateContainerCmd
-import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
 import swiss.dasch.integration.testcontainers.TestContainerOps.toZio
-import swiss.dasch.version.BuildInfo
-import zio.{URLayer, ZIO, ZLayer}
-
-import java.util.function.Consumer
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest")
 

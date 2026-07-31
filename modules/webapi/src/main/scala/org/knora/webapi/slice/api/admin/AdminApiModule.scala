@@ -9,7 +9,7 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.responders.admin.AssetPermissionsResponder
+import org.knora.webapi.responders.admin.AssetPermissionsCache
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.service.AdministrativePermissionService
@@ -43,7 +43,7 @@ object AdminApiModule { self =>
       // format: off
       AdministrativePermissionService &
       AppConfig &
-      AssetPermissionsResponder &
+      AssetPermissionsCache &
       AuthorizationRestService &
       BaseEndpoints &
       CacheManager &

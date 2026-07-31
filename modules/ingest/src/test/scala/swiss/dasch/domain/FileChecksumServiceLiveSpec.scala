@@ -5,13 +5,17 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.AssetRefs.*
 import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class FileChecksumServiceLiveSpec extends ZIOSpecDefault {
 
   private val checksumOrig = "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c"
   private val fileprefix   = "test-folder-structure/0001/fg/il/FGiLaT4zzuV-CqwbEDFAFeS"

@@ -5,12 +5,14 @@
 
 package org.knora.webapi.messages.util
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import scala.collection.Map
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
@@ -20,7 +22,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 
-object PermissionUtilADMSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PermissionUtilADMSpec extends ZIOSpecDefault {
 
   val permissionLiteral =
     "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"

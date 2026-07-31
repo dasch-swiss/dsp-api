@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang as JenaLang
 import org.apache.jena.riot.RDFDataMgr
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -20,6 +21,7 @@ import scala.jdk.CollectionConverters.*
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.util.rdf.QuadFormat
@@ -35,7 +37,8 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-object ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
 
   private val testProject = TestDataFactory.someProject
   private val testUser    = TestDataFactory.User.rootUser

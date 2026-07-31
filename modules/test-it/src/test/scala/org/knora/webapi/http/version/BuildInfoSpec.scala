@@ -5,9 +5,13 @@
 
 package org.knora.webapi.http.version
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object BuildInfoSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class BuildInfoSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Nothing] = suite("The version info") {
     test("contain all the necessary information")(assertTrue(BuildInfo.name == "webapi", BuildInfo.version.nonEmpty))
   }

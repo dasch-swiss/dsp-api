@@ -5,8 +5,10 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
@@ -30,7 +32,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode
  *   - legacy single-string mode preserves the existing language-selection behaviour
  *   - `labelEntry` / `commentEntry` attach the correct predicate IRI
  */
-object ListsMessagesV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ListsMessagesV2Spec extends ZIOSpecDefault {
 
   // The helpers under test are `private[listsmessages]` on the trait; instantiate
   // it once here so the spec can drive them directly without an access shim.

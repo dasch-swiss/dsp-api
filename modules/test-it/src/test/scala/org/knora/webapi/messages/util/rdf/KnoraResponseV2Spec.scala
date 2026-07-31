@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import org.junit.runner.RunWith
 import zio.Runtime
 import zio.Unsafe
 import zio.test.Spec
@@ -13,6 +14,7 @@ import zio.test.assertTrue
 
 import java.nio.file.Paths
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
@@ -20,10 +22,8 @@ import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
 import org.knora.webapi.util.FileUtil
 
-/**
- * Tests the formatting of Knora API v2 responses.
- */
-object KnoraResponseV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraResponseV2Spec extends ZIOSpecDefault {
 
   private val appConfig =
     Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(AppConfig.parseConfig).getOrThrowFiberFailure())

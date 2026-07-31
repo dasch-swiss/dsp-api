@@ -5,14 +5,17 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.ResourceIri
 
-object EraseResourceQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class EraseResourceQuerySpec extends ZIOSpecDefault {
 
   private val testProject = Project(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),

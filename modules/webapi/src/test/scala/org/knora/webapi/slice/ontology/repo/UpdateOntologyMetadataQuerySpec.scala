@@ -6,18 +6,21 @@
 package org.knora.webapi.slice.ontology.repo
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -27,7 +30,7 @@ object UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate: LastModificationDate =
     LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("UpdateOntologyMetadataQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("UpdateOntologyMetadataQuerySpec")(
     suite("build")(
       test("should produce the correct query when changing only the label") {
         UpdateOntologyMetadataQuery

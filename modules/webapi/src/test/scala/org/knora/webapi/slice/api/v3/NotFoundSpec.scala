@@ -4,12 +4,16 @@
  */
 
 package org.knora.webapi.slice.api.v3
+
+import org.junit.runner.RunWith
 import zio.json.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.ResourceIri
 
-object NotFoundSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class NotFoundSpec extends ZIOSpecDefault {
   override val spec = suite("NotFoundSpec")(
     test("NotFound.from(ResourceIri) should create a NotFound instance with the correct message and error details") {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/abcd1234")

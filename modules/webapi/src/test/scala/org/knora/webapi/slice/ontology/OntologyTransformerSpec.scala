@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
+import org.junit.runner.RunWith
 import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.*
@@ -16,6 +17,7 @@ import java.nio.file.Path
 import java.time.Instant
 import scala.jdk.CollectionConverters.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -29,7 +31,8 @@ import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
 
-object OntologyTransformerSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyTransformerSpec extends ZIOSpecDefault {
 
   private val transformer = ZIO.serviceWithZIO[OntologyTransformer]
 

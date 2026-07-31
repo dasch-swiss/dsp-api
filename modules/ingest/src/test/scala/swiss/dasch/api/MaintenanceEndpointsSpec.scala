@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.domain.*
@@ -17,7 +18,10 @@ import zio.http.*
 import zio.nio.file.Files
 import zio.test.*
 
-object MaintenanceEndpointsSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class MaintenanceEndpointsSpec extends ZIOSpecDefault {
   private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 3.seconds): ZIO[R, E, Boolean] =
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
 

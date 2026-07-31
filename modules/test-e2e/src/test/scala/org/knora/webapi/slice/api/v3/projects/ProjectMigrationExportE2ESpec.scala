@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.api.v3.projects
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.model.*
@@ -17,6 +18,7 @@ import zio.test.*
 import java.time.LocalDate
 
 import org.knora.bagit.BagIt
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.config.AppConfig
@@ -31,7 +33,8 @@ import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestApiClient
 
-object ProjectMigrationExportE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectMigrationExportE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
 

@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.api.v3.resources
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
 import zio.json.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -20,7 +22,8 @@ import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesPerOntologyEndpointsE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 

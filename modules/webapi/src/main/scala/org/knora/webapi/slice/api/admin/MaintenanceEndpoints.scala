@@ -23,7 +23,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
   private val maintenanceBase = "admin" / "maintenance"
 
   given Schema[Option[Json]] =
-    Schema.schemaForOption[Json](Schema.string.map((str: String) => str.fromJson[Json].toOption)(_.toJson))
+    Schema.schemaForOption[Json](using Schema.string.map((str: String) => str.fromJson[Json].toOption)(_.toJson))
 
   val postMaintenance = baseEndpoints.securedEndpoint.post
     .in(

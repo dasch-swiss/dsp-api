@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.ZIO
 import zio.prelude.ForEachOps
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -28,7 +30,8 @@ import org.knora.webapi.slice.admin.domain.model.UserStatus
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.common.domain.LanguageCode
 
-object KnoraUserToUserConverterSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraUserToUserConverterSpec extends E2EZSpec {
 
   private def createDummyUser(
     isInProject: Iterable[IRI],

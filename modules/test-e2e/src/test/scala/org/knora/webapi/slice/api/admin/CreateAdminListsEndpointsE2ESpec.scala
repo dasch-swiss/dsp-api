@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
@@ -23,7 +25,8 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri
 
-object CreateAdminListsEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CreateAdminListsEndpointsE2ESpec extends E2EZSpec {
 
   private val customListIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/qq54wdGKR0S5zsbR5-9wtg")
   private val customChildNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw")

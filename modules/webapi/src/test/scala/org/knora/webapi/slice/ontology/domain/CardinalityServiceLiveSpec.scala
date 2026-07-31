@@ -6,9 +6,11 @@
 package org.knora.webapi.slice.ontology.domain
 
 import org.apache.jena.query.Dataset
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -29,7 +31,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.*
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.*
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object CardinalityServiceLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CardinalityServiceLiveSpec extends ZIOSpecDefault {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private object CanSetCardinalityTestData {

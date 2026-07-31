@@ -5,13 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.*
 
-object UpgradePluginPR1615Spec extends ZIOSpecDefault with UpgradePluginSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class UpgradePluginPR1615Spec extends ZIOSpecDefault with UpgradePluginSpec {
 
   val spec: Spec[Any, Nothing] = suite("Upgrade plugin PR1615")(
     test("remove the instance of ForbiddenResource") {

@@ -19,11 +19,11 @@ using the result of `git describe`. The describe version is built from the
 The images can be published locally by running:
 
 ```bash
-make docker-build
+just docker-build
 ```
 
 or to Dockerhub:
 
 ```bash
-make docker-publish
+just docker-publish
 ```

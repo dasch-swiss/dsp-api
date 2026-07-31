@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.*
@@ -25,10 +26,12 @@ import java.security.MessageDigest
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.ChecksumAlgorithm
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object ProjectServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectServiceSpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ProjectService")(
       suite("listAllProjects")(
         test("should list all projects which contain assets in the asset directory") {

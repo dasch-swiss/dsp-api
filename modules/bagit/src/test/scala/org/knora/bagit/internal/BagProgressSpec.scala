@@ -5,11 +5,14 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.bagit.internal.BagProgress.ReporterState
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagProgressSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagProgressSpec extends ZIOSpecDefault {
 
   private val oneSecond = 1000000000L
 

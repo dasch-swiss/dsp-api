@@ -4,8 +4,10 @@
  */
 
 package org.knora.webapi.store.triplestore.api
+
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
+import org.junit.runner.RunWith
 import zio.Ref
 import zio.ZIO
 import zio.test.*
@@ -14,6 +16,7 @@ import zio.test.Assertion.hasSameElements
 import java.nio.file.Files
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
@@ -30,7 +33,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
-object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
 
   private val testDataSet =
     s"""
@@ -108,13 +112,14 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |""".stripMargin
           for {
             sf       <- ZIO.service[StringFormatter]
-            response <- ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query))).flatMap(_.asExtended(sf))
+            response <-
+              ZIO.serviceWithZIO[TriplestoreService](_.query(Construct(query))).flatMap(_.asExtended(using sf))
           } yield {
             val subject: SubjectV2 = IriSubjectV2(value = "http://anArticle")
             assertTrue(
               response.statements == Map(
                 subject -> Map(
-                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(sf) -> Seq(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(using sf) -> Seq(
                     IriLiteralV2(value = "http://www.knora.org/ontology/0801/biblio#Article"),
                   ),
                 ),
@@ -266,7 +271,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    _.insertDataIntoTriplestore(
                      List(
                        RdfDataObject(
-                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         path = "knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-admin",
                        ),
                      ),
@@ -289,7 +294,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    _.insertDataIntoTriplestore(
                      List(
                        RdfDataObject(
-                         path = "webapi/src/main/resources/knora-ontologies/knora-base.ttl",
+                         path = "knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-base",
                        ),
                      ),

@@ -73,8 +73,8 @@ object UpdateListInfoQuery extends QueryBuilderHelper {
       .MODIFY()
       .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
       .`with`(graphIri(project))
-      .delete(deletePatterns: _*)
-      .insert(insertPatterns: _*)
-      .where(wherePatterns: _*)
+      .delete(deletePatterns*)
+      .insert(insertPatterns*)
+      .where(wherePatterns*)
   }
 }

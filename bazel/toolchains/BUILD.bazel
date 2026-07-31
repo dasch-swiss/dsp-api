@@ -1,0 +1,45 @@
+load("@rules_scala//scala:scala.bzl", "setup_scala_toolchain")
+
+# DSP's Scala toolchain: our scalac options + semanticdb, matching build.sbt's
+# `customScalacOptions` (minus the sbt-/JVM-only entries). Registered from the root
+# MODULE.bazel so it wins over the toolchain auto-registered by `scala_deps.scala()`.
+#
+# `setup_scala_toolchain` emits both the `<name>_impl` scala_toolchain and a
+# `native.toolchain(name = <name>)` gated on the Scala version — register `<name>`.
+setup_scala_toolchain(
+    name = "dsp_scala_toolchain",
+    scala_version = "3.8.4",
+    # Put the full transitive closure on the compiler classpath, matching sbt.
+    # rules_scala defaults to "direct", which omits transitive-only deps — that
+    # breaks Scala 3 libraries whose public API relies on `inline given`s defined
+    # in a transitive module. Concretely, ZIO's auto-trace `given` lives in
+    # zio-stacktracer (a transitive dep of zio); under "direct" it is off the
+    # compiler classpath and every `ZIO.*` call fails with "No given instance of
+    # type zio.Trace". "transitive" also spares re-declaring every
+    # transitively-used artifact.
+    dependency_mode = "transitive",
+    # "transitive" would otherwise default strict-deps to "error" (demanding every
+    # directly-used transitive, e.g. the Scala stdlib, be re-declared per target);
+    # keep it off so targets don't have to re-declare transitives.
+    strict_deps_mode = "off",
+    enable_semanticdb = True,  # go-to-references for Metals-over-Bazel later
+    scalacopts = [
+        "-feature",
+        "-unchecked",
+        "-deprecation",
+        "-Xresolve-term-conflict:package",
+        "-Wvalue-discard",
+        "-Xmax-inlines:64",
+        # A Bazel toolchain applies to ALL from-source Scala in the graph, including
+        # rules_scala's own helper targets (test_discovery, source_compat). Exempt
+        # third-party sources under external/ from -Wunused/-Werror so their warnings
+        # don't fail our build. Our own code (under modules/) is unaffected.
+        "-Wconf:src=.*external/.*:s",
+        "-Wunused:all",
+        "-Werror",
+    ],
+    # `-Dotel.java.global-autoconfigure.enabled=true` is a JVM system property (it sits in
+    # build.sbt's scalacOptions only because sbt forks the compiler) — it belongs on the
+    # compiler worker JVM, not in scalacopts.
+    scalac_jvm_flags = ["-Dotel.java.global-autoconfigure.enabled=true"],
+)

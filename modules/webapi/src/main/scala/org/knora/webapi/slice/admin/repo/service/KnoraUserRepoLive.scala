@@ -129,9 +129,9 @@ object KnoraUserRepoLive {
         .andHas(status, Rdf.literalOf(u.status.value))
         .andHas(password, Rdf.literalOf(u.password.value))
         .andHas(isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
-        .andHas(isInProject, u.isInProject.map(p => Rdf.iri(p.value)).toList: _*)
-        .andHas(isInGroup, u.isInGroup.map(p => Rdf.iri(p.value)).toList: _*)
-        .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList: _*)
+        .andHas(isInProject, u.isInProject.map(p => Rdf.iri(p.value)).toList*)
+        .andHas(isInGroup, u.isInGroup.map(p => Rdf.iri(p.value)).toList*)
+        .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList*)
   }
 
   val layer =

@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
@@ -22,7 +23,10 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-object StorageServiceLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class StorageServiceLiveSpec extends ZIOSpecDefault {
 
   final private case class SomeJsonContent(value: String)
   private object SomeJsonContent {

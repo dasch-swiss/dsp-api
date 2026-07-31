@@ -5,9 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object UserSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class UserSpec extends ZIOSpecDefault {
   private val validPassword   = "pass-word"
   private val validGivenName  = "John"
   private val validFamilyName = "Rambo"

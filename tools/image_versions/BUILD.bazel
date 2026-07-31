@@ -1,0 +1,2 @@
+# Package marker so //tools/image_versions:extension.bzl resolves. The module
+# extension lives in extension.bzl; there are no targets here.

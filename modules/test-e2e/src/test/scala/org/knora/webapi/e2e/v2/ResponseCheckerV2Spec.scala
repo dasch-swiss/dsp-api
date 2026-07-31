@@ -5,16 +5,19 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.nio.file.Paths
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.util.FileUtil
 
-object ResponseCheckerV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResponseCheckerV2Spec extends E2EZSpec {
 
   override val e2eSpec = suite("ResponseCheckerV2")(
     test("not throw an exception if received and expected resource responses are the same") {

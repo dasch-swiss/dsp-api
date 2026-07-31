@@ -6,11 +6,14 @@
 package org.knora.webapi.slice.admin.repo
 
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
 
-object FileValuePermissionsQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class FileValuePermissionsQuerySpec extends ZIOSpecDefault {
 
   private val testFilename: InternalFilename = InternalFilename.unsafeFrom("0001/test-image.jp2")
 

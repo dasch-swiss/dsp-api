@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.common
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
-object ResourceIriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourceIriSpec extends ZIOSpecDefault {
 
   private val validResourceIri = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
 

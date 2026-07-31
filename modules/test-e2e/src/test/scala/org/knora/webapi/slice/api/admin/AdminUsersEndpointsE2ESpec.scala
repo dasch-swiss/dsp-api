@@ -5,12 +5,14 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import sttp.model.StatusCode
 import zio.ZIO
 import zio.json.ast.Json
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -25,10 +27,8 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.MutableTestIri
 
-/**
- * End-to-End (E2E) test specification for testing admin users endpoints.
- */
-object AdminUsersEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminUsersEndpointsE2ESpec extends E2EZSpec {
 
   private val projectAdminUser = imagesUser01
 

@@ -5,9 +5,13 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object BagInfoParserSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagInfoParserSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("BagInfoParserSpec")(
     test("two Contact-Name entries are both parsed into additionalFields") {

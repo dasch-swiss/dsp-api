@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -378,7 +379,10 @@ object GraphTestData {
   )
 }
 
-object ResourcesResponderV2Spec extends E2EZSpec { self =>
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesResponderV2Spec extends E2EZSpec { self =>
 
   private val resourceResponder = ZIO.serviceWithZIO[ResourcesResponderV2]
 
@@ -1455,9 +1459,21 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           projectADM = anythingProject,
         )
 
-        resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID))).exit.map(
-          actual => assert(actual)(failsWithA[OntologyConstraintException]),
-        )
+        // objectClassConstraint of hasOtherThing is anything:Thing, which has subclasses. The error must
+        // list the acceptable classes with each IRI in its own angle brackets (no malformed `<A,B>` token)
+        // and the constraint class must appear only once (it is a subclass of itself in the ontology cache).
+        val thingIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"
+        resourceResponder(
+          _.createResource(CreateResourceRequestV2(inputResource, anythingUser2, randomUUID)),
+        ).exit.map { actual =>
+          val message = actual.causeOption.flatMap(_.failureOption).map(_.getMessage).getOrElse("")
+          assert(actual)(failsWithA[OntologyConstraintException]) &&
+          assertTrue(
+            message.contains("does not belong to any of the following classes:"),
+            !message.contains(",http"),
+            message.split(java.util.regex.Pattern.quote(s"<$thingIri>"), -1).length - 1 == 1,
+          )
+        }
       },
       test("not create a resource with invalid custom permissions") {
         val resourceIri   = ResourceIri.makeNew(anythingProject.shortcode)
@@ -1691,6 +1707,97 @@ object ResourcesResponderV2Spec extends E2EZSpec { self =>
           resource.deletionInfo.nonEmpty,
           resource.lastModificationDate.nonEmpty,
           resource.creationDate == createdResourceCreationDate,
+        )
+      },
+      test("protect a Region referenced by a live region preview, and release it once the preview is deleted") {
+        // The fixture resource 55Urkg holds a live region preview pointing at region A5NfXW; deleting that
+        // preview must free the region (the value-node isDeleted filter in isResourceInUse). rootUser is a
+        // system admin, so permission checks never mask the in-use result.
+        val referencedRegionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w")
+        val regionClassIri      = "http://api.knora.org/ontology/knora-api/v2#Region".toSmartIri
+        val previewHostIri      = ResourceIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg")
+        val previewValueIri     =
+          ValueIri.unsafeFrom("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/Hn3kAqXyTbiB1RkF0r5Q7w")
+        val canDeleteRegion = resourceResponder(
+          _.canDeleteResource(
+            DeleteOrEraseResourceRequestV2(
+              resourceIri = referencedRegionIri,
+              resourceClassIri = regionClassIri,
+              maybeLastModificationDate = None,
+              requestingUser = rootUser,
+              apiRequestID = randomUUID,
+            ),
+          ),
+        )
+        for {
+          protection <- canDeleteRegion
+          _          <- ZIO.serviceWithZIO[ValuesResponderV2](
+                 _.deleteValueV2(
+                   DeleteValueV2(
+                     previewHostIri,
+                     ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri),
+                     PropertyIri.unsafeFrom(
+                       "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri,
+                     ),
+                     previewValueIri,
+                     valueTypeIri = OntologyConstants.KnoraApiV2Complex.RegionPreviewValue.toSmartIri,
+                     apiRequestId = randomUUID,
+                   ),
+                   rootUser,
+                 ),
+               )
+          release <- canDeleteRegion
+        } yield assertTrue(!protection.canDo.value, release.canDo.value)
+      },
+      test("reject creating a resource with an inline region preview whose target is not a Region") {
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri
+        val inputResource         = CreateResourceV2(
+          resourceIri = Some(ResourceIri.makeNew(anythingProject.shortcode)),
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "thing with an invalid inline region preview",
+          values = Map(
+            propertyIri -> Seq(
+              CreateValueInNewResourceV2(
+                // a-thing is a Thing, not a Region
+                valueContent =
+                  RegionPreviewValueContentV2(ApiV2Complex, ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")),
+              ),
+            ),
+          ),
+          projectADM = anythingProject,
+        )
+        resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser1, randomUUID))).exit
+          .map(err => assert(err)(failsWithA[OntologyConstraintException]))
+      },
+      test("create a resource with an inline region preview to a valid Region") {
+        val resourceIri           = ResourceIri.makeNew(anythingProject.shortcode)
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri
+        val inputResource         = CreateResourceV2(
+          resourceIri = Some(resourceIri),
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "thing with an inline region preview",
+          values = Map(
+            propertyIri -> Seq(
+              CreateValueInNewResourceV2(
+                valueContent = RegionPreviewValueContentV2(
+                  ApiV2Complex,
+                  ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w"),
+                ),
+              ),
+            ),
+          ),
+          projectADM = anythingProject,
+        )
+        for {
+          _      <- resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, anythingUser1, randomUUID)))
+          out    <- getResource(resourceIri.value)
+          preview = out.values(propertyIri).head.valueContent
+        } yield assertTrue(
+          preview.isInstanceOf[RegionPreviewValueContentV2],
+          preview
+            .asInstanceOf[RegionPreviewValueContentV2]
+            .regionIri
+            .value == "http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w",
         )
       },
       test("mark a resource as deleted, supplying a custom delete date") {

@@ -5,8 +5,10 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
@@ -14,7 +16,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.EN
 /**
  * This spec is used to test the [[Group]] value objects creation.
  */
-object KnoraGroupSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraGroupSpec extends ZIOSpecDefault {
   private val validDescription   = Seq(StringLiteralV2.from("Valid group description", EN))
   private val invalidDescription = Seq(StringLiteralV2.from("", EN))
 

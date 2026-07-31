@@ -4,16 +4,19 @@
  */
 
 package org.knora.webapi.messages.util.search.gravsearch.types
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import dsp.errors.GravsearchException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 
-object GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
 
   private def inspectTypes(query: String) = for {
     parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(query))

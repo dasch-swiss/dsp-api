@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import org.junit.runner.RunWith
 import sttp.client4.impl.zio.RIOMonadAsyncError
 import sttp.client4.testing.BackendStub
 import sttp.client4.testing.ResponseStub
@@ -30,7 +31,6 @@ import zio.Chunk
 import zio.UIO
 import zio.ZIO
 import zio.ZLayer
-import zio.http
 import zio.http.*
 import zio.http.Header.ContentDisposition
 import zio.http.Header.ContentDisposition.Attachment
@@ -41,15 +41,15 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import java.net.URLDecoder
-import java.text.Normalizer
 import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
 import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object ProjectsEndpointSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectsEndpointSpec extends ZIOSpecDefault {
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[ProjectsEndpointsHandler](handler =>
              ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints),
@@ -64,8 +64,8 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
   }
 
-  import zio.test.TestResult
   import zio.Scope
+  import zio.test.TestResult
 
   def testWithScope[E, Err](label: String)(assertion: => ZIO[E & Scope, Err, TestResult]): Spec[E, Err] =
     zio.test.test(label)(ZIO.scoped(assertion))
@@ -381,18 +381,24 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
         executeRequest(req).map(response => assertTrue(response.status == Status.Ok))
       },
       testWithScope("should handle ingest denormalized filenames") {
-        val encoded     = "a%CC%84.mp3"
-        val decoded     = URLDecoder.decode(encoded, "UTF-8")
-        val decodedNorm = Normalizer.normalize(decoded, Normalizer.Form.NFC)
-
-        val url = URL(Path.root / "projects" / "0666" / "assets" / "ingest" / encoded)
+        // A client may send a percent-encoded, Unicode-denormalized (NFD) filename in the path; macOS
+        // clients in particular emit NFD. Here "a%CC%84.mp3" is "a" + COMBINING MACRON (U+0304). Building
+        // the request via URL.decode runs the same path decoder the Netty server uses (Path.decodeRaw),
+        // so this exercises the server-side percent-decode; AssetFilename.from must then normalize the
+        // decoded NFD to NFC, so the stored original filename is the precomposed "ā.mp3" (U+0101).
+        val url = URL.decode("/projects/0666/assets/ingest/a%CC%84.mp3").getOrElse(throw new Exception("Invalid URL"))
         val req = Request
           .post(url, Body.fromString("tegxd"))
           .addHeader("Authorization", "Bearer fakeToken")
 
-        executeRequest(req).map { response =>
-          assertTrue(response.status == Status.Ok) && assertTrue(decodedNorm == "ā.mp3")
-        }
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+          info      = body.fromJson[AssetInfoResponse].getOrElse(throw new Exception("Invalid response"))
+        } yield assertTrue(
+          response.status == Status.Ok,
+          info.originalFilename == "\u0101.mp3", // NFC "\u0101" = LATIN SMALL LETTER A WITH MACRON ("a" + U+0304)
+        )
       },
       testWithScope("should refuse ingesting without content") {
         val req = Request

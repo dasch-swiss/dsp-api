@@ -5,11 +5,14 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.bagit.domain.PayloadPath
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object ManifestParserSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ManifestParserSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Any] = suite("ManifestParserSpec")(
     test("parses valid line with two-space separator") {

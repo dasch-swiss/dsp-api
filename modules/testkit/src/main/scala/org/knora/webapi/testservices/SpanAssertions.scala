@@ -11,6 +11,8 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import zio.test.TestResult
 import zio.test.assertTrue
 
+import scala.jdk.CollectionConverters.*
+
 /**
  * Reusable assertions over the spans captured by [[InMemoryTracing]].
  *
@@ -54,6 +56,34 @@ object SpanAssertions {
   /** The named span carries `key` with any value. */
   def hasAttributeKey(spans: Seq[SpanData], name: String, key: AttributeKey[?]): TestResult =
     assertTrue(findSpan(spans, name).exists(s => Option(s.getAttributes.get(key)).isDefined))
+
+  /** The named span does not carry `key` at all. Fails if the span itself is missing. */
+  def hasNoAttributeKey(spans: Seq[SpanData], name: String, key: AttributeKey[?]): TestResult =
+    assertTrue(findSpan(spans, name).exists(s => Option(s.getAttributes.get(key)).isEmpty))
+
+  /**
+   * The named span carries an event called `eventName` whose `key` attribute is exactly `value`.
+   *
+   * Payload too large or too high-cardinality for a span attribute (a submitted query, a request
+   * body) belongs in an event, so assertions over it need the event scope rather than
+   * [[hasAttribute]].
+   */
+  def hasEventWithAttribute[A](
+    spans: Seq[SpanData],
+    name: String,
+    eventName: String,
+    key: AttributeKey[A],
+    value: A,
+  ): TestResult =
+    assertTrue(
+      findSpan(spans, name).exists(
+        _.getEvents.asScala.exists(e => e.getName == eventName && Option(e.getAttributes.get(key)).contains(value)),
+      ),
+    )
+
+  /** The names of all finished spans carrying an event called `eventName`, in capture order. */
+  def spansWithEvent(spans: Seq[SpanData], eventName: String): Seq[String] =
+    spans.filter(_.getEvents.asScala.exists(_.getName == eventName)).map(_.getName)
 
   /** The named span finished with status code ERROR. */
   def hasErrorStatus(spans: Seq[SpanData], name: String): TestResult =

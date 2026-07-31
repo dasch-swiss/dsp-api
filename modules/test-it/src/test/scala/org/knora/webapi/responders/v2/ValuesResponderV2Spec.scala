@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -16,6 +17,7 @@ import scala.reflect.ClassTag
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -44,7 +46,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 
-object ValuesResponderV2Spec extends E2EZSpec { self =>
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValuesResponderV2Spec extends E2EZSpec { self =>
 
   private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
   private val valuesResponder = ZIO.serviceWithZIO[ValuesResponderV2]
@@ -1210,25 +1213,44 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
 
   private val regionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/A5NfXW4QRxOnBPULCTvH5w")
 
+  private val missingRegionIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/this-region-does-not-exist")
+
   private val regionPreviewValueSuite = {
     val regionPreviewValueIri = new MutableTestIri
 
+    def createPreviewParams(target: ResourceIri) = CreateValueV2(
+      resourceIri = aThingIri,
+      resourceClassIri = Anything.thingClass.smartIri,
+      propertyIri = Anything.hasRegionPreview.smartIri,
+      valueContent = RegionPreviewValueContentV2(ApiV2Complex, target),
+    )
+
+    // The reject-create tests run before the successful create so that aThing has no preview yet; a failed create
+    // never persists, so cardinality never interferes with the referential-integrity assertions.
     suite("RegionPreview Values")(
+      test("reject creating a region preview whose target does not exist") {
+        valuesResponder(_.createValueV2(createPreviewParams(missingRegionIri), anythingUser1, randomUUID)).exit
+          .map(err => assert(err)(failsWithA[NotFoundException]))
+      },
+      test("reject creating a region preview whose target is not a Region") {
+        // aThing is a Thing, not a Region.
+        valuesResponder(_.createValueV2(createPreviewParams(aThingIri), anythingUser1, randomUUID)).exit
+          .map(err => assert(err)(failsWithA[OntologyConstraintException]))
+      },
+      test("reject creating a region preview whose target is in another project") {
+        // zeitgloecklein is in the incunabula project (0803).
+        valuesResponder(_.createValueV2(createPreviewParams(zeitgloeckleinIri), anythingUser1, randomUUID)).exit
+          .map(err => assert(err)(failsWithA[BadRequestException]))
+      },
       test("create a region preview value") {
-        val resourceIri  = aThingIri
-        val propertyIri  = Anything.hasRegionPreview.smartIri
-        val createParams = CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = Anything.thingClass.smartIri,
-          propertyIri = propertyIri,
-          valueContent = RegionPreviewValueContentV2(ApiV2Complex, regionIri),
-        )
+        val propertyIri = Anything.hasRegionPreview.smartIri
         for {
-          maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
-          createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
-          _                         = regionPreviewValueIri.set(createValueResponse.valueIri)
-          valueFromTriplestore     <- getValue(
-                                    resourceIri,
+          maybeResourceLastModDate <- getResourceLastModificationDate(aThingIri, anythingUser1)
+          createValueResponse      <-
+            valuesResponder(_.createValueV2(createPreviewParams(regionIri), anythingUser1, randomUUID))
+          _                     = regionPreviewValueIri.set(createValueResponse.valueIri)
+          valueFromTriplestore <- getValue(
+                                    aThingIri,
                                     maybeResourceLastModDate,
                                     propertyIri,
                                     propertyIri,
@@ -1237,6 +1259,17 @@ object ValuesResponderV2Spec extends E2EZSpec { self =>
                                   )
           actual <- asInstanceOf[RegionPreviewValueContentV2](valueFromTriplestore.valueContent)
         } yield assertTrue(actual.regionIri == regionIri)
+      },
+      test("reject re-pointing a region preview to a non-Region target (update path)") {
+        val updateParams = UpdateValueContentV2(
+          resourceIri = aThingIri,
+          resourceClassIri = Anything.thingClass.smartIri,
+          propertyIri = Anything.hasRegionPreview.smartIri,
+          valueIri = regionPreviewValueIri.asValueIri,
+          valueContent = RegionPreviewValueContentV2(ApiV2Complex, aThingIri),
+        )
+        valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID)).exit
+          .map(err => assert(err)(failsWithA[OntologyConstraintException]))
       },
     )
   }

@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -31,7 +33,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object GroupServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GroupServiceSpec extends ZIOSpecDefault {
   private val exampleGroup = new Group(
     id = "http://rdfh.ch/groups/0007/james-bond-group",
     name = "James Bond Group",
@@ -50,7 +53,7 @@ object GroupServiceSpec extends ZIOSpecDefault {
     hasSelfJoinEnabled = GroupSelfJoin.disabled,
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("GroupServiceSpec")(
       test("KnoraGroup should be transformed to Group") {
         for {

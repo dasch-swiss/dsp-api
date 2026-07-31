@@ -5,16 +5,19 @@
 
 package org.knora.webapi.slice.search.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
 import dsp.errors.SparqlGenerationException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
-object SearchFulltextQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchFulltextQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -46,7 +49,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
               |        }
               |    }
               |    OPTIONAL {
@@ -103,7 +106,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
               |WHERE {
               |    {
               |        SELECT DISTINCT ?matchingSubject WHERE {
-              |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+              |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
               |        }
               |    }
               |    OPTIONAL {
@@ -165,7 +168,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> "test" .
+               |            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
                |        }
                |    }
                |    OPTIONAL {
@@ -226,7 +229,7 @@ object SearchFulltextQuerySpec extends ZIOSpecDefault {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> "test search" .
+               |            ?matchingSubject <http://jena.apache.org/text#query> ("test search" 1000000) .
                |    ?matchingSubject a knora-base:TextValue ;
                |        knora-base:valueHasString ?literal ;
                |        knora-base:valueHasStandoff ?standoffNode .

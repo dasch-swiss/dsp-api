@@ -5,15 +5,18 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import org.junit.runner.RunWith
 import zio.test.Gen
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.ScopeValue.Admin
 
-object ScopeSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ScopeSpec extends ZIOSpecDefault {
   private val prj1             = Shortcode.unsafeFrom("0001")
   private val readScopeValue1  = ScopeValue.Read(prj1)
   private val writeScopeValue1 = ScopeValue.Write(prj1)

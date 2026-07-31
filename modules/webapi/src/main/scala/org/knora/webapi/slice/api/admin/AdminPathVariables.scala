@@ -34,13 +34,13 @@ object AdminPathVariables {
       .example(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"))
 
   val projectShortcode: EndpointInput.PathCapture[Shortcode] =
-    path[Shortcode](TapirCodec.shortcode)
+    path[Shortcode](using TapirCodec.shortcode)
       .name("projectShortcode")
       .description("The shortcode of a project. Must be a 4 digit hexadecimal String.")
       .example(Shortcode.unsafeFrom("0001"))
 
   val projectShortname: EndpointInput.PathCapture[Shortname] =
-    path[Shortname](TapirCodec.shortname)
+    path[Shortname](using TapirCodec.shortname)
       .name("projectShortname")
       .description("The shortname of a project.")
       .example(Shortname.unsafeFrom("someShortname"))

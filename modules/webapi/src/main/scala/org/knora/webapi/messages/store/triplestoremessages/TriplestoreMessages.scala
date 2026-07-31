@@ -255,12 +255,14 @@ object PlainStringLiteralV2 {
 
 object StringLiteralV2 {
   given JsonCodec[StringLiteralV2] = JsonCodec(
-    JsonEncoder[StringLiteralV2] { (a, indent, out) =>
-      a match {
-        case p: PlainStringLiteralV2          => JsonEncoder[PlainStringLiteralV2].unsafeEncode(p, indent, out)
-        case l: LanguageTaggedStringLiteralV2 => JsonEncoder[LanguageTaggedStringLiteralV2].unsafeEncode(l, indent, out)
-      }
-    },
+    JsonEncoder[StringLiteralV2](using
+      (a, indent, out) =>
+        a match {
+          case p: PlainStringLiteralV2          => JsonEncoder[PlainStringLiteralV2].unsafeEncode(p, indent, out)
+          case l: LanguageTaggedStringLiteralV2 =>
+            JsonEncoder[LanguageTaggedStringLiteralV2].unsafeEncode(l, indent, out)
+        },
+    ),
     JsonDecoder[Json].mapOrFail { json =>
       json.asObject match {
         case Some(obj) if obj.get("language").isDefined =>
@@ -419,9 +421,9 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
  * ignored.
  */
 object SparqlResultProtocol {
+  import cats.implicits._
   import zio.json._
   import zio.json.ast.Json
-  import cats.implicits._
 
   implicit val VariableResultsZioJsonFormat: JsonDecoder[VariableResultsRow] =
     JsonDecoder[Json.Obj].map { obj =>

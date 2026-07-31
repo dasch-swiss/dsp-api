@@ -5,6 +5,7 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -19,8 +20,27 @@ import org.knora.bagit.BagItError
 import org.knora.bagit.ChecksumAlgorithm
 import org.knora.bagit.ExtractionLimits
 import org.knora.bagit.domain.*
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagReaderSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagReaderSpec extends ZIOSpecDefault {
+
+  /**
+   * Runs `thunk` on a thread with a deliberately small stack and returns its result.
+   * Used to assert stack-safety: an iterative/tail-recursive traversal completes here,
+   * whereas a naively recursive one raises StackOverflowError (surfaced as a test
+   * failure). This makes the assertion independent of the OS path-length limit, so it
+   * holds under sbt, the Bazel sandbox, and RBE alike.
+   */
+  private def onSmallStack[A](stackBytes: Long)(thunk: => A): Task[A] =
+    ZIO.async[Any, Throwable, A] { register =>
+      val runnable: Runnable = () =>
+        try register(ZIO.succeed(thunk))
+        catch { case t: Throwable => register(ZIO.fail(t)) }
+      val thread = new Thread(null, runnable, "bagit-walk-small-stack", stackBytes)
+      thread.setDaemon(true)
+      thread.start()
+    }
 
   private def createTestBag: ZIO[Scope, Any, Path] =
     for {
@@ -331,26 +351,31 @@ object BagReaderSpec extends ZIOSpecDefault {
         } yield assertTrue(bag.version == "1.0", bag.manifests.nonEmpty, bag.bagInfo.isDefined)
       }
     },
-    test("handles deeply nested directory (500 levels) without StackOverflowError") {
-      // Test that walkDirectory in BagCreator handles deeply nested dirs.
-      // macOS PATH_MAX is 1024, so we use the max nesting that fits on disk,
-      // then verify the file is found in the produced zip.
-      val depth = 450 // single-char dir names stay within OS path limits
+    test("handles a deeply nested directory without StackOverflowError") {
+      // JioHelper.walkDirectory must stay stack-safe (it uses an explicit work-stack,
+      // not the call stack). We prove that deterministically by walking the tree on a
+      // small-stack thread: a naively recursive walk would StackOverflow there, the
+      // tail-recursive one does not. `depth` stays well within the OS path limit
+      // (macOS PATH_MAX is 1024) so the test is portable across sbt, the Bazel sandbox,
+      // and RBE, where the temp-dir base path can be long. createBag then walks, reads,
+      // and zips the same tree for end-to-end coverage.
+      val depth = 300
       ZIO.scoped {
         for {
           tempDir <- Files.createTempDirectoryScoped(Some("b"), Seq.empty)
           _       <- ZIO.attemptBlocking {
                  var current = tempDir.toFile
                  for (_ <- 1 to depth) {
-                   val child = new java.io.File(current, "d")
-                   child.mkdir()
-                   current = child
+                   current = new java.io.File(current, "d")
+                   current.mkdir()
                  }
                  val file = new java.io.File(current, "f.txt")
-                 val fos  = new java.io.FileOutputStream(file)
+                 val fos  = new FileOutputStream(file)
                  try fos.write("deep".getBytes("UTF-8"))
                  finally fos.close()
                }
+          // Stack-safety: a recursive-per-level walk would overflow this small stack.
+          walked   <- onSmallStack(256L * 1024)(JioHelper.walkDirectory(tempDir.toFile))
           outputZip = tempDir / "o.zip"
           nestedDir = tempDir / "d"
           _        <- BagCreator.createBag(
@@ -374,7 +399,12 @@ object BagReaderSpec extends ZIOSpecDefault {
                           entries
                         }
           dataEntries = zipEntries.filter(e => e.startsWith("data/") && !e.endsWith("/"))
-        } yield assertTrue(dataEntries.size == 1, dataEntries.head.endsWith("f.txt"))
+        } yield assertTrue(
+          walked.size == 1,
+          walked.head.getName == "f.txt",
+          dataEntries.size == 1,
+          dataEntries.head.endsWith("f.txt"),
+        )
       }
     } @@ TestAspect.timeout(60.seconds),
     test("handles flat directory with 1000 files, all sorted by name") {

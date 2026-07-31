@@ -5,30 +5,18 @@
 
 package org.knora.webapi.slice.ontology.domain.model
 
+import org.junit.runner.RunWith
 import zio.Random
 import zio.Scope
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 
-object CardinalitySpec extends ZIOSpecDefault {
-  object Generator {
-    def cardinalitiesGen(cardinalities: Cardinality*): Gen[Any, Cardinality] = Gen.fromZIO {
-      val candidates: Array[Cardinality] = if (cardinalities != Nil) {
-        cardinalities.toArray
-      } else {
-        allCardinalities
-      }
-      val length = candidates.length
-      if (length == 0) {
-        throw new IllegalArgumentException("The parameter cardinalities may not be an empty Array.")
-      } else {
-        Random.nextIntBetween(0, length).map(candidates(_))
-      }
-    }
-  }
+@RunWith(classOf[DspZTestJUnitRunner])
+class CardinalitySpec extends ZIOSpecDefault {
 
   val spec: Spec[TestEnvironment & Scope, Nothing] = suite("CardinalitySpec")(
     suite("Cardinality to String")(
@@ -140,4 +128,22 @@ object CardinalitySpec extends ZIOSpecDefault {
       },
     ),
   )
+}
+
+object CardinalitySpec {
+  object Generator {
+    def cardinalitiesGen(cardinalities: Cardinality*): Gen[Any, Cardinality] = Gen.fromZIO {
+      val candidates: Array[Cardinality] = if (cardinalities != Nil) {
+        cardinalities.toArray
+      } else {
+        allCardinalities
+      }
+      val length = candidates.length
+      if (length == 0) {
+        throw new IllegalArgumentException("The parameter cardinalities may not be an empty Array.")
+      } else {
+        Random.nextIntBetween(0, length).map(candidates(_))
+      }
+    }
+  }
 }

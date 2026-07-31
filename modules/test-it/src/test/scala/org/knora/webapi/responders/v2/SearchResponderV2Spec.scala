@@ -5,11 +5,13 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.failsWithA
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.messages.IriConversions.*
@@ -17,11 +19,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
-object SearchResponderV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SearchResponderV2Spec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -42,6 +46,8 @@ object SearchResponderV2Spec extends E2EZSpec {
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
   private val bookClassIri                  =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri.toComplexSchema)
+  private val resourceBaseClassIri =
+    ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/knora-base#Resource".toSmartIri.toComplexSchema)
   private val searchResponder = ZIO.serviceWithZIO[SearchResponderV2]
 
   override val e2eSpec = suite("The search responder v2")(
@@ -195,6 +201,66 @@ object SearchResponderV2Spec extends E2EZSpec {
                     ),
                   )
       } yield assertTrue(result.numberOfResources == 1)
+    },
+
+    // DEV-6833. The class restriction must walk the whole subclass closure, not just one hop. The subclass closure is not
+    // materialised and there is no query-time inference, so the previous `rdfs:subClassOf?` matched only the target class
+    // and its direct subclasses. anything:BlueThing sits two hops below knora-base:Resource
+    // (BlueThing -> Thing -> Resource), so these searches returned nothing at all. Every pre-existing label test above
+    // restricts to incunabula:book, a *direct* subclass of knora-base:Resource, which is why none of them caught it.
+    // "blue" occurs in exactly one label in anything-data, so the expectation is exact rather than a count.
+    test("perform a search by label restricted to a class two hops above the matched resource's class") {
+      for {
+        result <- searchResponder(
+                    _.searchResourcesByLabelV2(
+                      searchValue = "blue",
+                      offset = 0,
+                      limitToProject = None,
+                      limitToResourceClass = Some(resourceBaseClassIri),
+                      targetSchema = ApiV2Complex,
+                      requestingUser = anythingUser1,
+                    ),
+                  )
+      } yield assertTrue(result.resources.map(_.resourceIri.value) == Seq("http://rdfh.ch/0001/a-blue-thing"))
+    },
+    test("perform a count search by label restricted to a class two hops above the matched resource's class") {
+      for {
+        result <- searchResponder(
+                    _.searchResourcesByLabelCountV2(
+                      searchValue = "blue",
+                      limitToProject = None,
+                      limitToResourceClass = Some(resourceBaseClassIri),
+                    ),
+                  )
+      } yield assertTrue(result.numberOfResources == 1)
+    },
+
+    // DEV-6833. Standoff is excluded from the label-search payload by filtering the predicate
+    // (?valueObjectProperty != knora-base:valueHasStandoff). The resource below carries two standoff-bearing text values,
+    // so it exercises that filter. The assertion pins what the client actually receives: the text value is still returned
+    // with its string intact, and — because search-by-label never queries standoff — without markup.
+    test("perform a search by label for a resource whose text values carry standoff") {
+      for {
+        result <- searchResponder(
+                    _.searchResourcesByLabelV2(
+                      searchValue = "jemanden",
+                      offset = 0,
+                      limitToProject = None,
+                      limitToResourceClass = None,
+                      targetSchema = ApiV2Complex,
+                      requestingUser = anythingUser1,
+                    ),
+                  )
+        resource   = result.resources.head
+        textValues = resource.values.values.flatten.collect { case v: ReadValueV2 =>
+                       v.valueContent
+                     }.collect { case tv: TextValueContentV2 => tv }.toSeq
+      } yield assertTrue(
+        result.resources.map(_.resourceIri.value) == Seq("http://rdfh.ch/0001/a-thing-with-text-values"),
+        textValues.nonEmpty,
+        textValues.forall(_.valueHasString.nonEmpty),
+        textValues.forall(_.standoff.isEmpty),
+      )
     },
     test("search by project and resource class") {
       for {

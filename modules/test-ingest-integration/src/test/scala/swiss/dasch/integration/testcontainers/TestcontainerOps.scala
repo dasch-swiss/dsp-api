@@ -6,7 +6,12 @@
 package swiss.dasch.integration.testcontainers
 
 import org.testcontainers.lifecycle.Startable
-import zio.{Scope, Tag, ULayer, URIO, ZIO, ZLayer}
+import zio.Scope
+import zio.Tag
+import zio.ULayer
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
 
 object ZioTestContainers {
 

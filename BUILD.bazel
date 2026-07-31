@@ -1,0 +1,8 @@
+# Root package. Exists so `//:maven_install.json` (the rules_jvm_external lock
+# file label) resolves. Re-pin with `bazel run @unpinned_maven//:pin`.
+exports_files([
+    "maven_install.json",
+    # Default scalafmt config for the rules_scala scalafmt toolchain
+    # (referenced as //:.scalafmt.conf by scala_deps.scalafmt in MODULE.bazel).
+    ".scalafmt.conf",
+])

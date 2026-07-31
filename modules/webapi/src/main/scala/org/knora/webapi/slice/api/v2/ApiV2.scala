@@ -176,13 +176,13 @@ object ApiV2 {
   private object Codecs {
     // Codec for ApiV2Schema
     implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
-      Codec.listHeadOption(Codec.string.mapEither(ApiV2Schema.from)(_.name))
+      Codec.listHeadOption(using Codec.string.mapEither(ApiV2Schema.from)(_.name))
 
     // Codecs for Rendering (JsonLdRendering and MarkupRendering)
     implicit val jsonLdRenderingListCodec: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(Codec.string.mapEither(JsonLdRendering.from)(_.name))
+      Codec.listHeadOption(using Codec.string.mapEither(JsonLdRendering.from)(_.name))
     implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(Codec.string.mapEither(MarkupRendering.from)(_.name))
+      Codec.listHeadOption(using Codec.string.mapEither(MarkupRendering.from)(_.name))
   }
 
 }

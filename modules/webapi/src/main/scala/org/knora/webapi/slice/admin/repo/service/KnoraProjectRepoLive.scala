@@ -93,9 +93,10 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
     def toEntity(resource: RdfResource): IO[RdfError, KnoraProject] = {
       def getRestrictedView =
         for {
-          size      <- resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(RestrictedView.Size.from)
-          watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(b =>
-                         Right(RestrictedView.Watermark.from(b)),
+          size <-
+            resource.getStringLiteral[RestrictedView.Size](ProjectRestrictedViewSize)(using RestrictedView.Size.from)
+          watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(using
+                         b => Right(RestrictedView.Watermark.from(b)),
                        )
         } yield size.orElse(watermark).getOrElse(RestrictedView.default)
 
@@ -110,13 +111,13 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         status                  <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin                <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         allowedCopyrightHolders <-
-          resource.getStringLiterals(hasAllowedCopyrightHolder)(CopyrightHolder.from).map(_.toSet)
-        enabledLicenses     <- resource.getObjectIrisConvert(hasEnabledLicense)(LicenseIri.from).map(_.toSet)
-        dataLicense         <- resource.getObjectIrisConvert(hasDataLicense)(LicenseIri.from).map(_.headOption)
+          resource.getStringLiterals(hasAllowedCopyrightHolder)(using CopyrightHolder.from).map(_.toSet)
+        enabledLicenses     <- resource.getObjectIrisConvert(hasEnabledLicense)(using LicenseIri.from).map(_.toSet)
+        dataLicense         <- resource.getObjectIrisConvert(hasDataLicense)(using LicenseIri.from).map(_.headOption)
         dataCopyrightHolder <-
-          resource.getStringLiterals(hasDataCopyrightHolder)(CopyrightHolder.from).map(_.headOption)
+          resource.getStringLiterals(hasDataCopyrightHolder)(using CopyrightHolder.from).map(_.headOption)
         defaultDataAuthorship <-
-          resource.getStringLiterals(hasDefaultDataAuthorship)(Authorship.from).map(_.toList.sortBy(_.value))
+          resource.getStringLiterals(hasDefaultDataAuthorship)(using Authorship.from).map(_.toList.sortBy(_.value))
         restrictedView <- getRestrictedView
       } yield KnoraProject(
         id = ProjectIri.unsafeFrom(iri.value),

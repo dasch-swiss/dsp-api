@@ -5,9 +5,11 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
@@ -18,7 +20,8 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-object OntologyHelpersSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyHelpersSpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 

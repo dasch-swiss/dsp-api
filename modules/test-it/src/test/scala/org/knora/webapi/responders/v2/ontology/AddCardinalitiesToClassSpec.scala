@@ -5,16 +5,17 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -30,10 +31,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.OntologyTestHelper
 
-/**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
- */
-object AddCardinalitiesToClassSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AddCardinalitiesToClassSpec extends E2EZSpec {
 
   private val ontologyResponder = ZIO.serviceWithZIO[OntologyResponderV2]
 

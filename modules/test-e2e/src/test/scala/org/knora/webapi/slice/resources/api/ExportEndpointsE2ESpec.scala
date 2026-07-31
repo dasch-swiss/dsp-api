@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.resources.api
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -16,7 +18,8 @@ import org.knora.webapi.slice.api.v3.`export`.ExportRequest
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestExportApiClient
 
-object ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData
   // override val rewriteAll: Boolean                 = true
 

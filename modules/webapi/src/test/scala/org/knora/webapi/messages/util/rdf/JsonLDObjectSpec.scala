@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
@@ -13,11 +14,13 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.service.IriConverter
 
-object JsonLDObjectSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class JsonLDObjectSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("JsonLDObject")(
       iriValueSuite +

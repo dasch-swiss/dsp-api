@@ -5,10 +5,12 @@
 
 package org.knora.webapi.slice.api.admin
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -19,7 +21,8 @@ import org.knora.webapi.slice.api.admin.model.ProjectGetResponse
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AdminProjectsResourceSideLegalInfoE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 

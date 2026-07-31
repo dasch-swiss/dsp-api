@@ -4418,10 +4418,87 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:hasFullImage"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasFullImageAuthorship"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasFullImageCopyrightHolder"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasFullImageLicense"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasHighlightBoxH"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasHighlightBoxW"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasHighlightBoxX"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasHighlightBoxY"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:hasPermissions"
                     },
                     "owl:cardinality": 1,
                     "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPreviewColor"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPreviewUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasThumbnailUrl"
+                    },
+                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -8962,6 +9039,66 @@
             "rdfs:comment": "Connects a Representation to a file"
         },
         {
+            "rdfs:label": "has region preview full image",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:Resource"
+            },
+            "@id": "knora-api:hasFullImage",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The still image resource the region is part of (computed on read)."
+        },
+        {
+            "rdfs:label": "has full image authorship",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasFullImageAuthorship",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The authorship of the still image the region is part of (computed on read)."
+        },
+        {
+            "rdfs:label": "has full image copyright holder",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasFullImageCopyrightHolder",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The copyright holder of the still image the region is part of (computed on read)."
+        },
+        {
+            "rdfs:label": "has full image license",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:License"
+            },
+            "@id": "knora-api:hasFullImageLicense",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The license of the still image the region is part of (computed on read)."
+        },
+        {
             "rdfs:label": "Geometry",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
@@ -8980,6 +9117,66 @@
                 "@id": "knora-api:Region"
             },
             "rdfs:comment": "Represents a geometrical shape."
+        },
+        {
+            "rdfs:label": "has region preview highlight box height",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:decimal"
+            },
+            "@id": "knora-api:hasHighlightBoxH",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "Height percentage (0..100) of the region's bounding box (computed on read; any geometry)."
+        },
+        {
+            "rdfs:label": "has region preview highlight box width",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:decimal"
+            },
+            "@id": "knora-api:hasHighlightBoxW",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "Width percentage (0..100) of the region's bounding box (computed on read; any geometry)."
+        },
+        {
+            "rdfs:label": "has region preview highlight box X",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:decimal"
+            },
+            "@id": "knora-api:hasHighlightBoxX",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "X percentage (0..100) of the region's bounding box (computed on read; any geometry)."
+        },
+        {
+            "rdfs:label": "has region preview highlight box Y",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:decimal"
+            },
+            "@id": "knora-api:hasHighlightBoxY",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "Y percentage (0..100) of the region's bounding box (computed on read; any geometry)."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -9116,6 +9313,36 @@
                 "@id": "xsd:string"
             },
             "rdfs:label": "has permissions"
+        },
+        {
+            "rdfs:label": "has region preview color",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:hasPreviewColor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "The region's color (its knora-base:hasColor, computed on read; geometry-independent)."
+        },
+        {
+            "rdfs:label": "has region preview URL",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "knora-api:hasPreviewUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "IIIF URL of the region's bounding-box crop image (computed on read; any geometry)."
         },
         {
             "rdfs:label": "has Region preview",
@@ -9314,6 +9541,21 @@
             "rdfs:comment": "Indicates the type of text value."
         },
         {
+            "rdfs:label": "has region preview thumbnail URL",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "knora-api:hasThumbnailUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:RegionPreviewValue"
+            },
+            "rdfs:comment": "IIIF URL of the full-page thumbnail the region is on (computed on read)."
+        },
+        {
             "rdfs:label": "Title",
             "rdfs:subPropertyOf": [
                 {
@@ -9358,21 +9600,6 @@
                 "@id": "knora-api:Value"
             },
             "@id": "knora-api:hasValue"
-        },
-        {
-            "rdfs:label": "is an IIIF URL",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:string"
-            },
-            "@id": "knora-api:iiifUrl",
-            "knora-api:subjectType": {
-                "@id": "knora-api:RegionPreviewValue"
-            },
-            "rdfs:comment": "IIIF URL for the region preview"
         },
         {
             "rdfs:label": "Integer value as integer",

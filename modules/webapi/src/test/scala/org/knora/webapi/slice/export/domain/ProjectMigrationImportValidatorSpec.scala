@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -13,10 +14,12 @@ import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
-object ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
 
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")
 

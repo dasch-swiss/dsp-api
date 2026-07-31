@@ -5,6 +5,7 @@
 
 package org.knora.webapi.it.v2
 
+import org.junit.runner.RunWith
 import sttp.model.Uri.*
 import zio.*
 import zio.test.*
@@ -14,6 +15,7 @@ import java.nio.file.Paths
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -33,10 +35,8 @@ import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.testservices.TestSipiApiClient
 import org.knora.webapi.util.MutableTestIri
 
-/**
- * Tests interaction between Knora and Sipi using Knora API v2.
- */
-object KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
   private val stillImageResourceIri  = new MutableTestIri
   private val stillImageFileValueIri = new MutableTestIri

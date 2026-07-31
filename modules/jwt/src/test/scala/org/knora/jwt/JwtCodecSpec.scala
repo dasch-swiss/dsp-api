@@ -5,12 +5,16 @@
 
 package org.knora.jwt
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
 
-object JwtCodecSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class JwtCodecSpec extends ZIOSpecDefault {
 
   private val secret = "test-secret-key-for-hmac-sha256".getBytes(StandardCharsets.UTF_8)
 

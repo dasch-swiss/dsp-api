@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.junit.runner.RunWith
 import zio.*
 import zio.http.*
 import zio.json.DecoderOps
@@ -25,20 +26,39 @@ import dsp.valueobjects.UuidUtil
 import org.knora.jwt.JwtClaim
 import org.knora.jwt.JwtCodec
 import org.knora.sipi.MockDspApiServer.verify.*
+import org.knora.sipi.SipiIT.dspApiPort
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
-object SipiIT extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class SipiIT extends ZIOSpecDefault {
 
-  val dspApiPort: Int       = 5555
   private val imageTestfile = "FGiLaT4zzuV-CqwbEDFAFeS.jp2"
   private val prefix        = "0001"
 
-  private def requestGet(path: Path, headers: Header*) =
-    SipiTestContainer.resolveUrl(path).map(url => Request.get(url).addHeaders(Headers(headers))).flatMap(Client.batched)
+  // Sipi answers /{prefix}/{identifier}/file with a 303 redirect to the canonical IIIF URL, where the
+  // permission-derived final status (Ok / Unauthorized / Not Found) is produced. zio-http's Client does not follow
+  // redirects, so follow them here. We re-resolve the redirect target's *path* through SipiTestContainer.resolveUrl
+  // so the follow-up always hits the container's mapped port, never any host/port carried in Sipi's Location header.
+  // (The older zio-http transitively pulled in before the Bazel/sbt version sync followed redirects implicitly,
+  // which masked the need for this.)
+  private def requestGet(path: Path, headers: Header*): ZIO[Client & SipiTestContainer, Throwable, Response] = {
+    def loop(p: Path, remaining: Int): ZIO[Client & SipiTestContainer, Throwable, Response] =
+      for {
+        url      <- SipiTestContainer.resolveUrl(p)
+        response <- Client.batched(Request.get(url).addHeaders(Headers(headers)))
+        followed <- response.header(Header.Location) match {
+                      case Some(location) if response.status.isRedirection && remaining > 0 =>
+                        loop(location.url.path, remaining - 1)
+                      case _ => ZIO.succeed(response)
+                    }
+      } yield followed
+    loop(path, 5)
+  }
 
   private def createJwt(scope: AuthScope): UIO[String] = for {
     now  <- Clock.instant
@@ -212,7 +232,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.Ok,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -228,7 +248,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.Unauthorized,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -242,7 +262,7 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-            response <- requestGet(Path.root / prefix / imageTestfile / "full/max/0/default.jp2")
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
           } yield assertTrue(
             response.status == Status.NotFound,
             verifySingleGetRequest(server, dspApiPermissionPath),
@@ -277,6 +297,10 @@ object SipiIT extends ZIOSpecDefault {
       .provideSomeLayerShared[Scope & Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential @@ TestAspect.withLiveClock
 
+}
+
+object SipiIT {
+  val dspApiPort: Int = 5555
 }
 
 object MockDspApiServer {

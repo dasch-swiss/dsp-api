@@ -5,11 +5,13 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.assertTrue
 
 import java.util.UUID
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -18,7 +20,8 @@ import org.knora.webapi.slice.resources.repo.GetMappingQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object StandoffResponderV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StandoffResponderV2Spec extends E2EZSpec {
 
   override val e2eSpec = suite("The standoff responder")(
     test("create a standoff mapping") {

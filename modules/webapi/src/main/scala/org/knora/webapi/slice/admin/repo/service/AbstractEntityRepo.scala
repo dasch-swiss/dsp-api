@@ -87,9 +87,12 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
       p.andHas(iri, variable(s"n$index"))
     }
 
-  private def graphP(sub: RdfSubject): GraphPattern = {
-    val req: GraphPattern = requiredTriples(sub.isA(Rdf.iri(resourceClass.toString)))
-    self.entityProperties.opt.zipWithIndex.foldLeft(req) { case (p, (iri, index)) =>
+  private def graphP(sub: RdfSubject): GraphPattern = graphP(sub, leading = None)
+
+  private def graphP(sub: RdfSubject, leading: Option[GraphPattern]): GraphPattern = {
+    val req: GraphPattern  = requiredTriples(sub.isA(Rdf.iri(resourceClass.toString)))
+    val base: GraphPattern = leading.fold(req)(_.and(req))
+    self.entityProperties.opt.zipWithIndex.foldLeft(base) { case (p, (iri, index)) =>
       p.and(sub.has(iri, variable(s"n${index + self.entityProperties.req.size}")).optional())
     }
   }
@@ -100,9 +103,13 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   protected def findAllByPattern(pattern: RdfSubject => GraphPattern): Task[Chunk[E]] =
     findAllByQuery(findByPatternQuery(pattern))
 
-  private def findByPatternQuery(pattern: RdfSubject => GraphPattern) = {
-    val s             = variable("s")
-    val query: String = entityQuery(tripleP(s), graphP(s).and(pattern(s))).getQueryString
+  private[service] def findByPatternQuery(pattern: RdfSubject => GraphPattern): Construct = {
+    val s = variable("s")
+    // The caller's pattern is the most selective part of the query (e.g. a shortcode lookup) and must
+    // precede the OPTIONAL blocks within the same group: OPTIONALs are left-joins evaluated in document
+    // order, so with the pattern at the end the triplestore computes them for every entity of the class
+    // before restricting.
+    val query: String = entityQuery(tripleP(s), graphP(s, leading = Some(pattern(s)))).getQueryString
     Construct(query)
   }
 

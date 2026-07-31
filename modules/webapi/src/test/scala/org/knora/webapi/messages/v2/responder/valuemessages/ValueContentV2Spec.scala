@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
+import org.junit.runner.RunWith
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -12,13 +13,15 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 
-object ValueContentV2Spec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValueContentV2Spec extends ZIOSpecDefault {
 
   private val assetId = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
 
@@ -65,6 +68,23 @@ object ValueContentV2Spec extends ZIOSpecDefault {
         test("returns a Left when the points field is missing") {
           val result = GeomValueContentV2.parsePoints("""{"type":"rectangle"}""")
           assertTrue(result.isLeft)
+        },
+      ),
+      suite("GeomValueContentV2.parseShape")(
+        test("extracts geomType 'rectangle' (the region-preview crop/highlight gate)") {
+          val geom =
+            """{"status":"active","points":[{"x":0.1,"y":0.2},{"x":0.3,"y":0.4}],"type":"rectangle"}"""
+          val result = GeomValueContentV2.parseShape(geom)
+          assertTrue(result.map(_.geomType) == Right(Some("rectangle")), result.map(_.points.size) == Right(2))
+        },
+        test("extracts a non-rectangle geomType (crop/highlight are gated off for it)") {
+          val geom   = """{"points":[{"x":0.1,"y":0.2},{"x":0.3,"y":0.4},{"x":0.5,"y":0.1}],"type":"polygon"}"""
+          val result = GeomValueContentV2.parseShape(geom)
+          assertTrue(result.map(_.geomType) == Right(Some("polygon")))
+        },
+        test("yields geomType None when the type field is absent") {
+          val result = GeomValueContentV2.parseShape("""{"points":[]}""")
+          assertTrue(result.map(_.geomType) == Right(None))
         },
       ),
     )

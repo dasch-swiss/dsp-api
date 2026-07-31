@@ -1,0 +1,3 @@
+# Package marker for //tools/oci:defs.bzl (see that file for the rules loaded by
+# the module BUILD files). No targets here since the sbt image-version drift
+# check was retired with sbt (MODULE.bazel is now the sole version source).

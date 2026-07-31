@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.common
 
+import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
-object StandoffMappingIriSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class StandoffMappingIriSpec extends ZIOSpecDefault {
 
   private val projectIri        = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val projectMappingIri = "http://rdfh.ch/projects/0001/mappings/MyMapping"

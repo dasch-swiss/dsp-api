@@ -5,6 +5,7 @@
 
 package org.knora.bagit.internal
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -14,8 +15,10 @@ import zio.test.Assertion.*
 import org.knora.bagit.BagItError
 import org.knora.bagit.ChecksumAlgorithm
 import org.knora.bagit.domain.*
+import org.knora.testrunner.DspZTestJUnitRunner
 
-object BagValidatorSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class BagValidatorSpec extends ZIOSpecDefault {
 
   private def createAndReadBag: ZIO[Scope, Any, (Bag, Path)] =
     for {

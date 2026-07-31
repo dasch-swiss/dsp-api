@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common
 
 import org.apache.jena.vocabulary.RDFS
+import org.junit.runner.RunWith
 import zio.*
 import zio.config.*
 import zio.json.DecoderOps
@@ -16,6 +17,7 @@ import zio.test.Assertion.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -71,7 +73,8 @@ import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName.GetFileMetadataFromDspIngest
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
   private val sf = StringFormatter.getInitializedTestInstance
 
   private val service = ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser]
@@ -929,6 +932,37 @@ object ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
           ApiV2Complex,
           ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-region"),
           None,
+        ),
+      )
+    },
+    test("should parse RegionPreviewValueContentV2 with a comment") {
+      // Guards the from-builder: before the reshape a 3-positional call bound `comment` to the removed
+      // iiifUrl slot, so a comment silently vanished. This asserts the comment round-trips.
+      for {
+        actual <- service(
+                    _.createValueV2FromJsonLd(
+                      """{
+                        |  "@id": "http://rdfh.ch/0001/a-thing",
+                        |  "@type": "ex:Thing",
+                        |  "ex:hasRegionPreview": {
+                        |    "@type": "ka:RegionPreviewValue",
+                        |    "ka:isRegionPreviewOf": {
+                        |      "@id": "http://rdfh.ch/0001/a-region"
+                        |    },
+                        |    "ka:valueHasComment": "a region preview comment"
+                        |  },
+                        |  "@context": {
+                        |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                        |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                        |  }
+                        |}""".stripMargin,
+                    ),
+                  )
+      } yield assertTrue(
+        actual.valueContent == RegionPreviewValueContentV2(
+          ApiV2Complex,
+          ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-region"),
+          comment = Some("a region preview comment"),
         ),
       )
     },

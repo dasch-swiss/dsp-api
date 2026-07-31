@@ -3,6 +3,7 @@
 .vscode
 .bloop
 .bsp
+.bazelbsp
 **/.idea
 **/*.iml
 **/*.ipr
@@ -36,7 +37,6 @@ modules/sipi/tmp-dsp-ingest/
 *.toc
 *.bak
 *.rdb
-.sbtrc
 /*.trig
 
 dependencies.txt
@@ -44,7 +44,6 @@ dependencies.txt
 
 .idea/
 .metals/
-**/metals.sbt
 .sdkmanrc
 
 .tmp/
@@ -64,6 +63,8 @@ modules/ingest/docs/openapi/*.yml
 # Bazel + direnv
 /bazel-*
 .direnv/
+# Local-machine-only Bazel overrides (try-import'd by .bazelrc); never committed.
+/user.bazelrc
 
 # Claude Code
 .claude/settings.local.json

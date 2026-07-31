@@ -5,12 +5,14 @@
 
 package org.knora.webapi.e2ez
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.AudioSegmentResourceResponse
 import org.knora.webapi.e2ez.KnoraBaseJsonModels.ResourceResponses.ResourcePreviewResponse
@@ -20,7 +22,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestOntologyApiClient
-object SegmentE2EZSpec extends E2EZSpec {
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class SegmentE2EZSpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

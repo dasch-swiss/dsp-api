@@ -5,10 +5,14 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import zio.Random
 import zio.test.*
 
-object AssetIdSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AssetIdSpec extends ZIOSpecDefault {
 
   private val validCharacters = Gen.oneOf(Gen.alphaNumericChar, Gen.const('-'), Gen.const('_'))
 

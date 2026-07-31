@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.junit.runner.RunWith
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio.URIO
@@ -17,11 +18,13 @@ import zio.test.assertTrue
 import java.security.MessageDigest
 import java.security.SecureRandom
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.Password
 import org.knora.webapi.slice.admin.domain.model.PasswordHash
 import org.knora.webapi.slice.admin.domain.model.PasswordStrength
 
-object PasswordServiceSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PasswordServiceSpec extends ZIOSpecDefault {
 
   private val strength: PasswordStrength = PasswordStrength.unsafeFrom(10)
   private val bCryptEncoder              = new BCryptPasswordEncoder(strength.value, new SecureRandom())

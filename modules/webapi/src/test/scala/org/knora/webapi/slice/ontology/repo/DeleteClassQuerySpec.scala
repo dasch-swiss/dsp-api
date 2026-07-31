@@ -5,18 +5,21 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
-object DeleteClassQuerySpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class DeleteClassQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -27,7 +30,7 @@ object DeleteClassQuerySpec extends ZIOSpecDefault {
   private val testLastModificationDate: LastModificationDate =
     LastModificationDate.from(Instant.parse("2023-08-01T10:30:00Z"))
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("DeleteClassQuerySpec")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("DeleteClassQuerySpec")(
     test("should produce the correct SPARQL query") {
       DeleteClassQuery
         .build(testClassIri, testLastModificationDate)

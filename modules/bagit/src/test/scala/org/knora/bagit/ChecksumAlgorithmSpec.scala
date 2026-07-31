@@ -5,12 +5,16 @@
 
 package org.knora.bagit
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
 import java.io.ByteArrayInputStream
 
-object ChecksumAlgorithmSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ChecksumAlgorithmSpec extends ZIOSpecDefault {
 
   private val helloWorld = "Hello, World!"
 

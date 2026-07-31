@@ -5,6 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -21,9 +22,12 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
+import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.reiseInsHeiligeLandIri
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -45,15 +49,14 @@ import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
-object ResourcesRouteV2E2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesRouteV2E2ESpec extends E2EZSpec {
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
-  private var aThingLastModificationDate  = Instant.now
-  private val hamletResourceIri           = new MutableTestIri
-  private val aThingIri                   = "http://rdfh.ch/0001/a-thing"
-  val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
-  val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")
+  private var aThingLastModificationDate = Instant.now
+  private val hamletResourceIri          = new MutableTestIri
+  private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -1610,4 +1613,9 @@ object ResourcesRouteV2E2ESpec extends E2EZSpec {
       } yield assertTrue(savedComment == commentWithLinebreaks)
     },
   )
+}
+
+object ResourcesRouteV2E2ESpec {
+  val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
+  val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")
 }

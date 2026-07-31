@@ -5,13 +5,17 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import org.junit.runner.RunWith
 import zio.test.Gen
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
-object PermissionIriSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class PermissionIriSpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("PermissionIri should")(
     test("not be created from an empty value") {
       assertTrue(PermissionIri.from("") == Left("Permission IRI cannot be empty."))

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -14,6 +15,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -29,10 +31,8 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
 
-/**
- * This spec is used to test the [[PermissionsResponder]] actor.
- */
-object PermissionsResponderSpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class PermissionsResponderSpec extends E2EZSpec {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

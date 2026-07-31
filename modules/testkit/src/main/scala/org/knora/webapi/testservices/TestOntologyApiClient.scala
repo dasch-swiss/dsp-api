@@ -13,8 +13,7 @@ import zio.json.ast.*
 import java.time.Instant
 
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-
-import ResponseOps.assert200
+import org.knora.webapi.testservices.ResponseOps.assert200
 
 case class TestOntologyApiClient(private val apiClient: TestApiClient) {
   def getLastModificationDate(ontologyIri: String): Task[String] = for {

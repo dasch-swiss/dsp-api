@@ -9,6 +9,7 @@ import org.apache.jena.sparql.modify.request.UpdateModify
 import org.apache.jena.sparql.modify.request.UpdateVisitorBase
 import org.apache.jena.update.UpdateFactory
 import org.apache.jena.update.UpdateRequest
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -17,6 +18,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.OntologyConstants
@@ -625,7 +627,8 @@ object InsertValueQueryBuilderTestSupport {
   }
 }
 
-object InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
   // override val rewriteAll: Boolean = true
 
   import InsertValueQueryBuilderTestSupport.*

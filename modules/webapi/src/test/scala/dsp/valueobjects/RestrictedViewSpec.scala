@@ -5,12 +5,15 @@
 
 package dsp.valueobjects
 
+import org.junit.runner.RunWith
 import zio.Scope
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
-object RestrictedViewSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RestrictedViewSpec extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment & Scope, Nothing] = suite("RestrictedViewSize")(
     suite("pct:n | percentage form")(

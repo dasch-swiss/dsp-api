@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
 
 import dsp.errors.SparqlGenerationException
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -16,6 +17,8 @@ import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 object SearchFulltextQuery extends QueryBuilderHelper {
+
+  private val luceneHitLimit = OntologyConstants.Fuseki.luceneHitLimit
 
   // The overall query structure (SELECT with GROUP_CONCAT, subqueries, BIND/COALESCE, SUBSTR)
   // is assembled via string interpolation because these features are not supported by the
@@ -98,7 +101,7 @@ object SearchFulltextQuery extends QueryBuilderHelper {
          |WHERE {
          |    {
          |        SELECT DISTINCT ?matchingSubject WHERE {
-         |            ?matchingSubject <http://jena.apache.org/text#query> $searchLiteral .$standoffFilter
+         |            ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .$standoffFilter
          |        }
          |    }
          |    OPTIONAL {

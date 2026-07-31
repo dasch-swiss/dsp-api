@@ -10,12 +10,18 @@ A test is not a [unit test](https://www.martinfowler.com/bliki/UnitTest.html) if
 * It can’t run at the same time as any of your other unit tests
 * You have to do special things to your environment (such as editing config files) to run it
 
-Unit tests live in the `src/test` folder of our sbt projects.
+Unit tests live in the `src/test` folder of each module.
 
 Run all unit tests from terminal:
 
 ```shell
-sbt test
+just test-unit
+```
+
+To run the unit tests of a single module directly with Bazel, e.g. webapi:
+
+```shell
+bazel test //modules/webapi:test
 ```
 
 ## How to Write and Run Integration Tests
@@ -35,13 +41,13 @@ In this case create it in the `modules/test-it/src/test/scala/` directory.
 Run all integration tests from the terminal.
 
 ```shell
-make test-it
+just test-it
 ```
 
 Run all end-to-end HTTP API tests from the terminal.
 
 ```shell
-make test-e2e
+just test-e2e
 ```
 
 ### Sipi Image Versioning
@@ -59,12 +65,12 @@ You can override this behavior with environment variables:
 If the required image doesn't exist locally, build it with:
 
 ```shell
-make docker-build-sipi-image
+just docker-build-sipi-image
 ```
 
 ## Debugging
 
 You can debug unit tests directly in your IDE. 
 
-For debugging integration tests locally with `sbt` or your IDE, tests will use the `latest` Sipi image by default.
+For debugging integration tests locally with Bazel or your IDE, tests will use the `latest` Sipi image by default.
 If you need a specific version, use the environment variables described above.

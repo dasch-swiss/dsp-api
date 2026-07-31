@@ -5,13 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade
 
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.common.domain.InternalIri
 
-object GraphsForMigrationSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class GraphsForMigrationSpec extends ZIOSpecDefault {
 
   def spec: Spec[Any, Nothing] = suite("GraphsForMigration")(
     test("Merging MigrateAllGraphs with MigrateSpecificGraphs results in MigrateAllGraphs") {

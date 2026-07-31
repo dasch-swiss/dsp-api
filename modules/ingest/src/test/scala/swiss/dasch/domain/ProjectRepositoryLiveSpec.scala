@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.util.TestUtils
 import zio.*
 import zio.test.*
@@ -13,7 +14,10 @@ import zio.test.Assertion.*
 import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
 
-object ProjectRepositoryLiveSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class ProjectRepositoryLiveSpec extends ZIOSpecDefault {
 
   private val repo = ZIO.serviceWithZIO[ProjectRepository]
 

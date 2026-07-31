@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.api.v3.export_
 
 import _root_.org.knora.webapi.responders.IriService
+import org.junit.runner.RunWith
 import zio.*
 import zio.Scope
 import zio.ZIO
@@ -15,6 +16,7 @@ import zio.test.*
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.Rendering
@@ -73,7 +75,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.builtInNamedGraphs
 
-object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   // override val rewriteAll: Boolean = true
 
   given sf: StringFormatter = StringFormatter.getInitializedTestInstance
@@ -93,6 +96,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
+  // distinct from base-url so the OAI test proves the file link uses external-base-url
+  val publicIngestUrl = "https://ingest.example.org"
+
   val dataSets: Set[RdfDataObject] = builtInNamedGraphs ++ List(
     RdfDataObject(
       path = "webapi/src/test/resources/org/knora/webapi/slice/export/api/service/ExportServiceSpec-1612-onto.ttl",
@@ -108,7 +114,7 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
     ),
   ).toSet
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ExportServiceSpec")(
       triplestoreSuite,
       streamingBehaviorSuite,
@@ -247,7 +253,8 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-        } yield assertGolden(json, "oai")
+        } yield assertGolden(json, "oai") &&
+          assertTrue(json.contains(s"$publicIngestUrl/projects/"))
       },
       test("resources are exported in alphabetical label order") {
         for {
@@ -334,7 +341,9 @@ object ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       },
     ).provide(
       ConstructResponseUtilV2.layer,
-      AppConfig.layer,
+      AppConfig.layer.map(env =>
+        env.update[AppConfig](c => c.copy(dspIngest = c.dspIngest.copy(externalBaseUrl = publicIngestUrl))),
+      ),
       CacheManager.layer,
       CsvService.layer,
       emptyDataset,

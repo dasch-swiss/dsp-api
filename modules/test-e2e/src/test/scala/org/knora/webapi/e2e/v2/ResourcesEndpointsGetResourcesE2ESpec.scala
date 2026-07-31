@@ -5,10 +5,12 @@
 
 package org.knora.webapi.e2e.v2
 
+import org.junit.runner.RunWith
 import sttp.client4.UriContext
 import zio.test.TestResult
 import zio.test.assertTrue
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
@@ -27,7 +29,8 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.TestDataFileUtil
 
-object ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourcesEndpointsGetResourcesE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

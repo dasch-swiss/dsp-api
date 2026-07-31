@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.infrastructure.CommandExecutorMock
@@ -20,7 +21,10 @@ import zio.test.Assertion.*
 
 import scala.language.implicitConversions
 
-object MovingImageServiceSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class MovingImageServiceSpec extends ZIOSpecDefault {
 
   private val shortcode = ProjectShortcode.unsafeFrom("0001")
   private final case class OrigRef(original: Original, assetRef: AssetRef)

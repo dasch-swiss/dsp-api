@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
+import org.junit.runner.RunWith
 import zio.Chunk
 import zio.Scope
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -21,7 +23,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Anything
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 
-object OntologyRepoLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class OntologyRepoLiveSpec extends ZIOSpecDefault {
 
   private val sf = StringFormatter.getInitializedTestInstance
 

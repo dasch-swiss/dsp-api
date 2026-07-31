@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.security
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
@@ -48,7 +50,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object AuthenticatorLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class AuthenticatorLiveSpec extends ZIOSpecDefault {
 
   private val authenticator = ZIO.serviceWithZIO[Authenticator]
   private val userRepo      = ZIO.serviceWithZIO[KnoraUserRepo]

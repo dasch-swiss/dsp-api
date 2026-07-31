@@ -1,5 +1,73 @@
 # Changelog
 
+## [37.4.0](https://github.com/dasch-swiss/dsp-api/compare/v37.3.0...v37.4.0) (2026-07-27)
+
+
+### Enhancements
+
+* add experimental /v2/standoff/canonicalize endpoint for rich-text change detection ([#4215](https://github.com/dasch-swiss/dsp-api/issues/4215)) ([6cb36e3](https://github.com/dasch-swiss/dsp-api/commit/6cb36e3329aa98d3d3f79947324f61c8734f6b27))
+
+
+### Bug Fixes
+
+* correct search-by-label class restriction, standoff filter and count query (DEV-6833) ([#4216](https://github.com/dasch-swiss/dsp-api/issues/4216)) ([9501462](https://github.com/dasch-swiss/dsp-api/commit/9501462eef99a01973761e787732d12f920870ab))
+
+## [37.3.0](https://github.com/dasch-swiss/dsp-api/compare/v37.2.0...v37.3.0) (2026-07-27)
+
+
+### Maintenances
+
+* bump Sipi to v6.0.0 ([#4205](https://github.com/dasch-swiss/dsp-api/issues/4205)) ([88ad67a](https://github.com/dasch-swiss/dsp-api/commit/88ad67aa1a3a4c86558596d9292ec942464135cd))
+* bump Sipi to v6.1.0 ([#4206](https://github.com/dasch-swiss/dsp-api/issues/4206)) ([823533d](https://github.com/dasch-swiss/dsp-api/commit/823533dcd0a43fd403f51910bed6b1ce7bab96b1))
+* bump Sipi to v6.2.0 ([#4213](https://github.com/dasch-swiss/dsp-api/issues/4213)) ([857ad6a](https://github.com/dasch-swiss/dsp-api/commit/857ad6a918a7f160d29aa7a0033e308145b3b00e))
+* bump Sipi to v6.2.1 ([#4220](https://github.com/dasch-swiss/dsp-api/issues/4220)) ([caa5cb9](https://github.com/dasch-swiss/dsp-api/commit/caa5cb97a975a814d58085179ba6594d0642092d))
+* **ci:** attach the Bazel build event JSON to the test jobs ([#4221](https://github.com/dasch-swiss/dsp-api/issues/4221)) ([0e9d1e7](https://github.com/dasch-swiss/dsp-api/commit/0e9d1e7dba2acabc98a99e4b38c2fa25e8787084))
+* Dependency updates (patch + minor + all, combined) ([#4194](https://github.com/dasch-swiss/dsp-api/issues/4194)) ([66409db](https://github.com/dasch-swiss/dsp-api/commit/66409db50b2da8d3d713cc685bce0d4d082a3b75))
+* **dsp-api:** sync Bazel/sbt maven versions and add drift-sync tooling ([#4210](https://github.com/dasch-swiss/dsp-api/issues/4210)) ([44055bc](https://github.com/dasch-swiss/dsp-api/commit/44055bc4c8b023773dfafadb73d928041993df2b))
+* fix misleading object-class-constraint error message ([#4214](https://github.com/dasch-swiss/dsp-api/issues/4214)) ([b8e268b](https://github.com/dasch-swiss/dsp-api/commit/b8e268b4fcad35e2ba4aaa819cfc6c9b217e3def))
+* **sipi:** bump SIPI base image to v6.2.2 ([#4222](https://github.com/dasch-swiss/dsp-api/issues/4222)) ([0da9f21](https://github.com/dasch-swiss/dsp-api/commit/0da9f2114e0bba7f38210c165fdee423c8abcd53))
+
+
+### Documentation
+
+* add Fuseki query-execution engine facts from the SPARQL audit (DEV-6803) ([#4209](https://github.com/dasch-swiss/dsp-api/issues/4209)) ([c85ecc9](https://github.com/dasch-swiss/dsp-api/commit/c85ecc92ef929c4e4974587f3abd47cd1d565ae6))
+* capture SPARQL pattern-order conventions from the tile-permission regression (DEV-6800) ([#4201](https://github.com/dasch-swiss/dsp-api/issues/4201)) ([efddb04](https://github.com/dasch-swiss/dsp-api/commit/efddb045e0b92aee529fff8846dd129827d5db2c))
+* correct stale metadata-source reference in SipiService comment ([#4202](https://github.com/dasch-swiss/dsp-api/issues/4202)) ([c0e0ee4](https://github.com/dasch-swiss/dsp-api/commit/c0e0ee48fc4c591a34e165b4a088b5ba8ace3ceb))
+
+
+### Enhancements
+
+* **dsp-api:** cache file permission checks on the image-serving path (DEV-6806) ([#4208](https://github.com/dasch-swiss/dsp-api/issues/4208)) ([bf9f471](https://github.com/dasch-swiss/dsp-api/commit/bf9f471f3dab369bbb987a9cd072200710049fc0))
+
+
+### Bug Fixes
+
+* **oai:** use public dsp-ingest hostname for OAI file links (DEV-6774) ([#4204](https://github.com/dasch-swiss/dsp-api/issues/4204)) ([21a7f0b](https://github.com/dasch-swiss/dsp-api/commit/21a7f0bc7eb7561cb34c27ba42251ff3c369ce20))
+* pass explicit Lucene hit limit in search queries to prevent silent 10k truncation (DEV-6823) ([#4207](https://github.com/dasch-swiss/dsp-api/issues/4207)) ([8351746](https://github.com/dasch-swiss/dsp-api/commit/8351746af891435e9fdfcab383ea417b99158dfe))
+
+## [37.2.0](https://github.com/dasch-swiss/dsp-api/compare/v37.1.0...v37.2.0) (2026-07-22)
+
+
+### Maintenances
+
+* bazelify the build with rules_scala + rules_oci ([#4187](https://github.com/dasch-swiss/dsp-api/issues/4187)) ([045d739](https://github.com/dasch-swiss/dsp-api/commit/045d7392e8c10abcb9aed12e6005293e35368aba))
+* group all scala-steward updates into a single PR ([#4197](https://github.com/dasch-swiss/dsp-api/issues/4197)) ([e1abb9f](https://github.com/dasch-swiss/dsp-api/commit/e1abb9f802b3ba1bc724b254a855efbe2c9a1e90))
+
+
+### Enhancements
+
+* **dsp-api:** implement Region Preview values (DEV-6758) ([#4193](https://github.com/dasch-swiss/dsp-api/issues/4193)) ([9d1080c](https://github.com/dasch-swiss/dsp-api/commit/9d1080cf750a4cbc9dc671003cf0bbe531d19d24))
+
+
+### Bug Fixes
+
+* place selective pattern before OPTIONAL blocks in generated entity queries (DEV-6796) ([#4199](https://github.com/dasch-swiss/dsp-api/issues/4199)) ([8dba714](https://github.com/dasch-swiss/dsp-api/commit/8dba714c0476ab905d70b89979942cd28d30a89c))
+
+
+### Performance Improvements
+
+* skip project lookup in asset-permission check unless restricted view applies (DEV-6797) ([#4200](https://github.com/dasch-swiss/dsp-api/issues/4200)) ([b2c203a](https://github.com/dasch-swiss/dsp-api/commit/b2c203a3174e84361016b9c163baae7ae742e9fb))
+
 ## [37.1.0](https://github.com/dasch-swiss/dsp-api/compare/v37.0.0...v37.1.0) (2026-07-12)
 
 

@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import org.junit.runner.RunWith
 import swiss.dasch.domain.SupportedFileType.Audio
 import swiss.dasch.domain.SupportedFileType.MovingImage
 import swiss.dasch.domain.SupportedFileType.OtherFiles
@@ -12,7 +13,10 @@ import swiss.dasch.domain.SupportedFileType.StillImage
 import zio.*
 import zio.test.*
 
-object AssetOverviewReportRowBuilderSpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class AssetOverviewReportRowBuilderSpec extends ZIOSpecDefault {
 
   private val headerRow = AssetOverviewReportRowBuilder.headerRow
 

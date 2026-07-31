@@ -5,14 +5,17 @@
 
 package org.knora.webapi.responders.v2
 
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 
-object ResourceUtilV2Spec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ResourceUtilV2Spec extends E2EZSpec {
 
   private val resourceUtil = ZIO.serviceWithZIO[ResourceUtilV2]
 

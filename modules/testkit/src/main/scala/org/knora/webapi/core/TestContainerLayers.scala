@@ -23,9 +23,29 @@ object TestContainerLayers { self =>
   type Environment = SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer &
     SipiTestContainer & AppConfigurations
 
+  private type ContainersEnv =
+    SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer & SipiTestContainer
+
+  private val containersLayer: ULayer[ContainersEnv] =
+    SharedVolumes.layer >+> DspIngestTestContainer.layer >+> FusekiTestContainer.layer >+> SipiTestContainer.layer
+
+  /**
+   * The custom JUnit runner ([[zio.test.junit.DspZTestRunnerBase]]) builds each spec class's
+   * `bootstrap` against its own fresh `Runtime` - a per-spec `val`/`ZLayer` composition here would
+   * therefore start a new Fuseki/Sipi/dsp-ingest container set per spec class instead of sharing
+   * one set across the whole test JVM. Cache the *built environment* once per JVM instead: a
+   * process-static `lazy val`, built via a one-off `Unsafe.run` extended into [[Scope.global]] -
+   * the standing, never-closed scope ZIO provides for exactly this "shared for the life of the
+   * process" case. Containers are therefore never stopped by a per-spec scope release; the
+   * Testcontainers Ryuk sidecar (and its JVM-exit hook) reaps them when the process ends.
+   */
+  private lazy val cachedContainers: ZEnvironment[ContainersEnv] =
+    Unsafe.unsafe { implicit unsafe =>
+      Runtime.default.unsafe.run(Scope.global.extend[Any](containersLayer.build)).getOrThrowFiberFailure()
+    }
+
   val all: ULayer[self.Environment] =
-    SharedVolumes.layer >+> DspIngestTestContainer.layer >+> FusekiTestContainer.layer >+> SipiTestContainer.layer >+>
-      AppConfigForTestContainers.testcontainers
+    ZLayer.succeedEnvironment(cachedContainers) >+> AppConfigForTestContainers.testcontainers
 
   private object AppConfigForTestContainers {
 

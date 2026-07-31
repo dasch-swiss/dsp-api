@@ -1,0 +1,7 @@
+# Local patches applied to BCR modules via `single_version_override(patches = …)`
+# in `//MODULE.bazel`. Each `.patch` file targets one module and is documented
+# inline with the upstream issue / exit condition.
+exports_files(
+    glob(["*.patch"]),
+    visibility = ["//visibility:public"],
+)

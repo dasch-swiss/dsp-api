@@ -11,14 +11,13 @@ import scalax.collection.immutable.Graph
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation.StringHyperGraph
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
-
-import GravsearchQueryOptimisation.StringHyperGraph
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
@@ -306,7 +305,7 @@ private object ReorderPatternsByDependency {
           }
 
           // Sort the preferred orders to produce a deterministic result, and return one of them.
-          preferredOrders.min(TopologicalOrderOrdering)
+          preferredOrders.min(using TopologicalOrderOrdering)
         }
       }
     }

@@ -36,6 +36,7 @@ object Schema {
     SalsahGui.TimeStamp,
     SalsahGui.Geonames,
     SalsahGui.Fileupload,
+    SalsahGui.RegionPreview,
   )
 
   /**

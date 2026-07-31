@@ -5,9 +5,13 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.junit.runner.RunWith
 import zio.test.*
 
-object GetAllResourcesInProjectPrequerySpec extends ZIOSpecDefault {
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class GetAllResourcesInProjectPrequerySpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("GetAllResourcesInProjectPrequery")(
     test("build should produce the expected SPARQL query") {
       val projectIri = "http://rdfh.ch/projects/0001"

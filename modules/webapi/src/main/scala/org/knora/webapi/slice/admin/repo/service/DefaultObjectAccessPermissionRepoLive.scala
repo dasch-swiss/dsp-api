@@ -98,7 +98,7 @@ object DefaultObjectAccessPermissionRepoLive {
     } yield DefaultObjectAccessPermission(id, forProject, forWhat, permissions)
 
     private def parsePermissions(resource: RdfResource) = for {
-      permissionStr     <- resource.getStringLiteralOrFail[String](KnoraBase.HasPermissions)(Right(_))
+      permissionStr     <- resource.getStringLiteralOrFail[String](KnoraBase.HasPermissions)(using Right(_))
       parsedPermissions <- parsePermission(permissionStr)
     } yield parsedPermissions
 

@@ -5,12 +5,14 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
+import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -24,7 +26,8 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
-object CardinalitiesV2E2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class CardinalitiesV2E2ESpec extends E2EZSpec {
 
   private val ontologyName = "inherit"
 

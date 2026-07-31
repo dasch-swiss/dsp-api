@@ -5,13 +5,16 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
+import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
-object IriConverterLiveSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class IriConverterLiveSpec extends ZIOSpecDefault {
 
   private val iriConverter    = ZIO.serviceWithZIO[IriConverter]
   private val someInternalIri = "http://www.knora.org/ontology/0001/anything#Thing"

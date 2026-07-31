@@ -6,6 +6,7 @@
 package org.knora.webapi.util.rdf
 
 import org.apache.jena
+import org.junit.runner.RunWith
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
@@ -19,16 +20,15 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import dsp.errors.BadRequestException
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.util.FileUtil
 
-/**
- * Tests implementations of [[RdfFormatUtil]].
- */
-object RdfFormatUtilSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class RdfFormatUtilSpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 

@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common
 
 import org.apache.jena.vocabulary.RDF
+import org.junit.runner.RunWith
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -14,6 +15,7 @@ import zio.test.*
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
@@ -33,7 +35,8 @@ import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.iiif.impl.SipiServiceMock
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-object ValueOrderingSpec extends ZIOSpecDefault {
+@RunWith(classOf[DspZTestJUnitRunner])
+class ValueOrderingSpec extends ZIOSpecDefault {
 
   private val parser = ZIO.serviceWithZIO[ApiComplexV2JsonLdRequestParser]
 

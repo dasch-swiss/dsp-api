@@ -4,9 +4,11 @@
  */
 
 package org.knora.webapi.slice.resources.api
+import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -16,7 +18,8 @@ import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestMetadataApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 
-object MetadataEndpointsE2ESpec extends E2EZSpec {
+@RunWith(classOf[DspZTestJUnitRunner])
+class MetadataEndpointsE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = List(anythingRdfOntology)
 
