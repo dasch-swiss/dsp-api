@@ -60,7 +60,15 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
     // Build the server layer into the spec Scope rather than forking `startup *> ZIO.never`:
     // the forked keepalive fiber's interruption tangled with its nested layer scope and hung
     // suite teardown ~60s before reaching the zio-http shutdown.
-    built <- DspApiServer.layer.build
+    //
+    // The build must run `ZIO.interruptible`: `TestAspect.beforeAll` runs `prepare` inside
+    // `ZIO.acquireRelease`'s uninterruptible acquire, and zio-http captures the runtime flags of
+    // the fiber that builds the server layer (AppRef.empty -> ZIO.runtime) into the Runtime it
+    // forks every request-handler fiber from. Without this, all E2E request handlers run with
+    // interruption disabled — diverging from production and breaking `race`, `timeout`, and
+    // connection-close interruption inside handlers (DEV-6864; see the dasch-specs learning
+    // "raceFirst in an uninterruptible region hangs").
+    built <- ZIO.interruptible(DspApiServer.layer.build)
     _     <- built.get[DspApiServer].startup()
     // wait max 5 seconds until api is ready
     _ <- TestApiClient
