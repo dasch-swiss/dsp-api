@@ -372,15 +372,23 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         asResource.groups.map(g => g.id -> g.counts).toMap == asAll.groups.map(g => g.id -> g.counts).toMap,
       )
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
-    // AC12: the summary counts and the drill-down items must agree for the same class/filter.
-    test("summary hidden-count for a property equals the number of items hidden under it (AC12)") {
+    // AC12: the summary count and the drill-down must agree for the same property/filter. The summary
+    // folds a comment into its parent value (a comment shares the value's permissions, so it is not counted
+    // separately), so the consistency check excludes Comment facets from the drill-down tally too — the
+    // drill-down still *lists* the comment as its own nested item, it just is not double-counted.
+    test("summary hidden-count for a property equals the number of hidden non-comment items (AC12)") {
       for {
         summary <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
         page    <- service(_.items(projectIri, GroupBy.Property, hasText, ItemType.All, PageAndSize.Default))
       } yield {
         val summaryAnon = summary.groups.find(_.id == hasText).map(_.counts.anonymous).getOrElse(0)
-        val itemsAnon   = page.data.flatMap(_.items).count(_.visibility.anonymous == Visibility.Hidden)
-        assertTrue(summaryAnon == 1, itemsAnon == summaryAnon, !page.pagination.approximate)
+        val itemsAnon   = page.data
+          .flatMap(_.items)
+          .filter(_.`type` != ItemType.Comment)
+          .count(_.visibility.anonymous == Visibility.Hidden)
+        // and the comment is nonetheless present as a nested item in the drill-down
+        val hasCommentItem = page.data.flatMap(_.items).exists(_.`type` == ItemType.Comment)
+        assertTrue(summaryAnon == 1, itemsAnon == summaryAnon, hasCommentItem, !page.pagination.approximate)
       }
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
   )
