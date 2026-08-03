@@ -9,13 +9,11 @@ import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
-import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 
@@ -30,7 +28,7 @@ class AssetPermissionsResponderSpec extends E2EZSpec {
   override val e2eSpec = suite("The AssetPermissionsResponder")(
     test("return details of a full quality file value") {
       assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(incunabulaProject.shortcode, asset),
+        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(asset),
       ).map { actual =>
         assertTrue(actual == PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None))
       }
@@ -38,7 +36,7 @@ class AssetPermissionsResponderSpec extends E2EZSpec {
     test("return details of a restricted view file value") {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
+        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(asset),
       ).map(actual =>
         assertTrue(
           actual == PermissionCodeAndProjectRestrictedViewSettings(
@@ -47,20 +45,6 @@ class AssetPermissionsResponderSpec extends E2EZSpec {
           ),
         ),
       )
-    },
-    test(
-      "return NotFound for a restricted view if the file belongs to a different project than the given shortcode",
-    ) {
-      assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(Shortcode.unsafeFrom("0001"), asset),
-      ).exit.map(exit => assert(exit)(Assertion.fails(Assertion.isSubtype[NotFoundException](Assertion.anything))))
-    },
-    test("not validate the shortcode when no restricted-view settings are needed") {
-      // Only permission code 1 needs the project (for its restricted-view settings); every other code
-      // answers from the permission query alone, without a project lookup.
-      assetPermissionResponder(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(Shortcode.unsafeFrom("0001"), asset),
-      ).map(actual => assertTrue(actual == PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None)))
     },
   )
 }
