@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
 
-import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -56,10 +55,20 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
         ),
       )
     },
-    test("still fail with NotFound when the file belongs to a different project than the given shortcode") {
-      cache(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(Shortcode.unsafeFrom("0001"), asset),
-      ).exit.map(exit => assert(exit)(Assertion.fails(Assertion.isSubtype[NotFoundException](Assertion.anything))))
+    test("treats the shortcode as non-authoritative and not part of the cache key (DEV-6806 regression)") {
+      // The `{shortcode}` path segment must never affect the decision, and must not be part of the cache key —
+      // otherwise an anonymous caller varying only the shortcode over one filename produces unlimited distinct
+      // keys that all resolve to the same value, evicting genuinely-hot entries.
+      for {
+        decisionA <-
+          cache(
+            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
+          )
+        decisionB <-
+          cache(
+            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(Shortcode.unsafeFrom("0001"), asset),
+          )
+      } yield assertTrue(decisionA == decisionB)
     },
     test(
       "cached anonymous decision equals the direct responder decision with the constant AnonymousUser (REQ-1.5/1.3)",
@@ -70,9 +79,7 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
             _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
           )
         direct <-
-          responder(
-            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
-          )
+          responder(_.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(asset))
       } yield assertTrue(cached == direct)
     },
     test("cached authenticated decision equals the direct responder decision (REQ-1.3)") {
@@ -83,12 +90,7 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
                       asset,
                     ),
                   )
-        direct <- responder(
-                    _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(
-                      incunabulaProject.shortcode,
-                      asset,
-                    ),
-                  )
+        direct <- responder(_.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(asset))
       } yield assertTrue(cached == direct)
     },
   )

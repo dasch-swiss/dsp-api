@@ -1,0 +1,38 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT (COUNT(DISTINCT ?resource) AS ?count)
+WHERE {
+    {
+        SELECT DISTINCT ?matchingSubject WHERE {
+            ?matchingSubject <http://jena.apache.org/text#query> ("test" 1000000) .
+        }
+    }
+    OPTIONAL {
+        ?matchingSubject knora-base:valueCreationDate ?valueCreationDate .
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:LinkValue . }
+        FILTER NOT EXISTS { ?matchingSubject a knora-base:ListValue . }
+        ?containingResource ?property ?matchingSubject .
+        FILTER NOT EXISTS {
+            ?matchingSubject knora-base:isDeleted true .
+        }
+        BIND(?matchingSubject AS ?valueObject)
+    }
+    OPTIONAL {
+        ?matchingSubject a knora-base:ListNode .
+        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
+        ?listValue knora-base:valueHasListNode ?subListNode .
+        ?subjectWithListValue ?predicate ?listValue .
+        FILTER NOT EXISTS {
+            ?matchingSubject knora-base:isDeleted true .
+        }
+        BIND(?listValue AS ?valueObject)
+    }
+    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
+    ?resource knora-base:creationDate ?resourceCreationDate .
+    
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
+    }
+}
+
+LIMIT 1

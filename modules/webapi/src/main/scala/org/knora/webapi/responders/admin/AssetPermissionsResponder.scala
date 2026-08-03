@@ -11,7 +11,6 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.FileValuePermissionsQuery
@@ -30,7 +29,6 @@ final class AssetPermissionsResponder(
 ) {
 
   def getPermissionCodeAndProjectRestrictedViewSettings(user: User)(
-    shortcode: Shortcode,
     filename: InternalFilename,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
@@ -48,17 +46,14 @@ final class AssetPermissionsResponder(
                          )
                          .map(_.code)
                          .getOrElse(0)
-      response <- buildResponse(projectIri, shortcode, filename, permissionCode)
+      response <- buildResponse(projectIri, permissionCode)
     } yield response
 
-  // The project is only needed for its restricted-view settings, i.e. for permission code 1; every other
-  // code answers without any project lookup. When it is needed, the project is resolved by the IRI already
-  // returned from the permission query so the lookup is served by the EntityCache (findById);
-  // findByShortcode would query the triplestore on every tile request.
+  // Permission code 1 needs the project only for its restricted-view settings; it is resolved by the IRI
+  // returned from the permission query, so the lookup is EntityCache-served (findById). Every other code
+  // answers without any project lookup.
   private def buildResponse(
     projectIri: ProjectIri,
-    shortcode: Shortcode,
-    filename: InternalFilename,
     permissionCode: Int,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     permissionCode match {
@@ -66,9 +61,6 @@ final class AssetPermissionsResponder(
         knoraProjectService
           .findById(projectIri)
           .someOrFail(NotFoundException(s"No project found for IRI ${projectIri.value}"))
-          .filterOrFail(_.shortcode == shortcode)(
-            NotFoundException(s"No file value was found for filename $filename in project ${shortcode.value}"),
-          )
           .map(project =>
             PermissionCodeAndProjectRestrictedViewSettings(
               permissionCode,
