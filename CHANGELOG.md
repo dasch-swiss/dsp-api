@@ -1,5 +1,39 @@
 # Changelog
 
+## [37.5.0](https://github.com/dasch-swiss/dsp-api/compare/v37.4.0...v37.5.0) (2026-08-03)
+
+
+### Maintenances
+
+* **ci:** add a dedicated Claude review job with a false-flag-resistant prompt ([#4235](https://github.com/dasch-swiss/dsp-api/issues/4235)) ([34c99b6](https://github.com/dasch-swiss/dsp-api/commit/34c99b6b582cc2e0dba1ff71364d9e6e67c5a404))
+* **ci:** raise the review timeout, notify on cancellation, and run review on Sonnet ([#4237](https://github.com/dasch-swiss/dsp-api/issues/4237)) ([fc6e8ee](https://github.com/dasch-swiss/dsp-api/commit/fc6e8ee2d6b6878bd16495b9ad0b52a7dae8afd4))
+* **dsp-api:** bootstrap Metals/Bloop in fresh checkouts and worktrees ([#4217](https://github.com/dasch-swiss/dsp-api/issues/4217)) ([687c75f](https://github.com/dasch-swiss/dsp-api/commit/687c75f59ccfb7645f4a252041411fb904d1bbc0))
+* **fuseki:** version image by release-please; surface Jena version in Grafana ([#4231](https://github.com/dasch-swiss/dsp-api/issues/4231)) ([912a856](https://github.com/dasch-swiss/dsp-api/commit/912a856147dd2f9730ebc6bda5773590e1264fcd))
+* remove sbt; Bazel now owns compile, test, formatting, linting, and deps ([#4228](https://github.com/dasch-swiss/dsp-api/issues/4228)) ([8b22a69](https://github.com/dasch-swiss/dsp-api/commit/8b22a691c92c418ff5cd329df3d03d37ea6caf2a))
+* **sipi:** bump SIPI base image to v6.2.3 ([#4230](https://github.com/dasch-swiss/dsp-api/issues/4230)) ([3175d81](https://github.com/dasch-swiss/dsp-api/commit/3175d812272f4d903c3006453e290c1a152c9557))
+* **sipi:** bump SIPI base image to v6.3.0 ([#4238](https://github.com/dasch-swiss/dsp-api/issues/4238)) ([0c9db28](https://github.com/dasch-swiss/dsp-api/commit/0c9db28c5d0470db714f6e87cb9c10bc8b66d3c4))
+
+
+### Documentation
+
+* add Fuseki engine facts 10 and 11 from the search-query work (DEV-6803) ([#4218](https://github.com/dasch-swiss/dsp-api/issues/4218)) ([af08ff5](https://github.com/dasch-swiss/dsp-api/commit/af08ff5dea4219117f7b4694ff4c59328fdd8d57))
+* dsp-api domain model, glossary, and modularization plan ([#4185](https://github.com/dasch-swiss/dsp-api/issues/4185)) ([1b30163](https://github.com/dasch-swiss/dsp-api/commit/1b3016376aeed79b18f3062af13517ad84a37526))
+
+
+### Enhancements
+
+* **grafana:** add Allocator row to the SIPI dashboard ([#4232](https://github.com/dasch-swiss/dsp-api/issues/4232)) ([6f9d74e](https://github.com/dasch-swiss/dsp-api/commit/6f9d74e058a44c8cc8139a7d55523bf978f88ccf))
+* **grafana:** git-synced SIPI dashboard on OTLP metrics ([#4224](https://github.com/dasch-swiss/dsp-api/issues/4224)) ([8595dbf](https://github.com/dasch-swiss/dsp-api/commit/8595dbf9366cb54d80f2b816227365b615856d97))
+* **Observability:** make the originating Gravsearch query retrievable from a slow trace (DEV-6858) ([#4227](https://github.com/dasch-swiss/dsp-api/issues/4227)) ([dbf94c6](https://github.com/dasch-swiss/dsp-api/commit/dbf94c693866cf8cb3dfe548e4da4ca30715406c))
+
+
+### Bug Fixes
+
+* **admin:** don't key the asset-permission cache on the decorative shortcode ([#4236](https://github.com/dasch-swiss/dsp-api/issues/4236)) ([f1aef54](https://github.com/dasch-swiss/dsp-api/commit/f1aef54d627a4e265e99622a325707bbf5d40722))
+* **grafana:** plot SIPI working set, not usage-incl-page-cache ([#4226](https://github.com/dasch-swiss/dsp-api/issues/4226)) ([0189c9e](https://github.com/dasch-swiss/dsp-api/commit/0189c9e1d9c6cbaa5b62f124f406f3a1b849b61a))
+* **grafana:** scope SIPI panels to the primary VRE host ([#4229](https://github.com/dasch-swiss/dsp-api/issues/4229)) ([01e9bb3](https://github.com/dasch-swiss/dsp-api/commit/01e9bb362d3b0f29ee52b3f77e6f5687c1dbc61f))
+* **search:** fix HTTP 500 on common fulltext search terms (DEV-6864) ([#4233](https://github.com/dasch-swiss/dsp-api/issues/4233)) ([8cf16d9](https://github.com/dasch-swiss/dsp-api/commit/8cf16d902334978841c381f9c2f1793f056fb1fa))
+
 ## [37.4.0](https://github.com/dasch-swiss/dsp-api/compare/v37.3.0...v37.4.0) (2026-07-27)
 
 
