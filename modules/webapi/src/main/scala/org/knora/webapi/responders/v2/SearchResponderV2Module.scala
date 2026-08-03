@@ -23,6 +23,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object SearchResponderV2Module {
@@ -36,5 +37,6 @@ object SearchResponderV2Module {
     (OntologyInferencer.layer ++ QueryTraverser.layer ++ InferenceOptimizationService.layer) >+>
       (ConstructTransformer.layer ++ InferringGravsearchTypeInspector.layer) >+>
       GravsearchTypeInspectionRunner.layer >+>
+      FulltextBreadthGuard.layer >+>
       ZLayer.derive[SearchResponderV2Live]
 }

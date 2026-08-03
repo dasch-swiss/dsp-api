@@ -62,10 +62,14 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.search.FulltextBreadthGuard
+import org.knora.webapi.slice.search.FulltextSearchTerms
+import org.knora.webapi.slice.search.SearchTimeoutException
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport
 import org.knora.webapi.util.ApacheLuceneSupport.*
 
@@ -325,6 +329,7 @@ trait SearchResponderV2 {
 final class SearchResponderV2Live(
   appConfig: AppConfig,
   triplestore: TriplestoreService,
+  fulltextBreadthGuard: FulltextBreadthGuard,
   constructResponseUtilV2: ConstructResponseUtilV2,
   ontologyCacheHelpers: OntologyCacheHelpers,
   queryTraverser: QueryTraverser,
@@ -539,6 +544,18 @@ final class SearchResponderV2Live(
    *
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
+  // HONEST-TIMEOUT (DEV-6864): a triplestore timeout on the fulltext prequery/count reaches the client as a bare
+  // 500 via BaseEndpoints' catch-all. Translate it into a search-specific 503 with a hedged message so the residue
+  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied at the Select.search call sites — the
+  // search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the prequery.
+  private def translateSearchTimeout(searchValue: String): PartialFunction[Throwable, Task[Nothing]] = {
+    // Only TriplestoreTimeoutException matches, so a query the breadth guard interrupts (a fast refusal winning
+    // the race) never triggers this — the interruption propagates as such and is not logged as a failure.
+    case _: TriplestoreTimeoutException =>
+      ZIO.logWarning(s"Fulltext search for '$searchValue' exceeded the search timeout tier") *>
+        ZIO.fail(SearchTimeoutException())
+  }
+
   override def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
@@ -548,6 +565,7 @@ final class SearchResponderV2Live(
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       _                    <- validateSearchString(searchValue)
+      _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql          <- SearchFulltextQuery.build(
                        searchTerms = LuceneQueryString(searchValue),
@@ -560,8 +578,13 @@ final class SearchResponderV2Live(
                        offset = 0,
                        countQuery = true, // do not get the resources themselves, but the sum of results
                      )
-      bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
-      count    <- // query response should contain one result with one row with the name "count"
+      bindings <-
+        fulltextBreadthGuard
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+            triplestore.query(Select.search(countSparql)).catchSome(translateSearchTimeout(searchValue)),
+          )
+          .map(_.results.bindings)
+      count <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
           GravsearchException(msg)
@@ -597,6 +620,7 @@ final class SearchResponderV2Live(
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       _                    <- validateSearchString(searchValue)
+      _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql         <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
@@ -610,7 +634,11 @@ final class SearchResponderV2Live(
                         countQuery = false,
                       )
 
-      prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
+      prequeryResponseNotMerged <-
+        fulltextBreadthGuard
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+            triplestore.query(Select.search(searchSparql)).catchSome(translateSearchTimeout(searchValue)),
+          )
 
       mainResourceVar = QueryVariable("resource")
 
@@ -1215,6 +1243,24 @@ final class SearchResponderV2Live(
           )
           .when(searchStr.length < searchValueMinLength)
     } yield ()
+  }
+
+  // Fulltext-only rule (LITERAL-LENGTH, DEV-6864): a wildcard term must carry at least the same number of
+  // *literal* characters as the whole-string minimum. `de*` matches 374k candidates and blows the timeout; the
+  // literal-length floor is a cheap, explainable proxy that rejects it before any query runs. Deliberately not in
+  // validateSearchString, whose other two call sites are searchbylabel, where a typed `*` is an escaped literal.
+  private def ensureWildcardTermsLongEnough(searchStr: String): Task[Unit] = {
+    val minLength = appConfig.v2.fulltextSearch.searchValueMinLength
+    val tooShort  = FulltextSearchTerms.tooShortWildcardTerms(LuceneQueryString(searchStr), minLength)
+    ZIO
+      .fail(
+        BadRequestException(
+          s"A wildcard search term must contain at least $minLength characters besides the wildcard, " +
+            s"but the following do not: ${tooShort.mkString(", ")}.",
+        ),
+      )
+      .when(tooShort.nonEmpty)
+      .unit
   }
 
   override def searchResourcesByLabelV2(

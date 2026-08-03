@@ -122,6 +122,100 @@ class SearchResponderV2Spec extends E2EZSpec {
           }
       } yield assertTrue(hasImageFileValues)
     },
+
+    // DEV-6864 / DEV-6833. The fulltext class restriction must walk the whole subclass closure
+    // (rdfs:subClassOf*), never one hop. anything:BlueThing sits two hops below knora-base:Resource
+    // (BlueThing -> Thing -> Resource), so a `subClassOf?` would silently drop it. These tests are the
+    // regression net for the query rewrite that makes the resource-type join conditional: they pass
+    // against the current query and must keep passing after `?resource a ?resourceClass` moves behind
+    // the class-restriction flag. "blue" occurs in exactly one anything label ("A blue thing").
+    test("fulltext search restricted to a class two hops above the matched resource's class returns the match") {
+      for {
+        result <- searchResponder(
+                    _.fulltextSearchV2(
+                      searchValue = "blue",
+                      offset = 0,
+                      limitToProject = None,
+                      limitToResourceClass = Some(resourceBaseClassIri),
+                      limitToStandoffClass = None,
+                      returnFiles = false,
+                      apiV2SchemaWithOption(MarkupRendering.Xml),
+                      requestingUser = anythingUser1,
+                    ),
+                  )
+      } yield assertTrue(result.resources.map(_.resourceIri.value).contains("http://rdfh.ch/0001/a-blue-thing"))
+    },
+    test("fulltext count restricted to a class two hops above the matched resource's class counts the match") {
+      for {
+        result <- searchResponder(
+                    _.fulltextSearchCountV2(
+                      searchValue = "blue",
+                      limitToProject = None,
+                      limitToResourceClass = Some(resourceBaseClassIri),
+                      limitToStandoffClass = None,
+                    ),
+                  )
+      } yield assertTrue(result.numberOfResources >= 1)
+    },
+
+    // DEV-6864. Project restriction must keep results inside the given project. "Narr" matches only
+    // incunabula resources (413 occurrences there, none in anything), so restricting it to incunabula
+    // returns those matches and restricting it to anything returns nothing — a discriminating filter,
+    // not a no-op.
+    test("fulltext search restricted to a project returns only that project's resources") {
+      for {
+        inIncunabula <- searchResponder(
+                          _.fulltextSearchV2(
+                            searchValue = "Narr",
+                            offset = 0,
+                            limitToProject = Some(incunabulaProjectIri),
+                            limitToResourceClass = None,
+                            limitToStandoffClass = None,
+                            returnFiles = false,
+                            apiV2SchemaWithOption(MarkupRendering.Xml),
+                            requestingUser = anonymousUser,
+                          ),
+                        )
+        inAnything <- searchResponder(
+                        _.fulltextSearchV2(
+                          searchValue = "Narr",
+                          offset = 0,
+                          limitToProject = Some(anythingProjectIri),
+                          limitToResourceClass = None,
+                          limitToStandoffClass = None,
+                          returnFiles = false,
+                          apiV2SchemaWithOption(MarkupRendering.Xml),
+                          requestingUser = anonymousUser,
+                        ),
+                      )
+      } yield assertTrue(
+        inIncunabula.resources.nonEmpty,
+        inIncunabula.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0803/")),
+        inAnything.resources.isEmpty,
+      )
+    },
+
+    // DEV-6864. Project and class restriction combined, again with a class two hops up, must still
+    // return the match and nothing outside the project.
+    test("fulltext search restricted to both a project and a class two hops up returns the match") {
+      for {
+        result <- searchResponder(
+                    _.fulltextSearchV2(
+                      searchValue = "blue",
+                      offset = 0,
+                      limitToProject = Some(anythingProjectIri),
+                      limitToResourceClass = Some(resourceBaseClassIri),
+                      limitToStandoffClass = None,
+                      returnFiles = false,
+                      apiV2SchemaWithOption(MarkupRendering.Xml),
+                      requestingUser = anythingUser1,
+                    ),
+                  )
+      } yield assertTrue(
+        result.resources.map(_.resourceIri.value).contains("http://rdfh.ch/0001/a-blue-thing"),
+        result.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0001/")),
+      )
+    },
     test("perform an extended search for books that have the title 'Zeitglöcklein des Lebens'") {
       for {
         searchResult <- searchResponder(

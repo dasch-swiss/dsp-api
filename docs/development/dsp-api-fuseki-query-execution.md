@@ -15,8 +15,10 @@ clause span the union of all named graphs), a **Lucene text index** over `rdfs:l
 Lucene field, which has consequences (Fact 10) — (`modules/fuseki/dsp-repo.ttl`),
 and **no `stats.opt` statistics file** — so the BGP optimizer runs on the `fixed`
 variable-counting heuristic, not cost estimates. The API sends every query with a server-side
-`timeout` form parameter in three tiers (Standard 20s, Maintenance 120s, Gravsearch 120s;
-`application.conf`).
+`timeout` form parameter in tiers (Standard 20s, Maintenance 120s, Gravsearch 120s, Search 60s;
+`application.conf`). The fulltext prequery and count run on the Search tier; the fulltext breadth probe
+(DEV-6864) reuses the Search timeout value under a distinct `SearchProbe` tier so its samples stay out of
+the Search-tier metric.
 
 ## Fact 1 — Reordering is BGP-local and heuristic
 
@@ -148,6 +150,12 @@ probing the path once per Lucene hit. (That rewrite was not semantically equival
 of the cautionary tale.) The fastest form was neither: a single bound-subject probe for a
 property present on exactly the wanted subjects (`?resource knora-base:creationDate ?d`) at
 **1.8s** for the correct 13,051 (DEV-6833, DEV-6850).
+
+The fulltext query carried the same per-hit walks, and the same substitution reproduced the win at
+scale: replacing `?resourceClass rdfs:subClassOf* knora-base:Resource` (plus the value branch's
+`?valueObjectType rdfs:subClassOf* knora-base:Value` and `?property rdfs:subPropertyOf*
+knora-base:hasValue` walks) with `creationDate` / `valueCreationDate` existence probes took
+`count/der` from **82.50s to 13.09s** on stage — 6.3× for byte-identical counts (DEV-6864).
 
 Rule: benchmark a simplification in place, using the query as actually generated, before trusting
 it. This is the same discipline as the equivalence check below — and for the same reason.
