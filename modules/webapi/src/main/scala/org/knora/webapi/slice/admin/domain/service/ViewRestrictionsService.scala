@@ -27,14 +27,14 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * [[PermissionUtilADM.getUserPermissionADM]] against a synthetic user for each of the three audiences
  * (see [[ViewRestrictionsService.audienceUser]]) and map the resulting permission code to a
  * [[Visibility]]. The summary counts hidden items only (a value that is not fully visible); restricted
- * view (code 1) is reported as its own state only for file values, where it is renderable (watermarked /
- * reduced image) — on resources, ordinary values and comments code 1 collapses to Hidden.
+ * view (code 1) is reported as its own state only for still-image file values, where it is renderable
+ * (watermarked / reduced image) — on resources, ordinary values, comments and non-image file values code 1
+ * collapses to Hidden.
  *
- * NOTE (v1, pending the DEV-6777 feasibility spike): counts are computed by scanning the
- * restriction-bearing objects the repo query returns. On very large projects this is unbounded — the
- * large-project guardrail (query timeout / hard cap / "approximate" flag) is deliberately left as a
- * follow-up; see `docs/prd/2026-07-28-view-restrictions-api.md` §7/§9. Property-first grouping and the
- * `restrictedView` state for image file values are also refined once the spike fixes the query shape.
+ * NOTE (v1): counts are computed by scanning the restriction-bearing objects the repo query returns, bounded
+ * by [[ViewRestrictionsRepo.ScanCap]] rows. When the scan hits the cap the counts are a lower bound and both
+ * the summary and the paged items response flag `approximate`. A configurable cap / cache is the remaining
+ * follow-up for the DEV-6777 feasibility spike.
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
@@ -95,8 +95,10 @@ final case class ViewRestrictionsService(
         entityPermissionLiteral = row.permissions,
         requestingUser = audienceUser(audience, projectIri),
       ),
-      // Only file values can be served in restricted view; RV on anything else means "not fully visible".
-      rvEligible = row.itemType == ItemType.File,
+      // Only still-image file values can be served in restricted view; RV on anything else — including
+      // non-image file values (audio/PDF/video), resources, ordinary values and comments — means
+      // "not fully visible" and collapses to Hidden. See AC10.
+      rvEligible = row.isImageFile,
     )
 
   private def itemVisibility(row: RestrictedObjectRow, projectIri: ProjectIri): ItemVisibility =
@@ -186,7 +188,9 @@ final case class ViewRestrictionsService(
       ordered   = byResource.sortBy(_.label)
       total     = ordered.size
       pageSlice = ordered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-    } yield PagedResponse.from(pageSlice, total, pageAndSize)
+      // When the underlying scan hit its cap, `total` is a lower bound and later pages may be incomplete —
+      // surface that to the client as `approximate`, mirroring the summary (AC12).
+    } yield PagedResponse.from(pageSlice, total, pageAndSize, approximate = result.capped)
 }
 
 object ViewRestrictionsService {

@@ -21,7 +21,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
  * Read-only "view restrictions" reporting for a project (design screen 1h).
  *
  * Reports, for the three built-in audiences, how many items are hidden and lets an admin
- * drill into the affected resources/items. See `docs/prd/2026-07-28-view-restrictions-api.md`.
+ * drill into the affected resources/items. (Spec: DEV-6778, dasch-specs.)
  */
 final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -156,8 +156,8 @@ object ViewRestrictionsEndpoints {
     itemType: ItemType,
     groups: Seq[RestrictionGroup],
     totals: AudienceCounts,
-    // True when the scan hit its cap and the counts are a lower bound rather than exact — see the
-    // large-project guardrail in docs/prd/2026-07-28-view-restrictions-api.md §7/§9.
+    // True when the scan hit its cap and the counts are a lower bound rather than exact
+    // (the large-project guardrail; see ViewRestrictionsRepo.ScanCap).
     approximate: Boolean,
   )
   object ViewRestrictionsSummary {
@@ -222,7 +222,8 @@ object ViewRestrictionsEndpoints {
       items = Seq(
         RestrictedItem(
           `type` = ItemType.File,
-          propertyIri = Some("http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"),
+          // The endpoint emits the internal knora-base IRI (as ?resourceClassIri does), not the external v2 one.
+          propertyIri = Some("http://www.knora.org/ontology/knora-base#hasStillImageFileValue"),
           propertyLabel = Some("Still image file"),
           valueIri = Some("http://rdfh.ch/0001/a-thing/values/image"),
           visibility = ItemVisibility(Visibility.RestrictedView, Visibility.Visible, Visibility.Visible),

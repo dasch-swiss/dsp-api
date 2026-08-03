@@ -40,7 +40,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
  * Grouping: `GroupBy.ResourceClass` groups by the resource class; `GroupBy.Property` groups by the
  * property that carries the value (whole-resource rows are not emitted in property mode).
  *
- * GUARDRAIL: each query is bounded by [[ScanCap]] rows (the large-project guardrail, PRD §7/§9). When a
+ * GUARDRAIL: each query is bounded by [[ScanCap]] rows (the large-project guardrail). When a
  * query returns exactly the cap, the result is a lower bound; the service flags the summary `approximate`.
  */
 final case class ViewRestrictionsRepo(
@@ -57,15 +57,23 @@ final case class ViewRestrictionsRepo(
     itemType: ItemType,
     group: Option[String] = None,
   ): Task[ViewRestrictionsRepo.Result] = {
+    // In property mode there are no whole-resource rows to group under a property, so `itemType=Resource`
+    // would return nothing. AC7 requires it to behave like `all` there (surface the value/file/comment
+    // rows instead), so coerce Resource → All when grouping by property.
+    val effectiveItemType =
+      if (groupBy == GroupBy.Property && itemType == ItemType.Resource) ItemType.All else itemType
+
     // Whole-resource restrictions are out of scope in property mode.
     val wantResources =
-      groupBy == GroupBy.ResourceClass && (itemType == ItemType.All || itemType == ItemType.Resource)
+      groupBy == GroupBy.ResourceClass &&
+        (effectiveItemType == ItemType.All || effectiveItemType == ItemType.Resource)
     val wantValues =
-      itemType == ItemType.All || itemType == ItemType.File || itemType == ItemType.Value || itemType == ItemType.Comment
+      effectiveItemType == ItemType.All || effectiveItemType == ItemType.File ||
+        effectiveItemType == ItemType.Value || effectiveItemType == ItemType.Comment
     val empty = (Seq.empty[RestrictedObjectRow], false)
     for {
       resources <- if (wantResources) runResourceQuery(projectIri, group) else ZIO.succeed(empty)
-      values    <- if (wantValues) runValueQuery(projectIri, group, groupBy, itemType) else ZIO.succeed(empty)
+      values    <- if (wantValues) runValueQuery(projectIri, group, groupBy, effectiveItemType) else ZIO.succeed(empty)
     } yield ViewRestrictionsRepo.Result(resources._1 ++ values._1, resources._2 || values._2)
   }
 
@@ -91,6 +99,7 @@ final case class ViewRestrictionsRepo(
             resourceLabel = label,
             resourceClassIri = resClass,
             itemType = ItemType.Resource,
+            isImageFile = false,
             propertyIri = None,
             propertyLabel = None,
             valueIri = None,
@@ -121,6 +130,9 @@ final case class ViewRestrictionsRepo(
           val creator    = row.getRequired("creator")
           val perms      = row.getRequired("permissions")
           val isFile     = row.get("fileClass").isDefined
+          // ?imageClass is bound only for still-image file values — the only file type served in restricted
+          // view. Audio/PDF/video/archive file values are `isFile` but not `isImage`, so their RV → Hidden.
+          val isImage    = row.get("imageClass").isDefined
           val hasComment = row.get("comment").isDefined
 
           // A value row yields a File-or-Value item, and — if it carries a comment — a Comment item too.
@@ -135,6 +147,8 @@ final case class ViewRestrictionsRepo(
             resourceLabel = label,
             resourceClassIri = resClass,
             itemType = t,
+            // Only the File facet can be an image; a Comment/Value facet of the same value never renders as RV.
+            isImageFile = t == ItemType.File && isImage,
             propertyIri = Some(prop),
             propertyLabel = Some(localName(prop)),
             valueIri = Some(value),
@@ -163,7 +177,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   val layer = ZLayer.derive[ViewRestrictionsRepo]
 
   /**
-   * Max rows scanned per query — the large-project guardrail (PRD §7/§9). A blunt cap in v1; a
+   * Max rows scanned per query — the large-project guardrail. A blunt cap in v1; a
    * configurable value / cache is the follow-up. Kept generous so real projects are not truncated.
    */
   val ScanCap: Int = 10000
@@ -179,6 +193,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    *
    * @param groupId     the grouping key — resource-class IRI (class mode) or property IRI (property mode).
    * @param itemType    which kind of object this row represents.
+   * @param isImageFile true only for still-image file values — the sole item type for which permission
+   *                    code 1 renders as restricted view (watermarked / reduced image). Non-image file
+   *                    values (audio/PDF/video/archive), resources, ordinary values and comments are false.
    * @param creator     `knora-base:attachedToUser` of the object (for permission resolution).
    * @param permissions the `knora-base:hasPermissions` literal (for permission resolution).
    */
@@ -191,6 +208,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     resourceLabel: String,
     resourceClassIri: String,
     itemType: ItemType,
+    isImageFile: Boolean,
     propertyIri: Option[String],
     propertyLabel: Option[String],
     valueIri: Option[String],
@@ -247,8 +265,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   /**
    * SELECT the current, non-deleted values of a project's resources with the data to resolve each
    * value's per-audience visibility. Values are matched via the `knora-base:hasValue` super-property so
-   * the carrying property IRI is captured; link values are excluded. `?fileValue` is bound when the value
-   * is a `knora-base:FileValue`, and `?comment` when it carries a `knora-base:valueHasComment`.
+   * the carrying property IRI is captured; link values are excluded. `?fileClass` is bound when the value
+   * is a `knora-base:FileValue`, `?imageClass` when it is a `knora-base:StillImageFileValue` (the only file
+   * type renderable in restricted view), and `?comment` when it carries a `knora-base:valueHasComment`.
    *
    * `group` filters by resource class (class mode) or by the carrying property (property mode).
    */
@@ -258,8 +277,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     val label       = variable("label")
     val prop        = variable("prop")
     val value       = variable("value")
-    val fileClass   = variable("fileClass") // bound iff the value is a knora-base:FileValue
-    val comment     = variable("comment")   // bound iff the value carries a valueHasComment literal
+    val fileClass   = variable("fileClass")  // bound iff the value is a knora-base:FileValue
+    val imageClass  = variable("imageClass") // bound iff the value is a knora-base:StillImageFileValue
+    val comment     = variable("comment")    // bound iff the value carries a valueHasComment literal
     val creator     = variable("creator")
     val permissions = variable("permissions")
 
@@ -294,6 +314,14 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
           .optional(),
       )
+      // OPTIONAL: bind ?imageClass when the value is (a subclass of) knora-base:StillImageFileValue.
+      // Only still-image file values can be served in restricted view (AC10); other file types cannot.
+      .and(
+        value
+          .isA(imageClass)
+          .and(imageClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.StillImageFileValue))
+          .optional(),
+      )
       // OPTIONAL: the comment literal, if present
       .and(value.has(KnoraBase.valueHasComment, comment).optional())
 
@@ -303,7 +331,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     }
 
     Queries
-      .SELECT(resource, resClass, label, prop, value, fileClass, comment, creator, permissions)
+      .SELECT(resource, resClass, label, prop, value, fileClass, imageClass, comment, creator, permissions)
       .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(wherePattern)

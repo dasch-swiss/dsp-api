@@ -85,8 +85,9 @@ object Vocabulary {
     val TextValue: Iri     = iri(kb + "TextValue")
     val linkValue: Iri     = iri(kb + "LinkValue")
     val LinkValue: Iri     = iri(kb + "LinkValue")
-    val FileValue: Iri     = iri(kb + "FileValue")
-    val hasValue: Iri      = iri(kb + "hasValue")
+    val FileValue: Iri           = iri(kb + "FileValue")
+    val StillImageFileValue: Iri = iri(kb + "StillImageFileValue")
+    val hasValue: Iri            = iri(kb + "hasValue")
     val previousValue: Iri = iri(kb + "previousValue")
 
     // list properties

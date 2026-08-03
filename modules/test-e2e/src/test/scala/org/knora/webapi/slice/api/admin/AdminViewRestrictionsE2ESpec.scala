@@ -82,6 +82,35 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
           .getJson[PagedResponse[RestrictedResource]](itemsUri, anythingUser2)
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
+      // AC5 / W3: a malformed `group` value is a client error (400), not a 500 or an unhandled SPARQL error.
+      test("returns 400 for a malformed group IRI (admin)") {
+        val itemsUri =
+          uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?groupBy=ResourceClass&group=not%20an%20iri&itemType=All"
+        TestApiClient
+          .getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser)
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
+      test("returns 200 with an empty page for a well-formed but unmatched group IRI") {
+        val unknownGroup = "http://www.knora.org/ontology/0001/anything#DoesNotExist"
+        val itemsUri     =
+          uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?groupBy=ResourceClass&group=$unknownGroup&itemType=All"
+        for {
+          page <- TestApiClient.getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser).flatMap(_.assert200)
+        } yield assertTrue(page.data.isEmpty, page.pagination.totalItems == 0)
+      },
+    ),
+    suite("unknown project (AC5)")(
+      // Deliberate: the shared admin authorization gate returns 403 (not 404) for a non-existent project so
+      // it does not leak project existence to non-admins. Every admin route behaves this way — see
+      // ViewRestrictionsRestService's authorization note.
+      test("returns 403 for a well-formed but non-existent project IRI") {
+        val unknownProject = "http://rdfh.ch/projects/FFFFFFFFFFFF"
+        val uri            =
+          uri"/admin/projects/iri/$unknownProject/view-restrictions/summary?groupBy=ResourceClass&itemType=All"
+        TestApiClient
+          .getJson[ViewRestrictionsSummary](uri, rootUser)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
     ),
   )
 }

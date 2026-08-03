@@ -138,6 +138,38 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  private val hasDocument = "http://www.knora.org/ontology/0001/anything#hasDocument"
+
+  /**
+   * A visible resource with a **non-image** file value (a document) carrying RV for anon. A document is a
+   * `kb:FileValue` but not a `kb:StillImageFileValue`, so restricted view is not renderable for it (AC10):
+   * permission code 1 must collapse to Hidden, unlike the still-image case in [[valuesTurtle]] (W2).
+   */
+  private val nonImageFileTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<$thingClass> rdfs:subClassOf kb:Resource .
+       |<$hasDocument> rdfs:subPropertyOf kb:hasValue .
+       |kb:DocumentFileValue rdfs:subClassOf kb:FileValue .
+       |
+       |<http://rdfh.ch/0001/docHost>
+       |  a <$thingClass> ;
+       |  rdfs:label "Doc host" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  <$hasDocument> <http://rdfh.ch/0001/docHost/values/doc> .
+       |
+       |<http://rdfh.ch/0001/docHost/values/doc>
+       |  a kb:DocumentFileValue ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "RV knora-admin:UnknownUser|V knora-admin:KnownUser" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
     ViewRestrictionsRepo.layer,
@@ -328,7 +360,56 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         )
       }
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
+    // AC7 (W1): in property mode, itemType=Resource must behave like itemType=All — property mode has no
+    // whole-resource rows to group, so it surfaces the value/file/comment rows instead of an empty report.
+    test("groupBy=Property + itemType=Resource behaves like itemType=All (AC7)") {
+      for {
+        asResource <- service(_.summary(projectIri, GroupBy.Property, ItemType.Resource))
+        asAll      <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
+      } yield assertTrue(
+        asResource.groups.nonEmpty,
+        // identical grouping/counts to the All view
+        asResource.groups.map(g => g.id -> g.counts).toMap == asAll.groups.map(g => g.id -> g.counts).toMap,
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
+    // AC12: the summary counts and the drill-down items must agree for the same class/filter.
+    test("summary hidden-count for a property equals the number of items hidden under it (AC12)") {
+      for {
+        summary <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
+        page    <- service(_.items(projectIri, GroupBy.Property, hasText, ItemType.All, PageAndSize.Default))
+      } yield {
+        val summaryAnon = summary.groups.find(_.id == hasText).map(_.counts.anonymous).getOrElse(0)
+        val itemsAnon   = page.data.flatMap(_.items).count(_.visibility.anonymous == Visibility.Hidden)
+        assertTrue(summaryAnon == 1, itemsAnon == summaryAnon, !page.pagination.approximate)
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
   )
 
-  def spec = suite("ViewRestrictionsService")(pureSuite, summarySuite, itemsSuite, valuesSuite)
+  // ----- W2 / AC10: restricted view is image-only -----
+
+  private val nonImageSuite = suite("non-image file values (W2 / AC10)")(
+    test("a non-image file value with RV for anon collapses to Hidden, not RestrictedView") {
+      for {
+        page <- service(_.items(projectIri, GroupBy.ResourceClass, thingClass, ItemType.File, PageAndSize.Default))
+      } yield {
+        val doc = page.data.flatMap(_.items).find(_.`type` == ItemType.File)
+        assertTrue(
+          doc.isDefined,
+          // AC10: RV is renderable for still images only; a document's code-1 permission is Hidden for anon.
+          doc.get.visibility.anonymous == Visibility.Hidden,
+          doc.get.visibility.authenticated == Visibility.Visible,
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
+    test("summary counts the non-image file as Hidden for anon (does not undercount)") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.File))
+      } yield {
+        val thing = result.groups.find(_.id == thingClass)
+        assertTrue(thing.exists(_.counts.anonymous == 1))
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
+  )
+
+  def spec = suite("ViewRestrictionsService")(pureSuite, summarySuite, itemsSuite, valuesSuite, nonImageSuite)
 }
