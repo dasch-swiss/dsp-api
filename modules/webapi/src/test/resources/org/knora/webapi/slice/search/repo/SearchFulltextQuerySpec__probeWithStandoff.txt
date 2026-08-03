@@ -1,0 +1,19 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT (COUNT(*) AS ?count)
+WHERE {
+    {
+        SELECT DISTINCT ?matchingSubject WHERE {
+            ?matchingSubject <http://jena.apache.org/text#query> ("test search" 1000000) .
+    ?matchingSubject a knora-base:TextValue ;
+        knora-base:valueHasString ?literal ;
+        knora-base:valueHasStandoff ?standoffNode .
+    ?standoffNode a <http://www.knora.org/ontology/standoff#StandoffBoldTag> ;
+        knora-base:standoffTagHasStart ?start ;
+        knora-base:standoffTagHasEnd ?end .
+    BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
+    FILTER REGEX(?markedup, "test", "i")
+    FILTER REGEX(?markedup, "search", "i")
+        }
+    }
+}

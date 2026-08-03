@@ -10,14 +10,168 @@ on:
   pull_request_review:
     types: [submitted]
 
+# Prevent multiple Claude runs on the same PR or issue from interfering with each other
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number || github.event.number || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
-  claude:
+  # Job 1: Dedicated code review with a predefined prompt, triggered by '@claude review' on a PR
+  claude-code-review:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned') && contains(github.event.issue.body, '@claude'))
+      (github.event.issue.pull_request || github.event.pull_request) &&
+      (contains(github.event.comment.body, '@claude review') || contains(github.event.review.body, '@claude review'))
     runs-on: ubuntu-latest
+    # 30, not 15: the first real run on a 26-file PR was killed at 15 min having produced nothing
+    # (the action writes its result only at the end, so a killed run yields no review and no usage
+    # data at all). A generous ceiling costs nothing on the runs that finish early.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ (github.event.issue.pull_request && format('refs/pull/{0}/head', github.event.issue.number)) || (github.event.pull_request && format('refs/pull/{0}/head', github.event.pull_request.number)) || github.ref }}
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+
+            Review this pull request for correctness, security, performance, and test coverage.
+
+            Read `REVIEW.md` at the repository root before you start. It is the review-phase
+            checklist for this repository and its rules override the defaults below; it also points
+            to `CONVENTIONS.md` and `docs/development/` for the authoritative detail. Honour its
+            "Skip" section — do not spend the run on Scalafmt-only diffs, `CHANGELOG.md` /
+            version-bump commits, generated sources, or legacy `responders/` code paths that the PR
+            is not migrating.
+
+            ## Scope
+
+            Report issues **only in lines this PR changed**. But READ WHATEVER YOU NEED to decide
+            whether an issue is real: open the changed files in full (the diff hunks alone give too
+            little surrounding context), plus their callers, their tests, neighbouring
+            implementations of the same pattern, and read-only git history. Reading widely is
+            required; reporting widely is not.
+
+            ## Every finding must survive this test
+
+            Name the concrete input or state that triggers it, and the wrong output, crash, or
+            regression that results.
+
+            DELETE — do not downgrade — any finding where:
+            - you cannot name a specific input and a specific wrong outcome;
+            - the justification is "more robust", "best practice", or "could break if X" where X
+              does not occur in this codebase;
+            - the code is already correct under Scala 3 or ZIO semantics — an effect that looks
+              unexecuted is being composed rather than dropped, a narrowed error channel already
+              excludes the case, an `Option` / `Either` is destructured by an exhaustive match, or a
+              value object's `from` has already validated the input;
+            - it is a deliberate decision explained in a comment (read the comment before flagging).
+
+            Three defensible findings beat twelve speculative ones. Reporting no findings is a
+            valid and useful outcome.
+
+            ## Verify every Critical or Major finding before reporting it
+
+            Spawn a separate agent per finding to attack it. Give that agent the finding, the file
+            and the surrounding code — but NOT the reasoning that led you to suspect it, so its
+            judgement is not shaped by yours. Instruct it to argue the finding is WRONG, to check
+            the claim against the source, and to default to "refuted" where the evidence is
+            ambiguous. Drop every finding its verifier refutes.
+
+            If you cannot spawn agents at all, do NOT check the findings yourself and do NOT post a
+            review. Post only a short error stating that subagents were unavailable and what
+            happened when you tried. A review that reads as verified but was not is worse than no
+            review, and quietly falling back to self-checking restores the exact anchoring this
+            section exists to remove.
+
+            If an individual spawn fails, retry it once; if it fails again keep that finding but
+            label it `unverified` and carry on. One flaky spawn should not sink a whole review.
+
+            Apply the deletion test to Minor findings without a verifier.
+
+            Work inside the job's time budget: verify in descending order of severity, and if you
+            run short, report the remaining findings explicitly marked as unverified rather than
+            letting the run time out. A partial review is useful; a timed-out one is not.
+
+            ## Checking claims about libraries
+
+            Do not assert an API contract from memory. When a finding depends on how a dependency
+            behaves — a method signature, a ZIO or Tapir combinator's semantics, a documented limit
+            — confirm it against the version this repo actually builds against
+            (`project/Dependencies.scala`, `build.sbt`) or against the library's own documentation
+            via web search. An unverified claim about a dependency is a finding to delete, not to
+            report.
+
+            ## Test coverage
+
+            For a bug fix, check that a test exists which would FAIL without the change — name it,
+            or state that none exists. Tests live in `webapi/src/test/scala/` (unit),
+            `modules/test-it/src/test/scala/` (integration) and `modules/test-e2e/src/test/scala/`
+            (end-to-end), so look in all three before concluding a fix is untested. Do not ask for
+            tests that only restate an implementation line or assert a config value.
+
+            ## Output
+
+            1. One-paragraph summary of what the PR does.
+            2. Findings, most severe first. For each: `file:line`, the failure scenario, and the
+               fix. Grade Critical / Major / Minor, where Critical means a bug, security hole, or
+               regression that reaches users.
+            3. Ready to merge: yes or no, based **only** on Critical findings.
+
+            Be precise and concise. Do **not** change code, push, or run build, test or `sbt`
+            commands — you cannot compile this project and must not claim to have.
+            Use `gh pr comment` to leave your review as a comment on the PR.
+
+          # Reading files is already in the action's base tool set; search, web lookup and Task are
+          # not, and the prompt above depends on all three — Grep/Glob to confirm a suspicion across
+          # the repo, WebSearch/WebFetch to check a dependency's real API instead of recalling it,
+          # and Task to verify findings in an agent that has not seen the reasoning behind them.
+          # Bash stays confined to read-only gh commands, so no path to secrets is opened.
+          #
+          # --model: the action defaults to Opus, which measured $3.70 for one review of a 7-file PR.
+          # Sonnet 5 is the cost lever for a read-only reviewer that never compiles anything.
+          claude_args: '--model claude-sonnet-5 --allowed-tools "Grep,Glob,WebSearch,WebFetch,Task,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh api:*)"'
+
+      # cancelled() as well as failure(): a `timeout-minutes` kill marks the job cancelled, not
+      # failed, so the previous `if: failure()` skipped this step on the one run that most needed
+      # it — the 15-minute timeout passed silently with no comment on the PR.
+      - name: Notify on failure
+        if: failure() || cancelled()
+        run: |
+          PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+          if [ -n "$PR_NUMBER" ]; then
+            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code Review did not complete (failed, timed out, or was cancelled). Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # Job 2: General Claude assistant (flexible), triggered by '@claude <PROMPT>' on PRs, issues etc.
+  # The negated clause is exactly job 1's condition, so the two jobs are mutually exclusive by
+  # construction, while '@claude review' on a plain issue — where job 1 cannot run — still lands here.
+  claude-general:
+    if: |
+      (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned') && contains(github.event.issue.body, '@claude'))
+      ) &&
+      !(
+        (github.event.issue.pull_request || github.event.pull_request) &&
+        (contains(github.event.comment.body, '@claude review') || contains(github.event.review.body, '@claude review'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
       pull-requests: write
@@ -31,3 +185,14 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # Same cancelled() fix as job 1 — a timeout here would otherwise also pass silently.
+      - name: Notify on failure
+        if: failure() || cancelled()
+        run: |
+          PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+          if [ -n "$PR_NUMBER" ]; then
+            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code did not complete (failed, timed out, or was cancelled). Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

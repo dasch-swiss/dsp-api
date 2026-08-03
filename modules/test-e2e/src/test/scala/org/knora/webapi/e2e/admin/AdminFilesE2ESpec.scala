@@ -14,6 +14,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.testservices.ResponseOps.*
@@ -36,6 +37,22 @@ class AdminFilesE2ESpec extends E2EZSpec {
       for {
         response <- TestAdminApiClient
                       .getAdminFilesPermissions(anythingShortcode, "B1D0OkEgfFp-Cew2Seur7Wi.jp2", normalUser)
+                      .flatMap(_.assert200)
+      } yield assertTrue(
+        response == PermissionCodeAndProjectRestrictedViewSettings(
+          1,
+          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
+        ),
+      )
+    },
+    test("return the same RV (1) decision when the shortcode does not match the file's project (DEV-6867)") {
+      // The {shortcode} path segment is non-authoritative: the file is identified by its filename alone. A
+      // permission-code-1 request that previously returned 404 for a mismatched (or nonexistent) project shortcode
+      // must now return 200 with the identical restricted-view decision. This pins the behaviour at the HTTP/routing
+      // layer so a future reintroduction of shortcode validation there would fail CI.
+      for {
+        response <- TestAdminApiClient
+                      .getAdminFilesPermissions(Shortcode.unsafeFrom("9999"), "B1D0OkEgfFp-Cew2Seur7Wi.jp2", normalUser)
                       .flatMap(_.assert200)
       } yield assertTrue(
         response == PermissionCodeAndProjectRestrictedViewSettings(
