@@ -27,7 +27,9 @@ final class FilesEndpoints(base: BaseEndpoints) {
     .out(jsonBody[PermissionCodeAndProjectRestrictedViewSettings])
     .description(
       "Returns the permission code and the project's restricted view settings for a given shortcode and filename. " +
-        "Publicly accessible.",
+        "Publicly accessible. The `{shortcode}` path segment is not authoritative and does not affect the result " +
+        "— the file is identified by its filename alone (internal filenames are globally-unique asset IDs); the " +
+        "segment is retained only for URL compatibility.",
     )
 }
 
