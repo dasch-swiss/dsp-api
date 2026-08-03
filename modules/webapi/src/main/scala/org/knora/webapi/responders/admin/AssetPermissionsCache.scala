@@ -11,6 +11,8 @@ import zio.cache.Lookup
 import zio.metrics.Metric
 import zio.metrics.PollingMetric
 
+import scala.annotation.unused
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
@@ -25,9 +27,9 @@ import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestricted
  * A short-lived, in-memory cache in front of [[AssetPermissionsResponder]] for the IIIF tile-serving path (DEV-6806).
  *
  * A single tiled image fires many identical `GET /admin/files/{shortcode}/{filename}` checks in a short burst; caching
- * the decision keyed by `(UserIri, Shortcode, InternalFilename)` sheds the repeated `FileValuePermissionsQuery`
- * round-trip and permission computation within that burst, and zio-cache's single-flight behaviour collapses the
- * simultaneous first-tile salvo into one resolution.
+ * the decision keyed by `(UserIri, InternalFilename)` sheds the repeated `FileValuePermissionsQuery` round-trip and
+ * permission computation within that burst, and zio-cache's single-flight behaviour collapses the simultaneous
+ * first-tile salvo into one resolution.
  *
  * The responder stays a pure resolver: this is a wrapping service, so the cache is self-contained and independently
  * testable. Only successful decisions are retained (failures re-resolve on the next request), expiry is lazy after a
@@ -43,10 +45,12 @@ final case class AssetPermissionsCache(
 
   /**
    * Same shape as [[AssetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings]], so the
-   * `serverLogic(...)` binding in `FilesServerEndpoints` is unchanged.
+   * `serverLogic(...)` binding in `FilesServerEndpoints` is unchanged. The `shortcode` parameter is accepted only to
+   * match the endpoint's path shape — it is non-authoritative for the permission decision and is deliberately kept
+   * out of the cache key (see [[CacheKey]]).
    */
   def getPermissionCodeAndProjectRestrictedViewSettings(user: User)(
-    shortcode: Shortcode,
+    @unused shortcode: Shortcode,
     filename: InternalFilename,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     // `User.id` is a `String` (only `KnoraUser.id` is a typed `UserIri`); convert per the IRI-handling convention —
@@ -56,12 +60,12 @@ final case class AssetPermissionsCache(
     ZIO
       .fromEither(UserIri.from(user.id))
       .mapError(BadRequestException.apply)
-      .flatMap(iri => cache.get(AssetPermissionsCache.CacheKey(iri, shortcode, filename)))
+      .flatMap(iri => cache.get(AssetPermissionsCache.CacheKey(iri, filename)))
 }
 
 object AssetPermissionsCache {
 
-  final case class CacheKey(userIri: UserIri, shortcode: Shortcode, filename: InternalFilename)
+  final case class CacheKey(userIri: UserIri, filename: InternalFilename)
 
   /**
    * Testable core of the cache. Unit tests pass a counting/failing `resolve`; production passes the real one (see
@@ -91,7 +95,7 @@ object AssetPermissionsCache {
     users
       .findUserByIri(key.userIri)
       .someOrFail(NotFoundException(s"No user found for ${key.userIri.value}"))
-      .flatMap(responder.getPermissionCodeAndProjectRestrictedViewSettings(_)(key.shortcode, key.filename))
+      .flatMap(responder.getPermissionCodeAndProjectRestrictedViewSettings(_)(key.filename))
 
   val layer: URLayer[AppConfig & UserService & AssetPermissionsResponder, AssetPermissionsCache] =
     ZLayer.scoped {
