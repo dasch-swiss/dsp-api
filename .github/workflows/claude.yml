@@ -22,7 +22,10 @@ jobs:
       (github.event.issue.pull_request || github.event.pull_request) &&
       (contains(github.event.comment.body, '@claude review') || contains(github.event.review.body, '@claude review'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 30, not 15: the first real run on a 26-file PR was killed at 15 min having produced nothing
+    # (the action writes its result only at the end, so a killed run yields no review and no usage
+    # data at all). A generous ceiling costs nothing on the runs that finish early.
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
@@ -134,14 +137,20 @@ jobs:
           # the repo, WebSearch/WebFetch to check a dependency's real API instead of recalling it,
           # and Task to verify findings in an agent that has not seen the reasoning behind them.
           # Bash stays confined to read-only gh commands, so no path to secrets is opened.
-          claude_args: '--allowed-tools "Grep,Glob,WebSearch,WebFetch,Task,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh api:*)"'
+          #
+          # --model: the action defaults to Opus, which measured $3.70 for one review of a 7-file PR.
+          # Sonnet 5 is the cost lever for a read-only reviewer that never compiles anything.
+          claude_args: '--model claude-sonnet-5 --allowed-tools "Grep,Glob,WebSearch,WebFetch,Task,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh api:*)"'
 
+      # cancelled() as well as failure(): a `timeout-minutes` kill marks the job cancelled, not
+      # failed, so the previous `if: failure()` skipped this step on the one run that most needed
+      # it — the 15-minute timeout passed silently with no comment on the PR.
       - name: Notify on failure
-        if: failure()
+        if: failure() || cancelled()
         run: |
           PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
           if [ -n "$PR_NUMBER" ]; then
-            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code Review failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code Review did not complete (failed, timed out, or was cancelled). Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
           fi
         env:
           GH_TOKEN: ${{ github.token }}
@@ -177,12 +186,13 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
+      # Same cancelled() fix as job 1 — a timeout here would otherwise also pass silently.
       - name: Notify on failure
-        if: failure()
+        if: failure() || cancelled()
         run: |
           PR_NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
           if [ -n "$PR_NUMBER" ]; then
-            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+            gh issue comment "$PR_NUMBER" --body "⚠️ Claude Code did not complete (failed, timed out, or was cancelled). Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
           fi
         env:
           GH_TOKEN: ${{ github.token }}
