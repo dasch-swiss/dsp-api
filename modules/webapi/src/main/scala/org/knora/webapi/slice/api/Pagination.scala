@@ -12,22 +12,14 @@ import sttp.tapir.query
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
-final case class Pagination(
-  pageSize: Int,
-  totalItems: Int,
-  totalPages: Int,
-  currentPage: Int,
-  // True when the underlying scan hit its cap: totalItems/totalPages are a lower bound and later pages may
-  // be incomplete. Defaults to false; only endpoints with a scan guardrail (e.g. view-restrictions) set it.
-  approximate: Boolean = false,
-)
+final case class Pagination(pageSize: Int, totalItems: Int, totalPages: Int, currentPage: Int)
 object Pagination {
   given JsonCodec[Pagination] = DeriveJsonCodec.gen[Pagination]
   given Schema[Pagination]    = Schema.derived[Pagination]
 
-  def from(totalItems: Int, pageAndSize: PageAndSize, approximate: Boolean = false): Pagination =
+  def from(totalItems: Int, pageAndSize: PageAndSize): Pagination =
     val totalPages = Math.ceil(totalItems.toDouble / pageAndSize.size).toInt
-    Pagination(pageAndSize.size, totalItems, totalPages, pageAndSize.page, approximate)
+    Pagination(pageAndSize.size, totalItems, totalPages, pageAndSize.page)
 }
 
 final case class PagedResponse[A] private (data: Seq[A], pagination: Pagination)
@@ -37,13 +29,8 @@ object PagedResponse {
     .derived[PagedResponse[A]]
     .modify(_.data)(_.copy(isOptional = false))
 
-  def from[A](
-    data: Seq[A],
-    totalItems: Int,
-    pageAndSize: PageAndSize,
-    approximate: Boolean = false,
-  ): PagedResponse[A] =
-    PagedResponse(data, Pagination.from(totalItems, pageAndSize, approximate))
+  def from[A](data: Seq[A], totalItems: Int, pageAndSize: PageAndSize): PagedResponse[A] =
+    PagedResponse(data, Pagination.from(totalItems, pageAndSize))
 }
 
 case class PageAndSize(page: Int, size: Int)

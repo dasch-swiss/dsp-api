@@ -45,8 +45,8 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * So we ask the repo for the project's *distinct* permission literals (a small set — literals come from
  * project-level default-permission templates, not per-object authoring), classify those few with the real
  * permission model, and let SPARQL `COUNT` the objects whose literal is in the hidden subset. Counts are
- * therefore exact at any project size and `approximate` is always false. The drill-down is paged in SPARQL
- * with a matching `COUNT`, so its `totalItems` is exact and its page order is stable.
+ * therefore exact at any project size. The drill-down is paged in SPARQL with a matching `COUNT`, so its
+ * `totalItems` is exact and its page order is stable.
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
@@ -187,8 +187,8 @@ final case class ViewRestrictionsService(
                  // …and order by descending anonymous-hidden count (matches the 1h matrix ordering).
                  .sortBy(g => (-g.counts.anonymous, g.label))
       totals = groups.map(_.counts).foldLeft(AudienceCounts.zero)(plus)
-      // Counts come from SPARQL aggregation over the whole project, so they are exact — never approximate.
-    } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals, approximate = false)
+      // Counts come from SPARQL aggregation over the whole project, so they are always exact.
+    } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals)
 
   /** Build a summary row. Labels are derived from the grouping IRI, as elsewhere in this v1 report. */
   private def restrictionGroup(groupId: String, groupBy: GroupBy, counts: AudienceCounts): RestrictionGroup =
@@ -253,7 +253,7 @@ final case class ViewRestrictionsService(
                    }
       // Preserve the SPARQL page order (label, then IRI) so paging stays reproducible across requests.
       ordered = byResource.sortBy(r => (r.label, r.resourceIri))
-    } yield PagedResponse.from(ordered, total, pageAndSize, approximate = false)
+    } yield PagedResponse.from(ordered, total, pageAndSize)
 }
 
 object ViewRestrictionsService {

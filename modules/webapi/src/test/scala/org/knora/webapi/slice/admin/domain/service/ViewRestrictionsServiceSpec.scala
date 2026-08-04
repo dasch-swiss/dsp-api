@@ -309,8 +309,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           result.totals == AudienceCounts(2, 1, 0),
           // ontology label derived from the class IRI
           thing.get.ontology.contains("anything"),
-          // small dataset well under the scan cap → exact, not approximate
-          !result.approximate,
         )
       }
     }.provide(commonLayers, datasetLayerFromTurtle(turtle)),
@@ -451,7 +449,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           .count(_.visibility.anonymous == Visibility.Hidden)
         // and the comment is nonetheless present as a nested item in the drill-down
         val hasCommentItem = page.data.flatMap(_.items).exists(_.`type` == ItemType.Comment)
-        assertTrue(summaryAnon == 1, itemsAnon == summaryAnon, hasCommentItem, !page.pagination.approximate)
+        assertTrue(summaryAnon == 1, itemsAnon == summaryAnon, hasCommentItem)
       }
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
   )
@@ -496,7 +494,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           thing.isDefined,
           // none of the three audiences is the creator, so CR grants them nothing
           thing.get.counts == AudienceCounts(anonymous = 1, authenticated = 1, projectMember = 1),
-          !result.approximate,
         )
       }
     }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),
@@ -513,7 +510,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           res.get.resourceVisibility ==
             ItemVisibility(Visibility.Hidden, Visibility.Hidden, Visibility.Hidden),
           page.pagination.totalItems == 1,
-          !page.pagination.approximate,
         )
       }
     }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),

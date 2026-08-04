@@ -48,6 +48,7 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Per-audience counts of hidden items for a project, grouped by resource class or property. " +
         "Counts hidden items only (permission code 0); restricted-view is reported per item in the drill-down. " +
+        "Counts are computed by the triplestore and are exact regardless of project size. " +
         "The user must be project admin or system admin.",
     )
 
@@ -61,6 +62,7 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Paginated list of resources affected by a restriction under a given class (or property), each with " +
         "its per-audience visibility and the nested restricted file values / values / comments. " +
+        "Ordered by label then IRI, so paging is stable across requests. " +
         "The user must be project admin or system admin.",
     )
 }
@@ -156,10 +158,6 @@ object ViewRestrictionsEndpoints {
     itemType: ItemType,
     groups: Seq[RestrictionGroup],
     totals: AudienceCounts,
-    // True if the counts are a lower bound rather than exact. Always false today: counts are computed by
-    // SPARQL aggregation over the whole project, so they are exact at any size. Retained so a future
-    // sampling/short-circuiting strategy can signal inexactness without a breaking response change.
-    approximate: Boolean,
   )
   object ViewRestrictionsSummary {
     given JsonCodec[ViewRestrictionsSummary] = DeriveJsonCodec.gen[ViewRestrictionsSummary]
@@ -179,7 +177,6 @@ object ViewRestrictionsEndpoints {
         ),
       ),
       totals = AudienceCounts(7, 2, 0),
-      approximate = false,
     )
   }
 
