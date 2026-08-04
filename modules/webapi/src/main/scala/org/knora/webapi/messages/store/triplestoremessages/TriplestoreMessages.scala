@@ -421,9 +421,9 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
  * ignored.
  */
 object SparqlResultProtocol {
+  import cats.implicits._
   import zio.json._
   import zio.json.ast.Json
-  import cats.implicits._
 
   implicit val VariableResultsZioJsonFormat: JsonDecoder[VariableResultsRow] =
     JsonDecoder[Json.Obj].map { obj =>

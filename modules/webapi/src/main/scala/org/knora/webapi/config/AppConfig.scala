@@ -156,6 +156,22 @@ final case class Resources(
 
 final case class FulltextSearch(
   searchValueMinLength: Int,
+  probe: FulltextSearchProbe,
+)
+
+/**
+ * Tuning knobs for the fulltext breadth probe (DEV-6864, PROBE).
+ *
+ * `cap` is the Lucene candidate count above which a fulltext search is refused (raced against the real query so
+ * an admitted term pays no tax). `cacheCapacity` / `cacheTtl` bound the measured-breadth cache, and `maxConcurrent`
+ * bounds how many probes run against Fuseki at once. All live in config so they can be tuned per deployment
+ * without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP` override.
+ */
+final case class FulltextSearchProbe(
+  cap: Int,
+  cacheCapacity: Int,
+  cacheTtl: Duration,
+  maxConcurrent: Int,
 )
 
 final case class GraphRoute(
@@ -170,6 +186,7 @@ final case class Triplestore(
   host: String,
   queryTimeout: Duration,
   gravsearchTimeout: Duration,
+  searchTimeout: Duration,
   maintenanceTimeout: Duration,
   fuseki: Fuseki,
   profileQueries: Boolean,
@@ -238,6 +255,15 @@ object AppConfig {
       c.copy(jwt = c.jwt.copy(issuer = c.jwt.issuer.orElse(Some(c.knoraApi.externalKnoraApiHostPort)))),
     )
     .validate("app.v2.resources.max-batch-size must be >= 1")(_.v2.resources.maxBatchSize >= 1)
+    .validate("app.triplestore.search-timeout must be positive")(
+      _.triplestore.searchTimeout.compareTo(Duration.ZERO) > 0,
+    )
+    // The search tier must never exceed Gravsearch, or the DEV-6864 load-shed rationale inverts: the whole
+    // point is that the fulltext prequery sheds load *before* the 120s main query would. An env override
+    // (KNORA_WEBAPI_TRIPLESTORE_SEARCH_TIMEOUT) makes a bad value injectable at deploy time, so guard it.
+    .validate("app.triplestore.search-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
+      c.triplestore.searchTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
+    )
     .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
@@ -254,6 +280,22 @@ object AppConfig {
     )
     .validate("app.triplestore.sparql-passthrough.max-concurrent-calls must be >= 1")(
       _.triplestore.sparqlPassthrough.maxConcurrentCalls >= 1,
+    )
+    // The probe knobs feed FulltextBreadthGuard's cap check, Cache.makeWith and Semaphore.make, so guard each
+    // against a value that breaks the guard. cap is env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP): cap < 1
+    // refuses every probed search; cache-capacity < 1 is undefined; max-concurrent = 0 is a zero-permit semaphore,
+    // so the probe lookup never completes and `guarded` — which awaits it before deciding — hangs every probed
+    // search; cache-ttl <= 0 expires each result instantly, defeating the single-flight cache so every request
+    // re-probes. Guard all four, as the sibling file-permission-cache guards do (DEV-6864).
+    .validate("app.v2.fulltext-search.probe.cap must be >= 1")(_.v2.fulltextSearch.probe.cap >= 1)
+    .validate("app.v2.fulltext-search.probe.cache-capacity must be >= 1")(
+      _.v2.fulltextSearch.probe.cacheCapacity >= 1,
+    )
+    .validate("app.v2.fulltext-search.probe.cache-ttl must be positive")(
+      _.v2.fulltextSearch.probe.cacheTtl.compareTo(Duration.ZERO) > 0,
+    )
+    .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
+      _.v2.fulltextSearch.probe.maxConcurrent >= 1,
     )
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie

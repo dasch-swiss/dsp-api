@@ -3,7 +3,9 @@
 `string_fields` are baked in verbatim. `stamp_fields` map a Scala val name to a
 workspace-status key (see tools/workspace_status.sh); their values are read from
 the stable-status file at action time, so a version change recompiles only the
-tiny generated library, not the world.
+tiny generated library, not the world. `file_fields` map a file label to a Scala
+val name; the file's contents becomes the value (e.g. a version string extracted
+from a pinned image's OCI label via `oci_config_label`).
 """
 
 def _buildinfo_impl(ctx):
@@ -20,11 +22,15 @@ def _buildinfo_impl(ctx):
         lines.append('  val %s: String = "%s"' % (k, ctx.attr.string_fields[k]))
     for k in ctx.attr.stamp_fields:
         lines.append('  val %s: String = "__%s__"' % (k, ctx.attr.stamp_fields[k]))
+    for _tgt, valname in ctx.attr.file_fields.items():
+        lines.append('  val %s: String = "__FILEFIELD_%s__"' % (valname, valname))
     lines.append("}")
     lines.append("")
     ctx.actions.write(tmpl, "\n".join(lines))
 
     info = ctx.info_file  # bazel-out/stable-status.txt (from workspace_status_command)
+
+    inputs = [tmpl, info]
 
     # Unique stamp keys → substitute their status values. Bash parameter
     # substitution (not sed) so a value containing regex-replacement
@@ -37,10 +43,15 @@ def _buildinfo_impl(ctx):
     for key in keys:
         script += "V=\"$(grep '^%s ' %s | cut -d' ' -f2-)\"\n" % (key, info.path)
         script += 'content="${content//__%s__/$V}"\n' % key
+    for tgt, valname in ctx.attr.file_fields.items():
+        f = tgt.files.to_list()[0]
+        inputs.append(f)
+        script += 'V="$(cat %s)"\n' % f.path
+        script += 'content="${content//__FILEFIELD_%s__/$V}"\n' % valname
     script += 'printf "%%s" "$content" > %s\n' % out.path
 
     ctx.actions.run_shell(
-        inputs = [tmpl, info],
+        inputs = inputs,
         outputs = [out],
         command = script,
         mnemonic = "BuildInfoGen",
@@ -55,5 +66,36 @@ buildinfo = rule(
         "out": attr.string(mandatory = True, doc = "Output .scala file name"),
         "string_fields": attr.string_dict(doc = "val name -> literal string"),
         "stamp_fields": attr.string_dict(doc = "val name -> workspace-status key"),
+        "file_fields": attr.label_keyed_string_dict(
+            allow_files = True,
+            doc = "file label -> val name; the file's contents becomes the value",
+        ),
+    },
+)
+
+def _oci_config_label_impl(ctx):
+    out = ctx.actions.declare_file(ctx.attr.name + ".txt")
+    layout = ctx.file.image
+    ctx.actions.run(
+        inputs = [layout],
+        outputs = [out],
+        executable = ctx.executable._extract,
+        arguments = [layout.path, ctx.attr.label, out.path],
+        mnemonic = "OciConfigLabel",
+        progress_message = "Extracting label %s from %s" % (ctx.attr.label, ctx.attr.image.label),
+    )
+    return [DefaultInfo(files = depset([out]))]
+
+oci_config_label = rule(
+    implementation = _oci_config_label_impl,
+    doc = "Extract an OCI config label (e.g. org.opencontainers.image.version) from an oci.pull image layout into a text file.",
+    attrs = {
+        "image": attr.label(allow_single_file = True, mandatory = True, doc = "oci.pull image target (its OCI layout)"),
+        "label": attr.string(mandatory = True, doc = "OCI config label key to extract"),
+        "_extract": attr.label(
+            default = "//tools/buildinfo:extract_label",
+            executable = True,
+            cfg = "exec",
+        ),
     },
 )

@@ -9,12 +9,7 @@ services:
       - knora-net
 
   db:
-    # should be the same version as in Dependencies.scala,
-    # make sure to use the same version in ops-deploy repository when deploying new DSP releases!
-    # Built by Bazel (`just docker-build-fuseki-image`), not by compose: modules/fuseki has no
-    # Dockerfile since the rules_oci migration. Without this the image must already be present --
-    # either pulled from Docker Hub (published on merge) or loaded locally by the just recipe.
-    image: daschswiss/apache-jena-fuseki:6.1.0-1
+    image: daschswiss/apache-jena-fuseki:latest
     ports:
       - "3030:3030"
     volumes:

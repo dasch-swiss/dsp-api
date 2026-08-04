@@ -34,6 +34,12 @@ build:macos --host_copt=-mmacosx-version-min=13.3
 build:macos --host_linkopt=-mmacosx-version-min=13.3
 build:macos --action_env=MACOSX_DEPLOYMENT_TARGET=13.3
 build:macos --repo_env=PATH
+# Metals-on-Bazel-9 support (macOS only — all local dev is macOS; CI is Linux and never runs
+# bazel-bsp). bazel-bsp's aspects reference JavaInfo/java_common/CcInfo as bare Starlark globals,
+# which Bazel 9 moved into @rules_java / @rules_cc behind this flag. Autoloading them back fixes
+# the aspect's "name 'JavaInfo' is not defined" analysis error. Harmless for our own build (our
+# rules load these explicitly). See docs/development/dsp-api-metals-mcp.md.
+build:macos --incompatible_autoload_externally=+JavaInfo,+JavaPluginInfo,+java_common,+CcInfo,+cc_common
 
 # JDK 25 (matches the runtime base eclipse-temurin:25-jre-noble and sbt's Temurin 25).
 # Requires rules_java >= 8.16 (remotejdk_25). Only resolved when a Java/Scala target builds.

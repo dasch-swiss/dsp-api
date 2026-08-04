@@ -7,7 +7,8 @@ reference implementation lives in
 
 The pattern in one sentence: open one **root** `INTERNAL` span named after the vertical, wrap each
 pipeline stage in a child span via a small `stageSpan` helper, attach a **bounded shape fingerprint**
-to the root, and make failures and interruptions legible without leaking user data.
+to the root as an attribute and the **raw submitted payload** to the root as an event, and make
+failures and interruptions legible without widening what reaches span status or metric labels.
 
 ## 1. Wire `Tracing` into the service
 
@@ -102,14 +103,15 @@ mainQueryResults <-
 ```
 
 Absent spans are a documented, legible signal — see the runbook's
-[four absent-data topologies](gravsearch-trace-runbook.md#6-absent-spans-four-normal-topologies).
+[four absent-data topologies](gravsearch-trace-runbook.md#7-absent-spans-four-normal-topologies).
 The triplestore `CLIENT` span nests automatically under the `*.execute` stage because it runs inside
 that stage's effect.
 
-## 5. Attach a bounded shape, not user data
+## 5. Attach a bounded shape as an attribute, never raw payload
 
 The single most important attribute rule: **never** set raw query text, instance IRIs, or user IDs
-as attributes. Instead derive a bounded *shape* from the parsed query and attach it to the root span:
+as span attributes. Derive a bounded *shape* from the parsed query and attach that to the root span
+instead — the raw text has a different home, see [step 6](#6-capture-the-raw-payload-as-an-event):
 
 ```scala
 def setShapeOnRoot(tracing: Tracing, query: ConstructQuery, resultType: QueryResultType): UIO[Unit] =
@@ -132,7 +134,48 @@ Split the cardinality deliberately:
 Bucket open-ended counts (pattern count, join count) into ranges (`0`, `1`, `2-3`, `4-7`, `8+`) so
 the shape label stays bounded. Set the shape on the root immediately after parse succeeds.
 
-## 6. Errors and interruptions without leaks
+## 6. Capture the raw payload as an event
+
+The shape tells you *what kind* of request this was; it does not tell you *which* request, so a slow
+trace cannot be reproduced from the shape alone. Capture the raw submitted payload — the query string,
+the request body — as a span **event** on the root span:
+
+```scala
+def recordQueryOnRoot(tracing: Tracing, query: IRI): UIO[Unit] =
+  tracing.getCurrentSpanUnsafe.map { span =>
+    val _ = span.addEvent("gravsearch.query", Attributes.of(DbAttributes.DB_QUERY_TEXT, query))
+  }
+```
+
+Three rules, all load-bearing:
+
+**Event, not attribute.** The Alloy `otelcol.connector.spanmetrics` dimension list reads span
+attributes, so raw payload in an attribute is one config line away from becoming an unbounded
+Prometheus label. An event attribute is unreachable from there — the cardinality accident becomes
+impossible rather than merely forbidden — while staying fully searchable in Tempo via the `event:name`
+/ `event.<key>` scope.
+
+**Root span only, and never inside `stageSpan`.** Stage spans are asserted to carry *no* events at
+all; that assertion is what locks the sanitized-error contract in step 7. Putting payload on a stage
+span would quietly retire the lock.
+
+**Record it before the first stage.** The shape is derived after parsing, so a payload that fails to
+parse never gets one. Capturing at entry means the least-diagnosable trace gains the most, at no extra
+cost.
+
+Naming follows OpenTelemetry Semantic Conventions where they reach:
+
+| Thing | Name | Why |
+| --- | --- | --- |
+| Payload attribute | `db.query.text` (use the generated `DbAttributes.DB_QUERY_TEXT`) | The stable semconv key for query text, and the rename target of the deprecated `db.statement`. Pairs with the shape attribute, which is `db.query.summary` semantics |
+| Event name | `<vertical>.query`, e.g. `gravsearch.query` | Semconv defines no event name for "payload captured", so this one is ours. Keep it bounded and predictable |
+
+Two caveats worth stating rather than glossing: semconv scopes `db.*` to database queries, and the
+statement actually sent to the database here is the *generated* SPARQL, not the client's Gravsearch;
+and the event carries **unredacted user input**, which is a deliberate, signed-off position for
+Gravsearch (search terms, not record content) — re-decide it per vertical rather than inheriting it.
+
+## 7. Errors and interruptions without leaks
 
 **Use `SanitizedSpan.withSpan` rather than writing this yourself.**
 `org.knora.webapi.slice.infrastructure.SanitizedSpan` implements everything in this section — the
@@ -207,6 +250,8 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 - [ ] Stages that may not run are wrapped *inside* their conditional (no placeholder spans).
 - [ ] A bounded shape on the root; no raw text / instance IRIs / user IDs as attributes.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
+- [ ] Raw payload captured as an **event** on the root span, before the first stage — never an attribute, never inside `stageSpan`; `db.query.text` for query text.
 - [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
 - [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message), and one
       asserting a **defect** yields `"<stage>: defect"` — the two go through different mechanisms.
+- [ ] A test asserting the payload event carries the exact submitted text, on both the success and the parse-failure path.

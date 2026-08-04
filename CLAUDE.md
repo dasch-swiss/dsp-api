@@ -19,16 +19,16 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 - **Primary**: `just` (command runner) - the canonical entry point for build, test, image, CI, and
   local-dev tasks (stack lifecycle, DB init, cleanup); it wraps Bazel. Run `just --list`.
-- **Compilation / formatting**: `sbt` - use the `./sbtx` wrapper (still the Scala build of record
-  during the Bazel validation window).
+- **Build of record**: `bazel` (via the Nix dev shell). sbt has been removed; everything (compile,
+  test, images, formatting, linting) runs through Bazel. For the fast edit → diagnostics loop, prefer
+  the `metals` MCP tools (see below) over shelling out to `bazel build`.
 
 ### Essential Development Commands
 
 **Testing:**
 
-- Run a single test: `sbt "testOnly *TestClassName*"`
-- Run tests in a specific package: `sbt "testOnly org.knora.webapi.slice.admin.*"`
-- `sbt test` - Run unit tests
+- Run a single test target: `bazel test //modules/webapi:test` (filter with `--test_filter=*TestClassName*`)
+- Run one module's tests: `bazel test //modules/webapi:test`
 - Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `just docker-build-sipi-image`.
 - `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator)
 - `just test-it` - Run integration tests (requires Docker)
@@ -36,13 +36,14 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 **Code Quality:**
 
-- `sbt fmt` - Format code with Scalafmt
-- `sbt check` - Check code formatting and linting
-- `sbt "scalafixAll --check"` - Check Scalafix rules
+- `just fmt` - Format Scala (scalafmt via Bazel) and apply Apache-2.0 SPDX headers
+- `just check` - Check formatting + license headers (the CI gate; no writes)
+- Import organization is handled by scalafmt (`.scalafmt.conf`); unused imports are caught by the
+  compiler (`-Wunused:all -Werror`). scalafix was removed with sbt.
 
 **Building:**
 
-- `sbt compile` - Compile the project
+- `bazel build //modules/webapi:webapi` - Compile a module (or use the metals `compile-module` tool)
 - `just docker-build` - Build the dsp-api/sipi/ingest Docker images (Fuseki excluded)
 - `just docker-build-dsp-api-image` - Build only the API Docker image
 
@@ -72,8 +73,9 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
   publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
 - CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
   (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
-  sbt is retained only for the formatting check (`just check`) and a temporary tag-drift gate
-  (`just check-docker-image-tag`), both removable once validation closes.
+  sbt has been fully removed: formatting/linting is the rules_scala scalafmt toolchain, license
+  headers are `//tools/license`, and dependency updates run through Renovate (`.github/renovate.json`)
+  with `MODULE.bazel` as the sole version source.
 
 ## Architecture
 
@@ -161,14 +163,14 @@ Each slice typically contains:
   dev shell" above)
 - Docker Desktop
 
-`sbt` is not installed separately — the checked-in `./sbtx` wrapper runs it on the dev shell's JDK,
-and it remains the Scala build of record (Scala 3.8.4) during the Bazel validation window.
+Bazel (via the Nix dev shell) is the only build tool — sbt has been removed. Scala 3.8.4 is pinned in
+`MODULE.bazel` (`scala_config`).
 
 ### Local Development
 
 1. Start the development stack: `just stack-start-dev`
 2. This provides Fuseki (port 3030) and Sipi (port 1024)
-3. Run the API locally via IDE or `sbt run`
+3. Run the API locally via IDE or `bazel run //modules/webapi:app`
 4. API will be available at <http://localhost:3333>
 
 ### Testing Against the Dev Database
@@ -187,23 +189,20 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 
 ### Scala language intelligence (Metals MCP)
 
-This repo ships a checked-in `metals` MCP server giving agents real Scala language intelligence (compiler
-diagnostics, type-aware usage search, symbol docs and lookup). **Prefer the `metals` MCP tools over direct
-`sbt`/`sbtx` calls** — e.g. use `compile-file` / `compile-module` instead of `sbt compile`, and `get-usages`
-instead of grep. It is much faster (incremental, no JVM/sbt startup per call) and more capable (structured
-diagnostics, type-aware navigation). For setup, the full tool list, usage pattern, and the worktree/LOOM
-caveats see `docs/development/dsp-api-metals-mcp.md`.
+This repo ships a checked-in `metals` MCP server intended to give agents Scala language intelligence
+(compiler diagnostics, type-aware usage search, symbol docs and lookup). **When it is working, prefer
+the `metals` MCP tools over shelling out to `bazel build`** — `compile-file` / `compile-module` and
+`get-usages` are incremental and return structured results. For setup, the full tool list, and the
+worktree/LOOM caveats see `docs/development/dsp-api-metals-mcp.md`.
 
-**In a fresh checkout or worktree, metals needs a one-time bootstrap (~15s) or it will not work at all:**
-
-1. Run `just metals-bootstrap` (generates `.bloop/`; without it Metals cannot pick between `build.sbt` and
-   `MODULE.bazel` and never connects to a build server).
-2. Call the metals `import-build` tool once — a server that started before `.bloop/` existed does not
-   reconnect on its own.
-
-**If metals returns empty results, that means it is not connected — it does not mean it is still warming up.**
-Read `.metals/metals.log`, then bootstrap. Do not quietly fall back to `sbt compile`; if metals is genuinely
-unavailable, say so and why.
+**Bazel-9 note:** Metals connects to Bazel via **bazel-bsp**, whose bundled aspect (in bazel-bsp 4.0.x)
+isn't Bazel-9-compatible out of the box. Two local fixes make it work: a macOS-scoped
+`--incompatible_autoload_externally` flag in `.bazelrc` (restores the `JavaInfo`/`CcInfo` globals Bazel 9
+removed) and a `bazel_binary` wrapper (`tools/metals/bazel-bsp-wrapper.sh`) that re-applies a struct→provider
+patch to bazel-bsp's `core.bzl` on each invocation. So `compile-file`/`compile-module`/`get-usages` all work.
+This is **not** a rules_scala 7.x issue. It's a vendored patch to bazel-bsp — track scalameta/metals#8268 and
+remove it once upstream supports Bazel 9. Bootstrap in a fresh worktree: `just metals-bootstrap`, then the
+metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp.md`.
 
 ## API Structure
 
@@ -237,16 +236,15 @@ unavailable, say so and why.
 
 ### Bumping the SIPI version
 
-When applying a new `daschswiss/sipi` release, update **both** pins (they must
-stay in sync — the Bazel build consumes `MODULE.bazel`, sbt consumes
-`Dependencies.scala`):
+The sipi version lives in **one place**: the two `oci.pull` digests in `MODULE.bazel`. There is no
+duplicated tag string — the `/version` endpoint reads the tag from the pulled image's own
+`org.opencontainers.image.version` OCI label (`//tools/buildinfo:oci_config_label`).
 
-1. `project/Dependencies.scala` — `sipiImage` tag, e.g. `"daschswiss/sipi:v6.2.0"`.
-2. `MODULE.bazel` — the two `oci.pull` blocks (`sipi_base_amd64`,
-   `sipi_base_arm64`) are pinned by **per-arch single-manifest digest**, not the
-   tag. The arm64 index entry carries a `v8` variant that a bare `linux/arm64`
-   request does not match, so pull each platform's manifest directly. Also update
-   the tag and the index digest in the comment above them.
+When applying a new `daschswiss/sipi` release, update `MODULE.bazel`: the two `oci.pull` blocks
+(`sipi_base_amd64`, `sipi_base_arm64`) are pinned by **per-arch single-manifest digest**, not the tag.
+The arm64 index entry carries a `v8` variant that a bare `linux/arm64` request does not match, so pull
+each platform's manifest directly. Also update the tag and the index digest in the comment above them
+(the comment tag is documentation + a Renovate anchor; the digests are what the build uses).
 
 Get the digests for the target tag with:
 
@@ -256,10 +254,15 @@ docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z --raw \
 docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z | grep -i digest   # index digest
 ```
 
-`docker-compose.yml` needs no change — it uses `daschswiss/knora-sipi:latest`
-(the derived image built from this base), not a pinned version. After bumping,
-remember to sync the same version in the **ops-deploy** repo when deploying the
-DSP release.
+`docker-compose.yml` needs no change — it uses `daschswiss/knora-sipi:latest` (the derived image built
+from this base), not a pinned version. After bumping, remember to sync the same version in the
+**ops-deploy** repo when deploying the DSP release.
+
+(The **Fuseki** image is versioned by release-please like knora-api/dsp-ingest — its tag is the DSP
+release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist version**
+(`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the `/version`
+report, and the image's OTLP `service.version` resource attribute — see "Updating Jena/Fuseki" in
+`modules/fuseki/README.md`.)
 
 ### Code Style
 

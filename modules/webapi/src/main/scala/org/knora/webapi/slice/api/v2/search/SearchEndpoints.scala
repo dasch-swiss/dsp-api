@@ -8,8 +8,11 @@ package org.knora.webapi.slice.api.v2.search
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
+import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.codec.refined.*
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.zio.jsonBody
 import zio.ZIO
 import zio.ZLayer
 
@@ -20,6 +23,7 @@ import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.common.StringValueCompanion
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.*
+import org.knora.webapi.slice.search.SearchTimeoutException
 
 object SearchEndpointsInputs {
 
@@ -61,6 +65,15 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
+
+  // A fulltext search that exceeds its triplestore timeout returns 503 with a legible, hedged body rather than
+  // the shared catch-all's bare 500 (DEV-6864, HONEST-TIMEOUT). Prepended so it is matched before the catch-all,
+  // and attached only to the two fulltext endpoints below — never to the shared BaseEndpoints.errorOutputs, which
+  // would advertise 503 on every path in the bot-synced OpenAPI (D11, Spike B).
+  private val searchTimeoutVariant =
+    oneOfVariant[SearchTimeoutException](
+      statusCode(StatusCode.ServiceUnavailable).and(jsonBody[SearchTimeoutException]),
+    )
 
   val postGravsearch = baseEndpoints.withUserEndpoint.post
     .in("v2" / "searchextended")
@@ -191,6 +204,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.returnFiles)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
       "Full-text search for resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )
@@ -203,6 +217,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(SearchEndpointsInputs.limitToStandoffClass)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
+    .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
       "Count full-text search results. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )

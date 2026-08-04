@@ -12,7 +12,6 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.responders.admin.AssetPermissionsCache.CacheKey
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 
@@ -28,10 +27,9 @@ class AssetPermissionsCacheSpec extends ZIOSpecDefault {
 
   private def keyFor(
     user: String = "http://rdfh.ch/users/aaaa",
-    shortcode: String = "0001",
     filename: String = "test.jp2",
   ): CacheKey =
-    CacheKey(UserIri.unsafeFrom(user), Shortcode.unsafeFrom(shortcode), InternalFilename.unsafeFrom(filename))
+    CacheKey(UserIri.unsafeFrom(user), InternalFilename.unsafeFrom(filename))
 
   private def decision(code: Int): PermissionCodeAndProjectRestrictedViewSettings =
     PermissionCodeAndProjectRestrictedViewSettings(code, restrictedViewSettings = None)

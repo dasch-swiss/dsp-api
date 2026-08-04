@@ -1,0 +1,26 @@
+load("@rules_python//python:defs.bzl", "py_test")
+
+# Enforce "no relative imports" across all Scala sources. Reuses each module's
+# `license_srcs` filegroup (glob of src/**/*.scala) so the file set stays in one
+# place. py_test (like //tools/license) resolves the hermetic Python interpreter
+# for RBE. Wired into `just check`.
+_LINT_SRCS = [
+    "//modules/bagit:license_srcs",
+    "//modules/ingest:license_srcs",
+    "//modules/jwt:license_srcs",
+    "//modules/shacl-validator:license_srcs",
+    "//modules/test-e2e:license_srcs",
+    "//modules/test-ingest-integration:license_srcs",
+    "//modules/test-it:license_srcs",
+    "//modules/test-runner:license_srcs",
+    "//modules/testkit:license_srcs",
+    "//modules/webapi:license_srcs",
+]
+
+py_test(
+    name = "no_relative_imports",
+    srcs = ["check_relative_imports.py"],
+    args = ["$(rootpaths %s)" % t for t in _LINT_SRCS],
+    data = _LINT_SRCS,
+    main = "check_relative_imports.py",
+)

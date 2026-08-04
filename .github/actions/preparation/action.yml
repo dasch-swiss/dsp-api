@@ -17,4 +17,3 @@ runs:
       with:
         distribution: "temurin"
         java-version: ${{ inputs.java-version }}
-        cache: sbt

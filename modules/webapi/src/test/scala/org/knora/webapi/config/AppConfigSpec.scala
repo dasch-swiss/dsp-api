@@ -33,6 +33,11 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.sipi.timeout == Duration.ofSeconds(120),
           appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
+          appConfig.triplestore.searchTimeout == Duration.ofSeconds(60),
+          appConfig.v2.fulltextSearch.probe.cap == 250000,
+          appConfig.v2.fulltextSearch.probe.cacheCapacity == 1024,
+          appConfig.v2.fulltextSearch.probe.cacheTtl == Duration.ofMinutes(10),
+          appConfig.v2.fulltextSearch.probe.maxConcurrent == 8,
           appConfig.bcryptPasswordStrength == PasswordStrength.unsafeFrom(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           appConfig.filePermissionCache.ttl == Duration.ofMinutes(2),
@@ -89,6 +94,30 @@ class AppConfigSpec extends ZIOSpecDefault {
     },
     test("reject a sparql passthrough request-body cap below 1") {
       loadAppConfigWith("app.triplestore.sparql-passthrough.max-request-body-bytes = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a search-timeout that is not positive") {
+      loadAppConfigWith("app.triplestore.search-timeout = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a search-timeout above the gravsearch-timeout") {
+      loadAppConfigWith("app.triplestore.search-timeout = 121 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe cap below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cap = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe cache-capacity below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cache-capacity = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe cache-ttl that is not positive") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.cache-ttl = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe max-concurrent below 1") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.max-concurrent = 0").exit
         .map(exit => assertTrue(exit.isFailure))
     },
   )

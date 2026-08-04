@@ -13,12 +13,12 @@ module(
 bazel_dep(name = "rules_oci", version = "2.3.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
 # Already a transitive dep of the graph (resolves to 1.7.0 regardless); declared
-# directly for the hermetic interpreter //tools/deps:maven_versions_match_sbt
-# needs — a py_test, not a host-python3-via-shebang script, so it doesn't break
-# on an RBE worker that has no (or a different) python3 on PATH.
+# directly for the hermetic interpreter the py_tests in //tools/license and
+# //tools/buildinfo need — not a host-python3-via-shebang script, so they don't
+# break on an RBE worker that has no (or a different) python3 on PATH.
 bazel_dep(name = "rules_python", version = "1.7.0")
-# Native sh_test/sh_binary are gone as of this Bazel version; //tools/oci's
-# image_versions_match_sbt check needs it.
+# Native sh_test/sh_binary are gone as of this Bazel version; declared directly
+# so any sh_* rule and rules_oci's transitive shell usage resolves.
 bazel_dep(name = "rules_shell", version = "0.6.1")
 # rules_oci depends on tar.bzl transitively (for its own oci_load); declaring it
 # directly here too makes `@tar.bzl//tar/toolchain:type` resolvable from our own
@@ -64,6 +64,12 @@ scala_deps = use_extension("@rules_scala//scala/extensions:deps.bzl", "scala_dep
 scala_deps.settings(fetch_sources = True)
 scala_deps.scala()
 scala_deps.junit()
+
+# scalafmt toolchain (replaces sbt-scalafmt). The bundled engine is scalafmt-core
+# 3.10.7 and it IGNORES the `version` field in .scalafmt.conf; the config file
+# pins the same version only so IDE/CLI scalafmt matches. The toolchain is
+# registered by rules_scala's own `register_toolchains("@rules_scala_toolchains//...:all")`.
+scala_deps.scalafmt(default_config = "//:.scalafmt.conf")
 use_repo(
     scala_deps,
     "rules_scala_toolchains",
@@ -251,8 +257,8 @@ maven.install(
     version_conflict_policy = "pinned",
 )
 
-# Artifacts needing exclusions, kept in sync with project/Dependencies.scala (enforced by
-# //tools/deps:maven_versions_match_sbt).
+# Artifacts needing exclusions. MODULE.bazel is the sole source of dependency
+# versions (Renovate keeps them current; see .github/renovate.json).
 maven.artifact(
     name = "maven",
     artifact = "commons-validator",
@@ -273,26 +279,50 @@ maven.artifact(
 use_repo(maven, "maven", "unpinned_maven")
 
 #############################################
+# Image version coordinates
+#############################################
+
+# Single source of truth for the Apache Jena Fuseki dist (jar) version — the one
+# thing we actually download and pack into the image. Used in two places, both
+# below: the @fuseki_dist tarball (strip_prefix + url) and the image_versions
+# extension. The Fuseki OCI *image* is versioned by release-please (git version,
+# stamped into the image label), like knora-api/dsp-ingest — it is NOT derived
+# from this value. This dist version reaches BUILD files via the generated
+# @dsp_image_versions//:defs.bzl (BUILD files can't load() MODULE.bazel): it
+# feeds the /version report (modules/webapi buildinfo) and the OTLP
+# service.version resource attribute (modules/fuseki), which surfaces the
+# deployed engine version in Grafana. The sipi tag has no entry here — its
+# version is read from the pulled image's OCI label, so its digest is its sole
+# source.
+FUSEKI_DIST_VERSION = "6.1.0"
+
+image_versions = use_extension("//tools/image_versions:extension.bzl", "image_versions")
+image_versions.fuseki(dist_version = FUSEKI_DIST_VERSION)
+use_repo(image_versions, "dsp_image_versions")
+
+#############################################
 # knora-sipi OCI image (unchanged)
 #############################################
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
-# Upstream Sipi image (daschswiss/sipi:v6.2.2), pinned per-arch by manifest
+# Upstream Sipi image (daschswiss/sipi:v6.3.0), pinned per-arch by manifest
 # digest. Pulling each platform's single image manifest directly avoids
-# index/variant matching — the arm64 entry of the v6.2.2 index carries a `v8`
-# variant, which a bare `linux/arm64` platform request does not match. The tag
-# is recorded in `Dependencies.sipiImage` (project/Dependencies.scala); bump both
-# together — see "Bumping the SIPI version" in CLAUDE.md.
-# Index digest: sha256:379f2a19a193bef907c4d99b4bfa49c2b76c62c44fa06cf52844aeaf14e63eac
+# index/variant matching — the arm64 entry of the v6.3.0 index carries a `v8`
+# variant, which a bare `linux/arm64` platform request does not match. These two
+# digests are the SOLE source of the sipi version: the /version endpoint reads
+# the tag from the image's own `org.opencontainers.image.version` OCI label
+# (//tools/buildinfo:oci_config_label), so there is no duplicated tag string to
+# keep in sync. To bump, see "Bumping the SIPI version" in CLAUDE.md.
+# Index digest: sha256:0096b8d62023fac37291d1f4a298cdef79e3979a034deee21d10721fab8caa6f
 oci.pull(
     name = "sipi_base_amd64",
-    digest = "sha256:113450308ca60ec302e3dbbd4b7678a9be2509e4cadd68f4b77158fdce9c9676",
+    digest = "sha256:ca8b1c78bb5aba0e4b16835dfbc5367f46d921f9ab7b936f1de6034db730bca0",
     image = "index.docker.io/daschswiss/sipi",
 )
 oci.pull(
     name = "sipi_base_arm64",
-    digest = "sha256:b7280d932e381718cc3a2dd70f8475320d01143e697af94a4ea8a1dadb55c2d9",
+    digest = "sha256:f803a8b2c76096b08a057714036396597f45d09eba84f0138b56f8d40d3f4ca1",
     image = "index.docker.io/daschswiss/sipi",
 )
 use_repo(
@@ -334,11 +364,10 @@ use_repo(
 # Prefetched image assets (OTel agent, Pyroscope extension)
 #############################################
 
-# ADDed from a URL in the sbt images (build.sbt webapi + ingest blocks); rules_oci
-# has no ADD-from-URL, so fetch hermetically and pack into a layer instead (see
-# the *_layer pkg_tar targets in modules/webapi and modules/ingest BUILD files).
-# Versions kept in sync with project/Dependencies.scala's otelAgentVersion/otelPyroscopeVersion
-# (enforced by //tools/oci:image_versions_match_sbt).
+# rules_oci has no ADD-from-URL, so fetch the OpenTelemetry agent + Pyroscope
+# extension hermetically and pack them into a layer (see the *_layer pkg_tar
+# targets in modules/webapi and modules/ingest BUILD files). These versions live
+# here in MODULE.bazel and are Renovate-updatable.
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
@@ -405,9 +434,9 @@ http_file(
 #############################################
 
 # rules_oci has no ADD-from-URL, so fetch the Fuseki dist tarball hermetically
-# here; the sha256 pin below guards its integrity. The dist version must match
-# modules/fuseki/BUILD.bazel's FUSEKI_VERSION (checked by
-# //tools/oci:image_versions_match_sbt); bump both together.
+# here; the sha256 pin below guards its integrity. Version single-sourced from
+# FUSEKI_DIST_VERSION above (strip_prefix + url) — bump that one value and update
+# the sha256 to match the new tarball.
 http_archive(
     name = "fuseki_dist",
     build_file_content = "\n".join([
@@ -423,8 +452,8 @@ http_archive(
         ')',
     ]),
     sha256 = "a4a845bb602515f66e3397e89b52180ca055f4b240ddb442a1a793a98ce4d280",
-    strip_prefix = "apache-jena-fuseki-6.1.0",
-    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-6.1.0.tar.gz"],
+    strip_prefix = "apache-jena-fuseki-" + FUSEKI_DIST_VERSION,
+    urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-" + FUSEKI_DIST_VERSION + ".tar.gz"],
 )
 
 # Static tini (fuseki's ENTRYPOINT, apt-installed in the Dockerfile) -- the

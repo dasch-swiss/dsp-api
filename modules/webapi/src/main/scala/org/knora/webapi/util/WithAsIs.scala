@@ -5,10 +5,9 @@
 
 package org.knora.webapi.util
 
+import scala.PartialFunction.cond
+import scala.PartialFunction.condOpt
 import scala.reflect.ClassTag
-
-import PartialFunction.condOpt
-import PartialFunction.cond
 
 trait WithAsIs[A] {
   def asOpt[T <: A: ClassTag]: Option[T] = condOpt(this) { case a: T => a }

@@ -1,5 +1,11 @@
 openapiDir := "./docs/03-endpoints/generated-openapi"
 
+# Scala targets with scalafmt enabled (format = True). The implicit .format /
+# .format-test outputs aren't discovered by `bazel test //...`, so fmt/check
+# drive them explicitly. Keep in sync with the `format = True` targets in the
+# module BUILD files.
+scalafmt_targets := "//modules/bagit:bagit //modules/bagit:test //modules/jwt:jwt //modules/jwt:test //modules/shacl-validator:shacl-validator //modules/shacl-validator:test //modules/test-runner:test-runner //modules/testkit:testkit //modules/webapi:webapi //modules/webapi:test //modules/ingest:ingest //modules/ingest:test //modules/test-it:test //modules/test-e2e:test //modules/test-ingest-integration:test"
+
 # List all recipies
 default:
     @just --list
@@ -8,9 +14,12 @@ alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
 
-# Format code
+# Format Scala (scalafmt via Bazel) and apply license headers
 fmt:
-    ./sbtx fmt
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for t in {{scalafmt_targets}}; do bazel run "$t.format"; done
+    just header-fix
 
 # CI threads the RBE flag string emitted by the bazel-rbe composite action into these recipes as a
 # trailing `*FLAGS` argument (`just <recipe> "$FLAGS"`); each bazel command appends `{{FLAGS}}`.
@@ -46,68 +55,47 @@ test-ingest *FLAGS='':
 test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
     bazel test //modules/test-ingest-integration:test {{FLAGS}}
 
-# Run code formatting + lint check (sbt)
-check:
-    ./sbtx check
+# Check Scala formatting (scalafmt via Bazel) + license headers (CI gate, no writes)
+check *FLAGS='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # scalafmt format-test runs LOCALLY (no {{FLAGS}}): `bazel run <t>.format-test` diffs the
+    # source against a generated `.fmt.output`, which under RBE build-without-the-bytes is never
+    # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
+    for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
+    bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
 
-# Sync MODULE.bazel's maven.install versions to Dependencies.scala (sbt) + re-pin the lock file.
-# scala-steward updates only the sbt side, so run this after a dependency update to clear the drift that
-# //tools/deps:maven_versions_match_sbt reports.
-sync-bazel-maven-versions:
-    python3 tools/deps/check_maven_versions.py --fix MODULE.bazel project/Dependencies.scala
-    bazel run @unpinned_maven//:pin
+# Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
+header-fix:
+    bazel run //tools/license:fix
 
 ## Scala language intelligence (Metals MCP)
 
-# dsp-api has both build.sbt and MODULE.bazel, so Metals finds two build definitions, cannot decide which to
-# import from, and has no way to ask over MCP stdio: it never connects and every metals tool returns empty.
-# Generating .bloop/ sidesteps the question, because Metals then connects to the Bloop build server directly.
-# `clean-metals` removes .bloop again, so re-run this afterwards.
-# See docs/development/dsp-api-metals-mcp.md.
-
-# Bootstrap Metals/Bloop so the `metals` MCP server can connect (run once per fresh checkout or worktree)
+# With sbt gone, Metals connects to the Bazel build via bazel-bsp. Metals bootstraps
+# bazel-bsp itself (its embedded coursier; no `cs` needed) and writes .bsp/bazelbsp.json,
+# driven by the committed .bazelproject (projectview). This recipe just checks the
+# prerequisites and warms Bazel; the running MCP server connects when you call its
+# `import-build` tool once. See docs/development/dsp-api-metals-mcp.md.
+#
+# BAZEL 9: bazel-bsp 4.0.x (bundled with Metals 1.6.7) isn't Bazel-9-compatible out of the box.
+# Two local fixes make it work: a macOS-scoped --incompatible_autoload_externally flag in .bazelrc,
+# and a bazel_binary wrapper (tools/metals/bazel-bsp-wrapper.sh, set in .bazelproject) that patches
+# bazel-bsp's struct-returning aspect on each invocation. So compile/get-usages work. Vendored patch,
+# not a rules_scala issue; tracked at scalameta/metals#8268. See docs/development/dsp-api-metals-mcp.md.
 metals-bootstrap:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Metals normally generates this itself right before running bloopInstall, but it never gets that far
-    # here. Gitignored via `**/metals.sbt`. Keep sbt-bloop in step with the Metals release in use.
-    if [ ! -f project/metals.sbt ]; then
-      printf '%s\n' \
-        '// format: off' \
-        '// DO NOT EDIT! This file is auto-generated.' \
-        '' \
-        '// This file enables sbt-bloop to create bloop config files.' \
-        '' \
-        'addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "2.0.18")' \
-        '' \
-        '// format: on' \
-        > project/metals.sbt
-      echo "wrote project/metals.sbt"
-    fi
-    ./sbtx -Dbloop.export-jar-classifiers=sources bloopInstall
-    echo
-    echo "Generated $(ls .bloop/*.json | wc -l | tr -d ' ') Bloop targets."
-    echo "If a metals MCP session is already running, call its 'import-build' tool once to reconnect."
+    test -f .bazelproject || { echo "ERROR: .bazelproject missing (should be committed)"; exit 1; }
+    # Warm the repo cache so bazel-bsp's import is fast when Metals triggers it.
+    bazel query //modules/... >/dev/null 2>&1 || true
+    echo "Metals connects to Bazel via bazel-bsp (auto-bootstrapped from .bazelproject)."
+    echo "In your session, call the metals 'import-build' tool once to connect (writes .bsp/)."
 
 ## Docker image build / publish
 
-# Print the docker image tag (git describe via workspace_status.sh; no sbt)
+# Print the docker image tag (git describe via workspace_status.sh)
 docker-image-tag:
     @tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}'
-
-# Assert workspace_status.sh's STABLE_GIT_VERSION byte-matches sbt's dockerImageTag (temporary gate)
-check-docker-image-tag:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ws=$(tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}')
-    # `print dockerImageTag` emits the value on the last stdout line; take only that
-    # line so a cold sbt-launcher bootstrap (download messages to stdout) can't pollute it.
-    sbt=$(./sbtx -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag" | awk 'NF{last=$0} END{print last}' | tr -d '[:space:]')
-    if [ "$ws" != "$sbt" ]; then
-      echo "DRIFT: workspace_status=$ws sbt=$sbt"
-      exit 1
-    fi
-    echo "OK: $ws"
 
 # Build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
 docker-build-dsp-api-image *FLAGS='':
@@ -160,24 +148,20 @@ docker-publish-ingest-image *FLAGS='':
     TAG=$(just docker-image-tag)
     bazel run {{FLAGS}} //modules/ingest:push -- -t latest -t "$TAG"
 
-# Publish dsp-api/sipi/ingest images to Docker Hub (Fuseki excluded: published separately)
-docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS)
+# Publish all images (dsp-api/sipi/ingest/fuseki) to Docker Hub
+docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS) (docker-publish-fuseki-image FLAGS)
 
-# Build the Fuseki image with Bazel + load it into the local Docker daemon (at its version tag)
+# Build the Fuseki image with Bazel + load it into the local Docker daemon (at :latest)
 docker-build-fuseki-image *FLAGS='':
     bazel run {{FLAGS}} //modules/fuseki:load
 
-# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel
+# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
+# The Fuseki image is versioned by release-please (git version), same as the other three images.
 docker-publish-fuseki-image *FLAGS='':
     #!/usr/bin/env bash
     set -euo pipefail
-    # Compose the tag from BUILD.bazel's two constants -- it derives every version-bearing
-    # site from them, so no `apache-jena-fuseki:<tag>` literal exists in the file to grep for.
-    # `oci_push` carries no tag of its own, so the `-t` below is the image's only tag source.
-    FUSEKI_VER=$(grep -oE '^FUSEKI_VERSION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
-    IMAGE_REV=$(grep -oE '^IMAGE_REVISION = "[^"]+"' modules/fuseki/BUILD.bazel | head -1 | cut -d'"' -f2)
-    VER="${FUSEKI_VER}-${IMAGE_REV}"
-    bazel run {{FLAGS}} //modules/fuseki:push -- -t "$VER"
+    TAG=$(just docker-image-tag)
+    bazel run {{FLAGS}} //modules/fuseki:push -- -t latest -t "$TAG"
 
 # Start stack
 stack-start:
@@ -242,7 +226,7 @@ run-with-dev-db:
     export KNORA_WEBAPI_SIPI_INTERNAL_HOST=iiif.dev.dasch.swiss                                                             
     export KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL=https                                                                        
     export KNORA_WEBAPI_SIPI_INTERNAL_PORT=443
-    ./sbtx "webapi/run"
+    bazel run //modules/webapi:app
 
 ## Documentation
 
@@ -438,13 +422,12 @@ clean-local-tmp:
     rm -rf .tmp
     mkdir .tmp
 
-# clean SBT and Metals related stuff
+# clean Metals/BSP state (re-run `just metals-bootstrap` afterwards)
 clean-metals:
     rm -rf .bloop
     rm -rf .bsp
     rm -rf .metals
     rm -rf target
-    ./sbtx clean
 
 # clean build artifacts
 clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp

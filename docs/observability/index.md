@@ -38,8 +38,9 @@ them.
 - **[Using Grafana](using-grafana.md)** — where Grafana lives (cloud and local stack), the Explore /
   TraceQL UI flow, and how to run every recipe from Claude Code via the Grafana MCP server.
 - **[Gravsearch Trace Runbook](gravsearch-trace-runbook.md)** — find a slow Gravsearch trace, read
-  the per-stage time decomposition, and interpret each span and attribute (including the cases where
-  *absent* spans are normal, not broken instrumentation).
+  the per-stage time decomposition, read the submitted query off the root span, and interpret each
+  span and attribute (including the cases where *absent* spans are normal, not broken
+  instrumentation).
 - **[TraceQL Recipes](traceql-recipes.md)** — ready-to-run TraceQL queries and a Grafana Explore
   starter for hunting slow Gravsearch queries.
 - **[Instrumentation Recipe](instrumentation-recipe.md)** — the pattern used to instrument

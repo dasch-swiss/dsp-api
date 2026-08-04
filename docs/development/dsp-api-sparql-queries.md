@@ -17,10 +17,8 @@ for the base trait — your query builders should extend or mix in `QueryBuilder
 
 ## Dependency
 
-```scala
-// sbt
-"org.eclipse.rdf4j" % "rdf4j-sparqlbuilder" % rdf4jVersion
-```
+The `org.eclipse.rdf4j:rdf4j-sparqlbuilder` artifact is provided through the Bazel `maven.install`
+in `MODULE.bazel` (the version is managed there); no manual dependency wiring is needed to use it.
 
 ## Core Imports
 
@@ -365,6 +363,16 @@ closure. Both directions of this were measured in the DEV-6803 audit:
 
 Corollary: an odd-looking pattern sitting next to a property path is probably load-bearing.
 Don't remove it without checking the plan — and make sure the golden spec pins it.
+
+Second corollary: *simplifying* an anchored path can also cost you. Because a path pins
+evaluation to document order while a plain triple pattern is reorderable, replacing one with the
+other hands the optimizer a choice it may get wrong. Measured (DEV-6833): swapping an anchored
+`subClassOf*` walk to `knora-base:Resource` for a single-hop `subClassOf` pattern went from
+**8.6s to 73.6s** — Fuseki enumerated the subclasses and scanned `?resource a ?rc` for each
+instead of probing per row. (That particular rewrite was also wrong, since the closure is not
+materialized — but it was 8.6× slower regardless.) Benchmark a simplification in place, using the
+query as generated, before believing it. See
+[`dsp-api-fuseki-query-execution.md` Fact 11](dsp-api-fuseki-query-execution.md).
 
 ### Negation: `FILTER NOT EXISTS`, not `MINUS`, for per-row guards
 

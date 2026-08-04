@@ -20,8 +20,8 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
