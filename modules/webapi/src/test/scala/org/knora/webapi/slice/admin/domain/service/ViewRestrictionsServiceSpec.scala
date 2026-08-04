@@ -409,7 +409,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.File))
       } yield {
         val thing = result.groups.find(_.id == thingClass)
-        assertTrue(thing.exists(_.counts.anonymous == 0))
+        // The document is RestrictedView (not Hidden) for anon, so its hidden count is 0 — and a group with
+        // no hidden items is dropped from the summary altogether.
+        assertTrue(thing.forall(_.counts == AudienceCounts(0, 0, 0)), result.totals == AudienceCounts(0, 0, 0))
       }
     }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
   )
