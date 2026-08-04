@@ -44,12 +44,15 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("valueQuery")(
-      test("binds the file-value and still-image markers, excludes link values and caps the scan") {
+      test("binds the file-value marker, excludes link values and caps the scan") {
         val q = ViewRestrictionsRepo.valueQuery(projectIri, group = None, GroupBy.ResourceClass).getQueryString
         assertTrue(
-          // both markers are present: a generic file marker AND the narrower still-image marker
+          // the generic file marker distinguishes File from Value items
           q.contains("knora-base:FileValue"),
-          q.contains("knora-base:StillImageFileValue"),
+          // …and no still-image marker: visibility no longer depends on whether a file is an image, so the
+          // subclass-closure OPTIONAL that bound ?imageClass must not come back as dead query work.
+          !q.contains("knora-base:StillImageFileValue"),
+          !q.contains("imageClass"),
           // link values are excluded and the scan is capped
           q.contains("FILTER NOT EXISTS") && q.contains("knora-base:LinkValue"),
           q.contains("knora-base:valueHasComment"),

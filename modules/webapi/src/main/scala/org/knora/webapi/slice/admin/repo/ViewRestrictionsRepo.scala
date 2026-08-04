@@ -256,8 +256,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * SELECT the current, non-deleted values of a project's resources with the data to resolve each
    * value's per-audience visibility. Values are matched via the `knora-base:hasValue` super-property so
    * the carrying property IRI is captured; link values are excluded. `?fileClass` is bound when the value
-   * is a `knora-base:FileValue`, `?imageClass` when it is a `knora-base:StillImageFileValue` (the only file
-   * type renderable in restricted view), and `?comment` when it carries a `knora-base:valueHasComment`.
+   * is a `knora-base:FileValue`, and `?comment` when it carries a `knora-base:valueHasComment`.
    *
    * `group` filters by resource class (class mode) or by the carrying property (property mode).
    */
@@ -267,9 +266,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     val label       = variable("label")
     val prop        = variable("prop")
     val value       = variable("value")
-    val fileClass   = variable("fileClass")  // bound iff the value is a knora-base:FileValue
-    val imageClass  = variable("imageClass") // bound iff the value is a knora-base:StillImageFileValue
-    val comment     = variable("comment")    // bound iff the value carries a valueHasComment literal
+    val fileClass   = variable("fileClass") // bound iff the value is a knora-base:FileValue
+    val comment     = variable("comment")   // bound iff the value carries a valueHasComment literal
     val creator     = variable("creator")
     val permissions = variable("permissions")
 
@@ -304,14 +302,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
           .optional(),
       )
-      // OPTIONAL: bind ?imageClass when the value is (a subclass of) knora-base:StillImageFileValue.
-      // Only still-image file values can be served in restricted view (AC10); other file types cannot.
-      .and(
-        value
-          .isA(imageClass)
-          .and(imageClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.StillImageFileValue))
-          .optional(),
-      )
       // OPTIONAL: the comment literal, if present
       .and(value.has(KnoraBase.valueHasComment, comment).optional())
 
@@ -321,7 +311,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     }
 
     Queries
-      .SELECT(resource, resClass, label, prop, value, fileClass, imageClass, comment, creator, permissions)
+      .SELECT(resource, resClass, label, prop, value, fileClass, comment, creator, permissions)
       .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(wherePattern)

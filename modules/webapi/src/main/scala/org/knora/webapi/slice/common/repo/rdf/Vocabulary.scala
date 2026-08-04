@@ -81,14 +81,13 @@ object Vocabulary {
     val Resource: Iri       = iri(kb + "Resource")
     val isMainResource: Iri = iri(kb + "isMainResource")
 
-    val Value                    = iri(kb + "Value")
-    val TextValue: Iri           = iri(kb + "TextValue")
-    val linkValue: Iri           = iri(kb + "LinkValue")
-    val LinkValue: Iri           = iri(kb + "LinkValue")
-    val FileValue: Iri           = iri(kb + "FileValue")
-    val StillImageFileValue: Iri = iri(kb + "StillImageFileValue")
-    val hasValue: Iri            = iri(kb + "hasValue")
-    val previousValue: Iri       = iri(kb + "previousValue")
+    val Value              = iri(kb + "Value")
+    val TextValue: Iri     = iri(kb + "TextValue")
+    val linkValue: Iri     = iri(kb + "LinkValue")
+    val LinkValue: Iri     = iri(kb + "LinkValue")
+    val FileValue: Iri     = iri(kb + "FileValue")
+    val hasValue: Iri      = iri(kb + "hasValue")
+    val previousValue: Iri = iri(kb + "previousValue")
 
     // list properties
     val ListNode: Iri         = iri(kb + "ListNode")
