@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.repo
 
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
@@ -339,7 +340,14 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   // apart — a count that matched a different row set than the drill-down would be worse than no count.
   // ---------------------------------------------------------------------------------------------------
 
-  /** The resource skeleton: a project's current, non-deleted resources with class, creator, permissions. */
+  /**
+   * The resource skeleton: a project's current, non-deleted resources with class, creator, permissions.
+   *
+   * `?resClass` is pinned to the resource's **most specific asserted** class — see [[mostSpecificClass]].
+   * Without that, a resource asserted as (or inferred to be) several classes in one hierarchy would bind
+   * `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in the
+   * drill-down.
+   */
   private def resourceCore(
     projectIri: ProjectIri,
     resource: Variable,
@@ -354,11 +362,30 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
+      .and(mostSpecificClass(resource, resClass))
+
+  /**
+   * `FILTER NOT EXISTS { ?resource a ?subClass . ?subClass rdfs:subClassOf+ ?resClass }` — keeps only the
+   * most specific asserted class of a resource, so one resource yields exactly one `?resClass` binding even
+   * when the triplestore asserts or infers its superclasses too.
+   */
+  private def mostSpecificClass(resource: Variable, resClass: Variable): GraphPattern = {
+    val subClass = variable("subClass")
+    GraphPatterns.filterNotExists(
+      resource
+        .isA(subClass)
+        .and(subClass.has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).oneOrMore().build(), resClass)),
+    )
+  }
 
   /**
    * The value skeleton: a project's current, non-deleted values reached through a sub-property of
    * `knora-base:hasValue`, with the carrying property captured and link values excluded. Values carry their
    * own creator and permission literal.
+   *
+   * `?resClass` is pinned to the most specific asserted class for the same reason as in [[resourceCore]]:
+   * in class mode it is the grouping key, so a multi-typed resource would otherwise count its values once
+   * per class in the hierarchy.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -374,6 +401,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
+      .and(mostSpecificClass(resource, resClass))
       .and(
         resource
           .has(prop, value)
@@ -457,17 +485,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * permission literal the service classified as hidden. Exact at any project size.
    */
   private[repo] def resourceCountQuery(projectIri: ProjectIri, hiddenPermissions: Set[String]): SelectQuery = {
-    val (resource, groupId)    = (variable("resource"), variable("groupId"))
+    val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val cnt                    = variable("cnt")
+    val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
 
     Queries
       .SELECT(groupId, Expressions.count(resource).distinct().as(cnt))
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(resourceCore(projectIri, resource, groupId, creator, permissions))
-          .filter(permissionsIn(permissions, hiddenPermissions)),
+          .and(resourceCore(projectIri, resource, resClass, creator, permissions))
+          .filter(permissionsIn(permissions, hiddenPermissions))
+          .and(Expressions.bind(resClass, groupId)),
       )
       .groupBy(groupId)
   }

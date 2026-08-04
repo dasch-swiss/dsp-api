@@ -161,6 +161,31 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
+
+  /**
+   * A resource asserted as BOTH its own class and that class's superclass — what a triplestore with RDFS
+   * inference (or data that states both types) looks like. The report must still see it as ONE resource of
+   * ONE class: the aggregated summary counts per class, so an unpinned `?resClass` would bind once per class
+   * in the hierarchy and count the same resource twice, inflating the totals.
+   */
+  private val multiTypedTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<$thingClass>    rdfs:subClassOf kb:Resource .
+       |<$subThingClass> rdfs:subClassOf <$thingClass> .
+       |
+       |<http://rdfh.ch/0001/multiTyped>
+       |  a <$subThingClass>, <$thingClass> ;
+       |  rdfs:label "Multi typed" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
   private val hasDocument = "http://www.knora.org/ontology/0001/anything#hasDocument"
 
   /**
@@ -515,6 +540,32 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),
   )
 
+  // ----- a resource typed as several classes in one hierarchy must not be counted per class -----
+
+  private val multiTypedSuite = suite("resources typed as several classes in one hierarchy")(
+    test("the summary counts the resource once, under its most specific class") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.All))
+      } yield assertTrue(
+        // one group only — not one per class in the hierarchy
+        result.groups.size == 1,
+        result.groups.head.id == subThingClass,
+        result.groups.head.counts == AudienceCounts(1, 1, 0),
+        // and the totals are not inflated by the superclass binding
+        result.totals == AudienceCounts(1, 1, 0),
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+    test("the drill-down lists the resource once for its most specific class") {
+      for {
+        page <- service(_.items(projectIri, GroupBy.ResourceClass, subThingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(
+        page.pagination.totalItems == 1,
+        page.data.size == 1,
+        page.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+  )
+
   def spec = suite("ViewRestrictionsService")(
     pureSuite,
     summarySuite,
@@ -522,5 +573,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     valuesSuite,
     nonImageSuite,
     creatorOnlySuite,
+    multiTypedSuite,
   )
 }
