@@ -31,14 +31,42 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * type — resources, ordinary values, comments and any file value — so the dashboard reflects the actual
  * permissions in the triplestore.
  *
- * NOTE (v1): counts are computed by scanning the restriction-bearing objects the repo query returns, bounded
- * by [[ViewRestrictionsRepo.ScanCap]] rows. When the scan hits the cap the counts are a lower bound and both
- * the summary and the paged items response flag `approximate`. A configurable cap / cache is the remaining
- * follow-up for the DEV-6777 feasibility spike.
+ * COUNTING: the summary counts are computed by the triplestore, not by scanning objects here. That is sound
+ * because for the three synthetic audiences the visibility of an object depends **only** on its
+ * `knora-base:hasPermissions` literal:
+ *
+ *   - `entityProject` is constant per request;
+ *   - `requestingUser` is one of three synthetic users, none of them system/project admin (so
+ *     `getUserPermissionADM`'s max-permission short-circuit never fires);
+ *   - `entityCreator` matters only when it equals the requesting user, which a synthetic audience user never
+ *     is — so the `Creator` group never applies, and a `CR knora-admin:Creator` clause grants the audiences
+ *     nothing (the drill-down, resolving the real creator, reaches the same conclusion for the same reason).
+ *
+ * So we ask the repo for the project's *distinct* permission literals (a small set — literals come from
+ * project-level default-permission templates, not per-object authoring), classify those few with the real
+ * permission model, and let SPARQL `COUNT` the objects whose literal is in the hidden subset. Counts are
+ * therefore exact at any project size and `approximate` is always false. The drill-down is paged in SPARQL
+ * with a matching `COUNT`, so its `totalItems` is exact and its page order is stable.
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
 ) {
+
+  /**
+   * Stands in for `entityCreator` when classifying a bare permission literal.
+   *
+   * `getUserPermissionADM` consults the creator for exactly one thing: whether the requesting user *is* the
+   * creator, which adds the `knora-admin:Creator` group. This placeholder is deliberately a value no real
+   * `attachedToUser` and no [[audienceUser]] id can take, so that branch never fires — making the
+   * classification a pure function of the permission literal, which is what lets the counts be aggregated
+   * in SPARQL. `ViewRestrictionsServiceSpec` pins the equivalence.
+   *
+   * Consequence, and it is the right one for a report: a `CR knora-admin:Creator` clause grants nothing to
+   * any of the three audiences, because none of them is the creator of an arbitrary object. That matches
+   * how the drill-down resolves the same object with its real creator, since a synthetic audience user is
+   * never the creator either.
+   */
+  private val syntheticCreatorPlaceholder = "urn:view-restrictions:no-such-creator"
 
   /**
    * A synthetic, non-admin [[User]] standing in for one audience, suitable to feed
@@ -103,46 +131,80 @@ final case class ViewRestrictionsService(
       projectMember = visibilityFor(row, Audience.ProjectMember, projectIri),
     )
 
-  /** Add 1 to each audience count that sees the item as [[Visibility.Hidden]] (the summary semantics). */
-  private def addHidden(acc: AudienceCounts, vis: ItemVisibility): AudienceCounts =
-    AudienceCounts(
-      anonymous = acc.anonymous + (if (vis.anonymous == Visibility.Hidden) 1 else 0),
-      authenticated = acc.authenticated + (if (vis.authenticated == Visibility.Hidden) 1 else 0),
-      projectMember = acc.projectMember + (if (vis.projectMember == Visibility.Hidden) 1 else 0),
-    )
-
   private def plus(a: AudienceCounts, b: AudienceCounts): AudienceCounts =
     AudienceCounts(a.anonymous + b.anonymous, a.authenticated + b.authenticated, a.projectMember + b.projectMember)
 
+  /**
+   * Which of the project's distinct permission literals are [[Visibility.Hidden]] for the given audience.
+   *
+   * This is the step that makes exact counting affordable: the visibility of an object depends only on its
+   * permission literal (see the class doc), so classifying the handful of distinct literals is equivalent
+   * to classifying every object — and then the triplestore can do the counting.
+   */
+  private def hiddenLiteralsFor(
+    literals: Set[String],
+    audience: Audience,
+    projectIri: ProjectIri,
+  ): Set[String] =
+    literals.filter { literal =>
+      visibilityOf(
+        PermissionUtilADM.getUserPermissionADM(
+          // The creator only matters when it equals the requesting user, which no synthetic audience user
+          // can be (see audienceUser) — so any placeholder is equivalent here.
+          entityCreator = syntheticCreatorPlaceholder,
+          entityProject = projectIri.value,
+          entityPermissionLiteral = literal,
+          requestingUser = audienceUser(audience, projectIri),
+        ),
+      ) == Visibility.Hidden
+    }
+
   def summary(projectIri: ProjectIri, groupBy: GroupBy, itemType: ItemType): Task[ViewRestrictionsSummary] =
     for {
-      result     <- repo.findRestrictedObjects(projectIri, groupBy, itemType)
-      rows        = result.rows
-      approximate = result.capped
-      // A comment is a facet of its value (same object, same permissions), so under itemType=All it must
-      // not be counted separately from its Value row — only count Comment rows when Comment is the filter.
-      countable = rows.filter(r => itemType == ItemType.Comment || r.itemType != ItemType.Comment)
-      // Group rows by their grouping key (class IRI, or property IRI in property mode).
-      grouped = countable.groupBy(_.groupId)
-      groups  = grouped.toSeq.map { case (groupId, groupRows) =>
-                 val counts = groupRows.foldLeft(AudienceCounts.zero) { (acc, row) =>
-                   addHidden(acc, itemVisibility(row, projectIri))
-                 }
-                 val head = groupRows.head
-                 RestrictionGroup(
-                   id = groupId,
-                   label = head.groupLabel,
-                   ontology = head.ontology,
-                   propertyName = head.propertyName,
-                   counts = counts,
-                 )
-               }
+      literals <- repo.distinctPermissions(projectIri, itemType, groupBy)
+      // Classify the small distinct-literal set once per audience, then let the triplestore count.
+      hiddenPerAudience  = Audience.ordered.map(a => a -> hiddenLiteralsFor(literals, a, projectIri)).toMap
+      countsPerAudience <- ZIO.foreach(Audience.ordered) { audience =>
+                             repo
+                               .countByGroup(projectIri, groupBy, itemType, hiddenPerAudience(audience))
+                               .map(rows => audience -> rows)
+                           }
+      // groupId -> per-audience counts, summing the resource and value contributions of the same group.
+      byGroup = countsPerAudience.foldLeft(Map.empty[String, AudienceCounts]) { case (acc, (audience, rows)) =>
+                  rows.foldLeft(acc) { (inner, row) =>
+                    val current = inner.getOrElse(row.groupId, AudienceCounts.zero)
+                    val delta   = audience match {
+                      case Audience.Anonymous     => AudienceCounts(row.count, 0, 0)
+                      case Audience.Authenticated => AudienceCounts(0, row.count, 0)
+                      case Audience.ProjectMember => AudienceCounts(0, 0, row.count)
+                    }
+                    inner.updated(row.groupId, plus(current, delta))
+                  }
+                }
+      groups = byGroup.toSeq.map { case (groupId, counts) => restrictionGroup(groupId, groupBy, counts) }
                  // Drop groups with no hidden items under the active filter…
                  .filter(g => g.counts.anonymous + g.counts.authenticated + g.counts.projectMember > 0)
                  // …and order by descending anonymous-hidden count (matches the 1h matrix ordering).
                  .sortBy(g => (-g.counts.anonymous, g.label))
       totals = groups.map(_.counts).foldLeft(AudienceCounts.zero)(plus)
-    } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals, approximate)
+      // Counts come from SPARQL aggregation over the whole project, so they are exact — never approximate.
+    } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals, approximate = false)
+
+  /** Build a summary row. Labels are derived from the grouping IRI, as elsewhere in this v1 report. */
+  private def restrictionGroup(groupId: String, groupBy: GroupBy, counts: AudienceCounts): RestrictionGroup =
+    RestrictionGroup(
+      id = groupId,
+      label = localName(groupId),
+      ontology = Some(ontologyName(groupId)),
+      propertyName = Option.when(groupBy == GroupBy.Property)(localName(groupId)),
+      counts = counts,
+    )
+
+  private def localName(iri: String): String    = iri.split(Array('#', '/')).lastOption.getOrElse(iri)
+  private def ontologyName(iri: String): String = {
+    val beforeHash = iri.split('#').headOption.getOrElse(iri)
+    beforeHash.split('/').lastOption.getOrElse(beforeHash)
+  }
 
   def items(
     projectIri: ProjectIri,
@@ -152,8 +214,17 @@ final case class ViewRestrictionsService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
-      result <- repo.findRestrictedObjects(projectIri, groupBy, itemType, group = Some(group))
-      rows    = result.rows
+      // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
+      // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
+      total <- repo.countRestrictedResources(projectIri, groupBy, itemType, group)
+      rows  <- repo.findRestrictedObjects(
+                projectIri,
+                groupBy,
+                itemType,
+                group,
+                offset = pageAndSize.size * (pageAndSize.page - 1),
+                limit = pageAndSize.size,
+              )
       // Assemble one RestrictedResource per affected resource, with its restricted parts nested under it.
       byResource = rows.groupBy(_.resourceIri).toSeq.map { case (resourceIri, resourceRows) =>
                      val head            = resourceRows.head
@@ -180,12 +251,9 @@ final case class ViewRestrictionsService(
                        items = restrictedItems,
                      )
                    }
-      ordered   = byResource.sortBy(_.label)
-      total     = ordered.size
-      pageSlice = ordered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
-      // When the underlying scan hit its cap, `total` is a lower bound and later pages may be incomplete —
-      // surface that to the client as `approximate`, mirroring the summary (AC12).
-    } yield PagedResponse.from(pageSlice, total, pageAndSize, approximate = result.capped)
+      // Preserve the SPARQL page order (label, then IRI) so paging stays reproducible across requests.
+      ordered = byResource.sortBy(r => (r.label, r.resourceIri))
+    } yield PagedResponse.from(ordered, total, pageAndSize, approximate = false)
 }
 
 object ViewRestrictionsService {

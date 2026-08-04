@@ -12,6 +12,7 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
@@ -138,6 +139,28 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  /**
+   * A resource whose permissions grant only `CR knora-admin:Creator` — hidden from all three audiences,
+   * since none of them created it. This is the fixture that catches a divergence between the aggregated
+   * summary (which classifies the bare literal with a placeholder creator) and the drill-down (which
+   * resolves the same object with its real creator).
+   */
+  private val creatorOnlyTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<$thingClass> rdfs:subClassOf kb:Resource .
+       |
+       |<http://rdfh.ch/0001/creatorOnly>
+       |  a <$thingClass> ;
+       |  rdfs:label "Creator only" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "CR knora-admin:Creator" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
   private val hasDocument = "http://www.knora.org/ontology/0001/anything#hasDocument"
 
   /**
@@ -207,6 +230,51 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
       for {
         user <- service(s => ZIO.succeed(s.audienceUser(Audience.ProjectMember, projectIri)))
       } yield assertTrue(user.isProjectMember(projectIri), !user.isProjectAdmin(projectIri), !user.isSystemAdmin)
+    },
+    // LOAD-BEARING: the exact summary counts classify *bare* permission literals, substituting a placeholder
+    // for each object's real creator. That is only sound if the creator cannot change the answer — i.e. if
+    // no audience user is ever the creator of the object being judged. It holds because the audience users
+    // are synthetic and never author data. This pins it: for any real creator IRI, all three audiences see
+    // the same visibility they'd see with the placeholder.
+    //
+    // Note the deliberately included `CR knora-admin:Creator` literal: it is a real default clause, and it
+    // is exactly the case that would break if an audience user could ever equal an object's creator.
+    test("visibility of a literal does not depend on which real user created the object") {
+      val literals = Seq(
+        "M knora-admin:ProjectMember",
+        "V knora-admin:KnownUser",
+        "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
+        "CR knora-admin:Creator|V knora-admin:ProjectMember",
+      )
+      val creators = Seq(
+        "http://rdfh.ch/users/creator",
+        "http://rdfh.ch/users/root",
+        "http://rdfh.ch/users/someone-else",
+      )
+      for {
+        results <- service(s =>
+                     ZIO.succeed(
+                       for {
+                         literal  <- literals
+                         audience <- Audience.ordered
+                       } yield creators.map { creator =>
+                         s.visibilityOf(
+                           PermissionUtilADM.getUserPermissionADM(
+                             entityCreator = creator,
+                             entityProject = projectIri.value,
+                             entityPermissionLiteral = literal,
+                             requestingUser = s.audienceUser(audience, projectIri),
+                           ),
+                         )
+                       }.distinct,
+                     ),
+                   )
+        // …and no audience user's own id collides with a real user IRI, which is what makes the above hold.
+        ids <- service(s => ZIO.succeed(Audience.ordered.map(a => s.audienceUser(a, projectIri).id)))
+      } yield assertTrue(
+        results.forall(_.size == 1),
+        ids.forall(id => !creators.contains(id)),
+      )
     },
   ).provide(commonLayers, emptyDataset)
 
@@ -416,5 +484,47 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
   )
 
-  def spec = suite("ViewRestrictionsService")(pureSuite, summarySuite, itemsSuite, valuesSuite, nonImageSuite)
+  // ----- the aggregated summary and the row-based drill-down must agree -----
+
+  private val creatorOnlySuite = suite("CR knora-admin:Creator permissions")(
+    test("a creator-only resource is hidden from all three audiences in the summary") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.All))
+      } yield {
+        val thing = result.groups.find(_.id == thingClass)
+        assertTrue(
+          thing.isDefined,
+          // none of the three audiences is the creator, so CR grants them nothing
+          thing.get.counts == AudienceCounts(anonymous = 1, authenticated = 1, projectMember = 1),
+          !result.approximate,
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),
+    // The summary classifies the bare literal with a placeholder creator; the drill-down resolves the real
+    // creator from the row. If those two ever disagreed, the matrix and the detail view would contradict
+    // each other — this asserts they don't, on the one literal where the creator is load-bearing.
+    test("the drill-down agrees with the summary for the same resource") {
+      for {
+        page <- service(_.items(projectIri, GroupBy.ResourceClass, thingClass, ItemType.All, PageAndSize.Default))
+      } yield {
+        val res = page.data.find(_.resourceIri == "http://rdfh.ch/0001/creatorOnly")
+        assertTrue(
+          res.isDefined,
+          res.get.resourceVisibility ==
+            ItemVisibility(Visibility.Hidden, Visibility.Hidden, Visibility.Hidden),
+          page.pagination.totalItems == 1,
+          !page.pagination.approximate,
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),
+  )
+
+  def spec = suite("ViewRestrictionsService")(
+    pureSuite,
+    summarySuite,
+    itemsSuite,
+    valuesSuite,
+    nonImageSuite,
+    creatorOnlySuite,
+  )
 }

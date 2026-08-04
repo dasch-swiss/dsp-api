@@ -156,8 +156,9 @@ object ViewRestrictionsEndpoints {
     itemType: ItemType,
     groups: Seq[RestrictionGroup],
     totals: AudienceCounts,
-    // True when the scan hit its cap and the counts are a lower bound rather than exact
-    // (the large-project guardrail; see ViewRestrictionsRepo.ScanCap).
+    // True if the counts are a lower bound rather than exact. Always false today: counts are computed by
+    // SPARQL aggregation over the whole project, so they are exact at any size. Retained so a future
+    // sampling/short-circuiting strategy can signal inexactness without a breaking response change.
     approximate: Boolean,
   )
   object ViewRestrictionsSummary {
