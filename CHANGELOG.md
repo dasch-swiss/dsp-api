@@ -1,5 +1,12 @@
 # Changelog
 
+## [37.5.2](https://github.com/dasch-swiss/dsp-api/compare/v37.5.1...v37.5.2) (2026-08-04)
+
+
+### Maintenances
+
+* **sipi:** bump SIPI base image to v6.3.1 ([#4242](https://github.com/dasch-swiss/dsp-api/issues/4242)) ([7695f95](https://github.com/dasch-swiss/dsp-api/commit/7695f9521091e66086782c608548d2f5346c205b))
+
 ## [37.5.1](https://github.com/dasch-swiss/dsp-api/compare/v37.5.0...v37.5.1) (2026-08-04)
 
 
