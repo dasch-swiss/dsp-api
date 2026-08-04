@@ -15,8 +15,8 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 /**
  * Query-generator tests for [[ViewRestrictionsRepo]]. They assert on the rendered SPARQL string rather
  * than on triplestore results, pinning the query shape that the service's correctness relies on: the
- * restriction pre-filter, the still-image marker (W2 / AC10), deleted exclusion, the optional group
- * filter, and the scan-cap LIMIT (the large-project guardrail).
+ * restriction pre-filter, the file-value markers, deleted exclusion, the optional group filter, and the
+ * scan-cap LIMIT (the large-project guardrail).
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsQuerySpec extends ZIOSpecDefault {
@@ -44,7 +44,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("valueQuery")(
-      test("binds the still-image marker so RV eligibility is image-only (W2 / AC10)") {
+      test("binds the file-value and still-image markers, excludes link values and caps the scan") {
         val q = ViewRestrictionsRepo.valueQuery(projectIri, group = None, GroupBy.ResourceClass).getQueryString
         assertTrue(
           // both markers are present: a generic file marker AND the narrower still-image marker

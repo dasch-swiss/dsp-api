@@ -99,7 +99,6 @@ final case class ViewRestrictionsRepo(
             resourceLabel = label,
             resourceClassIri = resClass,
             itemType = ItemType.Resource,
-            isImageFile = false,
             propertyIri = None,
             propertyLabel = None,
             valueIri = None,
@@ -130,9 +129,6 @@ final case class ViewRestrictionsRepo(
           val creator    = row.getRequired("creator")
           val perms      = row.getRequired("permissions")
           val isFile     = row.get("fileClass").isDefined
-          // ?imageClass is bound only for still-image file values — the only file type served in restricted
-          // view. Audio/PDF/video/archive file values are `isFile` but not `isImage`, so their RV → Hidden.
-          val isImage    = row.get("imageClass").isDefined
           val hasComment = row.get("comment").isDefined
 
           // A value row yields a File-or-Value item, and — if it carries a comment — a Comment item too.
@@ -147,8 +143,6 @@ final case class ViewRestrictionsRepo(
             resourceLabel = label,
             resourceClassIri = resClass,
             itemType = t,
-            // Only the File facet can be an image; a Comment/Value facet of the same value never renders as RV.
-            isImageFile = t == ItemType.File && isImage,
             propertyIri = Some(prop),
             propertyLabel = Some(localName(prop)),
             valueIri = Some(value),
@@ -193,9 +187,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    *
    * @param groupId     the grouping key — resource-class IRI (class mode) or property IRI (property mode).
    * @param itemType    which kind of object this row represents.
-   * @param isImageFile true only for still-image file values — the sole item type for which permission
-   *                    code 1 renders as restricted view (watermarked / reduced image). Non-image file
-   *                    values (audio/PDF/video/archive), resources, ordinary values and comments are false.
    * @param creator     `knora-base:attachedToUser` of the object (for permission resolution).
    * @param permissions the `knora-base:hasPermissions` literal (for permission resolution).
    */
@@ -208,7 +199,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     resourceLabel: String,
     resourceClassIri: String,
     itemType: ItemType,
-    isImageFile: Boolean,
     propertyIri: Option[String],
     propertyLabel: Option[String],
     valueIri: Option[String],

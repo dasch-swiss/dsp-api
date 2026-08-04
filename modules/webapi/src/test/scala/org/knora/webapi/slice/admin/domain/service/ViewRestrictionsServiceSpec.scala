@@ -39,8 +39,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
    *   - openThing        : V for UnknownUser  → visible to everyone           (hidden count 0/0/0)
    *   - memberOnlyThing  : M for ProjectMember → hidden from anon + logged-in (hidden count 1/1/0)
    *   - loggedInThing    : V for KnownUser     → hidden from anon only        (hidden count 1/0/0)
-   *   - rvThing          : RV for UnknownUser, V for KnownUser → RV on a RESOURCE (not a file value) is
-   *                        not renderable, so it collapses to Hidden for anon (hidden count 1/0/0)
+   *   - rvThing          : RV for UnknownUser, V for KnownUser → reported as RestrictedView for anon,
+   *                        which the summary does not count as hidden (hidden count 0/0/0)
    *   - deletedThing     : hidden from all but knora-base:isDeleted true → excluded entirely
    */
   private val turtle: String =
@@ -142,8 +142,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
   /**
    * A visible resource with a **non-image** file value (a document) carrying RV for anon. A document is a
-   * `kb:FileValue` but not a `kb:StillImageFileValue`, so restricted view is not renderable for it (AC10):
-   * permission code 1 must collapse to Hidden, unlike the still-image case in [[valuesTurtle]] (W2).
+   * `kb:FileValue` but not a `kb:StillImageFileValue`; the summary is a reporting view of the stored
+   * permissions, so code 1 is reported as RestrictedView here just as in the still-image case in
+   * [[valuesTurtle]].
    */
   private val nonImageFileTurtle: String =
     s"""
@@ -182,26 +183,19 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val pureSuite = suite("visibilityOf")(
     test("maps permission code 0 (no access) to Hidden") {
       for {
-        vis <- service(s => ZIO.succeed(s.visibilityOf(None, rvEligible = true)))
+        vis <- service(s => ZIO.succeed(s.visibilityOf(None)))
       } yield assertTrue(vis == Visibility.Hidden)
     },
-    test("maps RestrictedView (code 1) to RestrictedView only when RV-eligible (file values)") {
+    test("maps RestrictedView (code 1) to RestrictedView for every item type") {
       for {
-        eligible <-
-          service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.RestrictedView), rvEligible = true)))
-        notEligible <-
-          service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.RestrictedView), rvEligible = false)))
-      } yield assertTrue(
-        eligible == Visibility.RestrictedView,
-        // on a resource / ordinary value / comment, RV is not renderable → treated as Hidden
-        notEligible == Visibility.Hidden,
-      )
+        vis <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.RestrictedView))))
+      } yield assertTrue(vis == Visibility.RestrictedView)
     },
     test("maps View and higher (code >= 2) to Visible") {
       for {
-        v <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.View), rvEligible = true)))
-        m <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.Modify), rvEligible = false)))
-        c <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.ChangeRights), rvEligible = true)))
+        v <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.View))))
+        m <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.Modify))))
+        c <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.ChangeRights))))
       } yield assertTrue(v == Visibility.Visible, m == Visibility.Visible, c == Visibility.Visible)
     },
     test("the anonymous audience user is not an admin (would otherwise short-circuit to max permission)") {
@@ -236,14 +230,15 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           // one group (the Thing class); the deleted resource is excluded
           result.groups.size == 1,
           thing.isDefined,
-          // hidden-for-anon: memberOnly (1) + loggedIn (1) + rvThing (1, RV on a resource → Hidden) = 3;
-          // hidden-for-authenticated: memberOnly (1) = 1. openThing is fully open (filtered out).
-          thing.get.counts == AudienceCounts(anonymous = 3, authenticated = 1, projectMember = 0),
+          // hidden-for-anon: memberOnly (1) + loggedIn (1) = 2; rvThing is RestrictedView for anon, which
+          // the summary does not count as hidden. hidden-for-authenticated: memberOnly (1) = 1.
+          // openThing is fully open (filtered out).
+          thing.get.counts == AudienceCounts(anonymous = 2, authenticated = 1, projectMember = 0),
           // AC2 — cumulative: anonymous >= authenticated >= projectMember
           thing.get.counts.anonymous >= thing.get.counts.authenticated,
           thing.get.counts.authenticated >= thing.get.counts.projectMember,
           // totals equal the single group's counts
-          result.totals == AudienceCounts(3, 1, 0),
+          result.totals == AudienceCounts(2, 1, 0),
           // ontology label derived from the class IRI
           thing.get.ontology.contains("anything"),
           // small dataset well under the scan cap → exact, not approximate
@@ -273,10 +268,10 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           // loggedInThing: hidden from anon only
           byIri("http://rdfh.ch/0001/loggedInThing") ==
             ItemVisibility(Visibility.Hidden, Visibility.Visible, Visibility.Visible),
-          // rvThing: RV permission on a RESOURCE (no file value) → collapses to Hidden for anon,
-          // since restricted view is only renderable for image file values, not whole resources.
+          // rvThing: RV permission on a RESOURCE → reported as RestrictedView for anon, since the
+          // dashboard reports the stored permission rather than making a rendering decision.
           byIri("http://rdfh.ch/0001/rvThing") ==
-            ItemVisibility(Visibility.Hidden, Visibility.Visible, Visibility.Visible),
+            ItemVisibility(Visibility.RestrictedView, Visibility.Visible, Visibility.Visible),
           // AC14: the deleted resource is absent
           !byIri.contains("http://rdfh.ch/0001/deletedThing"),
         )
@@ -393,28 +388,28 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
   )
 
-  // ----- W2 / AC10: restricted view is image-only -----
+  // ----- restricted view is reported for non-image file values too -----
 
-  private val nonImageSuite = suite("non-image file values (W2 / AC10)")(
-    test("a non-image file value with RV for anon collapses to Hidden, not RestrictedView") {
+  private val nonImageSuite = suite("non-image file values")(
+    test("a non-image file value with RV for anon is reported as RestrictedView") {
       for {
         page <- service(_.items(projectIri, GroupBy.ResourceClass, thingClass, ItemType.File, PageAndSize.Default))
       } yield {
         val doc = page.data.flatMap(_.items).find(_.`type` == ItemType.File)
         assertTrue(
           doc.isDefined,
-          // AC10: RV is renderable for still images only; a document's code-1 permission is Hidden for anon.
-          doc.get.visibility.anonymous == Visibility.Hidden,
+          // Reporting view: code 1 is reported as stored, regardless of whether the file renders in RV.
+          doc.get.visibility.anonymous == Visibility.RestrictedView,
           doc.get.visibility.authenticated == Visibility.Visible,
         )
       }
     }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
-    test("summary counts the non-image file as Hidden for anon (does not undercount)") {
+    test("summary does not count the RestrictedView file as hidden for anon") {
       for {
         result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.File))
       } yield {
         val thing = result.groups.find(_.id == thingClass)
-        assertTrue(thing.exists(_.counts.anonymous == 1))
+        assertTrue(thing.exists(_.counts.anonymous == 0))
       }
     }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
   )

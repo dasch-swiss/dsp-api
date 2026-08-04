@@ -26,10 +26,10 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * Visibility is resolved with the real permission model: for each restriction-bearing object we run
  * [[PermissionUtilADM.getUserPermissionADM]] against a synthetic user for each of the three audiences
  * (see [[ViewRestrictionsService.audienceUser]]) and map the resulting permission code to a
- * [[Visibility]]. The summary counts hidden items only (a value that is not fully visible); restricted
- * view (code 1) is reported as its own state only for still-image file values, where it is renderable
- * (watermarked / reduced image) — on resources, ordinary values, comments and non-image file values code 1
- * collapses to Hidden.
+ * [[Visibility]]. This is a reporting view of what is stored, not a rendering decision: the summary counts
+ * hidden items only (code 0), while restricted view (code 1) is reported as its own state for every item
+ * type — resources, ordinary values, comments and any file value — so the dashboard reflects the actual
+ * permissions in the triplestore.
  *
  * NOTE (v1): counts are computed by scanning the restriction-bearing objects the repo query returns, bounded
  * by [[ViewRestrictionsRepo.ScanCap]] rows. When the scan hits the cap the counts are a lower bound and both
@@ -74,17 +74,16 @@ final case class ViewRestrictionsService(
   /**
    * Map a resolved object-access permission (or the absence of one) to a [[Visibility]].
    *
-   * `rvEligible` gates the RestrictedView (code 1) state: restricted view means a watermarked / reduced
-   * image and is only renderable for file values. For resources, ordinary values and comments there is no
-   * partial-view rendering, so code 1 collapses to [[Visibility.Hidden]] (the object is simply not fully
-   * visible to that audience) rather than showing a misleading "restricted view" state.
+   * This is a **reporting** view of what is stored in the triplestore, not a rendering decision: the
+   * dashboard shows the admin the actual permission on each object. So permission code 1 is reported as
+   * [[Visibility.RestrictedView]] for every item type — resources, ordinary values, comments and any file
+   * value (restricted view can be set on any object, whether or not it is meaningfully renderable there).
    */
-  def visibilityOf(permission: Option[Permission.ObjectAccess], rvEligible: Boolean): Visibility =
+  def visibilityOf(permission: Option[Permission.ObjectAccess]): Visibility =
     permission.map(_.code).getOrElse(0) match {
-      case 0                                                                   => Visibility.Hidden
-      case c if c == Permission.ObjectAccess.RestrictedView.code && rvEligible => Visibility.RestrictedView
-      case c if c == Permission.ObjectAccess.RestrictedView.code               => Visibility.Hidden
-      case _                                                                   => Visibility.Visible
+      case 0                                                     => Visibility.Hidden
+      case c if c == Permission.ObjectAccess.RestrictedView.code => Visibility.RestrictedView
+      case _                                                     => Visibility.Visible
     }
 
   private def visibilityFor(row: RestrictedObjectRow, audience: Audience, projectIri: ProjectIri): Visibility =
@@ -95,10 +94,6 @@ final case class ViewRestrictionsService(
         entityPermissionLiteral = row.permissions,
         requestingUser = audienceUser(audience, projectIri),
       ),
-      // Only still-image file values can be served in restricted view; RV on anything else — including
-      // non-image file values (audio/PDF/video), resources, ordinary values and comments — means
-      // "not fully visible" and collapses to Hidden. See AC10.
-      rvEligible = row.isImageFile,
     )
 
   private def itemVisibility(row: RestrictedObjectRow, projectIri: ProjectIri): ItemVisibility =
