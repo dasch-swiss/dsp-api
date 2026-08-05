@@ -1,5 +1,24 @@
 # Changelog
 
+## [37.5.2](https://github.com/dasch-swiss/dsp-api/compare/v37.5.1...v37.5.2) (2026-08-04)
+
+
+### Maintenances
+
+* **sipi:** bump SIPI base image to v6.3.1 ([#4242](https://github.com/dasch-swiss/dsp-api/issues/4242)) ([7695f95](https://github.com/dasch-swiss/dsp-api/commit/7695f9521091e66086782c608548d2f5346c205b))
+
+## [37.5.1](https://github.com/dasch-swiss/dsp-api/compare/v37.5.0...v37.5.1) (2026-08-04)
+
+
+### Maintenances
+
+* **sipi:** downgrade SIPI base image to v6.2.3 ([#4241](https://github.com/dasch-swiss/dsp-api/issues/4241)) ([d381ada](https://github.com/dasch-swiss/dsp-api/commit/d381ada803bbdf1317fc9a587b36a9faf83ad952))
+
+
+### Bug Fixes
+
+* **testkit:** build the E2E server layer interruptibly so request handlers match production (DEV-6864) ([#4234](https://github.com/dasch-swiss/dsp-api/issues/4234)) ([e8eb3d6](https://github.com/dasch-swiss/dsp-api/commit/e8eb3d615ac014ab83dd00f1849799077e5278c4))
+
 ## [37.5.0](https://github.com/dasch-swiss/dsp-api/compare/v37.4.0...v37.5.0) (2026-08-03)
 
 
