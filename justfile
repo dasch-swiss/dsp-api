@@ -249,17 +249,6 @@ docs-build: docs-build-dependent docs-ingest-build
 docs-ingest-build:
     (cd modules/ingest; mkdocs build --clean)
 
-# Dump the live OpenAPI spec (served by the running API's docs server) to docs/openapi/openapi.yaml.
-# The frontend (dsp-app / dsp-js) can codegen a typed client from this committed file.
-# Requires a running stack (`just stack-start`); override DOCS_URL for a remote/other-port server.
-dump-openapi DOCS_URL="http://localhost:3339/docs/docs.yaml":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    mkdir -p docs/openapi
-    echo "Fetching OpenAPI spec from {{DOCS_URL}} ..."
-    curl -fsS "{{DOCS_URL}}" -o docs/openapi/openapi.yaml
-    echo "Wrote docs/openapi/openapi.yaml ($(wc -l < docs/openapi/openapi.yaml | tr -d ' ') lines)"
-
 markdownlint:
     docker run \
     --rm \
