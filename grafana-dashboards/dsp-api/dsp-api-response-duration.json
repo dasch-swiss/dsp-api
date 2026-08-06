@@ -1,0 +1,718 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": { "name": "dsp-api-resp-duration" },
+  "spec": {
+    "title": "DSP-API — Response Duration",
+    "description": "Request latency and throughput for dsp-api, from the tapir request metrics (service_name=DSP_svc_api). Global stats plus a per-route breakdown, switchable across environment and stack. Averages are rate(sum)/rate(count) on phase=body, i.e. full-request duration; there are no histogram buckets on this metric, so percentiles are not available.",
+    "tags": ["dsp-api", "latency", "tapir"],
+    "cursorSync": "Off",
+    "editable": true,
+    "preload": false,
+    "links": [],
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "builtIn": true,
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "legacyOptions": { "type": "dashboard" },
+          "name": "Annotations & Alerts",
+          "query": {
+            "datasource": { "name": "-- Grafana --" },
+            "group": "grafana",
+            "kind": "DataQuery",
+            "spec": {},
+            "version": "v0"
+          }
+        }
+      }
+    ],
+    "timeSettings": {
+      "autoRefresh": "1m",
+      "autoRefreshIntervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "fiscalYearStartMonth": 0,
+      "from": "now-24h",
+      "to": "now",
+      "hideTimepicker": false,
+      "timezone": "browser"
+    },
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "Avg response time (selected range)",
+          "description": "Mean full-request duration (phase=body) across the selected environment/stack(s), over the dashboard time range. = rate(sum)/rate(count).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range]))",
+                        "instant": true,
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": { "mode": "thresholds" },
+                  "decimals": 1,
+                  "unit": "s",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      { "color": "green", "value": null },
+                      { "color": "yellow", "value": 0.3 },
+                      { "color": "red", "value": 1 }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Request rate",
+          "description": "Total requests per second across the selected environment/stack(s).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}[$__rate_interval]))",
+                        "instant": true,
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": { "fixedColor": "blue", "mode": "fixed" },
+                  "decimals": 1,
+                  "unit": "reqps"
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "5xx error rate (range)",
+          "description": "Share of requests returning a 5xx status across the selected environment/stack(s), over the dashboard time range.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",status=\"5xx\"}[$__range])) or vector(0)) / sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}[$__range]))",
+                        "instant": true,
+                        "range": false
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": { "mode": "thresholds" },
+                  "decimals": 2,
+                  "unit": "percentunit",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      { "color": "green", "value": null },
+                      { "color": "yellow", "value": 0.01 },
+                      { "color": "red", "value": 0.05 }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Average response duration — global",
+          "description": "Mean full-request duration (phase=body) over time, aggregated across the selected environment/stack(s). = rate(sum)/rate(count). This is the line to watch for regressions after a deploy.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "avg (body, $smoothing)"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": { "fixedColor": "green", "mode": "fixed" },
+                  "unit": "s",
+                  "custom": {
+                    "axisLabel": "avg duration",
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "showPoints": "never"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": { "calcs": ["mean", "max"], "displayMode": "list", "placement": "bottom" },
+                "tooltip": { "mode": "single", "sort": "none" }
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Average response duration by route",
+          "description": "Mean full-request duration (phase=body) per route template over time. Use the Route (path) variable to focus on specific endpoints — with all ~178 routes the graph is dense. Legend shows mean/max per route.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",phase=\"body\"}[$smoothing])) / sum by (path) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "{{path}}"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "s",
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "showPoints": "never"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": ["mean", "max"],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "sortBy": "Mean",
+                  "sortDesc": true
+                },
+                "tooltip": { "mode": "multi", "sort": "desc" }
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Routes ranked by average duration (range)",
+          "description": "Per-route average duration (phase=body) and request rate over the dashboard time range, sorted slowest first. This is the quickest way to see which endpoints are slow right now.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum by (path, method) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range]))",
+                        "instant": true,
+                        "range": false,
+                        "queryType": "instant"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": { "name": "${datasource}" },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum by (path, method) (rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\"}[$__range]))",
+                        "instant": true,
+                        "range": false,
+                        "queryType": "instant"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": [
+                { "kind": "merge", "spec": { "id": "merge", "options": {} } },
+                {
+                  "kind": "organize",
+                  "spec": {
+                    "id": "organize",
+                    "options": {
+                      "excludeByName": { "Time": true },
+                      "indexByName": { "method": 0, "path": 1, "Value #A": 2, "Value #B": 3 },
+                      "renameByName": { "Value #A": "Avg duration", "Value #B": "Requests/s" }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": { "custom": { "align": "auto", "filterable": false } },
+                "overrides": [
+                  {
+                    "matcher": { "id": "byName", "options": "Avg duration" },
+                    "properties": [
+                      { "id": "unit", "value": "s" },
+                      { "id": "decimals", "value": 3 },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": { "mode": "gradient", "type": "color-background" }
+                      },
+                      { "id": "color", "value": { "mode": "continuous-GrYlRd" } }
+                    ]
+                  },
+                  {
+                    "matcher": { "id": "byName", "options": "Requests/s" },
+                    "properties": [
+                      { "id": "unit", "value": "reqps" },
+                      { "id": "decimals", "value": 2 }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "sortBy": [{ "desc": true, "displayName": "Avg duration" }]
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "RowsLayout",
+      "spec": {
+        "rows": [
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Global — $environment / $stack",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-1" },
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-2" },
+                        "x": 8,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-3" },
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-4" },
+                        "x": 0,
+                        "y": 4,
+                        "width": 24,
+                        "height": 8
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Per route — $environment / $stack",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-5" },
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": { "kind": "ElementReference", "name": "panel-6" },
+                        "x": 0,
+                        "y": 9,
+                        "width": 24,
+                        "height": 11
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "variables": [
+      {
+        "kind": "DatasourceVariable",
+        "spec": {
+          "name": "datasource",
+          "label": "Data source",
+          "pluginId": "prometheus",
+          "current": { "text": "grafanacloud-dasch-prom", "value": "grafanacloud-prom" },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": false,
+          "multi": false,
+          "options": [],
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "skipUrlSync": false
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "environment",
+          "label": "Environment",
+          "definition": "label_values(tapir_request_total{service_name=\"DSP_svc_api\"}, environment)",
+          "current": { "text": "dev", "value": "dev" },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": false,
+          "multi": false,
+          "options": [],
+          "query": {
+            "datasource": { "name": "${datasource}" },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "version": "v0",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(tapir_request_total{service_name=\"DSP_svc_api\"}, environment)",
+              "refId": "StandardVariableQuery"
+            }
+          },
+          "refresh": "onTimeRangeChanged",
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "stack",
+          "label": "Stack",
+          "definition": "label_values(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\"}, stack)",
+          "current": { "text": ["All"], "value": ["$__all"] },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": true,
+          "multi": true,
+          "options": [],
+          "query": {
+            "datasource": { "name": "${datasource}" },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "version": "v0",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\"}, stack)",
+              "refId": "StandardVariableQuery"
+            }
+          },
+          "refresh": "onTimeRangeChanged",
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "path",
+          "label": "Route (path)",
+          "definition": "label_values(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}, path)",
+          "current": { "text": ["All"], "value": ["$__all"] },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": true,
+          "multi": true,
+          "options": [],
+          "query": {
+            "datasource": { "name": "${datasource}" },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "version": "v0",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}, path)",
+              "refId": "StandardVariableQuery"
+            }
+          },
+          "refresh": "onTimeRangeChanged",
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      },
+      {
+        "kind": "CustomVariable",
+        "spec": {
+          "name": "smoothing",
+          "label": "Smoothing window",
+          "query": "$__rate_interval,5m,15m,30m,1h,2h,6h,12h,1d,3d,7d",
+          "current": { "text": "15m", "value": "15m" },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": false,
+          "multi": false,
+          "options": [],
+          "skipUrlSync": false
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "method",
+          "label": "Method",
+          "current": { "text": ["All"], "value": ["$__all"] },
+          "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": true,
+          "multi": true,
+          "options": [],
+          "query": {
+            "datasource": { "name": "${datasource}" },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "version": "",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"},method)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "refresh": "onTimeRangeChanged",
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      }
+    ]
+  }
+}
