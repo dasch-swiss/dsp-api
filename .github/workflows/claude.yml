@@ -52,24 +52,52 @@ jobs:
             - Security concerns
             - Test coverage (only for modified code)
 
-            Focus your review **only on files and lines changed in this PR**.
-            Do **not** review unrelated parts of the repository.
+            Report issues **only in lines this PR changed** — but read whatever you need to
+            decide whether an issue is real: the changed files in full (diff hunks alone give
+            too little context), their callers, their tests, and neighbouring implementations
+            of the same pattern. Reading widely is fine; reporting widely is not.
             Do **not** make any code changes, run commands, or push code; only provide analysis and suggestions.
 
+            Before reporting an issue, name the concrete input or state that triggers it and
+            the wrong output, crash, or regression that results. Drop any issue where you
+            cannot; where the justification is only "more robust" or "best practice"; or where
+            a code comment explains it as a deliberate decision (read the comments before
+            flagging). If you checked a concern and could not prove it but still believe it
+            matters, report it as Suspected rather than dropping it or inflating its severity.
+            A few defensible issues beat many speculative ones, and reporting no issues at all
+            is a valid and useful outcome.
+
+            Do not assert how a library behaves from memory. When an issue depends on a
+            dependency's API or semantics, confirm it against the version this repo builds
+            with (`MODULE.bazel`) or the library's own documentation via web search — or
+            grade the issue Suspected.
+
             Structure your review as follows:
-            1. Summary of PR changes
-            2. Identified issues (prioritize Critical issues, including bugs, security vulnerabilities, or regressions):
-              - Grade each issue as Critical, Major, or Minor.
-              - Only Critical issues should prevent the PR from being ready to merge.
-              - Minor or style issues should be noted but do not affect merge readiness.
-            3. Recommendations for improvement (aligned with the issue severity)
-            4. Clear statement whether the PR is ready to merge (based **only** on Critical issues)
+            1. Summary of PR changes (one paragraph)
+            2. Identified issues, most severe first. For each: `file:line`, the failure
+               scenario, and a suggested fix. Grade each as Critical, Major, Minor, or Suspected:
+              - Critical: a bug, security vulnerability, or regression that reaches users.
+                Only Critical issues prevent the PR from being ready to merge.
+              - Major / Minor: worth fixing / worth noting, but do not affect merge readiness.
+              - Suspected: a concern you could not prove — state what would confirm or refute
+                it. Never blocks merge.
+            3. Clear statement whether the PR is ready to merge (based **only** on Critical issues)
 
             Be constructive, precise, and concise. Avoid verbose explanations unless necessary for clarity.
-            Use the repository's CLAUDE.md for guidance on style, conventions, and repository-specific best practices.
+            Read `REVIEW.md` at the repository root before you start; it is this repository's
+            review checklist and its rules override the defaults above. Honour its "Skip"
+            section — do not spend the run on diffs it tells you to skip.
             Use `gh pr comment` to leave your review as a comment on the PR.
 
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          # Reading files is already in the action's base tool set; search and web lookup are
+          # not, and the prompt above depends on both — Grep/Glob to check a suspicion against
+          # the rest of the repo instead of guessing, WebSearch/WebFetch to check a dependency's
+          # real API instead of recalling it. Bash stays confined to read-only gh commands.
+          #
+          # --model: pinned to Opus. In the 2026-08 prompt benchmark the model choice dominated
+          # the prompt choice: Opus caught 6/6 planted bugs with zero blocking false positives;
+          # Sonnet caught 1/6 and produced the only merge-blocking false positives.
+          claude_args: '--model claude-opus-5 --allowed-tools "Grep,Glob,WebSearch,WebFetch,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
 
       # cancelled() as well as failure(): a `timeout-minutes` kill marks the job cancelled, not
       # failed, so the previous `if: failure()` skipped this step on the one run that most needed
