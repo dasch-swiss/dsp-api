@@ -20,8 +20,8 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 /**
  * Read-only "view restrictions" reporting for a project (design screen 1h).
  *
- * Reports, for the three built-in audiences, how many items are hidden and lets an admin
- * drill into the affected resources/items. (Spec: DEV-6778, dasch-specs.)
+ * Reports, for the three built-in audiences, how many items are hidden or served in restricted view, and
+ * lets an admin drill into the affected resources/items. (Spec: DEV-6778, dasch-specs.)
  */
 final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -46,8 +46,19 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(itemTypeQuery)
     .out(jsonBody[ViewRestrictionsSummary].example(ViewRestrictionsSummary.example))
     .description(
-      "Per-audience counts of hidden items for a project, grouped by resource class or property. " +
-        "Counts hidden items only (permission code 0); restricted-view is reported per item in the drill-down. " +
+      "Per-audience counts of items a project's audiences cannot fully see, grouped by resource class or " +
+        "property. Each audience reports `hidden` (permission code 0 — nothing is served) and " +
+        "`restrictedView` (code 1 — a degraded version is served) separately; the two are disjoint. " +
+        "Both are further split by unit: `resources` counts whole restricted resources, `items` counts " +
+        "restricted values inside resources. The two units are never summed — one resource with three " +
+        "hidden values is 1 resource and 3 items, not 4 of anything. " +
+        "When grouping by resource class, **every** class in the project is reported — including classes " +
+        "with no restrictions at all — each with `totalResources`: how many resources the project has in " +
+        "that class in total. That count is independent of the restrictions and of `itemType`; it is the " +
+        "denominator for `counts.<audience>.resources` (same unit), not for `items`. Summing it over the " +
+        "groups gives the project's whole resource count. In property mode only properties that carry a " +
+        "restriction are " +
+        "reported and `totalResources` is absent, since a property has no resource population of its own. " +
         "Counts are computed by the triplestore and are exact regardless of project size. " +
         "The user must be project admin or system admin.",
     )
@@ -87,9 +98,9 @@ object ViewRestrictionsEndpoints {
 
   /** The effective visibility of one item for one audience. */
   enum Visibility {
-    case Visible        // full view (permission code >= 2)
-    case Hidden         // no access (permission code 0) — counted in the summary
-    case RestrictedView // watermarked / reduced size (permission code 1) — image file values only
+    case Visible        // full view (permission code >= 2) — not reported as a restriction
+    case Hidden         // no access (permission code 0) — counted as `hidden` in the summary
+    case RestrictedView // degraded view (code 1) — counted as `restrictedView` in the summary
   }
   object Visibility {
     given JsonCodec[Visibility] = DeriveJsonCodec.gen[Visibility]
@@ -130,22 +141,98 @@ object ViewRestrictionsEndpoints {
       Codec.derivedEnumeration[String, GroupBy].defaultStringBased
   }
 
-  /** Per-audience hidden counts. Cumulative: anonymous >= authenticated >= projectMember. */
-  final case class AudienceCounts(anonymous: Int, authenticated: Int, projectMember: Int)
+  /**
+   * How many items one audience cannot fully see, split by the two ways that happens.
+   *
+   *   - `hidden`         — permission code 0: the audience gets nothing at all.
+   *   - `restrictedView` — permission code 1: the audience gets a degraded version (for a still image, the
+   *     watermarked / reduced rendering).
+   *
+   * The two are disjoint, so `hidden + restrictedView` is the number of items that are not fully visible.
+   * They are reported separately because they are different facts an admin acts on differently, and because
+   * collapsing them would hide code-1 items behind a number labelled "hidden".
+   */
+  final case class RestrictionCounts(hidden: Int, restrictedView: Int)
+  object RestrictionCounts {
+    given JsonCodec[RestrictionCounts] = DeriveJsonCodec.gen[RestrictionCounts]
+    given Schema[RestrictionCounts]    = Schema.derived[RestrictionCounts]
+
+    val zero: RestrictionCounts = RestrictionCounts(0, 0)
+
+    def plus(a: RestrictionCounts, b: RestrictionCounts): RestrictionCounts =
+      RestrictionCounts(a.hidden + b.hidden, a.restrictedView + b.restrictedView)
+
+    /** Items that are not fully visible — the sum of both states. */
+    extension (c: RestrictionCounts) def total: Int = c.hidden + c.restrictedView
+  }
+
+  /**
+   * What one audience cannot fully see in a group, counted in the two units separately.
+   *
+   *   - `resources` — whole resources whose own permissions restrict them. This is the figure comparable
+   *     to [[RestrictionGroup.totalResources]]: "5 of 120 Things are hidden" is a true statement.
+   *   - `items` — restricted values inside resources (file values, ordinary values, comments).
+   *
+   * They are deliberately NOT summed. One resource carrying three hidden values is 1 resource and 3 items;
+   * reporting "4" mixes units and can exceed the class's resource population outright — a row reading
+   * "3 of 1" is the bug this split fixes.
+   *
+   * `items` is what conveys restriction *density*: five resources with one hidden field each and five with
+   * forty hidden fields each are very different situations, and the paginated drill-down cannot recover
+   * that number for a large class.
+   */
+  final case class UnitCounts(resources: RestrictionCounts, items: RestrictionCounts)
+  object UnitCounts {
+    given JsonCodec[UnitCounts] = DeriveJsonCodec.gen[UnitCounts]
+    given Schema[UnitCounts]    = Schema.derived[UnitCounts]
+
+    val zero: UnitCounts = UnitCounts(RestrictionCounts.zero, RestrictionCounts.zero)
+
+    def plus(a: UnitCounts, b: UnitCounts): UnitCounts =
+      UnitCounts(RestrictionCounts.plus(a.resources, b.resources), RestrictionCounts.plus(a.items, b.items))
+
+    /** Everything not fully visible, across both units. Only for "is anything restricted at all?" checks. */
+    extension (c: UnitCounts) def anyRestriction: Int = c.resources.total + c.items.total
+  }
+
+  /**
+   * Per-audience counts. Cumulative in the sense that access widens across the audiences, so each
+   * audience's counts are less than or equal to the previous one's, per unit.
+   */
+  final case class AudienceCounts(
+    anonymous: UnitCounts,
+    authenticated: UnitCounts,
+    projectMember: UnitCounts,
+  )
   object AudienceCounts {
     given JsonCodec[AudienceCounts] = DeriveJsonCodec.gen[AudienceCounts]
     given Schema[AudienceCounts]    = Schema.derived[AudienceCounts]
 
-    val zero: AudienceCounts = AudienceCounts(0, 0, 0)
+    val zero: AudienceCounts = AudienceCounts(UnitCounts.zero, UnitCounts.zero, UnitCounts.zero)
   }
 
-  /** One row of the summary matrix: a resource class or a property. */
+  /**
+   * One row of the summary matrix: a resource class or a property.
+   *
+   * `totalResources` is the size of the group's resource population — how many resources the project has in
+   * that class in total, restricted or not. It is the denominator for `counts.<audience>.resources` (the
+   * only figure in the same unit); `counts.<audience>.items` counts values and is NOT a share of it. It is
+   * deliberately independent of both the restrictions and the `itemType` filter: filtering changes which
+   * restrictions are reported, not how many resources a class holds.
+   *
+   * It is only defined in `groupBy=ResourceClass` mode; a property has no resource population of its own, so
+   * it is absent (`None`) when grouping by property.
+   *
+   * In class mode every class is reported, so a row may have zero counts across the board and still carry a
+   * non-zero `totalResources` — that is a class with nothing restricted, not an empty row.
+   */
   final case class RestrictionGroup(
     id: String,                   // class IRI, or property IRI in property mode
     label: String,                // human-readable label
     ontology: Option[String],     // short ontology label (class mode)
     propertyName: Option[String], // e.g. "anything:hasPicture" (property mode)
     counts: AudienceCounts,
+    totalResources: Option[Int], // resources in this class, project-wide (class mode only)
   )
   object RestrictionGroup {
     given JsonCodec[RestrictionGroup] = DeriveJsonCodec.gen[RestrictionGroup]
@@ -173,10 +260,21 @@ object ViewRestrictionsEndpoints {
           label = "Thing",
           ontology = Some("anything"),
           propertyName = None,
-          counts = AudienceCounts(7, 2, 0),
+          counts = AudienceCounts(
+            // 7 of the class's 120 resources are hidden outright, and 12 values inside other resources are
+            // hidden too — two different facts, in two different units.
+            anonymous = UnitCounts(RestrictionCounts(7, 3), RestrictionCounts(12, 4)),
+            authenticated = UnitCounts(RestrictionCounts(2, 1), RestrictionCounts(5, 2)),
+            projectMember = UnitCounts(RestrictionCounts(0, 0), RestrictionCounts(0, 0)),
+          ),
+          totalResources = Some(120),
         ),
       ),
-      totals = AudienceCounts(7, 2, 0),
+      totals = AudienceCounts(
+        anonymous = UnitCounts(RestrictionCounts(7, 3), RestrictionCounts(12, 4)),
+        authenticated = UnitCounts(RestrictionCounts(2, 1), RestrictionCounts(5, 2)),
+        projectMember = UnitCounts(RestrictionCounts(0, 0), RestrictionCounts(0, 0)),
+      ),
     )
   }
 

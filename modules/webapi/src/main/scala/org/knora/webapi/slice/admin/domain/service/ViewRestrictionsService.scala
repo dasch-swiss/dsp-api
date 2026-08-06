@@ -15,6 +15,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
@@ -26,10 +28,20 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * Visibility is resolved with the real permission model: for each restriction-bearing object we run
  * [[PermissionUtilADM.getUserPermissionADM]] against a synthetic user for each of the three audiences
  * (see [[ViewRestrictionsService.audienceUser]]) and map the resulting permission code to a
- * [[Visibility]]. This is a reporting view of what is stored, not a rendering decision: the summary counts
- * hidden items only (code 0), while restricted view (code 1) is reported as its own state for every item
- * type — resources, ordinary values, comments and any file value — so the dashboard reflects the actual
- * permissions in the triplestore.
+ * [[Visibility]]. This is a reporting view of what is stored, not a rendering decision: restricted view
+ * (code 1) is reported as its own state for every item type — resources, ordinary values, comments and any
+ * file value — so the dashboard reflects the actual permissions in the triplestore.
+ *
+ * The summary counts both non-visible states, separately: `hidden` (code 0, nothing is served) and
+ * `restrictedView` (code 1, a degraded version is served). They are disjoint, so their sum is the number of
+ * items an audience cannot fully see. Reporting a single conflated number would hide code-1 items behind a
+ * label that says "hidden".
+ *
+ * Each state is further split by UNIT — restricted whole resources vs restricted values (see
+ * [[org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit]]). Resources and values are counted by
+ * separate queries over separate row sets, so adding them yields a number in no unit at all: one resource
+ * with three hidden values would report 4, which can exceed the class's entire resource population. Keeping
+ * them apart is what makes `resources` comparable to `totalResources`.
  *
  * COUNTING: the summary counts are computed by the triplestore, not by scanning objects here. That is sound
  * because for the three synthetic audiences the visibility of an object depends **only** on its
@@ -132,17 +144,22 @@ final case class ViewRestrictionsService(
     )
 
   private def plus(a: AudienceCounts, b: AudienceCounts): AudienceCounts =
-    AudienceCounts(a.anonymous + b.anonymous, a.authenticated + b.authenticated, a.projectMember + b.projectMember)
+    AudienceCounts(
+      UnitCounts.plus(a.anonymous, b.anonymous),
+      UnitCounts.plus(a.authenticated, b.authenticated),
+      UnitCounts.plus(a.projectMember, b.projectMember),
+    )
 
   /**
-   * Which of the project's distinct permission literals are [[Visibility.Hidden]] for the given audience.
+   * Which of the project's distinct permission literals resolve to `state` for the given audience.
    *
    * This is the step that makes exact counting affordable: the visibility of an object depends only on its
    * permission literal (see the class doc), so classifying the handful of distinct literals is equivalent
    * to classifying every object — and then the triplestore can do the counting.
    */
-  private def hiddenLiteralsFor(
+  private def literalsResolvingTo(
     literals: Set[String],
+    state: Visibility,
     audience: Audience,
     projectIri: ProjectIri,
   ): Set[String] =
@@ -156,48 +173,116 @@ final case class ViewRestrictionsService(
           entityPermissionLiteral = literal,
           requestingUser = audienceUser(audience, projectIri),
         ),
-      ) == Visibility.Hidden
+      ) == state
     }
+
+  /** The two states the summary reports, each counted separately. [[Visibility.Visible]] is not restricted. */
+  private val countedStates: Seq[Visibility] = Seq(Visibility.Hidden, Visibility.RestrictedView)
 
   def summary(projectIri: ProjectIri, groupBy: GroupBy, itemType: ItemType): Task[ViewRestrictionsSummary] =
     for {
       literals <- repo.distinctPermissions(projectIri, itemType, groupBy)
-      // Classify the small distinct-literal set once per audience, then let the triplestore count.
-      hiddenPerAudience  = Audience.ordered.map(a => a -> hiddenLiteralsFor(literals, a, projectIri)).toMap
-      countsPerAudience <- ZIO.foreach(Audience.ordered) { audience =>
-                             repo
-                               .countByGroup(projectIri, groupBy, itemType, hiddenPerAudience(audience))
-                               .map(rows => audience -> rows)
-                           }
-      // groupId -> per-audience counts, summing the resource and value contributions of the same group.
-      byGroup = countsPerAudience.foldLeft(Map.empty[String, AudienceCounts]) { case (acc, (audience, rows)) =>
+      // One count per (audience, state). Both are tiny fixed sets — 3 x 2 — and each classification pass
+      // runs over the small distinct-literal set, so this stays cheap regardless of project size.
+      counted <- ZIO.foreach(for (a <- Audience.ordered; s <- countedStates) yield (a, s)) { case (audience, state) =>
+                   val hits = literalsResolvingTo(literals, state, audience, projectIri)
+                   repo.countByGroup(projectIri, groupBy, itemType, hits).map(rows => (audience, state, rows))
+                 }
+      // Every resource class the project has, with its population — independent of any restriction and of
+      // the itemType filter. In class mode this is the row set itself (see below), so a class is reported
+      // with its true size whether or not anything in it is restricted. A property has no resource
+      // population of its own, so property mode has no equivalent and reports none.
+      classTotals <- if (groupBy == GroupBy.ResourceClass) repo.totalResourcesByClass(projectIri)
+                     else ZIO.succeed(Seq.empty)
+      // groupId -> per-audience counts. Contributions accumulate per unit, so a group's resource count and
+      // its value count stay separate all the way to the response.
+      byGroup = counted.foldLeft(Map.empty[String, AudienceCounts]) { case (acc, (audience, state, rows)) =>
                   rows.foldLeft(acc) { (inner, row) =>
                     val current = inner.getOrElse(row.groupId, AudienceCounts.zero)
-                    val delta   = audience match {
-                      case Audience.Anonymous     => AudienceCounts(row.count, 0, 0)
-                      case Audience.Authenticated => AudienceCounts(0, row.count, 0)
-                      case Audience.ProjectMember => AudienceCounts(0, 0, row.count)
-                    }
-                    inner.updated(row.groupId, plus(current, delta))
+                    inner.updated(row.groupId, plus(current, delta(audience, state, row)))
                   }
                 }
-      groups = byGroup.toSeq.map { case (groupId, counts) => restrictionGroup(groupId, groupBy, counts) }
-                 // Drop groups with no hidden items under the active filter…
-                 .filter(g => g.counts.anonymous + g.counts.authenticated + g.counts.projectMember > 0)
-                 // …and order by descending anonymous-hidden count (matches the 1h matrix ordering).
-                 .sortBy(g => (-g.counts.anonymous, g.label))
+      groups =
+        if (groupBy == GroupBy.ResourceClass)
+          // Class mode: one row per class in the project, most-restricted first and the unrestricted
+          // remainder alphabetically after. Driven by classTotals rather than by the restriction rows,
+          // because a class with nothing restricted still has a resource count and must still be reported.
+          classTotals
+            .map(row =>
+              restrictionGroup(
+                row.groupId,
+                groupBy,
+                byGroup.getOrElse(row.groupId, AudienceCounts.zero),
+                Some(row.count),
+              ),
+            )
+            .sortBy(orderKey)
+        else
+          // Property mode: only properties that actually carry a restriction — an unrestricted property has
+          // no count and no population, so a row for it would be empty in every column.
+          byGroup.toSeq.map { case (groupId, counts) => restrictionGroup(groupId, groupBy, counts, None) }
+            .filter(g =>
+              g.counts.anonymous.anyRestriction + g.counts.authenticated.anyRestriction +
+                g.counts.projectMember.anyRestriction > 0,
+            )
+            .sortBy(orderKey)
       totals = groups.map(_.counts).foldLeft(AudienceCounts.zero)(plus)
       // Counts come from SPARQL aggregation over the whole project, so they are always exact.
     } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals)
 
-  /** Build a summary row. Labels are derived from the grouping IRI, as elsewhere in this v1 report. */
-  private def restrictionGroup(groupId: String, groupBy: GroupBy, counts: AudienceCounts): RestrictionGroup =
+  /**
+   * Place `count` in the right audience slot, the right state within it, and the right unit within that.
+   *
+   * The unit comes from the repo row rather than being inferred here, which is what keeps resource counts
+   * and value counts from being added into one meaningless number.
+   */
+  private def delta(audience: Audience, state: Visibility, row: GroupCountRow): AudienceCounts = {
+    val c    = if (state == Visibility.Hidden) RestrictionCounts(row.count, 0) else RestrictionCounts(0, row.count)
+    val unit = row.unit match {
+      case CountUnit.Resources => UnitCounts(c, RestrictionCounts.zero)
+      case CountUnit.Items     => UnitCounts(RestrictionCounts.zero, c)
+    }
+    audience match {
+      case Audience.Anonymous     => AudienceCounts(unit, UnitCounts.zero, UnitCounts.zero)
+      case Audience.Authenticated => AudienceCounts(UnitCounts.zero, unit, UnitCounts.zero)
+      case Audience.ProjectMember => AudienceCounts(UnitCounts.zero, UnitCounts.zero, unit)
+    }
+  }
+
+  /**
+   * Row ordering key: most-restricted first, by the anonymous audience.
+   *
+   * Sorts on hidden resources first, then hidden items, then the restricted-view pair, so a class where
+   * whole resources are hidden outranks one where only a few fields are — the more serious finding leads.
+   */
+  private def orderKey(g: RestrictionGroup): (Int, Int, Int, Int, String) =
+    (
+      -g.counts.anonymous.resources.hidden,
+      -g.counts.anonymous.items.hidden,
+      -g.counts.anonymous.resources.restrictedView,
+      -g.counts.anonymous.items.restrictedView,
+      g.label,
+    )
+
+  /**
+   * Build a summary row. Labels are derived from the grouping IRI, as elsewhere in this v1 report.
+   *
+   * `totalResources` is supplied by the caller: the class's population in class mode, `None` in property
+   * mode, where there is no resource population to report.
+   */
+  private def restrictionGroup(
+    groupId: String,
+    groupBy: GroupBy,
+    counts: AudienceCounts,
+    totalResources: Option[Int],
+  ): RestrictionGroup =
     RestrictionGroup(
       id = groupId,
       label = localName(groupId),
       ontology = Some(ontologyName(groupId)),
       propertyName = Option.when(groupBy == GroupBy.Property)(localName(groupId)),
       counts = counts,
+      totalResources = totalResources,
     )
 
   private def localName(iri: String): String    = iri.split(Array('#', '/')).lastOption.getOrElse(iri)

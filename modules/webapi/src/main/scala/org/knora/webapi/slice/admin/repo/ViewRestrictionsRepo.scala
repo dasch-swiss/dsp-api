@@ -18,6 +18,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
@@ -38,7 +39,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
  *     permission literals — a small set, since literals come from project-level default-permission
  *     templates rather than being authored per object — classifies those few literals in Scala with the
  *     real permission model, and then asks the triplestore to `COUNT` the objects whose literal falls in
- *     the "hidden" subset. No per-object rows cross the wire, so the counts are exact at any project size.
+ *     each visibility state (hidden / restricted view), once per audience. No per-object rows cross the
+ *     wire, so the counts are exact at any project size.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
  *     query is always narrowed to one class or property, ordered deterministically, and windowed with
  *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`.
@@ -56,10 +58,10 @@ final case class ViewRestrictionsRepo(
 ) extends QueryBuilderHelper {
 
   /**
-   * The project's distinct `knora-base:hasPermissions` literals among restriction-bearing objects, split
-   * by whether they sit on a resource or on a value. The service classifies these (and only these) with
-   * [[org.knora.webapi.messages.util.PermissionUtilADM]] to decide which literals mean "hidden" per
-   * audience, then feeds the result back into [[countByGroup]].
+   * The project's distinct `knora-base:hasPermissions` literals among restriction-bearing objects, across
+   * both resources and values. The service classifies these (and only these) with
+   * [[org.knora.webapi.messages.util.PermissionUtilADM]] to decide which literals mean hidden and which
+   * mean restricted view, per audience, then feeds each subset back into [[countByGroup]].
    *
    * Only the literal is projected — no creator, and no per-object data at all. That is sound because the
    * creator cannot change the decision for a synthetic audience user (it only adds the `knora-admin:Creator`
@@ -84,26 +86,31 @@ final case class ViewRestrictionsRepo(
     triplestore.query(Select(query)).map(_.map(_.getRequired("permissions")).toSet)
 
   /**
-   * Per-group counts of the objects whose permission literal is in `hiddenPermissions`, computed by the
+   * Per-group counts of the objects whose permission literal is in `permissions`, computed by the
    * triplestore with `GROUP BY` + `COUNT`. Exact regardless of project size.
    *
-   * An empty `hiddenPermissions` means nothing is hidden for that audience, so the query is skipped
-   * entirely rather than sent with an empty `FILTER IN` (which matches nothing anyway).
+   * The caller supplies the literals that resolve to ONE visibility state for ONE audience (see
+   * [[ViewRestrictionsService]]), so this is invoked once per (audience, state) pair — it is not
+   * hidden-specific. An empty set means no literal resolves to that state, so the query is skipped rather
+   * than sent with an empty `FILTER IN` (which would match nothing anyway).
    */
   def countByGroup(
     projectIri: ProjectIri,
     groupBy: GroupBy,
     itemType: ItemType,
-    hiddenPermissions: Set[String],
+    permissions: Set[String],
   ): Task[Seq[GroupCountRow]] =
-    if (hiddenPermissions.isEmpty) ZIO.succeed(Seq.empty)
+    if (permissions.isEmpty) ZIO.succeed(Seq.empty)
     else {
       val wantResources = ViewRestrictionsRepo.wantResources(groupBy, itemType)
       val wantValues    = ViewRestrictionsRepo.wantValues(groupBy, itemType)
+      // The two results are kept in their own units (see CountUnit) rather than concatenated into one
+      // number: they count different things, and the resource figure is the only one comparable to the
+      // class's resource population.
       for {
         resourceCounts <-
           if (wantResources)
-            runCountByGroup(ViewRestrictionsRepo.resourceCountQuery(projectIri, hiddenPermissions))
+            runCountByGroup(ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions), CountUnit.Resources)
           else ZIO.succeed(Seq.empty[GroupCountRow])
         valueCounts <-
           if (wantValues)
@@ -113,18 +120,29 @@ final case class ViewRestrictionsRepo(
                   projectIri,
                   groupBy,
                   ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
-                  hiddenPermissions,
+                  permissions,
                 ),
+              CountUnit.Items,
             )
           else ZIO.succeed(Seq.empty[GroupCountRow])
       } yield resourceCounts ++ valueCounts
     }
 
-  private def runCountByGroup(query: SelectQuery): Task[Seq[GroupCountRow]] =
+  /**
+   * How many resources the project has in each resource class, regardless of any restriction — the
+   * denominator the summary's per-class counts are read against ("7 of 120 Things are hidden").
+   *
+   * Only meaningful when grouping by resource class: a property group has no resource population of its own,
+   * so the service asks for this in class mode only.
+   */
+  def totalResourcesByClass(projectIri: ProjectIri): Task[Seq[GroupCountRow]] =
+    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri), CountUnit.Resources)
+
+  private def runCountByGroup(query: SelectQuery, unit: CountUnit): Task[Seq[GroupCountRow]] =
     triplestore
       .query(Select(query))
       .map(_.flatMap { row =>
-        row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _))))
+        row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
       })
 
   /**
@@ -267,8 +285,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
 
   val layer = ZLayer.derive[ViewRestrictionsRepo]
 
-  /** One row of the aggregated summary: a grouping key and how many of its objects are hidden. */
-  final case class GroupCountRow(groupId: String, count: Int)
+  /**
+   * What a [[GroupCountRow]]'s number counts. The two are different units and must never be added
+   * together: one resource carrying three hidden values contributes 1 resource and 3 items, and summing
+   * those to "4" is a number with no meaning (and one that can exceed the class's resource population).
+   */
+  enum CountUnit {
+    case Resources // distinct resources whose own permissions restrict them
+    case Items     // distinct values (files, ordinary values, comments) that are restricted
+  }
+
+  /** One row of the aggregated summary: a grouping key, a count, and the unit that count is in. */
+  final case class GroupCountRow(groupId: String, count: Int, unit: CountUnit)
 
   /**
    * One restriction-bearing object as read from the triplestore, before visibility resolution.
@@ -327,7 +355,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   private def onlyRestricted(permissions: Variable) =
     Expressions.not(Expressions.regex(permissions, Rdf.literalOf(grantsViewToAnonymousRegex)))
 
-  /** `FILTER(?permissions IN ("…", "…"))` — restrict to the literals the service classified as hidden. */
+  /** `FILTER(?permissions IN ("…", "…"))` — restrict to the literals the service classified for one state. */
   private def permissionsIn(permissions: Variable, literals: Set[String]) =
     Expressions.in(permissions, literals.toSeq.sorted.map(Rdf.literalOf)*)
 
@@ -482,9 +510,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
 
   /**
    * `SELECT ?groupId (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?groupId` over the resources whose
-   * permission literal the service classified as hidden. Exact at any project size.
+   * permission literal the service classified into the requested state. Exact at any project size.
    */
-  private[repo] def resourceCountQuery(projectIri: ProjectIri, hiddenPermissions: Set[String]): SelectQuery = {
+  private[repo] def resourceCountQuery(projectIri: ProjectIri, statePermissions: Set[String]): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))
     val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
@@ -495,7 +523,31 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .where(
         GraphPatterns
           .and(resourceCore(projectIri, resource, resClass, creator, permissions))
-          .filter(permissionsIn(permissions, hiddenPermissions))
+          .filter(permissionsIn(permissions, statePermissions))
+          .and(Expressions.bind(resClass, groupId)),
+      )
+      .groupBy(groupId)
+  }
+
+  /**
+   * `SELECT ?groupId (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?groupId` over **all** of a project's
+   * current resources, with no permission filter at all — the per-class population size.
+   *
+   * Deliberately built on the same [[resourceCore]] skeleton as [[resourceCountQuery]], so the restriction
+   * count and this total are counted over the same universe (non-deleted, project-owned, keyed by the
+   * resource's most specific asserted class) and the ratio between them is meaningful.
+   */
+  private[repo] def resourceTotalByClassQuery(projectIri: ProjectIri): SelectQuery = {
+    val (resource, resClass)   = (variable("resource"), variable("resClass"))
+    val (creator, permissions) = (variable("creator"), variable("permissions"))
+    val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
+
+    Queries
+      .SELECT(groupId, Expressions.count(resource).distinct().as(cnt))
+      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
+      .where(
+        GraphPatterns
+          .and(resourceCore(projectIri, resource, resClass, creator, permissions))
           .and(Expressions.bind(resClass, groupId)),
       )
       .groupBy(groupId)
@@ -503,7 +555,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
 
   /**
    * `SELECT ?groupId (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?groupId` over the values whose permission
-   * literal the service classified as hidden.
+   * literal the service classified into the requested state.
    *
    * Counts distinct *values*, matching the summary's semantics that a comment is a facet of its parent
    * value rather than a separately counted item — except under `itemType=Comment`, where the comment is
@@ -513,7 +565,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     projectIri: ProjectIri,
     groupBy: GroupBy,
     itemType: ItemType,
-    hiddenPermissions: Set[String],
+    statePermissions: Set[String],
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (prop, value)          = (variable("prop"), variable("value"))
@@ -531,7 +583,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         constrained
-          .filter(permissionsIn(permissions, hiddenPermissions))
+          .filter(permissionsIn(permissions, statePermissions))
           .and(Expressions.bind(groupCol, groupId)),
       )
       .groupBy(groupId)
