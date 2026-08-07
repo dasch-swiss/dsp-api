@@ -332,6 +332,17 @@ final case class TestApiClient(
     user: User,
   ): Task[Response[Either[String, String]]] =
     sendRequest(basicRequest.post(relativeUri).body(body).contentType(contentType).response(asString), Some(user))
+
+  /**
+   * Posts `application/x-www-form-urlencoded` fields, the request form off-the-shelf SPARQL clients default to.
+   * Encoding is left to the backend, so the test exercises the same wire representation those clients produce.
+   */
+  def postForm(
+    relativeUri: Uri,
+    fields: Seq[(String, String)],
+    user: User,
+  ): Task[Response[Either[String, String]]] =
+    sendRequest(basicRequest.post(relativeUri).body(fields*).response(asString), Some(user))
 }
 
 object TestApiClient {
@@ -572,6 +583,13 @@ object TestApiClient {
         case None    => http.postSparql(relativeUri, sparqlQuery, f)
       },
     )
+
+  def postForm(
+    relativeUri: Uri,
+    fields: Seq[(String, String)],
+    user: User,
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, String]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postForm(relativeUri, fields, user))
 
   val layer = ZLayer.derive[TestApiClient]
 }

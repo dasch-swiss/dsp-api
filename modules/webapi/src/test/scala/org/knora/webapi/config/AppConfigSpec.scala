@@ -42,6 +42,10 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           appConfig.filePermissionCache.ttl == Duration.ofMinutes(2),
           appConfig.filePermissionCache.capacity == 10000,
+          appConfig.triplestore.sparqlPassthrough.timeout == Duration.ofSeconds(120),
+          appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes == 1048576,
+          appConfig.triplestore.sparqlPassthrough.maxResponseBytes == 67108864,
+          appConfig.triplestore.sparqlPassthrough.maxConcurrentCalls == 8,
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",
           dspIngestConfig.externalBaseUrl == "http://localhost:3340",
@@ -61,6 +65,45 @@ class AppConfigSpec extends ZIOSpecDefault {
     },
     test("reject a file-permission-cache capacity below 1") {
       loadAppConfigWith("app.file-permission-cache.capacity = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("the sparql passthrough flag is off in the built-in configuration (fail-closed)") {
+      // REQ-3.2: a deployment that omits the env override must leave the route absent.
+      loadAppConfigWith("").orDie.map(config => assertTrue(!config.allowSparqlPassthrough))
+    },
+    test("the sparql passthrough flag is enabled by the string true") {
+      loadAppConfigWith("app.allow-sparql-passthrough = \"true\"").orDie
+        .map(config => assertTrue(config.allowSparqlPassthrough))
+    },
+    test("a sparql passthrough flag value that is not a boolean is rejected at load, never treated as enabled") {
+      // A typo in the env override must fail startup rather than silently resolve either way.
+      loadAppConfigWith("app.allow-sparql-passthrough = \"enabled\"").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a sparql passthrough timeout that is not positive") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a sub-second sparql passthrough timeout, which would reach the store truncated to zero") {
+      // The value is sent to the store in whole seconds, so anything under 1s would arrive as `timeout=0` and
+      // silently remove the store-side cancellation, while the API-side deadline still bounded the call.
+      loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 500 millis").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept a sparql passthrough timeout of exactly one second") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 1 second").orDie
+        .map(config => assertTrue(config.triplestore.sparqlPassthrough.timeout == Duration.ofSeconds(1)))
+    },
+    test("reject a sparql passthrough response ceiling below 1") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.max-response-bytes = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a sparql passthrough concurrency backstop below 1") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.max-concurrent-calls = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a sparql passthrough request-body cap below 1") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.max-request-body-bytes = 0").exit
         .map(exit => assertTrue(exit.isFailure))
     },
     test("reject a search-timeout that is not positive") {

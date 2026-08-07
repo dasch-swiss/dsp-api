@@ -14,7 +14,9 @@ import org.apache.jena.tdb2.TDB2
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
+import sttp.model.StatusCode
 import zio.Console
+import zio.IO
 import zio.RIO
 import zio.Ref
 import zio.Scope
@@ -41,12 +43,15 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.TestDatasetBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlRequest
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.RawSparqlResponse
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
+import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
@@ -200,6 +205,119 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset])(implicit v
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
+
+  /**
+   * A minimal but real `rawQuery`, so the passthrough's content negotiation and query-form dispatch can be tested
+   * without Docker. The contract it implements, stated explicitly so tests do not have to guess:
+   *
+   *   - SELECT, ASK, CONSTRUCT and DESCRIBE are all executed; DESCRIBE is supported here even though the typed
+   *     `query` overloads above have no DESCRIBE case.
+   *   - A Jena `QueryParseException` becomes a `400` whose body is Jena's own parse message, mirroring how Fuseki
+   *     reports a malformed query as a client error rather than a server fault.
+   *   - An `Accept` header naming a format that does not apply to the query's result kind (for instance `text/csv`
+   *     for a CONSTRUCT) becomes a `406`. Absent, empty or wildcard `Accept` yields the default for the result kind:
+   *     SPARQL-Results JSON for SELECT/ASK, Turtle for CONSTRUCT/DESCRIBE.
+   *   - `default-graph-uri` / `named-graph-uri` are **not** honoured; this double queries the whole dataset.
+   *
+   * It cannot reproduce Fuseki's own `406` or timeout response bodies, so verbatim-relay fidelity stays an
+   * integration-test concern. Statuses use [[StatusCode]]'s named constants rather than integers, so no runtime
+   * range check is needed.
+   *
+   * Everything is materialised inside the read transaction: TDB2 keeps transaction state in a `ThreadLocal`, so a
+   * lazily-consumed `ResultSet` escaping `withTx` would read outside the transaction that produced it.
+   */
+  override def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse] =
+    withTx(ReadWrite.READ)(executeRawQuery(_, request))
+      .orDieWith(e =>
+        // Not `orDie`: `executeRawQuery` already turns a malformed query into a 400 response, so anything reaching
+        // here is a broken double rather than something a test query can provoke, and the message says so.
+        new IllegalStateException("The in-memory triplestore double failed to run a raw SPARQL query", e),
+      )
+
+  private def executeRawQuery(ds: Dataset, request: RawSparqlRequest): RawSparqlResponse =
+    try {
+      val query = QueryFactory.create(request.sparql)
+      val qExec = QueryExecutionFactory.create(query, ds)
+      try serializeRawResult(query, qExec, request.accept)
+      finally qExec.close()
+    } catch {
+      case e: QueryParseException =>
+        RawSparqlResponse(StatusCode.BadRequest, Some("text/plain"), utf8(e.getMessage))
+    }
+
+  private def serializeRawResult(query: Query, qExec: QueryExecution, accept: Option[String]): RawSparqlResponse = {
+    val requested   = requestedFormat(accept)
+    val os          = new ByteArrayOutputStream()
+    val contentType =
+      if (query.isSelectType) selectFormat(requested).map(fmt => writeResultSet(os, qExec, fmt))
+      else if (query.isAskType) askFormat(requested).map(fmt => writeBoolean(os, qExec.execAsk(), fmt))
+      else if (query.isConstructType) rdfFormat(requested).map(lang => writeModel(os, qExec.execConstruct(), lang))
+      else if (query.isDescribeType) rdfFormat(requested).map(lang => writeModel(os, qExec.execDescribe(), lang))
+      else None
+    contentType.fold(notAcceptable(requested))(ct => RawSparqlResponse(StatusCode.Ok, Some(ct), os.toByteArray))
+  }
+
+  /** The first media type in the `Accept` header, without parameters; `None` for absent, empty or wildcard values. */
+  private def requestedFormat(accept: Option[String]): Option[String] =
+    accept
+      .map(_.split(",").head.split(";").head.trim.toLowerCase)
+      .filter(mediaType => mediaType.nonEmpty && mediaType != "*/*")
+
+  private def selectFormat(requested: Option[String]): Option[String] = requested match {
+    case None | Some("application/sparql-results+json") => Some("application/sparql-results+json")
+    case Some("application/sparql-results+xml")         => Some("application/sparql-results+xml")
+    case Some("text/csv")                               => Some("text/csv")
+    case Some("text/tab-separated-values")              => Some("text/tab-separated-values")
+    case _                                              => None
+  }
+
+  private def askFormat(requested: Option[String]): Option[String] = requested match {
+    case None | Some("application/sparql-results+json") => Some("application/sparql-results+json")
+    case Some("application/sparql-results+xml")         => Some("application/sparql-results+xml")
+    case _                                              => None
+  }
+
+  private def rdfFormat(requested: Option[String]): Option[String] = requested match {
+    case None | Some("text/turtle")                         => Some("text/turtle")
+    case Some("application/rdf+xml")                        => Some("application/rdf+xml")
+    case Some("application/n-triples") | Some("text/plain") => Some("application/n-triples")
+    case _                                                  => None
+  }
+
+  private def writeResultSet(os: ByteArrayOutputStream, qExec: QueryExecution, contentType: String): String = {
+    val rs = qExec.execSelect()
+    contentType match {
+      case "application/sparql-results+json" => ResultSetFormatter.outputAsJSON(os, rs)
+      case "application/sparql-results+xml"  => ResultSetFormatter.outputAsXML(os, rs)
+      case "text/csv"                        => ResultSetFormatter.outputAsCSV(os, rs)
+      case _                                 => ResultSetFormatter.outputAsTSV(os, rs)
+    }
+    contentType
+  }
+
+  private def writeBoolean(os: ByteArrayOutputStream, result: Boolean, contentType: String): String = {
+    if (contentType == "application/sparql-results+xml") ResultSetFormatter.outputAsXML(os, result)
+    else ResultSetFormatter.outputAsJSON(os, result)
+    contentType
+  }
+
+  private def writeModel(os: ByteArrayOutputStream, m: model.Model, contentType: String): String = {
+    val lang = contentType match {
+      case "application/rdf+xml"   => Lang.RDFXML
+      case "application/n-triples" => Lang.NTRIPLES
+      case _                       => Lang.TURTLE
+    }
+    try RDFDataMgr.write(os, m, lang)
+    finally m.close()
+    contentType
+  }
+
+  private def notAcceptable(requested: Option[String]): RawSparqlResponse = {
+    val body = s"No serialization available for ${requested.getOrElse("the requested media type")}"
+    RawSparqlResponse(StatusCode.NotAcceptable, Some("text/plain"), utf8(body))
+  }
+
+  private def utf8(s: String): Array[Byte] = s.getBytes(StandardCharsets.UTF_8)
 
   override def downloadGraph(
     graphIri: InternalIri,

@@ -54,6 +54,20 @@ if [ ! -e "$FUSEKI_BASE/configuration/dsp-repo.ttl" ]; then
   cp "$FUSEKI_HOME/dsp-repo.ttl" "$FUSEKI_BASE/configuration/dsp-repo.ttl"
 fi
 
+# The copy above is deliberately conditional and /fuseki is a persistent volume, so an environment created before a
+# configuration change keeps its old file forever. That is fine for tuning, but not for arq:httpServiceAllowed, which
+# is what stops a query from making this server issue outbound HTTP to a target the query author chose. Nothing here
+# can safely rewrite an operator's configuration, so warn instead: the setting has to be applied by hand, and verified
+# with a live SERVICE probe, before the dsp-api SPARQL passthrough is enabled against this host.
+# Matching the *value*, not just the key: the property name also appears in this file's own explanatory comment,
+# and `ja:cxtValue "true"` would contain the key while meaning the opposite. Comments are stripped first and newlines
+# folded, because the name and the value sit on separate lines of one `ja:context [ ... ]` block.
+if ! sed 's/#.*$//' "$FUSEKI_BASE/configuration/dsp-repo.ttl" | tr -d '\n' |
+  grep -qE '"arq:httpServiceAllowed"[[:space:]]*;[[:space:]]*ja:cxtValue[[:space:]]*"false"'; then
+  warn "Existing dsp-repo.ttl does not set arq:httpServiceAllowed to \"false\": federated SERVICE calls are ALLOWED."
+  warn "Add it to $FUSEKI_BASE/configuration/dsp-repo.ttl and restart before enabling the dsp-api SPARQL passthrough."
+fi
+
 # Check if index rebuild marker file exists
 if [ ! -n "$REBUILD_INDEX_OF_DATASET" ] && [ -f "$REBUILD_INDEX_MARKER_FILE" ] ; then
   info "Detected index rebuild marker file ${REBUILD_INDEX_MARKER_FILE}"

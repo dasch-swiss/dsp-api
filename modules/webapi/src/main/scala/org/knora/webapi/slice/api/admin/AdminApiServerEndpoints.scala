@@ -17,6 +17,7 @@ final class AdminApiServerEndpoints(
   permissionsServerEndpoints: PermissionsServerEndpoints,
   projectsServerEndpoints: ProjectsServerEndpoints,
   projectsLegalInfoServerEndpoints: ProjectsLegalInfoServerEndpoints,
+  sparqlPassthroughServerEndpoints: SparqlPassthroughServerEndpoints,
   storeServerEndpoints: StoreServerEndpoints,
   usersServerEndpoints: UsersServerEndpoints,
   viewRestrictionsServerEndpoints: ViewRestrictionsServerEndpoints,
@@ -30,6 +31,7 @@ final class AdminApiServerEndpoints(
       permissionsServerEndpoints.serverEndpoints ++
       projectsLegalInfoServerEndpoints.serverEndpoints ++
       projectsServerEndpoints.serverEndpoints ++
+      sparqlPassthroughServerEndpoints.serverEndpoints ++
       storeServerEndpoints.serverEndpoints ++
       usersServerEndpoints.serverEndpoints ++
       viewRestrictionsServerEndpoints.serverEndpoints)

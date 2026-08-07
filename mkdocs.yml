@@ -41,6 +41,7 @@ nav:
           - Lists Endpoint: 03-endpoints/api-admin/lists.md
           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
+          - SPARQL Passthrough: 03-endpoints/api-admin/sparql-passthrough.md
       - API V3:
           - Project Migration Export/Import: 03-endpoints/api-v3/project-migration.md
           - Project Data Import: 03-endpoints/api-v3/project-data-import.md

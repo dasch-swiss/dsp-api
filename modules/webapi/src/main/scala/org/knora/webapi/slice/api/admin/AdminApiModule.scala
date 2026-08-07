@@ -7,6 +7,7 @@ package org.knora.webapi.slice.api.admin
 
 import zio.URLayer
 import zio.ZLayer
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.responders.admin.AssetPermissionsCache
@@ -31,6 +32,7 @@ import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
 import org.knora.webapi.slice.api.admin.service.ProjectRestService
 import org.knora.webapi.slice.api.admin.service.ProjectsLegalInfoRestService
+import org.knora.webapi.slice.api.admin.service.SparqlPassthroughRestService
 import org.knora.webapi.slice.api.admin.service.StoreRestService
 import org.knora.webapi.slice.api.admin.service.UserRestService
 import org.knora.webapi.slice.api.admin.service.ViewRestrictionsRestService
@@ -64,6 +66,7 @@ object AdminApiModule { self =>
       ProjectEraseService &
       ProjectExportService &
       ProjectService &
+      Tracing &
       TriplestoreService &
       UserService &
       ViewRestrictionsService
@@ -88,6 +91,7 @@ object AdminApiModule { self =>
       PermissionsEndpoints.layer ++ PermissionRestService.layer ++
       ProjectsEndpoints.layer ++ ProjectRestService.layer ++
       ProjectsLegalInfoEndpoints.layer ++ ProjectsLegalInfoRestService.layer ++
+      SparqlPassthroughEndpoints.layer ++ SparqlPassthroughRestService.layer ++
       StoreEndpoints.layer ++ StoreRestService.layer ++
       UsersEndpoints.layer ++ UserRestService.layer ++
       ViewRestrictionsEndpoints.layer ++ ViewRestrictionsRestService.layer) >+>
@@ -95,8 +99,10 @@ object AdminApiModule { self =>
       (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
         GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
         PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
-        ProjectsLegalInfoServerEndpoints.layer ++ StoreServerEndpoints.layer ++
+        ProjectsLegalInfoServerEndpoints.layer ++ SparqlPassthroughServerEndpoints.layer ++
+        StoreServerEndpoints.layer ++
         UsersServerEndpoints.layer ++ ViewRestrictionsServerEndpoints.layer) >+>
+
       // Layer 3: Top-level aggregator
       AdminApiServerEndpoints.layer
 }

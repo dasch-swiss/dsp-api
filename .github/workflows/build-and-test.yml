@@ -2,13 +2,20 @@ name: CI-build-and-test
 
 on:
   # Run on every push to main to keep main green visible per-commit.
+  # `paths-ignore` skips the whole workflow when a main push touches only these
+  # two files — which is exactly (and only) what a release-please merge commit
+  # changes. That source-identical commit was already fully tested on the feature
+  # PRs behind it, so re-running unit/IT/E2E on it tests nothing new. Applied to
+  # `push` only: on `pull_request` the jobs must still REPORT (as skipped) for
+  # branch protection, so those keep their job-level `if:` guards. See DEV-6678.
   push:
     branches:
       - main
+    paths-ignore:
+      - CHANGELOG.md
+      - version.txt
   pull_request:
     types: [opened, reopened, synchronize]
-    branches-ignore:
-      - "**/graphite-base/**"
 
 # Least-privilege token. `checks: write` is required by dorny/test-reporter.
 permissions:
@@ -21,10 +28,13 @@ env:
 # Release PRs (head branch `release-please--*`, opened by release-please) only
 # bump CHANGELOG.md and version.txt — no source changes — so every job below is
 # skipped for them via `!startsWith(github.head_ref, 'release-please')`. This
-# saves CI resources and lets the release PR go green immediately. On `push`
-# events `github.head_ref` is empty, so main pushes still run the full suite.
-# A required check skipped by a job-level `if:` counts as passing in branch
-# protection, so the release PR stays mergeable. See DEV-6678.
+# saves CI resources and lets the release PR go green immediately. A required
+# check skipped by a job-level `if:` counts as passing in branch protection, so
+# the release PR stays mergeable. On `push` events `github.head_ref` is empty,
+# so ordinary main pushes run the test jobs (unit/IT/E2E) as usual; the
+# `paths-ignore` on the `push` trigger above then skips the whole workflow for
+# the release-please *merge* commit, which touches only those two files. See
+# DEV-6678.
 
 jobs:
   # All pure-JVM unit tests run in a single job: one `bazel test` over every
@@ -367,12 +377,17 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build images locally
-        # Build both knora-api and knora-sipi so docker compose picks up the
+        # Build knora-api, knora-sipi and fuseki so docker compose picks up the
         # PR's images. The registry's :latest for knora-sipi lags by a merge,
         # which matters across major Sipi base-image bumps (e.g. v4 -> v5
         # changed CLI surface and the compose `command:`).
+        #
+        # Fuseki's registry :latest likewise lags by a merge, and this PR changes the
+        # Fuseki assembler (modules/fuseki/dsp-repo.ttl). Build it here so the `db`
+        # healthcheck runs against the PR's own assembler config, not the stale registry image.
         run: |
           nix develop --command just docker-build-dsp-api-image ${{ steps.rbe.outputs.flags }}
           nix develop --command just docker-build-sipi-image ${{ steps.rbe.outputs.flags }}
+          nix develop --command just docker-build-fuseki-image ${{ steps.rbe.outputs.flags }}
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api

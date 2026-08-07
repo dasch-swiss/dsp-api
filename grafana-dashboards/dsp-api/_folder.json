@@ -1,0 +1,6 @@
+{
+  "apiVersion": "folder.grafana.app/v1",
+  "kind": "Folder",
+  "metadata": { "name": "dsp-api-dashboards" },
+  "spec": { "title": "DSP-API" }
+}

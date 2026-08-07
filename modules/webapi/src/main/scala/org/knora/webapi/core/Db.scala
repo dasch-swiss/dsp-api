@@ -40,6 +40,14 @@ object Db { self =>
         refreshCache *>
         ZIO.logInfo("=> Startup checks finished") *>
         ZIO.logWarning("Resetting DB over HTTP is turned ON").when(appConfig.allowReloadOverHttp) *>
+        // Echoes the resolved flag so an accidentally-enabled passthrough is visible in the log sink.
+        // An alert keys off this line; keep the ALLOW_SPARQL_PASSTHROUGH token if the wording changes.
+        ZIO
+          .logWarning(
+            "ALLOW_SPARQL_PASSTHROUGH is turned ON: SystemAdmins can run raw SPARQL against the triplestore " +
+              "via POST /admin/sparql/query",
+          )
+          .when(appConfig.allowSparqlPassthrough) *>
         setState(AppState.Running)
     }
     .orDie

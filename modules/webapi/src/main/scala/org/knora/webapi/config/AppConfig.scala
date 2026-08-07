@@ -20,6 +20,7 @@ final case class AppConfig(
   bcryptPasswordStrength: Int,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
+  allowSparqlPassthrough: Boolean,
   fallbackLanguage: String,
   knoraApi: KnoraApi,
   sipi: Sipi,
@@ -189,7 +190,44 @@ final case class Triplestore(
   maintenanceTimeout: Duration,
   fuseki: Fuseki,
   profileQueries: Boolean,
+  sparqlPassthrough: SparqlPassthroughConfig,
   isTestEnv: Boolean = false,
+)
+
+/**
+ * Guardrails for the admin SPARQL passthrough surface (`POST /admin/sparql/query`), which is itself gated by
+ * `app.allow-sparql-passthrough`. All four are operational knobs, living in config so an environment can tune them
+ * without a code change, release and redeploy, and all four bound an interaction with the triplestore -- which is
+ * why they sit under `app.triplestore`.
+ *
+ * `timeout` is sent to the store as its per-request execution timeout, so an over-time query is cancelled by the
+ * store's engine rather than merely abandoned client-side. It also sizes the API-side deadline.
+ *
+ * `maxRequestBodyBytes` bounds the SPARQL text a caller may submit. It is enforced on that one endpoint, never
+ * globally -- a global cap of this size would reject the larger project-import upload.
+ *
+ * `maxResponseBytes` bounds the bytes read back from the store, counted before any response compression. The read
+ * path buffers up to this ceiling and only then responds, so a breach yields a clean error rather than a truncated
+ * body; the consequence is that this value sizes per-request heap use. It is one copy, not two: the relay carries the
+ * response as the array the HTTP layer needs, collected once at the point it is read.
+ *
+ * `maxConcurrentCalls` is a surface-wide backstop on calls in flight *against the store*, so a runaway script or agent
+ * cannot open store connections without limit. It is runaway protection, not a throughput or fairness control, hence
+ * deliberately generous; a call arriving while it is saturated is rejected, never queued.
+ *
+ * It is deliberately **not** a heap bound, and must not be documented as one. The slot is released when the store's
+ * bytes have been collected, which is before the HTTP layer has written them to the client, so a response array
+ * outlives its slot for as long as the caller takes to read it. Worst-case response-side heap is `maxResponseBytes`
+ * times the simultaneous callers the deployment admits -- the same shape as the request side, where the backstop
+ * likewise sits downstream of the buffering it would have to bound. Holding the slot across the write is not
+ * available from here: this service hands the bytes back to the framework, whose write happens after every scope
+ * opened inside the server logic has already closed.
+ */
+final case class SparqlPassthroughConfig(
+  timeout: Duration,
+  maxRequestBodyBytes: Int,
+  maxResponseBytes: Int,
+  maxConcurrentCalls: Int,
 )
 
 final case class Fuseki(
@@ -239,6 +277,23 @@ object AppConfig {
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
     )
     .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
+    // Whole seconds, not merely positive: the value is sent to the store as its per-request execution timeout in
+    // seconds, so every use goes through `toSeconds`. A sub-second value is env-injectable
+    // (KNORA_WEBAPI_SPARQL_PASSTHROUGH_TIMEOUT=500 millis) and would truncate to `timeout=0` on the wire -- silently
+    // removing the store-side cancellation the design leans on, and reporting "0 seconds" to the caller, while the
+    // API-side deadline still made the call look bounded.
+    .validate("app.triplestore.sparql-passthrough.timeout must be >= 1 second; it is sent to the store in seconds")(
+      _.triplestore.sparqlPassthrough.timeout.toSeconds >= 1,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-request-body-bytes must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxRequestBodyBytes >= 1,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-response-bytes must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxResponseBytes >= 1,
+    )
+    .validate("app.triplestore.sparql-passthrough.max-concurrent-calls must be >= 1")(
+      _.triplestore.sparqlPassthrough.maxConcurrentCalls >= 1,
+    )
     // The probe knobs feed FulltextBreadthGuard's cap check, Cache.makeWith and Semaphore.make, so guard each
     // against a value that breaks the guard. cap is env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP): cap < 1
     // refuses every probed search; cache-capacity < 1 is undefined; max-concurrent = 0 is a zero-permit semaphore,
