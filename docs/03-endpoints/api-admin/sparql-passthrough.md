@@ -15,7 +15,8 @@ Standard SPARQL 1.1 Protocol, so off-the-shelf tooling works against it directly
 - The store's HTTP status, `Content-Type` and response body are **relayed verbatim**. A malformed query therefore
   yields the store's own `400` and its own message, not this API's JSON error envelope.
 - `Accept` is forwarded unchanged, so the format is negotiated by the store. With no `Accept`, the store's default is
-  returned.
+  returned. A preference list split across several `Accept` header lines is recombined into the one comma-separated
+  value RFC 9110 makes it equivalent to; nothing is parsed, reordered or dropped.
 - The SPARQL protocol dataset parameters `default-graph-uri` and `named-graph-uri` are relayed unchanged. Any other
   query-string parameter is ignored.
 
@@ -88,8 +89,16 @@ the same reason.
 
 Two notes on the response ceiling. It counts the bytes read **from the store**, before any compression this API
 applies on the way out, so a compressed response on the wire may be much smaller than the ceiling. And because the
-response is buffered to the ceiling before anything is sent, the ceiling multiplied by the concurrency backstop is the
-worst-case heap this surface can occupy on the response side: raising either raises that bound.
+response is buffered to the ceiling before anything is sent, `max-response-bytes` sizes the heap a single call costs.
+
+What it does **not** do is combine with the backstop into a total, and the reason is the mirror image of the
+request-side case below. The backstop bounds concurrent calls *to the store*: its slot is released when the store's
+bytes have been collected, which is before the HTTP layer has written them to the client. A response array therefore
+stays live after its slot is gone, for as long as the client takes to read it — so a slow reader holds
+`max-response-bytes` while a fresh call takes the slot it vacated. Worst-case response-side heap is
+`max-response-bytes` times the number of simultaneous callers the deployment admits, not times
+`max-concurrent-calls`; the backstop keeps a runaway script from opening store connections without limit, and does not
+size the JVM.
 
 To page through a large result, use `LIMIT` and `OFFSET` rather than raising the ceiling.
 

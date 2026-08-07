@@ -222,6 +222,25 @@ class SparqlPassthroughInterceptorSpec extends ZIOSpecDefault {
         )
         .provide(env(systemAdmin))
     },
+    test("a preference list split across two Accept lines is served, not refused as a malformed request") {
+      // RFC 9110 lets a client spell its preference list as repeated field lines, and the surface's contract is that
+      // `Accept` reaches the store untouched. Declaring the input as `header[Option[String]]` broke both: tapir's
+      // `listHeadOption` answers a second line with a decode failure, so a legal request became a 400 with a
+      // `malformed-request` entry and never reached the store. Asserted here rather than over real HTTP because a
+      // client library is free to fold repeated lines into one before they leave the process, which would make the
+      // regression invisible; an in-memory `Request` sends exactly what it is given.
+      val request = post(selectQuery, "application/sparql-query", Some(token))
+        .addHeader(Header.Custom("Accept", "text/csv"))
+        .addHeader(Header.Custom("Accept", "application/sparql-results+json"))
+      run(request)
+        .map((response, entries) =>
+          assertTrue(
+            response.status == Status.Ok,
+            !entries.exists(outcomeOf(_) == "malformed-request"),
+          ),
+        )
+        .provide(env(systemAdmin))
+    },
     test("a body over the endpoint's request cap is attributed as request-cap-exceeded, not malformed-request") {
       // The `request-cap-exceeded` branch of the decode hook was the one outcome nothing pinned. The e2e spec
       // asserts only the 413, which tapir's own decode-failure handler produces whether or not our hook recognised

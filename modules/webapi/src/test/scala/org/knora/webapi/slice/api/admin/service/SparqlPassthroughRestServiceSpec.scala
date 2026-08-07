@@ -46,7 +46,7 @@ class SparqlPassthroughRestServiceSpec extends ZIOSpecDefault {
   private def runQuery(
     user: User,
     sparql: String = selectQuery,
-    accept: Option[String] = None,
+    accept: List[String] = Nil,
     params: QueryParams = QueryParams.fromSeq(Seq.empty),
   ) = ZIO.serviceWithZIO[SparqlPassthroughRestService](_.query(user)(sparql, accept, params))
 
@@ -78,7 +78,27 @@ class SparqlPassthroughRestServiceSpec extends ZIOSpecDefault {
           assertTrue(status == StatusCode.Ok)
         }
       },
+      test("a preference list split across several Accept lines reaches the store, rather than being refused") {
+        // RFC 9110 permits the split spelling, and the contract is that Accept reaches the store untouched.
+        runQuery(systemAdmin, accept = List("text/csv", "application/sparql-results+json")).map { case (_, _, status) =>
+          assertTrue(status == StatusCode.Ok)
+        }
+      },
     ).provide(SparqlPassthroughTestEnv.layer()) @@ TestAspect.sequential,
+    suite("Accept recombination")(
+      // The join is what makes the split spelling equivalent to the single-line one, so pin it directly: it decides
+      // the bytes the store negotiates against.
+      test("no Accept line forwards nothing, leaving negotiation to the store's default") {
+        assertTrue(SparqlPassthroughRestService.forwardedAccept(Nil).isEmpty)
+      },
+      test("one Accept line is forwarded verbatim") {
+        assertTrue(SparqlPassthroughRestService.forwardedAccept(List("text/csv")).contains("text/csv"))
+      },
+      test("several Accept lines are joined in order, as one comma-separated value") {
+        val forwarded = SparqlPassthroughRestService.forwardedAccept(List("text/csv;q=0.9", "text/turtle"))
+        assertTrue(forwarded.contains("text/csv;q=0.9, text/turtle"))
+      },
+    ),
     suite("with the passthrough disabled")(
       test("even a SystemAdmin is forbidden, as defence in depth behind the unregistered route") {
         runQuery(systemAdmin).exit.map(exit => assert(exit)(failsWithA[ForbiddenException]))

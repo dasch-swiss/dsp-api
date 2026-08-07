@@ -70,7 +70,7 @@ class SparqlPassthroughAuditSpec extends ZIOSpecDefault {
     user: User = systemAdmin,
     sparql: String = selectQuery,
     params: QueryParams = QueryParams.fromSeq(Seq.empty),
-  ) = ZIO.serviceWithZIO[SparqlPassthroughRestService](_.query(user)(sparql, None, params))
+  ) = ZIO.serviceWithZIO[SparqlPassthroughRestService](_.query(user)(sparql, Nil, params))
 
   /** The passthrough's own entries, which is what a log query on this surface selects. */
   private val auditEntries: UIO[Chunk[String]] =

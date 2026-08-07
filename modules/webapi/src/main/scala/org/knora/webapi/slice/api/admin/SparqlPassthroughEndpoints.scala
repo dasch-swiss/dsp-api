@@ -70,8 +70,16 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: 
     .in("admin" / "sparql" / "query")
     .in(SparqlPassthroughEndpoints.queryBody)
     .in(
-      header[Option[String]](HeaderNames.Accept)
-        .description("Forwarded to the store unchanged. If absent, the store's default serialization is returned."),
+      // Taken as a list, not as `Option[String]`. RFC 9110 lets a client spell its preference list as repeated field
+      // lines, and `header[Option[String]]` resolves to tapir's `listHeadOption`, which answers anything past the
+      // first line with a decode failure -- a `400` for a legal request, on the one route whose contract is that
+      // `Accept` reaches the store untouched. The lines are recombined into the equivalent single value before
+      // being forwarded; see SparqlPassthroughRestService.forwardedAccept.
+      header[List[String]](HeaderNames.Accept)
+        .description(
+          "Forwarded to the store unchanged. Repeated header lines are combined into one comma-separated value, " +
+            "as RFC 9110 permits. If absent, the store's default serialization is returned.",
+        ),
     )
     .in(
       queryParams.description(

@@ -34,9 +34,11 @@ import org.knora.webapi.store.triplestore.errors.SparqlRequestTooLargeException
  * unchanged.
  *
  * `inFlight` is the surface-wide backstop counter. It is a `Ref` rather than a `zio.Semaphore` because a semaphore
- * offers no non-blocking acquire, and `withPermit` would make an over-limit call queue instead of being rejected --
- * heap would stay bounded, but fibers and connections would accumulate, which is the failure mode the backstop
- * exists to prevent.
+ * offers no non-blocking acquire, and `withPermit` would make an over-limit call queue instead of being rejected, so
+ * fibers and connections would accumulate -- which is the failure mode the backstop exists to prevent.
+ *
+ * What it bounds is concurrent calls *against the store*, not heap; see `SparqlPassthroughConfig` for why the
+ * distinction is load-bearing for anyone sizing a deployment from these numbers.
  */
 final class SparqlPassthroughRestService(
   private val appConfig: AppConfig,
@@ -50,7 +52,7 @@ final class SparqlPassthroughRestService(
 
   def query(user: User)(
     sparql: String,
-    accept: Option[String],
+    accept: List[String],
     params: QueryParams,
   ): Task[(Option[String], Array[Byte], StatusCode)] =
     SparqlPassthroughRestService
@@ -69,7 +71,7 @@ final class SparqlPassthroughRestService(
   private def runQuery(
     user: User,
     sparql: String,
-    accept: Option[String],
+    accept: List[String],
     params: QueryParams,
   ): Task[RawSparqlResponse] =
     for {
@@ -82,7 +84,8 @@ final class SparqlPassthroughRestService(
       _        <- ensureEnabled
       _        <- rejectSparqlInQueryString(params)
       _        <- ensureWithinRequestCap(sparql)
-      request   = RawSparqlRequest(sparql, accept, relayedDatasetParams(params))
+      forwarded = SparqlPassthroughRestService.forwardedAccept(accept)
+      request   = RawSparqlRequest(sparql, forwarded, relayedDatasetParams(params))
       response <- withBackstop(triplestoreService.rawQuery(request))
     } yield response
 
@@ -138,6 +141,11 @@ final class SparqlPassthroughRestService(
    * Runs `effect` while holding one of the `maxConcurrentCalls` slots, rejecting rather than waiting when all are
    * taken. `Ref#modify` makes the check-and-increment a single atomic step, so the limit cannot be exceeded by two
    * callers observing the same count.
+   *
+   * The slot covers the store leg only, and cannot be made to cover more from here: the scope closes when this
+   * effect completes, and the framework writes the response after all of the server logic's scopes have closed. So
+   * the collected response array outlives its slot. That is why `maxConcurrentCalls` is documented as a bound on
+   * store concurrency rather than on heap -- see `SparqlPassthroughConfig`.
    *
    * Visible to its own package so the reject-rather-than-queue property can be tested deterministically, by holding
    * a slot open with a latch. Driving the same property through the HTTP path would be a race, since whether two
@@ -237,6 +245,17 @@ object SparqlPassthroughRestService {
 
   /** The attribute an interrupted passthrough span carries; the counterpart of Gravsearch's own exit reason. */
   private[service] val exitReasonKey = "sparql_passthrough.exit_reason"
+
+  /**
+   * The single `Accept` value forwarded to the store, from however many header lines the caller sent.
+   *
+   * RFC 9110 makes repeated lines of a comma-separated header equivalent to one line joining them in order, so
+   * recombining is a spelling change and not a rewrite -- which is what keeps "forwarded unchanged" true for a client
+   * that splits its preference list. No line is parsed, reordered or dropped: whatever the caller wrote is what the
+   * store negotiates against, including a value this API would not recognise.
+   */
+  private[service] def forwardedAccept(accept: List[String]): Option[String] =
+    Option.when(accept.nonEmpty)(accept.mkString(", "))
 
   /** Query-string parameters that carry a SPARQL statement, and are therefore refused on this surface. */
   private val bodyOnlyParams: Set[String] = Set("query", "update")

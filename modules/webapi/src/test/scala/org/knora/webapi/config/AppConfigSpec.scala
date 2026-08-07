@@ -84,6 +84,16 @@ class AppConfigSpec extends ZIOSpecDefault {
       loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 0 seconds").exit
         .map(exit => assertTrue(exit.isFailure))
     },
+    test("reject a sub-second sparql passthrough timeout, which would reach the store truncated to zero") {
+      // The value is sent to the store in whole seconds, so anything under 1s would arrive as `timeout=0` and
+      // silently remove the store-side cancellation, while the API-side deadline still bounded the call.
+      loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 500 millis").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept a sparql passthrough timeout of exactly one second") {
+      loadAppConfigWith("app.triplestore.sparql-passthrough.timeout = 1 second").orDie
+        .map(config => assertTrue(config.triplestore.sparqlPassthrough.timeout == Duration.ofSeconds(1)))
+    },
     test("reject a sparql passthrough response ceiling below 1") {
       loadAppConfigWith("app.triplestore.sparql-passthrough.max-response-bytes = 0").exit
         .map(exit => assertTrue(exit.isFailure))
