@@ -14,6 +14,7 @@ import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
@@ -36,7 +37,11 @@ class SearchEndpointsSpec extends ZIOSpecDefault {
     def authenticate(jwtToken: String): IO[AuthenticatorError, User] = ZIO.fail(AuthenticatorError.BadCredentials)
   }
 
-  private val endpoints = new SearchEndpoints(BaseEndpoints(stubAuthenticator))
+  // Authorization is likewise never invoked here -- these render endpoint metadata via `.show`, so a bare instance
+  // (its service dependencies are never dereferenced) is enough to satisfy the BaseEndpoints constructor.
+  private val stubAuthorization: AuthorizationRestService = new AuthorizationRestService(null, null)
+
+  private val endpoints = new SearchEndpoints(BaseEndpoints(stubAuthenticator, stubAuthorization))
 
   // Tapir's `.show` renders each endpoint's error outputs, including the fixed status codes of its oneOf variants.
   private val fullTextSearch      = endpoints.getFullTextSearch.endpoint.show

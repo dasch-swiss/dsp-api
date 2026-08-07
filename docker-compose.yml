@@ -156,6 +156,9 @@ services:
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME=admin
       - KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD=test
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
+      # Local dev only: exposes POST /admin/sparql/query to SystemAdmins. Deployed environments opt in
+      # per host via ansible, and only after the store is confirmed to refuse federated SERVICE calls.
+      - KNORA_WEBAPI_ALLOW_SPARQL_PASSTHROUGH=true
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340

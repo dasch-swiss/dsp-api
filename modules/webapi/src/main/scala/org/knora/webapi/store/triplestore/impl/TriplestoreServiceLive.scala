@@ -10,6 +10,7 @@ import org.apache.http.HttpHost
 import sttp.capabilities.Effect
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
+import sttp.model.HeaderNames
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -30,6 +31,7 @@ import scala.io.Source
 
 import dsp.errors.*
 import org.knora.webapi.*
+import org.knora.webapi.config.SparqlPassthroughConfig
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.fusekiServerFormat
@@ -154,6 +156,102 @@ case class TriplestoreServiceLive(
 
     sendStreamingRequest(request, s"Triplestore query failed")
   }
+
+  /**
+   * Forwards a caller-supplied query to Fuseki's SPARQL protocol endpoint and returns the store's response as data.
+   *
+   * Deliberately bypasses [[doHttpRequest]], and therefore its `checkResponse`: that helper turns any non-2xx into a
+   * dsp-api failure, which would surface a user's malformed SPARQL as a dsp-api `500` instead of the store's own
+   * `400`. Here the store's status and body are the payload, so `asStreamAlways` is used rather than `asStream` --
+   * the `Always` variant does not fold a 4xx into a `Left`.
+   *
+   * The error channel is reserved for failures that are the API's own, and all of them are storeless: a transport
+   * failure, a response over the configured ceiling, an upstream credential rejection, or the overall deadline.
+   */
+  override def rawQuery(request: RawSparqlRequest): IO[SparqlPassthroughException, RawSparqlResponse] = {
+    val config      = triplestoreConfig.sparqlPassthrough
+    val sttpRequest = rawQueryRequest(request, config)
+    // Bounds the whole store interaction, which Fuseki's `timeout` parameter does not: that parameter bounds query
+    // execution, not result serialization, and sttp's readTimeout is per-read -- so a slow-drip response would
+    // otherwise hold a fiber, a connection and up to maxResponseBytes indefinitely. Interruption here closes the
+    // connection and discards the buffer. Nothing upstream of this can block: the concurrency backstop acquires its
+    // permit without waiting, so this deadline is the total time a call can occupy resources.
+    val deadline = config.timeout.plus(rawQueryDeadlineGrace)
+    sttpRequest
+      .send(backend)
+      .foldZIO(mapRawQueryFailure(sttpRequest.uri.toString), toRawSparqlResponse)
+      // The *configured* timeout is reported, not the deadline: the grace below is an internal implementation
+      // detail, and naming it would tell a caller a limit no operator set.
+      .timeoutFail(SparqlPassthroughTimedOutException.make(config.timeout.toSeconds))(deadline)
+  }
+
+  /** Grace added to the configured timeout so the store's own timeout response wins over the API-side deadline. */
+  private val rawQueryDeadlineGrace: Duration = 15.seconds
+
+  private def rawQueryRequest(request: RawSparqlRequest, config: SparqlPassthroughConfig) = {
+    // The query travels in the request body, never as a URL parameter. A URL parameter would put the caller's SPARQL
+    // text into the outbound client span's URL attribute and into Fuseki's own inbound access log, both outside this
+    // surface's logging controls.
+    val form: Seq[(String, String)] =
+      Seq("query" -> request.sparql, "timeout" -> config.timeout.toSeconds.toString) ++
+        request.protocolParams.toSeq.flatMap { case (name, values) => values.map(name -> _) }
+    val withAccept = request.accept.fold(authenticatedRequest)(authenticatedRequest.header("Accept", _))
+    withAccept
+      .post(targetHostUri.addPath(paths.query))
+      .readTimeout(FiniteDuration(config.timeout.toSeconds + 10, TimeUnit.SECONDS))
+      .body(form*)
+      .response(asStreamAlways(ZioStreams)(readCappedBody(_, config.maxResponseBytes)))
+  }
+
+  /**
+   * Collects the response body, refusing to buffer more than `maxBytes`.
+   *
+   * `take(maxBytes + 1)` stops pulling one byte past the ceiling, so the breach is detected during the read and no
+   * response byte is ever emitted to the client. Abandoning the remainder of the upstream stream is safe here: this
+   * is the outbound response side, inside sttp's own scope for the connection.
+   */
+  private def readCappedBody(stream: ZStream[Any, Throwable, Byte], maxBytes: Int): Task[Array[Byte]] =
+    stream.take(maxBytes.toLong + 1).runCollect.flatMap { bytes =>
+      if (bytes.length > maxBytes) ZIO.fail(SparqlResponseTooLargeException.make(maxBytes))
+      // Converted here, where the collected chunk is discarded immediately afterwards, rather than at the relay
+      // boundary, where it would still be reachable and the copy would double this call's peak heap.
+      else ZIO.succeed(bytes.toArray)
+    }
+
+  private def mapRawQueryFailure(storeUri: String)(error: Throwable): IO[SparqlPassthroughException, Nothing] =
+    error match {
+      case e: SparqlPassthroughException => ZIO.fail(e)
+      case e                             =>
+        // The store URI belongs here, in the server-side log, and nowhere near the caller's response or the span
+        // status: the error handed back is storeless.
+        ZIO.logError(s"SPARQL passthrough: request to $storeUri failed: ${e.getClass.getSimpleName}") *>
+          ZIO.fail(SparqlStoreUnavailableException.make)
+    }
+
+  private def toRawSparqlResponse(
+    response: Response[Array[Byte]],
+  ): IO[SparqlPassthroughException, RawSparqlResponse] =
+    if (rawQueryUpstreamRejectedCodes.contains(response.code.code)) {
+      ZIO.logError(
+        s"SPARQL passthrough: the triplestore rejected this API's own credentials with ${response.code}; " +
+          "check the configured triplestore username and password",
+      ) *> ZIO.fail(SparqlUpstreamRejectedException.make)
+    } else {
+      // Only the status and Content-Type are relayed. Content-Length, Content-Encoding, Transfer-Encoding and
+      // Connection are recomputed by zio-http, which may also re-compress, so relaying them would corrupt framing;
+      // WWW-Authenticate would make a client prompt for database credentials; Set-Cookie and Server leak store
+      // detail. Extracting exactly one header is what keeps that deny-list true by construction.
+      ZIO.succeed(
+        RawSparqlResponse(response.code, response.header(HeaderNames.ContentType), response.body),
+      )
+    }
+
+  /**
+   * Upstream statuses that are not relayed. They mean the API's own store credentials were refused -- typically
+   * after a database password rotation -- so relaying them would present a server misconfiguration as the caller's
+   * authentication failure and invite credential-confusion retries.
+   */
+  private val rawQueryUpstreamRejectedCodes: Set[Int] = Set(401, 403, 407)
 
   /**
    * Performs a SPARQL update operation.

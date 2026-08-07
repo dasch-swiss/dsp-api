@@ -30,7 +30,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 - `*Endpoints.scala` — Tapir endpoint definitions only.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]`, which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
-- Register new endpoints in `CompleteApiServerEndpoints`.
+- Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.
 - Request / response DTOs live in a sibling object inside the `*Endpoints.scala` file (or a `*RequestsAndResponses.scala` next to it), not in a separate `model/` package.
 
 ### Value objects
@@ -49,11 +49,14 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### Error handling
 
 - Recoverable failures travel in the ZIO error channel (`ZIO.fail`, `.someOrFail`); invariant violations use the `die` family with a message (`ZIO.dieMessage`, `.orDieWith`); `throw` only inside non-effectful code wrapped by an upstream `ZIO.attempt`.
+- **Never add a variant to the shared `BaseEndpoints.errorOutputs`.** It is attached to every endpoint in the API, and a typed variant serializes the exception's `message` verbatim — so one added line makes that message readable from every route, including unauthenticated public ones (the `oneOfDefaultVariant` catch-all discards it). Declare the variants on the endpoint that produces them with `errorOutVariantsPrepend` (precedent `V3BaseEndpoint.scala`), and enumerate **every** outcome: one without a variant falls through to the catch-all and is answered as a generic `500`.
 - Full rules — fail vs die, typed `IO[E, A]` vs `Task[A]`, V3 typed errors, the legacy `throw` carve-out — in `docs/development/dsp-api-error-handling.md`.
 
 ### SPARQL
 
 Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
+
+- **Carve-out — the admin SPARQL passthrough.** `POST /admin/sparql/query` forwards a client-supplied query string to the store on purpose: being transparent is its contract, so it must not parse, validate or rewrite the SPARQL it carries, and no builder applies. This is the only such surface; everything else builds queries. See `docs/03-endpoints/api-admin/sparql-passthrough.md`.
 
 - **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance.
 - **Anchor property paths.** A `*`/`+` path whose variables are not bound by *preceding* patterns cross-joins everything matched so far against the whole closure (audit DEV-6803: >60s vs 0.4s). Odd-looking patterns next to a path are usually the anchor — load-bearing, don't "clean up" (measured: 19ms → ~15s). Don't inline large closures as `VALUES` either (measured: 2s → >60s).

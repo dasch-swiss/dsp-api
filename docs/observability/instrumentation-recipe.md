@@ -177,6 +177,22 @@ Gravsearch (search terms, not record content) — re-decide it per vertical rath
 
 ## 7. Errors and interruptions without leaks
 
+**Use `SanitizedSpan.withSpan` rather than writing this yourself.**
+`org.knora.webapi.slice.infrastructure.SanitizedSpan` implements everything in this section — the
+`UNSET` failure mapper, the sanitized `ERROR` status, `error.type`, and the interruption branch — and
+hands your effect the raw span so it can attach its own bounded attributes:
+
+```scala
+SanitizedSpan.withSpan(tracing, "admin.sparql.query", "sparql_passthrough.exit_reason") { span =>
+  effect // attach bounded attributes to `span`; failures and interruptions are handled for you
+}
+```
+
+The exit-reason key is the caller's, because it belongs to the caller's attribute namespace and is
+what its own TraceQL queries select on. `SearchResponderV2.stageSpan` is a two-line wrapper over this
+that supplies `gravsearch.exit_reason`. The rest of this section explains what the helper does and
+why, so that a change to it is made knowingly — it is not an invitation to copy the snippets.
+
 The error handling has one load-bearing invariant. `zio-telemetry` writes `cause.prettyPrint` into
 the span status description on the `ERROR` branch — and for a SPARQL failure that string echoes the
 offending FILTER literal (user data). To prevent the leak, the failure status mapper **must** map to
@@ -198,13 +214,34 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 
 - **Typed failure** → status `ERROR`, description exactly `"<stage>: <ClassName>"` (e.g.
   `gravsearch.prequery.execute: TriplestoreException`), plus `error.type`. No message, no stacktrace.
-- **Interruption** → `gravsearch.exit_reason = interrupted` + status `ERROR "interrupted"` (set in
-  `stageSpan`'s `onExit`). OTel has no `cancelled` status, so this attribute is what distinguishes an
-  interrupted query from a typed failure and from a benign empty result.
+- **Defect** → status `ERROR`, description exactly `"<stage>: defect"`, no `error.type`. The status
+  mapper alone does *not* achieve this: `zio-telemetry` reaches the mapper through
+  `cause.failureOption`, which a `Cause.Die` does not have, so a defect falls through to the same
+  `ERROR` + `cause.prettyPrint` default. `SanitizedSpan.withSpan` therefore carries a defect across
+  the span boundary as a typed failure and re-throws it as a defect once the span has closed. Callers
+  still observe a defect; the span never sees its message.
+- **Interruption** → `<vertical>.exit_reason = interrupted` + status `ERROR "interrupted"` (set in
+  `SanitizedSpan.withSpan`'s `onExit`, which is uninterruptible and so still runs during teardown).
+  OTel has no `cancelled` status, so this attribute is what distinguishes an interrupted query from a
+  typed failure and from a benign empty result. This is the one cause whose status *description* is
+  still the library's, because a cause cannot be converted without swallowing the interrupt — safe
+  rather than accepted, since an interrupt cause carries no message. Select on the attribute, not the
+  description.
 
 !!! danger "Do not relax the status mapper"
     Changing `unsetOnFailure` to map failures to `ERROR` re-introduces the `cause.prettyPrint` leak
     in one edit. It is guarded by a description-equality test — keep that test.
+
+!!! note "What this covers, and what it does not"
+    The helper protects the span it opens. Two things outside it are worth knowing, both API-wide and
+    pre-existing. The outer HTTP SERVER span in `DspApiServer` uses a `StatusMapper.Success[Response]`,
+    and nearly every failure arrives there as a 500 *response* — ztapir's `zServerLogic` wraps the logic
+    in `.either.resurrect`, promoting a defect to a typed failure before the interpreter — so that span
+    gets `ERROR` with no description. Only what stays in the routes' error channel (an interrupt, a
+    non-`NonFatal` throwable) still takes zio-telemetry's `cause.prettyPrint` default. And tapir's
+    default `serverLog` is not customised, so a defect reaching the server logic is additionally written
+    to the **log** at ERROR with its raw message and stacktrace. Sanitizing the span does not sanitize
+    that line.
 
 ## Checklist for a new vertical
 
@@ -214,6 +251,7 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 - [ ] A bounded shape on the root; no raw text / instance IRIs / user IDs as attributes.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
 - [ ] Raw payload captured as an **event** on the root span, before the first stage — never an attribute, never inside `stageSpan`; `db.query.text` for query text.
-- [ ] Failure mapper maps to `UNSET`; sanitized `ERROR` + `error.type` set explicitly; interruption sets `exit_reason`.
-- [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message).
+- [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
+- [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message), and one
+      asserting a **defect** yields `"<stage>: defect"` — the two go through different mechanisms.
 - [ ] A test asserting the payload event carries the exact submitted text, on both the success and the parse-failure path.

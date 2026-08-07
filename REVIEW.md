@@ -16,7 +16,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] New services are `final class (…)` with `ZLayer.derive` in the companion — **no** new trait + `*Live` split for plain domain services
 - [ ] Trait + `*Live` is acceptable only for repos and explicit test seams; any such new repo ships an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`
-- [ ] Endpoints split across the three tiers: `*Endpoints` (definition) → `*ServerEndpoints` (wiring) → `*RestService` (logic) — and registered in `CompleteApiServerEndpoints`
+- [ ] Endpoints split across the three tiers: `*Endpoints` (definition) → `*ServerEndpoints` (wiring) → `*RestService` (logic) — and registered in the API's aggregator (`AdminApiServerEndpoints` for admin)
 - [ ] Secured RestService methods use multiple parameter lists `def x(user: User)(args…): Task[Resp]` — this lets the `ServerEndpoint` wire the method concisely without enumerating every param, so adding a param touches only the endpoint definition and the method
 - [ ] Secured RestService bodies follow **auth check → delegate to service → `format.toExternal(...)`** — RestServices hold only auth / presentation logic; business logic lives in plain `*Service`s; `toExternal` is not skipped
 - [ ] `AuthorizationRestService.ensure*` results are re-used (don't reload the project / group after the auth call returned it)
@@ -33,13 +33,14 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] Recoverable errors travel in the ZIO error channel (`ZIO.fail`, `.someOrFail`, `.orElseFail`) — not `throw`
 - [ ] `ZIO.die` / `.orDie` carries information: prefer `ZIO.dieMessage("invariant statement")` and `.orDieWith(e => …)` over the bare forms. The message documents the invariant — applies at config / boot time too
+- [ ] **No new variant added to the shared `BaseEndpoints.errorOutputs`** — it is on every endpoint, and a typed variant serializes the exception `message` verbatim, so one line exposes it on unauthenticated public routes too. Variants belong on the producing endpoint via `errorOutVariantsPrepend` (precedent `V3BaseEndpoint.scala`), with **every** outcome enumerated (an unenumerated one is answered as a generic `500`)
 - [ ] New v3 endpoints use typed `IO[V3ErrorInfo, A]` with error variants declared on the endpoint
 - [ ] Admin / v2 code uses the existing `RequestRejectedException` / `InternalServerException` hierarchy (`BadRequestException`, `NotFoundException`, …) — not bespoke error types
 - [ ] New `throw` only appears inside non-effectful code wrapped by an upstream `ZIO.attempt`; new code does not introduce non-effectful chunks just to keep throwing
 
 ### SPARQL
 
-- [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`)
+- [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`); the admin SPARQL passthrough is the one deliberate exception, see `CONVENTIONS.md` § SPARQL
 - [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
 - [ ] Selective patterns precede `OPTIONAL` blocks **within the same flat group** — no restriction appended after OPTIONALs, no accidental nesting via `pattern.and(group)` (emits `{ pattern . { … } }`) — see `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance (incident DEV-6796)
 - [ ] Property paths (`zeroOrMore()`, `*`/`+`) are **anchored** — a path variable is bound by preceding patterns; seemingly redundant patterns adjacent to a path are treated as load-bearing anchors (DEV-6803: removing one took a 19ms tile query to ~15s); no large closures inlined as `VALUES`

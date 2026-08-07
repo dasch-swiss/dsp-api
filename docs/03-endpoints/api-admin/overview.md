@@ -13,4 +13,6 @@ effect on, namely:
 All information regarding users, projects, groups, lists and permissions is stored in the `http://www.knora.org/admin`
 named graph.
 
-Additionally there is the [stores endpoint](stores.md) which allows manipulation of the triplestore content.
+Additionally there is the [stores endpoint](stores.md) which allows manipulation of the triplestore content, and the
+[SPARQL passthrough](sparql-passthrough.md): `http://server:port/admin/sparql/query` forwards a `SystemAdmin`'s SPARQL
+query to the triplestore unchanged. It is off by default and registered only where a deployment enables it.

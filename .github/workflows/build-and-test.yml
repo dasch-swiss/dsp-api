@@ -377,12 +377,17 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build images locally
-        # Build both knora-api and knora-sipi so docker compose picks up the
+        # Build knora-api, knora-sipi and fuseki so docker compose picks up the
         # PR's images. The registry's :latest for knora-sipi lags by a merge,
         # which matters across major Sipi base-image bumps (e.g. v4 -> v5
         # changed CLI surface and the compose `command:`).
+        #
+        # Fuseki's registry :latest likewise lags by a merge, and this PR changes the
+        # Fuseki assembler (modules/fuseki/dsp-repo.ttl). Build it here so the `db`
+        # healthcheck runs against the PR's own assembler config, not the stale registry image.
         run: |
           nix develop --command just docker-build-dsp-api-image ${{ steps.rbe.outputs.flags }}
           nix develop --command just docker-build-sipi-image ${{ steps.rbe.outputs.flags }}
+          nix develop --command just docker-build-fuseki-image ${{ steps.rbe.outputs.flags }}
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api
