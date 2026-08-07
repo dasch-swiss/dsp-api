@@ -441,7 +441,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .andHas(KnoraBase.hasPermissions, permissions)
           .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
       )
-      .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.LinkValue)))
+      .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
   private def optionalFileClass(value: Variable, fileClass: Variable): GraphPattern =

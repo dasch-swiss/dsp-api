@@ -102,7 +102,6 @@ object AdminApiModule { self =>
         ProjectsLegalInfoServerEndpoints.layer ++ SparqlPassthroughServerEndpoints.layer ++
         StoreServerEndpoints.layer ++
         UsersServerEndpoints.layer ++ ViewRestrictionsServerEndpoints.layer) >+>
-
       // Layer 3: Top-level aggregator
       AdminApiServerEndpoints.layer
 }
