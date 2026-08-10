@@ -1,5 +1,20 @@
 # Changelog
 
+## [37.6.0](https://github.com/dasch-swiss/dsp-api/compare/v37.5.2...v37.6.0) (2026-08-07)
+
+
+### Maintenances
+
+* **ci:** roll the review prompt back to baseline and patch it against false flags ([#4248](https://github.com/dasch-swiss/dsp-api/issues/4248)) ([8885eec](https://github.com/dasch-swiss/dsp-api/commit/8885eec5f9a6e9a81b45f06ae120df36fc7165d7))
+* **ci:** skip CI on release-please merge commits and drop graphite trigger ([#4244](https://github.com/dasch-swiss/dsp-api/issues/4244)) ([40297c2](https://github.com/dasch-swiss/dsp-api/commit/40297c27acf0dd553a668087f6d404e942b9c7a1))
+
+
+### Enhancements
+
+* **admin:** view-restrictions reporting API (DEV-6778) ([#4239](https://github.com/dasch-swiss/dsp-api/issues/4239)) ([e8dcdc8](https://github.com/dasch-swiss/dsp-api/commit/e8dcdc8d1a67415d8f87c0f327ad82324a8ed4ce))
+* **dashboards:** bring the dsp-api dashboards under Git Sync ([#4246](https://github.com/dasch-swiss/dsp-api/issues/4246)) ([84d4062](https://github.com/dasch-swiss/dsp-api/commit/84d406291f8239c43d9f5985eb64338da2b6bcef))
+* **dsp-api:** admin SPARQL query passthrough, read-only (DEV-6734) ([#4219](https://github.com/dasch-swiss/dsp-api/issues/4219)) ([e4ef2e3](https://github.com/dasch-swiss/dsp-api/commit/e4ef2e3487790d71c78e0fe5ff3b536f69512325))
+
 ## [37.5.2](https://github.com/dasch-swiss/dsp-api/compare/v37.5.1...v37.5.2) (2026-08-04)
 
 
