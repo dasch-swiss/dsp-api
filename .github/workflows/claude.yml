@@ -67,10 +67,22 @@ jobs:
             A few defensible issues beat many speculative ones, and reporting no issues at all
             is a valid and useful outcome.
 
-            Do not assert how a library behaves from memory. When an issue depends on a
-            dependency's API or semantics, confirm it against the version this repo builds
-            with (`MODULE.bazel`) or the library's own documentation via web search — or
-            grade the issue Suspected.
+            Do not assert how a library or external service behaves from memory — in either
+            direction. When the diff constructs a string that some other system parses (a
+            SPARQL or SQL query, a URL or IIIF image request, a path template, a regex, a
+            cron expression, a media-type string), you must check the constructed form
+            against that system's own specification before you either report it **or clear
+            it**. Well-formed is not the same as accepted: a form can be valid syntax, and
+            listed as supported by the receiving system, and still be rejected at runtime
+            because of a precondition attached to that form — a permitted value range, a
+            limit that depends on the input data rather than on the string, a flag that must
+            be present for the operation to be allowed. So do not stop at "the syntax is
+            valid" or "the server supports this feature": find the preconditions the
+            specification attaches to the form you built, and for each one name the input
+            that would violate it or state why none can. Confirm against the version this
+            repo builds with (`MODULE.bazel`) or the spec itself via web search. If you
+            cannot complete that check, say so explicitly and grade the line Suspected — do
+            not declare it correct.
 
             Structure your review as follows:
             1. Summary of PR changes (one paragraph)
