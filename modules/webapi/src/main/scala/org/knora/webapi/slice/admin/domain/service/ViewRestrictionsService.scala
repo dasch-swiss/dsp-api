@@ -181,19 +181,31 @@ final case class ViewRestrictionsService(
 
   def summary(projectIri: ProjectIri, groupBy: GroupBy, itemType: ItemType): Task[ViewRestrictionsSummary] =
     for {
-      literals <- repo.distinctPermissions(projectIri, itemType, groupBy)
+      // Resolved once and reused by every query below: the project's asserted resource classes, which
+      // replace two per-row `rdfs:subClassOf` traversals in the queries themselves.
+      classes  <- repo.projectClasses(projectIri)
+      literals <- repo.distinctPermissions(projectIri, itemType, groupBy, classes)
       // One count per (audience, state). Both are tiny fixed sets — 3 x 2 — and each classification pass
       // runs over the small distinct-literal set, so this stays cheap regardless of project size.
-      counted <- ZIO.foreach(for (a <- Audience.ordered; s <- countedStates) yield (a, s)) { case (audience, state) =>
-                   val hits = literalsResolvingTo(literals, state, audience, projectIri)
-                   repo.countByGroup(projectIri, groupBy, itemType, hits).map(rows => (audience, state, rows))
-                 }
-      // Every resource class the project has, with its population — independent of any restriction and of
-      // the itemType filter. In class mode this is the row set itself (see below), so a class is reported
-      // with its true size whether or not anything in it is restricted. A property has no resource
-      // population of its own, so property mode has no equivalent and reports none.
-      classTotals <- if (groupBy == GroupBy.ResourceClass) repo.totalResourcesByClass(projectIri)
-                     else ZIO.succeed(Seq.empty)
+      //
+      // Issued in parallel, together with the class population below: the six counts are independent
+      // read-only aggregations over disjoint permission literals, so serialising them just added up their
+      // latencies (the summary was ~17 sequential round-trips).
+      countedAndTotals <-
+        ZIO
+          .foreachPar(for (a <- Audience.ordered; s <- countedStates) yield (a, s)) { case (audience, state) =>
+            val hits = literalsResolvingTo(literals, state, audience, projectIri)
+            repo.countByGroup(projectIri, groupBy, itemType, hits, classes).map(rows => (audience, state, rows))
+          }
+          // Every resource class the project has, with its population — independent of any restriction and
+          // of the itemType filter. In class mode this is the row set itself (see below), so a class is
+          // reported with its true size whether or not anything in it is restricted. A property has no
+          // resource population of its own, so property mode has no equivalent and reports none.
+          .zipPar(
+            if (groupBy == GroupBy.ResourceClass) repo.totalResourcesByClass(projectIri, classes)
+            else ZIO.succeed(Seq.empty),
+          )
+      (counted, classTotals) = countedAndTotals
       // groupId -> per-audience counts. Contributions accumulate per unit, so a group's resource count and
       // its value count stay separate all the way to the response.
       byGroup = counted.foldLeft(Map.empty[String, AudienceCounts]) { case (acc, (audience, state, rows)) =>
@@ -301,15 +313,23 @@ final case class ViewRestrictionsService(
     for {
       // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
       // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
-      total <- repo.countRestrictedResources(projectIri, groupBy, itemType, group)
-      rows  <- repo.findRestrictedObjects(
-                projectIri,
-                groupBy,
-                itemType,
-                group,
-                offset = pageAndSize.size * (pageAndSize.page - 1),
-                limit = pageAndSize.size,
-              )
+      classes <- repo.projectClasses(projectIri)
+      // The page total and the page itself are independent reads over the same snapshot, so they go out
+      // together rather than one after the other.
+      totalAndRows <- repo
+                        .countRestrictedResources(projectIri, groupBy, itemType, group, classes)
+                        .zipPar(
+                          repo.findRestrictedObjects(
+                            projectIri,
+                            groupBy,
+                            itemType,
+                            group,
+                            offset = pageAndSize.size * (pageAndSize.page - 1),
+                            limit = pageAndSize.size,
+                            classes,
+                          ),
+                        )
+      (total, rows) = totalAndRows
       // Assemble one RestrictedResource per affected resource, with its restricted parts nested under it.
       byResource = rows.groupBy(_.resourceIri).toSeq.map { case (resourceIri, resourceRows) =>
                      val head            = resourceRows.head
