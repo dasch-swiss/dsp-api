@@ -134,7 +134,15 @@ jobs:
           # --model: pinned to Opus. In the 2026-08 prompt benchmark the model choice dominated
           # the prompt choice: Opus caught 6/6 planted bugs with zero blocking false positives;
           # Sonnet caught 1/6 and produced the only merge-blocking false positives.
-          claude_args: '--model claude-opus-5 --effort high --allowed-tools "Grep,Glob,WebSearch,WebFetch,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          #
+          # --effort: medium. Detection is identical to high -- across 9 commits run at both
+          # levels the two agreed on every catch, every miss and every clean pass. The only
+          # behavioural difference is that high additionally held one clean diff on a genuine
+          # but minor pager desync (2/2 runs), which medium did not, and medium never produced
+          # a wrong merge call in 10 runs. high retrieves pinned external sources more reliably
+          # (3/3 vs 1/3 on one commit) but that never changed a merge outcome. medium is ~16%
+          # cheaper per run.
+          claude_args: '--model claude-opus-5 --effort medium --allowed-tools "Grep,Glob,WebSearch,WebFetch,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
 
       # cancelled() as well as failure(): a `timeout-minutes` kill marks the job cancelled, not
       # failed, so the previous `if: failure()` skipped this step on the one run that most needed
