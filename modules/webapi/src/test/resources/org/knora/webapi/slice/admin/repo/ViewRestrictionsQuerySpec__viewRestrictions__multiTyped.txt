@@ -1,0 +1,9 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?resource
+WHERE { ?resource a ?resClass ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:isDeleted false ;
+    a ?subClass .
+?subClass rdfs:subClassOf+ ?resClass . }
+LIMIT 1

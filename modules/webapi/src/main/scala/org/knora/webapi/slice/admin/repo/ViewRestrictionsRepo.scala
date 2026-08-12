@@ -70,12 +70,9 @@ final case class ViewRestrictionsRepo(
       iris <- triplestore
                 .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri)))
                 .map(_.flatMap(_.get("resClass")))
-      // With fewer than two classes in play no resource can carry two of them, so the probe is skipped.
-      multi <- if (iris.sizeIs < 2) ZIO.succeed(false)
-               else
-                 triplestore
-                   .query(Select(ViewRestrictionsRepo.multiTypedSparql(projectIri, iris)))
-                   .map(_.nonEmpty)
+      multi <- triplestore
+                 .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri)))
+                 .map(_.nonEmpty)
     } yield ProjectClasses(iris, multi)
 
   /**
@@ -374,25 +371,41 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * scan instead — the shape that doc endorses.
    *
    * @param iris       the project's asserted resource-class IRIs.
-   * @param multiTyped whether any resource asserts a class together with one of that class's ancestors, in
-   *                   which case the most-specific-class filter is still required for correctness.
+   * @param multiTyped whether any resource asserts a class together with a strict subclass of it, in which
+   *                   case the most-specific-class filter is still required for correctness.
    */
   final case class ProjectClasses(iris: Seq[String], multiTyped: Boolean) {
 
-    /** `VALUES ?resClass { <…> }`, or `None` when the project has no resources to scan. */
+    /**
+     * `VALUES ?resClass { <…> }`, or `None` when no class was discovered.
+     *
+     * `None` does **not** mean "no constraint": [[resClassPatterns]] falls back to the original
+     * `subClassOf*` guard in that case, so `?resClass` is never left unconstrained.
+     */
     def valuesClause(resClass: Variable): Option[String] =
-      Option.when(iris.nonEmpty)(
-        s"VALUES ${resClass.getQueryString} { ${iris.map(i => s"<$i>").mkString(" ")} }",
-      )
+      Option.when(iris.nonEmpty)(ViewRestrictionsRepo.valuesOf(resClass, iris))
 
     /**
-     * The patterns that pin `?resClass`, beyond the `VALUES` clause spliced in by [[withValues]]: the
-     * most-specific-class filter, and only when the project's data can actually produce an ambiguous
-     * binding.
+     * The patterns that pin `?resClass`, beyond the `VALUES` clause spliced in by [[withValues]].
+     *
+     *   - When no class was discovered, the `VALUES` clause is omitted, so the original
+     *     `?resClass rdfs:subClassOf* knora-base:Resource` guard is emitted instead. Dropping both would
+     *     leave `?resClass` matching every asserted type — including value and non-resource classes —
+     *     and inflate every count.
+     *   - The most-specific-class filter is added only when the project's data can actually produce an
+     *     ambiguous binding (see [[multiTypedQuery]]).
      */
-    def resClassPatterns(resource: Variable, resClass: Variable): Seq[GraphPattern] =
-      if (multiTyped) Seq(mostSpecificClass(resource, resClass)) else Seq.empty
+    def resClassPatterns(resource: Variable, resClass: Variable): Seq[GraphPattern] = {
+      val classGuard =
+        Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
+      val specific = Option.when(multiTyped)(mostSpecificClass(resource, resClass))
+      (classGuard ++ specific).toSeq
+    }
   }
+
+  /** `VALUES ?v { <a> <b> … }` for a set of IRIs. */
+  private[repo] def valuesOf(v: Variable, iris: Seq[String]): String =
+    s"VALUES ${v.getQueryString} { ${iris.map(i => s"<$i>").mkString(" ")} }"
 
   /**
    * Splices a `VALUES` clause into a built query's WHERE block.
@@ -401,12 +414,19 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `docs/development/dsp-api-sparql-queries.md`), so the documented string fallback is used. The clause
    * is inserted immediately after the opening brace of the WHERE block, where it binds `?resClass` before
    * the patterns that consume it.
+   *
+   * The insertion point is located from the `WHERE` keyword rather than the first brace in the query, and
+   * a serialization without it is a programming error rather than something to paper over: splicing into
+   * an arbitrary brace would silently produce a wrong query.
    */
   private[repo] def withValues(query: SelectQuery, clause: Option[String]): String = {
     val sparql = query.getQueryString
     clause.fold(sparql) { v =>
-      val idx = sparql.indexOf('{', sparql.indexOf("WHERE"))
-      if (idx < 0) sparql else s"${sparql.substring(0, idx + 1)}\n$v${sparql.substring(idx + 1)}"
+      val whereAt = sparql.indexOf("WHERE")
+      require(whereAt >= 0, s"cannot splice VALUES: no WHERE clause in rendered query:\n$sparql")
+      val idx = sparql.indexOf('{', whereAt)
+      require(idx >= 0, s"cannot splice VALUES: no group graph pattern after WHERE:\n$sparql")
+      s"${sparql.substring(0, idx + 1)}\n$v${sparql.substring(idx + 1)}"
     }
   }
 
@@ -590,7 +610,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   // Summary: distinct permission literals, then aggregated counts.
   // ---------------------------------------------------------------------------------------------------
 
-  /** `SELECT DISTINCT ?permissions` over a project's restriction-bearing resources. */
   /**
    * `SELECT DISTINCT ?resClass` — the resource classes the project actually asserts.
    *
@@ -612,36 +631,38 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   }
 
   /**
-   * Whether any of the project's resources asserts **more than one** resource class — the only situation in
-   * which [[mostSpecificClass]] can change the answer, since `?resource a ?class` matches asserted types
-   * only (no inference is materialised, so an ancestor never matches unless it too is asserted).
+   * Whether [[mostSpecificClass]] can actually change the answer for this project: does any non-deleted
+   * resource assert a class together with a **strict subclass** of that class?
    *
-   * Deliberately free of any `subClassOf` traversal: asking "does any resource carry two of these classes?"
-   * is a bounded join over the already-discovered class list, whereas `?sub subClassOf+ ?resClass` is an
-   * unbounded walk whose cost grows with the class hierarchy. Returns at most one row — the answer is
-   * existential.
+   * This mirrors the gated filter exactly, which is what makes omitting the filter sound. In particular
+   * `?subClass` is **not** restricted to the project's discovered classes: the filter's own `?subClass` is
+   * unconstrained, so a resource typed with a subclass that is not itself a resource class (and so never
+   * appears in [[projectClassesQuery]]) still makes the filter load-bearing. Narrowing the probe to the
+   * discovered list would answer "no" for exactly that case and silently inflate the counts.
+   *
+   * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
+   * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
+   *
+   * The traversal is unavoidable here, but it runs **once per request** and stops at the first hit
+   * (`LIMIT 1`) — as opposed to the gated filter, which the store re-evaluates on every result row.
    */
   private[repo] def multiTypedQuery(projectIri: ProjectIri): SelectQuery = {
-    val (resource, classA, classB) = (variable("resource"), variable("classA"), variable("classB"))
+    val (resource, resClass, subClass) = (variable("resource"), variable("resClass"), variable("subClass"))
     Queries
       .SELECT(resource)
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         resource
-          .isA(classA)
+          .isA(resClass)
           .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-          .andIsA(classB)
-          .filter(Expressions.notEquals(classA, classB)),
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+          .andIsA(subClass)
+          .and(subClass.has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).oneOrMore().build(), resClass)),
       )
       .limit(1)
   }
 
-  /** [[multiTypedQuery]] with both class variables bound to the project's classes. */
-  private[repo] def multiTypedSparql(projectIri: ProjectIri, classes: Seq[String]): String = {
-    val vals = classes.map(c => s"<$c>").mkString(" ")
-    withValues(multiTypedQuery(projectIri), Some(s"VALUES ?classA { $vals }\nVALUES ?classB { $vals }"))
-  }
-
+  /** `SELECT DISTINCT ?permissions` over a project's restriction-bearing resources. */
   private[repo] def distinctResourcePermissionsQuery(projectIri: ProjectIri, classes: ProjectClasses): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))

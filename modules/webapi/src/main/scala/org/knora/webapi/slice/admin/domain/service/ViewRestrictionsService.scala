@@ -191,12 +191,17 @@ final case class ViewRestrictionsService(
       // Issued in parallel, together with the class population below: the six counts are independent
       // read-only aggregations over disjoint permission literals, so serialising them just added up their
       // latencies (the summary was ~17 sequential round-trips).
+      //
+      // Bounded on purpose: each count can itself issue two queries (resources + values), so an unbounded
+      // fan-out would put ~13 concurrent queries per request on the triplestore, multiplied across
+      // concurrent dashboard users. The cap keeps most of the win while leaving the store backpressure.
       countedAndTotals <-
         ZIO
           .foreachPar(for (a <- Audience.ordered; s <- countedStates) yield (a, s)) { case (audience, state) =>
             val hits = literalsResolvingTo(literals, state, audience, projectIri)
             repo.countByGroup(projectIri, groupBy, itemType, hits, classes).map(rows => (audience, state, rows))
           }
+          .withParallelism(ViewRestrictionsService.MaxConcurrentCountQueries)
           // Every resource class the project has, with its population — independent of any restriction and
           // of the itemType filter. In class mode this is the row set itself (see below), so a class is
           // reported with its true size whether or not anything in it is restricted. A property has no
@@ -314,8 +319,9 @@ final case class ViewRestrictionsService(
       // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
       // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
       classes <- repo.projectClasses(projectIri)
-      // The page total and the page itself are independent reads over the same snapshot, so they go out
-      // together rather than one after the other.
+      // The page total and the page itself are independent reads, so they go out together rather than one
+      // after the other. They are separate transactions, not a snapshot: a concurrent write between them
+      // can leave `totalItems` inconsistent with the rows — as it could before, when they ran in sequence.
       totalAndRows <- repo
                         .countRestrictedResources(projectIri, groupBy, itemType, group, classes)
                         .zipPar(
@@ -362,5 +368,14 @@ final case class ViewRestrictionsService(
 }
 
 object ViewRestrictionsService {
+
+  /**
+   * Cap on the summary's concurrent per-(audience, state) count queries.
+   *
+   * Each of the six can issue two triplestore queries (resources + values); four in flight keeps the
+   * latency win without letting one dashboard request saturate the store's connections.
+   */
+  private[service] val MaxConcurrentCountQueries = 4
+
   val layer = ZLayer.derive[ViewRestrictionsService]
 }
