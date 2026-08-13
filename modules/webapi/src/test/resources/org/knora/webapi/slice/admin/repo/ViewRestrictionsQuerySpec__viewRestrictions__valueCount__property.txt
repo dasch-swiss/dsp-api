@@ -1,0 +1,16 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?groupId ( COUNT( DISTINCT ?value ) AS ?cnt )
+WHERE {
+VALUES ?resClass { <http://www.knora.org/ontology/0001/anything#Thing> } ?resource a ?resClass ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:isDeleted false .
+{ ?resource ?prop ?value .
+?prop rdfs:subPropertyOf* knora-base:hasValue . }
+?value knora-base:attachedToUser ?creator ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+BIND( ?prop AS ?groupId )
+FILTER ( ?permissions IN ( "M knora-admin:ProjectMember", "V knora-admin:KnownUser" ) ) }
+GROUP BY ?groupId

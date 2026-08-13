@@ -1,0 +1,12 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?groupId ( COUNT( DISTINCT ?resource ) AS ?cnt )
+WHERE { ?resource a ?resClass ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToUser ?creator ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+?resClass rdfs:subClassOf* knora-base:Resource .
+BIND( ?resClass AS ?groupId )
+FILTER ( ?permissions IN ( "M knora-admin:ProjectMember", "V knora-admin:KnownUser" ) ) }
+GROUP BY ?groupId
