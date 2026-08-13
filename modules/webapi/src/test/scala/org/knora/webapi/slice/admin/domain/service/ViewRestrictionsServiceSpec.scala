@@ -1031,7 +1031,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // value queries could be conflated, so it is pinned directly rather than only through the service.
     test("tags resource counts as Resources and value counts as Items") {
       for {
-        rows <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.All, memberOnly))
+        classes <- repo(_.projectClasses(projectIri))
+        rows    <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.All, memberOnly, classes))
       } yield {
         val byUnit = rows.groupBy(_.unit).view.mapValues(_.map(_.count).sum).toMap
         assertTrue(
@@ -1048,7 +1049,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // resources unit downstream.
     test("tags the class population as Resources") {
       for {
-        rows <- repo(_.totalResourcesByClass(projectIri))
+        classes <- repo(_.projectClasses(projectIri))
+        rows    <- repo(_.totalResourcesByClass(projectIri, classes))
       } yield assertTrue(
         rows.nonEmpty,
         rows.forall(_.unit == ViewRestrictionsRepo.CountUnit.Resources),
@@ -1057,7 +1059,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // itemType=Resource must not even run the value query, so no Items rows can appear.
     test("emits no Items rows under itemType=Resource") {
       for {
-        rows <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.Resource, memberOnly))
+        classes <- repo(_.projectClasses(projectIri))
+        rows    <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.Resource, memberOnly, classes))
       } yield assertTrue(
         rows.nonEmpty,
         rows.forall(_.unit == ViewRestrictionsRepo.CountUnit.Resources),
@@ -1066,7 +1069,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // …and property mode never counts whole resources, so no Resources rows can appear.
     test("emits no Resources rows in property mode") {
       for {
-        rows <- repo(_.countByGroup(projectIri, GroupBy.Property, ItemType.All, memberOnly))
+        classes <- repo(_.projectClasses(projectIri))
+        rows    <- repo(_.countByGroup(projectIri, GroupBy.Property, ItemType.All, memberOnly, classes))
       } yield assertTrue(
         rows.nonEmpty,
         rows.forall(_.unit == ViewRestrictionsRepo.CountUnit.Items),

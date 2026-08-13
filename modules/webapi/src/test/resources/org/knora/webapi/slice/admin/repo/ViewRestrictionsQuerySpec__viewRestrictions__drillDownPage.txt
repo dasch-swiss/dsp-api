@@ -1,0 +1,26 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?resource ?labelOrIri
+WHERE {
+VALUES ?resClass { <http://www.knora.org/ontology/0001/anything#Thing> } { ?resource a ?resClass ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:attachedToUser ?creator ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+FILTER ( !( REGEX( ?permissions, "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser" ) ) )
+FILTER ( ?resClass = <http://www.knora.org/ontology/0001/anything#Thing> ) } UNION { ?resource a ?resClass ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:isDeleted false .
+{ ?resource ?prop ?value .
+?prop rdfs:subPropertyOf* knora-base:hasValue . }
+?value knora-base:attachedToUser ?creator ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+FILTER ( !( REGEX( ?permissions, "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser" ) ) )
+FILTER ( ?resClass = <http://www.knora.org/ontology/0001/anything#Thing> ) }
+OPTIONAL { ?resource rdfs:label ?label . }
+BIND( COALESCE( ?label, STR( ?resource ) ) AS ?labelOrIri ) }
+ORDER BY ASC( ?labelOrIri ) ASC( ?resource )
+LIMIT 25
+OFFSET 50
