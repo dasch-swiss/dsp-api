@@ -1,5 +1,5 @@
 <!-- Important! Please follow the guidelines for naming Pull Requests:
-https://docs.dasch.swiss/latest/developers/contribution/ -->
+https://docs.dasch.swiss/developers/contribution/ -->
 
 ### Description
 

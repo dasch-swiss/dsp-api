@@ -26,7 +26,7 @@ The service supports several different types of assets:
 * Html files (`.html`, `.htm`)
 * And others in binary format
 
-The supported file formats are explained in detail in the [DSP-API documentation](https://docs.dasch.swiss/2023.06.02/DSP-API/01-introduction/file-formats/).
+The supported file formats are explained in detail in the [DSP-API documentation](https://docs.dasch.swiss/DSP-API/01-introduction/file-formats/).
 
 # Projects
 

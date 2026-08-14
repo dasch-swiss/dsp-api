@@ -72,7 +72,7 @@ private val svgImages = Map("svg" -> MimeType.unsafeFrom("image/svg+xml"))
 
 /**
  * Enumeration of supported file types.
- * See also https://docs.dasch.swiss/2023.11.02/DSP-API/01-introduction/file-formats/
+ * See also https://docs.dasch.swiss/DSP-API/01-introduction/file-formats/
  *
  * @param extensions the file extensions of the supported file types.
  */
