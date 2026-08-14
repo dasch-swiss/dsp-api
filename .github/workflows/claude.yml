@@ -17,10 +17,21 @@ concurrency:
 
 jobs:
   # Job 1: Dedicated code review with a predefined prompt, triggered by '@claude review' on a PR
+  #
+  # Both jobs gate on author_association (DEV-6884): comment-triggered workflows always run
+  # from the default branch with secrets available, and the repo setting "Require approval
+  # for all external contributors" gates only fork pull_request events — not comment events,
+  # so without this gate any GitHub account that can comment could spend the org's API key.
+  # CONTRIBUTOR is deliberately outside the allowlist; a member can trigger on an outside
+  # contributor's behalf. A blocked trigger skips silently, like a non-matching comment.
   claude-code-review:
     if: |
       (github.event.issue.pull_request || github.event.pull_request) &&
-      (contains(github.event.comment.body, '@claude review') || contains(github.event.review.body, '@claude review'))
+      (contains(github.event.comment.body, '@claude review') || contains(github.event.review.body, '@claude review')) &&
+      (
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) ||
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)
+      )
     runs-on: ubuntu-latest
     # 30, not 15: the first real run on a 26-file PR was killed at 15 min having produced nothing
     # (the action writes its result only at the end, so a killed run yields no review and no usage
@@ -172,12 +183,19 @@ jobs:
   # The negated clause is exactly job 1's condition, so the two jobs are mutually exclusive by
   # construction, while '@claude review' on a plain issue — where job 1 cannot run — still lands here.
   claude-general:
+    # The allowlist check sits inside each trigger arm: issue_comment payloads also carry
+    # issue.author_association, so a single AND-ed check across the arms would pass a
+    # stranger's comment on any issue or PR a member opened.
     if: |
       (
-        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-        (github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned') && contains(github.event.issue.body, '@claude'))
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') &&
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') &&
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+        (github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned') && contains(github.event.issue.body, '@claude') &&
+          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
       ) &&
       !(
         (github.event.issue.pull_request || github.event.pull_request) &&
