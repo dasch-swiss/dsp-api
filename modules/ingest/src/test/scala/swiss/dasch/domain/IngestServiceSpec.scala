@@ -31,6 +31,7 @@ class IngestServiceSpec extends ZIOSpecDefault {
           fileToIngest = tempDir / "test.csv"
           _           <- Files.createFile(fileToIngest) *> Files.writeLines(fileToIngest, List("one,two", "1,2"))
           checksum    <- FileChecksumService.createSha256Hash(fileToIngest)
+          size        <- SizeInBytes.of(fileToIngest)
           // when
           asset <- IngestService.ingestFile(fileToIngest, shortcode)
           // then
@@ -48,9 +49,11 @@ class IngestServiceSpec extends ZIOSpecDefault {
           info.originalFilename == asset.original.originalFilename,
           info.assetRef == asset.ref,
           info.original.checksum == checksum,
+          info.original.size.contains(size),
           info.original.filename.toString == originalFilename,
           info.original.filename == asset.original.internalFilename,
           info.derivative.checksum == checksum,
+          info.derivative.size.contains(size),
           info.derivative.filename.toString == derivativeFilename,
           info.derivative.filename == asset.derivative.filename,
           originalExists,
@@ -68,6 +71,7 @@ class IngestServiceSpec extends ZIOSpecDefault {
           _           <- Files.createFile(fileToIngest) *>
                  Files.writeLines(fileToIngest, List("""<svg xmlns="http://www.w3.org/2000/svg"/>"""))
           checksum <- FileChecksumService.createSha256Hash(fileToIngest)
+          size     <- SizeInBytes.of(fileToIngest)
           // when
           asset <- IngestService.ingestFile(fileToIngest, shortcode)
           // then
@@ -83,8 +87,10 @@ class IngestServiceSpec extends ZIOSpecDefault {
           asset.metadata.internalMimeType.map(_.value).contains("image/svg+xml"),
           info.originalFilename.toString == fileToIngest.filename.toString,
           info.original.checksum == checksum,
+          info.original.size.contains(size),
           info.original.filename.toString == originalFilename,
           info.derivative.checksum == checksum,
+          info.derivative.size.contains(size),
           info.derivative.filename.toString == derivativeFilename,
           originalExists,
           derivativeExists,
