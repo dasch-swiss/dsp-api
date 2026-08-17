@@ -1,5 +1,24 @@
 # Changelog
 
+## [37.7.0](https://github.com/dasch-swiss/dsp-api/compare/v37.6.0...v37.7.0) (2026-08-17)
+
+
+### Maintenances
+
+* **ci:** rebuild the review gate — blocking predicate, --effort medium, corrected tool set ([#4252](https://github.com/dasch-swiss/dsp-api/issues/4252)) ([e1f8a61](https://github.com/dasch-swiss/dsp-api/commit/e1f8a614420a2665fc21e595139568497e8f1587))
+* **ci:** verify constructed strings against spec preconditions, pin review to --effort high ([#4249](https://github.com/dasch-swiss/dsp-api/issues/4249)) ([7245f8e](https://github.com/dasch-swiss/dsp-api/commit/7245f8e5758741321bfc483946dbcd01e5a16396))
+
+
+### Enhancements
+
+* Store size for original/derivative in sidecars (DEV-6957) ([#4255](https://github.com/dasch-swiss/dsp-api/issues/4255)) ([86f3d49](https://github.com/dasch-swiss/dsp-api/commit/86f3d49c22eb4e1af27128e43afce550a7a16626))
+
+
+### Bug Fixes
+
+* **admin:** make the view-restrictions endpoints usable on real projects (DEV-6778) ([#4251](https://github.com/dasch-swiss/dsp-api/issues/4251)) ([5a9d3a5](https://github.com/dasch-swiss/dsp-api/commit/5a9d3a50ab9cda5b69e8cdfbb0f6bce5018f6041))
+* **ci:** gate the Claude workflow to org members (DEV-6884) ([#4253](https://github.com/dasch-swiss/dsp-api/issues/4253)) ([67ab064](https://github.com/dasch-swiss/dsp-api/commit/67ab06441122e23fef24ec38b4df4af84f605319))
+
 ## [37.6.0](https://github.com/dasch-swiss/dsp-api/compare/v37.5.2...v37.6.0) (2026-08-07)
 
 

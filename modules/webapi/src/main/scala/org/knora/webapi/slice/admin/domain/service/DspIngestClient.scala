@@ -31,6 +31,8 @@ final case class AssetInfoResponse(
   originalFilename: String,
   checksumOriginal: String,
   checksumDerivative: String,
+  sizeOriginal: Option[Long] = None,
+  sizeDerivative: Option[Long] = None,
   width: Option[Int] = None,
   height: Option[Int] = None,
   duration: Option[Double] = None,

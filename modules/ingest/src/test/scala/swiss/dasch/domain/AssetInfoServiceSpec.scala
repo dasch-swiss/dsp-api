@@ -36,6 +36,28 @@ class AssetInfoServiceSpec extends ZIOSpecDefault {
           actual.derivative.file == assetDir / s"${assetDir.assetId}.pdf",
           actual.derivative.checksum == testChecksumDerivative,
           actual.metadata == OtherMetadata(None, None),
+          // sizes are absent in info files written before they were recorded
+          actual.original.size.isEmpty,
+          actual.derivative.size.isEmpty,
+        )
+      },
+      test("parsing an info file with sizes works") {
+        // given
+        for {
+          assetDir <- createInfoFile(
+                        originalFileExt = "pdf",
+                        derivativeFileExt = "pdf",
+                        customJsonProps = Some("""
+                                                 |"sizeOriginal": 204800,
+                                                 |"sizeDerivative": 153211
+                                                 |""".stripMargin),
+                      )
+          // when
+          actual <- AssetInfoService.findByAssetRef(assetDir.assetRef).map(_.head)
+          // then
+        } yield assertTrue(
+          actual.original.size.contains(SizeInBytes(204800L)),
+          actual.derivative.size.contains(SizeInBytes(153211L)),
         )
       },
       test("parsing an info file for a moving image with complete metadata info works") {
