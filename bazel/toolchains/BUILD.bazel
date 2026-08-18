@@ -41,5 +41,18 @@ setup_scala_toolchain(
     # `-Dotel.java.global-autoconfigure.enabled=true` is a JVM system property (it sits in
     # build.sbt's scalacOptions only because sbt forks the compiler) — it belongs on the
     # compiler worker JVM, not in scalacopts.
-    scalac_jvm_flags = ["-Dotel.java.global-autoconfigure.enabled=true"],
+    #
+    # -Xss8m: dotty's `staging` phase (CrossStageSafety) recurses once per statement while
+    # walking blocks, so the stack depth it needs scales with module size. On the JVM default
+    # (~1 MB thread stack) //modules/webapi:webapi overflows it and the worker dies with
+    # "Worker process did not return a WorkResponse" plus ~1000 repeated CrossStageSafety
+    # frames — nondeterministically, since JIT inlining moves frame sizes around. sbt never hit
+    # this: sbtx launched the compiler JVM with -Xss2m. PR CI is immune because it compiles on
+    # the RBE executor (bazel-rbe stage=full); the image-publish workflows run stage=cache and
+    # compile locally in a worker, which is why the flake only ever broke image publishing
+    # (v37.6.0 and v37.7.0 releases, ~half of all publish runs).
+    scalac_jvm_flags = [
+        "-Dotel.java.global-autoconfigure.enabled=true",
+        "-Xss8m",
+    ],
 )
