@@ -26,7 +26,11 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: cache
+          # full = remote executor: compile + OCI image assembly run on NativeLink (where
+          # :webapi has never crashed), reusing PR CI's cached compile. Only `bazel run
+          # //modules/*:push` stays local; --remote_download_toplevel (.bazelrc) materializes
+          # the image bytes for it. cache-mode local compiles are the release-flake exposure.
+          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}

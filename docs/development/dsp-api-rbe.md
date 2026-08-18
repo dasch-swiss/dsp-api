@@ -63,15 +63,25 @@ inner-loop. Machine-local flags (e.g. `--disk_cache=…`) go in a gitignored `us
 
 ## Staged rollout
 
-- **Stage 1 (current): remote cache only** — the `bazel-rbe` steps use `stage: cache`. All actions
-  execute locally; results are cached remotely.
-- **Stage 2: add the remote executor** — flip `stage: cache` → `stage: full`, starting with the
-  `unit-tests` job. This is gated on an empirical check: rules_scala compiles and JVM unit-test
-  execution on the NativeLink worker are unproven (sipi proved remote execution for C++/Rust, not
-  Scala/JVM). Verify via `--execution_log_json_file` (or the build event stream) that the Scalac and
-  `webapi:test`/`ingest:test` actions report `runner: remote` and stay green; if a target fights the
-  persistent-worker default, try `--strategy=Scalac=remote`/`Javac=remote`, or pin that one target
-  local. `--remote_local_fallback` means a backend outage degrades to a local build, never a CI break.
+- **Stage 1: remote cache only** — `stage: cache`. All actions execute locally; results are cached
+  remotely. This was the initial rollout; no CI job runs here any more (see below).
+- **Stage 2: add the remote executor** — `stage: full` adds `--remote_executor` so build/compile/test
+  actions run on the NativeLink worker. rules_scala compiles and JVM unit-test execution were verified
+  green (`--execution_log_json_file` / build event stream showing `runner: remote`); if a target
+  fights the persistent-worker default, try `--strategy=Scalac=remote`/`Javac=remote`, or pin that one
+  target local. `--remote_local_fallback` means a backend outage degrades to a local build, never a CI
+  break.
+
+**Current state: every RBE-using CI job runs `stage: full`.**
+
+- `build-and-test.yml` (the PR + push-to-main build/test jobs) runs `full`.
+- The three publish workflows (`docker-publish.yml`, `publish-release.yml`,
+  `publish-from-branch.yml`) also run `full`. Previously `cache`, they compiled `:webapi` locally on
+  every publish — the release-flake exposure: 4 of 8 `Docker publish images` runs and the last two
+  releases died on a local scalac worker `StackOverflowError`. Under `full` the compile + image
+  assembly run on the executor (reusing PR CI's cached compile for the same commit); only
+  `bazel run //modules/*:push` stays local to reach Docker Hub. The `-Xss8m` on the scalac toolchain
+  (`bazel/toolchains/BUILD.bazel`) remains the safety net for the `--remote_local_fallback` path.
 
 ## OCI images (both arches)
 
@@ -79,7 +89,9 @@ All four images build for `image_amd64` and `image_arm64` on the x86_64 worker u
 arch-neutral (the per-arch base is pulled by digest at the repository-fetch phase, JVM jars / the
 fuseki dist are packed, and the sipi binary is extracted from a local OCI tarball). `:load`/`:push`
 run locally (Docker daemon / registry auth), which `--remote_download_toplevel` supports by
-materializing the image tarball on the runner.
+materializing the image tarball on the runner. This is the same path the publish workflows now take
+under `stage: full`, and the `docker-healthcheck` job's `bazel run //modules/*:load` exercises it on
+every PR.
 
 ## Tuning
 
