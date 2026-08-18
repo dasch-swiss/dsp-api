@@ -140,7 +140,7 @@ final case class ViewRestrictionsRepo(
         resourceCounts <-
           if (wantResources)
             runCountByGroup(
-              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, classes),
+              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, _),
               CountUnit.Resources,
               classes,
             )
@@ -154,7 +154,7 @@ final case class ViewRestrictionsRepo(
                   groupBy,
                   ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
                   permissions,
-                  classes,
+                  _,
                 ),
               CountUnit.Items,
               classes,
@@ -171,14 +171,51 @@ final case class ViewRestrictionsRepo(
    * so the service asks for this in class mode only.
    */
   def totalResourcesByClass(projectIri: ProjectIri, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, classes), CountUnit.Resources, classes)
+    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, _), CountUnit.Resources, classes)
 
-  private def runCountByGroup(query: SelectQuery, unit: CountUnit, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    triplestore
-      .query(select(query, classes))
-      .map(_.flatMap { row =>
-        row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
-      })
+  /**
+   * Runs one grouped count as a fan-out over chunks of the project's classes, then merges.
+   *
+   * The whole-project query is a single scan whose cost grows with the project; Fuseki applies
+   * `query-timeout` per request, so past some size that one query is cancelled mid-stream and the request
+   * fails, however fast the rest of the pipeline is. Splitting the class list bounds each individual query
+   * instead: on a 46k-resource / 265k-value project the single query took 8.1s while the slowest chunk took
+   * 1.4s, so the same work survives a budget the whole-project form eventually will not.
+   *
+   * Merging depends on the grouping key, so both cases are handled by summing per `(groupId, unit)`:
+   *
+   *   - grouping by resource class, the chunks partition the groups themselves, so every `groupId` occurs in
+   *     exactly one chunk and the sum is a concatenation;
+   *   - grouping by property, every chunk can report every property — the classes partition the *rows*, not
+   *     the groups — so a property's total is the sum of its per-chunk counts.
+   *
+   * Summing is only sound because each counted object belongs to exactly one chunk: a value belongs to one
+   * resource, and `dedupeRows = true` (the default these count queries use) pins a resource to a single
+   * `?resClass` binding. Were a resource to bind several classes in the hierarchy, its objects would be
+   * counted once per chunk. `ViewRestrictionsQuerySpec` pins that the count queries keep the dedup filter.
+   */
+  private def runCountByGroup(
+    query: ProjectClasses => SelectQuery,
+    unit: CountUnit,
+    classes: ProjectClasses,
+  ): Task[Seq[GroupCountRow]] =
+    ZIO
+      .foreachPar(classes.chunked(ViewRestrictionsRepo.ClassChunkSize))(chunk =>
+        triplestore
+          .query(select(query(chunk), chunk))
+          .map(_.flatMap { row =>
+            row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
+          }),
+      )
+      .withParallelism(ViewRestrictionsRepo.MaxConcurrentChunkQueries)
+      .map(mergeCounts)
+
+  /** Sums chunk results per `(groupId, unit)`; see [[runCountByGroup]] for why summing is sound. */
+  private def mergeCounts(perChunk: Seq[Seq[GroupCountRow]]): Seq[GroupCountRow] =
+    perChunk.flatten
+      .groupMapReduce(r => (r.groupId, r.unit))(_.count)(_ + _)
+      .map { case ((groupId, unit), count) => GroupCountRow(groupId, count, unit) }
+      .toSeq
 
   /**
    * The distinct resource IRIs of one page of the drill-down, ordered by label then IRI so paging is
@@ -404,6 +441,17 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
      *                   some other row still carries.
      */
+    /**
+     * Splits into groups of at most `size` classes, each carrying the same `multiTyped` flag, so a grouped
+     * count can be issued per chunk instead of once for the whole project — see `runCountByGroup`.
+     *
+     * An empty class list yields a single empty chunk rather than none: with no discovered class the queries
+     * fall back to the `subClassOf*` guard ([[resClassPatterns]]) and must still be run once.
+     */
+    def chunked(size: Int): Seq[ProjectClasses] =
+      if (iris.isEmpty) Seq(this)
+      else iris.grouped(math.max(1, size)).map(ProjectClasses(_, multiTyped)).toSeq
+
     def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
       val classGuard =
         Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
@@ -411,6 +459,23 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       (classGuard ++ specific).toSeq
     }
   }
+
+  /**
+   * How many of the project's classes one grouped-count query covers.
+   *
+   * Small enough that each query stays well inside the triplestore's `query-timeout`, large enough not to
+   * pay the fixed per-request overhead once per class: measured on a 46k-resource project, per-class queries
+   * bottomed out at ~25ms of overhead each, so grouping a few classes together costs nothing and cuts the
+   * number of round-trips.
+   */
+  private[repo] val ClassChunkSize = 3
+
+  /**
+   * Concurrent chunk queries per grouped count. Deliberately small: the service already fans out over
+   * (audience, state) with its own cap, and these multiply, so a large value here would put the product of
+   * the two on the triplestore for a single request.
+   */
+  private[repo] val MaxConcurrentChunkQueries = 2
 
   /** `VALUES ?v { <a> <b> … }` for a set of IRIs. */
   private[repo] def valuesOf(v: Variable, iris: Seq[String]): String =

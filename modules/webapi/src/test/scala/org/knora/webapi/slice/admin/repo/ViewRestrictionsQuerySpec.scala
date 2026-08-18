@@ -78,6 +78,38 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(!q.contains("rdfs:subClassOf+"), !q.contains("?creator"))
       },
     ),
+    suite("class chunking")(
+      test("chunks cover every class exactly once and carry the multiTyped flag") {
+        val many    = ViewRestrictionsRepo.ProjectClasses((1 to 7).map(i => s"http://example.org/C$i"), true)
+        val chunks  = many.chunked(3)
+        val covered = chunks.flatMap(_.iris)
+        assertTrue(
+          chunks.size == 3,
+          chunks.forall(_.iris.size <= 3),
+          // a partition: no class lost, none duplicated into two chunks (which would double-count it)
+          covered == many.iris,
+          covered.distinct == covered,
+          chunks.forall(_.multiTyped),
+        )
+      },
+      test("an empty class list still yields one chunk, so the subClassOf* fallback runs") {
+        val none = ViewRestrictionsRepo.ProjectClasses(Seq.empty, multiTyped = false)
+        assertTrue(none.chunked(3) == Seq(none))
+      },
+      test("each chunk's query binds only that chunk's classes") {
+        val three              = ViewRestrictionsRepo.ProjectClasses(Seq("http://example.org/A", "http://example.org/B"), false)
+        val Seq(first, second) = three.chunked(1)
+        val qA                 = ViewRestrictionsRepo.withValues(
+          ViewRestrictionsRepo.resourceCountQuery(projectIri, hidden, first),
+          first.valuesClause(resClassVar),
+        )
+        assertTrue(
+          qA.contains("http://example.org/A"),
+          !qA.contains("http://example.org/B"),
+          second.iris == Seq("http://example.org/B"),
+        )
+      },
+    ),
     suite("aggregated counts")(
       test("resource counts group by class and COUNT DISTINCT, filtered to the hidden literals") {
         val q = ViewRestrictionsRepo.resourceCountQuery(projectIri, hidden, singleTyped).getQueryString
