@@ -49,6 +49,9 @@ final private case class AssetInfoFileContent(
 ) {
   def withDerivative(checksum: Sha256Hash, size: SizeInBytes): AssetInfoFileContent =
     copy(checksumDerivative = checksum, sizeDerivative = Some(size))
+
+  def withSizes(original: Option[SizeInBytes], derivative: Option[SizeInBytes]): AssetInfoFileContent =
+    copy(sizeOriginal = original, sizeDerivative = derivative)
 }
 
 private object AssetInfoFileContent {
@@ -94,6 +97,12 @@ trait AssetInfoService {
   def save(assetInfo: AssetInfo): Task[Unit]
   def findAllInPath(path: Path, shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo]
   def updateAssetInfoForDerivative(derivative: Path): Task[Unit]
+
+  /**
+   * Records the on-disk sizes of `original` and `derivative` in the sidecar, leaving every other field
+   * — checksums included — untouched. A file that is not on disk is logged and its size left absent.
+   */
+  def updateSizes(infoFile: Path, original: Path, derivative: Path): Task[Unit]
   def createAssetInfo(asset: Asset): IO[IOException, AssetInfo]
 }
 
@@ -104,6 +113,8 @@ object AssetInfoService {
     ZIO.serviceWithZIO[AssetInfoService](_.loadFromFilesystem(infoFile, shortcode))
   def updateAssetInfoForDerivative(derivative: Path): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.updateAssetInfoForDerivative(derivative))
+  def updateSizes(infoFile: Path, original: Path, derivative: Path): ZIO[AssetInfoService, Throwable, Unit] =
+    ZIO.serviceWithZIO[AssetInfoService](_.updateSizes(infoFile, original, derivative))
   def getInfoFilePath(asset: AssetRef): ZIO[AssetInfoService, Nothing, Path] =
     ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(asset))
   def createAssetInfo(asset: Asset): ZIO[AssetInfoService, IOException, AssetInfo] =
@@ -190,6 +201,19 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     newSize     <- SizeInBytes.of(derivative)
     _           <- storage.saveJsonFile(infoFile, content.withDerivative(newChecksum, newSize))
   } yield ()
+
+  override def updateSizes(infoFile: Path, original: Path, derivative: Path): Task[Unit] = for {
+    content        <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
+    sizeOriginal   <- sizeIfPresent(original, "original")
+    sizeDerivative <- sizeIfPresent(derivative, "derivative")
+    _              <- storage.saveJsonFile(infoFile, content.withSizes(sizeOriginal, sizeDerivative))
+  } yield ()
+
+  private def sizeIfPresent(file: Path, role: String): UIO[Option[SizeInBytes]] =
+    SizeInBytes
+      .of(file)
+      .asSome
+      .catchAll(e => ZIO.logWarning(s"No size for $role $file: ${e.getMessage}").as(None))
 
   override def createAssetInfo(asset: Asset): IO[IOException, AssetInfo] = for {
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file)

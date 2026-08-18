@@ -98,6 +98,14 @@ scala_binary(
     runtime_deps = [":ingest"],
 )
 
+# One-off sidecar size backfill; not part of the service startup.
+scala_binary(
+    name = "migrate-sizes",
+    main_class = "swiss.dasch.MigrateSizes",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":ingest"],
+)
+
 scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
