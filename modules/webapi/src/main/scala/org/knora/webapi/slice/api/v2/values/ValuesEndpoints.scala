@@ -24,7 +24,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
   private val version     = query[Option[VersionDate]]("version")
 
   private val linkToValuesDocumentation =
-    """Find detailed documentation on <a href="https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/editing-values/">docs.dasch.swiss</a>."""
+    """Find detailed documentation on <a href="https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/editing-values/">docs.dasch.swiss</a>."""
 
   val getValue = baseEndpoint.withUserEndpoint.get
     .in(base / resourceIri / valueUuid)

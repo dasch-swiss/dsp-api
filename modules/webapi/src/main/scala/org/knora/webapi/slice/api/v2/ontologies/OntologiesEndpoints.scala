@@ -125,7 +125,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Add cardinalities to a class. " +
         "Requires ProjectAdmin permissions for the ontology's project. " +
-        "For more info check out the <a href=\"https://docs.dasch.swiss/knora-api-v2/ontologies.html#add-cardinalities-to-a-class\">documentation</a>.",
+        "For more info check out the <a href=\"https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/ontology-information/#adding-cardinalities-to-a-class\">documentation</a>.",
     )
 
   val getOntologiesCanreplacecardinalities = baseEndpoints.withUserEndpoint.get

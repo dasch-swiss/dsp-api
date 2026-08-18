@@ -23,7 +23,7 @@ released under the [Apache License, Version 2.0](http://www.apache.org/licenses/
     * Handles authentication and authorization.
     * Provides automatic versioning of data.
 * Uses [Sipi](https://sipi.io), a high-performance media server implemented in C++.
-* Designed to be be used with [DSP-APP](https://docs.dasch.swiss/latest/DSP-APP/), a general-purpose, browser-based virtual research environment,
+* Designed to be be used with [DSP-APP](https://docs.dasch.swiss/DSP-APP/), a general-purpose, browser-based virtual research environment,
   as well as with custom user interfaces.
 
 ## Requirements
@@ -134,7 +134,7 @@ The DSP-API release versioning follows the [Semantic Versioning](https://semver.
 > * PATCH version when you make backwards-compatible bug fixes.
 
 Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
-data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/latest/DSP-API/02-dsp-ontologies/knora-base/) which are not backwards compatible.
+data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/DSP-API/02-dsp-ontologies/knora-base/) which are not backwards compatible.
 
 ## Issues & Contributions
 

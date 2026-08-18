@@ -64,7 +64,7 @@ object SearchEndpointsInputs {
 final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val gravsearchDescription =
-    "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
+    "The Gravsearch query. See https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/query-language/"
 
   // A fulltext search that exceeds its triplestore timeout returns 503 with a legible, hedged body rather than
   // the shared catch-all's bare 500 (DEV-6864, HONEST-TIMEOUT). Prepended so it is matched before the catch-all,
