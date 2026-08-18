@@ -39,8 +39,8 @@ Bazel does **not** expand env vars in `.bazelrc`, and the connection/cert values
 runtime. So they are **not** committed to `.bazelrc` and **no** `ci.bazelrc` is generated. Instead:
 
 1. The `bazel-rbe` composite action (`.github/actions/bazel-rbe`) writes the mTLS material to
-   `$RUNNER_TEMP/.nl/` (outside the checkout) and emits a `flags` step-output string. Its `stage`
-   input selects `cache` (remote cache only) or `full` (also the executor).
+   `$RUNNER_TEMP/.nl/` (outside the checkout) and emits a `flags` step-output string enabling the
+   remote cache and executor.
 2. Each CI step runs a `just` recipe with the flags appended:
    `nix develop --command just <recipe> ${{ steps.rbe.outputs.flags }}`.
 3. Each bazel-invoking `just` recipe takes `*FLAGS=''` and appends `{{FLAGS}}` to its `bazel` command.
@@ -59,9 +59,9 @@ RBE is **CI-only**. Developers never contact the backend; Bazel's own local incr
 inner-loop. Machine-local flags (e.g. `--disk_cache=…`) go in a gitignored `user.bazelrc`
 (`try-import`ed by `.bazelrc`).
 
-## Every CI job runs `stage: full`
+## What runs remotely
 
-Every RBE-using CI job runs the `bazel-rbe` action with `stage: full` — remote cache **and** executor:
+Every RBE-using CI job runs the `bazel-rbe` action, which enables the remote cache **and** executor:
 `build-and-test.yml` (PR + push-to-main build/test jobs) and the three publish workflows
 (`docker-publish.yml`, `publish-release.yml`, `publish-from-branch.yml`). Build, compile, and
 unit-test actions run on the NativeLink worker; only `bazel run //modules/*:push` (registry auth) and
