@@ -163,6 +163,48 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  /**
+   * Five resource classes, each with one restricted value carried by the SAME property.
+   *
+   * Five classes exceeds `ViewRestrictionsRepo.ClassChunkSize` (3), so the grouped counts really are issued
+   * as more than one per-chunk query and merged. In property mode all five classes contribute to the one
+   * `hasText` group, so that group's count spans every chunk — the case where the merge must add the
+   * per-chunk counts rather than pick one of them. With a single chunk the merge is a no-op and a broken
+   * merge would go unnoticed.
+   */
+  private val manyClassesTurtle: String = {
+    val classes = (1 to 5).map(i => s"http://www.knora.org/ontology/0001/anything#Klass$i")
+    val decls   = classes.map(c => s"<$c> rdfs:subClassOf kb:Resource .").mkString("\n")
+    val bodies  = classes.zipWithIndex.map { case (cls, i) =>
+      s"""
+         |<http://rdfh.ch/0001/many$i>
+         |  a <$cls> ;
+         |  rdfs:label "Many $i" ;
+         |  kb:attachedToProject <${projectIri.value}> ;
+         |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+         |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+         |  kb:isDeleted false ;
+         |  <$hasText> <http://rdfh.ch/0001/many$i/values/text> .
+         |
+         |<http://rdfh.ch/0001/many$i/values/text>
+         |  a kb:TextValue ;
+         |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+         |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+         |  kb:isDeleted false .
+         |""".stripMargin
+    }.mkString
+
+    s"""
+       |@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |$decls
+       |<$hasText> rdfs:subPropertyOf kb:hasValue .
+       |$bodies
+       |""".stripMargin
+  }
+
   private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
 
   /**
@@ -741,6 +783,63 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // Property mode has no resource population to report: a property groups values across classes, so any
     // number here would be arbitrary. Absent, not zero. Unrestricted properties are omitted entirely, since
     // such a row would be empty in every column.
+    // The dsp-app summary footer shows `totals` above a column of per-row `counts` and cross-checks
+    // neither against the other, so a `totals` that did not reconcile with the rows would render as a
+    // column that visibly fails to add up. Pinned in both grouping modes because they build `groups`
+    // differently — class mode from the class population (unrestricted classes included), property mode
+    // from the restriction rows only — and because the counts behind them are now assembled from several
+    // per-chunk queries and merged (see ViewRestrictionsRepo.runCountByGroup), so an error in that merge
+    // would surface here.
+    test("totals reconcile with the sum of the per-group counts, grouping by class") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.All))
+      } yield {
+        val summed = result.groups.map(_.counts).foldLeft(AudienceCounts.zero)(addCounts)
+        assertTrue(
+          result.groups.size > 1, // more than one group, or the sum is trivially the single row
+          result.totals == summed,
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(unrestrictedClassTurtle)),
+    test("totals reconcile with the sum of the per-group counts, grouping by property") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
+      } yield {
+        val summed = result.groups.map(_.counts).foldLeft(AudienceCounts.zero)(addCounts)
+        assertTrue(
+          result.groups.nonEmpty,
+          result.totals == summed,
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
+    // Five classes -> more than one chunk, so these two exercise the per-chunk merge rather than a no-op.
+    // In property mode the single `hasText` group is populated from every chunk, so its count is only right
+    // if the merge sums the per-chunk contributions.
+    test("a group whose rows span several class chunks gets the summed count") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
+      } yield {
+        val text = result.groups.find(_.id == hasText)
+        assertTrue(
+          result.groups.size == 1,
+          // one hidden value per class, all five under the same property
+          text.map(_.counts.anonymous.items) == Some(rc(5, 0)),
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(manyClassesTurtle)),
+    test("every class chunk is counted, so no class is dropped from the class-mode row set") {
+      for {
+        result <- service(_.summary(projectIri, GroupBy.ResourceClass, ItemType.All))
+      } yield {
+        val summed = result.groups.map(_.counts).foldLeft(AudienceCounts.zero)(addCounts)
+        assertTrue(
+          result.groups.size == 5,
+          result.groups.flatMap(_.totalResources).sum == 5,
+          result.totals == summed,
+          result.totals.anonymous.items == rc(5, 0),
+        )
+      }
+    }.provide(commonLayers, datasetLayerFromTurtle(manyClassesTurtle)),
     test("omits totalResources entirely when grouping by property") {
       for {
         result <- service(_.summary(projectIri, GroupBy.Property, ItemType.All))
@@ -750,6 +849,27 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
       )
     }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
   )
+
+  /**
+   * Adds two [[AudienceCounts]] per audience and unit. Deliberately spelled out here rather than reusing the
+   * service's private `plus`, so the reconciliation tests below check the service's arithmetic against an
+   * independent one instead of against itself.
+   */
+  private def addCounts(a: AudienceCounts, b: AudienceCounts): AudienceCounts =
+    AudienceCounts(
+      anonymous = addUnits(a.anonymous, b.anonymous),
+      authenticated = addUnits(a.authenticated, b.authenticated),
+      projectMember = addUnits(a.projectMember, b.projectMember),
+    )
+
+  private def addUnits(a: UnitCounts, b: UnitCounts): UnitCounts =
+    UnitCounts(
+      resources = RestrictionCounts(
+        a.resources.hidden + b.resources.hidden,
+        a.resources.restrictedView + b.resources.restrictedView,
+      ),
+      items = RestrictionCounts(a.items.hidden + b.items.hidden, a.items.restrictedView + b.items.restrictedView),
+    )
 
   // ----- drill-down over seeded data -----
 
