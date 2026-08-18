@@ -213,7 +213,7 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     SizeInBytes
       .of(file)
       .asSome
-      .catchAll(e => ZIO.logWarning(s"No size for $role $file: ${e.getMessage}").as(None))
+      .catchAll(e => ZIO.logWarning(s"No size for $role $file: ${e.getClass.getSimpleName}").as(None))
 
   override def createAssetInfo(asset: Asset): IO[IOException, AssetInfo] = for {
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file)

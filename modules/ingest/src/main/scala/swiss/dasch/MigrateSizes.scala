@@ -18,11 +18,16 @@ import zio.*
  * One-off migration backfilling `sizeOriginal`/`sizeDerivative` into every `.info` sidecar in the store.
  * Reads `STORAGE_ASSET_DIR` like the service does, so point it at the same volume.
  *
+ * Locally, via Bazel:
+ *
  * {{{
  *   bazel run //modules/ingest:migrate-sizes            # whole asset store
  *   bazel run //modules/ingest:migrate-sizes -- 0801    # a single project
  * }}}
+ *
+ * Against a deployed image, swapping only the main class out of the image's own entrypoint:
  */
+// docker compose run --rm --no-deps --entrypoint java ingest -cp '/sipi/lib/*' swiss.dasch.MigrateSizes
 object MigrateSizes extends ZIOAppDefault {
 
   override val bootstrap: Layer[Config.Error, ServiceConfig & JwtConfig & StorageConfig] =
