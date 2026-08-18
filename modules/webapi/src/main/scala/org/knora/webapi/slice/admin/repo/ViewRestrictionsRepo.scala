@@ -393,12 +393,21 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *     leave `?resClass` matching every asserted type — including value and non-resource classes —
      *     and inflate every count.
      *   - The most-specific-class filter is added only when the project's data can actually produce an
-     *     ambiguous binding (see [[multiTypedQuery]]).
+     *     ambiguous binding (see [[multiTypedQuery]]) *and* the caller's result depends on how many rows
+     *     a resource contributes — see `dedupeRows`.
+     *
+     * @param dedupeRows whether the caller needs one `?resClass` binding per resource. True for the
+     *                   counting and paging queries, whose answer changes if a multi-typed resource is
+     *                   counted or listed once per class in its hierarchy. False for
+     *                   `SELECT DISTINCT ?permissions`, which projects only the permission literal, so
+     *                   duplicate rows collapse in `DISTINCT` and the filter cannot change the result set
+     *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
+     *                   some other row still carries.
      */
-    def resClassPatterns(resource: Variable, resClass: Variable): Seq[GraphPattern] = {
+    def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
       val classGuard =
         Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
-      val specific = Option.when(multiTyped)(mostSpecificClass(resource, resClass))
+      val specific = Option.when(multiTyped && dedupeRows)(mostSpecificClass(resource, resClass))
       (classGuard ++ specific).toSeq
     }
   }
@@ -515,6 +524,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     creator: Variable,
     permissions: Variable,
     classes: ProjectClasses,
+    dedupeRows: Boolean = true,
   ) =
     resource
       .isA(resClass)
@@ -522,7 +532,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .andHas(KnoraBase.attachedToUser, creator)
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass)*)
+      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
 
   /**
    * `FILTER NOT EXISTS { ?resource a ?subClass . ?subClass rdfs:subClassOf+ ?resClass }` — keeps only the
@@ -562,12 +572,13 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     creator: Variable,
     permissions: Variable,
     classes: ProjectClasses,
+    dedupeRows: Boolean = true,
   ) =
     resource
       .isA(resClass)
       .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass)*)
+      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
       .and(
         resource
           .has(prop, value)
@@ -673,7 +684,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
+          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes, dedupeRows = false))
           .filter(onlyRestricted(permissions)),
       )
   }
@@ -693,7 +704,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes))
+          .and(
+            valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes, dedupeRows = false),
+          )
           .filter(onlyRestricted(permissions)),
       )
   }

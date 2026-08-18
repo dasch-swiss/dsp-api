@@ -61,6 +61,20 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           !q.contains("LIMIT"),
         )
       },
+      // Both variants omit the most-specific-class filter even for a multi-typed project: they project
+      // only ?permissions under DISTINCT, so the filter can only remove rows, never change which literals
+      // survive. Pinned as golden snapshots because dropping it is a large win on big projects
+      // (measured on 46k resources / 265k values: 121s -> 16s, byte-identical results).
+      test("resource variant omits the most-specific-class filter for a multi-typed project") {
+        val q = ViewRestrictionsRepo.distinctResourcePermissionsQuery(projectIri, multiTyped).getQueryString
+        assertGolden(q, "distinctResourcePermissions__multiTyped") &&
+        assertTrue(!q.contains("rdfs:subClassOf+"))
+      },
+      test("value variant omits the most-specific-class filter for a multi-typed project") {
+        val q = ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, multiTyped).getQueryString
+        assertGolden(q, "distinctValuePermissions__multiTyped") &&
+        assertTrue(!q.contains("rdfs:subClassOf+"))
+      },
     ),
     suite("aggregated counts")(
       test("resource counts group by class and COUNT DISTINCT, filtered to the hidden literals") {
