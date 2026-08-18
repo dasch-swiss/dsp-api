@@ -56,11 +56,13 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
   inventory hostname (injected via `SIPI_SENTRY_ENVIRONMENT` in ops-deploy). The env variable is a
   fixed custom list `dev,stage,prod` (value = short name) and only feeds that host pattern.
 - **Not bridged to OTLP** (deliberately, per the Rust source — permanently empty on the OTLP path):
-  `sipi_rejected_connections_total`, `sipi_waiting_connections`, `sipi_rate_limit_decisions_total`
-  (the `{action}` family; OTLP splits it into `allowed`/`rejected`/`near_limit`/`shadow_rejected`),
-  `sipi_essentials_hash_mismatch_total`, `sipi_read_shape_fast_path_total`. These live in the
-  **"Empty on OTLP (investigate)"** row so gaps stay visible. If one starts flowing, move it into the
-  relevant section (as was done for the decode-memory estimate histogram).
+  `sipi_rejected_connections_total` and `sipi_waiting_connections`. Both are transport-dead — the
+  C++ oracle/mongoose transport was removed (ADR-0020), so they will never flow. They are the only
+  two entries left in the SIPI `NOT_BRIDGED` list. The former **"Empty on OTLP (investigate)"** row
+  was removed with the admission-control refresh: `sipi_rate_limit_*` (per-IP rate limiter removed),
+  `sipi_essentials_hash_mismatch_total`, and `sipi_read_shape_fast_path_total` are now gone from the
+  Rust source entirely (not merely unbridged), and the two transport-dead series above will never
+  flow, so the row carried only dead panels.
 - **Authoritative metric/span inventory** is the SIPI Rust shell:
   `~/_github.com/dasch-swiss/sipi/src/server-rs/src/metrics.rs` (instrument names + a `NOT_BRIDGED`
   list) and `telemetry.rs` (resource attributes / version chain). OTLP instrument names are dotted
