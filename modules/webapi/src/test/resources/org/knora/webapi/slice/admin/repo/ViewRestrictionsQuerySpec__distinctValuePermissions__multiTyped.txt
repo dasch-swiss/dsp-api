@@ -6,8 +6,7 @@ WHERE { ?resource a ?resClass ;
     knora-base:isDeleted false .
 { ?resource ?prop ?value .
 ?prop rdfs:subPropertyOf* knora-base:hasValue . }
-?value knora-base:attachedToUser ?creator ;
-    knora-base:hasPermissions ?permissions ;
+?value knora-base:hasPermissions ?permissions ;
     knora-base:isDeleted false .
 FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
 FILTER ( !( REGEX( ?permissions, "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser" ) ) ) }

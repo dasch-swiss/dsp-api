@@ -3,7 +3,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT ?permissions
 WHERE { ?resource a ?resClass ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:attachedToUser ?creator ;
     knora-base:hasPermissions ?permissions ;
     knora-base:isDeleted false .
 FILTER ( !( REGEX( ?permissions, "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser" ) ) ) }

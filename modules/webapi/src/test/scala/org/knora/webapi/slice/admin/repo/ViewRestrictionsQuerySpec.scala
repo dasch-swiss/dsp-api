@@ -61,19 +61,21 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           !q.contains("LIMIT"),
         )
       },
-      // Both variants omit the most-specific-class filter even for a multi-typed project: they project
-      // only ?permissions under DISTINCT, so the filter can only remove rows, never change which literals
-      // survive. Pinned as golden snapshots because dropping it is a large win on big projects
-      // (measured on 46k resources / 265k values: 121s -> 16s, byte-identical results).
+      // Both variants project only ?permissions under DISTINCT, so two patterns the shared cores emit are
+      // dead weight here and are left out:
+      //   - the most-specific-class filter, which can only remove rows and so cannot change which literals
+      //     survive (measured on 46k resources / 265k values: 121s -> 16s, byte-identical results);
+      //   - the `attachedToUser ?creator` join, which is neither projected nor constrained (-18%).
+      // Pinned as golden snapshots so neither silently comes back.
       test("resource variant omits the most-specific-class filter for a multi-typed project") {
         val q = ViewRestrictionsRepo.distinctResourcePermissionsQuery(projectIri, multiTyped).getQueryString
         assertGolden(q, "distinctResourcePermissions__multiTyped") &&
-        assertTrue(!q.contains("rdfs:subClassOf+"))
+        assertTrue(!q.contains("rdfs:subClassOf+"), !q.contains("?creator"))
       },
       test("value variant omits the most-specific-class filter for a multi-typed project") {
         val q = ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, multiTyped).getQueryString
         assertGolden(q, "distinctValuePermissions__multiTyped") &&
-        assertTrue(!q.contains("rdfs:subClassOf+"))
+        assertTrue(!q.contains("rdfs:subClassOf+"), !q.contains("?creator"))
       },
     ),
     suite("aggregated counts")(

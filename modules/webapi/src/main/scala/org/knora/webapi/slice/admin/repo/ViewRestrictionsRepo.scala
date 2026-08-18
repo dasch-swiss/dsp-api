@@ -516,6 +516,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * Without that, a resource asserted as (or inferred to be) several classes in one hierarchy would bind
    * `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in the
    * drill-down.
+   *
+   * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
    */
   private def resourceCore(
     projectIri: ProjectIri,
@@ -525,14 +527,17 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     permissions: Variable,
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
-  ) =
-    resource
-      .isA(resClass)
-      .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-      .andHas(KnoraBase.attachedToUser, creator)
+    bindCreator: Boolean = true,
+  ) = {
+    val withProject = resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+    // The creator keeps its position in the chain rather than being appended, so enabling/disabling it
+    // cannot reorder the other patterns.
+    val withCreator = if (bindCreator) withProject.andHas(KnoraBase.attachedToUser, creator) else withProject
+    withCreator
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
+  }
 
   /**
    * `FILTER NOT EXISTS { ?resource a ?subClass . ?subClass rdfs:subClassOf+ ?resClass }` — keeps only the
@@ -562,6 +567,10 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `?resClass` is pinned to the most specific asserted class for the same reason as in [[resourceCore]]:
    * in class mode it is the grouping key, so a multi-typed resource would otherwise count its values once
    * per class in the hierarchy.
+   *
+   * `bindCreator = false` drops the `attachedToUser ?creator` pattern for callers that neither project nor
+   * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
+   * multiply intermediate rows.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -573,7 +582,17 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     permissions: Variable,
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
-  ) =
+    bindCreator: Boolean = true,
+  ) = {
+    // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
+    // reorder the remaining patterns.
+    val valuePatterns =
+      if (bindCreator)
+        value
+          .has(KnoraBase.attachedToUser, creator)
+          .andHas(KnoraBase.hasPermissions, permissions)
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+      else value.has(KnoraBase.hasPermissions, permissions).andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
     resource
       .isA(resClass)
       .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
@@ -584,13 +603,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .has(prop, value)
           .and(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)),
       )
-      .and(
-        value
-          .has(KnoraBase.attachedToUser, creator)
-          .andHas(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
-      )
+      .and(valuePatterns)
       .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
+  }
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
   private def optionalFileClass(value: Variable, fileClass: Variable): GraphPattern =
@@ -684,7 +699,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes, dedupeRows = false))
+          .and(
+            resourceCore(
+              projectIri,
+              resource,
+              resClass,
+              creator,
+              permissions,
+              classes,
+              dedupeRows = false,
+              bindCreator = false,
+            ),
+          )
           .filter(onlyRestricted(permissions)),
       )
   }
@@ -705,7 +731,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .where(
         GraphPatterns
           .and(
-            valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes, dedupeRows = false),
+            valueCore(
+              projectIri,
+              resource,
+              resClass,
+              prop,
+              value,
+              creator,
+              permissions,
+              classes,
+              dedupeRows = false,
+              bindCreator = false,
+            ),
           )
           .filter(onlyRestricted(permissions)),
       )
