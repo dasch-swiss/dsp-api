@@ -4,16 +4,13 @@ description: >
   string (the `flags` output) that each CI step passes to a `just` recipe. Bazel does
   NOT expand env vars in .bazelrc, so the connection + mTLS flags live here (per CI step), not in the
   rc file; the backend-agnostic tuning flags (--remote_download_toplevel, --remote_local_fallback,
-  --repository_cache, …) are in .bazelrc. stage=cache emits remote-cache-only flags; stage=full also
-  adds the remote executor. Flags are empty when mTLS material is absent (fork PR → cold local build).
+  --repository_cache, …) are in .bazelrc. The flags enable the remote cache (AC+CAS) and the remote
+  executor. Flags are empty when mTLS material is absent (fork PR → cold local build).
   dsp-api is single-arch (all runners are x86_64 = the worker arch), so there is no cross-compile /
   target-platform machinery. External archives are cached via --repository_cache + the actions/cache
   step, not a remote downloader.
 
 inputs:
-  stage:
-    description: "cache = remote cache only (local execution); full = also remote executor."
-    default: "cache"
   runner-endpoint:
     description: RE-API endpoint, e.g. grpcs://<host>:50051 — serves the remote cache (AC+CAS) and the remote executor.
     required: true
@@ -38,7 +35,6 @@ runs:
     - id: build
       shell: bash
       env:
-        RBE_STAGE: ${{ inputs.stage }}
         RBE_RUNNER_ENDPOINT: ${{ inputs.runner-endpoint }}
         RBE_CA_CERT: ${{ inputs.ca-cert }}
         RBE_CLIENT_CERT: ${{ inputs.client-cert }}
@@ -64,12 +60,10 @@ runs:
         FLAGS="--remote_cache=$RBE_RUNNER_ENDPOINT --remote_instance_name=main"
         FLAGS="$FLAGS --tls_certificate=$CERT_DIR/ca.crt --tls_client_certificate=$CERT_DIR/client.crt --tls_client_key=$CERT_DIR/client.key"
         FLAGS="$FLAGS --noremote_cache_compression --remote_upload_local_results=true --experimental_remote_cache_eviction_retries=5"
-        if [ "$RBE_STAGE" = "full" ]; then
-          # Remote executor: build/compile actions run on the x86_64 worker; the scheduler matches it
-          # on cpu_arch. Docker-dependent test targets opt out locally via a `no-remote` BUILD tag
-          # (they need the local Docker daemon); unit tests run remotely + result-cache. --jobs raises
-          # the client fan-out far above the runner core count (actions run on the worker, not locally)
-          # — start at 128, retune with ops as more repos onboard.
-          FLAGS="$FLAGS --remote_executor=$RBE_RUNNER_ENDPOINT --remote_default_exec_properties=cpu_arch=x86_64 --jobs=128"
-        fi
+        # Remote executor: build/compile actions run on the x86_64 worker; the scheduler matches it on
+        # cpu_arch. Docker-dependent test targets opt out locally via a `no-remote` BUILD tag (they need
+        # the local Docker daemon); unit tests run remotely + result-cache. --jobs raises the client
+        # fan-out far above the runner core count (actions run on the worker, not locally) — start at
+        # 128, retune with ops as more repos onboard.
+        FLAGS="$FLAGS --remote_executor=$RBE_RUNNER_ENDPOINT --remote_default_exec_properties=cpu_arch=x86_64 --jobs=128"
         echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"

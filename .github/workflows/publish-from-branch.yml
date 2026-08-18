@@ -24,7 +24,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: cache
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}

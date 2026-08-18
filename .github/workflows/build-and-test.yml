@@ -67,11 +67,9 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          # Stage 2: remote EXECUTOR — compiles + tests run on the NativeLink worker (the unit-tests
-          # spike proved this green: 1483/2464 actions remote, all tests pass). All Bazel jobs use it;
-          # Docker/testcontainer test targets still run local via their `no-remote` tag.
-          # `--remote_local_fallback` degrades to a local build if the worker is unreachable.
-          stage: full
+          # The RBE action enables the remote cache + executor: compiles and tests run on the
+          # NativeLink worker. Docker/testcontainer test targets still run local via their `no-remote`
+          # tag; `--remote_local_fallback` degrades to a local build if the worker is unreachable.
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
@@ -137,7 +135,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
@@ -199,7 +196,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
@@ -259,7 +255,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
@@ -338,7 +333,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
@@ -371,7 +365,6 @@ jobs:
         id: rbe
         uses: ./.github/actions/bazel-rbe
         with:
-          stage: full
           runner-endpoint: ${{ vars.REMOTEBUILD_RUNNER_ENDPOINT }}
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
