@@ -25,9 +25,21 @@ import zio.*
  *   bazel run //modules/ingest:migrate-sizes -- 0801    # a single project
  * }}}
  *
- * Against a deployed image, swapping only the main class out of the image's own entrypoint:
+ * Against a deployed image, swapping only the main class out of the image's own entrypoint (the
+ * classpath glob would close this comment, so both forms are plain line comments below).
  */
 // docker compose run --rm --no-deps --entrypoint java ingest -cp '/sipi/lib/*' swiss.dasch.MigrateSizes
+//
+// Without compose, only the two settings compose supplies have to be passed explicitly — the asset
+// volume and the SQLite DB; everything else in application.conf defaults sensibly. A trailing
+// shortcode limits the run to one project, as with the Bazel form above.
+//
+//   docker run --rm --entrypoint java \
+//     -e STORAGE_ASSET_DIR=/opt/images \
+//     -e DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite \
+//     -v /path/to/images:/opt/images \
+//     -v /path/to/db:/opt/db \
+//     daschswiss/dsp-ingest:latest -cp '/sipi/lib/*' swiss.dasch.MigrateSizes 0801
 object MigrateSizes extends ZIOAppDefault {
 
   override val bootstrap: Layer[Config.Error, ServiceConfig & JwtConfig & StorageConfig] =
