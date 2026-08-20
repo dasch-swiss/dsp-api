@@ -15,158 +15,78 @@ File size in bytes
 
 ---
 
+Add the sidecar fields to `MetadataRecord.file` on `POST /v3/export/resources/oai`.
+Code refs are from `feat/migrate-sidecar-sizes` (d9b332c3d).
+
 # Decisions
 
-Settled 2026-08-20. Code references are from `feat/migrate-sidecar-sizes` (d9b332c3d).
+- **Read sidecars in-process** via ingest's `AssetInfoService`, from the same asset dir as
+  ingest. Not HTTP: ingest is being merged into API (agreed with the architect), so this is the
+  target state, and N HTTP calls could hit the export timeouts.
+- **Creation date**: the resource's `creationDate` from the triplestore — already read as
+  `r.creationDate` (`ExportService.scala:122`). No sidecar field, no migration. There is no
+  per-asset timestamp anywhere: ingest's SQLite has only a project table.
+- **Original, always**: `checksumOriginal`, `sizeOriginal`, `originalFilename`,
+  `originalMimeType`. Matches `FileLink.url`, already pointing at `/assets/{id}/original`.
+- **Checksum algorithm**: hardcoded. Only SHA-256 is ever stored — no md5 despite the request.
+- **File size**: JSON integer.
+- **Fetch all sidecars**: no batching or streaming; expensive by design, cached elsewhere.
+- **Missing sidecars**: not a real case on prod; no partial-failure policy.
+- **Response shape**: additive change is fine, no coordination needed.
 
-- **Creation date**: from the triplestore, the resource's `creationDate` — already read as
-  `r.creationDate` and already populating `MetadataRecord.dateCreated`
-  (`ExportService.scala:122`). Reuse that same value for the file block. No ingest change,
-  no sidecar field, no migration. Granularity is per-resource, which equals per-file here
-  because a resource has at most one file value.
-- **Original, always**: for every field with an original/derivative pair, expose the original —
-  `checksumOriginal`, `sizeOriginal`, `originalFilename`, `originalMimeType`. This also matches
-  `FileLink.url`, which already points at `/assets/{id}/original` (`ExportService.scala:142`).
-  Includes changing the mimetype the export service already emits, which is currently the
-  derivative's — see implementation notes.
-- **Fetch all sidecars**: no batching, no lazy loading, no streaming. The endpoint is expected
-  to be expensive; caching is handled elsewhere, not in this change.
-- **Checksum algorithm**: hardcoded, not read from the sidecar. Only SHA-256 is ever stored
-  (`Sha256Hash`, produced by `FileChecksumService.createSha256Hash`).
-- **Missing sidecars**: not a real case on prod. No partial-failure policy; let it fail.
-- **Response shape**: additive change to the JSON contract is fine, no coordination needed.
-- **Shared asset directory**: API reads the same asset dir as ingest, in-process via ingest's
-  own classes. Mount and env var are in `docker-compose.yml`; ops-deploy is a follow-up.
-- **File size**: exported as a JSON integer. Scala type is free (`Long` / `SizeInBytes`) as
-  long as it encodes to a bare number.
-- **Test coverage**: going ahead with it; reuse ingest's temp-dir `AssetInfoService` setup.
+# Wiring
 
-## Gap 1 — how API reads the sidecar (resolved: direct call into ingest's classes)
+`//modules/ingest` is already `//visibility:public` (`modules/ingest/BUILD.bazel:50`), so
+adding it to webapi's `deps` is a one-line change. Entry point is
+`AssetInfoService.findByAssetRef: Task[Option[AssetInfo]]` (`AssetInfoService.scala:96`);
+`AssetInfo` (`:85`) exposes every needed field. (`AssetInfoFileContent` is `private`, but
+irrelevant — `AssetInfo` is what the service returns.) `AssetInfoServiceLive` needs only
+`StorageService`, which needs only `StorageConfig` — no DB, no Sipi, no HTTP.
 
-Ingest is going to be merged into API (agreed with the architect). That makes a direct
-in-process call the target state, not a shortcut — so build toward it rather than adding an
-HTTP hop that would be removed again. HTTP per file also risks being slow enough to hit the
-export timeouts.
+Both wired on `api` in `docker-compose.yml`: mount `./modules/sipi/images:/opt/images:ro`
+(same host dir and container path as `ingest`; read-only since ingest owns writes) and
+`KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images`, matching ingest's `STORAGE_ASSET_DIR`. The
+two must always agree.
 
-**Chosen: depend on `//modules/ingest` from webapi and call `AssetInfoService` directly.**
+**TODO: mirror the mount and env var in ops-deploy.** Local dev only until then; external
+follow-up, not a blocker.
 
-Verified feasible:
+Config goes in `app.dsp-ingest` (`webapi/src/main/resources/application.conf:37`), which
+already holds `base-url`/`audience`. webapi builds ingest's `StorageConfig` from its own
+setting rather than parsing ingest's config — `tempDir` is unused for reads.
 
-- `//modules/ingest` is already `visibility = ["//visibility:public"]`
-  (`modules/ingest/BUILD.bazel:50`), so adding it to `//modules/webapi`'s `deps`
-  (`modules/webapi/BUILD.bazel`) is a one-line change. webapi does not depend on it today.
-- `AssetInfoService.findByAssetRef(assetRef): Task[Option[AssetInfo]]`
-  (`AssetInfoService.scala:96`) is the entry point; `AssetInfo` (`:85`) exposes
-  `original.checksum`, `original.size`, `originalFilename`, and `metadata.originalMimeType` —
-  every field needed. Note `AssetInfoFileContent` (`:35`) is `private`, but that does not
-  matter: `AssetInfo` is public and is what the service returns.
-- `AssetInfoServiceLive` needs only `StorageService`, and `StorageServiceLive` needs only
-  `StorageConfig(assetDir, tempDir)` (`config/Configuration.scala:43`) — no DB, no Sipi, no
-  HTTP. So the layer is cheap to construct inside webapi without dragging in ingest's app wiring.
-
-Fallback if this turns out to be blocked: `DspIngestClient.getAssetInfo(shortcode, assetId)`
-(`DspIngestClient.scala:68`) already exists and returns everything needed — but N HTTP calls
-against a whole-project export is exactly the timeout risk above.
-
-### Shared asset directory — committed
-
-API reads the **same asset directory as ingest**. Both are wired in `docker-compose.yml`:
-
-- `api` mounts `./modules/sipi/images:/opt/images:ro` — same host dir and container path as
-  the `ingest` service, so both resolve identical asset paths. Read-only: API only reads
-  sidecars, ingest owns writes.
-- `api` gets `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images`, matching ingest's
-  `STORAGE_ASSET_DIR=/opt/images`. The two must always agree.
-
-**TODO: mirror both the mount and the env var in ops-deploy for every environment.** Until
-that lands this works in local dev only. Treated as an external follow-up, not a blocker on
-this work.
-
-Config placement: `app.dsp-ingest` in `modules/webapi/src/main/resources/application.conf:37`
-already holds the ingest-facing settings (`base-url`, `external-base-url`, `audience`), so
-`asset-dir` belongs there with the `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR` override, alongside
-them. webapi then builds ingest's `StorageConfig(assetDir, tempDir)` from its own setting
-rather than parsing ingest's `application.conf` — no shared config schema, and `tempDir` is
-irrelevant for reads (pass the same path or a dummy; `AssetInfoService` only uses `assetPath`).
-
-### Remaining sub-question
-
-- **`AssetId` is duplicated.** webapi has its own in
-  `slice/api/admin/model/MaintenanceRequests.scala:24`, ingest has
-  `domain/AssetModel.scala:22` — both `RefinedTypeOps[.., String]`. Building an ingest
-  `AssetRef` requires ingest's `AssetId` plus a `ProjectShortcode` (also duplicated vs.
-  webapi's `Shortcode`). Converting via `String` at the boundary is fine for now; worth
-  flagging as something the merge should collapse.
+Fallback if the shared dir turns out unavailable: `DspIngestClient.getAssetInfo`
+(`DspIngestClient.scala:68`) already returns everything needed, at the cost of N HTTP calls.
 
 # Implementation notes
 
-Consequences of the decisions above, for whoever picks this up.
+**Fields** go on `FileLink` (`MetadataRecord.scala:46`), today `(mimeType, url)`:
+`checksum`, `checksumAlgorithm`, `fileName`, `fileSize`, `dateCreated`.
 
-## Where the fields go
+**Change the exported mimetype.** `FileLink.mimeType` currently carries the triplestore's
+`internalMimeType` (`ExportService.scala:141`) — the *derivative's*. Under "always original"
+it becomes the sidecar's `originalMimeType`. Deliberate change of meaning, not a new field.
 
-Extend `FileLink` (`slice/api/v3/export/MetadataRecord.scala:46`), currently
-`(mimeType, url)`. Adding: `checksum`, `checksumAlgorithm` (hardcoded), `fileName`,
-`fileSize`, `dateCreated`.
+**Size type.** Ingest's `SizeInBytes` (`SizeInBytes.scala:16`) is a `Long` value class whose
+codec is already `JsonCodec[Long].transform(...)`, so it encodes as a bare number. `Long` or
+`SizeInBytes` both work. Keep it `Option` — a `0` default would report a real file as zero
+bytes. Don't reuse `MetadataRecord.size`: it's `Option[String]`, meant for a human-readable
+record size.
 
-**Change the exported mimetype.** `FileLink.mimeType` today comes from the triplestore's
-`internalMimeType` (`ExportService.scala:141`) — the *derivative's* type. Under "always
-original" it becomes the sidecar's `originalMimeType`. This is a deliberate change in meaning
-for an existing field, not a new field alongside it.
+**`fileLinkOf` becomes effectful** (`ExportService.scala:136`) — reading a sidecar is I/O, so
+`records = ...map` (`:110`) becomes a `ZIO.foreach`, and `ExportService` gains
+`AssetInfoService`. Not driven by the creation date, which is already in hand at `:122`.
 
-**File size is a JSON integer.** The Scala type is free to vary as long as it serializes to a
-bare JSON number — no quotes, no formatting. Ingest's `SizeInBytes`
-(`modules/ingest/.../domain/SizeInBytes.scala:16`) is a `Long` value class whose codec is
-already `JsonCodec[Long].transform(...)`, so it serializes as an int for free; `Long` or
-`SizeInBytes` both satisfy the requirement, `String` does not.
+**`sizeOriginal` is absent pre-migration.** Distinct from a missing sidecar: the file is there,
+the field isn't. Only meaningful where the size migration (`AssetSizeMigrationService.scala`)
+has run.
 
-This rules out reusing `MetadataRecord.size` (`ExportService.scala:126`), which is hardcoded
-`None` and typed `Option[String]` — a string field, evidently intended for a human-readable
-record size. Leave it alone and put file size in the new `FileLink` field.
+**`AssetId` is duplicated** — webapi's (`MaintenanceRequests.scala:24`) vs ingest's
+(`AssetModel.scala:22`), same for `Shortcode`/`ProjectShortcode`. Building an `AssetRef` needs
+ingest's. Convert via `String` at the boundary; the merge should collapse them.
 
-Note the field stays optional on the Scala side: `sizeOriginal` is `Option[SizeInBytes]` in the
-sidecar and is genuinely absent pre-migration (see below). "JSON int" constrains the *encoding*
-when a value is present, not whether the key can be absent — so `Option[Long]` is fine, but a
-default of `0` would be wrong (it would report a real file as zero bytes).
-
-## Rewiring `fileLinkOf`
-
-`fileLinkOf` (`ExportService.scala:136`) is currently pure and synchronous — it collects the
-first `FileValueContentV2` and builds a URL from the asset id, both from data already in hand.
-Reading the sidecar is I/O, so it has to return an effect — `AssetInfoService.findByAssetRef`
-is `Task[Option[AssetInfo]]`. Going in-process avoids the network, not the effect.
-
-Consequence: `records = readResources.resources.toList.map { ... }`
-(`ExportService.scala:110`) becomes a `ZIO.foreach`, and `ExportService` gains
-`AssetInfoService` as a constructor dependency.
-
-Note this is *not* driven by the creation date — that comes from `r.creationDate`, already
-available at `ExportService.scala:122` with no fetch. Only the sidecar fields force the effect.
-
-## Caching
-
-Not done here — caching happens elsewhere.
-
-## Sizes are absent pre-migration
-
-`sizeOriginal` is `Option` and is absent for every asset ingested before the size migration on
-this branch (`AssetSizeMigrationService.scala`, `MigrateSizes.scala`). Distinct from the
-"sidecars are never missing" case — the sidecar is there, the field inside it is not. The
-migration must have been run in an environment before file sizes are meaningful there.
-
-## Tests
-
-`ExportServiceSpec` (`modules/webapi/src/test/.../export_/ExportServiceSpec.scala`) is the home
-for this.
-
-Going in-process changes what the test needs: not a fake HTTP client, but a real
-`AssetInfoService` over a temp dir containing `.info` files. Ingest's own specs already do
-exactly that — see `AssetSizeMigrationServiceSpec.scala` for the layer setup and
-`swiss/dasch/test/SpecConstants.scala` for asset-id fixtures. Reuse that rather than inventing
-one. The existing `getAssetInfo` stubs (`ProjectMigrationExportServiceSpec.scala:58`,
-`ProjectMigrationImportServiceSpec.scala:267`) only apply if the HTTP fallback is taken.
-
-Also cover: a sidecar whose `sizeOriginal` is absent (the pre-migration case above), since that
-is reachable in real environments and must not fail the export.
-
-Per the repo's test-data rule, check whether an existing fixture already has a resource with a
-file value before adding to a shared dataset.
+**Tests** in `ExportServiceSpec`. Needs a real `AssetInfoService` over a temp dir of `.info`
+files, not an HTTP fake — reuse `AssetSizeMigrationServiceSpec.scala` and
+`swiss/dasch/test/SpecConstants.scala`. Cover an absent `sizeOriginal`. Per the repo's
+test-data rule, check for an existing fixture with a file value before touching a shared
+dataset.
