@@ -35,7 +35,11 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   /** A project that asserts a class together with one of its ancestors — the filter must be kept. */
   private val multiTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = true)
 
+  /** No property discovered, so the value queries keep the `subPropertyOf*` fallback. */
+  private val noProperties = ViewRestrictionsRepo.ProjectProperties(Seq.empty)
+
   private val resClassVar = SparqlBuilder.`var`("resClass")
+  private val propVar     = SparqlBuilder.`var`("prop")
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
     suite("distinct permission literals")(
@@ -96,6 +100,84 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         val none = ViewRestrictionsRepo.ProjectClasses(Seq.empty, multiTyped = false)
         assertTrue(none.chunked(3) == Seq(none))
       },
+    ),
+    // The second chunking axis. Classes alone bottom out at one class per query; the property axis is what
+    // bounds a query below that floor, so the same partition guarantees must hold here.
+    suite("property chunking")(
+      test("chunks cover every property exactly once") {
+        val many    = ViewRestrictionsRepo.ProjectProperties((1 to 9).map(i => s"http://example.org/p$i"))
+        val chunks  = many.chunked(4)
+        val covered = chunks.flatMap(_.iris)
+        assertTrue(
+          chunks.size == 3,
+          chunks.forall(_.iris.size <= 4),
+          // a partition: summing per-chunk counts is only sound if no property lands in two chunks
+          covered == many.iris,
+          covered.distinct == covered,
+        )
+      },
+      test("an empty property list still yields one chunk, so the subPropertyOf* fallback runs") {
+        val none = ViewRestrictionsRepo.ProjectProperties(Seq.empty)
+        assertTrue(none.chunked(4) == Seq(none))
+      },
+      // Discovering no property must NOT leave ?prop unconstrained: without either the VALUES clause or the
+      // traversal, ?prop would match every predicate on the resource — rdf:type and the admin properties
+      // included — and inflate every count.
+      test("an empty property list keeps the subPropertyOf* traversal") {
+        val none = ViewRestrictionsRepo.ProjectProperties(Seq.empty)
+        val q    = ViewRestrictionsRepo.withValues(
+          ViewRestrictionsRepo.valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, none),
+          (singleTyped.valuesClause(resClassVar) ++ none.valuesClause(propVar)).toSeq,
+        )
+        assertTrue(q.contains("rdfs:subPropertyOf*"), !q.contains("VALUES ?prop"))
+      },
+      // …and conversely, once properties are discovered the traversal is replaced by the VALUES table —
+      // that swap is the per-query speedup (232ms -> ~110ms measured on one class).
+      test("discovered properties replace the traversal with a VALUES clause") {
+        val props = ViewRestrictionsRepo.ProjectProperties(Seq("http://example.org/pA", "http://example.org/pB"))
+        val q     = ViewRestrictionsRepo.withValues(
+          ViewRestrictionsRepo.valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, props),
+          (singleTyped.valuesClause(resClassVar) ++ props.valuesClause(propVar)).toSeq,
+        )
+        assertTrue(
+          !q.contains("rdfs:subPropertyOf*"),
+          q.contains("VALUES ?prop"),
+          q.contains("http://example.org/pA"),
+          q.contains("http://example.org/pB"),
+        )
+      },
+      test("each chunk's query binds only that chunk's properties") {
+        val two                                                = ViewRestrictionsRepo.ProjectProperties(Seq("http://example.org/pA", "http://example.org/pB"))
+        val Seq(first, second)                                 = two.chunked(1)
+        def render(ps: ViewRestrictionsRepo.ProjectProperties) =
+          ViewRestrictionsRepo.withValues(
+            ViewRestrictionsRepo.valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, ps),
+            (singleTyped.valuesClause(resClassVar) ++ ps.valuesClause(propVar)).toSeq,
+          )
+        val qA = render(first)
+        val qB = render(second)
+        assertTrue(
+          qA.contains("http://example.org/pA"),
+          !qA.contains("http://example.org/pB"),
+          qB.contains("http://example.org/pB"),
+          !qB.contains("http://example.org/pA"),
+        )
+      },
+      // Both axes are spliced at the same insertion point and must both survive.
+      test("both VALUES clauses are spliced into the same WHERE block") {
+        val props = ViewRestrictionsRepo.ProjectProperties(Seq("http://example.org/pA"))
+        val q     = ViewRestrictionsRepo.withValues(
+          ViewRestrictionsRepo.valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, props),
+          (singleTyped.valuesClause(resClassVar) ++ props.valuesClause(propVar)).toSeq,
+        )
+        val whereAt = q.indexOf("WHERE")
+        assertTrue(
+          q.contains("VALUES ?resClass"),
+          q.contains("VALUES ?prop"),
+          q.indexOf("VALUES ?resClass") > whereAt,
+          q.indexOf("VALUES ?prop") > whereAt,
+        )
+      },
       test("each chunk's query binds only that chunk's classes") {
         val three              = ViewRestrictionsRepo.ProjectClasses(Seq("http://example.org/A", "http://example.org/B"), false)
         val Seq(first, second) = three.chunked(1)
@@ -125,7 +207,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       },
       test("value counts group by the carrying property in property mode") {
         val q = ViewRestrictionsRepo
-          .valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped)
+          .valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, noProperties)
           .getQueryString
         assertTrue(
           q.contains("COUNT") && q.contains("DISTINCT"),
@@ -136,13 +218,13 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       },
       test("itemType=Comment restricts the count to values carrying a comment") {
         val q = ViewRestrictionsRepo
-          .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.Comment, hidden, singleTyped)
+          .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.Comment, hidden, singleTyped, noProperties)
           .getQueryString
         assertTrue(q.contains("knora-base:valueHasComment"))
       },
       test("itemType=Value excludes file values so File and Value cannot double-count") {
         val q = ViewRestrictionsRepo
-          .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.Value, hidden, singleTyped)
+          .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.Value, hidden, singleTyped, noProperties)
           .getQueryString
         assertTrue(q.contains("FILTER NOT EXISTS") && q.contains("knora-base:FileValue"))
       },
@@ -241,7 +323,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       },
       test("the value count binds VALUES inside the WHERE block in property mode") {
         val q = ViewRestrictionsRepo.withValues(
-          ViewRestrictionsRepo.valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped),
+          ViewRestrictionsRepo
+            .valueCountQuery(projectIri, GroupBy.Property, ItemType.All, hidden, singleTyped, noProperties),
           singleTyped.valuesClause(resClassVar),
         )
         assertGolden(q, "viewRestrictions__valueCount__property")

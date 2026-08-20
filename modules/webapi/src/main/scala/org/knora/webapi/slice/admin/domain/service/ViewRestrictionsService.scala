@@ -183,8 +183,11 @@ final case class ViewRestrictionsService(
     for {
       // Resolved once and reused by every query below: the project's asserted resource classes, which
       // replace two per-row `rdfs:subClassOf` traversals in the queries themselves.
-      classes  <- repo.projectClasses(projectIri)
-      literals <- repo.distinctPermissions(projectIri, itemType, groupBy, classes)
+      classes <- repo.projectClasses(projectIri)
+      // The second axis the grouped value counts are chunked along, so a single large class cannot produce
+      // an unbounded query — see ViewRestrictionsRepo.runCountByGroup.
+      properties <- repo.projectProperties(projectIri)
+      literals   <- repo.distinctPermissions(projectIri, itemType, groupBy, classes)
       // One count per (audience, state). Both are tiny fixed sets — 3 x 2 — and each classification pass
       // runs over the small distinct-literal set, so this stays cheap regardless of project size.
       //
@@ -199,7 +202,9 @@ final case class ViewRestrictionsService(
         ZIO
           .foreachPar(for (a <- Audience.ordered; s <- countedStates) yield (a, s)) { case (audience, state) =>
             val hits = literalsResolvingTo(literals, state, audience, projectIri)
-            repo.countByGroup(projectIri, groupBy, itemType, hits, classes).map(rows => (audience, state, rows))
+            repo
+              .countByGroup(projectIri, groupBy, itemType, hits, classes, properties)
+              .map(rows => (audience, state, rows))
           }
           .withParallelism(ViewRestrictionsService.MaxConcurrentCountQueries)
           // Every resource class the project has, with its population — independent of any restriction and

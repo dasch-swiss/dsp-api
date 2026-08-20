@@ -1152,7 +1152,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     test("tags resource counts as Resources and value counts as Items") {
       for {
         classes <- repo(_.projectClasses(projectIri))
-        rows    <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.All, memberOnly, classes))
+        props   <- repo(_.projectProperties(projectIri))
+        rows    <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.All, memberOnly, classes, props))
       } yield {
         val byUnit = rows.groupBy(_.unit).view.mapValues(_.map(_.count).sum).toMap
         assertTrue(
@@ -1180,7 +1181,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     test("emits no Items rows under itemType=Resource") {
       for {
         classes <- repo(_.projectClasses(projectIri))
-        rows    <- repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.Resource, memberOnly, classes))
+        props   <- repo(_.projectProperties(projectIri))
+        rows    <-
+          repo(_.countByGroup(projectIri, GroupBy.ResourceClass, ItemType.Resource, memberOnly, classes, props))
       } yield assertTrue(
         rows.nonEmpty,
         rows.forall(_.unit == ViewRestrictionsRepo.CountUnit.Resources),
@@ -1190,7 +1193,8 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     test("emits no Resources rows in property mode") {
       for {
         classes <- repo(_.projectClasses(projectIri))
-        rows    <- repo(_.countByGroup(projectIri, GroupBy.Property, ItemType.All, memberOnly, classes))
+        props   <- repo(_.projectProperties(projectIri))
+        rows    <- repo(_.countByGroup(projectIri, GroupBy.Property, ItemType.All, memberOnly, classes, props))
       } yield assertTrue(
         rows.nonEmpty,
         rows.forall(_.unit == ViewRestrictionsRepo.CountUnit.Items),
