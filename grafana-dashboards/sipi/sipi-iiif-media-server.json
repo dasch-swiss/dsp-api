@@ -7,7 +7,7 @@
   "spec": {
     "annotations": [],
     "cursorSync": "Off",
-    "description": "SIPI IIIF media server, driven by SIPI's OpenTelemetry (OTLP) metrics (service_name=sipi). Latency, throughput, caching, decode-memory and pool saturation, rate limiting, errors, plus the dsp-api /admin/files permission route SIPI calls on every request. The legacy Prometheus scrape (service DSP_iiif_iiif) is intentionally excluded.",
+    "description": "SIPI IIIF media server, driven by SIPI's OpenTelemetry (OTLP) metrics (service_name=sipi). Latency, throughput, caching, decode-memory, two-lane admission saturation, errors, plus the dsp-api /admin/files permission route SIPI calls on every request. The legacy Prometheus scrape (service DSP_iiif_iiif) is intentionally excluded.",
     "editable": true,
     "elements": {
       "panel-13": {
@@ -27,11 +27,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))", "instant": true, "legendFormat": "{{deployment_environment_name}}", "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))",
+                        "instant": true,
+                        "legendFormat": "{{deployment_environment_name}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -45,8 +53,26 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } },
-              "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] }
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "name",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "blue"
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -68,11 +94,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))", "instant": true, "legendFormat": "{{service_version}}", "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "topk(1, timestamp(target_info{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}))",
+                        "instant": true,
+                        "legendFormat": "{{service_version}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -86,8 +120,26 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } },
-              "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] }
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "name",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -109,11 +161,18 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -127,8 +186,21 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-              "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] }
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "reqps"
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -150,11 +222,18 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -168,11 +247,35 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
               "fieldConfig": {
                 "defaults": {
                   "unit": "s",
-                  "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 3 } ] }
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "orange",
+                        "value": 1
+                      },
+                      {
+                        "color": "red",
+                        "value": 3
+                      }
+                    ]
+                  }
                 },
                 "overrides": []
               }
@@ -197,11 +300,18 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -215,13 +325,37 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
               "fieldConfig": {
                 "defaults": {
                   "unit": "percentunit",
                   "min": 0,
                   "max": 1,
-                  "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.7 }, { "color": "green", "value": 0.9 } ] }
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "orange",
+                        "value": 0.7
+                      },
+                      {
+                        "color": "green",
+                        "value": 0.9
+                      }
+                    ]
+                  }
                 },
                 "overrides": []
               }
@@ -246,11 +380,18 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\",http_response_status_code=~\"5..\"}[$__rate_interval]))", "instant": true, "queryType": "instant", "range": false }
+                      "spec": {
+                        "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\",http_response_status_code=~\"5..\"}[$__rate_interval])) or vector(0)",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
                     }
                   }
                 }
@@ -264,11 +405,31 @@
             "group": "stat",
             "version": "",
             "spec": {
-              "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
               "fieldConfig": {
                 "defaults": {
                   "unit": "reqps",
-                  "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.1 } ] }
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "red",
+                        "value": 0.1
+                      }
+                    ]
+                  }
                 },
                 "overrides": []
               }
@@ -293,11 +454,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p50", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p50",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -307,11 +476,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p95",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -321,11 +498,19 @@
                     "hidden": false,
                     "refId": "C",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p99", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p99",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -339,8 +524,27 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" }, "tooltip": { "mode": "multi" } },
-              "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                },
+                "tooltip": {
+                  "mode": "multi"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "s",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -362,11 +566,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum by(status) (rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{status}}", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum by(status) (rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "{{status}}",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -380,8 +592,26 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "reqps",
+                  "custom": {
+                    "fillOpacity": 20,
+                    "stacking": {
+                      "mode": "normal"
+                    }
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -403,11 +633,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "avg latency", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "avg latency",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -421,8 +659,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "s",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -444,11 +698,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Cache Used", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_cache_size_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "Cache Used",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -458,11 +720,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_size_limit_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "Cache Limit", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_cache_size_limit_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)",
+                        "instant": false,
+                        "legendFormat": "Cache Limit",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -476,8 +746,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -499,11 +784,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Files", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_cache_files{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "Files",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -513,11 +806,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_cache_files_limit{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "Files Limit", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_cache_files_limit{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"} > 0)",
+                        "instant": false,
+                        "legendFormat": "Files Limit",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -531,8 +832,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -554,11 +870,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_evictions_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "evictions", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_cache_evictions_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "evictions",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -568,11 +892,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_cache_skips_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "skips", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_cache_skips_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "skips",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -586,8 +918,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "cps",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -609,11 +956,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "hit ratio", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) / (sum(rate(sipi_preflight_cache_hits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])) + sum(rate(sipi_preflight_cache_misses_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "hit ratio",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -627,8 +982,25 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percentunit",
+                  "min": 0,
+                  "max": 1,
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -637,8 +1009,8 @@
         "kind": "Panel",
         "spec": {
           "id": 9,
-          "title": "Decode Memory Used vs Budget",
-          "description": "Decode-memory admission control: bytes currently reserved by in-flight decodes vs the configured budget. Decodes whose estimate would exceed the budget are rejected. The gauge is sampled at export interval, so short spikes between exports are not visible.",
+          "title": "Decode Memory: Full-lane Used vs Budget",
+          "description": "Full-lane accounted decode bytes (sipi_decode_memory_used_bytes) against the full-lane budget (sipi_decode_memory_budget_bytes = envelope x (1 - tiles_memory_ratio), ~75%). Tiles bypass the budget. Used approaching Budget is where 503s begin in advanced mode.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -650,11 +1022,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_used_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Used", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_decode_memory_used_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "Used",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -664,11 +1044,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_decode_memory_budget_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "Budget", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_decode_memory_budget_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "Budget",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -682,8 +1070,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -693,7 +1096,7 @@
         "spec": {
           "id": 23,
           "title": "Decode Memory Admission (rate)",
-          "description": "Admission-control decisions on the decode-memory budget: acquired = admitted; rejected = would exceed the budget; near_limit = usage crossed 80% of budget; shadow_rejected = would have been rejected while the budget runs in non-enforcing shadow mode.",
+          "description": "Decode-memory budget decisions (advanced mode): acquired = admitted; rejected = 503, budget currently exhausted; too large = 413, a single request's estimate alone exceeds the full-lane budget; near_limit = usage crossed 80% of budget. Cumulative process-lifetime counters; rate() is correct.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -705,11 +1108,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_acquired_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "acquired", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_acquired_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "acquired",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -719,11 +1130,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "rejected (503)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -733,11 +1152,19 @@
                     "hidden": false,
                     "refId": "C",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_near_limit_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_too_large_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "too large (413)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -747,11 +1174,19 @@
                     "hidden": false,
                     "refId": "D",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_decode_memory_shadow_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_near_limit_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "near limit",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -765,8 +1200,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "cps",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -775,8 +1225,8 @@
         "kind": "Panel",
         "spec": {
           "id": 25,
-          "title": "Worker Pool Permits (in use vs total)",
-          "description": "Engine worker-pool permits held vs total (SIPI_NTHREADS). In use = total means every worker is busy and new requests queue.",
+          "title": "Admission Permits (in use vs total)",
+          "description": "Global admission permits held vs total (SIPI_NTHREADS). In use = total means every worker is busy and further requests queue or shed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -788,11 +1238,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_in_use{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "in use", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_admission_permits_in_use{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "in use",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -802,11 +1260,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_permits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "total", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_admission_permits_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "total",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -820,8 +1286,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -830,8 +1312,8 @@
         "kind": "Panel",
         "spec": {
           "id": 26,
-          "title": "Worker Pool Waiting",
-          "description": "Requests queued waiting for a worker permit. Sustained non-zero means the pool is saturated; see load-shed/timeout for the overflow.",
+          "title": "Admission Waiting (per partition)",
+          "description": "Requests parked waiting for a permit, per partition. Tiles are exempt from the full-partition queue-depth shed, so a full burst never fills the queue against tiles.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -843,11 +1325,41 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_pool_waiting{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "waiting", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_admission_tile_waiting{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "tile waiting",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(sipi_admission_full_waiting{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "full waiting",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -861,8 +1373,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -871,8 +1399,8 @@
         "kind": "Panel",
         "spec": {
           "id": 27,
-          "title": "Pool Load-Shed & Queue Timeout (rate)",
-          "description": "Overload signals per second: requests shed with 503 because the queue was full, and requests that timed out waiting for a permit.",
+          "title": "Admission Load-Shed (per partition, rate)",
+          "description": "Requests shed per partition (immediate queue-full shed + queue-timeout shed, combined into one counter per partition). The tile partition should stay flat under a full-lane burst. Cumulative counters; rate() is correct.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -884,11 +1412,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_load_shed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "load shed", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_admission_tile_shed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "tile shed",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -898,11 +1434,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_pool_queue_timeout_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "queue timeout", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_admission_full_shed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "full shed",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -916,159 +1460,26 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-28": {
-        "kind": "Panel",
-        "spec": {
-          "id": 28,
-          "title": "Rate Limit: Allowed vs Rejected (rate)",
-          "description": "Per-client rate limiter: requests allowed vs rejected, per second.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_allowed_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "allowed", "queryType": "range", "range": true }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "cps",
+                  "custom": {
+                    "fillOpacity": 20,
+                    "stacking": {
+                      "mode": "normal"
                     }
                   }
                 },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "B",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-29": {
-        "kind": "Panel",
-        "spec": {
-          "id": 29,
-          "title": "Rate Limit: Near-Limit & Shadow-Rejected (rate)",
-          "description": "Rate-limiter early warnings per second: near_limit = a client crossed 80% of its budget; shadow_rejected = would have been rejected while the limiter runs in non-enforcing shadow mode.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_near_limit_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "near limit", "queryType": "range", "range": true }
-                    }
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "B",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rate_limit_shadow_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "shadow rejected", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-33": {
-        "kind": "Panel",
-        "spec": {
-          "id": 33,
-          "title": "Rate Limit: Clients Tracked",
-          "description": "Active client entries in the rate limiter (distinct clients seen within the tracking window).",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(sipi_rate_limit_clients_tracked{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "clients tracked", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+                "overrides": []
+              }
             }
           }
         }
@@ -1078,7 +1489,7 @@
         "spec": {
           "id": 30,
           "title": "Errors (rate)",
-          "description": "Engine error signals per second: requests rejected by the output pixel limit (image too large), allocation failures during image processing, and requests aborted by client disconnect.",
+          "description": "Error-class rates. decode too large = 413 (single request exceeds the full-lane budget); budget rejected = 503 (budget currently exhausted); alloc failures / client disconnected as before.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1090,11 +1501,41 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_image_too_large_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "image too large", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_too_large_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "decode too large (413)",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(sipi_decode_memory_rejected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "budget rejected (503)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1104,11 +1545,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_memory_alloc_failures_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "alloc failures", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_memory_alloc_failures_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "alloc failures",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1118,11 +1567,19 @@
                     "hidden": false,
                     "refId": "C",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(sipi_client_disconnected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "client disconnected", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(sipi_client_disconnected_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "client disconnected",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1136,8 +1593,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "cps",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1159,11 +1632,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(rate(container_cpu_usage_seconds_total{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "cpu", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(rate(container_cpu_usage_seconds_total{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "cpu",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1177,8 +1658,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percentunit",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1188,7 +1685,7 @@
         "spec": {
           "id": 12,
           "title": "SIPI Container Memory Usage",
-          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif) on the primary VRE host. 'working set' is the real, non-reclaimable memory the cgroup OOM killer acts on; 'usage (incl. page cache)' additionally counts reclaimable page cache from reading image files, so it saturates at the limit under load without indicating a problem. 'limit' is the container memory limit - working set approaching it risks an OOM kill. On images before SIPI 6.2.3 the working set ratchets up to a concurrency x peak-decode watermark and plateaus (glibc malloc arenas retain freed decode buffers); that is expected, not a leak.",
+          "description": "cAdvisor container metrics for the SIPI container (service DSP_iiif_iiif) on the primary VRE host. 'working set' is the real, non-reclaimable memory the cgroup OOM killer acts on; 'usage (incl. page cache)' additionally counts reclaimable page cache from reading image files, so it saturates at the limit under load without indicating a problem. 'limit' is the container memory limit - working set approaching it risks an OOM kill. On images before SIPI 6.2.3 the working set ratchets up to a concurrency x peak-decode watermark and plateaus (glibc malloc arenas retain freed decode buffers); that is expected, not a leak. 'decode envelope' overlays SIPI's decode-memory envelope (sipi_admission_memory_limit_bytes, 0=auto-detected cgroup limit) for reference.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1200,11 +1697,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(container_memory_working_set_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "working set", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(container_memory_working_set_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "working set",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1214,11 +1719,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})", "instant": false, "legendFormat": "usage (incl. page cache)", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(container_memory_usage_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "usage (incl. page cache)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1228,11 +1741,41 @@
                     "hidden": false,
                     "refId": "C",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(container_spec_memory_limit_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"} > 0)", "instant": false, "legendFormat": "limit", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(container_spec_memory_limit_bytes{service=\"DSP_iiif_iiif\",environment=~\"$environment\",instance=~\"dasch-vre-$environment-01\"} > 0)",
+                        "instant": false,
+                        "legendFormat": "limit",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(sipi_admission_memory_limit_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "decode envelope",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1246,27 +1789,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-40": {
-        "kind": "Panel",
-        "spec": {
-          "id": 40,
-          "title": "Empty on OTLP — investigate",
-          "description": "",
-          "links": [],
-          "data": { "kind": "QueryGroup", "spec": { "queries": [], "queryOptions": {}, "transformations": [] } },
-          "vizConfig": {
-            "kind": "",
-            "group": "text",
-            "version": "",
-            "spec": {
-              "options": { "mode": "markdown", "content": "The panels below query SIPI instruments that currently return **no series over OTLP** (`service_name=\"sipi\"`). Either the instrument is not bridged from the C++ engine to the Rust OTLP path, or it only emits under specific conditions (e.g. non-zero decode estimates). Use this row to spot gaps and decide what still needs to be bridged. If a panel here starts showing data, move it into the relevant section above." },
-              "fieldConfig": { "defaults": {}, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1275,8 +1815,8 @@
         "kind": "Panel",
         "spec": {
           "id": 41,
-          "title": "Decode Memory Estimate (p95)",
-          "description": "p95 of the per-request estimated decode memory (sipi_decode_memory_estimate_bytes). Feeds the decode-memory budget admission control that rate-limits heavy requests.",
+          "title": "Decode Memory Estimate (p50/p95/p99)",
+          "description": "Estimated peak decode memory per request, from the sipi_decode_memory_estimate_bytes histogram. The engine classifies tile vs full from this estimate; p99 tracks the crawler large-download cost that drove the OOM incident.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1288,11 +1828,63 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))", "instant": false, "legendFormat": "p95 estimate", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "histogram_quantile(0.5, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p50",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p95",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.99, sum by(le) (rate(sipi_decode_memory_estimate_bytes_bucket{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p99",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1306,213 +1898,24 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-42": {
-        "kind": "Panel",
-        "spec": {
-          "id": 42,
-          "title": "Rejected Connections (rate)",
-          "description": "sipi_rejected_connections_total. Not bridged to OTLP (always zero on the FFI serve path). Use Pool Waiting / Load-Shed instead.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_rejected_connections_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "rejected connections", "queryType": "range", "range": true }
-                    }
-                  }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
                 }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-43": {
-        "kind": "Panel",
-        "spec": {
-          "id": 43,
-          "title": "Waiting Connections",
-          "description": "sipi_waiting_connections. Not bridged to OTLP. Use sipi.pool.waiting instead.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(sipi_waiting_connections{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})", "instant": false, "legendFormat": "waiting connections", "queryType": "range", "range": true }
-                    }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
                   }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-44": {
-        "kind": "Panel",
-        "spec": {
-          "id": 44,
-          "title": "Rate Limit Decisions by action (rate)",
-          "description": "sipi_rate_limit_decisions_total{action}. Legacy single-family counter; the OTLP path splits this into allowed / rejected / near_limit / shadow_rejected instead.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum by(action) (rate(sipi_rate_limit_decisions_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{action}}", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-45": {
-        "kind": "Panel",
-        "spec": {
-          "id": 45,
-          "title": "Essentials Hash Mismatch (rate)",
-          "description": "sipi_essentials_hash_mismatch_total. Not bridged to OTLP today (C++/Prometheus-only integrity tripwire).",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum(rate(sipi_essentials_hash_mismatch_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "hash mismatch", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
-            }
-          }
-        }
-      },
-      "panel-46": {
-        "kind": "Panel",
-        "spec": {
-          "id": 46,
-          "title": "Read-shape Fast Path (rate)",
-          "description": "sipi_read_shape_fast_path_total{format,outcome}. Not bridged to OTLP today (C++/Prometheus-only).",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "",
-                      "spec": { "expr": "sum by(outcome) (rate(sipi_read_shape_fast_path_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))", "instant": false, "legendFormat": "{{outcome}}", "queryType": "range", "range": true }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "",
-            "group": "timeseries",
-            "version": "",
-            "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "cps", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1521,8 +1924,8 @@
         "kind": "Panel",
         "spec": {
           "id": 47,
-          "title": "Allocator: In Use vs Retained",
-          "description": "Process-allocator accounting (sipi_malloc_* gauges, SIPI > 6.2.3; empty until that release is deployed). In use = allocated and not yet freed — grows without bound only under a true leak. Retained = freed but held by the allocator instead of returned to the OS — the series that explains an RSS ratchet with no leak (the 2026-07-29 OOM). See sipi docs/adr/0019-mimalloc-production-allocator.md.",
+          "title": "Allocator: RSS In Use vs Retained",
+          "description": "mimalloc in-use bytes vs retained. As of SIPI v5 (fix 9d7f69ff) sipi_malloc_retained_bytes is remapped to true RSS held but not in use (current_rss - in_use), not mimalloc committed. Retained is the glibc-style arena retention watched for the RSS ratchet.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1534,11 +1937,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_malloc_in_use_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "In use", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_malloc_in_use_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "in use",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1548,11 +1959,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_malloc_retained_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Retained (freed, not returned)", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_malloc_retained_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "retained (RSS - in use)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1566,8 +1985,23 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1576,8 +2010,8 @@
         "kind": "Panel",
         "spec": {
           "id": 48,
-          "title": "Allocator: Held from OS",
-          "description": "Bytes the allocator holds from the OS backing RSS (arena) and the mmap-served share outside the regular heap (sipi_malloc_* gauges, SIPI > 6.2.3). The gap between Held-from-OS and the Resources row's container working set is non-allocator memory (thread stacks, code, page tables).",
+          "title": "Allocator: Process RSS & mmap-served",
+          "description": "As of SIPI v5 (fix 9d7f69ff) sipi_malloc_arena_bytes is remapped to the process RSS (mi_process_info current_rss), a true OOM/RSS proxy; mmap-served is the mmap share outside the regular heap. Sanity-check RSS against container_memory_working_set_bytes in Resources.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1589,11 +2023,19 @@
                     "hidden": false,
                     "refId": "A",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_malloc_arena_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "Held from OS", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_malloc_arena_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "process RSS (current_rss)",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 },
@@ -1603,11 +2045,19 @@
                     "hidden": false,
                     "refId": "B",
                     "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "group": "prometheus",
                       "kind": "DataQuery",
                       "version": "",
-                      "spec": { "expr": "sum(sipi_malloc_mmap_bytes{service_name=\"sipi\",environment=~\"$environment\"})", "instant": false, "legendFormat": "mmap-served", "queryType": "range", "range": true }
+                      "spec": {
+                        "expr": "sum(sipi_malloc_mmap_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "mmap-served",
+                        "queryType": "range",
+                        "range": true
+                      }
                     }
                   }
                 }
@@ -1621,8 +2071,667 @@
             "group": "timeseries",
             "version": "",
             "spec": {
-              "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-              "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-49": {
+        "kind": "Panel",
+        "spec": {
+          "id": 49,
+          "title": "Full-lane Occupancy vs Cap",
+          "description": "Full-download decodes in flight (sipi_admission_full_in_use) against the hard thread cap (sipi_admission_full_max_threads = nthreads - tile_min). In use pinned at the cap means fulls are being capped so tiles keep their floor.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_full_in_use{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "full in use",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_full_max_threads{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "full max (cap)",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-50": {
+        "kind": "Panel",
+        "spec": {
+          "id": 50,
+          "title": "Classifier Disagreement (rate)",
+          "description": "Rate of requests where the shell tile/full classifier disagreed with the engine's estimate-based classification (sipi_admission_classifier_disagreement_total). Non-zero is expected and tolerated; a sustained rise means the shell pixel-proxy threshold has drifted from the engine's byte threshold. Cumulative counter; rate() is correct.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "sum(rate(sipi_admission_classifier_disagreement_total{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "disagreement",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "cps",
+                  "custom": {
+                    "fillOpacity": 10
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-51": {
+        "kind": "Panel",
+        "spec": {
+          "id": 51,
+          "title": "Admission Mode",
+          "description": "Resolved admission mode: basic = enforce only the CPU/thread cap (advanced tier observe-only); advanced = also enforce the memory budget + two-lane shedding (503/413). Every environment ships advanced.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_mode{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "mode",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "green"
+                  },
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "basic",
+                          "color": "blue"
+                        },
+                        "1": {
+                          "text": "advanced",
+                          "color": "green"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-52": {
+        "kind": "Panel",
+        "spec": {
+          "id": 52,
+          "title": "Memory Envelope",
+          "description": "Resolved decode-memory envelope (sipi_admission_memory_limit_bytes). 0-config auto-detects the container cgroup limit; the full-lane budget is 75% of this.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_memory_limit_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "envelope",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "bytes"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-53": {
+        "kind": "Panel",
+        "spec": {
+          "id": 53,
+          "title": "Tiles Memory Ratio",
+          "description": "Fraction of the envelope reserved for the tile partition (1 - full-lane share). Default 0.25.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_tiles_memory_ratio{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "ratio",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "percentunit",
+                  "decimals": 2
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-54": {
+        "kind": "Panel",
+        "spec": {
+          "id": 54,
+          "title": "Tiles Thread Ratio",
+          "description": "Fraction of nthreads guaranteed to the tile partition as a floor (tile_min = round(nthreads x ratio)). Default 0.5.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_tiles_thread_ratio{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "ratio",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "percentunit",
+                  "decimals": 2
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-55": {
+        "kind": "Panel",
+        "spec": {
+          "id": 55,
+          "title": "Tile Min Threads",
+          "description": "Guaranteed tile thread floor (tile_min). Tiles burst above this into idle capacity up to nthreads.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_tile_min_threads{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "tile_min",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-56": {
+        "kind": "Panel",
+        "spec": {
+          "id": 56,
+          "title": "Full Max Threads",
+          "description": "Hard cap on concurrent full-download decodes (full_max = nthreads - tile_min).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_full_max_threads{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "full_max",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "short"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-57": {
+        "kind": "Panel",
+        "spec": {
+          "id": 57,
+          "title": "Large Decode Threshold",
+          "description": "Estimated-peak byte threshold at or above which a request is classified full (sipi_admission_large_decode_threshold_bytes). Single-sourced in the shell config, passed to the engine over the seam. Default 32 MiB.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "max(sipi_admission_large_decode_threshold_bytes{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\"})",
+                        "instant": false,
+                        "legendFormat": "threshold",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ]
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "purple"
+                  },
+                  "unit": "bytes"
+                },
+                "overrides": []
+              }
             }
           }
         }
@@ -1641,12 +2750,84 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-13" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 4, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-14" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-2" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-3" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-4" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 20, "y": 0, "width": 4, "height": 4, "element": { "kind": "ElementReference", "name": "panel-5" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-13"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-14"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-2"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-3"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-4"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 20,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-5"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1661,7 +2842,19 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 8, "element": { "kind": "ElementReference", "name": "panel-6" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-6"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1676,8 +2869,32 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-16" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-17" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-16"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-17"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1692,10 +2909,58 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-8" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-20" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-21" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-22" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-8"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-20"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-21"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-22"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1710,8 +2975,45 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-9" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-23" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-9"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-23"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-41"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1726,8 +3028,32 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-47" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-48" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-47"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-48"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1736,33 +3062,77 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Pool Saturation",
+              "title": "Admission Saturation",
               "collapse": false,
               "layout": {
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-25" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-26" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-27" } } }
-                  ]
-                }
-              }
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "Rate Limiting",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-28" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-29" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-33" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 8, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-41" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-25"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-26"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-27"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-49"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-50"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1777,7 +3147,19 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 8, "element": { "kind": "ElementReference", "name": "panel-30" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-30"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1792,8 +3174,32 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-11" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8, "element": { "kind": "ElementReference", "name": "panel-12" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-11"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-12"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1802,18 +3208,103 @@
           {
             "kind": "RowsLayoutRow",
             "spec": {
-              "title": "Empty on OTLP (investigate)",
+              "title": "Config Fingerprint",
               "collapse": false,
               "layout": {
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 0, "width": 24, "height": 3, "element": { "kind": "ElementReference", "name": "panel-40" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-42" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-43" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 3, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-44" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 0, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-45" } } },
-                    { "kind": "GridLayoutItem", "spec": { "x": 8, "y": 11, "width": 8, "height": 8, "element": { "kind": "ElementReference", "name": "panel-46" } } }
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-51"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 6,
+                        "y": 0,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-52"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-53"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 18,
+                        "y": 0,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-54"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-55"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 6,
+                        "y": 4,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-56"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 4,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-57"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -1824,13 +3315,28 @@
     },
     "links": [],
     "preload": false,
-    "tags": ["sipi", "iiif", "otlp"],
+    "tags": [
+      "sipi",
+      "iiif",
+      "otlp"
+    ],
     "timeSettings": {
       "timezone": "browser",
       "from": "now-6h",
       "to": "now",
       "autoRefresh": "1m",
-      "autoRefreshIntervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
@@ -1843,11 +3349,26 @@
           "label": "Environment",
           "description": "",
           "query": "dev,stage,prod",
-          "current": { "text": "dev", "value": "dev" },
+          "current": {
+            "text": "dev",
+            "value": "dev"
+          },
           "options": [
-            { "text": "dev", "value": "dev", "selected": true },
-            { "text": "stage", "value": "stage", "selected": false },
-            { "text": "prod", "value": "prod", "selected": false }
+            {
+              "text": "dev",
+              "value": "dev",
+              "selected": true
+            },
+            {
+              "text": "stage",
+              "value": "stage",
+              "selected": false
+            },
+            {
+              "text": "prod",
+              "value": "prod",
+              "selected": false
+            }
           ],
           "multi": false,
           "includeAll": false,
