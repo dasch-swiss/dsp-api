@@ -1,21 +1,5 @@
-# we're going to iterate on this document, don't delete this line.
-
-in export service we have an endpoint for dsp-repo that sends JSON about records.
-read the docker-compose.
-the resources come from the triplestore, but for each file, we'd have to access the sidecar, which is in the volume attached to ingest.
-we can access this in API, so we can add it to the docker-compose (it hasn't been attached yet).
-the fields that have to be added are listed below
-
--- Fields
-Checksum and hash function name (e.g., md5)
-Mimetype
-File name
-Creation date
-File size in bytes
-
----
-
-Add the sidecar fields to `MetadataRecord.file` on `POST /v3/export/resources/oai`.
+Add the sidecar fields to `MetadataRecord.file` on `POST /v3/export/resources/oai`:
+checksum, mimetype, file name, creation date, file size.
 Code refs are from `feat/migrate-sidecar-sizes` (d9b332c3d).
 
 # Decisions
@@ -28,7 +12,8 @@ Code refs are from `feat/migrate-sidecar-sizes` (d9b332c3d).
   per-asset timestamp anywhere: ingest's SQLite has only a project table.
 - **Original, always**: `checksumOriginal`, `sizeOriginal`, `originalFilename`,
   `originalMimeType`. Matches `FileLink.url`, already pointing at `/assets/{id}/original`.
-- **Checksum algorithm**: hardcoded. Only SHA-256 is ever stored — no md5 despite the request.
+- **Checksum algorithm**: hardcoded. Only SHA-256 is ever stored, so the original request's
+  "hash function name (e.g. md5)" resolves to a constant; no md5 is available.
 - **File size**: JSON integer.
 - **Fetch all sidecars**: no batching or streaming; expensive by design, cached elsewhere.
 - **Missing sidecars**: not a real case on prod; no partial-failure policy.
