@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectProperties
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
@@ -76,6 +77,17 @@ final case class ViewRestrictionsRepo(
     } yield ProjectClasses(iris, multi)
 
   /**
+   * The project's value properties, the second axis [[countByGroup]] chunks its value counts along.
+   *
+   * One small anchored query per request, in exchange for both a finer chunk granularity than the class
+   * list can offer and the removal of a `subPropertyOf*` traversal from every value count in that request.
+   */
+  def projectProperties(projectIri: ProjectIri): Task[ProjectProperties] =
+    triplestore
+      .query(Select(ViewRestrictionsRepo.projectPropertiesQuery(projectIri)))
+      .map(rows => ProjectProperties(rows.flatMap(_.get("prop"))))
+
+  /**
    * The project's distinct `knora-base:hasPermissions` literals among restriction-bearing objects, across
    * both resources and values. The service classifies these (and only these) with
    * [[org.knora.webapi.messages.util.PermissionUtilADM]] to decide which literals mean hidden and which
@@ -113,6 +125,15 @@ final case class ViewRestrictionsRepo(
   private def select(query: SelectQuery, classes: ProjectClasses): Select =
     Select(ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))))
 
+  /** As above, additionally pinning `?prop` for the value counts' second chunking axis. */
+  private def select(query: SelectQuery, classes: ProjectClasses, properties: ProjectProperties): Select =
+    Select(
+      ViewRestrictionsRepo.withValues(
+        query,
+        (classes.valuesClause(variable("resClass")) ++ properties.valuesClause(variable("prop"))).toSeq,
+      ),
+    )
+
   /**
    * Per-group counts of the objects whose permission literal is in `permissions`, computed by the
    * triplestore with `GROUP BY` + `COUNT`. Exact regardless of project size.
@@ -128,6 +149,7 @@ final case class ViewRestrictionsRepo(
     itemType: ItemType,
     permissions: Set[String],
     classes: ProjectClasses,
+    properties: ProjectProperties,
   ): Task[Seq[GroupCountRow]] =
     if (permissions.isEmpty) ZIO.succeed(Seq.empty)
     else {
@@ -139,25 +161,30 @@ final case class ViewRestrictionsRepo(
       for {
         resourceCounts <-
           if (wantResources)
+            // No property axis: a resource-level count has no `?prop` to chunk on.
             runCountByGroup(
-              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, _),
+              (cs, _) => ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, cs),
               CountUnit.Resources,
               classes,
+              ProjectProperties(Seq.empty),
             )
           else ZIO.succeed(Seq.empty[GroupCountRow])
         valueCounts <-
           if (wantValues)
             runCountByGroup(
-              ViewRestrictionsRepo
-                .valueCountQuery(
-                  projectIri,
-                  groupBy,
-                  ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
-                  permissions,
-                  _,
-                ),
+              (cs, ps) =>
+                ViewRestrictionsRepo
+                  .valueCountQuery(
+                    projectIri,
+                    groupBy,
+                    ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
+                    permissions,
+                    cs,
+                    ps,
+                  ),
               CountUnit.Items,
               classes,
+              properties,
             )
           else ZIO.succeed(Seq.empty[GroupCountRow])
       } yield resourceCounts ++ valueCounts
@@ -171,7 +198,12 @@ final case class ViewRestrictionsRepo(
    * so the service asks for this in class mode only.
    */
   def totalResourcesByClass(projectIri: ProjectIri, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, _), CountUnit.Resources, classes)
+    runCountByGroup(
+      (cs, _) => ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, cs),
+      CountUnit.Resources,
+      classes,
+      ProjectProperties(Seq.empty),
+    )
 
   /**
    * Runs one grouped count as a fan-out over chunks of the project's classes, then merges.
@@ -182,33 +214,48 @@ final case class ViewRestrictionsRepo(
    * instead: on a 46k-resource / 265k-value project the single query took 8.1s while the slowest chunk took
    * 1.4s, so the same work survives a budget the whole-project form eventually will not.
    *
-   * Merging depends on the grouping key, so both cases are handled by summing per `(groupId, unit)`:
+   * Chunking runs on **two** axes, the cartesian product of class chunks and property chunks. Classes alone
+   * have a floor — a chunk of one class cannot be subdivided — so a project with a single very large class
+   * still issued one unbounded query. Binding `?prop` splits below that floor, and it also removes the
+   * `subPropertyOf*` traversal from the query (see [[ProjectProperties]]): measured on the perftest project,
+   * one class went from 232ms to ~110ms with identical counts. Resource-level counts pass an empty
+   * [[ProjectProperties]], which yields a single chunk — they have no `?prop` to split on.
    *
-   *   - grouping by resource class, the chunks partition the groups themselves, so every `groupId` occurs in
-   *     exactly one chunk and the sum is a concatenation;
-   *   - grouping by property, every chunk can report every property — the classes partition the *rows*, not
-   *     the groups — so a property's total is the sum of its per-chunk counts.
+   * Merging depends on the grouping key, so every case is handled by summing per `(groupId, unit)`:
    *
-   * Summing is only sound because each counted object belongs to exactly one chunk: a value belongs to one
-   * resource, and `dedupeRows = true` (the default these count queries use) pins a resource to a single
-   * `?resClass` binding. Were a resource to bind several classes in the hierarchy, its objects would be
-   * counted once per chunk. `ViewRestrictionsQuerySpec` pins that the count queries keep the dedup filter.
+   *   - grouping by resource class, the class chunks partition the groups themselves, so a `groupId` occurs
+   *     in one class chunk — but in as many property chunks as it has properties, and those are summed;
+   *   - grouping by property, the property chunks partition the groups and the class chunks partition the
+   *     *rows*, so a property's total is the sum of its per-class-chunk counts.
+   *
+   * Summing is only sound because each counted object belongs to exactly one chunk on each axis: a value
+   * belongs to one resource, `dedupeRows = true` (the default these count queries use) pins a resource to a
+   * single `?resClass` binding, and a value is reached through exactly one property, so the property chunks
+   * partition the values rather than overlapping them. Were a resource to bind several classes in the
+   * hierarchy, its objects would be counted once per chunk. `ViewRestrictionsQuerySpec` pins that the count
+   * queries keep the dedup filter.
    */
   private def runCountByGroup(
-    query: ProjectClasses => SelectQuery,
+    query: (ProjectClasses, ProjectProperties) => SelectQuery,
     unit: CountUnit,
     classes: ProjectClasses,
-  ): Task[Seq[GroupCountRow]] =
+    properties: ProjectProperties,
+  ): Task[Seq[GroupCountRow]] = {
+    val chunks = for {
+      classChunk <- classes.chunked(ViewRestrictionsRepo.ClassChunkSize)
+      propChunk  <- properties.chunked(ViewRestrictionsRepo.PropertyChunkSize)
+    } yield (classChunk, propChunk)
     ZIO
-      .foreachPar(classes.chunked(ViewRestrictionsRepo.ClassChunkSize))(chunk =>
+      .foreachPar(chunks) { case (classChunk, propChunk) =>
         triplestore
-          .query(select(query(chunk), chunk))
+          .query(select(query(classChunk, propChunk), classChunk, propChunk))
           .map(_.flatMap { row =>
             row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
-          }),
-      )
+          })
+      }
       .withParallelism(ViewRestrictionsRepo.MaxConcurrentChunkQueries)
       .map(mergeCounts)
+  }
 
   /** Sums chunk results per `(groupId, unit)`; see [[runCountByGroup]] for why summing is sound. */
   private def mergeCounts(perChunk: Seq[Seq[GroupCountRow]]): Seq[GroupCountRow] =
@@ -461,6 +508,51 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   }
 
   /**
+   * The value properties a project's data actually uses — the second axis the grouped value counts are
+   * chunked along.
+   *
+   * Class chunking alone has a floor: once a chunk is a single class it cannot be subdivided, so a project
+   * with one very large class still issues one query whose cost grows without bound. Binding `?prop` from a
+   * discovered list splits *below* that floor, and it simultaneously replaces the
+   * `?prop rdfs:subPropertyOf* knora-base:hasValue` traversal — which the store would otherwise re-evaluate
+   * per candidate row — with a table the engine can anchor on. Measured on the perftest project, one class
+   * went from 232ms (traversal) to ~110ms (bound), returning identical counts.
+   *
+   * As with [[ProjectClasses]], these are the properties **present in the data**, not the sub-property
+   * closure from the ontology: inlining a large ontology closure as `VALUES` is the shape DEV-6803 measured
+   * as catastrophic.
+   *
+   * @param iris the value-property IRIs asserted in the project, empty when none was discovered.
+   */
+  final case class ProjectProperties(iris: Seq[String]) {
+
+    /**
+     * `VALUES ?prop { <…> }`, or `None` when no property was discovered.
+     *
+     * `None` does **not** mean "no constraint": [[propPatterns]] falls back to the original
+     * `subPropertyOf*` traversal in that case, so `?prop` is never left unconstrained.
+     */
+    def valuesClause(prop: Variable): Option[String] =
+      Option.when(iris.nonEmpty)(ViewRestrictionsRepo.valuesOf(prop, iris))
+
+    /**
+     * The pattern that pins `?prop` beyond the `VALUES` clause: the original `subPropertyOf*` traversal,
+     * emitted only when nothing was discovered. Dropping both would let `?prop` match every predicate on
+     * the resource — including `rdf:type` and the admin properties — and inflate every count.
+     */
+    def propPatterns(prop: Variable): Seq[GraphPattern] =
+      Option.when(iris.isEmpty)(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)).toSeq
+
+    /**
+     * Splits into groups of at most `size` properties. An empty list yields a single empty chunk rather
+     * than none: the queries must still run once, falling back to the traversal.
+     */
+    def chunked(size: Int): Seq[ProjectProperties] =
+      if (iris.isEmpty) Seq(this)
+      else iris.grouped(math.max(1, size)).map(ProjectProperties(_)).toSeq
+  }
+
+  /**
    * How many of the project's classes one grouped-count query covers.
    *
    * Small enough that each query stays well inside the triplestore's `query-timeout`, large enough not to
@@ -469,6 +561,15 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * number of round-trips.
    */
   private[repo] val ClassChunkSize = 3
+
+  /**
+   * How many value properties one grouped value-count query covers — the second chunking axis.
+   *
+   * Class chunking bottoms out at one class; this is what bounds a query below that. Sized like
+   * [[ClassChunkSize]]: large enough to amortise the fixed per-request overhead (~120ms measured), small
+   * enough that a single chunk stays far inside the triplestore's `query-timeout`.
+   */
+  private[repo] val PropertyChunkSize = 4
 
   /**
    * Concurrent chunk queries per grouped count. Deliberately small: the service already fans out over
@@ -493,14 +594,22 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * a serialization without it is a programming error rather than something to paper over: splicing into
    * an arbitrary brace would silently produce a wrong query.
    */
-  private[repo] def withValues(query: SelectQuery, clause: Option[String]): String = {
+  private[repo] def withValues(query: SelectQuery, clause: Option[String]): String =
+    withValues(query, clause.toSeq)
+
+  /**
+   * As above, for several `VALUES` clauses at once (`?resClass` and `?prop`). They are spliced in the
+   * given order at the same insertion point, so both bind before the patterns that consume them.
+   */
+  private[repo] def withValues(query: SelectQuery, clauses: Seq[String]): String = {
     val sparql = query.getQueryString
-    clause.fold(sparql) { v =>
+    if (clauses.isEmpty) sparql
+    else {
       val whereAt = sparql.indexOf("WHERE")
       require(whereAt >= 0, s"cannot splice VALUES: no WHERE clause in rendered query:\n$sparql")
       val idx = sparql.indexOf('{', whereAt)
       require(idx >= 0, s"cannot splice VALUES: no group graph pattern after WHERE:\n$sparql")
-      s"${sparql.substring(0, idx + 1)}\n$v${sparql.substring(idx + 1)}"
+      s"${sparql.substring(0, idx + 1)}\n${clauses.mkString("\n")}${sparql.substring(idx + 1)}"
     }
   }
 
@@ -648,6 +757,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
     bindCreator: Boolean = true,
+    properties: ProjectProperties = ProjectProperties(Seq.empty),
   ) = {
     // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
     // reorder the remaining patterns.
@@ -664,9 +774,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
       .and(
-        resource
-          .has(prop, value)
-          .and(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)),
+        // `?prop` is pinned by the spliced `VALUES` clause when the project's properties were discovered;
+        // propPatterns emits the `subPropertyOf*` traversal only as the fallback for an empty list.
+        GraphPatterns.and((resource.has(prop, value) +: properties.propPatterns(prop))*),
       )
       .and(valuePatterns)
       .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
@@ -718,6 +828,32 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .isA(resClass)
           .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
           .and(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource)),
+      )
+  }
+
+  /**
+   * `SELECT DISTINCT ?prop` — the value properties the project's data actually uses.
+   *
+   * Anchored on `attachedToProject` for the same reason as [[projectClassesQuery]]: the `subPropertyOf*`
+   * check runs over the project's predicates once, here, instead of per result row in every count query.
+   * Feeds [[ProjectProperties]], which chunks the grouped value counts along this second axis.
+   *
+   * Link values are excluded to match [[valueCore]] — a property whose only values are link values
+   * contributes nothing to these counts, so binding it would just add an empty chunk.
+   */
+  private[repo] def projectPropertiesQuery(projectIri: ProjectIri): SelectQuery = {
+    val (resource, prop, value) = (variable("resource"), variable("prop"), variable("value"))
+    Queries
+      .SELECT(prop)
+      .distinct()
+      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
+      .where(
+        resource
+          .has(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+          .andHas(prop, value)
+          .and(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue))
+          .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue))),
       )
   }
 
@@ -876,6 +1012,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     itemType: ItemType,
     statePermissions: Set[String],
     classes: ProjectClasses,
+    properties: ProjectProperties,
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (prop, value)          = (variable("prop"), variable("value"))
@@ -884,7 +1021,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
     val groupCol               = if (groupBy == GroupBy.Property) prop else resClass
 
-    val core        = valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes)
+    val core =
+      valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes, properties = properties)
     val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
       .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
 
