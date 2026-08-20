@@ -387,7 +387,7 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": {
-                        "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\",http_response_status_code=~\"5..\"}[$__rate_interval]))",
+                        "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"sipi\",deployment_environment_name=~\"vre-$environment-01\",http_response_status_code=~\"5..\"}[$__rate_interval])) or vector(0)",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
