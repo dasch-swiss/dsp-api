@@ -140,7 +140,7 @@ final case class ViewRestrictionsRepo(
         resourceCounts <-
           if (wantResources)
             runCountByGroup(
-              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, classes),
+              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, _),
               CountUnit.Resources,
               classes,
             )
@@ -154,7 +154,7 @@ final case class ViewRestrictionsRepo(
                   groupBy,
                   ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
                   permissions,
-                  classes,
+                  _,
                 ),
               CountUnit.Items,
               classes,
@@ -171,14 +171,51 @@ final case class ViewRestrictionsRepo(
    * so the service asks for this in class mode only.
    */
   def totalResourcesByClass(projectIri: ProjectIri, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, classes), CountUnit.Resources, classes)
+    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, _), CountUnit.Resources, classes)
 
-  private def runCountByGroup(query: SelectQuery, unit: CountUnit, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    triplestore
-      .query(select(query, classes))
-      .map(_.flatMap { row =>
-        row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
-      })
+  /**
+   * Runs one grouped count as a fan-out over chunks of the project's classes, then merges.
+   *
+   * The whole-project query is a single scan whose cost grows with the project; Fuseki applies
+   * `query-timeout` per request, so past some size that one query is cancelled mid-stream and the request
+   * fails, however fast the rest of the pipeline is. Splitting the class list bounds each individual query
+   * instead: on a 46k-resource / 265k-value project the single query took 8.1s while the slowest chunk took
+   * 1.4s, so the same work survives a budget the whole-project form eventually will not.
+   *
+   * Merging depends on the grouping key, so both cases are handled by summing per `(groupId, unit)`:
+   *
+   *   - grouping by resource class, the chunks partition the groups themselves, so every `groupId` occurs in
+   *     exactly one chunk and the sum is a concatenation;
+   *   - grouping by property, every chunk can report every property — the classes partition the *rows*, not
+   *     the groups — so a property's total is the sum of its per-chunk counts.
+   *
+   * Summing is only sound because each counted object belongs to exactly one chunk: a value belongs to one
+   * resource, and `dedupeRows = true` (the default these count queries use) pins a resource to a single
+   * `?resClass` binding. Were a resource to bind several classes in the hierarchy, its objects would be
+   * counted once per chunk. `ViewRestrictionsQuerySpec` pins that the count queries keep the dedup filter.
+   */
+  private def runCountByGroup(
+    query: ProjectClasses => SelectQuery,
+    unit: CountUnit,
+    classes: ProjectClasses,
+  ): Task[Seq[GroupCountRow]] =
+    ZIO
+      .foreachPar(classes.chunked(ViewRestrictionsRepo.ClassChunkSize))(chunk =>
+        triplestore
+          .query(select(query(chunk), chunk))
+          .map(_.flatMap { row =>
+            row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
+          }),
+      )
+      .withParallelism(ViewRestrictionsRepo.MaxConcurrentChunkQueries)
+      .map(mergeCounts)
+
+  /** Sums chunk results per `(groupId, unit)`; see [[runCountByGroup]] for why summing is sound. */
+  private def mergeCounts(perChunk: Seq[Seq[GroupCountRow]]): Seq[GroupCountRow] =
+    perChunk.flatten
+      .groupMapReduce(r => (r.groupId, r.unit))(_.count)(_ + _)
+      .map { case ((groupId, unit), count) => GroupCountRow(groupId, count, unit) }
+      .toSeq
 
   /**
    * The distinct resource IRIs of one page of the drill-down, ordered by label then IRI so paging is
@@ -393,15 +430,52 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *     leave `?resClass` matching every asserted type — including value and non-resource classes —
      *     and inflate every count.
      *   - The most-specific-class filter is added only when the project's data can actually produce an
-     *     ambiguous binding (see [[multiTypedQuery]]).
+     *     ambiguous binding (see [[multiTypedQuery]]) *and* the caller's result depends on how many rows
+     *     a resource contributes — see `dedupeRows`.
+     *
+     * @param dedupeRows whether the caller needs one `?resClass` binding per resource. True for the
+     *                   counting and paging queries, whose answer changes if a multi-typed resource is
+     *                   counted or listed once per class in its hierarchy. False for
+     *                   `SELECT DISTINCT ?permissions`, which projects only the permission literal, so
+     *                   duplicate rows collapse in `DISTINCT` and the filter cannot change the result set
+     *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
+     *                   some other row still carries.
      */
-    def resClassPatterns(resource: Variable, resClass: Variable): Seq[GraphPattern] = {
+    /**
+     * Splits into groups of at most `size` classes, each carrying the same `multiTyped` flag, so a grouped
+     * count can be issued per chunk instead of once for the whole project — see `runCountByGroup`.
+     *
+     * An empty class list yields a single empty chunk rather than none: with no discovered class the queries
+     * fall back to the `subClassOf*` guard ([[resClassPatterns]]) and must still be run once.
+     */
+    def chunked(size: Int): Seq[ProjectClasses] =
+      if (iris.isEmpty) Seq(this)
+      else iris.grouped(math.max(1, size)).map(ProjectClasses(_, multiTyped)).toSeq
+
+    def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
       val classGuard =
         Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
-      val specific = Option.when(multiTyped)(mostSpecificClass(resource, resClass))
+      val specific = Option.when(multiTyped && dedupeRows)(mostSpecificClass(resource, resClass))
       (classGuard ++ specific).toSeq
     }
   }
+
+  /**
+   * How many of the project's classes one grouped-count query covers.
+   *
+   * Small enough that each query stays well inside the triplestore's `query-timeout`, large enough not to
+   * pay the fixed per-request overhead once per class: measured on a 46k-resource project, per-class queries
+   * bottomed out at ~25ms of overhead each, so grouping a few classes together costs nothing and cuts the
+   * number of round-trips.
+   */
+  private[repo] val ClassChunkSize = 3
+
+  /**
+   * Concurrent chunk queries per grouped count. Deliberately small: the service already fans out over
+   * (audience, state) with its own cap, and these multiply, so a large value here would put the product of
+   * the two on the triplestore for a single request.
+   */
+  private[repo] val MaxConcurrentChunkQueries = 2
 
   /** `VALUES ?v { <a> <b> … }` for a set of IRIs. */
   private[repo] def valuesOf(v: Variable, iris: Seq[String]): String =
@@ -507,6 +581,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * Without that, a resource asserted as (or inferred to be) several classes in one hierarchy would bind
    * `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in the
    * drill-down.
+   *
+   * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
    */
   private def resourceCore(
     projectIri: ProjectIri,
@@ -515,14 +591,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     creator: Variable,
     permissions: Variable,
     classes: ProjectClasses,
-  ) =
-    resource
-      .isA(resClass)
-      .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-      .andHas(KnoraBase.attachedToUser, creator)
+    dedupeRows: Boolean = true,
+    bindCreator: Boolean = true,
+  ) = {
+    val withProject = resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+    // The creator keeps its position in the chain rather than being appended, so enabling/disabling it
+    // cannot reorder the other patterns.
+    val withCreator = if (bindCreator) withProject.andHas(KnoraBase.attachedToUser, creator) else withProject
+    withCreator
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass)*)
+      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
+  }
 
   /**
    * `FILTER NOT EXISTS { ?resource a ?subClass . ?subClass rdfs:subClassOf+ ?resClass }` — keeps only the
@@ -552,6 +632,10 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `?resClass` is pinned to the most specific asserted class for the same reason as in [[resourceCore]]:
    * in class mode it is the grouping key, so a multi-typed resource would otherwise count its values once
    * per class in the hierarchy.
+   *
+   * `bindCreator = false` drops the `attachedToUser ?creator` pattern for callers that neither project nor
+   * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
+   * multiply intermediate rows.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -562,24 +646,31 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     creator: Variable,
     permissions: Variable,
     classes: ProjectClasses,
-  ) =
+    dedupeRows: Boolean = true,
+    bindCreator: Boolean = true,
+  ) = {
+    // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
+    // reorder the remaining patterns.
+    val valuePatterns =
+      if (bindCreator)
+        value
+          .has(KnoraBase.attachedToUser, creator)
+          .andHas(KnoraBase.hasPermissions, permissions)
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+      else value.has(KnoraBase.hasPermissions, permissions).andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
     resource
       .isA(resClass)
       .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass)*)
+      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
       .and(
         resource
           .has(prop, value)
           .and(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)),
       )
-      .and(
-        value
-          .has(KnoraBase.attachedToUser, creator)
-          .andHas(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
-      )
+      .and(valuePatterns)
       .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
+  }
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
   private def optionalFileClass(value: Variable, fileClass: Variable): GraphPattern =
@@ -673,7 +764,18 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
+          .and(
+            resourceCore(
+              projectIri,
+              resource,
+              resClass,
+              creator,
+              permissions,
+              classes,
+              dedupeRows = false,
+              bindCreator = false,
+            ),
+          )
           .filter(onlyRestricted(permissions)),
       )
   }
@@ -693,7 +795,20 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
         GraphPatterns
-          .and(valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes))
+          .and(
+            valueCore(
+              projectIri,
+              resource,
+              resClass,
+              prop,
+              value,
+              creator,
+              permissions,
+              classes,
+              dedupeRows = false,
+              bindCreator = false,
+            ),
+          )
           .filter(onlyRestricted(permissions)),
       )
   }

@@ -61,6 +61,54 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           !q.contains("LIMIT"),
         )
       },
+      // Both variants project only ?permissions under DISTINCT, so two patterns the shared cores emit are
+      // dead weight here and are left out:
+      //   - the most-specific-class filter, which can only remove rows and so cannot change which literals
+      //     survive (measured on 46k resources / 265k values: 121s -> 16s, byte-identical results);
+      //   - the `attachedToUser ?creator` join, which is neither projected nor constrained (-18%).
+      // Pinned as golden snapshots so neither silently comes back.
+      test("resource variant omits the most-specific-class filter for a multi-typed project") {
+        val q = ViewRestrictionsRepo.distinctResourcePermissionsQuery(projectIri, multiTyped).getQueryString
+        assertGolden(q, "distinctResourcePermissions__multiTyped") &&
+        assertTrue(!q.contains("rdfs:subClassOf+"), !q.contains("?creator"))
+      },
+      test("value variant omits the most-specific-class filter for a multi-typed project") {
+        val q = ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, multiTyped).getQueryString
+        assertGolden(q, "distinctValuePermissions__multiTyped") &&
+        assertTrue(!q.contains("rdfs:subClassOf+"), !q.contains("?creator"))
+      },
+    ),
+    suite("class chunking")(
+      test("chunks cover every class exactly once and carry the multiTyped flag") {
+        val many    = ViewRestrictionsRepo.ProjectClasses((1 to 7).map(i => s"http://example.org/C$i"), true)
+        val chunks  = many.chunked(3)
+        val covered = chunks.flatMap(_.iris)
+        assertTrue(
+          chunks.size == 3,
+          chunks.forall(_.iris.size <= 3),
+          // a partition: no class lost, none duplicated into two chunks (which would double-count it)
+          covered == many.iris,
+          covered.distinct == covered,
+          chunks.forall(_.multiTyped),
+        )
+      },
+      test("an empty class list still yields one chunk, so the subClassOf* fallback runs") {
+        val none = ViewRestrictionsRepo.ProjectClasses(Seq.empty, multiTyped = false)
+        assertTrue(none.chunked(3) == Seq(none))
+      },
+      test("each chunk's query binds only that chunk's classes") {
+        val three              = ViewRestrictionsRepo.ProjectClasses(Seq("http://example.org/A", "http://example.org/B"), false)
+        val Seq(first, second) = three.chunked(1)
+        val qA                 = ViewRestrictionsRepo.withValues(
+          ViewRestrictionsRepo.resourceCountQuery(projectIri, hidden, first),
+          first.valuesClause(resClassVar),
+        )
+        assertTrue(
+          qA.contains("http://example.org/A"),
+          !qA.contains("http://example.org/B"),
+          second.iris == Seq("http://example.org/B"),
+        )
+      },
     ),
     suite("aggregated counts")(
       test("resource counts group by class and COUNT DISTINCT, filtered to the hidden literals") {
