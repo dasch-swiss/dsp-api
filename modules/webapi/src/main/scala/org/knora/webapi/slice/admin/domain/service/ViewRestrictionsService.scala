@@ -180,11 +180,35 @@ final case class ViewRestrictionsService(
   private val countedStates: Seq[Visibility] = Seq(Visibility.Hidden, Visibility.RestrictedView)
 
   def summary(projectIri: ProjectIri, groupBy: GroupBy, itemType: ItemType): Task[ViewRestrictionsSummary] =
+    // DEBUG BRANCH — a failing summary must name the phase it died in. Without this the request just
+    // disappears from the log after its last successful stage marker.
+    summaryTraced(projectIri, groupBy, itemType).tapErrorCause(c =>
+      ZIO.logError(s"[vr-trace] summary FAILED interrupted=${c.isInterrupted}\n${c.squash.getMessage}").ignore,
+    )
+
+  private def summaryTraced(
+    projectIri: ProjectIri,
+    groupBy: GroupBy,
+    itemType: ItemType,
+  ): Task[ViewRestrictionsSummary] =
     for {
+      // DEBUG BRANCH — stage markers so the log says which *phase* of the summary was in flight when a
+      // request died, not just which SPARQL. Pair these with the `[sparql-trace …]` lines from
+      // TriplestoreServiceLive: the last stage that logged START without its DONE is the one that hung.
+      _ <- ZIO.logInfo(s"[vr-trace] summary START project=$projectIri groupBy=$groupBy itemType=$itemType")
       // Resolved once and reused by every query below: the project's asserted resource classes, which
       // replace two per-row `rdfs:subClassOf` traversals in the queries themselves.
-      classes  <- repo.projectClasses(projectIri)
-      literals <- repo.distinctPermissions(projectIri, itemType, groupBy, classes)
+      classes <-
+        repo
+          .projectClasses(projectIri)
+          .tap(c =>
+            ZIO.logInfo(s"[vr-trace] stage=projectClasses DONE classes=${c.iris.size} multiTyped=${c.multiTyped}"),
+          )
+      // The one query in the request that is never chunked, and scans the project's whole value
+      // population to return a handful of literals — the prime suspect for a timeout.
+      literals <- repo
+                    .distinctPermissions(projectIri, itemType, groupBy, classes)
+                    .tap(l => ZIO.logInfo(s"[vr-trace] stage=distinctPermissions DONE literals=${l.size}"))
       // One count per (audience, state). Both are tiny fixed sets — 3 x 2 — and each classification pass
       // runs over the small distinct-literal set, so this stays cheap regardless of project size.
       //
@@ -202,12 +226,16 @@ final case class ViewRestrictionsService(
             repo.countByGroup(projectIri, groupBy, itemType, hits, classes).map(rows => (audience, state, rows))
           }
           .withParallelism(ViewRestrictionsService.MaxConcurrentCountQueries)
+          .tap(rows => ZIO.logInfo(s"[vr-trace] stage=countByGroup DONE fanOut=${rows.size}"))
           // Every resource class the project has, with its population — independent of any restriction and
           // of the itemType filter. In class mode this is the row set itself (see below), so a class is
           // reported with its true size whether or not anything in it is restricted. A property has no
           // resource population of its own, so property mode has no equivalent and reports none.
           .zipPar(
-            if (groupBy == GroupBy.ResourceClass) repo.totalResourcesByClass(projectIri, classes)
+            if (groupBy == GroupBy.ResourceClass)
+              repo
+                .totalResourcesByClass(projectIri, classes)
+                .tap(r => ZIO.logInfo(s"[vr-trace] stage=totalResourcesByClass DONE rows=${r.size}"))
             else ZIO.succeed(Seq.empty),
           )
       (counted, classTotals) = countedAndTotals
@@ -244,6 +272,7 @@ final case class ViewRestrictionsService(
             )
             .sortBy(orderKey)
       totals = groups.map(_.counts).foldLeft(AudienceCounts.zero)(plus)
+      _     <- ZIO.logInfo(s"[vr-trace] summary DONE groups=${groups.size}")
       // Counts come from SPARQL aggregation over the whole project, so they are always exact.
     } yield ViewRestrictionsSummary(projectIri.value, groupBy, itemType, groups, totals)
 
