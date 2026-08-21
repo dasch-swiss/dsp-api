@@ -1,5 +1,31 @@
 # Changelog
 
+## [37.8.0](https://github.com/dasch-swiss/dsp-api/compare/v37.7.0...v37.8.0) (2026-08-21)
+
+
+### Maintenances
+
+* bump sipi to v6.4.1 ([#4261](https://github.com/dasch-swiss/dsp-api/issues/4261)) ([40249a3](https://github.com/dasch-swiss/dsp-api/commit/40249a390c7afb7a829be0f60b254d558498091b))
+* fix the release-publish scalac worker crash (8 MB stack + run publish over RBE) ([#4257](https://github.com/dasch-swiss/dsp-api/issues/4257)) ([4b62762](https://github.com/dasch-swiss/dsp-api/commit/4b62762528f67e6f51a3d92eaeaac718bad0d164))
+* **grafana:** refresh SIPI dashboard for two-lane admission control ([#4259](https://github.com/dasch-swiss/dsp-api/issues/4259)) ([36dd953](https://github.com/dasch-swiss/dsp-api/commit/36dd9530f567c29b3880111e6378debb0d4a4575))
+* **sipi:** remove dead Lua scripts, routes, and config (DEV-7013) ([#4263](https://github.com/dasch-swiss/dsp-api/issues/4263)) ([4e3acf3](https://github.com/dasch-swiss/dsp-api/commit/4e3acf396b476322d71f9863bf612dcf82b41efc))
+* trace every SPARQL request and view-restrictions stage ([#4264](https://github.com/dasch-swiss/dsp-api/issues/4264)) ([365bbb3](https://github.com/dasch-swiss/dsp-api/commit/365bbb3b2624f465ff3a7a35473cb92765318a96))
+
+
+### Enhancements
+
+* **ingest:** backfill sidecar sizes for existing assets (DEV-6957) ([#4258](https://github.com/dasch-swiss/dsp-api/issues/4258)) ([6129beb](https://github.com/dasch-swiss/dsp-api/commit/6129beb18b731ef3b1a9984dbe26f293846570f9))
+
+
+### Bug Fixes
+
+* **docs:** stop emitting docs.dasch.swiss/latest links (DEV-6964) ([#4254](https://github.com/dasch-swiss/dsp-api/issues/4254)) ([fbd308a](https://github.com/dasch-swiss/dsp-api/commit/fbd308a91165f4be2f0c3708838c07fe8f357e4b))
+
+
+### Performance Improvements
+
+* **admin:** trim the view-restrictions permission probes and bound the grouped counts (DEV-6778) ([#4260](https://github.com/dasch-swiss/dsp-api/issues/4260)) ([2fee568](https://github.com/dasch-swiss/dsp-api/commit/2fee5684ede972b9809c0ecd90715cb9e31a3f33))
+
 ## [37.7.0](https://github.com/dasch-swiss/dsp-api/compare/v37.6.0...v37.7.0) (2026-08-17)
 
 
