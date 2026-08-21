@@ -149,11 +149,6 @@ fileserver = {
 --
 routes = {
     {
-        method = 'DELETE',
-        route = '/delete_temp_file',
-        script = 'delete_temp_file.lua'
-    },
-    {
         method = 'GET',
         route = '/test_functions',
         script = 'test_functions.lua'
@@ -162,10 +157,5 @@ routes = {
         method = 'GET',
         route = '/test_file_info',
         script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
     }
 }

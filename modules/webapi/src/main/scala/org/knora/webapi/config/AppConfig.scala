@@ -120,7 +120,6 @@ final case class Sipi(
   externalPort: Int,
   fileServerPath: String,
   moveFileRoute: String,
-  deleteTempFileRoute: String,
   imageMimeTypes: List[String],
   documentMimeTypes: List[String],
   textMimeTypes: List[String],

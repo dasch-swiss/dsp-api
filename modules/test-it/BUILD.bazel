@@ -37,8 +37,8 @@ _DATA = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**
 #  2. SharedVolumes.Temp (this module's and test-ingest-integration's copy) is
 #     `ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))` - unlike Images.layer, it is
 #     NOT a freshly-created unique-per-run directory, just the raw tmpdir path. Since every one of
-#     these targets pins java.io.tmpdir to the same literal `/tmp` (see _JVM_FLAGS below), any two
-#     of them running concurrently bind-mount and write to the *same* host /tmp tree through
+#     these targets pins java.io.tmpdir to the same stable directory (see _JVM_FLAGS below), any two
+#     of them running concurrently bind-mount and write to the *same* host tmpdir tree through
 #     different dsp-ingest containers - a real race. This DOES apply to test-ingest-integration.
 #
 # "requires-network" + "no-sandbox" + "no-remote": these specs drive Docker testcontainers through
@@ -62,7 +62,15 @@ _TAGS = [
 # "error while creating mount source path ...: no such file or directory" because that brand-new
 # nested execroot path hasn't propagated through Docker Desktop's file-sharing layer yet. Pointing
 # java.io.tmpdir at a stable, long-lived directory sidesteps it.
-_JVM_FLAGS = ["-Djava.io.tmpdir=/tmp"]
+#
+# The stable directory must live under the real home directory, not /tmp: VM-based Docker
+# runtimes (colima, lima) share only $HOME with their VM, so a bind mount sourced from /tmp is a
+# phantom empty directory inside every container (Sipi then 404s every pre-seeded asset). The
+# path cannot be spelled with $HOME here - Bazel scrubs the test environment and sets HOME to the
+# ephemeral TEST_TMPDIR - so the flag passes a home-relative marker property that
+# DspZTestJUnitRunner resolves against `user.home`, creates, and repoints java.io.tmpdir to
+# before any spec runs. No developer setup needed.
+_JVM_FLAGS = ["-Ddsp.test.tmpdir.in-home=.cache/dsp-api-test-tmp"]
 
 # FusekiTestContainer (in testkit) launches this image; inject it through the
 # build graph rather than reading a compiled version-report. The Fuseki image is

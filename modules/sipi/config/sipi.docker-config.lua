@@ -180,10 +180,4 @@ fileserver = {
 --
 -- Custom routes. Each route is an URL path associated with a Lua script.
 --
-routes = {
-    {
-        method = 'DELETE',
-        route = '/delete_temp_file',
-        script = 'delete_temp_file.lua'
-    }
-}
+routes = {}
