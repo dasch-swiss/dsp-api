@@ -10,8 +10,10 @@ scala_junit_test(
     srcs = glob(["src/test/scala/**/*.scala"]),
     # See //modules/test-it:BUILD.bazel's _JVM_FLAGS comment: Bazel's execroot-scoped
     # java.io.tmpdir default breaks testcontainers' withClasspathResourceMapping mount on macOS
-    # Docker Desktop for containers started well into a long-running JVM.
-    jvm_flags = ["-Djava.io.tmpdir=/tmp"],
+    # Docker Desktop for containers started well into a long-running JVM, and a /tmp pin breaks
+    # bind mounts under VM-based Docker runtimes (colima) - hence a stable home directory,
+    # resolved and created by DspZTestJUnitRunner from this marker property.
+    jvm_flags = ["-Ddsp.test.tmpdir.in-home=.cache/dsp-api-test-tmp"],
     # FusekiTestContainer (testkit) launches this image; injected through the build
     # graph rather than read from compiled BuildInfo. Versioned by release-please,
     # loaded locally at :latest by `just docker-load-test-images`.

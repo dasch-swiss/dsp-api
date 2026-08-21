@@ -13,15 +13,16 @@ scala_junit_test(
     srcs = glob(["src/test/scala/**/*.scala"]),
     # See //modules/test-it:BUILD.bazel's _JVM_FLAGS comment: keep java.io.tmpdir off Bazel's
     # ephemeral execroot scratch dir for anything that bind-mounts a host-created temp dir into a
-    # container.
-    jvm_flags = ["-Djava.io.tmpdir=/tmp"],
+    # container, and under the real home directory so VM-based Docker runtimes (colima) see the
+    # mount source. DspZTestJUnitRunner resolves and creates it from this marker property.
+    jvm_flags = ["-Ddsp.test.tmpdir.in-home=.cache/dsp-api-test-tmp"],
     suffixes = [
         "Spec",
         "IT",
         "Test",
     ],
     # "exclusive" is required here too even though this spec doesn't use E2EZSpec's fixed-port API
-    # server - see //modules/test-it:BUILD.bazel's _TAGS comment, reason 2 (shared host /tmp via
+    # server - see //modules/test-it:BUILD.bazel's _TAGS comment, reason 2 (shared host tmpdir via
     # SharedVolumes.Temp, bind-mounted into a dsp-ingest container by this module's own
     # testcontainer copy).
     tags = [
