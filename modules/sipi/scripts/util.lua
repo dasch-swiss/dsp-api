@@ -78,18 +78,3 @@ function get_api_port()
 
   return port
 end
-
---------------------------------------------------------------------------
--- Calculate the SHA256 checksum of a file using the operating system tool
---------------------------------------------------------------------------
-function file_checksum(path)
-  local handle = io.popen("/usr/bin/sha256sum " .. path)
-  if handle ~= nil then
-    local checksum = handle:read("*a")
-    handle:close()
-    return string.match(checksum, "%w*")
-  else
-    send_error(500, "util.lua: file_checksum() failed for: " .. tostring(path))
-    return
-  end
-end

@@ -165,16 +165,6 @@ fileserver = {
 -- Custom routes. Each route is URL path associated with a Lua script.
 --
 routes = {
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_login',
-    --    script = 'Knora_login.lua'
-    --},
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_logout',
-    --    script = 'Knora_logout.lua'
-    --},
     {
         method = 'GET',
         route = '/test_functions',
@@ -184,16 +174,5 @@ routes = {
         method = 'GET',
         route = '/test_file_info',
         script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
-    },
-    {
-        method = 'DELETE',
-        route = '/delete_temp_file',
-        script = 'delete_temp_file.lua'
     }
-
 }
