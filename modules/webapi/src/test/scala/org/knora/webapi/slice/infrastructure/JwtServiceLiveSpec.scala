@@ -69,7 +69,7 @@ class JwtServiceLiveSpec extends ZIOSpecDefault {
   private val dspApiIssuer      = "https://dsp-api"
 
   private val dspIngestConfigLayer =
-    ZLayer.succeed(DspIngestConfig("https://dps-ingest", "https://dps-ingest", dspIngestAudience))
+    ZLayer.succeed(DspIngestConfig("https://dps-ingest", "https://dps-ingest", dspIngestAudience, "/opt/images"))
 
   private val jwtConfigLayer = ZLayer.succeed(
     JwtConfig("n76lPIwWKNeTodFfZPPPYFn7V24R14aE63A+XgS8MMA=", Duration.ofSeconds(10), Some(dspApiIssuer)),

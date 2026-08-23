@@ -91,6 +91,57 @@ scala_library(
     ],
 )
 
+# Classes only, no resources. Depending on :ingest from //modules/webapi would put ingest's
+# src/main/resources on webapi's classpath, where its application.conf and logback.xml collide with
+# webapi's same-named ones (webapi resolves config via ConfigFactory.load(), so the winner would be
+# classpath-order dependent). Consumers that only need ingest's *code* depend on this instead.
+scala_library(
+    name = "ingest_classes",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    format = False,  # :ingest already formats the same srcs
+    visibility = ["//visibility:public"],
+    deps = [
+        ":buildinfo",
+        "//modules/bagit",
+        "//modules/jwt",
+        "@maven//:com_github_tototoshi_scala_csv_3",
+        "@maven//:com_softwaremill_sttp_client4_opentelemetry_tracing_zio_backend_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_json_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_json_zio_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_opentelemetry_tracing_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_refined_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
+        "@maven//:com_zaxxer_HikariCP",
+        "@maven//:commons_io_commons_io",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_config_3",
+        "@maven//:dev_zio_zio_config_magnolia_3",
+        "@maven//:dev_zio_zio_config_typesafe_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_json_interop_refined_3",
+        "@maven//:dev_zio_zio_logging_3",
+        "@maven//:dev_zio_zio_logging_slf4j2_bridge_3",
+        "@maven//:dev_zio_zio_metrics_connectors_3",
+        "@maven//:dev_zio_zio_metrics_connectors_prometheus_3",
+        "@maven//:dev_zio_zio_nio_3",
+        "@maven//:dev_zio_zio_opentelemetry_3",
+        "@maven//:dev_zio_zio_prelude_3",
+        "@maven//:dev_zio_zio_schema_3",
+        "@maven//:dev_zio_zio_schema_derivation_3",
+        "@maven//:dev_zio_zio_streams_3",
+        "@maven//:eu_timepit_refined_3",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_logging_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_sdk",
+        "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
+        "@maven//:org_flywaydb_flyway_core",
+        "@maven//:org_xerial_sqlite_jdbc",
+    ],
+)
+
 scala_binary(
     name = "app",
     main_class = "swiss.dasch.Main",

@@ -42,10 +42,17 @@ object LegalInfo {
   )
 }
 
-// A downloadable file belonging to a record: its MIME type and a direct download link.
+// A downloadable file belonging to a record: a direct download link plus what the sidecar knows about the
+// file behind it. `url` always points at the *original*, so every sidecar-derived field describes the
+// original too. The sidecar-derived fields are absent when the sidecar (or the field within it) is missing.
 final case class FileLink(
   mimeType: String,
   url: String,
+  checksum: Option[String],
+  checksumAlgorithm: Option[String],
+  fileName: Option[String],
+  fileSize: Option[Long],
+  dateCreated: Option[String],
 )
 
 object FileLink {

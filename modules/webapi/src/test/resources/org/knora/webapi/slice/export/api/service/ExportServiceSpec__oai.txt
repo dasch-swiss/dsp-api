@@ -395,8 +395,13 @@
     "typeOfData" : "Image",
     "keywords" : [],
     "file" : {
-      "mimeType" : "image/jp2",
-      "url" : "https://ingest.example.org/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original"
+      "mimeType" : "image/jpeg",
+      "url" : "https://ingest.example.org/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original",
+      "checksum" : "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "checksumAlgorithm" : "SHA-256",
+      "fileName" : "the-original.jpg",
+      "fileSize" : 123456,
+      "dateCreated" : "2026-03-19T10:00:00Z"
     }
   }
 ]
