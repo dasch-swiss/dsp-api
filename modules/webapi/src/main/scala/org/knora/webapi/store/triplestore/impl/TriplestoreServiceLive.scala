@@ -496,32 +496,8 @@ case class TriplestoreServiceLive(
   private def trackQueryDuration[T](query: SparqlQuery, reqTask: Task[T]): Task[T] = {
     val trackingThreshold = fusekiConfig.queryLoggingThreshold
     val startTime         = java.lang.System.nanoTime()
-    // DEBUG BRANCH — temporary tracing to locate a request that dies on the Fuseki query-timeout.
-    //
-    // The existing logging below cannot answer "which query failed": it fires only on the success path
-    // (a query the store cancels logs nothing at all), only above `queryLoggingThreshold`, and it prints
-    // the SPARQL without any identifier tying it back to a call site. So a timing-out request leaves a
-    // gap in the log exactly where the culprit is.
-    //
-    // These three log lines close that gap. Each request gets a correlation id so the before/after pair
-    // can be matched in an interleaved log — the summary fans out over several queries concurrently, so
-    // without an id the lines cannot be paired.
-    // A monotonic counter, not `nanoTime`: two fibers starting in the same nanosecond tick collided in
-    // practice (observed on the summary's fan-out), and a duplicated id makes the START/DONE pair
-    // ambiguous — which is the one thing this tracing exists to provide.
-    val queryId   = f"q${TriplestoreServiceLive.traceCounter.incrementAndGet()}%05d"
-    val queryKind = query.getClass.getSimpleName
-    // The first line of the query's WHERE-bearing body is usually enough to recognise the call site
-    // without dumping several KB of SPARQL per request into the log.
-    val shape = query.sparql.linesIterator
-      .map(_.trim)
-      .filter(l => l.nonEmpty && !l.startsWith("PREFIX") && !l.startsWith("#"))
-      .take(2)
-      .mkString(" ")
-      .take(160)
     for {
-      _      <- ZIO.logInfo(s"[sparql-trace $queryId] START kind=$queryKind timeout=${query.timeout} shape=$shape")
-      result <- (reqTask @@ requestTimer
+      result <- reqTask @@ requestTimer
                   .tagged("type", query.getClass.getSimpleName)
                   .tagged("isGravsearch", s"${query.timeout == SparqlTimeout.Gravsearch}")
                   .tagged("isMaintenance", s"${query.timeout == SparqlTimeout.Maintenance}")
@@ -530,29 +506,15 @@ case class TriplestoreServiceLive(
                   // probe (SparqlTimeout.SearchProbe) is deliberately isSearch=false so its cheap samples do not
                   // pollute the search-tier duration the regression watch depends on (DEV-6864).
                   .tagged("isSearch", s"${query.timeout == SparqlTimeout.Search}")
-                  .trackDuration)
-                  // The failure path is the whole point: a query cancelled by the store's query-timeout, or
-                  // one whose HTTP read times out, must say so *and* say which query it was. `tapErrorCause`
-                  // rather than `tapError` so a defect or an interrupt (the fan-out cancelling its siblings
-                  // once one fails) is reported too, and the cause is re-raised untouched.
-                  .tapErrorCause { cause =>
-                    val failed = Duration.fromNanos(java.lang.System.nanoTime() - startTime)
-                    ZIO
-                      .logError(
-                        s"[sparql-trace $queryId] FAILED after $failed kind=$queryKind timeout=${query.timeout}" +
-                          s" interrupted=${cause.isInterrupted}\n${cause.squash.getMessage}\n${query.sparql}",
-                      )
-                      .ignore
-                  }
+                  .trackDuration
       _ <- {
              val endTime  = java.lang.System.nanoTime()
              val duration = Duration.fromNanos(endTime - startTime)
-             ZIO.logInfo(s"[sparql-trace $queryId] DONE  after $duration kind=$queryKind") *>
-               ZIO.when(!triplestoreConfig.isTestEnv && duration >= trackingThreshold) {
-                 ZIO.logDebug(
-                   s"Fuseki request took $duration, which is longer than $trackingThreshold, timeout=${query.timeout}\n ${query.sparql}",
-                 )
-               }
+             ZIO.when(!triplestoreConfig.isTestEnv && duration >= trackingThreshold) {
+               ZIO.logDebug(
+                 s"Fuseki request took $duration, which is longer than $trackingThreshold, timeout=${query.timeout}\n ${query.sparql}",
+               )
+             }
            }.ignore
     } yield result
   }
@@ -702,9 +664,6 @@ case class TriplestoreServiceLive(
 }
 
 object TriplestoreServiceLive {
-
-  /** DEBUG BRANCH — source of the `[sparql-trace …]` correlation ids. */
-  private val traceCounter = new java.util.concurrent.atomic.AtomicLong(0L)
 
   val layer: URLayer[Triplestore & Tracing, TriplestoreService] =
     TracingHttpClient.layer(FiniteDuration(1, TimeUnit.MINUTES)) >>> ZLayer.derive[TriplestoreServiceLive]
