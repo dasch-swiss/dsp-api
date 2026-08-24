@@ -63,8 +63,7 @@ scala_library(
     deps = [
         ":buildinfo",
         "//modules/bagit",
-        # Classes only (not //modules/ingest) — see the :ingest_classes comment: ingest's
-        # application.conf/logback.xml would collide with webapi's on a shared classpath.
+        # not //modules/ingest — see the :ingest_classes comment
         "//modules/ingest:ingest_classes",
         "//modules/jwt",
         "//modules/shacl-validator",

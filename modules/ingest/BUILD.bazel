@@ -91,10 +91,9 @@ scala_library(
     ],
 )
 
-# Classes only, no resources. Depending on :ingest from //modules/webapi would put ingest's
-# src/main/resources on webapi's classpath, where its application.conf and logback.xml collide with
-# webapi's same-named ones (webapi resolves config via ConfigFactory.load(), so the winner would be
-# classpath-order dependent). Consumers that only need ingest's *code* depend on this instead.
+# Classes only. :ingest's resources would put a second application.conf and logback.xml on a
+# consumer's classpath, and webapi resolves config via ConfigFactory.load() — the winner would be
+# classpath-order dependent.
 scala_library(
     name = "ingest_classes",
     srcs = glob(["src/main/scala/**/*.scala"]),

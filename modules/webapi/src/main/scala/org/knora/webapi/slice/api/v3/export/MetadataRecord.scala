@@ -42,11 +42,10 @@ object LegalInfo {
   )
 }
 
-// A downloadable file belonging to a record: a direct download link plus what the sidecar knows about the
-// file behind it. `url` always points at the *original*, so every sidecar-derived field describes the
-// original too. The sidecar-derived fields are absent when the sidecar (or the field within it) is missing.
+// `url` serves the original, so every other field describes the original too. All but `url` and
+// `dateCreated` come from the sidecar and are absent without it.
 final case class FileLink(
-  mimeType: String,
+  mimeType: Option[String],
   url: String,
   checksum: Option[String],
   checksumAlgorithm: Option[String],

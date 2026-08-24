@@ -45,9 +45,9 @@ object ExportApiModule { self =>
     ExportService
     // format: on
 
-  // dsp-ingest's sidecar reader, built from *webapi's* own config on purpose: ingest's `Configuration.layer`
-  // would call `ConfigFactory.defaultApplication()` and, on a shared classpath, read webapi's application.conf.
-  // `tempDir` is unused for reads, so the asset dir stands in for it.
+  // Built from webapi's own config on purpose: ingest's Configuration.layer calls
+  // ConfigFactory.defaultApplication(), which on a shared classpath reads webapi's application.conf.
+  // tempDir is unused for reads.
   private val assetInfoServiceLayer: URLayer[AppConfig, AssetInfoService] =
     ZLayer
       .service[AppConfig]

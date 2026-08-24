@@ -95,7 +95,7 @@ final case class ExportService(
   private val CopyrightHolderHeader = "Copyright Holder"
   private val AuthorshipHeader      = "Authorship"
 
-  // The sidecar stores only SHA-256 checksums (`Sha256Hash`), so the algorithm is a constant, not a field.
+  // the sidecar only ever stores SHA-256, so this is a constant rather than a field
   private val ChecksumAlgorithm = "SHA-256"
 
   def exportResourcesOai(
@@ -145,30 +145,26 @@ final case class ExportService(
   // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
   // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 => fc }) { fc =>
-      val internalFilename = fc.fileValue.internalFilename
-      val assetId          = internalFilename.takeWhile(_ != '.')
+    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
+      fc.fileValue.internalFilename.takeWhile(_ != '.')
+    }) { assetId =>
       findAssetInfo(project, assetId).map { info =>
         FileLink(
-          // Under "always original" this is the *original's* mimetype, not the derivative's. The sidecar may
-          // not carry one, in which case we keep the previous (derivative) value rather than emitting nothing.
-          mimeType =
-            info.flatMap(_.metadata.originalMimeType.map(_.value.value)).getOrElse(fc.fileValue.internalMimeType),
+          // never falls back to the derivative's internalMimeType: the url serves the original
+          mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
           url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
           checksum = info.map(_.original.checksum.value),
           checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
           fileName = info.map(_.originalFilename.value),
-          // Absent both when the sidecar is missing and when it predates the size migration.
           fileSize = info.flatMap(_.original.size.map(_.value)),
-          // The resource's creation date: there is no per-asset timestamp in the sidecar or in ingest's DB.
+          // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
           dateCreated = Some(r.creationDate.toString),
         )
       }
     }
 
-  // Reads the on-disk sidecar from the asset dir shared with dsp-ingest. `None` when there is no sidecar —
-  // which is every asset in a deployment without the shared mount, so this must never fail the export. An
-  // unreadable or malformed sidecar is logged and treated the same way, for the same reason.
+  // Never fails: without the shared asset dir every asset is missing a sidecar, and failing there would
+  // make the endpoint unusable. A malformed sidecar is logged and treated the same way.
   private def findAssetInfo(project: KnoraProject, assetId: String): UIO[Option[AssetInfo]] =
     ZIO
       .fromEither(for {

@@ -18,6 +18,7 @@ import zio.*
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
+import zio.json.*
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
@@ -58,6 +59,8 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
+import org.knora.webapi.slice.api.v3.`export`.FileLink
+import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -163,12 +166,40 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       _        <- ZIO.attemptBlocking(JFiles.deleteIfExists(java.nio.file.Path.of(infoFile.toString))).unit
     } yield ()
 
-  // The sole `"file"` object in the OAI JSON, as raw text. Asserting on the substring keeps these tests
-  // independent of the record ordering and of the golden, which only pins the fully-populated case.
-  private def fileObjectOf(json: String): String = {
-    val start = json.indexOf(""""file" :""")
-    if (start < 0) "" else json.substring(start, json.indexOf("}", start) + 1)
-  }
+  private def fileLinkOf(json: String): Either[String, Option[FileLink]] =
+    json
+      .fromJson[List[MetadataRecord]]
+      .map(_.flatMap(_.file) match {
+        case Nil           => None
+        case single :: Nil => Some(single)
+        case many          => throw new AssertionError(s"expected at most one file link, got ${many.size}")
+      })
+
+  private val expectedUrl =
+    s"$publicIngestUrl/projects/$fixtureShortcode/assets/$fixtureAssetId/original"
+
+  // the resource's creationDate, not a sidecar field
+  private val expectedDateCreated = Some("2026-03-19T10:00:00Z")
+
+  private val fullFileLink = FileLink(
+    mimeType = Some("image/jpeg"),
+    url = expectedUrl,
+    checksum = Some("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+    checksumAlgorithm = Some("SHA-256"),
+    fileName = Some("the-original.jpg"),
+    fileSize = Some(123456L),
+    dateCreated = expectedDateCreated,
+  )
+
+  private val noSidecarFileLink = FileLink(
+    mimeType = None,
+    url = expectedUrl,
+    checksum = None,
+    checksumAlgorithm = None,
+    fileName = None,
+    fileSize = None,
+    dateCreated = expectedDateCreated,
+  )
 
   // A complete, post-size-migration sidecar: every exported field present.
   private val fullSidecarFields =
@@ -343,14 +374,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-          file           = fileObjectOf(json)
-        } yield assertTrue(
-          // the triplestore's internalMimeType for this asset is image/jp2 — the derivative's
-          file.contains(""""mimeType" : "image/jpeg""""),
-          file.contains(""""checksumAlgorithm" : "SHA-256""""),
-          file.contains(""""fileName" : "the-original.jpg""""),
-          file.contains(""""fileSize" : 123456"""),
-        )
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink)))
       },
       test("exportResourcesOai omits fileSize when the sidecar predates the size migration") {
         for {
@@ -364,45 +388,30 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-          file           = fileObjectOf(json)
-        } yield assertTrue(
-          !file.contains("fileSize"),
-          // the file is still there, so everything else the sidecar carries is still reported
-          file.contains(""""checksum" : "0123456789abcdef"""),
-          file.contains(""""mimeType" : "image/jpeg""""),
-        )
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink.copy(fileSize = None))))
       },
-      test("exportResourcesOai falls back to the derivative mimetype when the sidecar has no originalMimeType") {
+      test("exportResourcesOai omits mimeType when the sidecar has no originalMimeType") {
         for {
           _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _ <- writeSidecar(
                  fixtureAssetId,
                  """,
-                   |  "sizeOriginal": 123456""".stripMargin,
+                   |  "sizeOriginal": 123456,
+                   |  "internalMimeType": "image/jp2"""".stripMargin,
                )
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-          file           = fileObjectOf(json)
-        } yield assertTrue(
-          file.contains(""""mimeType" : "image/jp2""""),
-          file.contains(""""fileSize" : 123456"""),
-        )
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink.copy(mimeType = None))))
       },
       test("exportResourcesOai still exports when the sidecar is present but malformed") {
         for {
-          _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
-          // parses as JSON but is missing required fields, so decoding it fails
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
           _             <- writeSidecarRaw(fixtureAssetId, """{"internalFilename": "x.jp2"}""")
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-          file           = fileObjectOf(json)
-        } yield assertTrue(
-          // a broken sidecar must degrade to the no-sidecar shape, not fail the whole export
-          file.contains(s"$publicIngestUrl/projects/$fixtureShortcode/assets/$fixtureAssetId/original"),
-          !file.contains("checksum"),
-        )
+        } yield assertTrue(fileLinkOf(json) == Right(Some(noSidecarFileLink)))
       },
       test("exportResourcesOai emits the link and creation date but no sidecar fields when the sidecar is missing") {
         for {
@@ -411,16 +420,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
-          file           = fileObjectOf(json)
-        } yield assertTrue(
-          // no sidecar must never fail the export: without the shared asset dir this is every asset
-          file.contains(s"$publicIngestUrl/projects/$fixtureShortcode/assets/$fixtureAssetId/original"),
-          file.contains(""""mimeType" : "image/jp2""""),
-          file.contains(""""dateCreated""""),
-          !file.contains("checksum"),
-          !file.contains("fileName"),
-          !file.contains("fileSize"),
-        )
+        } yield assertTrue(fileLinkOf(json) == Right(Some(noSidecarFileLink)))
       },
       test("resources are exported in alphabetical label order") {
         for {

@@ -144,8 +144,7 @@ services:
       - /tmp:/tmp
       # Needed for local development when resetting the triplestore
       - ./test_data:/opt/test_data
-      # dsp-ingest's asset dir, read in-process for sidecar (.info) metadata. Same host dir and container
-      # path as `ingest`, read-only because ingest owns the writes. Must match KNORA_WEBAPI_DSP_INGEST_ASSET_DIR.
+      # read-only: ingest owns the writes
       - ./modules/sipi/images:/opt/images:ro
     networks:
       - knora-net
@@ -166,7 +165,7 @@ services:
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
-      # Must always equal `ingest`'s STORAGE_ASSET_DIR.
+      # must always equal ingest's STORAGE_ASSET_DIR
       - KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images
       - DSP_API_LOG_LEVEL=INFO
       - ALLOW_ERASE_PROJECTS=true
