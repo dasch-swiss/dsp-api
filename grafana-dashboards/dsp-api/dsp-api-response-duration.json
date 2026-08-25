@@ -385,11 +385,12 @@
                       "datasource": { "name": "${datasource}" },
                       "group": "prometheus",
                       "kind": "DataQuery",
-                      "version": "",
+                      "version": "v0",
                       "spec": {
                         "expr": "sum by (path, method) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range]))",
                         "instant": true,
                         "range": false,
+                        "format": "table",
                         "queryType": "instant"
                       }
                     }
@@ -404,11 +405,12 @@
                       "datasource": { "name": "${datasource}" },
                       "group": "prometheus",
                       "kind": "DataQuery",
-                      "version": "",
+                      "version": "v0",
                       "spec": {
                         "expr": "sum by (path, method) (rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\"}[$__range]))",
                         "instant": true,
                         "range": false,
+                        "format": "table",
                         "queryType": "instant"
                       }
                     }
