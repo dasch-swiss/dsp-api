@@ -156,6 +156,7 @@ object DspIngestClientLiveSpecLayers {
           baseUrl = s"http://localhost:$port",
           externalBaseUrl = s"http://localhost:$port",
           audience = "audience",
+          assetDir = "/opt/images",
         ),
       ),
   )

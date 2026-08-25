@@ -7,13 +7,22 @@ package org.knora.webapi.slice.api.v3.export_
 
 import _root_.org.knora.webapi.responders.IriService
 import org.junit.runner.RunWith
+import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.domain.AssetId as IngestAssetId
+import swiss.dasch.domain.AssetInfoService
+import swiss.dasch.domain.AssetInfoServiceLive
+import swiss.dasch.domain.AssetRef
+import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
+import swiss.dasch.domain.StorageServiceLive
 import zio.*
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
+import zio.json.*
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files as JFiles
 import java.time.Instant
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -50,6 +59,8 @@ import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
+import org.knora.webapi.slice.api.v3.`export`.FileLink
+import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -98,6 +109,105 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   // distinct from base-url so the OAI test proves the file link uses external-base-url
   val publicIngestUrl = "https://ingest.example.org"
+
+  // The only asset in the 1612 fixture that has a file value, and so the only OAI record with a `file`.
+  val fixtureAssetId   = "B1D0OkEgfFp-Cew2Seur7Wi"
+  val fixtureShortcode = "1612"
+
+  // Real AssetInfoService over a throwaway asset dir, laid out the way dsp-ingest lays out its own: the
+  // service resolves the .info path itself, so the segment scheme is never hard-coded here. Created
+  // eagerly because AppConfig — which carries the dir — is built before any test effect runs.
+  private val assetDir: java.nio.file.Path = JFiles.createTempDirectory("ExportServiceSpec-assets")
+
+  private val assetInfoServiceLayer: ULayer[AssetInfoService] =
+    ZLayer.succeed(StorageConfig(assetDir.toString, assetDir.toString)) >>>
+      StorageServiceLive.layer >>> ZLayer.derive[AssetInfoServiceLive]
+
+  private def assetRefOf(assetId: String): IO[IllegalArgumentException, AssetRef] =
+    ZIO
+      .fromEither(for {
+        id        <- IngestAssetId.from(assetId)
+        shortcode <- IngestProjectShortcode.from(fixtureShortcode)
+      } yield AssetRef(id, shortcode))
+      .mapError(new IllegalArgumentException(_))
+
+  /** Writes `content` verbatim as the asset's sidecar, at the path dsp-ingest would read it from. */
+  private def writeSidecarRaw(assetId: String, content: String): ZIO[AssetInfoService, Throwable, Unit] =
+    for {
+      ref      <- assetRefOf(assetId)
+      infoFile <- ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(ref))
+      path      = java.nio.file.Path.of(infoFile.toString)
+      _        <- ZIO.attemptBlocking {
+             JFiles.createDirectories(path.getParent)
+             JFiles.writeString(path, content)
+           }.unit
+    } yield ()
+
+  /**
+   * Writes a well-formed sidecar for `assetId`. `extraFields` is raw JSON appended to the object, so a test
+   * can add or omit optional fields (`sizeOriginal`, `originalMimeType`) exactly as a real sidecar would.
+   */
+  private def writeSidecar(assetId: String, extraFields: String): ZIO[AssetInfoService, Throwable, Unit] =
+    writeSidecarRaw(
+      assetId,
+      s"""{
+         |  "internalFilename": "$assetId.jp2",
+         |  "originalInternalFilename": "$assetId.jpg.orig",
+         |  "originalFilename": "the-original.jpg",
+         |  "checksumOriginal": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+         |  "checksumDerivative": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"$extraFields
+         |}""".stripMargin,
+    )
+
+  private def deleteSidecar(assetId: String): ZIO[AssetInfoService, Throwable, Unit] =
+    for {
+      ref      <- assetRefOf(assetId)
+      infoFile <- ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(ref))
+      _        <- ZIO.attemptBlocking(JFiles.deleteIfExists(java.nio.file.Path.of(infoFile.toString))).unit
+    } yield ()
+
+  private def fileLinkOf(json: String): Either[String, Option[FileLink]] =
+    json
+      .fromJson[List[MetadataRecord]]
+      .map(_.flatMap(_.file) match {
+        case Nil           => None
+        case single :: Nil => Some(single)
+        case many          => throw new AssertionError(s"expected at most one file link, got ${many.size}")
+      })
+
+  private val expectedUrl =
+    s"$publicIngestUrl/projects/$fixtureShortcode/assets/$fixtureAssetId/original"
+
+  // the resource's creationDate, not a sidecar field
+  private val expectedDateCreated = Some("2026-03-19T10:00:00Z")
+
+  private val fullFileLink = FileLink(
+    mimeType = Some("image/jpeg"),
+    url = expectedUrl,
+    checksum = Some("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
+    checksumAlgorithm = Some("SHA-256"),
+    fileName = Some("the-original.jpg"),
+    fileSize = Some(123456L),
+    dateCreated = expectedDateCreated,
+  )
+
+  private val noSidecarFileLink = FileLink(
+    mimeType = None,
+    url = expectedUrl,
+    checksum = None,
+    checksumAlgorithm = None,
+    fileName = None,
+    fileSize = None,
+    dateCreated = expectedDateCreated,
+  )
+
+  // A complete, post-size-migration sidecar: every exported field present.
+  private val fullSidecarFields =
+    """,
+      |  "sizeOriginal": 123456,
+      |  "sizeDerivative": 654321,
+      |  "internalMimeType": "image/jp2",
+      |  "originalMimeType": "image/jpeg"""".stripMargin
 
   val dataSets: Set[RdfDataObject] = builtInNamedGraphs ++ List(
     RdfDataObject(
@@ -250,11 +360,67 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       test("exportResourcesOai") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- writeSidecar(fixtureAssetId, fullSidecarFields)
           project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
         } yield assertGolden(json, "oai") &&
           assertTrue(json.contains(s"$publicIngestUrl/projects/"))
+      },
+      test("exportResourcesOai reports the original's mimetype, not the derivative's") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- writeSidecar(fixtureAssetId, fullSidecarFields)
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink)))
+      },
+      test("exportResourcesOai omits fileSize when the sidecar predates the size migration") {
+        for {
+          _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _ <- writeSidecar(
+                 fixtureAssetId,
+                 """,
+                   |  "internalMimeType": "image/jp2",
+                   |  "originalMimeType": "image/jpeg"""".stripMargin,
+               )
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink.copy(fileSize = None))))
+      },
+      test("exportResourcesOai omits mimeType when the sidecar has no originalMimeType") {
+        for {
+          _ <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _ <- writeSidecar(
+                 fixtureAssetId,
+                 """,
+                   |  "sizeOriginal": 123456,
+                   |  "internalMimeType": "image/jp2"""".stripMargin,
+               )
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertTrue(fileLinkOf(json) == Right(Some(fullFileLink.copy(mimeType = None))))
+      },
+      test("exportResourcesOai still exports when the sidecar is present but malformed") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- writeSidecarRaw(fixtureAssetId, """{"internalFilename": "x.jp2"}""")
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertTrue(fileLinkOf(json) == Right(Some(noSidecarFileLink)))
+      },
+      test("exportResourcesOai emits the link and creation date but no sidecar fields when the sidecar is missing") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- deleteSidecar(fixtureAssetId)
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          json          <- exportService.exportResourcesOai(project, user)
+        } yield assertTrue(fileLinkOf(json) == Right(Some(noSidecarFileLink)))
       },
       test("resources are exported in alphabetical label order") {
         for {
@@ -340,6 +506,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           assertTrue(resource2Row.split(",").last == "Resource1")
       },
     ).provide(
+      assetInfoServiceLayer,
       ConstructResponseUtilV2.layer,
       AppConfig.layer.map(env =>
         env.update[AppConfig](c => c.copy(dspIngest = c.dspIngest.copy(externalBaseUrl = publicIngestUrl))),
@@ -376,7 +543,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraUserRepoLive.layer,
       PasswordService.layer,
       KnoraUserService.layer,
-    )
+    ) @@ TestAspect.sequential // the tests share one triplestore and one asset dir
 
   private val streamingBehaviorSuite = {
     val nIris    = 600
@@ -399,6 +566,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       csvService: CsvService,
       sf: StringFormatter,
       appConfig: AppConfig,
+      assetInfoService: AssetInfoService,
     ): ExportService =
       ExportService(
         iriConverter,
@@ -409,6 +577,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
         csvService,
         sf,
         appConfig,
+        assetInfoService,
       )
 
     def mkReadStub(
@@ -489,13 +658,23 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           configured      = appConfig.copy(`export` = appConfig.`export`.copy(batchSize = 100))
           batchSizes     <- Ref.make(Chunk.empty[Int])
           readStub       <- mkReadStub { (_, iris) =>
                         batchSizes.update(_ :+ iris.size).as(ReadResourcesSequenceV2(Seq.empty))
                       }
           exportService =
-            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, configured)
+            mkExportService(
+              iriConverter,
+              ontologyRepo,
+              readStub,
+              listsResponder,
+              csvService,
+              sf,
+              configured,
+              assetInfoSvc,
+            )
           _ <- exportService
                  .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
                  .flatMap(_.runDrain)
@@ -513,12 +692,22 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           readStub       <- mkReadStub { (n, _) =>
                         if n == 0 then ZIO.succeed(ReadResourcesSequenceV2(Seq.empty))
                         else ZIO.fail(failure)
                       }
           exportService =
-            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+            mkExportService(
+              iriConverter,
+              ontologyRepo,
+              readStub,
+              listsResponder,
+              csvService,
+              sf,
+              appConfig,
+              assetInfoSvc,
+            )
           result <- exportService
                       .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
                       .flatMap(_.runDrain)
@@ -535,9 +724,19 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           readStub       <- mkReadStub((_, _) => ZIO.never)
           exportService   =
-            mkExportService(iriConverter, ontologyRepo, readStub, listsResponder, csvService, sf, appConfig)
+            mkExportService(
+              iriConverter,
+              ontologyRepo,
+              readStub,
+              listsResponder,
+              csvService,
+              sf,
+              appConfig,
+              assetInfoSvc,
+            )
           resultOpt <-
             exportService
               .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -566,6 +765,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sf             <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           readStub       <- mkReadStub((_, _) => ZIO.never)
           exportService   =
             ExportService(
@@ -577,6 +777,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sf,
               appConfig,
+              assetInfoSvc,
             )
           exit <- exportService
                     .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -627,6 +828,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sfSvc          <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           readStub       <- mkReadStub((_, _) =>
                         ZIO.succeed(
                           ReadResourcesSequenceV2(
@@ -647,6 +849,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sfSvc,
               appConfig,
+              assetInfoSvc,
             )
           bytes <- exportService
                      .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -684,6 +887,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csvService     <- ZIO.service[CsvService]
           sfSvc          <- ZIO.service[StringFormatter]
           appConfig      <- ZIO.service[AppConfig]
+          assetInfoSvc   <- ZIO.service[AssetInfoService]
           resource        = ReadResourceV2(
                        resourceIri = iri,
                        label = "NoLegal",
@@ -710,6 +914,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sfSvc,
               appConfig,
+              assetInfoSvc,
             )
           bytes <- exportService
                      .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -720,6 +925,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           assertTrue(lines(1) == s"${iri.value},NoLegal,,,")
       },
     ).provide(
+      assetInfoServiceLayer,
       AppConfig.layer,
       CacheManager.layer,
       CsvService.layer,

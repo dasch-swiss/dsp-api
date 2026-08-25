@@ -144,6 +144,8 @@ services:
       - /tmp:/tmp
       # Needed for local development when resetting the triplestore
       - ./test_data:/opt/test_data
+      # read-only: ingest owns the writes
+      - ./modules/sipi/images:/opt/images:ro
     networks:
       - knora-net
     environment:
@@ -163,6 +165,8 @@ services:
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
+      # must always equal ingest's STORAGE_ASSET_DIR
+      - KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images
       - DSP_API_LOG_LEVEL=INFO
       - ALLOW_ERASE_PROJECTS=true
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally

@@ -63,6 +63,8 @@ scala_library(
     deps = [
         ":buildinfo",
         "//modules/bagit",
+        # not //modules/ingest — see the :ingest_classes comment
+        "//modules/ingest:ingest_classes",
         "//modules/jwt",
         "//modules/shacl-validator",
         "@maven//:com_apicatalog_titanium_json_ld",

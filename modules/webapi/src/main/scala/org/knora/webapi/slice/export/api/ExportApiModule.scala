@@ -5,6 +5,10 @@
 
 package org.knora.webapi.slice.`export`.api
 
+import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.domain.AssetInfoService
+import swiss.dasch.domain.AssetInfoServiceLive
+import swiss.dasch.domain.StorageServiceLive
 import zio.URLayer
 import zio.ZLayer
 
@@ -41,6 +45,15 @@ object ExportApiModule { self =>
     ExportService
     // format: on
 
+  // Built from webapi's own config on purpose: ingest's Configuration.layer calls
+  // ConfigFactory.defaultApplication(), which on a shared classpath reads webapi's application.conf.
+  // tempDir is unused for reads.
+  private val assetInfoServiceLayer: URLayer[AppConfig, AssetInfoService] =
+    ZLayer
+      .service[AppConfig]
+      .project(c => StorageConfig(assetDir = c.dspIngest.assetDir, tempDir = c.dspIngest.assetDir)) >>>
+      StorageServiceLive.layer >>> ZLayer.derive[AssetInfoServiceLive]
+
   val layer: URLayer[self.Dependencies, self.Provided] =
-    FindResourcesService.layer >+> ExportService.layer
+    (FindResourcesService.layer ++ assetInfoServiceLayer) >+> ExportService.layer
 }

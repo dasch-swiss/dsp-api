@@ -31,8 +31,11 @@ buildinfo(
 # interface jar exposes just getter signatures — the stamped string values are
 # method bodies, stripped from the ijar — so :ingest cache-hits across pushes.
 # Were :buildinfo_gen inlined into :ingest's srcs, the whole module would recompile.
+# Name is module-qualified, not plain `buildinfo`: webapi's runtime classpath pulls in
+# both this and //modules/webapi:buildinfo, and the image's lib layer flattens jars by
+# basename (pkg_files strip_prefix.files_only) — two `buildinfo.jar`s would collide.
 scala_library(
-    name = "buildinfo",
+    name = "ingest_buildinfo",
     srcs = [":buildinfo_gen"],
     visibility = ["//visibility:public"],
 )
@@ -50,7 +53,57 @@ scala_library(
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        ":buildinfo",
+        ":ingest_buildinfo",
+        "//modules/bagit",
+        "//modules/jwt",
+        "@maven//:com_github_tototoshi_scala_csv_3",
+        "@maven//:com_softwaremill_sttp_client4_opentelemetry_tracing_zio_backend_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_3",
+        "@maven//:com_softwaremill_sttp_client4_zio_json_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_json_zio_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_opentelemetry_tracing_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_refined_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
+        "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
+        "@maven//:com_zaxxer_HikariCP",
+        "@maven//:commons_io_commons_io",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_config_3",
+        "@maven//:dev_zio_zio_config_magnolia_3",
+        "@maven//:dev_zio_zio_config_typesafe_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_json_interop_refined_3",
+        "@maven//:dev_zio_zio_logging_3",
+        "@maven//:dev_zio_zio_logging_slf4j2_bridge_3",
+        "@maven//:dev_zio_zio_metrics_connectors_3",
+        "@maven//:dev_zio_zio_metrics_connectors_prometheus_3",
+        "@maven//:dev_zio_zio_nio_3",
+        "@maven//:dev_zio_zio_opentelemetry_3",
+        "@maven//:dev_zio_zio_prelude_3",
+        "@maven//:dev_zio_zio_schema_3",
+        "@maven//:dev_zio_zio_schema_derivation_3",
+        "@maven//:dev_zio_zio_streams_3",
+        "@maven//:eu_timepit_refined_3",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_logging_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
+        "@maven//:io_opentelemetry_opentelemetry_sdk",
+        "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
+        "@maven//:org_flywaydb_flyway_core",
+        "@maven//:org_xerial_sqlite_jdbc",
+    ],
+)
+
+# Classes only. :ingest's resources would put a second application.conf and logback.xml on a
+# consumer's classpath, and webapi resolves config via ConfigFactory.load() — the winner would be
+# classpath-order dependent.
+scala_library(
+    name = "ingest_classes",
+    srcs = glob(["src/main/scala/**/*.scala"]),
+    format = False,  # :ingest already formats the same srcs
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ingest_buildinfo",
         "//modules/bagit",
         "//modules/jwt",
         "@maven//:com_github_tototoshi_scala_csv_3",
