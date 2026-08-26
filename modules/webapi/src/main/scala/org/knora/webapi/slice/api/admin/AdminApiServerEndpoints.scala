@@ -21,6 +21,7 @@ final class AdminApiServerEndpoints(
   storeServerEndpoints: StoreServerEndpoints,
   usersServerEndpoints: UsersServerEndpoints,
   viewRestrictionsServerEndpoints: ViewRestrictionsServerEndpoints,
+  viewRestrictionsByPropertyServerEndpoints: ViewRestrictionsByPropertyServerEndpoints,
 ) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
@@ -34,7 +35,8 @@ final class AdminApiServerEndpoints(
       sparqlPassthroughServerEndpoints.serverEndpoints ++
       storeServerEndpoints.serverEndpoints ++
       usersServerEndpoints.serverEndpoints ++
-      viewRestrictionsServerEndpoints.serverEndpoints)
+      viewRestrictionsServerEndpoints.serverEndpoints ++
+      viewRestrictionsByPropertyServerEndpoints.serverEndpoints)
       .map(_.tag("Admin API"))
 }
 

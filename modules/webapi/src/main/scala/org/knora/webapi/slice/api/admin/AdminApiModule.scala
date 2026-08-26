@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsByPropertyService
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.service.GroupRestService
@@ -35,6 +36,7 @@ import org.knora.webapi.slice.api.admin.service.ProjectsLegalInfoRestService
 import org.knora.webapi.slice.api.admin.service.SparqlPassthroughRestService
 import org.knora.webapi.slice.api.admin.service.StoreRestService
 import org.knora.webapi.slice.api.admin.service.UserRestService
+import org.knora.webapi.slice.api.admin.service.ViewRestrictionsByPropertyRestService
 import org.knora.webapi.slice.api.admin.service.ViewRestrictionsRestService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -69,7 +71,8 @@ object AdminApiModule { self =>
       Tracing &
       TriplestoreService &
       UserService &
-      ViewRestrictionsService
+      ViewRestrictionsService &
+      ViewRestrictionsByPropertyService
       // format: on
 
   type Provided =
@@ -94,14 +97,16 @@ object AdminApiModule { self =>
       SparqlPassthroughEndpoints.layer ++ SparqlPassthroughRestService.layer ++
       StoreEndpoints.layer ++ StoreRestService.layer ++
       UsersEndpoints.layer ++ UserRestService.layer ++
-      ViewRestrictionsEndpoints.layer ++ ViewRestrictionsRestService.layer) >+>
+      ViewRestrictionsEndpoints.layer ++ ViewRestrictionsRestService.layer ++
+      ViewRestrictionsByPropertyEndpoints.layer ++ ViewRestrictionsByPropertyRestService.layer) >+>
       // Layer 2: Each ServerEndpoints depends on its paired Endpoints + RestService
       (AdminListsServerEndpoints.layer ++ FilesServerEndpoints.layer ++
         GroupsServerEndpoints.layer ++ MaintenanceServerEndpoints.layer ++
         PermissionsServerEndpoints.layer ++ ProjectsServerEndpoints.layer ++
         ProjectsLegalInfoServerEndpoints.layer ++ SparqlPassthroughServerEndpoints.layer ++
         StoreServerEndpoints.layer ++
-        UsersServerEndpoints.layer ++ ViewRestrictionsServerEndpoints.layer) >+>
+        UsersServerEndpoints.layer ++ ViewRestrictionsServerEndpoints.layer ++
+        ViewRestrictionsByPropertyServerEndpoints.layer) >+>
       // Layer 3: Top-level aggregator
       AdminApiServerEndpoints.layer
 }
