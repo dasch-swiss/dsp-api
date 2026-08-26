@@ -630,7 +630,7 @@
         "spec": {
           "id": 7,
           "title": "Slowest Gravsearch queries (traces)",
-          "description": "Individual gravsearch executions slower than the Duration ≥ threshold, from Tempo traces (service DSP_svc_api), scoped to the selected environment/stack. Sorted slowest first. To read the actual SPARQL/Gravsearch query: click the Trace ID → in the trace view select the 'gravsearch' span → Events → 'gravsearch.query' → db.query.text (verbatim, untruncated). Tempo returns the most recent matches above the threshold (limit 100), then this table sorts them by duration.",
+          "description": "Individual gravsearch executions slower than the Duration ≥ threshold, from Tempo traces (service DSP_svc_api), scoped to the selected environment/stack. Sorted slowest first. To read the actual SPARQL/Gravsearch query: click the Trace ID → in the trace view select the 'gravsearch' span → Events → 'gravsearch.query' → db.query.text (verbatim, untruncated). Tempo returns the most recent matches above the threshold (limit 100), then this table sorts them by duration. Set 'Project shortcode (Gravsearch)' to filter to one project's queries (matches the ontology IRIs in the query text, host-agnostic; empty = all projects). The 'Query (preview)' column shows the start of the query inline (filtering on the event surfaces it); click the Trace ID for the full, untruncated text. A rendered Project column needs the follow-up span attribute (DEV-7032/DEV-7031).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -650,7 +650,7 @@
                       "version": "v0",
                       "spec": {
                         "queryType": "traceql",
-                        "query": "{ span:name = \"gravsearch\" && span.environment =~ \"${environment:regex}\" && span.stack =~ \"${stack:regex}\" && span:duration > ${gsthreshold} } | select(span:duration, span.gravsearch.query.shape, span.gravsearch.schema_predicates)",
+                        "query": "{ span:name = \"gravsearch\" && span.environment =~ \"${environment:regex}\" && span.stack =~ \"${stack:regex}\" && span:duration > ${gsthreshold} && event.db.query.text =~ \".*ontology/${project}.*\" } | select(span:duration, span.gravsearch.query.shape, span.gravsearch.schema_predicates)",
                         "limit": 100,
                         "tableType": "spans"
                       }
@@ -682,7 +682,8 @@
                       },
                       "renameByName": {
                         "gravsearch.query.shape": "Shape",
-                        "gravsearch.schema_predicates": "Predicates"
+                        "gravsearch.schema_predicates": "Predicates",
+                        "db.query.text": "Query (preview)"
                       }
                     }
                   }
@@ -1148,14 +1149,28 @@
           "label": "Gravsearch duration ≥",
           "query": "500ms,1s,2s,5s,10s",
           "current": {
-            "text": "1s",
-            "value": "1s"
+            "text": "2s",
+            "value": "2s"
           },
           "allowCustomValue": true,
           "hide": "dontHide",
           "includeAll": false,
           "multi": false,
           "options": [],
+          "skipUrlSync": false
+        }
+      },
+      {
+        "kind": "TextVariable",
+        "spec": {
+          "name": "project",
+          "label": "Project shortcode (Gravsearch)",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "query": "",
+          "hide": "dontHide",
           "skipUrlSync": false
         }
       }

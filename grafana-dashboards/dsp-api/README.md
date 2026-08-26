@@ -76,6 +76,12 @@ here — use the Gravsearch dashboard / Tempo for tail latency.
   (`query = ${__value.raw}`) so it opens the trace by ID; from there: `gravsearch` span → Events →
   `gravsearch.query`. The trace-id field must **not** be excluded by the organize transform, or the link
   loses the ID and points nowhere.
+- **Panel 7 project filter.** A **Project shortcode (Gravsearch)** variable is interpolated into the
+  TraceQL as `event.db.query.text =~ ".*ontology/${project}.*"` (host-agnostic; empty matches all).
+  Filtering on that event attribute also surfaces a truncated **Query (preview)** column; the Trace ID
+  link remains the way to the full, untruncated query. The `span.environment` predicate must stay in,
+  or an `event.`-scoped search crosses environments. The threshold default is `2s` — the p95 of the
+  `gravsearch` span baseline (PRD REQ-3.1: baseline-anchored, not an arbitrary constant).
 
 ### Notes
 
