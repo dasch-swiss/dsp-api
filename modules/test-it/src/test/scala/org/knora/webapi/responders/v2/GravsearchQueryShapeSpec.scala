@@ -176,9 +176,10 @@ class GravsearchQueryShapeSpec extends ZIOSpecDefault {
             |    ?book a knora-api:Resource .
             |    ?book knora-api:isPartOf <http://rdfh.ch/0803/SECRETINSTANCEID> .
             |}""".stripMargin
+        val shortcodes = shortcodesOf(query)
         assertTrue(
-          shortcodesOf(query) == Seq("0803"),
-          !shortcodesOf(query).exists(_.contains("SECRETINSTANCEID")),
+          shortcodes == Seq("0803"),
+          !shortcodes.exists(_.contains("SECRETINSTANCEID")),
         )
       },
     )
