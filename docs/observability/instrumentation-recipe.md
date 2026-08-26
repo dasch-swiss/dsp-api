@@ -130,9 +130,17 @@ Split the cardinality deliberately:
 | Composite shape label | `gravsearch.query.shape` = `resource-list\|has_filter\|patterns:4-7\|joins:1` | Bounded (enums + bucketed counts) | **Span attribute, safe as a metric label** |
 | Per-flag booleans | `gravsearch.shape.has_filter` = `true` | Bounded (fixed flag set) | Span attribute (for TraceQL filtering) |
 | Ontology predicate names | `gravsearch.schema_predicates` = `hasTitle,isPartOf` | Higher (but ontology-bounded, never instance IRIs) | **Span attribute only — never a metric label** |
+| Bounded projection of an identifier | `gravsearch.project_shortcodes` = `0803` | Bounded (one value per project) | **Span attribute only — never a metric label** |
 
 Bucket open-ended counts (pattern count, join count) into ranges (`0`, `1`, `2-3`, `4-7`, `8+`) so
 the shape label stays bounded. Set the shape on the root immediately after parse succeeds.
+
+The no-instance-IRIs rule bans the **IRI**, not everything derivable from one. A bounded projection of
+an identifier is fine and often the most useful attribute on the span — the project shortcode in
+`…/ontology/0803/…` or `http://rdfh.ch/0803/c5058f3a` is one value per project, so it groups and
+filters cleanly while the IRI it came from never leaves the payload event. Apply the same test to any
+projection: is the value set bounded by something that grows with the *deployment* (projects,
+ontologies, endpoints) rather than with *traffic* (resources, users, literals)?
 
 ## 6. Capture the raw payload as an event
 
