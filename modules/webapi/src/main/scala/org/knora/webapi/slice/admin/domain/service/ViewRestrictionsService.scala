@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
-import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -23,7 +22,6 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
-import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Computes the "view restrictions" report for a project (design screen 1h).
@@ -65,30 +63,7 @@ import org.knora.webapi.slice.common.domain.InternalIri
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
-  private val projectRepo: KnoraProjectRepo,
 ) {
-
-  /**
-   * The project's data graph, used to graph-scope the stepped report's queries instead of joining
-   * `attachedToProject` (see [[ViewRestrictionsRepo]]).
-   *
-   * [[ProjectService.projectDataNamedGraphV2]] derives the graph from the project's shortcode and
-   * shortname, so it needs the project itself and not just its IRI — which is why this is resolved here
-   * rather than in the repo.
-   *
-   * Depends on [[KnoraProjectRepo]] rather than `KnoraProjectService`: the only thing needed is
-   * `findById`, which the service merely delegates, and taking the service would pull `LicenseRepo` and
-   * `OntologyRepo` into this service's dependencies for no benefit.
-   *
-   * A missing project is a real 404, not an invariant violation: the authorization gate lets a **system**
-   * admin through without the project existing, so a bogus IRI reaches this point instead of being
-   * rejected upstream.
-   */
-  private def dataGraph(projectIri: ProjectIri): Task[InternalIri] =
-    projectRepo
-      .findById(projectIri)
-      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
-      .map(ProjectService.projectDataNamedGraphV2)
 
   /**
    * Resolves each distinct permission literal against each audience, once.
@@ -146,8 +121,7 @@ final case class ViewRestrictionsService(
   def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
       classes <- repo.projectClasses(projectIri)
-      graph   <- dataGraph(projectIri)
-      rows    <- repo.resourceCountsByClass(projectIri, classes, graph)
+      rows    <- repo.resourceCountsByClass(projectIri, classes)
       lookup   = classify(rows.map(_.permissions).toSet, projectIri)
       byClass  = rows.groupBy(_.groupId).collect { case (Some(classIri), rs) => classIri -> foldRows(rs, lookup) }
       // Report every class the project asserts, not just those that produced rows: a class holding no
@@ -169,8 +143,7 @@ final case class ViewRestrictionsService(
   ): Task[ViewRestrictionsValues] =
     for {
       classes <- repo.projectClasses(projectIri)
-      graph   <- dataGraph(projectIri)
-      rows    <- repo.valueCountsForClass(projectIri, resourceClass, ValueItemType.toItemType(itemType), classes, graph)
+      rows    <- repo.valueCountsForClass(projectIri, resourceClass, ValueItemType.toItemType(itemType), classes)
       lookup   = classify(rows.map(_.permissions).toSet, projectIri)
       counts   = foldRows(rows, lookup)._1
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)

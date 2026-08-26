@@ -14,7 +14,6 @@ import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
-import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Query-generator tests for [[ViewRestrictionsRepo]]. They assert on the rendered SPARQL string rather
@@ -37,9 +36,6 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val multiTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = true)
 
   private val resClassVar = SparqlBuilder.`var`("resClass")
-
-  /** The project data graph the stepped queries scope to, in place of an `attachedToProject` join. */
-  private val dataGraph = InternalIri("http://www.knora.org/data/0001/anything")
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
     suite("distinct permission literals")(
@@ -154,7 +150,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
     suite("permission-grouped counts (stepped report)")(
       test("resource counts group by class AND literal, with no permission filter at all") {
         val q = ViewRestrictionsRepo
-          .resourceCountsByClassAndPermissionQuery(projectIri, singleTyped, dataGraph)
+          .resourceCountsByClassAndPermissionQuery(projectIri, singleTyped)
           .getQueryString
         assertTrue(
           q.contains("COUNT") && q.contains("DISTINCT"),
@@ -173,7 +169,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       },
       test("value counts group by literal alone and are narrowed to one class by FILTER, not by chunking") {
         val q = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped, dataGraph)
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped)
           .getQueryString
         assertTrue(
           q.contains("GROUP BY ?permissions"),
@@ -188,10 +184,10 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       },
       test("itemType still narrows the value counts") {
         val comment = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Comment, singleTyped, dataGraph)
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Comment, singleTyped)
           .getQueryString
         val value = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Value, singleTyped, dataGraph)
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Value, singleTyped)
           .getQueryString
         assertTrue(
           comment.contains("knora-base:valueHasComment"),
@@ -202,32 +198,23 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         // Load-bearing for the grouping: without it a resource asserted as several classes in one
         // hierarchy binds ?resClass once per class, double-counting it and overstating totalResources.
         val q = ViewRestrictionsRepo
-          .resourceCountsByClassAndPermissionQuery(projectIri, multiTyped, dataGraph)
+          .resourceCountsByClassAndPermissionQuery(projectIri, multiTyped)
           .getQueryString
         assertTrue(q.contains("rdfs:subClassOf+"))
       },
     ),
-    suite("graph scoping is opt-in")(
-      test("the stepped queries scope by GRAPH and drop the attachedToProject join") {
-        val resources = ViewRestrictionsRepo
-          .resourceCountsByClassAndPermissionQuery(projectIri, singleTyped, dataGraph)
-          .getQueryString
-        val values = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped, dataGraph)
-          .getQueryString
-        assertTrue(
-          resources.contains("GRAPH") && resources.contains(dataGraph.value),
-          values.contains("GRAPH") && values.contains(dataGraph.value),
-          // GRAPH *replaces* the join rather than joining it as well — emitting both would be redundant
-          // per-row work (CONVENTIONS.md § SPARQL, DEV-6827).
-          !resources.contains("attachedToProject"),
-          !values.contains("attachedToProject"),
-        )
-      },
-      test("every pre-existing query keeps the attachedToProject join and stays ungraphed") {
-        // The graph parameter defaults to None precisely so that adding it could not change any existing
-        // query. This pins that: a regression here would silently alter the /items drill-down.
-        val untouched = Seq(
+    suite("every query is scoped by attachedToProject")(
+      test("no view-restrictions query uses GRAPH scoping") {
+        // Deliberate, and measured: a project's resources span one data graph per ontology, while
+        // ProjectService.projectDataNamedGraphV2 derives exactly one from shortcode + shortname. On the
+        // local `anything` project that is 65 resources in …/data/0001/anything and 6 more in
+        // …/data/0001/freetest, so scoping to the derived graph undercounts by those 6 — and silently,
+        // because a graph with no matches yields no rows rather than an error. The join stays.
+        val all = Seq(
+          ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, singleTyped).getQueryString,
+          ViewRestrictionsRepo
+            .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped)
+            .getQueryString,
           ViewRestrictionsRepo.resourceCountQuery(projectIri, hidden, singleTyped).getQueryString,
           ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, singleTyped).getQueryString,
           ViewRestrictionsRepo
@@ -237,8 +224,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, singleTyped).getQueryString,
         )
         assertTrue(
-          untouched.forall(_.contains(s"knora-base:attachedToProject <${projectIri.value}>")),
-          untouched.forall(!_.contains("GRAPH")),
+          all.forall(_.contains(s"knora-base:attachedToProject <${projectIri.value}>")),
+          all.forall(!_.contains("GRAPH")),
         )
       },
     ),

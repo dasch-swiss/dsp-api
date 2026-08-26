@@ -27,7 +27,6 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRo
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -188,10 +187,9 @@ final case class ViewRestrictionsRepo(
   def resourceCountsByClass(
     projectIri: ProjectIri,
     classes: ProjectClasses,
-    graph: InternalIri,
   ): Task[Seq[PermissionCountRow]] =
     triplestore
-      .query(select(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes, graph), classes))
+      .query(select(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes), classes))
       .map(_.flatMap(row => permissionCountRow(row, groupCol = Some("resClass"))))
 
   /**
@@ -205,12 +203,11 @@ final case class ViewRestrictionsRepo(
     resourceClass: String,
     itemType: ItemType,
     classes: ProjectClasses,
-    graph: InternalIri,
   ): Task[Seq[PermissionCountRow]] =
     triplestore
       .query(
         select(
-          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes, graph),
+          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes),
           classes,
         ),
       )
@@ -656,12 +653,15 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    *
    * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
    *
-   * `graph` scopes the whole skeleton to the project's data graph *instead of* joining
-   * `attachedToProject`, which is the cheaper form of the same restriction (`GRAPH <projectDataGraph>`
-   * replaces the join — measured 5.4× on DEV-6827; see `CONVENTIONS.md` § SPARQL). It is deliberately
-   * **opt-in**: with `None` the original `attachedToProject` join is emitted unchanged, so every
-   * pre-existing call site keeps its exact query shape and only the callers that ask for graph scoping
-   * get it. `ViewRestrictionsQuerySpec` pins both shapes.
+   * NOTE — graph scoping does NOT apply here, and must not be reintroduced.
+   * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join
+   * (DEV-6827: 5.4×), and that holds for a caller which already knows the single graph it wants — the v2
+   * write path writes into one. It does **not** hold for a project-wide read: a project's resources span
+   * one data graph per ontology, while `ProjectService.projectDataNamedGraphV2` derives exactly one from
+   * shortcode + shortname. Measured on the local `anything` project: 65 resources in
+   * `…/data/0001/anything` and 6 more in `…/data/0001/freetest`, so scoping to the derived graph
+   * undercounts by those 6 — silently, since a graph with no matches yields no rows rather than an error.
+   * `ViewRestrictionsQuerySpec` pins that every query keeps the join.
    */
   private def resourceCore(
     projectIri: ProjectIri,
@@ -672,22 +672,15 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
     bindCreator: Boolean = true,
-    graph: Option[InternalIri] = None,
   ) = {
-    // Graph scoping and the attachedToProject join express the same restriction; emitting both would be
-    // redundant per-row work, so the join is dropped exactly when a graph is supplied.
-    val withProject =
-      graph.fold(resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value)))(_ =>
-        resource.isA(resClass),
-      )
+    val withProject = resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
     // The creator keeps its position in the chain rather than being appended, so enabling/disabling it
     // cannot reorder the other patterns.
     val withCreator = if (bindCreator) withProject.andHas(KnoraBase.attachedToUser, creator) else withProject
-    val body        = withCreator
+    withCreator
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
-    graph.fold(body)(g => body.from(toRdfIri(g)))
   }
 
   /**
@@ -723,8 +716,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
    * multiply intermediate rows.
    *
-   * `graph` is opt-in graph scoping, exactly as in [[resourceCore]]: supplying it replaces the
-   * `attachedToProject` join with `GRAPH <projectDataGraph>`, and `None` leaves the original shape intact.
+   * Graph scoping does not apply here either — see [[resourceCore]] for why a project-wide read cannot
+   * substitute a single derived data graph for the `attachedToProject` join.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -737,7 +730,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
     bindCreator: Boolean = true,
-    graph: Option[InternalIri] = None,
   ) = {
     // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
     // reorder the remaining patterns.
@@ -748,11 +740,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .andHas(KnoraBase.hasPermissions, permissions)
           .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       else value.has(KnoraBase.hasPermissions, permissions).andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-    val resourcePatterns =
-      graph.fold(
-        resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value)),
-      )(_ => resource.isA(resClass))
-    val body = resourcePatterns
+    resource
+      .isA(resClass)
+      .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
       .and(
@@ -762,7 +752,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       )
       .and(valuePatterns)
       .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
-    graph.fold(body)(g => body.from(toRdfIri(g)))
   }
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
@@ -985,7 +974,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   private[repo] def resourceCountsByClassAndPermissionQuery(
     projectIri: ProjectIri,
     classes: ProjectClasses,
-    graph: InternalIri,
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))
@@ -1004,7 +992,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
             permissions,
             classes,
             bindCreator = false,
-            graph = Some(graph),
           ),
         ),
       )
@@ -1028,7 +1015,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     resourceClass: String,
     itemType: ItemType,
     classes: ProjectClasses,
-    graph: InternalIri,
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (prop, value)          = (variable("prop"), variable("value"))
@@ -1046,7 +1032,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       permissions,
       classes,
       bindCreator = false,
-      graph = Some(graph),
     )
     val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
       .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
