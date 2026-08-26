@@ -630,7 +630,7 @@
         "spec": {
           "id": 7,
           "title": "Slowest Gravsearch queries (traces)",
-          "description": "Individual gravsearch executions slower than the Duration ≥ threshold, from Tempo traces (service DSP_svc_api), scoped to the selected environment/stack. Sorted slowest first. To read the actual SPARQL/Gravsearch query: click the Trace ID → in the trace view select the 'gravsearch' span → Events → 'gravsearch.query' → db.query.text (verbatim, untruncated). Tempo returns the most recent matches above the threshold (limit 100), then this table sorts them by duration. Set 'Project shortcode (Gravsearch)' to filter to one project's queries (matches the ontology IRIs in the query text, host-agnostic; empty = all projects). The 'Query (preview)' column shows the start of the query inline (filtering on the event surfaces it); click the Trace ID for the full, untruncated text. A rendered Project column needs the follow-up span attribute (DEV-7032/DEV-7031).",
+          "description": "Individual gravsearch executions slower than the Duration ≥ threshold, from Tempo traces (service DSP_svc_api), scoped to the selected environment/stack. Sorted slowest first. To read the actual SPARQL/Gravsearch query: click the Trace ID → in the trace view select the 'gravsearch' span → Events → 'gravsearch.query' → db.query.text (verbatim, untruncated). Tempo returns the most recent matches above the threshold (limit 100), then this table sorts them by duration. Set 'Project shortcode (Gravsearch)' to filter to one project's queries (matches the ontology IRIs in the query text, host-agnostic; empty = all projects). The 'Query (preview)' column shows the start of the query inline (filtering on the event surfaces it); click the Trace ID for the full, untruncated text. The 'Project' column is the gravsearch.project_shortcodes span attribute (DEV-7031): the projects a query references, read from its ontology IRIs and its resource IRIs alike, so it is populated for dsp-api's internal searches (incoming links, still-image representations, incoming regions) as well. It is blank on traces recorded before that instrumentation was deployed. Note that the 'Project shortcode (Gravsearch)' variable still filters on the query text, so it matches ontology IRIs only; prefer reading the Project column over trusting that filter for internal searches.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -650,7 +650,7 @@
                       "version": "v0",
                       "spec": {
                         "queryType": "traceql",
-                        "query": "{ span:name = \"gravsearch\" && span.environment =~ \"${environment:regex}\" && span.stack =~ \"${stack:regex}\" && span:duration > ${gsthreshold} && event.db.query.text =~ \".*ontology/${project}.*\" } | select(span:duration, span.gravsearch.query.shape, span.gravsearch.schema_predicates)",
+                        "query": "{ span:name = \"gravsearch\" && span.environment =~ \"${environment:regex}\" && span.stack =~ \"${stack:regex}\" && span:duration > ${gsthreshold} && event.db.query.text =~ \".*ontology/${project}.*\" } | select(span:duration, span.gravsearch.query.shape, span.gravsearch.schema_predicates, span.gravsearch.project_shortcodes)",
                         "limit": 100,
                         "tableType": "spans"
                       }
@@ -675,12 +675,14 @@
                       "indexByName": {
                         "Duration": 0,
                         "Start time": 1,
-                        "gravsearch.query.shape": 2,
-                        "gravsearch.schema_predicates": 3,
-                        "stack": 4,
-                        "Spans traceIdHidden": 5
+                        "gravsearch.project_shortcodes": 2,
+                        "gravsearch.query.shape": 3,
+                        "gravsearch.schema_predicates": 4,
+                        "stack": 5,
+                        "Spans traceIdHidden": 6
                       },
                       "renameByName": {
+                        "gravsearch.project_shortcodes": "Project",
                         "gravsearch.query.shape": "Shape",
                         "gravsearch.schema_predicates": "Predicates",
                         "db.query.text": "Query (preview)"
