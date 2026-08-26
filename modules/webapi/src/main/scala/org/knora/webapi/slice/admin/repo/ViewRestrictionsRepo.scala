@@ -17,14 +17,17 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -172,6 +175,62 @@ final case class ViewRestrictionsRepo(
    */
   def totalResourcesByClass(projectIri: ProjectIri, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
     runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, _), CountUnit.Resources, classes)
+
+  /**
+   * Step 1 of the stepped report: every class's resource counts, broken down by permission literal, in a
+   * single unchunked query.
+   *
+   * One query rather than a fan-out, because grouping by the literal makes the six former
+   * (audience, state) counts and the separate population count all derivable from one row set — see
+   * [[ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery]]. A class present in the project but
+   * carrying no resources simply yields no rows; the caller reports it with a zero population.
+   */
+  def resourceCountsByClass(
+    projectIri: ProjectIri,
+    classes: ProjectClasses,
+    graph: InternalIri,
+  ): Task[Seq[PermissionCountRow]] =
+    triplestore
+      .query(select(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes, graph), classes))
+      .map(_.flatMap(row => permissionCountRow(row, groupCol = Some("resClass"))))
+
+  /**
+   * Step 2 of the stepped report: one class's value counts, broken down by permission literal.
+   *
+   * Scoped to a single class by the route, so there is nothing to chunk and no grouping key beyond the
+   * literal itself.
+   */
+  def valueCountsForClass(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ItemType,
+    classes: ProjectClasses,
+    graph: InternalIri,
+  ): Task[Seq[PermissionCountRow]] =
+    triplestore
+      .query(
+        select(
+          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes, graph),
+          classes,
+        ),
+      )
+      .map(_.flatMap(row => permissionCountRow(row, groupCol = None)))
+
+  /**
+   * Parses one permission-grouped count row. A row missing `permissions` or with an unparseable `cnt` is
+   * dropped rather than failing the request: an aggregate row without its grouping key carries no usable
+   * information, and a report is more useful slightly incomplete than not at all.
+   */
+  private def permissionCountRow(
+    row: VariableResultsRow,
+    groupCol: Option[String],
+  ): Option[PermissionCountRow] =
+    for {
+      permissions <- row.get("permissions")
+      count       <- row.get("cnt").flatMap(_.toIntOption)
+      // In step 1 the class column must be present, since it is a grouping key; in step 2 there is none.
+      groupId <- groupCol.fold[Option[Option[String]]](Some(None))(col => row.get(col).map(Some(_)))
+    } yield PermissionCountRow(groupId, permissions, count)
 
   /**
    * Runs one grouped count as a fan-out over chunks of the project's classes, then merges.
@@ -389,6 +448,19 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   final case class GroupCountRow(groupId: String, count: Int, unit: CountUnit)
 
   /**
+   * One row of a permission-grouped count: how many objects carry `permissions`, optionally within a group.
+   *
+   * `groupId` is the resource-class IRI for the step-1 query, which groups by class as well as by literal,
+   * and `None` for the step-2 query, which is already narrowed to a single class by the route.
+   *
+   * The literal is carried raw and unclassified on purpose: the caller resolves it against each audience
+   * with the real permission model, which is what lets one query answer all three audiences and both
+   * restriction states at once. No `CountUnit` here — the unit is decided by which query produced the row,
+   * so it cannot be mixed up in the first place.
+   */
+  final case class PermissionCountRow(groupId: Option[String], permissions: String, count: Int)
+
+  /**
    * The resource classes a project actually asserts, resolved once per request and reused by every query
    * of that request.
    *
@@ -583,6 +655,13 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * drill-down.
    *
    * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
+   *
+   * `graph` scopes the whole skeleton to the project's data graph *instead of* joining
+   * `attachedToProject`, which is the cheaper form of the same restriction (`GRAPH <projectDataGraph>`
+   * replaces the join — measured 5.4× on DEV-6827; see `CONVENTIONS.md` § SPARQL). It is deliberately
+   * **opt-in**: with `None` the original `attachedToProject` join is emitted unchanged, so every
+   * pre-existing call site keeps its exact query shape and only the callers that ask for graph scoping
+   * get it. `ViewRestrictionsQuerySpec` pins both shapes.
    */
   private def resourceCore(
     projectIri: ProjectIri,
@@ -593,15 +672,22 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
     bindCreator: Boolean = true,
+    graph: Option[InternalIri] = None,
   ) = {
-    val withProject = resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+    // Graph scoping and the attachedToProject join express the same restriction; emitting both would be
+    // redundant per-row work, so the join is dropped exactly when a graph is supplied.
+    val withProject =
+      graph.fold(resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value)))(_ =>
+        resource.isA(resClass),
+      )
     // The creator keeps its position in the chain rather than being appended, so enabling/disabling it
     // cannot reorder the other patterns.
     val withCreator = if (bindCreator) withProject.andHas(KnoraBase.attachedToUser, creator) else withProject
-    withCreator
+    val body        = withCreator
       .andHas(KnoraBase.hasPermissions, permissions)
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
+    graph.fold(body)(g => body.from(toRdfIri(g)))
   }
 
   /**
@@ -636,6 +722,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `bindCreator = false` drops the `attachedToUser ?creator` pattern for callers that neither project nor
    * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
    * multiply intermediate rows.
+   *
+   * `graph` is opt-in graph scoping, exactly as in [[resourceCore]]: supplying it replaces the
+   * `attachedToProject` join with `GRAPH <projectDataGraph>`, and `None` leaves the original shape intact.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -648,6 +737,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     classes: ProjectClasses,
     dedupeRows: Boolean = true,
     bindCreator: Boolean = true,
+    graph: Option[InternalIri] = None,
   ) = {
     // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
     // reorder the remaining patterns.
@@ -658,9 +748,11 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .andHas(KnoraBase.hasPermissions, permissions)
           .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       else value.has(KnoraBase.hasPermissions, permissions).andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-    resource
-      .isA(resClass)
-      .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+    val resourcePatterns =
+      graph.fold(
+        resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value)),
+      )(_ => resource.isA(resClass))
+    val body = resourcePatterns
       .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
       .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
       .and(
@@ -670,6 +762,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       )
       .and(valuePatterns)
       .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
+    graph.fold(body)(g => body.from(toRdfIri(g)))
   }
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
@@ -860,6 +953,109 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           .and(Expressions.bind(resClass, groupId)),
       )
       .groupBy(groupId)
+  }
+
+  // ---------------------------------------------------------------------------------------------------
+  // Stepped report: counts grouped by permission literal.
+  //
+  // These replace the per-(audience, state) fan-out. Because an object's visibility for the three
+  // synthetic audiences is a pure function of its `knora-base:hasPermissions` literal (see
+  // ViewRestrictionsService, and the equivalence pinned by ViewRestrictionsServiceSpec), grouping by the
+  // literal instead of pre-filtering to one state's literals answers every audience at once: the caller
+  // classifies the handful of returned literals in Scala.
+  //
+  // The literal set is small in practice — literals come from project-level default-permission templates
+  // rather than being authored per object — so the grouping key stays low-cardinality.
+  //
+  // There is no permission FILTER at all, which is what makes the population derivable: summing a class's
+  // counts over every literal it carries yields the class's whole resource population, replacing the
+  // separate `resourceTotalByClassQuery` round-trip.
+  // ---------------------------------------------------------------------------------------------------
+
+  /**
+   * `SELECT ?resClass ?permissions (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?resClass ?permissions`
+   * over all of a project's current resources — the whole of step 1 in one query.
+   *
+   * Built on the same [[resourceCore]] skeleton as the queries it replaces, so it counts the same universe
+   * (non-deleted, project-owned, keyed by the resource's most specific asserted class). `bindCreator =
+   * false` because the creator cannot change the decision for a synthetic audience, making
+   * `attachedToUser ?creator` an unconstrained join that only multiplies intermediate rows — the same
+   * reasoning [[valueCore]] already records for the permission probes.
+   */
+  private[repo] def resourceCountsByClassAndPermissionQuery(
+    projectIri: ProjectIri,
+    classes: ProjectClasses,
+    graph: InternalIri,
+  ): SelectQuery = {
+    val (resource, resClass)   = (variable("resource"), variable("resClass"))
+    val (creator, permissions) = (variable("creator"), variable("permissions"))
+    val cnt                    = variable("cnt")
+
+    Queries
+      .SELECT(resClass, permissions, Expressions.count(resource).distinct().as(cnt))
+      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
+      .where(
+        GraphPatterns.and(
+          resourceCore(
+            projectIri,
+            resource,
+            resClass,
+            creator,
+            permissions,
+            classes,
+            bindCreator = false,
+            graph = Some(graph),
+          ),
+        ),
+      )
+      .groupBy(resClass, permissions)
+  }
+
+  /**
+   * `SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?permissions` over the values of ONE
+   * resource class — the whole of step 2 for that class in one query.
+   *
+   * Narrowed to a single class by a `FILTER (?resClass = <iri>)` rather than by chunking: the route is the
+   * unit of work now, so there is no second axis to split on.
+   *
+   * NOTE: `valueCore` reaches values through `?prop rdfs:subPropertyOf* knora-base:hasValue` with `?prop`
+   * unbound. That is a knowingly accepted cost (see the PRD's Constraints): `CONVENTIONS.md` warns an
+   * unanchored property path cross-joins against the whole closure, and it is the first thing to revisit
+   * if a class turns out to be too slow.
+   */
+  private[repo] def valueCountsByPermissionQuery(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ItemType,
+    classes: ProjectClasses,
+    graph: InternalIri,
+  ): SelectQuery = {
+    val (resource, resClass)   = (variable("resource"), variable("resClass"))
+    val (prop, value)          = (variable("prop"), variable("value"))
+    val (creator, permissions) = (variable("creator"), variable("permissions"))
+    val (fileClass, comment)   = (variable("fileClass"), variable("comment"))
+    val cnt                    = variable("cnt")
+
+    val core = valueCore(
+      projectIri,
+      resource,
+      resClass,
+      prop,
+      value,
+      creator,
+      permissions,
+      classes,
+      bindCreator = false,
+      graph = Some(graph),
+    )
+    val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
+      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
+
+    Queries
+      .SELECT(permissions, Expressions.count(value).distinct().as(cnt))
+      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
+      .where(constrained.filter(Expressions.equals(resClass, Rdf.iri(resourceClass))))
+      .groupBy(permissions)
   }
 
   /**

@@ -256,14 +256,19 @@ cross-repo tooling can attribute them.
 - [ ] Add an opt-in `graph: Option[InternalIri] = None` parameter to `resourceCore`, defaulting to the current `attachedToProject` join
 - [ ] Add the same opt-in `graph` parameter to `valueCore`
 - [ ] Pass `Some(graph)` from the two new queries only, leaving all eight existing call sites unchanged
-- [ ] Resolve the project's data graph in `ViewRestrictionsService` via `KnoraProjectService.findById` + `ProjectService.projectDataNamedGraphV2`
-- [ ] Add the `KnoraProjectService` dependency to `ViewRestrictionsService` and wire it in `AdminDomainModule`
 - [ ] Verify whether `COUNT(DISTINCT ?resource)` can drop `DISTINCT`, by byte-comparing query outputs
 - [ ] Add repo methods `resourceCountsByClass` and `valueCountsForClass` returning `Seq[PermissionCountRow]`
 - [ ] Confirm `mostSpecificClass` / `needsMostSpecificClassFilter` still applies to both new queries
 - [ ] **Gate before Phase 5:** byte-compare the new queries' counts against the current implementation on a real project, while the old queries still exist
 
 #### Phase 2: service layer
+
+Carries the two graph-plumbing deliverables deferred from Phase 1: the repo methods take a
+graph IRI, but nothing supplies one until this phase calls them, and an unused private
+resolver would not survive `-Wunused:all -Werror`.
+
+- [ ] Resolve the project's data graph in `ViewRestrictionsService` via `KnoraProjectService.findById` + `ProjectService.projectDataNamedGraphV2`
+- [ ] Add the `KnoraProjectService` dependency to `ViewRestrictionsService` and wire it in `AdminDomainModule` (`:68`)
 
 - [ ] Add `classSummaries(projectIri)`: classify literals, fold into `AudienceCounts` plus derived `totalResources`
 - [ ] Add `valueCounts(projectIri, resourceClass, itemType)`: classify literals, fold into `AudienceCounts`
@@ -367,9 +372,14 @@ The frontend work depends on the API change being reachable by
 `npm run update-openapi`, which pulls from `api.dev.dasch.swiss`. Either point it at a
 local API or land dsp-api first. Phases 6-8 are otherwise blocked on Phases 1-5.
 
-PRD OQ-2 — the largest class on LHTT by value count — should be answered before Phase 1.
-A bad answer reopens the chunking decision, and finding that out after Phase 5 wastes the
-whole backend rewrite.
+**PRD OQ-2 is dropped by decision.** The largest-class measurement is *not* a gate on
+Phase 1. The query collapse is worth doing regardless of the answer, and if step 2 turns
+out to fail on a very large class the remedy (constraining `?prop`, or reinstating a
+sub-class axis) is additive rather than a redesign. The risk stays recorded below; it is
+simply not blocking.
+
+Note this is distinct from the **byte-compare gate** in Phase 1, which is a correctness
+check against the old queries and is retained.
 
 ## Risk Analysis & Mitigation
 
