@@ -140,7 +140,8 @@ never string concatenation.
 
 - [ ] Add `ViewRestrictionsByPropertyRepo` with a `projectValueProperties(projectIri)` returning IRI + label + ontology name
 - [ ] Source it from `OntologyRepo.findByProject`, plus `findById` for `knora-base`
-- [ ] Filter to value properties, excluding link-value properties
+- [ ] Decide and document the value-property predicate. `ReadPropertyInfoV2` exposes `isResourceProp`, `isLinkProp`, `isLinkValueProp`, `isFileValueProp` and `isStandoffInternalReferenceProperty`, and there is **no** existing "is a value property" helper in the ontology slice — the abandoned branch's `findAllValuePropertyIris` is not on main. Candidate: `isResourceProp && !isLinkProp && !isLinkValueProp` (unverified — confirm against a real ontology)
+- [ ] Add a test pinning that predicate against a project ontology with a link property, a link-value property and a file-value property, since it alone determines the row set
 - [ ] Extract labels via the `Rdfs.Label` pattern used in `OntologyRestServiceV3.scala:32`
 - [ ] Confirm the method issues no SPARQL (PRD REQ-1.2)
 
@@ -149,8 +150,9 @@ never string concatenation.
 - [ ] Add `propertyValueCountsQuery(projectIri, propertyIri, itemType)` grouped by `?permissions`, with the property IRI bound directly in the triple pattern
 - [ ] Assert by test that it emits no `?resClass`, no `VALUES`, and no `FILTER (?prop`
 - [ ] Add `propertyDrillDownPageQuery` and its matching `COUNT DISTINCT` total query
+- [ ] Project each resource's own class in the drill-down row (REQ-4.2) — a property spans classes, so the class is per row here rather than a property of the whole table
 - [ ] Add repo methods returning `Seq[PermissionCountRow]` and the drill-down rows
-- [ ] Reuse the existing `itemTypeConstraint` shape for `File`/`Value`/`Comment`, or copy it if reuse would couple the two repos
+- [ ] Copy the `File`/`Value`/`Comment` constraint into this repo rather than reusing `ViewRestrictionsRepo.itemTypeConstraint`. Reusing it is the seam this whole design avoids, and the fragment is a few lines of pattern-building; a test pins each branch
 
 #### Phase 3: service layer
 
@@ -164,11 +166,13 @@ never string concatenation.
 
 - [ ] Define the three endpoints in `ViewRestrictionsByPropertyEndpoints` with their DTOs
 - [ ] `/properties` takes no filter (REQ-1.6); `/property-values` and `/property-items` take `ValueItemType`
+- [ ] Import `ValueItemType` from `ViewRestrictionsEndpoints` rather than redefining it. It carries no grouping discriminator (PRD REQ-6.2), the two reports genuinely mean the same four value types, and a second identical enum would surface in the generated client as a confusing near-duplicate
 - [ ] Add `ViewRestrictionsByPropertyRestService` with the project-admin-or-sysadmin check on all three (REQ-1.5, REQ-2.8, REQ-4.5)
 - [ ] Validate `property` as a well-formed IRI, failing `BadRequestException` (REQ-2.7, REQ-4.6)
 - [ ] Wire `ViewRestrictionsByPropertyServerEndpoints`
 - [ ] Register in `AdminApiServerEndpoints` and `AdminApiModule`
-- [ ] Wire the service and repo in `AdminDomainModule`
+- [ ] Wire the service and repo in `AdminDomainModule`, adding them to its `Provided` type list
+- [ ] Add the new endpoints and rest service to `AdminApiModule`'s `Provided` list, and any new dependency to its `Dependencies` list
 
 #### Phase 5: dsp-api tests
 
@@ -180,13 +184,16 @@ never string concatenation.
 - [ ] E2E: all three routes return 200 for an admin, 401 unauthenticated, 403 for a non-admin
 - [ ] E2E: 400 for a malformed `property` on both parameterised routes
 - [ ] E2E: each audience's counts do not exceed `totalValues` (REQ-2.6)
-- [ ] E2E: the class routes' responses are unchanged by this work (REQ-6.1)
+- [ ] E2E: assert the class routes still answer with their current paths, parameters and status codes (REQ-6.1)
+- [ ] Before merging, capture `/classes` and `/values` responses for one project on the parent branch and diff them against this branch — the "byte-identical" success metric is a manual gate, not something a single test run can assert
 
 ### dsp-das
 
 #### Phase 6: client and state
 
-- [ ] Regenerate the OpenAPI client from a locally running API (`localhost:3339/docs/docs.yaml`)
+- [ ] Rebuild and redeploy the API image so the new routes are live (`just docker-build-dsp-api-image` then `docker compose up -d api`)
+- [ ] Regenerate the OpenAPI client from the running API at `localhost:3339/docs/docs.yaml` — note the docs are served by the instrumentation server on 3339, not the API port
+- [ ] Verify the regenerated client exposes all three new operations before touching any component
 - [ ] Add `ViewRestrictionsByPropertyPageService` with its own step-1 stream and bounded step-2 fan-out at concurrency 4
 - [ ] Accumulate per-property results with `scan`, `catchError` on the inner request
 - [ ] Cache per `(itemType, propertyIri)`; add `retryProperty`
