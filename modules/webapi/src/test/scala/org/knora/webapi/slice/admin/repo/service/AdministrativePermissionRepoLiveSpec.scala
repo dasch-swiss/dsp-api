@@ -17,6 +17,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermission
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionRepo
@@ -104,5 +105,46 @@ class AdministrativePermissionRepoLiveSpec extends ZIOSpecDefault {
           .head == s"ProjectResourceCreateAllPermission|ProjectAdminGroupRestrictedPermission knora-admin:Creator,knora-admin:UnknownUser,${groupIri.value}",
       )
     },
+    suite("findAll resilience")(
+      test("skip (not die on) an AP subject that is missing knora-admin:forGroup/forProject") {
+        // `.map(_.head)` on `getObjectIrisConvert[GroupIri](KnoraAdmin.ForGroup)` throws NoSuchElementException
+        // as a defect when the property is absent - findAllResilient must skip it, not let `findAll()` die.
+        val brokenTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+              |
+              |<${AdminConstants.permissionsDataNamedGraph.value}> {
+              |  <http://rdfh.ch/permissions/missingForGroup> a knora-admin:AdministrativePermission ;
+              |    knora-base:hasPermissions "ProjectResourceCreateAllPermission" .
+              |}
+              |""".stripMargin
+        for {
+          _      <- TriplestoreServiceInMemory.setDataSetFromTriG(brokenTrig)
+          exit   <- repo(_.findAll()).exit
+          result <- repo(_.findAll())
+        } yield assertTrue(exit.isSuccess, result.isEmpty)
+      },
+      test("skip (not die on) an AP subject with an unparseable hasPermissions token") {
+        // `parsePermission`'s `case _ => ZIO.die(...)` branch fires for a token that is neither
+        // `Array(simplePermission)` nor `Array(restricted, irisStr)` - e.g. three space-separated parts.
+        // findAllResilient must skip this defect and log it too.
+        val brokenTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+              |
+              |<${AdminConstants.permissionsDataNamedGraph.value}> {
+              |  <http://rdfh.ch/permissions/malformedToken> a knora-admin:AdministrativePermission ;
+              |    knora-admin:forGroup <${groupIri.value}> ;
+              |    knora-admin:forProject <${projectIri.value}> ;
+              |    knora-base:hasPermissions "this is not valid" .
+              |}
+              |""".stripMargin
+        for {
+          _      <- TriplestoreServiceInMemory.setDataSetFromTriG(brokenTrig)
+          exit   <- repo(_.findAll()).exit
+          result <- repo(_.findAll())
+        } yield assertTrue(exit.isSuccess, result.isEmpty)
+      },
+    ),
   ).provide(AdministrativePermissionRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
 }

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.junit.runner.RunWith
 import zio.Chunk
 import zio.NonEmptyChunk
@@ -116,6 +117,87 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         for {
           projects <- KnoraProjectRepo(_.findAll())
         } yield assertTrue(projects.sortBy(_.id.value) == builtInProjects.sortBy(_.id.value))
+      },
+      test("skip a subject missing a required property, log the skip, and still return the valid ones") {
+        // "missingShortname" has no knora-admin:projectShortname triple, so the mapper fails with a
+        // (non-defect) LiteralNotPresent RdfError. findAllResilient must skip it, not fail the whole batch.
+        val brokenTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |
+              |<${AdminConstants.adminDataNamedGraph.value}> {
+              |  <http://rdfh.ch/projects/missingShortname> a knora-admin:knoraProject ;
+              |    knora-admin:projectShortcode "9999" ;
+              |    knora-admin:projectDescription "Broken project"@en ;
+              |    knora-admin:status true ;
+              |    knora-admin:hasSelfJoinEnabled false .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig + brokenTrig)
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).sortBy(_.id.value),
+        )
+      },
+      test("skip a subject with a malformed required value, log the skip, and still return the valid ones") {
+        // "malformedShortcode" carries an invalid knora-admin:projectShortcode (not a 4-digit hex value), so
+        // Shortcode.from fails with a ConversionError RdfError. Same skip-and-log contract as a missing property.
+        val brokenTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |
+              |<${AdminConstants.adminDataNamedGraph.value}> {
+              |  <http://rdfh.ch/projects/malformedShortcode> a knora-admin:knoraProject ;
+              |    knora-admin:projectShortcode "not-a-shortcode" ;
+              |    knora-admin:projectShortname "brokenproject" ;
+              |    knora-admin:projectDescription "Broken project"@en ;
+              |    knora-admin:status true ;
+              |    knora-admin:hasSelfJoinEnabled false .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig + brokenTrig)
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).sortBy(_.id.value),
+        )
+      },
+      test("not return a foreign-class subject in the same named graph") {
+        // findAllQuery's `?s a <resourceClass>` anchor must still filter out subjects of a different class,
+        // even though the whole-subject CONSTRUCT no longer enumerates properties one by one.
+        val foreignClassTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |
+              |<${AdminConstants.adminDataNamedGraph.value}> {
+              |  <http://rdfh.ch/groups/9999> a knora-admin:UserGroup ;
+              |    knora-admin:groupName "not a project" .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig + foreignClassTrig)
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).sortBy(_.id.value),
+          !projects.exists(_.id.value == "http://rdfh.ch/groups/9999"),
+        )
+      },
+      test("map a subject with an extra unrelated predicate and a second rdf:type correctly") {
+        // Whole-subject fetch over-fetches: an unrelated predicate and a second rdf:type on the same subject
+        // must survive into the model without breaking `getResourcesRdfType` or the mapper.
+        val extraPredicateTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+              |
+              |<${AdminConstants.adminDataNamedGraph.value}> {
+              |  <http://rdfh.ch/projects/1234> knora-base:unrelatedPredicate "unrelated value" ;
+              |    a knora-base:Resource .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig + extraPredicateTrig)
+          projects <- KnoraProjectRepo(_.findAll())
+        } yield assertTrue(
+          projects.sortBy(_.id.value) == (Chunk(someProject) ++ builtInProjects).sortBy(_.id.value),
+        )
       },
     ),
     suite("findBy ...")(
@@ -229,6 +311,21 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
               |OPTIONAL { ?s knora-admin:hasDataLicense ?n12 . }
               |OPTIONAL { ?s knora-admin:hasDataCopyrightHolder ?n13 . }
               |OPTIONAL { ?s knora-admin:hasDefaultDataAuthorship ?n14 . } } }
+              |""".stripMargin
+        } yield assertTrue(query.sparql == expected)
+      },
+    ),
+    suite("findAllQuery")(
+      // Pins the generated whole-subject SPARQL for findAll: CONSTRUCT { ?s ?p ?o } scoped to the admin
+      // named graph, anchored by `?s a knora-admin:knoraProject`. No property enumeration, no OPTIONALs.
+      test("build a whole-subject CONSTRUCT scoped to the named graph") {
+        for {
+          repo    <- ZIO.service[KnoraProjectRepoLive]
+          query    = repo.findAllQuery(variable("s"))
+          expected =
+            """CONSTRUCT { ?s ?p ?o . }
+              |WHERE { GRAPH <http://www.knora.org/data/admin> { ?s a <http://www.knora.org/ontology/knora-admin#knoraProject> ;
+              |    ?p ?o . } }
               |""".stripMargin
         } yield assertTrue(query.sparql == expected)
       },
