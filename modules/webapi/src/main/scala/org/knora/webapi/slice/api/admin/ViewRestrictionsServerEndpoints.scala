@@ -14,6 +14,8 @@ final class ViewRestrictionsServerEndpoints(
   restService: ViewRestrictionsRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+    endpoints.getViewRestrictionsClasses.serverLogic(restService.getClasses),
+    endpoints.getViewRestrictionsValues.serverLogic(restService.getValues),
     endpoints.getViewRestrictionsSummary.serverLogic(restService.getSummary),
     endpoints.getViewRestrictionsItems.serverLogic(restService.getItems),
   )

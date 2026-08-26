@@ -63,6 +63,42 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be project admin or system admin.",
     )
 
+  private val resourceClassQuery = query[String]("resourceClass")
+    .description("The IRI of the resource class whose value-level restrictions to count.")
+
+  val getViewRestrictionsClasses = baseEndpoints.securedEndpoint.get
+    .in(base / "classes")
+    .out(jsonBody[ViewRestrictionsClasses].example(ViewRestrictionsClasses.example))
+    .description(
+      "Step 1 of the view-restrictions report: every resource class in the project with its label, " +
+        "ontology, total resource count, and per-audience resource-level restriction counts. Answered by a " +
+        "single triplestore query, so the whole table can be rendered before any value counts arrive. " +
+        "Each audience reports `hidden` (permission code 0 — nothing is served) and `restrictedView` " +
+        "(code 1 — a degraded version is served) separately; the two are disjoint. " +
+        "`totalResources` is the class's whole population — restricted or not — and is the denominator " +
+        "for the counts here, which are in the same unit. It is derived from the same query rather than " +
+        "from a separate count. **Every** class is reported, including classes with nothing restricted " +
+        "(all-zero counts, non-zero `totalResources`) and classes holding no resources at all (zero " +
+        "population). Takes no item-type filter: resource-level counts are never filtered. " +
+        "The user must be project admin or system admin.",
+    )
+
+  val getViewRestrictionsValues = baseEndpoints.securedEndpoint.get
+    .in(base / "values")
+    .in(resourceClassQuery)
+    .in(itemTypeQuery)
+    .out(jsonBody[ViewRestrictionsValues].example(ViewRestrictionsValues.example))
+    .description(
+      "Step 2 of the view-restrictions report: the per-audience value-level restriction counts for ONE " +
+        "resource class, answered by a single triplestore query. Clients call this once per class from " +
+        "the step-1 list, which bounds each request and lets a failure affect only that class's row. " +
+        "Counts restricted values inside the class's resources — file values, ordinary values, comments — " +
+        "which is a different unit from the resource counts in step 1 and must never be summed with them. " +
+        "`itemType` narrows to one kind of value; `All` means all value types (it does not include whole " +
+        "resources, which step 1 already reports). " +
+        "The user must be project admin or system admin.",
+    )
+
   val getViewRestrictionsItems = baseEndpoints.securedEndpoint.get
     .in(base / "items")
     .in(groupByQuery)
@@ -209,6 +245,120 @@ object ViewRestrictionsEndpoints {
     given Schema[AudienceCounts]    = Schema.derived[AudienceCounts]
 
     val zero: AudienceCounts = AudienceCounts(UnitCounts.zero, UnitCounts.zero, UnitCounts.zero)
+  }
+
+  // ---------------------------------------------------------------------------------------------------
+  // Stepped report (DEV-6778).
+  //
+  // The stepped endpoints deliberately do NOT reuse [[UnitCounts]]. Each endpoint answers in exactly one
+  // unit — `/classes` counts whole resources, `/values` counts values inside them — so a pair-shaped type
+  // could only ever be returned half-empty, which reintroduces the very unit confusion UnitCounts exists
+  // to prevent. The unit is carried by which endpoint answered, not by a field.
+  // ---------------------------------------------------------------------------------------------------
+
+  /**
+   * What each audience cannot fully see, in the unit of the answering endpoint.
+   *
+   * Cumulative in the sense that access widens across the audiences, so each audience's counts are less
+   * than or equal to the previous one's.
+   */
+  final case class AudienceRestrictionCounts(
+    anonymous: RestrictionCounts,
+    authenticated: RestrictionCounts,
+    projectMember: RestrictionCounts,
+  )
+  object AudienceRestrictionCounts {
+    given JsonCodec[AudienceRestrictionCounts] = DeriveJsonCodec.gen[AudienceRestrictionCounts]
+    given Schema[AudienceRestrictionCounts]    = Schema.derived[AudienceRestrictionCounts]
+
+    val zero: AudienceRestrictionCounts =
+      AudienceRestrictionCounts(RestrictionCounts.zero, RestrictionCounts.zero, RestrictionCounts.zero)
+
+    /**
+     * Adds `counts` into one audience's slot, leaving the other two untouched.
+     *
+     * Written as an update rather than as a three-way `plus` of mostly-zero values because the caller
+     * classifies one permission literal against one audience at a time, and this keeps that fold direct.
+     */
+    def add(
+      c: AudienceRestrictionCounts,
+      audience: Audience,
+      counts: RestrictionCounts,
+    ): AudienceRestrictionCounts =
+      audience match {
+        case Audience.Anonymous     => c.copy(anonymous = RestrictionCounts.plus(c.anonymous, counts))
+        case Audience.Authenticated => c.copy(authenticated = RestrictionCounts.plus(c.authenticated, counts))
+        case Audience.ProjectMember => c.copy(projectMember = RestrictionCounts.plus(c.projectMember, counts))
+      }
+  }
+
+  /**
+   * One row of the step-1 table: a resource class, its population, and its resource-level restrictions.
+   *
+   * `totalResources` is the class's whole resource population, derived as the sum of its per-permission
+   * counts rather than by a separate query. It is the denominator for every figure in `counts`, which are
+   * in the same unit — unlike the value counts from `/values`, which count a different thing entirely.
+   *
+   * Every class in the project is reported, so a row may be all zeros with a non-zero `totalResources`:
+   * that is a class with nothing restricted, not an empty row.
+   */
+  final case class RestrictedClass(
+    id: String,
+    label: String,
+    ontology: Option[String],
+    totalResources: Int,
+    counts: AudienceRestrictionCounts,
+  )
+  object RestrictedClass {
+    given JsonCodec[RestrictedClass] = DeriveJsonCodec.gen[RestrictedClass]
+    given Schema[RestrictedClass]    = Schema.derived[RestrictedClass]
+  }
+
+  /** Step 1: the whole table skeleton plus resource-level counts, from a single query. */
+  final case class ViewRestrictionsClasses(projectIri: String, classes: Seq[RestrictedClass])
+  object ViewRestrictionsClasses {
+    given JsonCodec[ViewRestrictionsClasses] = DeriveJsonCodec.gen[ViewRestrictionsClasses]
+    given Schema[ViewRestrictionsClasses]    = Schema.derived[ViewRestrictionsClasses]
+
+    val example: ViewRestrictionsClasses = ViewRestrictionsClasses(
+      projectIri = "http://rdfh.ch/projects/0001",
+      classes = Seq(
+        RestrictedClass(
+          id = "http://www.knora.org/ontology/0001/anything#Thing",
+          label = "Thing",
+          ontology = Some("anything"),
+          totalResources = 120,
+          counts = AudienceRestrictionCounts(
+            anonymous = RestrictionCounts(7, 3),
+            authenticated = RestrictionCounts(2, 1),
+            projectMember = RestrictionCounts(0, 0),
+          ),
+        ),
+      ),
+    )
+  }
+
+  /** Step 2: one class's value-level counts, from a single query. */
+  final case class ViewRestrictionsValues(
+    projectIri: String,
+    resourceClass: String,
+    itemType: ItemType,
+    counts: AudienceRestrictionCounts,
+  )
+  object ViewRestrictionsValues {
+    given JsonCodec[ViewRestrictionsValues] = DeriveJsonCodec.gen[ViewRestrictionsValues]
+    given Schema[ViewRestrictionsValues]    = Schema.derived[ViewRestrictionsValues]
+
+    val example: ViewRestrictionsValues = ViewRestrictionsValues(
+      projectIri = "http://rdfh.ch/projects/0001",
+      resourceClass = "http://www.knora.org/ontology/0001/anything#Thing",
+      itemType = ItemType.All,
+      counts = AudienceRestrictionCounts(
+        anonymous = RestrictionCounts(12, 4),
+        authenticated = RestrictionCounts(5, 2),
+        projectMember = RestrictionCounts(0, 0),
+      ),
+    )
   }
 
   /**

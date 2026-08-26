@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
+import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -17,10 +18,12 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
+import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Computes the "view restrictions" report for a project (design screen 1h).
@@ -62,7 +65,115 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
+  private val projectRepo: KnoraProjectRepo,
 ) {
+
+  /**
+   * The project's data graph, used to graph-scope the stepped report's queries instead of joining
+   * `attachedToProject` (see [[ViewRestrictionsRepo]]).
+   *
+   * [[ProjectService.projectDataNamedGraphV2]] derives the graph from the project's shortcode and
+   * shortname, so it needs the project itself and not just its IRI — which is why this is resolved here
+   * rather than in the repo.
+   *
+   * Depends on [[KnoraProjectRepo]] rather than `KnoraProjectService`: the only thing needed is
+   * `findById`, which the service merely delegates, and taking the service would pull `LicenseRepo` and
+   * `OntologyRepo` into this service's dependencies for no benefit.
+   *
+   * A missing project is a real 404, not an invariant violation: the authorization gate lets a **system**
+   * admin through without the project existing, so a bogus IRI reaches this point instead of being
+   * rejected upstream.
+   */
+  private def dataGraph(projectIri: ProjectIri): Task[InternalIri] =
+    projectRepo
+      .findById(projectIri)
+      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
+      .map(ProjectService.projectDataNamedGraphV2)
+
+  /**
+   * Resolves each distinct permission literal against each audience, once.
+   *
+   * The literals recur across classes (the step-1 query groups by class *and* literal), so classifying
+   * per row would repeat the same permission resolution many times over. The set is small either way —
+   * literals come from project-level default-permission templates rather than being authored per object —
+   * but resolving up front also makes the fold below a pure lookup.
+   */
+  private def classify(literals: Set[String], projectIri: ProjectIri): Map[(String, Audience), Visibility] =
+    (for {
+      literal  <- literals
+      audience <- Audience.ordered
+    } yield (literal, audience) -> visibilityOf(
+      PermissionUtilADM.getUserPermissionADM(
+        // The creator only matters when it equals the requesting user, which no synthetic audience user
+        // can be (see audienceUser) — so the placeholder is equivalent to any real creator here.
+        entityCreator = syntheticCreatorPlaceholder,
+        entityProject = projectIri.value,
+        entityPermissionLiteral = literal,
+        requestingUser = audienceUser(audience, projectIri),
+      ),
+    )).toMap
+
+  /**
+   * Folds permission-grouped rows into per-audience counts, and the total object count across every
+   * literal.
+   *
+   * The total is what replaces the separate population query: because the grouped query applies no
+   * permission filter, summing a group's counts over all its literals — the fully visible ones included —
+   * gives that group's entire population.
+   */
+  private def foldRows(
+    rows: Seq[PermissionCountRow],
+    lookup: Map[(String, Audience), Visibility],
+  ): (AudienceRestrictionCounts, Int) =
+    rows.foldLeft((AudienceRestrictionCounts.zero, 0)) { case ((counts, total), row) =>
+      val next = Audience.ordered.foldLeft(counts) { (acc, audience) =>
+        lookup.get((row.permissions, audience)) match {
+          case Some(Visibility.Hidden) =>
+            AudienceRestrictionCounts.add(acc, audience, RestrictionCounts(row.count, 0))
+          case Some(Visibility.RestrictedView) =>
+            AudienceRestrictionCounts.add(acc, audience, RestrictionCounts(0, row.count))
+          // Fully visible is not a restriction, so it contributes to the population only.
+          case _ => acc
+        }
+      }
+      (next, total + row.count)
+    }
+
+  /**
+   * Step 1 of the stepped report: every resource class with its population and its resource-level
+   * restrictions, from a single query.
+   */
+  def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
+    for {
+      classes <- repo.projectClasses(projectIri)
+      graph   <- dataGraph(projectIri)
+      rows    <- repo.resourceCountsByClass(projectIri, classes, graph)
+      lookup   = classify(rows.map(_.permissions).toSet, projectIri)
+      byClass  = rows.groupBy(_.groupId).collect { case (Some(classIri), rs) => classIri -> foldRows(rs, lookup) }
+      // Report every class the project asserts, not just those that produced rows: a class holding no
+      // resources at all is still a real row, with a zero population. When no class was discovered the
+      // queries fall back to a subClassOf guard, so the row set is the only source of class IRIs.
+      reported = (if (classes.iris.nonEmpty) classes.iris else byClass.keys.toSeq).map { classIri =>
+                   val (counts, total) = byClass.getOrElse(classIri, (AudienceRestrictionCounts.zero, 0))
+                   RestrictedClass(classIri, localName(classIri), Some(ontologyName(classIri)), total, counts)
+                 }
+      // Ordering is no longer part of the contract — the frontend renders rows as they arrive — but a
+      // stable order keeps the response reproducible and the tests readable.
+    } yield ViewRestrictionsClasses(projectIri.value, reported.sortBy(c => (c.label, c.id)))
+
+  /** Step 2 of the stepped report: one class's value-level restrictions, from a single query. */
+  def valueCounts(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ItemType,
+  ): Task[ViewRestrictionsValues] =
+    for {
+      classes <- repo.projectClasses(projectIri)
+      graph   <- dataGraph(projectIri)
+      rows    <- repo.valueCountsForClass(projectIri, resourceClass, itemType, classes, graph)
+      lookup   = classify(rows.map(_.permissions).toSet, projectIri)
+      counts   = foldRows(rows, lookup)._1
+    } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
 
   /**
    * Stands in for `entityCreator` when classifying a bare permission literal.
