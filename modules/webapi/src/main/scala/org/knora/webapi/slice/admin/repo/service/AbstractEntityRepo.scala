@@ -156,8 +156,15 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
                              case Exit.Success(e)                    => ZIO.some(e)
                              case Exit.Failure(c) if c.isInterrupted => ZIO.refailCause(c)
                              case Exit.Failure(c)                    =>
-                               skippedRef.update(_ + 1) *>
-                                 ZIO.logWarningCause("skipping unmappable entity in findAll", c).as(None)
+                               r.getSubjectIri.flatMap { subjectIri =>
+                                 skippedRef.update(_ + 1) *>
+                                   ZIO
+                                     .logWarningCause(
+                                       s"skipping unmappable entity in findAll (subject=${subjectIri.value})",
+                                       c,
+                                     )
+                                     .as(None)
+                               }
                            }
                          }
                          .collectSome
