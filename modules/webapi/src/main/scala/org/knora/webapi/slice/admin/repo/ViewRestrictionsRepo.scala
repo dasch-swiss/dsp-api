@@ -15,6 +15,7 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -28,6 +29,8 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -58,23 +61,39 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
  */
 final case class ViewRestrictionsRepo(
   private val triplestore: TriplestoreService,
+  private val projectClassesCache: EhCache[ProjectIri, ProjectClasses],
 ) extends QueryBuilderHelper {
 
   /**
    * Resolves the project's asserted resource classes, and whether the most-specific-class filter is
    * needed at all — see [[ViewRestrictionsRepo.ProjectClasses]].
    *
-   * Two small anchored queries per request, in exchange for dropping two `rdfs:subClassOf` traversals
-   * that the store would otherwise re-evaluate on every result row of every query in that request.
+   * Cached per project, briefly. The stepped report calls this once for the class list and then once per
+   * class for that class's value counts, so on a 43-class project an uncached resolve is paid 44 times for
+   * an answer that is identical every time. The TTL is what keeps a newly added resource class from being
+   * invisible until restart: it only has to outlive one report run, not the deployment.
    */
   def projectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
+    ZIO.succeed(projectClassesCache.get(projectIri)).flatMap {
+      case Some(cached) => ZIO.succeed(cached)
+      case None         =>
+        resolveProjectClasses(projectIri).tap(resolved => ZIO.succeed(projectClassesCache.put(projectIri, resolved)))
+    }
+
+  private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     for {
       iris <- triplestore
                 .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri)))
                 .map(_.flatMap(_.get("resClass")))
-      multi <- triplestore
-                 .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri)))
-                 .map(_.nonEmpty)
+      // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
+      // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
+      // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
+      anyMultiTyped <- triplestore
+                         .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri)))
+                         .map(_.nonEmpty)
+      multi <- if (anyMultiTyped)
+                 triplestore.query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri))).map(_.nonEmpty)
+               else ZIO.succeed(false)
     } yield ProjectClasses(iris, multi)
 
   /**
@@ -429,7 +448,28 @@ final case class ViewRestrictionsRepo(
 
 object ViewRestrictionsRepo extends QueryBuilderHelper {
 
-  val layer = ZLayer.derive[ViewRestrictionsRepo]
+  /**
+   * How long a resolved [[ProjectClasses]] stays cached.
+   *
+   * Sized to outlive one report run — step 1 plus one request per class, at the frontend's concurrency —
+   * and nothing more, so an ontology change shows up on the next report rather than the next restart.
+   */
+  private val ProjectClassesTtl: java.time.Duration = java.time.Duration.ofMinutes(1)
+
+  val layer: URLayer[TriplestoreService & CacheManager, ViewRestrictionsRepo] = ZLayer.fromZIO(
+    for {
+      cache <- ZIO.serviceWithZIO[CacheManager](
+                 _.createCache[ProjectIri, ProjectClasses](
+                   "viewRestrictionsProjectClasses",
+                   CacheManager
+                     .defaultCacheConfigBuilder[ProjectIri, ProjectClasses]()
+                     .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(ProjectClassesTtl))
+                     .build(),
+                 ),
+               )
+      triplestore <- ZIO.service[TriplestoreService]
+    } yield ViewRestrictionsRepo(triplestore, cache),
+  )
 
   /**
    * What a [[GroupCountRow]]'s number counts. The two are different units and must never be added
@@ -816,9 +856,43 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
    * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
    *
-   * The traversal is unavoidable here, but it runs **once per request** and stops at the first hit
-   * (`LIMIT 1`) — as opposed to the gated filter, which the store re-evaluates on every result row.
+   * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
+   * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
+   * on LHTT (105,983 resources) returning nothing. Anchoring `?resClass` with a `VALUES` clause makes it
+   * worse, not better (36.7s) — the closure-as-VALUES shape `CONVENTIONS.md` warns about.
+   *
+   * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
+   * needs no path, and a negative answer settles this one. See [[projectClasses]].
    */
+  /**
+   * Does any non-deleted resource of the project carry **two distinct types at all**?
+   *
+   * A necessary condition for [[multiTypedQuery]]: asserting a class together with a strict subclass of it
+   * entails having two distinct types. So `false` here settles `multiTypedQuery` as `false` too, without
+   * the `subClassOf+` traversal — and it is the common case, since most resources carry exactly one class.
+   *
+   * Strictly weaker on purpose, so it can only ever over-approximate: a `true` answer proves nothing and
+   * the real traversal still runs. That keeps the correctness argument in [[multiTypedQuery]] intact —
+   * notably that `?subClass` must stay unconstrained.
+   *
+   * Measured on LHTT: 1.4s, against 27.3s for the query it gates.
+   */
+  private[repo] def anyMultiTypedResourceQuery(projectIri: ProjectIri): SelectQuery = {
+    val (resource, c1, c2) = (variable("resource"), variable("c1"), variable("c2"))
+    Queries
+      .SELECT(resource)
+      .prefix(prefix(KnoraBase.NS))
+      .where(
+        resource
+          .isA(c1)
+          .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+          .andIsA(c2)
+          .filter(Expressions.notEquals(c1, c2)),
+      )
+      .limit(1)
+  }
+
   private[repo] def multiTypedQuery(projectIri: ProjectIri): SelectQuery = {
     val (resource, resClass, subClass) = (variable("resource"), variable("resClass"), variable("subClass"))
     Queries

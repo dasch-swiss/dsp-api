@@ -37,8 +37,8 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Restrict the report to a single item type, or `all` for the combined view.")
     .default(ItemType.All)
 
-  private val groupQuery = query[String]("group")
-    .description("The IRI of the class (or property, in property mode) whose affected items to page through.")
+  private val groupQuery = query[String]("resourceClass")
+    .description("The IRI of the resource class whose affected resources to page through.")
 
   val getViewRestrictionsSummary = baseEndpoints.securedEndpoint.get
     .in(base / "summary")

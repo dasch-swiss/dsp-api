@@ -18,6 +18,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
+import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -449,6 +450,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
     ViewRestrictionsRepo.layer,
+    CacheManager.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
@@ -1220,6 +1222,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
   private val repoLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsRepo](
     ViewRestrictionsRepo.layer,
+    CacheManager.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
