@@ -14,6 +14,7 @@ import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
+import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Query-generator tests for [[ViewRestrictionsRepo]]. They assert on the rendered SPARQL string rather
@@ -36,6 +37,9 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val multiTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = true)
 
   private val resClassVar = SparqlBuilder.`var`("resClass")
+
+  /** The project data graph the stepped queries scope to, in place of an `attachedToProject` join. */
+  private val dataGraph = InternalIri("http://www.knora.org/data/0001/anything")
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
     suite("distinct permission literals")(
@@ -145,6 +149,97 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.Value, hidden, singleTyped)
           .getQueryString
         assertTrue(q.contains("FILTER NOT EXISTS") && q.contains("knora-base:FileValue"))
+      },
+    ),
+    suite("permission-grouped counts (stepped report)")(
+      test("resource counts group by class AND literal, with no permission filter at all") {
+        val q = ViewRestrictionsRepo
+          .resourceCountsByClassAndPermissionQuery(projectIri, singleTyped, dataGraph)
+          .getQueryString
+        assertTrue(
+          q.contains("COUNT") && q.contains("DISTINCT"),
+          // Both axes in the grouping key: this is what lets one query answer every audience and both
+          // restriction states at once.
+          q.contains("GROUP BY ?resClass ?permissions"),
+          // No literal IN-list — the absence of a permission filter is exactly what makes the class's
+          // whole population derivable by summing its rows.
+          !q.contains("M knora-admin:ProjectMember"),
+          !q.contains("V knora-admin:KnownUser"),
+          // The creator is neither projected nor constrained, so the join is dropped (see resourceCore).
+          !q.contains("?creator"),
+          // exact at any size: no row cap
+          !q.contains("LIMIT"),
+        )
+      },
+      test("value counts group by literal alone and are narrowed to one class by FILTER, not by chunking") {
+        val q = ViewRestrictionsRepo
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped, dataGraph)
+          .getQueryString
+        assertTrue(
+          q.contains("GROUP BY ?permissions"),
+          // one class per request — the route is the unit of work, so there is no second grouping axis
+          !q.contains("GROUP BY ?resClass"),
+          q.contains("FILTER") && q.contains(thingClass),
+          // link values stay excluded, as in every other value query
+          q.contains("FILTER NOT EXISTS") && q.contains("knora-base:LinkValue"),
+          !q.contains("?creator"),
+          !q.contains("LIMIT"),
+        )
+      },
+      test("itemType still narrows the value counts") {
+        val comment = ViewRestrictionsRepo
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Comment, singleTyped, dataGraph)
+          .getQueryString
+        val value = ViewRestrictionsRepo
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Value, singleTyped, dataGraph)
+          .getQueryString
+        assertTrue(
+          comment.contains("knora-base:valueHasComment"),
+          value.contains("FILTER NOT EXISTS") && value.contains("knora-base:FileValue"),
+        )
+      },
+      test("the most-specific-class filter is kept, so a multi-typed resource is counted once") {
+        // Load-bearing for the grouping: without it a resource asserted as several classes in one
+        // hierarchy binds ?resClass once per class, double-counting it and overstating totalResources.
+        val q = ViewRestrictionsRepo
+          .resourceCountsByClassAndPermissionQuery(projectIri, multiTyped, dataGraph)
+          .getQueryString
+        assertTrue(q.contains("rdfs:subClassOf+"))
+      },
+    ),
+    suite("graph scoping is opt-in")(
+      test("the stepped queries scope by GRAPH and drop the attachedToProject join") {
+        val resources = ViewRestrictionsRepo
+          .resourceCountsByClassAndPermissionQuery(projectIri, singleTyped, dataGraph)
+          .getQueryString
+        val values = ViewRestrictionsRepo
+          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped, dataGraph)
+          .getQueryString
+        assertTrue(
+          resources.contains("GRAPH") && resources.contains(dataGraph.value),
+          values.contains("GRAPH") && values.contains(dataGraph.value),
+          // GRAPH *replaces* the join rather than joining it as well — emitting both would be redundant
+          // per-row work (CONVENTIONS.md § SPARQL, DEV-6827).
+          !resources.contains("attachedToProject"),
+          !values.contains("attachedToProject"),
+        )
+      },
+      test("every pre-existing query keeps the attachedToProject join and stays ungraphed") {
+        // The graph parameter defaults to None precisely so that adding it could not change any existing
+        // query. This pins that: a regression here would silently alter the /items drill-down.
+        val untouched = Seq(
+          ViewRestrictionsRepo.resourceCountQuery(projectIri, hidden, singleTyped).getQueryString,
+          ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, singleTyped).getQueryString,
+          ViewRestrictionsRepo
+            .valueCountQuery(projectIri, GroupBy.ResourceClass, ItemType.All, hidden, singleTyped)
+            .getQueryString,
+          ViewRestrictionsRepo.distinctResourcePermissionsQuery(projectIri, singleTyped).getQueryString,
+          ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, singleTyped).getQueryString,
+        )
+        assertTrue(
+          untouched.forall(_.contains(s"knora-base:attachedToProject <${projectIri.value}>")),
+          untouched.forall(!_.contains("GRAPH")),
+        )
       },
     ),
     suite("drill-down paging")(

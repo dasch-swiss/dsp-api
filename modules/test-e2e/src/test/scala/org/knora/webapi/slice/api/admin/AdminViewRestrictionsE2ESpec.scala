@@ -16,11 +16,14 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.PagedResponse
+import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemVisibility
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.RestrictedResource
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.RestrictionCounts
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.UnitCounts.anyRestriction
+import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsClasses
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsSummary
+import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsValues
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -32,6 +35,15 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
 
   private val summaryUri =
     uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/summary?groupBy=ResourceClass&itemType=All"
+
+  /** Step 1 takes no parameters at all — resource-level counts are never filtered. */
+  private val classesUri = uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/classes"
+
+  private val thingClassIri = "http://www.knora.org/ontology/0001/anything#Thing"
+
+  /** Step 2 is always scoped to exactly one class. */
+  private def valuesUri(resourceClass: String, itemType: String = "All") =
+    uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/values?resourceClass=$resourceClass&itemType=$itemType"
 
   val e2eSpec = suite("The view-restrictions admin endpoint")(
     suite("summary")(
@@ -145,6 +157,110 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
       test("returns 403 for a project admin of a different project") {
         TestApiClient
           .getJson[ViewRestrictionsSummary](summaryUri, incunabulaProjectAdminUser)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+    ),
+    suite("classes (step 1)")(
+      test("returns every class with its population and resource-level counts, in one request") {
+        for {
+          result <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
+        } yield assertTrue(
+          result.projectIri == anythingProjectIri.value,
+          result.classes.nonEmpty,
+          // Every class is a row because it exists, not because it is restricted, so the population is the
+          // one figure that is never zero on this fixture.
+          result.classes.forall(_.totalResources > 0),
+          // Cumulative invariant: access widens across the audiences, so counts can only shrink.
+          result.classes.forall(c => c.counts.anonymous.total >= c.counts.authenticated.total),
+          result.classes.forall(c => c.counts.authenticated.total >= c.counts.projectMember.total),
+          // THE INVARIANT the unit split exists to protect: these counts are whole resources, so they can
+          // never exceed the class's resource population. The old mixed count could report "3 of 1".
+          result.classes.forall(c => c.counts.anonymous.total <= c.totalResources),
+          result.classes.forall(c => c.counts.authenticated.total <= c.totalResources),
+          result.classes.forall(c => c.counts.projectMember.total <= c.totalResources),
+        )
+      },
+      test("takes no itemType filter — resource counts are never filtered") {
+        // An unknown query parameter is ignored by tapir rather than rejected, so this asserts the response
+        // is identical with and without it: proof the filter cannot affect step 1.
+        for {
+          plain    <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
+          filtered <- TestApiClient
+                        .getJson[ViewRestrictionsClasses](uri"$classesUri?itemType=Comment", rootUser)
+                        .flatMap(_.assert200)
+        } yield assertTrue(plain == filtered)
+      },
+      test("returns 200 for a project admin of the project") {
+        TestApiClient
+          .getJson[ViewRestrictionsClasses](classesUri, anythingAdminUser)
+          .flatMap(_.assert200)
+          .as(assertCompletes)
+      },
+      test("returns 401 when no authentication is provided") {
+        TestApiClient
+          .getJson[ViewRestrictionsClasses](classesUri)
+          .map(response => assertTrue(response.code == StatusCode.Unauthorized))
+      },
+      test("returns 403 for a user who is neither system nor project admin") {
+        TestApiClient
+          .getJson[ViewRestrictionsClasses](classesUri, anythingUser2)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+    ),
+    suite("values (step 2)")(
+      test("returns value-level counts for one class named by the step-1 response") {
+        for {
+          classes <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
+          // headOption, not head: a fixture change should fail with a clear assertion rather than a
+          // NoSuchElementException from an unrelated-looking line.
+          clazz <- ZIO
+                     .fromOption(classes.classes.headOption.map(_.id))
+                     .orElseFail(new AssertionError("step 1 reported no classes to count values for"))
+          result <- TestApiClient.getJson[ViewRestrictionsValues](valuesUri(clazz), rootUser).flatMap(_.assert200)
+        } yield assertTrue(
+          result.projectIri == anythingProjectIri.value,
+          result.resourceClass == clazz,
+          // Same cumulative invariant, in the value unit. Deliberately NOT bounded by totalResources: one
+          // resource can carry arbitrarily many restricted values.
+          result.counts.anonymous.total >= result.counts.authenticated.total,
+          result.counts.authenticated.total >= result.counts.projectMember.total,
+        )
+      },
+      test("itemType narrows the counts") {
+        for {
+          all <- TestApiClient
+                   .getJson[ViewRestrictionsValues](valuesUri(thingClassIri, "All"), rootUser)
+                   .flatMap(_.assert200)
+          comments <- TestApiClient
+                        .getJson[ViewRestrictionsValues](valuesUri(thingClassIri, "Comment"), rootUser)
+                        .flatMap(_.assert200)
+        } yield assertTrue(
+          comments.itemType == ItemType.Comment,
+          // A narrowed filter can only ever count a subset of All.
+          comments.counts.anonymous.total <= all.counts.anonymous.total,
+        )
+      },
+      test("returns 400 for a malformed resourceClass IRI") {
+        TestApiClient
+          .getJson[ViewRestrictionsValues](valuesUri("not an iri"), rootUser)
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
+      test("returns zero counts for a well-formed but unmatched resourceClass") {
+        // Not an error: a class with nothing restricted is a legitimate all-zero row, and the frontend
+        // renders it as such rather than as a failure.
+        for {
+          result <- TestApiClient
+                      .getJson[ViewRestrictionsValues](valuesUri("http://example.org/NoSuchClass"), rootUser)
+                      .flatMap(_.assert200)
+        } yield assertTrue(
+          result.counts.anonymous.total == 0,
+          result.counts.authenticated.total == 0,
+          result.counts.projectMember.total == 0,
+        )
+      },
+      test("returns 403 for a non-admin user") {
+        TestApiClient
+          .getJson[ViewRestrictionsValues](valuesUri(thingClassIri), anythingUser2)
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
     ),

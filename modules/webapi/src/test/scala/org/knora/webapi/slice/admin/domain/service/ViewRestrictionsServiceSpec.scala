@@ -10,14 +10,18 @@ import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
 
+import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -449,6 +453,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
     ViewRestrictionsRepo.layer,
+    KnoraProjectRepoInMemory.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
@@ -1133,6 +1138,134 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
   )
 
+  // ----- stepped report (DEV-6778) -----
+
+  /**
+   * The graph `TestDataFactory.someProject` resolves to — shortcode `0001`, shortname `shortname`, so
+   * `ProjectService.projectDataNamedGraphV2` yields this.
+   *
+   * The stepped queries scope with `GRAPH <…>` instead of filtering on `attachedToProject`, so the fixture
+   * has to put its triples in exactly this graph. A Turtle fixture would land them in
+   * `http://www.example.org/graph` and every count would come back zero — passing vacuously, which is why
+   * these use TriG.
+   */
+  private val projectDataGraph = "http://www.knora.org/data/0001/shortname"
+
+  /**
+   * Two `Thing`s in the project's data graph, one member-only (hidden from anon and logged-in) and one
+   * world-readable, plus one member-only value on the first.
+   *
+   * Populations matter here as much as restrictions: `totalResources` is derived by summing a class's rows
+   * over *every* literal, the fully visible one included, which is what retires the separate population
+   * query.
+   */
+  private val steppedTriG: String =
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |
+       |<$projectDataGraph> {
+       |  <$thingClass> rdfs:subClassOf kb:Resource .
+       |
+       |  <http://rdfh.ch/0001/memberOnly> rdf:type <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false ;
+       |    <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/memberOnly/values/v1> .
+       |
+       |  <http://rdfh.ch/0001/memberOnly/values/v1> rdf:type kb:TextValue ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false .
+       |
+       |  <http://www.knora.org/ontology/0001/anything#hasText> rdfs:subPropertyOf kb:hasValue .
+       |
+       |  <http://rdfh.ch/0001/openThing> rdf:type <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |    kb:isDeleted false .
+       |}
+       |""".stripMargin
+
+  /**
+   * The project must exist for its data graph to be resolvable, so every stepped test seeds it first —
+   * except the 404 test below, which deliberately does not.
+   */
+  private val seedProject =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(TestDataFactory.someProject))
+
+  /**
+   * As [[commonLayers]], but also *exposes* the in-memory project repo.
+   *
+   * `commonLayers` outputs only the service, so the repo it is built from is unreachable from a test body —
+   * and these tests have to seed the project whose shortcode and shortname the data graph is derived from.
+   */
+  private val steppedLayers =
+    ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService & KnoraProjectRepoInMemory](
+      ViewRestrictionsService.layer,
+      ViewRestrictionsRepo.layer,
+      KnoraProjectRepoInMemory.layer,
+      StringFormatter.test,
+      TriplestoreServiceInMemory.layer,
+    )
+
+  private val steppedSuite = suite("stepped report")(
+    test("classSummaries derives totalResources by summing every literal, visible ones included") {
+      for {
+        _      <- seedProject
+        result <- service(_.classSummaries(projectIri))
+        thing   = result.classes.find(_.id == thingClass)
+      } yield assertTrue(
+        // Both resources counted, though only one is restricted: the population is not a restriction count.
+        thing.map(_.totalResources).contains(2),
+        // Hidden from anonymous and from a logged-in non-member, visible to a project member.
+        thing.map(_.counts.anonymous.hidden).contains(1),
+        thing.map(_.counts.authenticated.hidden).contains(1),
+        thing.map(_.counts.projectMember.hidden).contains(0),
+        // The open resource is fully visible, so it is in the population but in no restriction bucket.
+        thing.map(_.counts.anonymous.restrictedView).contains(0),
+      )
+    }.provide(steppedLayers, datasetLayerFromTriG(steppedTriG)),
+    test("classSummaries reports every asserted class, including one with nothing restricted") {
+      for {
+        _      <- seedProject
+        result <- service(_.classSummaries(projectIri))
+      } yield assertTrue(
+        result.classes.nonEmpty,
+        result.projectIri == projectIri.value,
+        // A class is a row whether or not it carries a restriction — the frontend needs the denominator.
+        result.classes.forall(_.totalResources >= 0),
+      )
+    }.provide(steppedLayers, datasetLayerFromTriG(steppedTriG)),
+    test("valueCounts counts values, in a unit separate from the resource counts") {
+      for {
+        _      <- seedProject
+        result <- service(_.valueCounts(projectIri, thingClass, ItemType.All))
+      } yield assertTrue(
+        result.resourceClass == thingClass,
+        // One member-only value: hidden from anon and logged-in, visible to a member. This is 1 *value*,
+        // not to be added to the 1 restricted *resource* above.
+        result.counts.anonymous.hidden == 1,
+        result.counts.authenticated.hidden == 1,
+        result.counts.projectMember.hidden == 0,
+      )
+    }.provide(steppedLayers, datasetLayerFromTriG(steppedTriG)),
+    test("a project that does not exist is a failure, not an empty report") {
+      // Deliberately does NOT seed the project. The authorization gate lets a system admin through without
+      // the project existing, so this path is reachable and must not be a 500 or a silently empty table.
+      for {
+        exit <- service(_.classSummaries(projectIri)).exit
+      } yield assertTrue(
+        exit.isFailure,
+        // a recoverable failure in the error channel (404), not a defect
+        exit.causeOption.exists(c => c.failureOption.exists(_.isInstanceOf[NotFoundException])),
+      )
+    }.provide(steppedLayers, datasetLayerFromTriG(steppedTriG)),
+  )
+
   // ----- count units, at the repo boundary where the tagging happens -----
 
   private val repo = ZIO.serviceWithZIO[ViewRestrictionsRepo]
@@ -1245,5 +1378,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     multiTypedSuite,
     countUnitSuite,
     unitConsistencySuite,
+    steppedSuite,
   )
 }

@@ -280,8 +280,6 @@ resolver would not survive `-Wunused:all -Werror`.
 
 - [ ] Define `getViewRestrictionsClasses` in `ViewRestrictionsEndpoints` with its response DTO
 - [ ] Define `getViewRestrictionsValues` in `ViewRestrictionsEndpoints` with its response DTO
-- [ ] Narrow `ItemType` to `All | File | Value | Comment`
-- [ ] Delete the `GroupBy` enum
 - [ ] Change `/items` to take `resourceClass` and drop `groupBy`
 - [ ] Add `getClasses` and `getValues` to `ViewRestrictionsRestService` with the project-admin-or-sysadmin check
 - [ ] Validate `resourceClass` at the boundary, failing `BadRequestException` (REQ-2.7)
@@ -296,6 +294,9 @@ comparison baseline.
 
 - [ ] Rewrite `ViewRestrictionsQuerySpec` for the two grouped queries; delete chunk-summation tests
 - [ ] Add a query test pinning the graph-scoped shape of the two new queries
+- [ ] Add `TestDatasetBuilder.datasetLayerFromTriG` so a fixture can place triples in the project's real data graph
+- [ ] Add TriG fixtures for the stepped service tests (a Turtle fixture lands in `http://www.example.org/graph`, so a graph-scoped query matches nothing and the test passes vacuously)
+- [ ] Add a service test asserting a non-existent project fails with `NotFoundException` rather than returning an empty report
 - [ ] Add a query test pinning that the eight pre-existing call sites still emit the `attachedToProject` join
 - [ ] Keep the literal-equivalence pin in `ViewRestrictionsServiceSpec`
 - [ ] Replace the five `CountUnit` assertions at `ViewRestrictionsServiceSpec:1161-1196` with equivalents over `PermissionCountRow`
@@ -308,6 +309,13 @@ comparison baseline.
 - [ ] Confirm the existing `/items` E2E coverage still passes unchanged
 
 #### Phase 5: deletions and cleanup
+
+Carries two deliverables deferred from Phase 3. Narrowing `ItemType` and deleting `GroupBy`
+are contract-step changes: `/summary` and `/items` both still accept them until this phase,
+so doing either earlier would produce a commit that does not compile.
+
+- [ ] Narrow `ItemType` to `All | File | Value | Comment` (deferred from Phase 3)
+- [ ] Delete the `GroupBy` enum (deferred from Phase 3)
 
 - [ ] Delete `distinctPermissions` and `runDistinctPermissions`
 - [ ] Delete `totalResourcesByClass` and `resourceTotalByClassQuery`
@@ -388,6 +396,8 @@ check against the old queries and is retained.
 | Unbound `subPropertyOf*` path makes step 2 time out (DEV-6803 shape: >60s vs 0.4s) | H | H | Answer OQ-2 first; `GRAPH` scoping in Phase 1; reopen the `VALUES ?prop` decision if measurement demands it |
 | One class too large for a single query | M | M | Accepted by decision — surfaces as an error row (US-3), not a 500 |
 | Graph scoping changes the counted universe | M | H | Opt-in `graph` parameter defaults to current behaviour, so only the two new queries change; Phase 4 pins both shapes and byte-compares counts while the old queries still exist (Phase 1 gate) |
+| Project data not actually in `projectDataNamedGraphV2` | L | H | Graph scoping returns **zero rows** rather than erroring if the assumption is wrong, so the report would silently show all zeros. Verify against the dev DB with a `GROUP BY ?g` query over the project's resources before shipping; drop scoping if any resources live elsewhere |
+| Graph-scoped queries pass vacuously in tests | M | M | Discovered during Phase 4: `datasetLayerFromTurtle` puts fixtures in `http://www.example.org/graph`, which no graph-scoped query looks in. Stepped service tests use TriG fixtures in the project's real data graph |
 | Graph scoping regresses the `/items` drill-down | L | H | Shared skeletons keep their default behaviour; Phase 4 pins the `attachedToProject` join on the eight untouched call sites and re-runs existing `/items` E2E coverage |
 | Dropping `DISTINCT` silently undercounts | M | H | Byte-compare outputs before dropping; keep `DISTINCT` if not provably redundant |
 | Deleting the fan-out also deletes the literal-purity spec coverage | M | H | Phase 5 keeps the `ViewRestrictionsServiceSpec` equivalence pin as an explicit deliverable |
