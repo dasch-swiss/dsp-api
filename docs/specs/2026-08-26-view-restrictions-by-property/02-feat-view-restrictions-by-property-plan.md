@@ -138,41 +138,41 @@ never string concatenation.
 
 #### Phase 1: property list from the ontology cache
 
-- [ ] Add `ViewRestrictionsByPropertyRepo` with a `projectValueProperties(projectIri)` returning IRI + label + ontology name
-- [ ] Source it from `OntologyRepo.findByProject`, plus `findById` for `knora-base`
-- [ ] Decide and document the value-property predicate. `ReadPropertyInfoV2` exposes `isResourceProp`, `isLinkProp`, `isLinkValueProp`, `isFileValueProp` and `isStandoffInternalReferenceProperty`, and there is **no** existing "is a value property" helper in the ontology slice — the abandoned branch's `findAllValuePropertyIris` is not on main. Candidate: `isResourceProp && !isLinkProp && !isLinkValueProp` (unverified — confirm against a real ontology)
+- [x] Add `ViewRestrictionsByPropertyRepo` with a `projectValueProperties(projectIri)` returning IRI + label + ontology name
+- [x] Source it from `OntologyRepo.findByProject`, plus `findById` for `knora-base`
+- [x] Decide and document the value-property predicate. `ReadPropertyInfoV2` exposes `isResourceProp`, `isLinkProp`, `isLinkValueProp`, `isFileValueProp` and `isStandoffInternalReferenceProperty`, and there is **no** existing "is a value property" helper in the ontology slice — the abandoned branch's `findAllValuePropertyIris` is not on main. Candidate: `isResourceProp && !isLinkProp && !isLinkValueProp` (unverified — confirm against a real ontology)
 - [ ] Add a test pinning that predicate against a project ontology with a link property, a link-value property and a file-value property, since it alone determines the row set
 - [ ] Extract labels via the `Rdfs.Label` pattern used in `OntologyRestServiceV3.scala:32`
-- [ ] Confirm the method issues no SPARQL (PRD REQ-1.2)
+- [x] Confirm the method issues no SPARQL (PRD REQ-1.2)
 
 #### Phase 2: the two counting queries
 
-- [ ] Add `propertyValueCountsQuery(projectIri, propertyIri, itemType)` grouped by `?permissions`, with the property IRI bound directly in the triple pattern
+- [x] Add `propertyValueCountsQuery(projectIri, propertyIri, itemType)` grouped by `?permissions`, with the property IRI bound directly in the triple pattern
 - [ ] Assert by test that it emits no `?resClass`, no `VALUES`, and no `FILTER (?prop`
-- [ ] Add `propertyDrillDownPageQuery` and its matching `COUNT DISTINCT` total query
-- [ ] Project each resource's own class in the drill-down row (REQ-4.2) — a property spans classes, so the class is per row here rather than a property of the whole table
-- [ ] Add repo methods returning `Seq[PermissionCountRow]` and the drill-down rows
-- [ ] Copy the `File`/`Value`/`Comment` constraint into this repo rather than reusing `ViewRestrictionsRepo.itemTypeConstraint`. Reusing it is the seam this whole design avoids, and the fragment is a few lines of pattern-building; a test pins each branch
+- [x] Add `propertyDrillDownPageQuery` and its matching `COUNT DISTINCT` total query
+- [x] Project each resource's own class in the drill-down row (REQ-4.2) — a property spans classes, so the class is per row here rather than a property of the whole table
+- [x] Add repo methods returning `Seq[PermissionCountRow]` and the drill-down rows
+- [x] Copy the `File`/`Value`/`Comment` constraint into this repo rather than reusing `ViewRestrictionsRepo.itemTypeConstraint`. Reusing it is the seam this whole design avoids, and the fragment is a few lines of pattern-building; a test pins each branch
 
 #### Phase 3: service layer
 
-- [ ] Add `ViewRestrictionsByPropertyService` with its own `audienceUser`, `visibilityOf` and synthetic-creator placeholder
-- [ ] Add `classify` resolving each distinct literal once per audience
-- [ ] Add `foldRows` producing per-audience counts plus `totalValues`
-- [ ] Add `properties(projectIri)`, `propertyValues(projectIri, property, itemType)` and `propertyItems(...)`
-- [ ] Take no `KnoraProjectRepo` and no `ViewRestrictionsRepo` dependency
+- [x] Add `ViewRestrictionsByPropertyService` with its own `audienceUser`, `visibilityOf` and synthetic-creator placeholder
+- [x] Add `classify` resolving each distinct literal once per audience
+- [x] Add `foldRows` producing per-audience counts plus `totalValues`
+- [x] Add `properties(projectIri)`, `propertyValues(projectIri, property, itemType)` and `propertyItems(...)`
+- [x] Take no `KnoraProjectRepo` and no `ViewRestrictionsRepo` dependency
 
 #### Phase 4: API layer
 
-- [ ] Define the three endpoints in `ViewRestrictionsByPropertyEndpoints` with their DTOs
-- [ ] `/properties` takes no filter (REQ-1.6); `/property-values` and `/property-items` take `ValueItemType`
-- [ ] Import `ValueItemType` from `ViewRestrictionsEndpoints` rather than redefining it. It carries no grouping discriminator (PRD REQ-6.2), the two reports genuinely mean the same four value types, and a second identical enum would surface in the generated client as a confusing near-duplicate
-- [ ] Add `ViewRestrictionsByPropertyRestService` with the project-admin-or-sysadmin check on all three (REQ-1.5, REQ-2.8, REQ-4.5)
-- [ ] Validate `property` as a well-formed IRI, failing `BadRequestException` (REQ-2.7, REQ-4.6)
-- [ ] Wire `ViewRestrictionsByPropertyServerEndpoints`
-- [ ] Register in `AdminApiServerEndpoints` and `AdminApiModule`
-- [ ] Wire the service and repo in `AdminDomainModule`, adding them to its `Provided` type list
-- [ ] Add the new endpoints and rest service to `AdminApiModule`'s `Provided` list, and any new dependency to its `Dependencies` list
+- [x] Define the three endpoints in `ViewRestrictionsByPropertyEndpoints` with their DTOs
+- [x] `/properties` takes no filter (REQ-1.6); `/property-values` and `/property-items` take `ValueItemType`
+- [x] Import `ValueItemType` from `ViewRestrictionsEndpoints` rather than redefining it. It carries no grouping discriminator (PRD REQ-6.2), the two reports genuinely mean the same four value types, and a second identical enum would surface in the generated client as a confusing near-duplicate
+- [x] Add `ViewRestrictionsByPropertyRestService` with the project-admin-or-sysadmin check on all three (REQ-1.5, REQ-2.8, REQ-4.5)
+- [x] Validate `property` as a well-formed IRI, failing `BadRequestException` (REQ-2.7, REQ-4.6)
+- [x] Wire `ViewRestrictionsByPropertyServerEndpoints`
+- [x] Register in `AdminApiServerEndpoints` and `AdminApiModule`
+- [x] Wire the service and repo in `AdminDomainModule`, adding them to its `Provided` type list
+- [x] Add the new endpoints and rest service to `AdminApiModule`'s `Provided` list, and any new dependency to its `Dependencies` list
 
 #### Phase 5: dsp-api tests
 
@@ -191,7 +191,7 @@ never string concatenation.
 
 #### Phase 6: client and state
 
-- [ ] Rebuild and redeploy the API image so the new routes are live (`just docker-build-dsp-api-image` then `docker compose up -d api`)
+- [x] Rebuild and redeploy the API image so the new routes are live (`just docker-build-dsp-api-image` then `docker compose up -d api`)
 - [ ] Regenerate the OpenAPI client from the running API at `localhost:3339/docs/docs.yaml` — note the docs are served by the instrumentation server on 3339, not the API port
 - [ ] Verify the regenerated client exposes all three new operations before touching any component
 - [ ] Add `ViewRestrictionsByPropertyPageService` with its own step-1 stream and bounded step-2 fan-out at concurrency 4
@@ -216,6 +216,21 @@ never string concatenation.
 - [ ] Mirror them in `de.json`
 - [ ] Mirror them in `fr.json`
 - [ ] Mirror them in `it.json`
+
+## Verified against LHTT after Phases 1-4
+
+Deployed locally and called against the real project (`0820`, 105,983 resources):
+
+| | Result |
+|---|---|
+| `/properties` | **182 properties in 552ms** — exactly the 182 SPARQL reports for `subPropertyOf* knora-base:hasValue`, so the `isValueProperty` predicate is confirmed rather than assumed. Both sources present: `lhtt:*` from the project's ontology and `knora-base:hasArchiveFileValue` from the separately fetched built-ins |
+| `/property-values` for `hasTitle` | 2,267ms, `totalValues` 66,484, all hidden from anonymous and authenticated. Cross-checked in SPARQL: 66,484 values, 66,484 distinct resources, and exactly **one** distinct permission literal — so "all hidden" is correct, not a bug |
+| `/property-items` for `hasTitle` | 6,827ms, `totalItems` 66,484, each row carrying its own class (`PhotographyArchaeology`) |
+
+**Correction to the earlier estimate:** the drill-down was measured at 3.2s during discovery, but that
+query omitted the `OPTIONAL` label / fileClass / comment joins and the creator join the real one carries.
+The true figure is ~6.8s on the worst-case property. Still user-initiated and one at a time, so viable —
+but it is the slowest thing in this report and the first place to look if the drill-down feels sluggish.
 
 ## Acceptance Criteria
 
