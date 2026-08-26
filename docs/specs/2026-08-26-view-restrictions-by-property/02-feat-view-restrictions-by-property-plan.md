@@ -141,14 +141,14 @@ never string concatenation.
 - [x] Add `ViewRestrictionsByPropertyRepo` with a `projectValueProperties(projectIri)` returning IRI + label + ontology name
 - [x] Source it from `OntologyRepo.findByProject`, plus `findById` for `knora-base`
 - [x] Decide and document the value-property predicate. `ReadPropertyInfoV2` exposes `isResourceProp`, `isLinkProp`, `isLinkValueProp`, `isFileValueProp` and `isStandoffInternalReferenceProperty`, and there is **no** existing "is a value property" helper in the ontology slice — the abandoned branch's `findAllValuePropertyIris` is not on main. Candidate: `isResourceProp && !isLinkProp && !isLinkValueProp` (unverified — confirm against a real ontology)
-- [ ] Add a test pinning that predicate against a project ontology with a link property, a link-value property and a file-value property, since it alone determines the row set
+- [x] Add a test pinning that predicate against a project ontology with a link property, a link-value property and a file-value property, since it alone determines the row set
 - [ ] Extract labels via the `Rdfs.Label` pattern used in `OntologyRestServiceV3.scala:32`
 - [x] Confirm the method issues no SPARQL (PRD REQ-1.2)
 
 #### Phase 2: the two counting queries
 
 - [x] Add `propertyValueCountsQuery(projectIri, propertyIri, itemType)` grouped by `?permissions`, with the property IRI bound directly in the triple pattern
-- [ ] Assert by test that it emits no `?resClass`, no `VALUES`, and no `FILTER (?prop`
+- [x] Assert by test that it emits no `?resClass`, no `VALUES`, and no `FILTER (?prop`
 - [x] Add `propertyDrillDownPageQuery` and its matching `COUNT DISTINCT` total query
 - [x] Project each resource's own class in the drill-down row (REQ-4.2) — a property spans classes, so the class is per row here rather than a property of the whole table
 - [x] Add repo methods returning `Seq[PermissionCountRow]` and the drill-down rows
@@ -176,15 +176,15 @@ never string concatenation.
 
 #### Phase 5: dsp-api tests
 
-- [ ] Query spec: the counting query binds the property and emits no `?resClass`, no `VALUES`, no `FILTER (?prop`
-- [ ] Query spec: the drill-down orders deterministically and windows in SPARQL
-- [ ] Service spec: pin the bare-literal / real-object equivalence for this service (REQ-6.3)
+- [x] Query spec: the counting query binds the property and emits no `?resClass`, no `VALUES`, no `FILTER (?prop`
+- [x] Query spec: the drill-down orders deterministically and windows in SPARQL
+- [x] Service spec: pin the bare-literal / real-object equivalence for this service (REQ-6.3)
 - [ ] Service spec: `totalValues` is the sum over every literal, visible ones included
 - [ ] Service spec: a property no resource uses yields zero counts rather than an error
-- [ ] E2E: all three routes return 200 for an admin, 401 unauthenticated, 403 for a non-admin
-- [ ] E2E: 400 for a malformed `property` on both parameterised routes
-- [ ] E2E: each audience's counts do not exceed `totalValues` (REQ-2.6)
-- [ ] E2E: assert the class routes still answer with their current paths, parameters and status codes (REQ-6.1)
+- [x] E2E: all three routes return 200 for an admin, 401 unauthenticated, 403 for a non-admin
+- [x] E2E: 400 for a malformed `property` on both parameterised routes
+- [x] E2E: each audience's counts do not exceed `totalValues` (REQ-2.6)
+- [x] E2E: assert the class routes still answer with their current paths, parameters and status codes (REQ-6.1)
 - [ ] Before merging, capture `/classes` and `/values` responses for one project on the parent branch and diff them against this branch — the "byte-identical" success metric is a manual gate, not something a single test run can assert
 
 ### dsp-das
@@ -192,30 +192,30 @@ never string concatenation.
 #### Phase 6: client and state
 
 - [x] Rebuild and redeploy the API image so the new routes are live (`just docker-build-dsp-api-image` then `docker compose up -d api`)
-- [ ] Regenerate the OpenAPI client from the running API at `localhost:3339/docs/docs.yaml` — note the docs are served by the instrumentation server on 3339, not the API port
-- [ ] Verify the regenerated client exposes all three new operations before touching any component
-- [ ] Add `ViewRestrictionsByPropertyPageService` with its own step-1 stream and bounded step-2 fan-out at concurrency 4
-- [ ] Accumulate per-property results with `scan`, `catchError` on the inner request
-- [ ] Cache per `(itemType, propertyIri)`; add `retryProperty`
-- [ ] Expose `progress$` and `anyFailed$`
-- [ ] Add `loadPropertyItems` for the drill-down
+- [x] Regenerate the OpenAPI client from the running API at `localhost:3339/docs/docs.yaml` — note the docs are served by the instrumentation server on 3339, not the API port
+- [x] Verify the regenerated client exposes all three new operations before touching any component
+- [x] Add `ViewRestrictionsByPropertyPageService` with its own step-1 stream and bounded step-2 fan-out at concurrency 4
+- [x] Accumulate per-property results with `scan`, `catchError` on the inner request
+- [x] Cache per `(itemType, propertyIri)`; add `retryProperty`
+- [x] Expose `progress$` and `anyFailed$`
+- [x] Add `loadPropertyItems` for the drill-down
 
 #### Phase 7: component and toggle
 
-- [ ] Add `ViewRestrictionsByPropertyTableComponent` with its own rows, progress, per-row error and retry
-- [ ] Add the grouping toggle to `view-restrictions.component`
-- [ ] Provide both page services above the tables so neither is destroyed on toggle (REQ-5.4)
-- [ ] Mount one table at a time (REQ-5.1)
-- [ ] Show `totalValues` as the property row's denominator
-- [ ] Add an empty state for a project with no value properties (REQ-1.7)
+- [x] Add `ViewRestrictionsByPropertyTableComponent` with its own rows, progress, per-row error and retry
+- [x] Add the grouping toggle to `view-restrictions.component`
+- [x] Provide both page services above the tables so neither is destroyed on toggle (REQ-5.4)
+- [x] Mount one table at a time (REQ-5.1)
+- [x] Show `totalValues` as the property row's denominator
+- [x] Add an empty state for a project with no value properties (REQ-1.7)
 - [ ] Update the component spec and stories
 
 #### Phase 8: i18n
 
-- [ ] Add grouping-toggle, property-column and `totalValues` keys to `en.json`
-- [ ] Mirror them in `de.json`
-- [ ] Mirror them in `fr.json`
-- [ ] Mirror them in `it.json`
+- [x] Add grouping-toggle, property-column and `totalValues` keys to `en.json`
+- [x] Mirror them in `de.json`
+- [x] Mirror them in `fr.json`
+- [x] Mirror them in `it.json`
 
 ## Verified against LHTT after Phases 1-4
 
