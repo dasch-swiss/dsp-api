@@ -51,7 +51,7 @@ here — use the Gravsearch dashboard / Tempo for tail latency.
 | 4 Avg duration — global | Mean duration over time (deploy-regression line) | `[$smoothing]` |
 | 5 Avg duration by route | Mean duration per route over time | `[$smoothing]` |
 | 6 Routes ranked by avg duration | Slowest routes now + how often they run | `$__range` |
-| 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target project + the query | Tempo |
+| 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target + scoped project, + the query | Tempo |
 
 ### Query-shape rationale (don't "simplify" these away)
 
@@ -82,6 +82,14 @@ here — use the Gravsearch dashboard / Tempo for tail latency.
   link remains the way to the full, untruncated query. The `span.environment` predicate must stay in,
   or an `event.`-scoped search crosses environments. The threshold default is `2s` — the p95 of the
   `gravsearch` span baseline (PRD REQ-3.1: baseline-anchored, not an arbitrary constant).
+- **Panel 7's two project columns are not redundant** (DEV-7031). **Project**
+  (`gravsearch.project_shortcodes`) is *inferred* from the query's IRIs — which projects it touches.
+  **Scoped to** (`gravsearch.project_restriction`) is *stated* by the caller — the project the request
+  limited the search to. Both are worth showing: dsp-app's Advanced Search always sends
+  `limitToProject` (`advanced-search-results.component.ts`), and it is the most Gravsearch-heavy flow
+  there is, so on a slow trace the pair tells you whether a researcher ran a project-scoped search or
+  a query that merely references the project. Empty **Scoped to** means unrestricted, not unknown; it
+  holds an IRI rather than a shortcode, so for newer projects it will not visually match **Project**.
 - **Panel 7 keeps the text filter even though a project attribute now exists** (DEV-7031). The
   **Project** column selects `span.gravsearch.project_shortcodes`, but the *filter* deliberately still
   matches the query text: a TraceQL attribute predicate does not match a span that lacks the attribute,
@@ -99,8 +107,8 @@ here — use the Gravsearch dashboard / Tempo for tail latency.
   steady throughput; daytime layers heavier human-driven search/admin/ontology calls on top. Excluding
   `/health`+`/version` barely moves it. A per-route-group average (Route group filter) separates "are
   reads fast" from "are searches fast".
-- Panel 7's **Project** column is live (DEV-7031): `gravsearch.project_shortcodes` is a bounded, sorted,
-  comma-separated set on the `gravsearch` root span, and stays off the Alloy spanmetrics dimension list
-  (which selects only `gravsearch.query.shape`, `stack`, `domain`, `environment`), so it adds no Prometheus
-  label. Remaining follow-up: once traces from before that release have aged out of retention, switch the
+- Panel 7's **Project** and **Scoped to** columns are live (DEV-7031): `gravsearch.project_shortcodes` is a
+  bounded, sorted, comma-separated set and `gravsearch.project_restriction` a single project IRI, both on the
+  `gravsearch` root span, and both stay off the Alloy spanmetrics dimension list (which selects only
+  `gravsearch.query.shape`, `stack`, `domain`, `environment`), so neither adds a Prometheus label. Remaining follow-up: once traces from before that release have aged out of retention, switch the
   project filter from the query text to the attribute — see the panel-7 bullet above for why not yet.
