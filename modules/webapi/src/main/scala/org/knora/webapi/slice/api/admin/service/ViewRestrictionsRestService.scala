@@ -55,7 +55,7 @@ final case class ViewRestrictionsRestService(
   def getValues(user: User)(
     projectIri: ProjectIri,
     resourceClass: String,
-    itemType: ItemType,
+    itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)

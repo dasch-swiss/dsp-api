@@ -1243,7 +1243,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     test("valueCounts counts values, in a unit separate from the resource counts") {
       for {
         _      <- seedProject
-        result <- service(_.valueCounts(projectIri, thingClass, ItemType.All))
+        result <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
       } yield assertTrue(
         result.resourceClass == thingClass,
         // One member-only value: hidden from anon and logged-in, visible to a member. This is 1 *value*,

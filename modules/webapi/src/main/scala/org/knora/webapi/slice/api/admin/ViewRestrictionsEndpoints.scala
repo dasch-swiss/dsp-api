@@ -83,10 +83,14 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be project admin or system admin.",
     )
 
+  private val valueItemTypeQuery = query[ValueItemType]("itemType")
+    .description("Restrict the value counts to a single value type, or `All` for every value type.")
+    .default(ValueItemType.All)
+
   val getViewRestrictionsValues = baseEndpoints.securedEndpoint.get
     .in(base / "values")
     .in(resourceClassQuery)
-    .in(itemTypeQuery)
+    .in(valueItemTypeQuery)
     .out(jsonBody[ViewRestrictionsValues].example(ViewRestrictionsValues.example))
     .description(
       "Step 2 of the view-restrictions report: the per-audience value-level restriction counts for ONE " +
@@ -162,6 +166,39 @@ object ViewRestrictionsEndpoints {
     // Query-param codec, e.g. ?itemType=All
     given Codec[String, ItemType, CodecFormat.TextPlain] =
       Codec.derivedEnumeration[String, ItemType].defaultStringBased
+  }
+
+  /**
+   * The item-type filter accepted by the stepped `/values` endpoint.
+   *
+   * Deliberately **not** [[ItemType]], which cannot be narrowed: `ItemType.Resource` is load-bearing for
+   * the `/items` drill-down, where it tags whether a row is the resource itself or a value inside it (see
+   * `ViewRestrictionsRepo`'s row construction and `ViewRestrictionsService.items`). Reusing `ItemType`
+   * here would offer clients a `Resource` value that means nothing on an endpoint that only counts values —
+   * step 1 already reports every resource-level count, unfiltered.
+   *
+   * `All` therefore means "all value types", which is narrower than `ItemType.All`.
+   */
+  enum ValueItemType {
+    case All
+    case File
+    case Value
+    case Comment
+  }
+  object ValueItemType {
+    given JsonCodec[ValueItemType] = DeriveJsonCodec.gen[ValueItemType]
+    given Schema[ValueItemType]    = Schema.derivedEnumeration[ValueItemType].defaultStringBased
+
+    given Codec[String, ValueItemType, CodecFormat.TextPlain] =
+      Codec.derivedEnumeration[String, ValueItemType].defaultStringBased
+
+    /** The corresponding [[ItemType]], for the query builder that still speaks in those terms. */
+    def toItemType(t: ValueItemType): ItemType = t match {
+      case ValueItemType.All     => ItemType.All
+      case ValueItemType.File    => ItemType.File
+      case ValueItemType.Value   => ItemType.Value
+      case ValueItemType.Comment => ItemType.Comment
+    }
   }
 
   /** How the summary matrix is grouped. */
@@ -342,7 +379,7 @@ object ViewRestrictionsEndpoints {
   final case class ViewRestrictionsValues(
     projectIri: String,
     resourceClass: String,
-    itemType: ItemType,
+    itemType: ValueItemType,
     counts: AudienceRestrictionCounts,
   )
   object ViewRestrictionsValues {
@@ -352,7 +389,7 @@ object ViewRestrictionsEndpoints {
     val example: ViewRestrictionsValues = ViewRestrictionsValues(
       projectIri = "http://rdfh.ch/projects/0001",
       resourceClass = "http://www.knora.org/ontology/0001/anything#Thing",
-      itemType = ItemType.All,
+      itemType = ValueItemType.All,
       counts = AudienceRestrictionCounts(
         anonymous = RestrictionCounts(12, 4),
         authenticated = RestrictionCounts(5, 2),

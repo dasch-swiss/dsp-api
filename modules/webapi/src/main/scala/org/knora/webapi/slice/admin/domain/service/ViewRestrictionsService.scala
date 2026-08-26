@@ -165,12 +165,12 @@ final case class ViewRestrictionsService(
   def valueCounts(
     projectIri: ProjectIri,
     resourceClass: String,
-    itemType: ItemType,
+    itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
       classes <- repo.projectClasses(projectIri)
       graph   <- dataGraph(projectIri)
-      rows    <- repo.valueCountsForClass(projectIri, resourceClass, itemType, classes, graph)
+      rows    <- repo.valueCountsForClass(projectIri, resourceClass, ValueItemType.toItemType(itemType), classes, graph)
       lookup   = classify(rows.map(_.permissions).toSet, projectIri)
       counts   = foldRows(rows, lookup)._1
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)

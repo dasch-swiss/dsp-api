@@ -16,11 +16,11 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.PagedResponse
-import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemVisibility
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.RestrictedResource
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.RestrictionCounts
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.UnitCounts.anyRestriction
+import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsClasses
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsSummary
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ViewRestrictionsValues
@@ -235,7 +235,7 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
                         .getJson[ViewRestrictionsValues](valuesUri(thingClassIri, "Comment"), rootUser)
                         .flatMap(_.assert200)
         } yield assertTrue(
-          comments.itemType == ItemType.Comment,
+          comments.itemType == ValueItemType.Comment,
           // A narrowed filter can only ever count a subset of All.
           comments.counts.anonymous.total <= all.counts.anonymous.total,
         )
