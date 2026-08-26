@@ -324,8 +324,8 @@ Not EARS-shaped — pure constraints:
    zero rows? Kept for now (REQ-1.4), but it is a UI judgement that only looks right or
    wrong with real data on screen.
 3. Does the drill-down need an itemType filter, or is that only meaningful on the counts?
-4. The drill-down is **unmeasured**. Step 1 and step 2 were measured on LHTT; the property
-   drill-down was not. It spans classes and, on a property like `hasTitle` with 66,484
-   values, its paginated resource list may behave quite differently from the class
-   drill-down (0.43s). Measure before implementing US-4, and treat its query shape as
-   open until then.
+4. ~~The drill-down is unmeasured.~~ **Measured on LHTT for `hasTitle` (66,484 values):**
+   a page of 25 ordered resources takes 3.2s, its `COUNT DISTINCT` total 1.1s, and a deep
+   page (OFFSET 2500) 1.7s. Issued in parallel as the class drill-down does, opening a row
+   on the worst-case property costs ~3.2s. Slower than the class drill-down's 0.43s but
+   viable: it is user-initiated and one at a time. No change to US-4.
