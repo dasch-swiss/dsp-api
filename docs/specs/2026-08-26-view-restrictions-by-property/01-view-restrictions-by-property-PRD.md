@@ -1,7 +1,7 @@
 ---
 title: View restrictions grouped by property
 date: 2026-08-26
-status: draft
+status: reviewed
 repositories:
   - dsp-api
   - dsp-das
@@ -139,7 +139,7 @@ reports its own class.
 | `libs/vre/3rd-party-services/open-api/dsp-api_spec.yaml` | Regenerate after the API lands |
 | i18n `en/de/fr/it.json` | Toggle labels, property column, `totalValues` |
 
-## Deliberate duplication, and its one exception
+## What is duplicated, and what is simply not needed
 
 The permission-literal machinery is duplicated rather than shared: the audience users,
 `visibilityOf`, the synthetic-creator placeholder, and the fold of grouped rows into
@@ -155,9 +155,26 @@ It is duplicated anyway, because the alternative is the shared seam that produce
 `groupBy` flag. The mitigation is that **both** copies get the equivalence pinned by
 their own spec, so a divergence fails a test rather than silently changing counts.
 
-The one exception: `projectClasses`, its 27s-probe gate and its cache are **reused as
-is**. That is not report-shaped logic — it is a fact about the project, it is already
-cached per project, and duplicating it would mean paying the probe twice per report.
+### `ProjectClasses` is not reused — it is not needed
+
+The property queries do not touch a resource class at all. Measured on LHTT for
+`hasTitle`:
+
+| Query shape | Time | Total |
+| --- | --- | --- |
+| With `?resource a ?resClass` | 2,380ms | 66,484 |
+| Without the class join | **1,128ms** | **66,484** |
+
+Identical counts, twice as fast. That follows from what each report counts: the class
+report groups by class, so it must pin each resource to exactly one `?resClass` — which
+is what `ProjectClasses`, its `VALUES` clause and the most-specific-class filter exist
+for. The property report counts `DISTINCT ?value` under a bound property and never groups
+by class, so a resource binding several classes cannot double-count anything.
+
+So the property route uses **none** of it: no `projectClasses` call, no `VALUES ?resClass`
+clause, no most-specific-class filter, and therefore no exposure to the 27s multi-typed
+probe. `?resource knora-base:attachedToProject <iri>` is the whole project scope it
+needs.
 
 ## User stories and acceptance criteria
 
@@ -176,6 +193,10 @@ restricted on it, so I can spot a property that is misconfigured across many cla
   render one row per property, including properties no resource uses.
 - **REQ-1.5 (Ubiquitous):** The properties endpoint shall require the requesting user to
   be project admin on the target project or system admin.
+- **REQ-1.6 (Ubiquitous):** The properties endpoint shall accept no item-type filter.
+- **REQ-1.7 (Unwanted-behaviour):** If the project's ontologies declare no value
+  property, then the endpoint shall return an empty list and the frontend shall show an
+  explicit empty state rather than a perpetual loading indicator.
 
 ### US-2
 
@@ -195,6 +216,14 @@ I can tell a deliberate policy from an accident.
 - **REQ-2.6 (Ubiquitous):** Each audience's counts shall not exceed `totalValues`.
 - **REQ-2.7 (Unwanted-behaviour):** If the `property` parameter is absent or is not a
   well-formed IRI, then the endpoint shall respond 400.
+- **REQ-2.8 (Ubiquitous):** The property-values endpoint shall require the requesting
+  user to be project admin on the target project or system admin.
+- **REQ-2.9 (Ubiquitous):** The property-values endpoint shall join no resource class and
+  shall not call `projectClasses`.
+- **REQ-2.10 (Ubiquitous):** `totalValues` shall count the same universe as the
+  restriction figures beside it — non-deleted, non-link values of that property on
+  non-deleted resources of the project that carry a `knora-base:hasPermissions` literal.
+  A value with no permission literal is outside the report, as in the class report.
 
 ### US-3
 
@@ -225,6 +254,10 @@ As a project admin, I want to drill into a property and see which resources are 
   deterministically so that paging is stable.
 - **REQ-4.4 (Ubiquitous):** The existing `/items` endpoint shall continue to be keyed by
   `resourceClass` and shall not gain a property parameter.
+- **REQ-4.5 (Ubiquitous):** The property drill-down shall require the requesting user to
+  be project admin on the target project or system admin.
+- **REQ-4.6 (Unwanted-behaviour):** If the `property` parameter is absent or is not a
+  well-formed IRI, then the property drill-down shall respond 400.
 
 ### US-5
 
@@ -236,6 +269,10 @@ As a project admin, I want to switch between the class and property views on one
   request state.
 - **REQ-5.3 (Event-driven):** When the admin switches grouping and switches back, the
   frontend shall serve counts it already holds rather than refetching.
+- **REQ-5.4 (Ubiquitous):** Both page services shall outlive the mounting and unmounting
+  of their tables. An Angular service provided on a component is destroyed with it, so
+  providing them at table level would clear the cache on every toggle and make REQ-5.3
+  unsatisfiable.
 
 ### US-6
 
@@ -277,10 +314,18 @@ Not EARS-shaped — pure constraints:
 
 ## Open questions
 
-1. ~182 properties at concurrency 4 is roughly 45s of progressive filling on LHTT,
-   against 43 classes today. Is that acceptable, or should the frontend prioritise
-   properties the class view already showed as restricted?
+1. How long does the full fill actually take on LHTT? The ~1.05s figure is `hasTitle`,
+   one of the largest properties (66,484 values), so a naive 182 × 1.05s ÷ 4 ≈ 48s is
+   pessimistic — most properties are far smaller. Batching was measured and rejected: ten
+   of the largest properties in one request took 8.2s against ~10s issued individually,
+   which saves almost nothing and replaces a row-per-second trickle with ten rows landing
+   at once.
 2. Should properties with `totalValues == 0` be hidden once known, or kept as explicit
    zero rows? Kept for now (REQ-1.4), but it is a UI judgement that only looks right or
    wrong with real data on screen.
 3. Does the drill-down need an itemType filter, or is that only meaningful on the counts?
+4. The drill-down is **unmeasured**. Step 1 and step 2 were measured on LHTT; the property
+   drill-down was not. It spans classes and, on a property like `hasTitle` with 66,484
+   values, its paginated resource list may behave quite differently from the class
+   drill-down (0.43s). Measure before implementing US-4, and treat its query shape as
+   open until then.
