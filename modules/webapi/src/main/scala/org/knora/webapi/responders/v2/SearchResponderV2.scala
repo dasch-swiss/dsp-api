@@ -114,6 +114,10 @@ trait SearchResponderV2 {
   protected final def recordQueryOnRoot(query: IRI): UIO[Unit] =
     SearchResponderV2.recordQueryOnRoot(tracing, query)
 
+  /** Sets `gravsearch.project_shortcodes` + `gravsearch.project_restriction` on the root span. */
+  protected final def setProjectsOnRoot(query: ConstructQuery, limitToProject: Option[ProjectIri]): UIO[Unit] =
+    SearchResponderV2.setProjectsOnRoot(tracing, query, limitToProject)
+
   /**
    * Performs a search using a Gravsearch query provided by the client.
    *
@@ -139,6 +143,7 @@ trait SearchResponderV2 {
         _ <- recordQueryOnRoot(query)
         q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.ResourceList)
+        _ <- setProjectsOnRoot(q, limitToProject)
         r <- gravsearchV2(q, rendering, user, limitToProject)
       } yield r
     }
@@ -157,6 +162,7 @@ trait SearchResponderV2 {
         _ <- recordQueryOnRoot(query)
         q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.Count)
+        _ <- setProjectsOnRoot(q, limitToProject)
         r <- gravsearchCountV2(q, user, limitToProject)
       } yield r
     }
@@ -1560,6 +1566,109 @@ object SearchResponderV2 {
 
   private def bucket(n: Int): String =
     if (n == 0) "0" else if (n == 1) "1" else if (n <= 3) "2-3" else if (n <= 7) "4-7" else "8+"
+
+  // ---- target projects (DEV-7031) -----------------------------------------------------------------
+
+  /**
+   * Sets the two target-project attributes on the current (root) span:
+   *
+   *   - `gravsearch.project_shortcodes` — the projects the query itself refers to, derived from its
+   *     IRIs (see [[projectShortcodes]]). Always set, empty string included: an empty value means
+   *     "no project identifiable" (a query over built-in ontologies only), which is a different fact
+   *     from the attribute being absent (interrupted before parse — see the runbook's shape-less
+   *     early interrupt topology).
+   *   - `gravsearch.project_restriction` — the project the request was explicitly scoped to. Set
+   *     only when there was one, so absence means "unrestricted" without needing a sentinel value.
+   *
+   * They answer different questions and so are two attributes rather than one plus a flag: the first
+   * is "which projects does this query touch", inferred; the second is "which project was this
+   * search scoped to", stated by the caller. A cross-project query has several of the former and
+   * none of the latter.
+   *
+   * The restriction is recorded as the `ProjectIri` exactly as received, **not** as a shortcode:
+   * `limitToProject` arrives from the query string as an IRI, and a modern project IRI is
+   * `http://rdfh.ch/projects/<base64-UUID>` — resolving it to a shortcode would need a project
+   * lookup, i.e. a second abstract member on this trait and a repository call on the pre-parse path
+   * of every Gravsearch request. So this column does not join against `project_shortcodes` for
+   * projects created after shortcode-shaped IRIs were retired; that is a known limitation, not an
+   * oversight.
+   *
+   * Both values are bounded — a shortcode set and a project IRI, never the IRIs they came from — but
+   * bounded is not metric-safe: keep them off the Alloy `otelcol.connector.spanmetrics` dimension
+   * list, exactly like `gravsearch.schema_predicates`.
+   */
+  def setProjectsOnRoot(tracing: Tracing, query: ConstructQuery, limitToProject: Option[ProjectIri]): UIO[Unit] =
+    tracing.getCurrentSpanUnsafe.map { span =>
+      val _ = span.setAttribute("gravsearch.project_shortcodes", projectShortcodes(query).mkString(","))
+      limitToProject.foreach { project =>
+        val _ = span.setAttribute("gravsearch.project_restriction", project.value)
+      }
+    }
+
+  /**
+   * The sorted, de-duplicated shortcodes of every project the query's IRIs belong to.
+   *
+   * Derived from **all** Knora IRIs in the query, not only the ontology ones. Both kinds carry the
+   * shortcode — `…/ontology/0803/incunabula/simple/v2#book` and `http://rdfh.ch/0803/c5058f3a`
+   * alike — and the data IRIs are the *only* source for the internally generated searches (incoming
+   * links, still-image representations, incoming regions): those queries reference built-in
+   * ontologies exclusively and interpolate the target resource IRI, so reading ontology IRIs alone
+   * would leave every one of their spans blank.
+   *
+   * Only the shortcode reaches the span, never the IRI it was taken from, so this stays inside the
+   * "no instance IRIs as span attributes" rule of the instrumentation recipe.
+   *
+   * Normalised through `Shortcode` rather than read off [[SmartIri.getProjectCode]] directly, and
+   * that is load-bearing: `getProjectCode` returns the raw path segment, which for an *ontology* IRI
+   * has already been through `Shortcode` (upper-cased) but for a *data* IRI is the regex capture
+   * verbatim — and the project-ID pattern is `\p{XDigit}{4}`, which accepts either case. A query
+   * mixing `…/ontology/082a/…` with `http://rdfh.ch/082a/…` would otherwise report `082A,082a`:
+   * one project, two entries.
+   *
+   * Built-in ontologies (`knora-api`, `salsah-gui`, …) carry no project code and drop out on their
+   * own. Shared ontologies report `0000`, the shared-ontologies project, which is the truthful
+   * answer for a query that references them.
+   */
+  def projectShortcodes(query: ConstructQuery): Seq[String] =
+    queryIris(query).flatMap(_.getProjectShortcode.toOption.toList).map(_.value).distinct.sorted
+
+  /** Every IRI mentioned anywhere in the query: CONSTRUCT clause, FROM clause and WHERE clause. */
+  private def queryIris(query: ConstructQuery): Seq[SmartIri] =
+    query.constructClause.statements.flatMap(statementIris) ++
+      query.fromClause.map(_.defaultGraph.iri).toList ++
+      flattenPatterns(query.whereClause.patterns).flatMap(patternIris)
+
+  /** The IRIs in a statement's subject, predicate and object positions. */
+  private def statementIris(statement: StatementPattern): Seq[SmartIri] =
+    Seq(statement.subj, statement.pred, statement.obj).collect { case IriRef(iri, _) => iri }
+
+  /**
+   * The IRIs referenced by a single already-flattened WHERE pattern. Group nodes (OPTIONAL / UNION /
+   * MINUS / FILTER NOT EXISTS) hold no IRIs of their own and fall through to the catch-all —
+   * `flattenPatterns` already yields their children alongside them.
+   */
+  private def patternIris(pattern: QueryPattern): Seq[SmartIri] =
+    pattern match {
+      case statement: StatementPattern => statementIris(statement)
+      case FilterPattern(expression)   => expressionIris(expression)
+      case BindPattern(_, expression)  => expressionIris(expression)
+      case ValuesPattern(_, values)    => values.toSeq.map(_.iri)
+      case _                           => Seq.empty
+    }
+
+  /** Every IRI referenced anywhere in an expression tree (FILTER, BIND). */
+  private def expressionIris(expression: Expression): Seq[SmartIri] =
+    expression match {
+      case IriRef(iri, _)                            => Seq(iri)
+      case FunctionCallExpression(functionIri, args) => functionIri.iri +: args.flatMap(expressionIris)
+      case CompareExpression(l, _, r)                => expressionIris(l) ++ expressionIris(r)
+      case AndExpression(l, r)                       => expressionIris(l) ++ expressionIris(r)
+      case OrExpression(l, r)                        => expressionIris(l) ++ expressionIris(r)
+      case ArithmeticExpression(l, _, r)             => expressionIris(l) ++ expressionIris(r)
+      case CoalesceFunction(args)                    => args.flatMap(expressionIris)
+      case RegexFunction(textExpr, _, _)             => expressionIris(textExpr)
+      case _                                         => Seq.empty
+    }
 }
 
 object SearchResponderV2Live {

@@ -39,7 +39,13 @@ class GravsearchQueryShapeSpec extends ZIOSpecDefault {
   private def shapeOf(query: String, resultType: QueryResultType) =
     SearchResponderV2.queryShape(GravsearchParser.parseQuery(query), resultType)
 
+  private def shortcodesOf(query: String) =
+    SearchResponderV2.projectShortcodes(GravsearchParser.parseQuery(query))
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
+    suite("SearchResponderV2 query derivations")(queryShapeSuite, projectShortcodesSuite)
+
+  private def queryShapeSuite =
     suite("SearchResponderV2.queryShape")(
       test("is invariant under a change to a FILTER literal (never encodes user data)") {
         val shapeA = shapeOf(
@@ -85,6 +91,95 @@ class GravsearchQueryShapeSpec extends ZIOSpecDefault {
         assertTrue(
           shape.predicates.contains("title"),
           !shape.predicates.exists(_.contains("SECRETINSTANCEID")),
+        )
+      },
+    )
+
+  private def projectShortcodesSuite =
+    suite("SearchResponderV2.projectShortcodes")(
+      test("a single-project query reports that project's shortcode") {
+        assertTrue(shortcodesOf(bookQueryWithTitleFilter("anything")) == Seq("0803"))
+      },
+      test("a cross-project query reports every project it references, sorted and de-duplicated") {
+        // Gravsearch can span projects, so the honest shape is a set — not one "primary" project.
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |    ?book incunabula:title ?title .
+            |} WHERE {
+            |    ?book a incunabula:book .
+            |    ?book a knora-api:Resource .
+            |    ?book incunabula:title ?title .
+            |    ?thing a anything:Thing .
+            |    ?thing anything:hasText ?text .
+            |}""".stripMargin
+        assertTrue(shortcodesOf(query) == Seq("0001", "0803"))
+      },
+      test("a query over built-in ontologies only reports no project") {
+        // knora-api / salsah-gui carry no project code, so they drop out and the attribute is empty.
+        // Empty is a real answer here ("no project identifiable"), distinct from the attribute being absent.
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?region knora-api:isMainResource true .
+            |} WHERE {
+            |    ?region a knora-api:Region .
+            |    ?region a knora-api:Resource .
+            |    ?region knora-api:hasGeometry ?geom .
+            |}""".stripMargin
+        assertTrue(shortcodesOf(query).isEmpty)
+      },
+      test("an internally generated search reports the project of the interpolated resource IRI") {
+        // The shape of `searchIncomingLinksV2` and friends: built-in ontologies only, with the target
+        // resource IRI interpolated in. Reading ontology IRIs alone would leave every such span blank,
+        // which is why the derivation reads data IRIs too.
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?incomingRes knora-api:isMainResource true .
+            |    ?incomingRes ?incomingProp <http://rdfh.ch/0803/c5058f3a> .
+            |} WHERE {
+            |    ?incomingRes a knora-api:Resource .
+            |    ?incomingRes ?incomingProp <http://rdfh.ch/0803/c5058f3a> .
+            |    <http://rdfh.ch/0803/c5058f3a> a knora-api:Resource .
+            |    ?incomingProp knora-api:objectType knora-api:Resource .
+            |}""".stripMargin
+        assertTrue(shortcodesOf(query) == Seq("0803"))
+      },
+      test("one project referenced in mixed case is reported once, normalised") {
+        // The project-ID pattern is `\p{XDigit}{4}`, so either case parses. An ontology IRI's code has
+        // already been through `Shortcode` (upper-cased) but a data IRI's is the raw capture, so reading
+        // the raw project code would report this single project as `00FF,00ff`.
+        val query =
+          """PREFIX images: <http://0.0.0.0:3333/ontology/00ff/images/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?img knora-api:isMainResource true .
+            |} WHERE {
+            |    ?img a images:bild .
+            |    ?img a knora-api:Resource .
+            |    ?img knora-api:isPartOf <http://rdfh.ch/00ff/abc123> .
+            |}""".stripMargin
+        assertTrue(shortcodesOf(query) == Seq("00FF"))
+      },
+      test("only the shortcode is reported, never the instance IRI it was taken from") {
+        val query =
+          """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+            |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |CONSTRUCT {
+            |    ?book knora-api:isMainResource true .
+            |} WHERE {
+            |    ?book a incunabula:book .
+            |    ?book a knora-api:Resource .
+            |    ?book knora-api:isPartOf <http://rdfh.ch/0803/SECRETINSTANCEID> .
+            |}""".stripMargin
+        val shortcodes = shortcodesOf(query)
+        assertTrue(
+          shortcodes == Seq("0803"),
+          !shortcodes.exists(_.contains("SECRETINSTANCEID")),
         )
       },
     )
