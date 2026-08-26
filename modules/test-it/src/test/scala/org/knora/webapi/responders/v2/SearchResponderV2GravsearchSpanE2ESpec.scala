@@ -21,6 +21,7 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaProjectIri
 import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
 
@@ -49,6 +50,9 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
   )
 
   private val shapeKey = AttributeKey.stringKey("gravsearch.query.shape")
+
+  private val projectShortcodesKey  = AttributeKey.stringKey("gravsearch.project_shortcodes")
+  private val projectRestrictionKey = AttributeKey.stringKey("gravsearch.project_restriction")
 
   // The wire keys the runbook tells engineers to look for — asserted as literals, not imported from
   // production, so a rename shows up here as a failing test rather than silently following along.
@@ -169,6 +173,38 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
       } yield SpanAssertions.hasSpan(spans, "gravsearch") &&
         SpanAssertions.hasNoAttributeKey(spans, "gravsearch", shapeKey) &&
         SpanAssertions.hasEventWithAttribute(spans, "gravsearch", queryEvent, queryTextKey, unparseable)
+    },
+    test("the root span carries the target project shortcodes, and no restriction when unrestricted (DEV-7031)") {
+      for {
+        spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
+      } yield SpanAssertions.hasAttribute(spans, "gravsearch", projectShortcodesKey, "0803") &&
+        SpanAssertions.hasNoAttributeKey(spans, "gravsearch", projectRestrictionKey)
+    },
+    test("a project-restricted search records the restriction as the project IRI it was given (DEV-7031)") {
+      // Recorded as the IRI, not a shortcode: `limitToProject` arrives as a `ProjectIri` and resolving it
+      // would need a project lookup. Incunabula's IRI is shortcode-shaped, so it happens to read as one
+      // here; a project created after those were retired carries a base64 UUID instead.
+      for {
+        spans <- spansAfter(
+                   ZIO.serviceWithZIO[SearchResponderV2](
+                     _.gravsearchV2(
+                       bookByTitleQuery(existingTitle),
+                       SchemaRendering.default,
+                       anonymousUser,
+                       Some(incunabulaProjectIri),
+                     ),
+                   ),
+                 )
+      } yield SpanAssertions.hasAttribute(spans, "gravsearch", projectShortcodesKey, "0803") &&
+        SpanAssertions.hasAttribute(spans, "gravsearch", projectRestrictionKey, "http://rdfh.ch/projects/0803")
+    },
+    test("a query that fails to parse carries no project attribute at all, rather than an empty one") {
+      // Locks the absent-vs-empty distinction the attribute relies on: empty means "no project
+      // identifiable", absent means the derivation never ran. A parse failure is the latter.
+      for {
+        spans <- spansAfter(runGravsearch(unparseable).either)
+      } yield SpanAssertions.hasSpan(spans, "gravsearch") &&
+        SpanAssertions.hasNoAttributeKey(spans, "gravsearch", projectShortcodesKey)
     },
     test("only the root span carries the event, so the stage-span no-events contract stays meaningful") {
       // Keeps `SearchResponderV2StageSpanSpec`'s `getEvents.isEmpty` assertion honest: it locks the
