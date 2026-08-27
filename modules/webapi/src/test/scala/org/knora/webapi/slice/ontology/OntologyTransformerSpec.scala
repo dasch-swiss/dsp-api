@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
 import org.junit.runner.RunWith
+import zio.Exit
 import zio.NonEmptyChunk
 import zio.ZIO
 import zio.test.*
@@ -158,7 +159,24 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         defaultEmpty = dataset.getDefaultModel.isEmpty
         expected    <- ModelOps.fromTurtle(expectedTurtle)
         iso          = actual.isIsomorphicWith(expected)
-      } yield assertTrue(iso, defaultEmpty, graphNames == List(dataNamedGraph))
+      } yield assertTrue(iso, defaultEmpty, graphNames == List(dataNamedGraph)).label(actualNQ)
+    }
+
+  /** Stage-2: drives `toKnoraBase` expecting a `TransformerError`, returning the `Exit` for message assertions. */
+  private def runTransformStage2Failure(jsonLd: String) =
+    ZIO.scoped {
+      for {
+        inputPath <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _         <- TestClock.setTime(knownInstant)
+        exit      <- transformer(_.toKnoraBase(inputPath, ctx)).exit
+      } yield exit
+    }
+
+  /** The `TransformerError` message of a failed `Exit`, or the empty string if it did not fail. */
+  private def messageOf(exit: Exit[TransformerError, Path]): String =
+    exit match {
+      case Exit.Failure(cause) => cause.failureOption.fold("")(_.message)
+      case Exit.Success(_)     => ""
     }
 
   private val simpleScalarValues = suite("Simple Scalar Values")(
@@ -637,6 +655,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     startPrecision: String,
     endPrecision: String,
     dateString: String,
+    calendar: String = "GREGORIAN",
   ) =
     runTransformStage2(
       jsonLd = resourceWithValueJsonLd(s"${onto}testSubDate1", s"${knoraApi}DateValue", inner),
@@ -659,7 +678,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                           |
                           | <$valueIri>
                           |     a                                 knora-base:DateValue ;
-                          |     knora-base:valueHasCalendar       "GREGORIAN" ;
+                          |     knora-base:valueHasCalendar       "$calendar" ;
                           |     knora-base:valueHasStartJDN       $startJDN ;
                           |     knora-base:valueHasEndJDN         $endJDN ;
                           |     knora-base:valueHasStartPrecision "$startPrecision" ;
@@ -740,6 +759,72 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         dateString = "GREGORIAN:1800-01-02 CE",
       )
     },
+    test("Gregorian BCE year-precision date") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear": { "@type": "${xsd}integer", "@value": 44 },
+                   |    "${knoraApi}dateValueHasStartEra":  { "@type": "${xsd}string",  "@value": "BCE" },
+                   |    "${knoraApi}dateValueHasEndYear":   { "@type": "${xsd}integer", "@value": 44 },
+                   |    "${knoraApi}dateValueHasEndEra":    { "@type": "${xsd}string",  "@value": "BCE" }""".stripMargin,
+        startJDN = 1705355,
+        endJDN = 1705719,
+        startPrecision = "YEAR",
+        endPrecision = "YEAR",
+        dateString = "GREGORIAN:0044 BCE",
+      )
+    },
+    test("Gregorian mixed-precision range (day start, year end)") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 2 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1900 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378498,
+        endJDN = 2415385,
+        startPrecision = "DAY",
+        endPrecision = "YEAR",
+        dateString = "GREGORIAN:1800-01-02 CE:1900 CE",
+      )
+    },
+    test("Julian day-precision date") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "JULIAN" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartEra":   { "@type": "${xsd}string",  "@value": "CE" },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1800 },
+                   |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasEndEra":     { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+        startJDN = 2378508,
+        endJDN = 2378508,
+        startPrecision = "DAY",
+        endPrecision = "DAY",
+        dateString = "JULIAN:1800-01-01 CE",
+        calendar = "JULIAN",
+      )
+    },
+    test("Islamic day-precision date") {
+      runDateStage2(
+        inner = s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "ISLAMIC" },
+                   |    "${knoraApi}dateValueHasStartYear":  { "@type": "${xsd}integer", "@value": 1000 },
+                   |    "${knoraApi}dateValueHasStartMonth": { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasStartDay":   { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasEndYear":    { "@type": "${xsd}integer", "@value": 1000 },
+                   |    "${knoraApi}dateValueHasEndMonth":   { "@type": "${xsd}integer", "@value": 1 },
+                   |    "${knoraApi}dateValueHasEndDay":     { "@type": "${xsd}integer", "@value": 1 }""".stripMargin,
+        startJDN = 2302451,
+        endJDN = 2302451,
+        startPrecision = "DAY",
+        endPrecision = "DAY",
+        dateString = "ISLAMIC:1000-01-01",
+        calendar = "ISLAMIC",
+      )
+    },
   )
 
   private val linkValuesStage2 = suite("Stage 2 — LinkValue reification")(
@@ -811,6 +896,178 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  /** Full expected `knora-base` graph for a single-value resource that carries no `valueHasString` (the `None` case). */
+  private def expectedStage2ValueNoString(
+    propLocalName: String,
+    valueClass: String,
+    valueContent: Option[String],
+  ): String = {
+    val contentTriple = valueContent.fold("")(c => s"$c ;\n     ")
+    s"""
+       | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+       | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+       | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+       | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       | <$resourceIri>
+       |     a                            onto:Example ;
+       |     rdfs:label                   "test" ;
+       |     onto:$propLocalName          <$valueIri> ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+       |     knora-base:isDeleted         false .
+       |
+       | <$valueIri>
+       |     a                            knora-base:$valueClass ;
+       |     ${contentTriple}knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
+       |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
+       |     knora-base:isDeleted         false .
+       |""".stripMargin
+  }
+
+  private val regionPreviewStage2 = suite("Stage 2 — RegionPreviewValue")(
+    test("uses the region IRI as valueHasString") {
+      val region = "http://rdfh.ch/9999/theRegion"
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testRegionPreview",
+          s"${knoraApi}RegionPreviewValue",
+          s""""${knoraApi}isRegionPreviewOf": { "@id": "$region" }""",
+        ),
+        expectedStage2SingleValue(
+          "testRegionPreview",
+          "RegionPreviewValue",
+          s"knora-base:isRegionPreviewOf <$region>",
+          region,
+        ),
+      )
+    },
+    test("without isRegionPreviewOf yields no valueHasString and no error") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${onto}testRegionPreview": {
+           |      "@id": "$valueIri",
+           |      "@type": "${knoraApi}RegionPreviewValue"
+           |    },
+           |    "@context": {
+           |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+           |    }
+           |}]""".stripMargin
+      runTransformStage2(jsonLd, expectedStage2ValueNoString("testRegionPreview", "RegionPreviewValue", None))
+    },
+  )
+
+  private val geomStage2 = suite("Stage 2 — GeomValue")(
+    test("renames geometryValueAsGeometry and derives valueHasString") {
+      val geometry = s"""{\\"status\\":\\"active\\",\\"type\\":\\"rectangle\\"}"""
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testGeometry",
+          s"${knoraApi}GeomValue",
+          s""""${knoraApi}geometryValueAsGeometry": { "@type": "${xsd}string", "@value": "$geometry" }""",
+        ),
+        expectedStage2SingleValue(
+          "testGeometry",
+          "GeomValue",
+          s"""knora-base:valueHasGeometry "$geometry"""",
+          geometry,
+        ),
+      )
+    },
+  )
+
+  private val intervalStage2 = suite("Stage 2 — IntervalValue")(
+    test("composes valueHasString from both bounds") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testInterval",
+          s"${knoraApi}IntervalValue",
+          s""""${knoraApi}intervalValueHasStart": { "@type": "${xsd}decimal", "@value": "1.5" },
+             |    "${knoraApi}intervalValueHasEnd":   { "@type": "${xsd}decimal", "@value": "10.75" }""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testInterval",
+          "IntervalValue",
+          s"""knora-base:valueHasIntervalStart "1.5"^^xsd:decimal ;
+             |     knora-base:valueHasIntervalEnd   "10.75"^^xsd:decimal""".stripMargin,
+          "1.5 - 10.75",
+        ),
+      )
+    },
+    test("with a missing end bound yields no valueHasString and no error") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testInterval",
+          s"${knoraApi}IntervalValue",
+          s""""${knoraApi}intervalValueHasStart": { "@type": "${xsd}decimal", "@value": "1.5" }""",
+        ),
+        expectedStage2ValueNoString(
+          "testInterval",
+          "IntervalValue",
+          Some("""knora-base:valueHasIntervalStart "1.5"^^xsd:decimal"""),
+        ),
+      )
+    },
+    test("with a missing start bound yields no valueHasString and no error") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testInterval",
+          s"${knoraApi}IntervalValue",
+          s""""${knoraApi}intervalValueHasEnd": { "@type": "${xsd}decimal", "@value": "10.75" }""",
+        ),
+        expectedStage2ValueNoString(
+          "testInterval",
+          "IntervalValue",
+          Some("""knora-base:valueHasIntervalEnd "10.75"^^xsd:decimal"""),
+        ),
+      )
+    },
+  )
+
+  private val dateValueRejections = suite("Stage 2 — DateValue rejection")(
+    test("rejects a range whose start is after its end with a descriptive error") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testSubDate1",
+        s"${knoraApi}DateValue",
+        s""""${knoraApi}dateValueHasCalendar":  { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+           |    "${knoraApi}dateValueHasStartYear": { "@type": "${xsd}integer", "@value": 1900 },
+           |    "${knoraApi}dateValueHasStartEra":  { "@type": "${xsd}string",  "@value": "CE" },
+           |    "${knoraApi}dateValueHasEndYear":   { "@type": "${xsd}integer", "@value": 1800 },
+           |    "${knoraApi}dateValueHasEndEra":    { "@type": "${xsd}string",  "@value": "CE" }""".stripMargin,
+      )
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("after end date"))
+      }
+    },
+    test("rejects a Gregorian date without an era with a descriptive error") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testSubDate1",
+        s"${knoraApi}DateValue",
+        s""""${knoraApi}dateValueHasCalendar": { "@type": "${xsd}string",  "@value": "GREGORIAN" },
+           |    "${knoraApi}dateValueHasStartYear": { "@type": "${xsd}integer", "@value": 1800 },
+           |    "${knoraApi}dateValueHasEndYear":   { "@type": "${xsd}integer", "@value": 1900 }""".stripMargin,
+      )
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(
+          exit.isFailure,
+          message.contains("Failed to restructure RDF"),
+          message.contains("Era is required in calendar GREGORIAN"),
+        )
+      }
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
@@ -821,5 +1078,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     valueHasString,
     dateValuesStage2,
     linkValuesStage2,
+    regionPreviewStage2,
+    geomStage2,
+    intervalStage2,
+    dateValueRejections,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 }

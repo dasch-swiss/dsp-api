@@ -112,6 +112,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
       _     <- ZIO.attempt(convertDateValues(model))
       _     <- ZIO.attempt(convertLinkValues(model))
+      _     <- ZIO.attempt(convertGeomValues(model))
       _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       graph  = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
@@ -341,15 +342,45 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
   }
 
   /**
+   * Renames the geometry predicate produced by stage 1 onto `knora-base:valueHasGeometry`. The correspondence table
+   * has no `geometryValueAsGeometry` entry, so stage 1 falls back to a local-name-preserving rewrite and emits the
+   * non-existent `knora-base#geometryValueAsGeometry`; this pass moves the literal onto the real property. It must run
+   * after `addValueMetadata` and before `addValueHasString`, which derives `valueHasString` from the renamed predicate.
+   * The geometry JSON literal is carried over verbatim; its well-formedness is validated at read time, not here.
+   */
+  private def convertGeomValues(model: Model): Unit = {
+    val rdfType          = model.createProperty(Rdf.Type)
+    val geomValue        = KnoraBase.GeomValue
+    val src              = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "geometryValueAsGeometry")
+    val valueHasGeometry = model.createProperty(KnoraBase.ValueHasGeometry)
+
+    val geomValues = model.listSubjects().asScala.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == geomValue)
+    }
+
+    geomValues.foreach { v =>
+      Option(v.getProperty(src)).map(_.getObject).foreach { obj =>
+        v.removeAll(src)
+        v.addProperty(valueHasGeometry, obj)
+      }
+    }
+  }
+
+  /**
    * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
-   * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
-   * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
-   * (step 4), rich text (step 5) and file values (step 6) are handled where those structures are built.
+   * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI,
+   * `RegionPreviewValue` to the region IRI, and `IntervalValue` composes its two decimal bounds as `"$start - $end"`.
+   * `TextValue` already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3),
+   * `LinkValue` (step 4), rich text (step 5) and file values (step 6) are handled where those structures are built.
    */
   private def addValueHasString(model: Model): Unit = {
-    val rdfType          = model.createProperty(Rdf.Type)
-    val valueHasString   = model.createProperty(KnoraBase.ValueHasString)
-    val valueHasListNode = model.createProperty(KnoraBase.ValueHasListNode)
+    val rdfType               = model.createProperty(Rdf.Type)
+    val valueHasString        = model.createProperty(KnoraBase.ValueHasString)
+    val valueHasListNode      = model.createProperty(KnoraBase.ValueHasListNode)
+    val isRegionPreviewOf     = model.createProperty(KnoraBase.IsRegionPreviewOf)
+    val valueHasIntervalStart = model.createProperty(KnoraBase.ValueHasIntervalStart)
+    val valueHasIntervalEnd   = model.createProperty(KnoraBase.ValueHasIntervalEnd)
 
     val literalContent: Map[String, Property] = Map(
       KnoraBase.BooleanValue -> KnoraBase.ValueHasBoolean,
@@ -359,6 +390,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       KnoraBase.UriValue     -> KnoraBase.ValueHasUri,
       KnoraBase.GeonameValue -> KnoraBase.ValueHasGeonameCode,
       KnoraBase.TimeValue    -> KnoraBase.ValueHasTimeStamp,
+      KnoraBase.GeomValue    -> KnoraBase.ValueHasGeometry,
     ).map { case (cls, prop) => cls -> model.createProperty(prop) }
 
     def iriOf(v: Resource, p: Property): Option[String] =
@@ -374,7 +406,13 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
         val string = typeOf(v).flatMap {
           case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
           case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
-          case _                                   => None
+          case KnoraBase.RegionPreviewValue        => iriOf(v, isRegionPreviewOf)
+          case KnoraBase.IntervalValue =>
+            for {
+              start <- lexicalOf(v, valueHasIntervalStart)
+              end   <- lexicalOf(v, valueHasIntervalEnd)
+            } yield s"$start - $end"
+          case _ => None
         }
         string.foreach(v.addProperty(valueHasString, _))
       }
