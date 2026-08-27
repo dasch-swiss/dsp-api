@@ -386,17 +386,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
      *                   some other row still carries.
      */
-    /**
-     * Splits into groups of at most `size` classes, each carrying the same `multiTyped` flag, so a grouped
-     * count can be issued per chunk instead of once for the whole project — see `runCountByGroup`.
-     *
-     * An empty class list yields a single empty chunk rather than none: with no discovered class the queries
-     * fall back to the `subClassOf*` guard ([[resClassPatterns]]) and must still be run once.
-     */
-    def chunked(size: Int): Seq[ProjectClasses] =
-      if (iris.isEmpty) Seq(this)
-      else iris.grouped(math.max(1, size)).map(ProjectClasses(_, multiTyped)).toSeq
-
     def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
       val classGuard =
         Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
@@ -651,27 +640,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   }
 
   /**
-   * Whether [[mostSpecificClass]] can actually change the answer for this project: does any non-deleted
-   * resource assert a class together with a **strict subclass** of that class?
-   *
-   * This mirrors the gated filter exactly, which is what makes omitting the filter sound. In particular
-   * `?subClass` is **not** restricted to the project's discovered classes: the filter's own `?subClass` is
-   * unconstrained, so a resource typed with a subclass that is not itself a resource class (and so never
-   * appears in [[projectClassesQuery]]) still makes the filter load-bearing. Narrowing the probe to the
-   * discovered list would answer "no" for exactly that case and silently inflate the counts.
-   *
-   * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
-   * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
-   *
-   * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
-   * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
-   * on LHTT (105,983 resources) returning nothing. Anchoring `?resClass` with a `VALUES` clause makes it
-   * worse, not better (36.7s) — the closure-as-VALUES shape `CONVENTIONS.md` warns about.
-   *
-   * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
-   * needs no path, and a negative answer settles this one. See [[projectClasses]].
-   */
-  /**
    * Does any non-deleted resource of the project carry **two distinct types at all**?
    *
    * A necessary condition for [[multiTypedQuery]]: asserting a class together with a strict subclass of it
@@ -700,6 +668,27 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .limit(1)
   }
 
+  /**
+   * Whether [[mostSpecificClass]] can actually change the answer for this project: does any non-deleted
+   * resource assert a class together with a **strict subclass** of that class?
+   *
+   * This mirrors the gated filter exactly, which is what makes omitting the filter sound. In particular
+   * `?subClass` is **not** restricted to the project's discovered classes: the filter's own `?subClass` is
+   * unconstrained, so a resource typed with a subclass that is not itself a resource class (and so never
+   * appears in [[projectClassesQuery]]) still makes the filter load-bearing. Narrowing the probe to the
+   * discovered list would answer "no" for exactly that case and silently inflate the counts.
+   *
+   * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
+   * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
+   *
+   * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
+   * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
+   * on LHTT (105,983 resources) returning nothing. Anchoring `?resClass` with a `VALUES` clause makes it
+   * worse, not better (36.7s) — the closure-as-VALUES shape `CONVENTIONS.md` warns about.
+   *
+   * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
+   * needs no path, and a negative answer settles this one. See [[projectClasses]].
+   */
   private[repo] def multiTypedQuery(projectIri: ProjectIri): SelectQuery = {
     val (resource, resClass, subClass) = (variable("resource"), variable("resClass"), variable("subClass"))
     Queries

@@ -287,13 +287,5 @@ final case class ViewRestrictionsService(
 
 object ViewRestrictionsService {
 
-  /**
-   * Cap on the summary's concurrent per-(audience, state) count queries.
-   *
-   * Each of the six can issue two triplestore queries (resources + values); four in flight keeps the
-   * latency win without letting one dashboard request saturate the store's connections.
-   */
-  private[service] val MaxConcurrentCountQueries = 4
-
   val layer = ZLayer.derive[ViewRestrictionsService]
 }
