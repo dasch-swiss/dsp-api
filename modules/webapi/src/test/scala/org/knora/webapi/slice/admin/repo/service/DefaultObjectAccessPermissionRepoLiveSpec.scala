@@ -18,6 +18,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
@@ -122,5 +123,25 @@ class DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
           .head == s"RV ${groupIri.value}|V knora-admin:Creator,knora-admin:UnknownUser",
       )
     },
+    suite("findAll resilience")(
+      test("skip (not die on) a DOAP subject that is missing knora-admin:forProject") {
+        // A missing forProject makes the mapper's `.map(_.head)` throw as a defect (not a typed RdfError);
+        // findAllResilient must catch it via `.exit` and skip rather than let `findAll()` die.
+        val brokenTrig =
+          s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+              |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+              |
+              |<${AdminConstants.permissionsDataNamedGraph.value}> {
+              |  <http://rdfh.ch/permissions/missingForProject> a knora-admin:DefaultObjectAccessPermission ;
+              |    knora-base:hasPermissions "V knora-admin:UnknownUser" .
+              |}
+              |""".stripMargin
+        for {
+          _      <- TriplestoreServiceInMemory.setDataSetFromTriG(brokenTrig)
+          exit   <- repo(_.findAll()).exit
+          result <- repo(_.findAll())
+        } yield assertTrue(exit.isSuccess, result.isEmpty)
+      },
+    ),
   ).provide(DefaultObjectAccessPermissionRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, StringFormatter.test)
 }

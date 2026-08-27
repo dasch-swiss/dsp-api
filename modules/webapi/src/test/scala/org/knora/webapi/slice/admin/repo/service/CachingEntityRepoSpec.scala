@@ -10,6 +10,8 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.junit.runner.RunWith
+import zio.Chunk
+import zio.Exit
 import zio.IO
 import zio.NonEmptyChunk
 import zio.ZIO
@@ -85,6 +87,64 @@ class CachingEntityRepoSpec extends ZIOSpecDefault {
         cacheEmpty <- checkAllEntitiesRemovedFromCache(entities)
       } yield assertTrue(actual2.isEmpty, actual3.isEmpty, cacheEmpty)
     },
+    suite("findAll resilience")(
+      test("empty class extent returns Chunk.empty before any built-in append") {
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG("")
+          entities <- repo(_.findAll())
+        } yield assertTrue(entities.isEmpty)
+      },
+      test("a foreign-class subject in the same named graph is not returned") {
+        val trig =
+          s"""|<${TestRepo.namedGraph}> {
+              |  <https://example.com/foreign-and-valid/1> a <${TestRepo.resourceClass}> ;
+              |    <${TestRepo.property}> "valid" .
+              |  <https://example.com/foreign-and-valid/2> a <https://example.com/class/other> ;
+              |    <${TestRepo.property}> "foreign" .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(trig)
+          entities <- repo(_.findAll())
+        } yield assertTrue(
+          entities == Chunk(TestEntity(TestId("https://example.com/foreign-and-valid/1"), "valid")),
+        )
+      },
+      test("a subject with an extra unrelated predicate and a second rdf:type maps correctly") {
+        val trig =
+          s"""|<${TestRepo.namedGraph}> {
+              |  <https://example.com/over-fetch/1> a <${TestRepo.resourceClass}>, <https://example.com/class/other> ;
+              |    <${TestRepo.property}> "overFetched" ;
+              |    <https://example.com/prop/#extra> "unrelated" .
+              |}
+              |""".stripMargin
+        for {
+          _        <- TriplestoreServiceInMemory.setDataSetFromTriG(trig)
+          entities <- repo(_.findAll())
+        } yield assertTrue(
+          entities == Chunk(TestEntity(TestId("https://example.com/over-fetch/1"), "overFetched")),
+        )
+      },
+      test("an interrupted findAll does not silently return a partial list") {
+        // TestMapper interrupts itself on TestRepo.interruptSentinel; findAllResilient must let that
+        // interruption propagate out of its per-subject Exit-handling instead of skipping it like a failure.
+        val trig =
+          s"""|<${TestRepo.namedGraph}> {
+              |  <https://example.com/interrupt/1> a <${TestRepo.resourceClass}> ;
+              |    <${TestRepo.property}> "valid" .
+              |  <https://example.com/interrupt/2> a <${TestRepo.resourceClass}> ;
+              |    <${TestRepo.property}> "${TestRepo.interruptSentinel}" .
+              |}
+              |""".stripMargin
+        for {
+          _    <- TriplestoreServiceInMemory.setDataSetFromTriG(trig)
+          exit <- repo(_.findAll()).exit
+        } yield assertTrue(exit match {
+          case Exit.Failure(cause) => cause.isInterrupted
+          case Exit.Success(_)     => false
+        })
+      },
+    ) @@ TestAspect.sequential,
   ).provide(
     TriplestoreServiceInMemory.emptyLayer,
     CacheManager.layer,
@@ -111,6 +171,7 @@ final case class TestMapper()                         extends RdfEntityMapper[Te
     for {
       id   <- resource.getSubjectIri
       name <- resource.getStringLiteralOrFail[String](TestRepo.property)(using Right(_))
+      _    <- ZIO.interrupt.when(name == TestRepo.interruptSentinel)
     } yield TestEntity(TestId(id.value), name)
 }
 
@@ -119,13 +180,15 @@ final case class TestRepo(
   cache: EntityCache[TestId, TestEntity],
 ) extends CachingEntityRepo(triplestore, TestMapper(), cache) {
   override protected def resourceClass: ParsedIRI           = ParsedIRI.create(TestRepo.resourceClass)
-  override protected def namedGraphIri: Iri                 = Rdf.iri("https://example.com/namedGraph")
+  override protected def namedGraphIri: Iri                 = Rdf.iri(TestRepo.namedGraph)
   override protected def entityProperties: EntityProperties = EntityProperties(NonEmptyChunk(TestRepo.propertyIri))
 }
 
 object TestRepo {
-  val property: String      = "https://example.com/prop/#name"
-  val propertyIri: Iri      = Rdf.iri(property)
-  val resourceClass: String = "https://example.com/class/test-entity"
-  val layer                 = ZLayer.derive[TestRepo]
+  val property: String          = "https://example.com/prop/#name"
+  val propertyIri: Iri          = Rdf.iri(property)
+  val resourceClass: String     = "https://example.com/class/test-entity"
+  val namedGraph: String        = "https://example.com/namedGraph"
+  val interruptSentinel: String = "__INTERRUPT__"
+  val layer                     = ZLayer.derive[TestRepo]
 }

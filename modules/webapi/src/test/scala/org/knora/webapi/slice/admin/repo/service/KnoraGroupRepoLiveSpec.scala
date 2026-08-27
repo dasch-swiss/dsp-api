@@ -5,6 +5,11 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
+import org.eclipse.rdf4j.model.vocabulary.RDF
+import org.eclipse.rdf4j.model.vocabulary.XSD
+import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.junit.runner.RunWith
 import zio.Chunk
 import zio.Ref
@@ -20,13 +25,17 @@ import zio.test.check
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory.UserGroup.*
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupName
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 final case class KnoraGroupRepoInMemory(groups: Ref[Chunk[KnoraGroup]])
@@ -76,6 +85,26 @@ class KnoraGroupRepoLiveSpec extends ZIOSpecDefault {
       for {
         userGroup <- KnoraGroupRepo(_.findAll())
       } yield assertTrue(userGroup.sortBy(_.id.value) == builtInGroups.sortBy(_.id.value))
+    },
+    test("skip a group subject missing a required property (groupName), and still return the valid ones") {
+      val brokenTriples = Rdf
+        .iri("http://rdfh.ch/groups/0001/missingGroupName")
+        .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)
+        .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(true))
+        .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, Rdf.literalOf(false))
+      val brokenQuery = Update(
+        Queries
+          .INSERT_DATA(brokenTriples)
+          .into(Rdf.iri(adminDataNamedGraph.value))
+          .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS)),
+      )
+      for {
+        _         <- KnoraGroupRepo(_.save(testUserGroup))
+        _         <- ZIO.serviceWithZIO[TriplestoreService](_.query(brokenQuery))
+        userGroup <- KnoraGroupRepo(_.findAll())
+      } yield assertTrue(
+        userGroup.sortBy(_.id.value) == (builtInGroups ++ Chunk(testUserGroup)).sortBy(_.id.value),
+      )
     },
   )
 
