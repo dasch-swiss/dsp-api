@@ -19,6 +19,7 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
 import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -501,6 +502,67 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(steppedTurtle)),
   )
 
+  // ----- graph scoping would undercount: a project's data spans one graph per ontology -----
+
+  /**
+   * Three `Thing`s of one project, split across **two** named data graphs.
+   *
+   * This is the real DSP layout, not a contrived one: a project gets one data graph per ontology, so
+   * `projectDataNamedGraphV2` — which derives exactly one — names only a slice of the project. An earlier
+   * revision scoped these queries with `GRAPH <thatOneGraph>` for the speed-up, and the report silently
+   * lost every resource living in the project's other graphs. Measured on the local `anything` project as
+   * 65 resources in one graph and 6 in another; reproduced here at 2 and 1, which is the same defect.
+   *
+   * A Turtle fixture cannot catch this — [[datasetLayerFromTurtle]] puts everything in one fixed graph, so
+   * a graph-scoped query would either match all of it or none of it, and the test would pass either way.
+   * Hence TriG.
+   */
+  private val twoGraphTriG: String =
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |
+       |<http://www.knora.org/data/0001/anything> {
+       |  <$thingClass> rdfs:subClassOf kb:Resource .
+       |
+       |  <http://rdfh.ch/0001/inAnything1> rdf:type <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false .
+       |
+       |  <http://rdfh.ch/0001/inAnything2> rdf:type <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |    kb:isDeleted false .
+       |}
+       |
+       |<http://www.knora.org/data/0001/something> {
+       |  <http://rdfh.ch/0001/inSomething> rdf:type <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false .
+       |}
+       |""".stripMargin
+
+  private val graphScopingSuite = suite("a project's data spanning several named graphs")(
+    test("every graph is counted, because the queries scope by attachedToProject and not by GRAPH") {
+      for {
+        result <- service(_.classSummaries(projectIri))
+        thing   = result.classes.find(_.id == thingClass)
+      } yield assertTrue(
+        // 2 in one graph + 1 in another. Under the reverted GRAPH scoping this read 2, with nothing to
+        // indicate the third was missing — the failure mode was a plausible-looking smaller number.
+        thing.map(_.totalResources).contains(3),
+        // and the restriction counts lose the other graph's rows the same way
+        thing.map(_.counts.anonymous.hidden).contains(2),
+      )
+    }.provide(commonLayers, datasetLayerFromTriG(twoGraphTriG)),
+  )
+
   // ----- count units, at the repo boundary where the tagging happens -----
 
   def spec = suite("ViewRestrictionsService")(
@@ -511,5 +573,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     creatorOnlySuite,
     multiTypedSuite,
     steppedSuite,
+    graphScopingSuite,
   )
 }
