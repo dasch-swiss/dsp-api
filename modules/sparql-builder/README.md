@@ -31,24 +31,30 @@ val query: String = sparql"""
 
 ### Dynamic structure
 
-Conditionals are `Option[Fragment]`, iteration is `.map(...).combineAll`; composed
-fragments drop into the template as ordinary holes:
+Conditionals are `Option[Fragment]` combined with `Fragments.combine`; iteration is
+`.map(...)` joined with `Fragment.join`; composed fragments drop into the template as
+ordinary holes:
 
 ```scala
 val commentPattern: Option[Fragment] =
   maybeComment.map(c => sparql"$value <…#valueHasComment> ${Literal.string(c)} .")
 
-val linkPatterns: Fragment = linkUpdates.zipWithIndex.map { case (u, i) =>
-  val linkValue = Variable(s"linkValue$i")               // indexed variables per iteration
-  sparql"$resource ${Iri.unsafeFrom(u.propertyIri)} $linkValue ."
-}.combineAll
+val linkPatterns: Fragment = Fragment.join(
+  linkUpdates.zipWithIndex.map { case (u, i) =>
+    val linkValue = Variable(s"linkValue$i")             // indexed variables per iteration
+    sparql"$resource ${Iri.unsafeFrom(u.propertyIri)} $linkValue ."
+  },
+  Fragment.raw("\n"),
+)
 
-val where = Fragment.combine(Some(basePattern), commentPattern) ++ linkPatterns
+val where = Fragments.combine(Some(basePattern), commentPattern) ++ linkPatterns
 ```
 
-Helpers: `Fragment.combine` (options), `Fragment.join` (separator), `combineAll`
-(iterables), and in `Fragments`: `optional`, `union`, `graph`, `filter`,
-`filterNotExists`, `minus`, `bind`, `values`, `subquery`.
+Helpers: `Fragments.combine` (options, newline-separated), `Fragment.join` (separator),
+plus `optional`, `union`, `graph`, `filter`, `filterNotExists`, `minus`, `bind`,
+`values`, `subquery` in `Fragments`. The raw monoid (`++`, `combineAll`,
+`Fragment.combine`) concatenates with **no** separator — fine for fragments that carry
+their own whitespace, wrong for joining bare triple patterns.
 
 ### Safety model
 

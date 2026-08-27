@@ -18,7 +18,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
  * `Fragment` values and dropped into template holes.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
-class SparqlInterpolatorSpec extends ZIOSpecDefault {
+class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
 
   // -- Common vocabulary (would live in the adapter layer in production) --
   val knoraBase      = "http://www.knora.org/ontology/knora-base#"
@@ -63,14 +63,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
         LIMIT 25
       """.render
 
-      assertTrue(
-        query.contains("SELECT ?s ?p ?o"),
-        query.contains("?s a <http://example.org/MyClass>"),
-        query.contains("?s <http://www.knora.org/ontology/knora-base#isDeleted> false"),
-        query.contains("OPTIONAL"),
-        query.contains("DESC(?lastModDate)"),
-        query.contains("LIMIT 25"),
-      )
+      assertGolden(query, "simpleSelect")
     },
   )
 
@@ -133,7 +126,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
           )
         }
 
-        Fragment.combine(deleteDirectLink, linkValueExistsPatterns)
+        Fragments.combine(deleteDirectLink, linkValueExistsPatterns)
       }.combineAll
 
       val query = sparql"""
@@ -146,15 +139,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
         }
       """.render
 
-      assertTrue(
-        query.contains(
-          "?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate",
-        ),
-        query.contains("?resource <http://example.org/hasLink> <http://example.org/target1>"),
-        query.contains("?linkValue0"),
-        query.contains("?linkValueUUID0"),
-        query.contains("?linkValuePermissions0"),
-      )
+      assertGolden(query, "insertValueDeleteBlock")
     },
   )
 
@@ -171,11 +156,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
           sparql"$s $kbLastMod $nodeIri .",
         )
         .render
-      assertTrue(
-        rendered.contains("UNION"),
-        rendered.contains("guiAttribute"),
-        rendered.contains("\"hlist=<http://rdfh.ch/lists/0001/treeList01>\""),
-      )
+      assertGolden(rendered, "union")
     },
     test("graph wraps a pattern in a GRAPH clause") {
       val g        = Iri.unsafeFrom("http://www.knora.org/data/0001/anything")
@@ -218,27 +199,20 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
         sparql"$newValue $commentIri ${Literal.string(c)} ."
       }
 
-      val result = Fragment.combine(
+      val result = Fragments.combine(
         Some(sparql"$newValue a ${Iri.unsafeFrom(knoraBase + "TextValue")} ."),
         commentPattern,
       )
 
-      assertTrue(
-        result.render.contains("TextValue"),
-        result.render.contains("valueHasComment"),
-        result.render.contains("A comment"),
-      )
+      assertGolden(result.render, "conditionalCombine")
     },
     test("None fragments are skipped") {
       val noComment: Option[Fragment] = None
-      val result                      = Fragment.combine(
+      val result                      = Fragments.combine(
         Some(sparql"?s a ?type ."),
         noComment,
       )
-      assertTrue(
-        result.render.contains("?s a ?type"),
-        !result.render.contains("comment"),
-      )
+      assertTrue(result.render == "?s a ?type .")
     },
   )
 
@@ -246,7 +220,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
   // Dynamic iteration (Twirl @for equivalent)
   // -------------------------------------------------------------------------
   val iterationSuite = suite("Dynamic iteration")(
-    test("collection to indexed variable patterns via map + combineAll") {
+    test("collection to indexed variable patterns via map + join") {
       case class ValueUpdate(predicateIri: String, value: String)
 
       val updates = List(
@@ -256,39 +230,31 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
 
       val newValue = Variable("newValue")
 
-      val patterns: Fragment = updates.map { update =>
-        val pred = Iri.unsafeFrom(update.predicateIri)
-        val lit  = Literal.string(update.value)
-        sparql"$newValue $pred $lit ."
-      }.combineAll
-
-      val rendered = patterns.render
-      assertTrue(
-        rendered.contains("hasName"),
-        rendered.contains("\"Alice\""),
-        rendered.contains("hasAge"),
-        rendered.contains("\"30\""),
+      val patterns: Fragment = Fragment.join(
+        updates.map { update =>
+          val pred = Iri.unsafeFrom(update.predicateIri)
+          val lit  = Literal.string(update.value)
+          sparql"$newValue $pred $lit ."
+        },
+        Fragment.raw("\n"),
       )
+
+      assertGolden(patterns.render, "iterationMap")
     },
     test("indexed variables for link updates (Twirl @for equivalent)") {
       val resource    = Variable("resource")
       val linkUpdates = List("target1", "target2", "target3")
 
-      val patterns: Fragment = linkUpdates.zipWithIndex.map { case (target, idx) =>
-        val linkValue = Variable(s"linkValue$idx")
-        val targetIri = Iri.unsafeFrom(s"http://example.org/$target")
-        sparql"$resource ${Iri.unsafeFrom(knoraBase + "hasLink")} $targetIri .\n$linkValue ${Iri.unsafeFrom(knoraBase + "valueHasRefCount")} ${Literal.int(1)} ."
-      }.combineAll
-
-      val rendered = patterns.render
-      assertTrue(
-        rendered.contains("?linkValue0"),
-        rendered.contains("?linkValue1"),
-        rendered.contains("?linkValue2"),
-        rendered.contains("target1"),
-        rendered.contains("target2"),
-        rendered.contains("target3"),
+      val patterns: Fragment = Fragment.join(
+        linkUpdates.zipWithIndex.map { case (target, idx) =>
+          val linkValue = Variable(s"linkValue$idx")
+          val targetIri = Iri.unsafeFrom(s"http://example.org/$target")
+          sparql"$resource ${Iri.unsafeFrom(knoraBase + "hasLink")} $targetIri .\n$linkValue ${Iri.unsafeFrom(knoraBase + "valueHasRefCount")} ${Literal.int(1)} ."
+        },
+        Fragment.raw("\n"),
       )
+
+      assertGolden(patterns.render, "iterationIndexed")
     },
   )
 }

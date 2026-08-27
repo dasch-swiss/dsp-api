@@ -15,6 +15,12 @@ scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
     format = True,
+    # Golden files (GoldenTest snapshots) live in the resources mirror of the spec package.
+    resource_strip_prefix = "modules/sparql-builder/src/test/resources",
+    resources = glob(
+        ["src/test/resources/**"],
+        allow_empty = True,
+    ),
     # Discovery is by class-name suffix; a missed suffix silently skips specs.
     suffixes = ["Spec", "IT", "Test"],
     deps = [

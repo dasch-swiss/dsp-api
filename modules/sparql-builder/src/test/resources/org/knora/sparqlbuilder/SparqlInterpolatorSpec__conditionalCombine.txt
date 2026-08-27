@@ -1,0 +1,2 @@
+?newValue a <http://www.knora.org/ontology/knora-base#TextValue> .
+?newValue <http://www.knora.org/ontology/knora-base#valueHasComment> "A comment" .
