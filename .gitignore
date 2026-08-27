@@ -71,8 +71,6 @@ modules/ingest/docs/openapi/*.yml
 .claude/settings.local.json
 /.claude/tmp
 /.claude/worktrees/
-.claude-flow/*
-.swarm/*
 
 # ingest
 localdev/storage/
