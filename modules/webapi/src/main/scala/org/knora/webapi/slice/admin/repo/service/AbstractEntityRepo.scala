@@ -106,11 +106,9 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   protected def findAllByPattern(pattern: RdfSubject => GraphPattern): Task[Chunk[E]] =
     findAllByQuery(findByPatternQuery(pattern))
 
-  // Whole-subject query: fetches every triple of every subject of `resourceClass` in one shot instead of
-  // enumerating each known property (required triples + N OPTIONAL blocks), which is O(N) per subject and
-  // becomes a cross-product for classes with many optional properties. Over-fetching unrelated predicates
-  // on the same subject is benign; `findAllResilient` skips (rather than fails) any subject whose fetched
-  // triples don't map cleanly onto `E`.
+  // Fetches every triple of every matching subject in one CONSTRUCT instead of enumerating each known
+  // property (required triples + N OPTIONAL blocks): the per-property shape becomes a cross-product for
+  // classes with many optional properties. Over-fetching unrelated predicates on the same subject is benign.
   private[service] def findAllQuery(sub: Variable): Construct = {
     val p       = variable("p")
     val o       = variable("o")
@@ -141,10 +139,9 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
       ZStream.fromIterator(_).mapZIO(mapper.toEntity(_).mapError(TriplestoreResponseException.apply)).runCollect,
     )
 
-  // Resilient collector used only by `findAll`: a single unmappable subject (missing required property,
-  // malformed value, or a mapper defect) is skipped and logged rather than failing the whole batch.
-  // Fiber interruption is re-propagated, never swallowed as a skip - a blanket catchAllCause/.sandbox would
-  // also catch interruption, which must instead cancel the outer `findAll()` effect.
+  // An unmappable subject (missing required property, malformed value, or a mapper defect) is skipped and
+  // logged rather than failing the whole batch. Interruption is re-propagated explicitly: a blanket
+  // catchAllCause/.sandbox would also catch interruption, which must instead cancel the outer `findAll()`.
   private def findAllResilient(construct: Construct): Task[Chunk[E]] =
     runQuery(construct).flatMap { resources =>
       for {

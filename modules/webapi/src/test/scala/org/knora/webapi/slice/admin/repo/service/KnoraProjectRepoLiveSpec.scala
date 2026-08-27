@@ -119,8 +119,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(projects.sortBy(_.id.value) == builtInProjects.sortBy(_.id.value))
       },
       test("skip a subject missing a required property, log the skip, and still return the valid ones") {
-        // "missingShortname" has no knora-admin:projectShortname triple, so the mapper fails with a
-        // (non-defect) LiteralNotPresent RdfError. findAllResilient must skip it, not fail the whole batch.
         val brokenTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |
@@ -140,8 +138,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         )
       },
       test("skip a subject with a malformed required value, log the skip, and still return the valid ones") {
-        // "malformedShortcode" carries an invalid knora-admin:projectShortcode (not a 4-digit hex value), so
-        // Shortcode.from fails with a ConversionError RdfError. Same skip-and-log contract as a missing property.
         val brokenTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |
@@ -162,8 +158,8 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         )
       },
       test("not return a foreign-class subject in the same named graph") {
-        // findAllQuery's `?s a <resourceClass>` anchor must still filter out subjects of a different class,
-        // even though the whole-subject CONSTRUCT no longer enumerates properties one by one.
+        // The whole-subject CONSTRUCT dropped per-property enumeration, so the `?s a <resourceClass>` anchor
+        // is now solely responsible for excluding subjects of other classes.
         val foreignClassTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |
@@ -316,8 +312,7 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       },
     ),
     suite("findAllQuery")(
-      // Pins the generated whole-subject SPARQL for findAll: CONSTRUCT { ?s ?p ?o } scoped to the admin
-      // named graph, anchored by `?s a knora-admin:knoraProject`. No property enumeration, no OPTIONALs.
+      // Golden-pins the whole-subject findAll SPARQL: no per-property enumeration, no OPTIONALs.
       test("build a whole-subject CONSTRUCT scoped to the named graph") {
         for {
           repo    <- ZIO.service[KnoraProjectRepoLive]

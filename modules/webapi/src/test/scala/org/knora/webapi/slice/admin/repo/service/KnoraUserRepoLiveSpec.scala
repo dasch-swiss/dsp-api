@@ -190,8 +190,6 @@ class KnoraUserRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(users.sortBy(_.id.value) == builtInUsers.sortBy(_.id.value))
       },
       test("skip a user subject missing a required property (username), and still return the valid ones") {
-        // "missingUsername" has no knora-admin:username triple, so the mapper fails with a
-        // (non-defect) LiteralNotPresent RdfError. findAllResilient must skip it, not fail the whole batch.
         val brokenTriples = Rdf
           .iri("http://rdfh.ch/users/missingUsername")
           .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)

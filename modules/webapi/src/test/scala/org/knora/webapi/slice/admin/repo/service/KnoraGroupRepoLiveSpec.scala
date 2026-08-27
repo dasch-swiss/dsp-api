@@ -87,8 +87,6 @@ class KnoraGroupRepoLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(userGroup.sortBy(_.id.value) == builtInGroups.sortBy(_.id.value))
     },
     test("skip a group subject missing a required property (groupName), and still return the valid ones") {
-      // "missingGroupName" has no knora-admin:groupName triple, so the mapper fails with a
-      // (non-defect) LiteralNotPresent RdfError. findAllResilient must skip it, not fail the whole batch.
       val brokenTriples = Rdf
         .iri("http://rdfh.ch/groups/0001/missingGroupName")
         .has(RDF.TYPE, Vocabulary.KnoraAdmin.UserGroup)

@@ -107,8 +107,8 @@ class AdministrativePermissionRepoLiveSpec extends ZIOSpecDefault {
     },
     suite("findAll resilience")(
       test("skip (not die on) an AP subject that is missing knora-admin:forGroup/forProject") {
-        // `.map(_.head)` on `getObjectIrisConvert[GroupIri](KnoraAdmin.ForGroup)` throws NoSuchElementException
-        // as a defect when the property is absent - findAllResilient must skip it, not let `findAll()` die.
+        // A missing forGroup makes the mapper's `.map(_.head)` throw as a defect (not a typed RdfError);
+        // findAllResilient must still skip it rather than let `findAll()` die.
         val brokenTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
@@ -125,9 +125,8 @@ class AdministrativePermissionRepoLiveSpec extends ZIOSpecDefault {
         } yield assertTrue(exit.isSuccess, result.isEmpty)
       },
       test("skip (not die on) an AP subject with an unparseable hasPermissions token") {
-        // `parsePermission`'s `case _ => ZIO.die(...)` branch fires for a token that is neither
-        // `Array(simplePermission)` nor `Array(restricted, irisStr)` - e.g. three space-separated parts.
-        // findAllResilient must skip this defect and log it too.
+        // An unparseable hasPermissions token hits `parsePermission`'s `ZIO.die` branch - a defect, not a
+        // typed error; findAllResilient must skip it too.
         val brokenTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .

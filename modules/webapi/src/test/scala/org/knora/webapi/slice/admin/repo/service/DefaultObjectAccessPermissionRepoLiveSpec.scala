@@ -125,10 +125,8 @@ class DefaultObjectAccessPermissionRepoLiveSpec extends ZIOSpecDefault {
     },
     suite("findAll resilience")(
       test("skip (not die on) a DOAP subject that is missing knora-admin:forProject") {
-        // DefaultObjectAccessPermissionRepoLive's mapper does
-        // `resource.getObjectIrisConvert[ProjectIri](KnoraAdmin.ForProject).map(_.head)` - an empty Chunk's
-        // `.head` throws NoSuchElementException as a defect, not a typed RdfError. findAllResilient must
-        // catch that defect via `.exit`, skip the subject, and log it - not let `findAll()` die.
+        // A missing forProject makes the mapper's `.map(_.head)` throw as a defect (not a typed RdfError);
+        // findAllResilient must catch it via `.exit` and skip rather than let `findAll()` die.
         val brokenTrig =
           s"""|@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
               |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .

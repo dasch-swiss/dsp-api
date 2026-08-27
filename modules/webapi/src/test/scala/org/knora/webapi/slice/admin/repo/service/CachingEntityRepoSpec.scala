@@ -126,9 +126,8 @@ class CachingEntityRepoSpec extends ZIOSpecDefault {
         )
       },
       test("an interrupted findAll does not silently return a partial list") {
-        // TestMapper.toEntity interrupts itself when it sees TestRepo.interruptSentinel as the name. This
-        // must propagate out of findAllResilient's per-subject Exit-handling as a genuine interruption of the
-        // outer findAll() effect, not be treated like an ordinary mapping failure and skipped.
+        // TestMapper interrupts itself on TestRepo.interruptSentinel; findAllResilient must let that
+        // interruption propagate out of its per-subject Exit-handling instead of skipping it like a failure.
         val trig =
           s"""|<${TestRepo.namedGraph}> {
               |  <https://example.com/interrupt/1> a <${TestRepo.resourceClass}> ;
