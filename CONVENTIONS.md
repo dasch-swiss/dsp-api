@@ -56,11 +56,10 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 
 Never concatenate query strings. **New queries** use the `sparql"..."` interpolator from
 `modules/sparql-builder/` (whole-query templates, typed `Iri`/`Variable`/`Literal` holes,
-`Fragment` composition for dynamic structure). rdf4j SparqlBuilder is **banned for new
-code** — enforced by `//tools/lint:sparqlbuilder_ratchet` (in `just check`) against
-`tools/lint/sparqlbuilder_allowlist.txt`; grandfathered files migrate over time (remove
-the allowlist entry when you migrate one, verify by diffing rendered SPARQL against the
-old `getQueryString` output). See `docs/development/dsp-api-sparql-queries.md`.
+`Fragment` composition for dynamic structure). Do not write new queries with rdf4j
+SparqlBuilder; existing files keep it until they are migrated (verify a migration by
+diffing rendered SPARQL against the old `getQueryString` output). See
+`docs/development/dsp-api-sparql-queries.md`.
 
 - **Carve-out — the admin SPARQL passthrough.** `POST /admin/sparql/query` forwards a client-supplied query string to the store on purpose: being transparent is its contract, so it must not parse, validate or rewrite the SPARQL it carries, and no builder applies. This is the only such surface; everything else builds queries. See `docs/03-endpoints/api-admin/sparql-passthrough.md`.
 

@@ -1,6 +1,6 @@
 ---
 name: sparqlbuilder
-description: "Write SPARQL and Gravsearch queries in Scala. NEW queries use the in-house sparql\"...\" interpolator (modules/sparql-builder); RDF4J SparqlBuilder is banned for new code (CI ratchet) and documented here only for maintaining grandfathered query sites. Triggers on: sparqlbuilder, sparql interpolator, rdf4j query, scala sparql, build sparql query, gravsearch."
+description: "Write SPARQL and Gravsearch queries in Scala. NEW queries use the in-house sparql\"...\" interpolator (modules/sparql-builder); RDF4J SparqlBuilder is not used for new code and documented here only for maintaining existing query sites. Triggers on: sparqlbuilder, sparql interpolator, rdf4j query, scala sparql, build sparql query, gravsearch."
 ---
 
 # SPARQL and Gravsearch Queries in Scala
@@ -32,14 +32,11 @@ val query = sparql"""
 - Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
   queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
 
-**RDF4J SparqlBuilder is banned for new code.** The CI ratchet
-(`//tools/lint:sparqlbuilder_ratchet`, wired into `just check`) fails when a file outside
-[`tools/lint/sparqlbuilder_allowlist.txt`](../../tools/lint/sparqlbuilder_allowlist.txt)
-imports `org.eclipse.rdf4j.sparqlbuilder`. When you migrate (or delete) a grandfathered
-file, remove its allowlist entry — the list only ever shrinks. Verify a migration by
-diffing the rendered SPARQL against the old builder's `getQueryString` output. Only the
-`sparqlbuilder` package is banned; RDF4J model classes (`org.eclipse.rdf4j.model.*`,
-`Vocabulary`) remain fine.
+**Do not write new queries with RDF4J SparqlBuilder.** This is a code-review convention
+(see `CONVENTIONS.md` / `REVIEW.md` § SPARQL), not a CI gate: existing query sites keep
+the builder until they are migrated. Verify a migration by diffing the rendered SPARQL
+against the old builder's `getQueryString` output. Only new *SparqlBuilder* usage is out;
+RDF4J model classes (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain fine.
 
 ---
 

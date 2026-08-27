@@ -4,7 +4,7 @@ Safe, composable SPARQL query building: whole queries as `sparql"""..."""` inter
 templates with typed holes, dynamic structure composed as `Fragment` values. This is the
 **only** SPARQL generation style for new dsp-api code — see
 [the decision record](../../docs/development/dsp-api-sparql-builder.md) for why, and for
-the RDF4J SparqlBuilder migration ratchet.
+the RDF4J SparqlBuilder migration plan.
 
 ## Usage
 

@@ -9,8 +9,9 @@ rules see [dsp-api-sparql-queries.md](dsp-api-sparql-queries.md).
 
 All SPARQL generation uses **one style**: whole queries as `sparql"""..."""` interpolated
 templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic structure composed as
-`Fragment` values. RDF4J SparqlBuilder, the incumbent, is **banned for new code** and
-burns down to zero via a CI ratchet (`//tools/lint:sparqlbuilder_ratchet`, in `just check`).
+`Fragment` values. RDF4J SparqlBuilder, the incumbent, is not used for new code; existing
+usage burns down to zero as query sites are migrated (enforced organisationally — code
+review — not by tooling).
 
 ## Why
 
@@ -62,25 +63,22 @@ The module's literal escaping is byte-for-byte identical to RDF4J's
 test-only oracle. A migrated query is verified by diffing its rendered SPARQL against the
 old builder's `getQueryString` output.
 
-## Enforcement: hard rule with a grace period
+## The rule
 
-- New code MUST use `org.knora.sparqlbuilder`; importing `org.eclipse.rdf4j.sparqlbuilder`
-  in a file not on
-  [`tools/lint/sparqlbuilder_allowlist.txt`](../../tools/lint/sparqlbuilder_allowlist.txt)
-  fails CI.
-- The allowlist only ever shrinks: when a file is migrated (or deleted), remove its entry —
-  stale entries fail the check too.
-- Only the `org.eclipse.rdf4j.sparqlbuilder` package is banned. RDF4J model classes
-  (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain legitimate dependencies.
-- One permanent entry: the module's own `Rdf4jEscapingSpec` (the escaping oracle).
+- New code uses `org.knora.sparqlbuilder`; do not add new `org.eclipse.rdf4j.sparqlbuilder`
+  usage. This is a code-review convention (`CONVENTIONS.md` / `REVIEW.md` § SPARQL), not a
+  CI gate.
+- Only new *SparqlBuilder* usage is out — RDF4J model classes
+  (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain legitimate dependencies, and the
+  module's own `Rdf4jEscapingSpec` keeps RDF4J as its test-only escaping oracle.
 
 ## Migration plan
 
-The allowlist (94 files at introduction) is the authoritative burn-down list. Derivation
-of the categories below:
+94 files used RDF4J SparqlBuilder when this decision landed. The burn-down list and the
+categories below are derived with:
 
 ```bash
-# RDF4J SparqlBuilder importers (the ratchet's subject)
+# RDF4J SparqlBuilder importers (the burn-down list)
 grep -rl 'org\.eclipse\.rdf4j\.sparqlbuilder' modules --include='*.scala'
 
 # Heuristic for raw/hybrid string-interpolated SPARQL (triage: constants are noise,
@@ -99,7 +97,7 @@ Priority order:
    `InsertValueQueryBuilder.scala` (~750 lines), `GetResourceValueVersionHistoryQuery.scala`,
    `ResourcesRepoLive.scala`, `SearchQueries.scala`.
 3. **The long tail of simple CRUD builder files** — mechanical ports, each verified by the
-   `getQueryString` diff, entry removed from the allowlist.
+   `getQueryString` diff.
 
 The first migration PR also wires `//modules/sparql-builder` into `//modules/webapi`.
 
