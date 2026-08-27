@@ -189,6 +189,31 @@ class KnoraUserRepoLiveSpec extends ZIOSpecDefault {
           users <- KnoraUserRepo(_.findAll())
         } yield assertTrue(users.sortBy(_.id.value) == builtInUsers.sortBy(_.id.value))
       },
+      test("skip a user subject missing a required property (username), and still return the valid ones") {
+        val brokenTriples = Rdf
+          .iri("http://rdfh.ch/users/missingUsername")
+          .has(RDF.TYPE, Vocabulary.KnoraAdmin.User)
+          .andHas(Vocabulary.KnoraAdmin.email, Rdf.literalOf("broken@example.com"))
+          .andHas(Vocabulary.KnoraAdmin.givenName, Rdf.literalOf("Broken"))
+          .andHas(Vocabulary.KnoraAdmin.familyName, Rdf.literalOf("User"))
+          .andHas(Vocabulary.KnoraAdmin.preferredLanguage, Rdf.literalOf("en"))
+          .andHas(Vocabulary.KnoraAdmin.status, Rdf.literalOf(true))
+          .andHas(Vocabulary.KnoraAdmin.password, Rdf.literalOf("hash"))
+          .andHas(Vocabulary.KnoraAdmin.isInSystemAdminGroup, Rdf.literalOf(false))
+        val brokenQuery = Update(
+          Queries
+            .INSERT_DATA(brokenTriples)
+            .into(Rdf.iri(adminDataNamedGraph.value))
+            .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS)),
+        )
+        for {
+          _     <- storeUsersInTripleStore(testUser)
+          _     <- ZIO.serviceWithZIO[TriplestoreService](_.query(brokenQuery))
+          users <- KnoraUserRepo(_.findAll())
+        } yield assertTrue(
+          users.sortBy(_.id.value) == (builtInUsers ++ Chunk(testUser)).sortBy(_.id.value),
+        )
+      },
     ),
     suite("save")(
       test("should create and find user") {

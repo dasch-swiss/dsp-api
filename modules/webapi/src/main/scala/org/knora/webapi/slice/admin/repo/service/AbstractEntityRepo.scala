@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.XSD
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
+import org.eclipse.rdf4j.sparqlbuilder.core.Variable
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
@@ -17,8 +18,10 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 import zio.Chunk
+import zio.Exit
 import zio.IO
 import zio.NonEmptyChunk
+import zio.Ref
 import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
@@ -60,7 +63,7 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
 
   override def findAll(): Task[Chunk[E]] = {
     val sub = variable("s")
-    findAllByQuery(Construct(entityQuery(tripleP(sub), graphP(sub)).getQueryString))
+    findAllResilient(findAllQuery(sub))
   }
 
   override def findById(id: Id): Task[Option[E]] = {
@@ -103,6 +106,19 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   protected def findAllByPattern(pattern: RdfSubject => GraphPattern): Task[Chunk[E]] =
     findAllByQuery(findByPatternQuery(pattern))
 
+  // Fetches every triple of every matching subject in one CONSTRUCT instead of enumerating each known
+  // property (required triples + N OPTIONAL blocks): the per-property shape becomes a cross-product for
+  // classes with many optional properties. Over-fetching unrelated predicates on the same subject is benign.
+  private[service] def findAllQuery(sub: Variable): Construct = {
+    val p       = variable("p")
+    val o       = variable("o")
+    val pattern = sub.isA(Rdf.iri(resourceClass.toString)).andHas(p, o)
+    val query   = Queries
+      .CONSTRUCT(sub.has(p, o))
+      .where(pattern.from(namedGraphIri))
+    Construct(query.getQueryString)
+  }
+
   private[service] def findByPatternQuery(pattern: RdfSubject => GraphPattern): Construct = {
     val s = variable("s")
     // The caller's pattern is the most selective part of the query (e.g. a shortcode lookup) and must
@@ -122,6 +138,40 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
     runQuery(construct).flatMap(
       ZStream.fromIterator(_).mapZIO(mapper.toEntity(_).mapError(TriplestoreResponseException.apply)).runCollect,
     )
+
+  // An unmappable subject (missing required property, malformed value, or a mapper defect) is skipped and
+  // logged rather than failing the whole batch. Interruption is re-propagated explicitly: a blanket
+  // catchAllCause/.sandbox would also catch interruption, which must instead cancel the outer `findAll()`.
+  private def findAllResilient(construct: Construct): Task[Chunk[E]] =
+    runQuery(construct).flatMap { resources =>
+      for {
+        skippedRef  <- Ref.make(0)
+        resultChunk <- ZStream
+                         .fromIterator(resources)
+                         .mapZIO { r =>
+                           mapper.toEntity(r).mapError(TriplestoreResponseException.apply).exit.flatMap {
+                             case Exit.Success(e)                    => ZIO.some(e)
+                             case Exit.Failure(c) if c.isInterrupted => ZIO.refailCause(c)
+                             case Exit.Failure(c)                    =>
+                               r.getSubjectIri.flatMap { subjectIri =>
+                                 skippedRef.update(_ + 1) *>
+                                   ZIO
+                                     .logWarningCause(
+                                       s"skipping unmappable entity in findAll (subject=${subjectIri.value})",
+                                       c,
+                                     )
+                                     .as(None)
+                               }
+                           }
+                         }
+                         .collectSome
+                         .runCollect
+        skipped <- skippedRef.get
+        _       <- ZIO
+               .logWarning(s"findAll skipped $skipped of ${resultChunk.length + skipped} subjects")
+               .when(skipped > 0)
+      } yield resultChunk
+    }
 
   private def runQuery(construct: Construct): Task[Iterator[RdfResource]] = for {
     model     <- triplestore.queryRdfModel(construct)
