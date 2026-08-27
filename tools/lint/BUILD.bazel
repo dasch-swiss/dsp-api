@@ -9,6 +9,7 @@ _LINT_SRCS = [
     "//modules/ingest:license_srcs",
     "//modules/jwt:license_srcs",
     "//modules/shacl-validator:license_srcs",
+    "//modules/sparql-builder:license_srcs",
     "//modules/test-e2e:license_srcs",
     "//modules/test-ingest-integration:license_srcs",
     "//modules/test-it:license_srcs",
@@ -23,4 +24,15 @@ py_test(
     args = ["$(rootpaths %s)" % t for t in _LINT_SRCS],
     data = _LINT_SRCS,
     main = "check_relative_imports.py",
+)
+
+# Ratchet: RDF4J SparqlBuilder is banned for new code (use //modules/sparql-builder's
+# `sparql"..."` interpolator); existing usage is grandfathered in the allowlist, which
+# only ever shrinks as query sites are migrated. Wired into `just check`.
+py_test(
+    name = "sparqlbuilder_ratchet",
+    srcs = ["check_sparqlbuilder_ratchet.py"],
+    args = ["$(rootpath :sparqlbuilder_allowlist.txt)"] + ["$(rootpaths %s)" % t for t in _LINT_SRCS],
+    data = [":sparqlbuilder_allowlist.txt"] + _LINT_SRCS,
+    main = "check_sparqlbuilder_ratchet.py",
 )
