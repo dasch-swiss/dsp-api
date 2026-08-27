@@ -57,7 +57,7 @@ operator (`>>` returns the right-hand spans that are descendants of the left):
 { span:name = "gravsearch" && span:duration > 2s } >> { span:name = "gravsearch.mainquery.execute" }
 ```
 
-## 4. Filter by query shape
+## 4. Filter by query shape or target project
 
 The root span carries per-flag booleans, so you can isolate query *kinds* without any user data.
 Slow queries that use a FILTER:
@@ -77,6 +77,25 @@ Match on the composite shape label (regex is fully anchored — wrap with `.*`):
 
 ```traceql
 { span:name = "gravsearch" && span.gravsearch.query.shape =~ ".*has_union.*" }
+```
+
+Slow queries touching one project. `gravsearch.project_shortcodes` is a comma-separated set, so match
+it as a regex rather than for equality — a cross-project query lists several:
+
+```traceql
+{ span:name = "gravsearch" && span.gravsearch.project_shortcodes =~ ".*0803.*" && span:duration > 2s }
+```
+
+Searches the client explicitly scoped to a project, as opposed to queries that merely reference it:
+
+```traceql
+{ span:name = "gravsearch" && span.gravsearch.project_restriction = "http://rdfh.ch/projects/0803" }
+```
+
+Cross-project queries — those referencing more than one project, a shape worth knowing about on its own:
+
+```traceql
+{ span:name = "gravsearch" && span.gravsearch.project_shortcodes =~ ".*,.*" }
 ```
 
 ## 5. Errors and interruptions

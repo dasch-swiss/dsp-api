@@ -60,14 +60,37 @@ the root — four prequery-side stages, no main-query or result-transform spans.
 
 The `gravsearch` root span carries a **query shape** — a bounded fingerprint of *what kind* of query
 this was, with no user data in any attribute. Use it to group "queries like this one" without
-aggregating over FILTER literals or instance IRIs. For the query *itself*, see
-[§5](#5-read-the-submitted-query) — it is on the same span, as an event.
+aggregating over FILTER literals or instance IRIs. It also carries the **target project(s)**, so you
+can tell whose data a slow query was reading without opening the query text. For the query *itself*,
+see [§5](#5-read-the-submitted-query) — it is on the same span, as an event.
 
 | Attribute | Example | Use |
 | --- | --- | --- |
 | `gravsearch.query.shape` | `resource-list\|has_filter\|has_order_by\|patterns:4-7\|joins:1` | Bounded label; safe to group/aggregate by. Format: result-type, then each true flag, then `patterns:<bucket>` and `joins:<bucket>` (buckets: `0`, `1`, `2-3`, `4-7`, `8+`) |
 | `gravsearch.shape.has_filter` | `true` | Per-flag booleans for TraceQL filtering — also `has_optional`, `has_union`, `has_order_by`, `has_offset`, `has_link_traversal`, `is_fulltext` |
 | `gravsearch.schema_predicates` | `hasTitle,isPartOf` | Sorted, de-duplicated **ontology** predicate names only (never instance IRIs). Drill-down detail, not a metric label |
+| `gravsearch.project_shortcodes` | `0803` | Sorted, de-duplicated shortcodes of the projects the query **refers to**, inferred from its IRIs. Usually one; a cross-project query lists several. Always present — an empty value means no project was identifiable (a query over built-in ontologies only). Drill-down detail, not a metric label |
+| `gravsearch.project_restriction` | `http://rdfh.ch/projects/0803` | The project the request was explicitly **scoped to** (`limitToProject` and the project-restricted entry points). Present only when the search was restricted |
+
+The two project attributes answer different questions, which is why they are separate. `project_shortcodes`
+is inferred from the query — "which projects does this query touch". `project_restriction` is stated by the
+caller — "which project was this search scoped to". A cross-project query has several of the first and none
+of the second.
+
+!!! note "Why the restriction is an IRI, not a shortcode"
+    `limitToProject` arrives from the request as a `ProjectIri`, and a project IRI created after the
+    shortcode-shaped ones were retired is `http://rdfh.ch/projects/<base64-UUID>`. Turning it into a
+    shortcode needs a project lookup on the pre-parse path of every Gravsearch. So for older projects the
+    IRI ends in the shortcode and lines up with `project_shortcodes` by eye, and for newer ones it does
+    not — a known limitation. To find every trace for one project, filter on `project_shortcodes`.
+
+!!! note "Shortcodes come from data IRIs too, not only ontology IRIs"
+    A project shortcode is carried by both `…/ontology/0803/incunabula/simple/v2#book` and
+    `http://rdfh.ch/0803/c5058f3a`, and the derivation reads both. That is what makes the attribute useful
+    on the internally generated searches ([§7](#not-every-captured-query-came-from-a-researcher)) — incoming
+    links, still-image representations, incoming regions — whose queries reference built-in ontologies
+    exclusively and interpolate the target resource IRI. Reading ontology IRIs alone would leave every one
+    of those spans blank. Only the shortcode reaches the span, never the IRI it came from.
 
 On a failed or interrupted stage span you may also see:
 
@@ -136,7 +159,7 @@ them as broken instrumentation, and do not mistake one for another.
 | **Empty result** | parse → type_inspection → prequery.generate → prequery.execute present; **no** `mainquery.*`, **no** `result_transform` | The prequery returned zero main resources, so there was nothing to fetch — "no rows", not an error | All present spans are `OK`; root has its shape attributes |
 | **Parse failure** | root + `gravsearch.parse` only, parse span is `ERROR` | The Gravsearch string was malformed; the pipeline never started | Only the parse span exists and it is `ERROR` (`gravsearch.parse: <Class>`) |
 | **Interruption / timeout** | early stages present, later stages absent, **last open span + root are `ERROR`** | The request fiber was interrupted (client disconnect, timeout, cancellation) mid-query | `gravsearch.exit_reason = interrupted` on the open span and the root |
-| **Shape-less early interrupt** | root present but **without `gravsearch.query.shape` / `gravsearch.shape.*`**, little or nothing below it | Interrupted (or failed) *before* parse completed, so the shape was never derived | Missing shape attributes **and** `exit_reason = interrupted` / `ERROR` on the root — not a broken shape derivation |
+| **Shape-less early interrupt** | root present but **without `gravsearch.query.shape` / `gravsearch.shape.*` / `gravsearch.project_shortcodes`**, little or nothing below it | Interrupted (or failed) *before* parse completed, so neither the shape nor the target project was ever derived | Missing shape attributes **and** `exit_reason = interrupted` / `ERROR` on the root — not a broken shape derivation. Note the difference from an *empty* `project_shortcodes`, which means the derivation ran and found no project |
 
 How to tell them apart quickly:
 
