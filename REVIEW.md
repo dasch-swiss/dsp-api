@@ -40,7 +40,8 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ### SPARQL
 
-- [ ] No string concatenation in SPARQL — use rdf4j SparqlBuilder via the helpers in `slice/common/repo` (see `docs/development/dsp-api-sparql-queries.md`); the admin SPARQL passthrough is the one deliberate exception, see `CONVENTIONS.md` § SPARQL
+- [ ] No string concatenation in SPARQL — new queries use the `sparql"..."` interpolator from `modules/sparql-builder/`; rdf4j SparqlBuilder only in grandfathered files (allowlisted in `tools/lint/sparqlbuilder_allowlist.txt`, checked by CI) — see `docs/development/dsp-api-sparql-queries.md`; the admin SPARQL passthrough is the one deliberate exception, see `CONVENTIONS.md` § SPARQL
+- [ ] A migrated query site's rendered SPARQL was diffed against the old builder's `getQueryString` output, and its allowlist entry removed
 - [ ] Query builders are tested with **golden snapshots** (`GoldenTest`), not scattered `q.contains(...)` / `!q.contains(...)` substring assertions (brittle on serialization, blind to clause placement) — see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders
 - [ ] Selective patterns precede `OPTIONAL` blocks **within the same flat group** — no restriction appended after OPTIONALs, no accidental nesting via `pattern.and(group)` (emits `{ pattern . { … } }`) — see `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance (incident DEV-6796)
 - [ ] Property paths (`zeroOrMore()`, `*`/`+`) are **anchored** — a path variable is bound by preceding patterns; seemingly redundant patterns adjacent to a path are treated as load-bearing anchors (DEV-6803: removing one took a 19ms tile query to ~15s); no large closures inlined as `VALUES`

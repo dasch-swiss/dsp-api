@@ -22,11 +22,12 @@ salsahGui      = "http://www.knora.org/ontology/salsah-gui#"
 **Scenario**: Find all triples about non-deleted resources of a given class, with optional last modification date.
 
 **Parameters**:
+
 - `resourceClass` = `http://example.org/MyClass`
 - `ORDER BY DESC` on last modification date
 - `LIMIT 25`
 
-### Target SPARQL
+### Target SPARQL (Benchmark 1)
 
 ```sparql
 SELECT ?s ?p ?o
@@ -47,9 +48,10 @@ LIMIT 25
 **Scenario**: Check if a list node is referenced anywhere — either as a GUI attribute value or as a list node value.
 
 **Parameters**:
+
 - `nodeIri` = `http://rdfh.ch/lists/0001/treeList01`
 
-### Target SPARQL
+### Target SPARQL (Benchmark 2)
 
 ```sparql
 ASK
@@ -71,13 +73,14 @@ WHERE {
 **Scenario**: Delete a property from an ontology, including its optional link value property. Update the ontology's last modification date. Guard with FILTER NOT EXISTS to ensure the property is not used.
 
 **Parameters**:
+
 - `ontologyIri` = `http://www.knora.org/ontology/0001/anything`
 - `propertyIri` = `http://www.knora.org/ontology/0001/anything#hasOtherThing`
 - `linkValuePropertyIri` = `Some(http://www.knora.org/ontology/0001/anything#hasOtherThingValue)` (present in this scenario)
 - `oldLastModDate` = `2024-01-01T00:00:00Z`
 - `newLastModDate` = `2024-01-02T00:00:00Z`
 
-### Target SPARQL
+### Target SPARQL (Benchmark 3)
 
 ```sparql
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -113,16 +116,17 @@ WHERE {
 **Scenario**: Insert a new value for a resource, handling link updates. One link update has both `deleteDirectLink = true` and `linkValueExists = true`.
 
 **Parameters**:
+
 - `resource` = `?resource` (variable)
 - One link update:
-  - `linkPropertyIri` = `http://example.org/hasLink`
-  - `linkTargetIri` = `http://example.org/target1`
-  - `deleteDirectLink` = `true`
-  - `linkValueExists` = `true`
-  - `newLinkValueIri` = `http://example.org/newLinkValue1`
-  - `newReferenceCount` = `1`
+    - `linkPropertyIri` = `http://example.org/hasLink`
+    - `linkTargetIri` = `http://example.org/target1`
+    - `deleteDirectLink` = `true`
+    - `linkValueExists` = `true`
+    - `newLinkValueIri` = `http://example.org/newLinkValue1`
+    - `newReferenceCount` = `1`
 
-### Target SPARQL
+### Target SPARQL (Benchmark 4)
 
 ```sparql
 DELETE {
@@ -144,11 +148,12 @@ WHERE {
 **Scenario**: Count distinct resources matching a full-text search, filtered by project. No resource class filter in this scenario.
 
 **Parameters**:
+
 - `luceneQuery` = `test search`
 - `limitToProject` = `Some(http://rdfh.ch/projects/0001)` (present)
 - `limitToResourceClass` = `None` (absent)
 
-### Target SPARQL
+### Target SPARQL (Benchmark 5)
 
 ```sparql
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -171,19 +176,20 @@ WHERE {
 **Scenario**: A simplified sketch of the 518-line Twirl template. Creates a new version of a TextValue with an optional comment, handling one link update with indexed variables.
 
 **Parameters**:
+
 - `resource` = `http://rdfh.ch/0001/resource1`
 - `newValueIri` = `http://rdfh.ch/0001/resource1/values/newValue1`
 - `valueType` = TextValue (one case of the polymorphic match)
 - `textValue` = `Hello world`
 - `maybeComment` = `Some("Updated value")`
 - One link update:
-  - `linkPropertyIri` = `http://example.org/hasLink`
-  - `linkTargetIri` = `http://example.org/target1`
-  - `newLinkValueIri` = `http://example.org/newLinkValue1`
-  - `newReferenceCount` = `2`
-  - `newPermissions` = `CR knora-admin:ProjectAdmin`
+    - `linkPropertyIri` = `http://example.org/hasLink`
+    - `linkTargetIri` = `http://example.org/target1`
+    - `newLinkValueIri` = `http://example.org/newLinkValue1`
+    - `newReferenceCount` = `2`
+    - `newPermissions` = `CR knora-admin:ProjectAdmin`
 
-### Target SPARQL
+### Target SPARQL (Benchmark 6)
 
 ```sparql
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>

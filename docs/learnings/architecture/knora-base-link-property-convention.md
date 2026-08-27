@@ -51,11 +51,11 @@ linkValue1 a kb:LinkValue ;
 
 The link value property name is **mechanically derived** from the link property name by appending `"Value"`:
 
-| Link property | Link value property |
-|---|---|
-| `hasOtherThing` | `hasOtherThingValue` |
-| `isInCollection` | `isInCollectionValue` |
-| `isPartOf` | `isPartOfValue` |
+| Link property       | Link value property      |
+|---------------------|--------------------------|
+| `hasOtherThing`     | `hasOtherThingValue`     |
+| `isInCollection`    | `isInCollectionValue`    |
+| `isPartOf`          | `isPartOfValue`          |
 | `hasStandoffLinkTo` | `hasStandoffLinkToValue` |
 
 This convention is **enforced**: non-link value properties must not end in `"Value"`, ensuring the naming rule is unambiguous.

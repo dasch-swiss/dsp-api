@@ -1,45 +1,77 @@
-# Recommended Approach: Interpolated Template
+# The Chosen API: Interpolated Templates
 
-The chosen API. Write SPARQL as `sparql"..."` templates with typed interpolation; compose
-dynamic parts as `Fragment` values. Reads like raw SPARQL, safe by construction.
+Write whole SPARQL queries as `sparql"""..."""` templates with typed holes; compose dynamic
+parts as `Fragment` values. Reads like raw SPARQL, safe by construction. The implementation
+lives in `modules/sparql-builder/` (package `org.knora.sparqlbuilder`).
 
 ## Philosophy
 
-One foundation, two surfaces:
+One style, one foundation:
 
-- **Template style (primary)** — write whole queries as `sparql"""..."""` templates with
-  typed holes. This is the Doobie/Skunk pattern (`sql"..."` for entire queries).
-- **Builder style (alternative)** — construct queries programmatically via
-  `Sparql.select(...).where(...).render`, where each slot accepts a `Fragment`. Useful
-  when the query *shape* itself is dynamic.
+- **Whole-query templates** — every query is a `sparql"""..."""` template. Static text is
+  written as SPARQL; anything dynamic is an interpolated hole.
+- **`Fragment` composition for dynamic structure** — conditionals are `Option[Fragment]`
+  (combined with `Fragment.combine`), iteration is `.map(...).combineAll`, and the composed
+  fragment drops into the template as an ordinary hole.
 
-Both share the same core — `Fragment` (a monoid), the `sparql"..."` interpolator, and the
-typed values `Iri`, `Variable`, `Literal`, `Prefix`. They render identical output; the
-choice is ergonomic, not semantic. Exposing both mirrors `sqlx` (`query!` macro +
-`QueryBuilder`) and JOOQ (DSL + plain SQL).
+There is deliberately **no** programmatic query-builder surface (no
+`select(...).where(...)` API). An earlier revision of this spike exposed one as a secondary
+style; it was dropped — two ways to write the same query means every author decides and
+every reader learns both, and the builder re-implemented clause assembly that a template
+already expresses. See [alternatives-considered.md](alternatives-considered.md).
 
-## Shared vocabulary
+## The API surface
 
 ```scala
-import org.knora.sparqlbuilder.{Fragment, Iri, Variable, Literal, Prefix, Sparql}
-import org.knora.sparqlbuilder.Fragment.{sparql, sp}  // sp is a short alias for sparql
-import org.knora.sparqlbuilder.Fragments
+import org.knora.sparqlbuilder.*
 
-// Prefixes — constructed with unsafeFrom, derive IRIs via unsafeIri
-val kb   = Prefix.unsafeFrom("knora-base", "http://www.knora.org/ontology/knora-base#")
-val rdfs = Prefix.unsafeFrom("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-val xsd  = Prefix.unsafeFrom("xsd", "http://www.w3.org/2001/XMLSchema#")
+// Typed values — all constructors validate; there is no unvalidated path.
+val projectIri = Iri.unsafeFrom("http://rdfh.ch/projects/0001") // throws on invalid input
+val userIri    = Iri.from(untrustedString)                      // Either[String, Iri]
+val resource   = Variable("resource")                           // throws on non-VARNAME names
+val label      = Literal.string(userInput)                      // escaped at construction
+val labelDe    = Literal.langString("Haus", "de")               // lang tag validated
+val count      = Literal.int(42)
+val stamp      = Literal.dateTime(java.time.Instant.now())
 
-// IRIs derived from prefixes — no raw namespace strings repeated
-val kbIsDeleted    = kb.unsafeIri("isDeleted")
-val kbLastMod      = kb.unsafeIri("lastModificationDate")
-val kbResource     = kb.unsafeIri("Resource")
-val rdfsSubClassOf = rdfs.unsafeIri("subClassOf")
+// Fragments — the composable unit. Only SparqlValue (Iri, Variable, Literal) and
+// Fragment can be interpolated; a raw String is a compile error.
+val pattern: Fragment = sparql"$resource a $projectIri ."
+
+// Composition
+val f1 = pattern ++ sparql" $resource ?p ?o ."          // monoid append
+val f2 = Fragment.combine(Some(pattern), None)          // Option[Fragment]* — conditionals
+val f3 = List(pattern, pattern).combineAll              // Iterable[Fragment] — iteration
+val f4 = Fragment.join(List(pattern), Fragment.raw("\n")) // join with separator
+
+// Common SPARQL constructs (Fragments object)
+Fragments.optional(pattern)             // OPTIONAL { ... }
+Fragments.union(f1, f2)                 // { ... } UNION { ... }
+Fragments.graph(sparql"$projectIri")(pattern) // GRAPH <...> { ... }
+Fragments.filterNotExists(pattern)      // FILTER NOT EXISTS { ... }
+Fragments.filter(sparql"?n > $count")   // FILTER(...)
+Fragments.bind(sparql"NOW()", resource) // BIND(... AS ?resource)
+Fragments.values(resource, iris)        // VALUES ?resource { <...> <...> }
+
+// The audited escape hatch — the ONLY way to inject raw text:
+Fragment.raw("FILTER(REGEX(?label, 'x', 'i'))")
 ```
 
-Two benchmarks below show the range: a trivial query, then the hardest case (conditional
-fragments + iteration with indexed variables). The remaining four benchmarks are defined in
-[reference-sparql.md](reference-sparql.md) and behave identically.
+### Safety model
+
+- **Compile time:** the `sparql"..."` interpolator accepts only `SparqlValue | Fragment`.
+  Interpolating a `String` (or anything else) does not compile.
+- **Construction time:** `Iri` rejects every character that could terminate the `<...>`
+  wrapper (the SPARQL `IRIREF` production), `Variable` names are restricted to `VARNAME`
+  characters, language tags must match `LANGTAG`, and `Literal` holds only its final
+  escaped rendering — there is no constructor that stores unescaped content.
+- **Escaping:** byte-for-byte identical to RDF4J's (`Rdf.literalOf(v).getQueryString`),
+  covering the full `ECHAR` set (`\ " ' \t \b \n \r \f`). Parity is pinned by
+  `Rdf4jEscapingSpec`, with RDF4J as a test-only oracle. Identical escaping means a query
+  migrated from RDF4J SparqlBuilder renders identical literals — migrations are verifiable
+  by diffing rendered SPARQL.
+- **Escape hatch:** `Fragment.raw(...)` is the single injection-risk surface, and it is
+  grep-able: `grep -rn "Fragment.raw" modules/`.
 
 ## Benchmark 1 — Simple SELECT with OPTIONAL
 
@@ -57,10 +89,10 @@ ORDER BY DESC(?lastModDate)
 LIMIT 25
 ```
 
-Template style:
+Template:
 
 ```scala
-val s = Variable("s"); val p = Variable("p"); val o = Variable("o")
+val s   = Variable("s"); val p = Variable("p"); val o = Variable("o")
 val lmd = Variable("lastModDate")
 val resourceClass = Iri.unsafeFrom("http://example.org/MyClass")
 
@@ -69,7 +101,7 @@ val query = sparql"""
   WHERE {
     $s a $resourceClass .
     $s $kbIsDeleted false .
-    OPTIONAL { $s $kbLastMod $lmd . }
+    ${Fragments.optional(sparql"$s $kbLastMod $lmd .")}
     $s $p $o .
   }
   ORDER BY DESC($lmd)
@@ -79,10 +111,10 @@ val query = sparql"""
 
 ## Benchmark 4 — conditional fragments + iteration (the hard case)
 
-A simplified sketch of the 740-line `InsertValueQueryBuilder.scala`, the most complex query
-builder in the codebase. It exercises everything the legacy Twirl `@for`/`@if` machinery
-does: iterate over a list, conditionally emit patterns per item, and generate **indexed
-variables** (`?linkValue0`, `?linkValue1`, …) so each iteration's bindings stay distinct.
+A simplified sketch of the 750-line `InsertValueQueryBuilder.scala`, the most complex query
+builder in the codebase. It exercises everything dynamic query generation needs: iterate
+over a list, conditionally emit patterns per item, and generate **indexed variables**
+(`?linkValue0`, `?linkValue1`, …) so each iteration's bindings stay distinct.
 
 This is where the library earns its keep — the complexity lives in **shared fragment
 composition**, not in the query template. Three blocks (DELETE, INSERT, WHERE) are all keyed
@@ -96,7 +128,7 @@ case class LinkUpdate(
 )
 
 // DELETE block: iteration + per-item conditionals
-val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { case (update, index) =>
+val linkDeleteBlock: Fragment = linkUpdates.zipWithIndex.map { case (update, index) =>
   val prop   = Iri.unsafeFrom(update.linkPropertyIri)
   val target = Iri.unsafeFrom(update.linkTargetIri)
 
@@ -110,148 +142,39 @@ val linkDeleteFragments: List[Fragment] = linkUpdates.zipWithIndex.flatMap { cas
     sparql"""$resource $linkPropValue $linkValue .
       $linkValue $kbValueHasUUID $linkValueUUID ."""
   }
-  directLink.toList ++ linkValuePatterns.toList
-}
-val linkDeleteBlock = Fragment.join(linkDeleteFragments)
+  Fragment.combine(directLink, linkValuePatterns)
+}.combineAll
 // (linkInsertBlock and linkWhereBlock are built the same way, with their own conditionals)
-```
 
-The composed blocks then drop into the template as ordinary holes:
-
-```scala
+// The composed blocks drop into the template as ordinary holes:
 val query = sparql"""
-  PREFIX $kb
-  PREFIX $rdfs
-  PREFIX $xsd
-
   DELETE {
-    GRAPH $dataNamedGraph {
-      $resource $kbLastMod $resourceLastMod .
-      $linkDeleteBlock
-    }
+    $resource $kbLastMod $resourceLastMod .
+    $linkDeleteBlock
   }
-  INSERT {
-    GRAPH $dataNamedGraph {
-      $resource $kbLastMod $newLmd .
-      $linkInsertBlock
-    }
-  }
-  WHERE {
-    ${Fragments.bind(sparql"IRI($dataGraphIri)", dataNamedGraph)}
-    $resource a $resourceClass .
-    $resource $kbIsDeleted false .
-    $resourceClass ${PropertyPath.zeroOrMore(rdfsSubClassOf)} $kbResource .
-    OPTIONAL { $resource $kbLastMod $resourceLastMod . }
-    $linkWhereBlock
-  }
+  INSERT { ... }
+  WHERE { ... }
 """.render
 ```
 
-`Fragment` composition replaces the Twirl `@for`/`@if` nesting; `Fragments.bind` and
-`PropertyPath.zeroOrMore` cover the `BIND` and property-path patterns the real query uses.
-
-## Builder style (the alternative surface)
-
-For the same Benchmark 1, the builder makes the query structure explicit through named
-slots instead of positional embedding:
-
-```scala
-val query = Sparql
-  .select(s, p, o)
-  .where(
-    sparql"$s a $resourceClass .",
-    sparql"$s $kbIsDeleted false .",
-    Fragments.optional(sparql"$s $kbLastMod $lmd ."),
-    sparql"$s $p $o .",
-  )
-  .orderBy(lmd.desc)
-  .limit(25)
-  .render
-```
-
-For UPDATE queries, GRAPH scope is expressed by the method name —
-`deleteFrom(graph)(...)` / `insertInto(graph)(...)` — which removes any ambiguity about
-which clause a `GRAPH` block applies to and supports DELETE and INSERT targeting different
-named graphs.
-
-### When to use which
-
-| Scenario | Recommended | Why |
-|----------|-------------|-----|
-| Simple/medium static queries | Template | Reads like SPARQL |
-| Complex multi-clause (DELETE/INSERT/WHERE) | Template | Visual structure |
-| Query shape varies at runtime | Builder | Conditionally add `.orderBy()`, `.limit()`, … |
-| Programmatic construction from config | Builder | No template to write |
-| One-off migration of a Twirl template | Template | Closest to the original structure |
+Compare with the current RDF4J-builder rendition of the same logic
+(`buildFileValuePatterns` in `InsertValueQueryBuilder.scala`): five chained
+`match`/`foldLeft` steps to express five optional patterns. Here each optional pattern is
+one `Option.when`, and the query shape stays visible in the template.
 
 ## Design notes
 
-### Core types and combinators
-
-- **`Fragment`** — a monoid over SPARQL text. Compose with `++`, `Fragment.join`,
-  `Fragment.combineAll`. `Fragment.fromOption(opt)(f)` is the idiom for a conditional
-  fragment (replaces `opt.fold(Fragment.empty)(f)`).
-- **`Fragment.raw("...")`** — the only injection-risk surface; an explicit, grep-able escape
-  hatch. With `PropertyPath` and `Fragments.jenaTextQuery` (below) it should rarely be needed.
-- **`Fragments`** — combinators: `optional`, `union`, `filterNotExists`, `minus`, `filter`,
-  `bind`, `values`, `graph`, `subquery`.
-- **`PropertyPath`** — SPARQL 1.1 property paths as a `SparqlValue`:
-  `zeroOrMore`, `oneOrMore`, `sequence`, `alternative`, `inverse`.
-- **`Fragments.jenaTextQuery`** — typed Lucene full-text combinator that encapsulates the
-  vendor-specific `<http://jena.apache.org/text#query>` syntax, isolating the Jena
-  dependency to one place.
-
-### Type construction: safe / unsafe convention
-
-All types follow the codebase's `from` / `unsafeFrom` convention. `from` returns
-`Either[String, T]` (validated); `unsafeFrom` skips validation.
-
-| Type | Safe | Unsafe |
-|------|------|--------|
-| `Iri` | `Iri.from(value)` | `Iri.unsafeFrom(value)` |
-| `Variable` | `Variable.from(name)` | `Variable.unsafeFrom(name)` |
-| `Prefix` | `Prefix.from(name, ns)` | `Prefix.unsafeFrom(name, ns)` |
-| `LanguageTag` | `LanguageTag.from(tag)` | `LanguageTag.unsafeFrom(tag)` |
-
-`Prefix` also derives IRIs: `prefix.iri("localName")` / `prefix.unsafeIri("localName")`.
-
-### Literal API
-
-Two safety models:
-
-```scala
-// Type-safe — Scala types guarantee safety, no escaping needed
-Literal.bool(true); Literal.int(42); Literal.double(3.14)
-Literal.decimal(BigDecimal("3.14")); Literal.instant(instant)
-
-// String-based — escaping is the safety boundary
-Literal.stringEscaped("hello")                      // → "hello"
-Literal.langStringEscaped("hello", lang)            // → "hello"@en
-Literal.typedEscaped("2024-01-01", xsdDate)         // → "2024-01-01"^^<...>
-Literal.unsafeStringUnescaped("hello")              // → "hello" — no escaping, caller owns safety
-```
-
-`LanguageTag` is the library's own BCP 47 opaque type, deliberately decoupled from
-dsp-api's domain-specific `LanguageCode` enum.
-
-### Escaping backend (the "Approach D" half)
-
-The escaping backend is an independent choice from the API. The current prototype uses
-custom escaping; **RDF4J's `Rdf.literalOf().getQueryString()` is the intended replacement**
-— a drop-in with better coverage (`\f`, `\b`, single quotes). The API surface is identical
-either way. Wiring this in is the first Phase 2 task (see [decision.md](decision.md#next-steps-phase-2)).
-
-## Open questions
-
-- **Error handling.** Safe constructors return `Either[String, T]`. Should there be a
-  cohesive error type (e.g. `SparqlBuilderError`) instead of plain strings? Should errors
-  compose when building a fragment from several potentially-invalid values? How does this
-  interact with ZIO at the `webapi` call site?
-- **PREFIX usage in template bodies.** A template may declare `PREFIX $kb` in the header and
-  then use a bare `knora-base:lastModificationDate` in the body; the library can't verify at
-  construction time that the prefix is declared. Options: accept bare prefixed names as raw
-  text (current, reads like SPARQL), always interpolate IRIs (safer, more verbose), or
-  validate at render time (complex).
-- **Known rough edges.** Whitespace artifacts remain when an absent conditional leaves
-  surrounding blank lines; `Fragment.empty` and `Fragment.raw("")` are semantically equal but
-  structurally distinct; prefix deduplication is not yet implemented.
+- **Property paths:** the star/plus operator sits *outside* the interpolated IRI —
+  `sparql"$cls $rdfsSubClassOf* $target"` renders `?cls <...#subClassOf>* ?target`, which
+  is valid SPARQL. Never bake path operators into the IRI string (an `Iri` would reject
+  most of them anyway).
+- **Vendor extensions** (Jena `text:query`, etc.) interpolate like anything else; the
+  Lucene query string goes through `Literal.string` and is escaped. A dedicated
+  `LuceneQuery` type can be layered on later.
+- **PREFIX declarations** are plain template text. In practice most dsp-api queries
+  interpolate full IRIs and need no prefixes.
+- **Non-finite doubles** (`NaN`, `±Infinity`) are not valid SPARQL numeric tokens and
+  render as `"NaN"^^xsd:double` / `"INF"^^xsd:double` / `"-INF"^^xsd:double`.
+- **Rendering is `Fragment.render`** — the library produces strings, deliberately. It does
+  not model or validate whole-query structure; optional parse-validation through Jena can
+  be added at the `TriplestoreService` boundary later if wanted.

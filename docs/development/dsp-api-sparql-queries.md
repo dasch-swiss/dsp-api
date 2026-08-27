@@ -1,11 +1,54 @@
 ---
 name: sparqlbuilder
-description: "Write SPARQL and Gravsearch queries in Scala using RDF4J SparqlBuilder. Use for building type-safe SPARQL SELECT, CONSTRUCT, MODIFY, and Gravsearch queries programmatically. Triggers on: sparqlbuilder, rdf4j query, scala sparql, build sparql query, gravsearch."
+description: "Write SPARQL and Gravsearch queries in Scala. NEW queries use the in-house sparql\"...\" interpolator (modules/sparql-builder); RDF4J SparqlBuilder is banned for new code (CI ratchet) and documented here only for maintaining grandfathered query sites. Triggers on: sparqlbuilder, sparql interpolator, rdf4j query, scala sparql, build sparql query, gravsearch."
 ---
 
 # SPARQL and Gravsearch Queries in Scala
 
-Build type-safe SPARQL queries in Scala using the
+## The rule: new queries use the `sparql"..."` interpolator
+
+All **new** SPARQL generation uses the in-house interpolated-template library in
+`modules/sparql-builder/` (package `org.knora.sparqlbuilder`): whole queries as
+`sparql"""..."""` templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic
+structure composed as `Fragment` values.
+
+```scala
+import org.knora.sparqlbuilder.*
+
+val resource = Variable("resource")
+val project  = Iri.unsafeFrom("http://rdfh.ch/projects/0001")
+
+val query = sparql"""
+  SELECT $resource
+  WHERE {
+    $resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
+    ${Fragments.filterNotExists(sparql"$resource <http://www.knora.org/ontology/knora-base#isDeleted> true .")}
+  }
+""".render
+```
+
+- API guide and safety model: [docs/sparql-builder-approaches/recommended-approach.md](../sparql-builder-approaches/recommended-approach.md)
+- Why, and the migration plan: [docs/sparql-builder-approaches/decision.md](../sparql-builder-approaches/decision.md)
+- Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
+  queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
+
+**RDF4J SparqlBuilder is banned for new code.** The CI ratchet
+(`//tools/lint:sparqlbuilder_ratchet`, wired into `just check`) fails when a file outside
+[`tools/lint/sparqlbuilder_allowlist.txt`](../../tools/lint/sparqlbuilder_allowlist.txt)
+imports `org.eclipse.rdf4j.sparqlbuilder`. When you migrate (or delete) a grandfathered
+file, remove its allowlist entry — the list only ever shrinks. Verify a migration by
+diffing the rendered SPARQL against the old builder's `getQueryString` output. Only the
+`sparqlbuilder` package is banned; RDF4J model classes (`org.eclipse.rdf4j.model.*`,
+`Vocabulary`) remain fine.
+
+---
+
+The rest of this document covers the **grandfathered** RDF4J SparqlBuilder style — needed
+when maintaining the existing query sites until they are migrated — and Gravsearch.
+
+## Maintaining grandfathered queries: RDF4J SparqlBuilder
+
+Existing query sites use the
 [RDF4J SparqlBuilder](https://rdf4j.org/documentation/tutorials/sparqlbuilder/)
 fluent API, and Gravsearch queries via string interpolation.
 

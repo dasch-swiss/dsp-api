@@ -161,9 +161,13 @@ See "Docker Image Versions" in `docs/05-internals/development/third-party.md`.
 
 ### Writing SPARQL queries
 
-When writing SPARQL queries do not use String concatenation.
-Instead use rdf4j and the query helper in dsp-api.
-For more details see `docs/development/dsp-api-sparql-queries.md`.
+Never build SPARQL with String concatenation or `s"..."` interpolation.
+New queries use the in-house `sparql"..."` interpolator from `modules/sparql-builder/`
+(whole-query templates with typed `Iri`/`Variable`/`Literal` holes; dynamic structure via
+`Fragment` composition). RDF4J SparqlBuilder is banned for new code — a CI ratchet
+(`//tools/lint:sparqlbuilder_ratchet`) enforces this; existing sites are grandfathered in
+`tools/lint/sparqlbuilder_allowlist.txt` and migrate over time (remove the entry when you
+migrate a file). For details see `docs/development/dsp-api-sparql-queries.md`.
 
 ### Development Conventions
 

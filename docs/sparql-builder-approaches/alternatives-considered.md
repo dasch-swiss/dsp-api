@@ -12,12 +12,45 @@ Each approach was tested against the same six benchmark queries in
 Two early prototypes were **not** rejected — the recommended approach is their synthesis:
 
 - **Interpolator + Fragment composition** — the `sparql"..."` interpolator and the
-  `Fragment` monoid. Retained as the foundation; matches Doobie/Skunk. Its bolt-on fluent
-  builder survives as the secondary "builder style."
+  `Fragment` monoid. Retained as the foundation; matches Doobie/Skunk.
 - **Whole-query interpolation (hybrid)** — using the interpolator for entire multi-line
-  query templates rather than small fragments. This became the primary template style.
+  query templates rather than small fragments. This became the (only) template style.
 
 The genuinely rejected approaches follow.
+
+## RDF4J SparqlBuilder (the incumbent)
+
+The status quo after the Twirl migration (DEV-6231): RDF4J's fluent Java builder API
+(`Queries.SELECT(...)`, `subject.has(predicate, obj)`, `GraphPatterns.union(...)`),
+wrapped by `QueryBuilderHelper`, used across ~90 files.
+
+**Rejected (to be migrated away):** reading the migrated files shows the notation fails
+at scale. Files annotate nearly every builder line with a comment showing the SPARQL it
+should produce (`GetResourceValueVersionHistoryQuery.scala`) — the comments are the real
+source of truth and can silently drift from the code. Optional patterns become chained
+`match`/`foldLeft` staircases (`InsertValueQueryBuilder.buildFileValuePatterns` threads
+five steps to emit five optional triples). The API is loosely typed Java (`RdfValue`,
+overloads on `Object`-ish hierarchies), clauses don't compose as values, and dynamic query
+shape means mutating `var whereClause` in `foreach` loops. Its two genuine strengths —
+injection safety and full coverage — are matched by the interpolator, and its escaping is
+retained byte-for-byte so migrations can be verified by diffing rendered SPARQL against
+`getQueryString`. It remains banned only for *new* code; existing sites burn down via
+`//tools/lint:sparqlbuilder_ratchet`.
+
+## The spike's own secondary "builder style"
+
+An earlier revision of this spike shipped a programmatic surface next to the templates:
+`SparqlQuery.select(...).where(...).orderBy(...).render` and friends (SELECT / CONSTRUCT /
+ASK / UPDATE / INSERT DATA builders whose slots accepted `Fragment`s), pitched as the
+ergonomic choice "when the query shape itself is dynamic".
+
+**Rejected (dropped from the module):** two ways to write the same query is a built-in
+stumbling block — every author must choose, every reader must learn both, and the clause
+assembly it performed (`SELECT`/`WHERE {}`/`ORDER BY` scaffolding) is exactly what a
+whole-query template already expresses as plain text. Dynamic *shape* is handled inside
+templates by `Option[Fragment]` holes that render to nothing. Dropping it also removed the
+only rendering bugs found in the spike (case-class `toString` leaking `Iri(...)` into
+`GRAPH <...>` clauses) — less surface, fewer bugs.
 
 ## AST case classes + typed rendering
 
@@ -62,8 +95,9 @@ val query = Select()
 
 **Rejected (subsumed):** `triple(s, p, o)` only covers the simplest patterns — OPTIONAL,
 UNION, FILTER, and GRAPH all need `Fragment.raw` escapes, a worse safety ratio than the
-interpolator. It is otherwise virtually identical to the recommended approach's builder
-style, with `triple(...)` in place of `sparql"..."`. Nothing is gained.
+interpolator. And as a programmatic clause-assembly surface it shares the fate of the
+spike's own builder style (above): a second way to write a query, expressing nothing a
+template can't. Nothing is gained.
 
 ### Variant: consequent fluent builder
 
