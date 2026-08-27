@@ -27,8 +27,8 @@ val query = sparql"""
 """.render
 ```
 
-- API guide and safety model: [docs/sparql-builder-approaches/recommended-approach.md](../sparql-builder-approaches/recommended-approach.md)
-- Why, and the migration plan: [docs/sparql-builder-approaches/decision.md](../sparql-builder-approaches/decision.md)
+- API guide and safety model: [modules/sparql-builder/README.md](../../modules/sparql-builder/README.md)
+- Why, and the migration plan: [docs/development/dsp-api-sparql-builder.md](dsp-api-sparql-builder.md)
 - Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
   queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
 

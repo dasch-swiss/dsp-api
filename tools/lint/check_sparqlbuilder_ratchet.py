@@ -2,7 +2,7 @@
 """Ratchet down (and keep out new) usage of RDF4J SparqlBuilder.
 
 dsp-api is migrating all SPARQL generation to the in-house `sparql"..."` interpolator
-(//modules/sparql-builder, see docs/sparql-builder-approaches/decision.md). RDF4J's
+(//modules/sparql-builder, see docs/development/dsp-api-sparql-builder.md). RDF4J's
 SparqlBuilder (`org.eclipse.rdf4j.sparqlbuilder.*`) is banned for new code; existing
 usage sites are grandfathered in `sparqlbuilder_allowlist.txt` and burn down to zero
 as they are migrated.

@@ -3,7 +3,7 @@ load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 # Safe, composable SPARQL query building: `sparql"..."` interpolator + Fragment monoid +
 # validated typed values (Iri, Variable, Literal). Pure leaf module with no main-source
 # dependencies; RDF4J appears only in tests, as the escaping-parity oracle.
-# See docs/sparql-builder-approaches/ for the design decision.
+# See docs/development/dsp-api-sparql-builder.md for the design decision.
 scala_library(
     name = "sparql-builder",
     srcs = glob(["src/main/scala/**/*.scala"]),

@@ -34,10 +34,8 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
 
   override def spec = suite("Fragment + sparql interpolator")(
     simpleSelectSuite,
-    isNodeUsedBenchmark,
-    deletePropertyBenchmark,
     insertValueBenchmarkSketch,
-    searchQueriesBenchmark,
+    combinatorsSuite,
     conditionalFragmentsSuite,
     iterationSuite,
   )
@@ -75,105 +73,6 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
       )
     },
   )
-
-  // -------------------------------------------------------------------------
-  // Benchmark: IsNodeUsedQuery (Hybrid → ASK with UNION)
-  // -------------------------------------------------------------------------
-  val isNodeUsedBenchmark = suite("Benchmark: IsNodeUsedQuery")(
-    test("renders ASK with UNION") {
-      val s              = Variable("s")
-      val nodeIri        = Iri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-      val guiAttr        = Iri.unsafeFrom("http://www.knora.org/ontology/salsah-gui#guiAttribute")
-      val valHasListNode = Iri.unsafeFrom(knoraBase + "valueHasListNode")
-
-      val query = sparql"""
-        ASK
-        WHERE {
-          ${Fragments.union(
-          sparql"$s $guiAttr ${Literal.string(s"hlist=${nodeIri.render}")} .",
-          sparql"$s $valHasListNode $nodeIri .",
-        )}
-        }
-      """.render
-
-      assertTrue(
-        query.contains("ASK"),
-        query.contains("UNION"),
-        query.contains("?s <http://www.knora.org/ontology/salsah-gui#guiAttribute>"),
-        query.contains("?s <http://www.knora.org/ontology/knora-base#valueHasListNode>"),
-      )
-    },
-  )
-
-  // -------------------------------------------------------------------------
-  // Benchmark: DeletePropertyQuery (Pure RDF4J → conditional + filterNotExists)
-  // -------------------------------------------------------------------------
-  val deletePropertyBenchmark = suite("Benchmark: DeletePropertyQuery")(
-    test("renders UPDATE with conditional link value patterns") {
-      val ontologyIri = Iri.unsafeFrom("http://www.knora.org/ontology/0001/anything")
-      val propertyIri = Iri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasOtherThing")
-      val lmdValue    = Literal.typed("2024-01-01T00:00:00Z", Iri.unsafeFrom(xsd + "dateTime"))
-      val newLmd      = Literal.typed("2024-01-02T00:00:00Z", Iri.unsafeFrom(xsd + "dateTime"))
-
-      val propertyPred = Variable("propertyPred")
-      val propertyObj  = Variable("propertyObj")
-      val s            = Variable("s")
-      val p            = Variable("p")
-
-      // Optional link value property (mirrors the Option[PropertyIri] in the real code)
-      val linkValuePropertyIri: Option[Iri] =
-        Some(Iri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasOtherThingValue"))
-      val linkValuePropertyPred = Variable("linkValuePropertyPred")
-      val linkValuePropertyObj  = Variable("linkValuePropertyObj")
-
-      val linkValueDeletePattern: Option[Fragment] = linkValuePropertyIri.map { lvpIri =>
-        sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
-      }
-
-      val linkValueWherePattern: Option[Fragment] = linkValuePropertyIri.map { lvpIri =>
-        sparql"$lvpIri $linkValuePropertyPred $linkValuePropertyObj ."
-      }
-
-      val owlOntology   = Iri.unsafeFrom(owl + "Ontology")
-      val owlObjectProp = Iri.unsafeFrom(owl + "ObjectProperty")
-
-      val query = sparql"""
-        DELETE {
-          GRAPH $ontologyIri {
-            $ontologyIri $kbLastMod $lmdValue .
-            $propertyIri $propertyPred $propertyObj .
-            ${Fragment.combine(linkValueDeletePattern)}
-          }
-        }
-        INSERT {
-          GRAPH $ontologyIri {
-            $ontologyIri $kbLastMod $newLmd .
-          }
-        }
-        WHERE {
-          $ontologyIri a $owlOntology .
-          $ontologyIri $kbLastMod $lmdValue .
-          $propertyIri a $owlObjectProp .
-          $propertyIri $propertyPred $propertyObj .
-          ${Fragments.filterNotExists(sparql"$s $p $propertyIri .")}
-          ${Fragment.combine(linkValueWherePattern)}
-        }
-      """.render
-
-      assertTrue(
-        query.contains("DELETE"),
-        query.contains("INSERT"),
-        query.contains("WHERE"),
-        query.contains("GRAPH <http://www.knora.org/ontology/0001/anything>"),
-        query.contains("FILTER NOT EXISTS"),
-        query.contains("hasOtherThingValue"),
-      )
-    },
-  )
-
-  // -------------------------------------------------------------------------
-  // Benchmark: InsertValueQueryBuilder sketch (complex conditional + iteration)
-  // -------------------------------------------------------------------------
 
   /** Simplified link update data for the benchmark. */
   case class LinkUpdate(
@@ -260,52 +159,48 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault {
   )
 
   // -------------------------------------------------------------------------
-  // Benchmark: SearchQueries.selectCountByLabel (Hybrid → Lucene + filters)
+  // Fragments combinators
   // -------------------------------------------------------------------------
-  val searchQueriesBenchmark = suite("Benchmark: SearchQueries.selectCountByLabel")(
-    test("renders SELECT count with Lucene and conditional filters") {
-      val resource      = Variable("resource")
-      val resourceClass = Variable("resourceClass")
-      val count         = Variable("count")
-
-      val luceneQuery   = "test search" // Would come from FusekiLuceneQuery
-      val textQueryPred = Iri.unsafeFrom("http://jena.apache.org/text#query")
-      val rdfsLabel     = Iri.unsafeFrom(rdfs + "label")
-
-      val limitToProject: Option[Iri]       = Some(Iri.unsafeFrom("http://rdfh.ch/projects/0001"))
-      val limitToResourceClass: Option[Iri] = None
-
-      // Build conditional filter fragments
-      val projectFilter = limitToProject.map { prj =>
-        val attachedToProject = Iri.unsafeFrom(knoraBase + "attachedToProject")
-        sparql"$resource $attachedToProject $prj ."
-      }
-
-      val classFilter = limitToResourceClass.map { cls =>
-        sparql"$resourceClass $rdfsSubClassOf* $cls ."
-      }
-
-      val filters = Fragment.combine(projectFilter, classFilter)
-
-      val query = sparql"""
-        SELECT (count(distinct $resource) as $count)
-        WHERE {
-          $resource $textQueryPred ($rdfsLabel ${Literal.string(luceneQuery)}) ;
-            a $resourceClass .
-          $resourceClass $rdfsSubClassOf* $kbResource .
-          $filters
-          ${Fragments.filterNotExists(sparql"$resource $kbIsDeleted true .")}
-        }
-      """.render
-
+  val combinatorsSuite = suite("Fragments combinators")(
+    test("union renders UNION branches") {
+      val s        = Variable("s")
+      val nodeIri  = Iri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+      val rendered = Fragments
+        .union(
+          sparql"$s <http://www.knora.org/ontology/salsah-gui#guiAttribute> ${Literal.string(s"hlist=${nodeIri.render}")} .",
+          sparql"$s $kbLastMod $nodeIri .",
+        )
+        .render
       assertTrue(
-        query.contains("count(distinct ?resource) as ?count"),
-        query.contains("text#query"),
-        query.contains("\"test search\""),
-        query.contains("attachedToProject"),
-        // property path: the star sits outside the IRIREF
-        query.contains("<http://www.w3.org/2000/01/rdf-schema#subClassOf>*"),
-        query.contains("FILTER NOT EXISTS"),
+        rendered.contains("UNION"),
+        rendered.contains("guiAttribute"),
+        rendered.contains("\"hlist=<http://rdfh.ch/lists/0001/treeList01>\""),
+      )
+    },
+    test("graph wraps a pattern in a GRAPH clause") {
+      val g        = Iri.unsafeFrom("http://www.knora.org/data/0001/anything")
+      val rendered = Fragments.graph(sparql"$g")(sparql"?s ?p ?o .").render
+      assertTrue(rendered.startsWith("GRAPH <http://www.knora.org/data/0001/anything> {"))
+    },
+    test("values renders a VALUES clause over IRIs") {
+      val v        = Variable("cls")
+      val rendered = Fragments
+        .values(v, List(Iri.unsafeFrom("http://example.org/A"), Iri.unsafeFrom("http://example.org/B")))
+        .render
+      assertTrue(rendered == "VALUES ?cls { <http://example.org/A> <http://example.org/B> }")
+    },
+    test("filter and bind render expressions") {
+      val n = Variable("n")
+      assertTrue(
+        Fragments.filter(sparql"$n > ${Literal.int(5)}").render == "FILTER(?n > 5)",
+        Fragments.bind(sparql"NOW()", n).render == "BIND(NOW() AS ?n)",
+      )
+    },
+    test("property path operator sits outside the interpolated IRI") {
+      val cls      = Variable("cls")
+      val rendered = sparql"$cls $rdfsSubClassOf* $kbResource .".render
+      assertTrue(
+        rendered == "?cls <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Resource> .",
       )
     },
   )
