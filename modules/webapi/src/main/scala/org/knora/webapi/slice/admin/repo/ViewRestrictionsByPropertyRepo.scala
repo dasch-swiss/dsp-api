@@ -116,7 +116,13 @@ final case class ViewRestrictionsByPropertyRepo(
       .query(Select(ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType)))
       .map(_.flatMap(permissionCountRow))
 
-  /** One page of resources carrying a restricted value of the property, ordered for stable paging. */
+  /**
+   * One page of resources carrying a restricted value of the property, with all of their restricted values.
+   *
+   * Two queries rather than one: the first windows **resources** in SPARQL, the second fetches every row
+   * for exactly those IRIs. Windowing the value rows directly would page a different unit than
+   * [[countRestrictedResources]] counts — see [[ViewRestrictionsByPropertyRepo.drillDownResourcePageQuery]].
+   */
   def findRestrictedResources(
     projectIri: ProjectIri,
     propertyIri: String,
@@ -124,13 +130,27 @@ final case class ViewRestrictionsByPropertyRepo(
     offset: Int,
     limit: Int,
   ): Task[Seq[RestrictedPropertyValueRow]] =
-    triplestore
-      .query(
-        Select(
-          ViewRestrictionsByPropertyRepo.drillDownPageQuery(projectIri, propertyIri, itemType, offset, limit),
-        ),
-      )
-      .map(_.flatMap(restrictedRow))
+    for {
+      pageIris <- triplestore
+                    .query(
+                      Select(
+                        ViewRestrictionsByPropertyRepo
+                          .drillDownResourcePageQuery(projectIri, propertyIri, itemType, offset, limit),
+                      ),
+                    )
+                    .map(_.flatMap(_.get("resource")))
+      // An empty window means an empty page: sending `?resource IN ()` would be a pointless round trip.
+      rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedPropertyValueRow])
+              else
+                triplestore
+                  .query(
+                    Select(
+                      ViewRestrictionsByPropertyRepo
+                        .drillDownRowsQuery(projectIri, propertyIri, itemType, pageIris),
+                    ),
+                  )
+                  .map(_.flatMap(restrictedRow))
+    } yield rows
 
   /** The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. */
   def countRestrictedResources(
@@ -212,13 +232,14 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
    * resource), the reified link value that accompanies it, or a value property — so excluding the first two
    * from the resource properties leaves exactly the value properties.
    *
-   * This single filter decides the report's whole row set, so `ViewRestrictionsByPropertyRepoSpec` pins it
-   * against an ontology carrying a link property, a link-value property and a file-value property.
+   * This single filter decides the report's whole row set — a property it rejects can never be counted and
+   * never reaches a screen — so `ViewRestrictionsByPropertyRepoSpec` pins each flag combination directly:
+   * a plain value property and a file-value property are accepted, a link property, its reified link value,
+   * a standoff internal reference and a non-resource property are not.
    */
   private[repo] def isValueProperty(info: ReadPropertyInfoV2): Boolean =
     info.isResourceProp && !info.isLinkProp && !info.isLinkValueProp && !info.isStandoffInternalReferenceProperty
 
-  /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   private[repo] val KnoraBaseOntologyIri: String = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 
@@ -252,13 +273,59 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
       .groupBy(permissions)
   }
 
-  /** One page of resources carrying a restricted value of the property, ordered by label then IRI. */
-  private[repo] def drillDownPageQuery(
+  /**
+   * One page of **resources** carrying a restricted value of the property.
+   *
+   * `DISTINCT ?resource`, with the window applied to resources rather than to value rows. A resource can
+   * carry several restricted values of one property — any `maxCardinality > 1` property, such as keywords
+   * or several titles — so windowing value rows while [[drillDownCountQuery]] counts distinct resources
+   * would page two different units against each other: `totalPages` would be computed from resources while
+   * the pages consumed rows, leaving the resources past that point unreachable by any page number the
+   * pagination block admits. [[ViewRestrictionsRepo.resourcePageQuery]] has this shape for the same reason.
+   * [[drillDownRowsQuery]] then fetches the rows for exactly this page's IRIs.
+   */
+  private[repo] def drillDownResourcePageQuery(
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
     offset: Int,
     limit: Int,
+  ): SelectQuery = {
+    val (resource, value)           = (variable("resource"), variable("value"))
+    val permissions                 = variable("permissions")
+    val (fileClass, comment, label) = (variable("fileClass"), variable("comment"), variable("label"))
+    val labelOrIri                  = variable("labelOrIri")
+
+    val core        = valueCore(projectIri, resource, value, permissions, propertyIri)
+    val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
+      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
+    val windowed = GraphPatterns
+      .and(constrained.filter(onlyRestricted(permissions)), resource.has(RDFS.LABEL, label).optional())
+      // Order by label when present, else the IRI, so unlabelled resources still page deterministically.
+      .and(Expressions.bind(Expressions.coalesce(label, Expressions.str(resource)), labelOrIri))
+
+    Queries
+      .SELECT(resource, labelOrIri)
+      .distinct()
+      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
+      .where(windowed)
+      .orderBy(labelOrIri.asc(), resource.asc())
+      .offset(offset)
+      .limit(limit)
+  }
+
+  /**
+   * Every restricted value of the property carried by an explicit set of resources — one drill-down page.
+   *
+   * Unbounded by design: the IRI list from [[drillDownResourcePageQuery]] is already the window. Fetching
+   * by resource rather than by row is also what keeps a resource whole: its values cannot straddle a page
+   * boundary and be returned twice, once partially on each side.
+   */
+  private[repo] def drillDownRowsQuery(
+    projectIri: ProjectIri,
+    propertyIri: String,
+    itemType: ValueItemType,
+    resourceIris: Seq[String],
   ): SelectQuery = {
     val (resource, resClass, value) = (variable("resource"), variable("resClass"), variable("value"))
     val (creator, permissions)      = (variable("creator"), variable("permissions"))
@@ -275,14 +342,20 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
 
     Queries
       .SELECT(resource, resClass, value, creator, permissions, fileClass, comment, label)
+      .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(constrained.filter(onlyRestricted(permissions)))
+      .where(
+        constrained
+          .filter(onlyRestricted(permissions))
+          .filter(Expressions.in(resource, resourceIris.map(Rdf.iri)*)),
+      )
       .orderBy(label.asc(), resource.asc(), value.asc())
-      .offset(offset)
-      .limit(limit)
   }
 
-  /** `COUNT(DISTINCT ?resource)` matching [[drillDownPageQuery]] — the exact page total. */
+  /**
+   * `COUNT(DISTINCT ?resource)` — the exact total for [[drillDownResourcePageQuery]], in the **same unit**
+   * that query pages in. A page is a page of resources; each one arrives with all of its restricted values.
+   */
   private[repo] def drillDownCountQuery(
     projectIri: ProjectIri,
     propertyIri: String,

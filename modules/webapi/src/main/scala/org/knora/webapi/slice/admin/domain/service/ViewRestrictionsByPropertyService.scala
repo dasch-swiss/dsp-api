@@ -189,15 +189,23 @@ final case class ViewRestrictionsByPropertyService(
                   RestrictedPropertyResource(
                     resourceIri = resourceIri,
                     label = head.resourceLabel,
-                    resourceClassIri = head.resourceClassIri,
-                    values = resourceRows.map(r =>
-                      RestrictedPropertyValue(
-                        valueIri = r.valueIri,
-                        isFile = r.isFile,
-                        hasComment = r.hasComment,
-                        visibility = itemVisibility(r, projectIri),
+                    // A resource asserted as several classes yields one row per type, since this report
+                    // joins `?resource a ?resClass` without the most-specific-class filter the class report
+                    // needs. Picking the minimum rather than `head` keeps the answer reproducible across
+                    // requests; resolving the most specific one would mean importing the class machinery
+                    // this report exists without.
+                    resourceClassIri = resourceRows.map(_.resourceClassIri).min,
+                    // ...and the same multi-typing would repeat every value once per type.
+                    values = resourceRows
+                      .distinctBy(_.valueIri)
+                      .map(r =>
+                        RestrictedPropertyValue(
+                          valueIri = r.valueIri,
+                          isFile = r.isFile,
+                          hasComment = r.hasComment,
+                          visibility = itemVisibility(r, projectIri),
+                        ),
                       ),
-                    ),
                   )
                 }
       // Preserve the SPARQL page order (label, then IRI) so paging stays reproducible across requests.

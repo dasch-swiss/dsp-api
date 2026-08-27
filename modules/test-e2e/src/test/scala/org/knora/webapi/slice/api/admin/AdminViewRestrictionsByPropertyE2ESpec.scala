@@ -35,8 +35,33 @@ class AdminViewRestrictionsByPropertyE2ESpec extends E2EZSpec {
   private def valuesUri(property: String, itemType: String = "All") =
     uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/property-values?property=$property&itemType=$itemType"
 
-  private def itemsUri(property: String) =
-    uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/property-items?property=$property&itemType=All&page=1&page-size=25"
+  private def itemsUri(property: String, page: Int = 1, pageSize: Int = 25) =
+    uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/property-items?property=$property&itemType=All&page=$page&page-size=$pageSize"
+
+  /**
+   * A property the fixture actually restricts, found by asking step 2 rather than assumed.
+   *
+   * Hard-coding one would couple these tests to the `anything` fixture's current contents; taking
+   * `headOption` would make every drill-down assertion vacuous the moment that property happens to be
+   * unrestricted. Fails loudly if nothing is restricted at all, since that would silently void the suite.
+   */
+  private val restrictedProperty: zio.RIO[TestApiClient, String] =
+    for {
+      properties <- TestApiClient.getJson[ViewRestrictionsProperties](propertiesUri, rootUser).flatMap(_.assert200)
+      // Short-circuits: once a restricted property is found the remaining step-2 requests are skipped,
+      // so this is one or two round trips in practice rather than one per property in the ontology.
+      candidate <- ZIO.foldLeft(properties.properties.map(_.id))(Option.empty[String]) {
+                     case (found @ Some(_), _) => ZIO.succeed(found)
+                     case (None, id)           =>
+                       TestApiClient
+                         .getJson[ViewRestrictionsPropertyValues](valuesUri(id), rootUser)
+                         .flatMap(_.assert200)
+                         .map(v => Option.when(v.counts.anonymous.total > 0)(id))
+                   }
+      found <- ZIO
+                 .fromOption(candidate)
+                 .orElseFail(new AssertionError("no property of the fixture carries a restriction"))
+    } yield found
 
   val e2eSpec = suite("The property-grouped view-restrictions endpoints")(
     suite("properties (step 1)")(
@@ -147,20 +172,49 @@ class AdminViewRestrictionsByPropertyE2ESpec extends E2EZSpec {
     ),
     suite("property-items (drill-down)")(
       test("returns affected resources, each reporting its own class") {
+        // Driven from a property step 2 says is actually restricted, rather than from `headOption`. A
+        // `forall` over the first property's page passes vacuously whenever that page is empty, which
+        // makes the assertion survive a fixture with no restrictions at all — i.e. it tests nothing.
         for {
-          properties <- TestApiClient.getJson[ViewRestrictionsProperties](propertiesUri, rootUser).flatMap(_.assert200)
-          property   <- ZIO
-                        .fromOption(properties.properties.headOption.map(_.id))
-                        .orElseFail(new AssertionError("step 1 reported no properties"))
-          page <- TestApiClient
+          property <- restrictedProperty
+          page     <- TestApiClient
                     .getJson[PagedResponse[RestrictedPropertyResource]](itemsUri(property), rootUser)
                     .flatMap(_.assert200)
         } yield assertTrue(
-          // REQ-4.2: the class is per row because a property spans classes. An empty page is acceptable
-          // here — the fixture may have nothing restricted on the first property — but any row that IS
-          // returned must carry its class.
+          // Not vacuous: step 2 reported restrictions here, so the drill-down must list them.
+          page.data.nonEmpty,
+          page.pagination.totalItems > 0,
+          // REQ-4.2: the class is per row, because a property spans classes.
           page.data.forall(_.resourceClassIri.nonEmpty),
           page.data.forall(_.values.nonEmpty),
+        )
+      },
+      test("pages resources, not value rows: every resource is reachable exactly once") {
+        // The unit invariant. `totalItems` counts distinct resources, so the pages must too — otherwise a
+        // property with several restricted values per resource leaves its tail unreachable. Walking every
+        // page of size 1 and comparing against the total is the end-to-end form of that check.
+        for {
+          property <- restrictedProperty
+          first    <- TestApiClient
+                     .getJson[PagedResponse[RestrictedPropertyResource]](itemsUri(property, pageSize = 1), rootUser)
+                     .flatMap(_.assert200)
+          total = first.pagination.totalItems
+          // Bounded so a large fixture cannot turn this into a slow crawl; the assertion below accounts
+          // for the cap rather than silently checking a prefix.
+          walked = math.min(total, 10)
+          pages <-
+            ZIO.foreach(1 to walked) { n =>
+              TestApiClient
+                .getJson[PagedResponse[RestrictedPropertyResource]](itemsUri(property, n, pageSize = 1), rootUser)
+                .flatMap(_.assert200)
+            }
+          iris = pages.flatMap(_.data.map(_.resourceIri))
+        } yield assertTrue(
+          total > 0,
+          // one resource per page of size 1 — not one value row
+          pages.forall(_.data.size == 1),
+          // and no resource served twice across the walk
+          iris.distinct.size == walked,
         )
       },
       test("returns 400 for a malformed property IRI") {

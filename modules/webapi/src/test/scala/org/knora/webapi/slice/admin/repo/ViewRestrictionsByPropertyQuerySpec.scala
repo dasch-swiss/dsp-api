@@ -98,39 +98,82 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
       },
     ),
     suite("drill-down")(
-      test("orders deterministically and windows in SPARQL") {
+      test("windows resources, not value rows, so the page unit matches the total") {
+        // THE invariant. A property with maxCardinality > 1 (keywords, several titles) gives a resource
+        // several restricted values. Windowing the value rows while the total counts distinct resources
+        // pages two units against each other: 30 resources x 2 values = 60 rows, total 30, size 25 gives
+        // totalPages 2, whose two pages consume rows 1-50 — resources 26-30 are then unreachable by any
+        // page number the pagination block admits. So the LIMIT/OFFSET goes on a DISTINCT resource query.
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownPageQuery(projectIri, hasText, ValueItemType.All, offset = 50, limit = 25)
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 50, limit = 25)
           .getQueryString
         assertTrue(
-          q.contains("ORDER BY"),
+          // The value is a join partner here, never a projected column: projecting it would reintroduce
+          // one row per value and undo the whole point of this query.
+          q.contains("SELECT DISTINCT ?resource ?labelOrIri"),
           q.contains("LIMIT 25"),
           q.contains("OFFSET 50"),
-          q.contains(s"<$hasText>"),
+          q.contains("ORDER BY"),
+        )
+      },
+      test("orders by label, falling back to the IRI so unlabelled resources still page deterministically") {
+        val q = ViewRestrictionsByPropertyRepo
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+          .getQueryString
+        assertTrue(q.contains("COALESCE"), q.contains("?labelOrIri"))
+      },
+      test("the row query is bounded by the page's IRIs and carries no window of its own") {
+        // The IRI list IS the window, so every restricted value of a paged resource comes back together.
+        // A resource can therefore never straddle a page boundary and be returned twice, partial each time.
+        val q = ViewRestrictionsByPropertyRepo
+          .drillDownRowsQuery(
+            projectIri,
+            hasText,
+            ValueItemType.All,
+            Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"),
+          )
+          .getQueryString
+        assertTrue(
+          q.contains("http://rdfh.ch/0001/a") && q.contains("http://rdfh.ch/0001/b"),
+          !q.contains("LIMIT"),
+          !q.contains("OFFSET"),
         )
       },
       test("projects the resource's own class, since a property spans classes") {
         // REQ-4.2. Without this the drill-down could not show that one property is restricted across
         // several classes, which is the finding the whole report exists to surface.
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownPageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, Seq("http://rdfh.ch/0001/a"))
           .getQueryString
         assertTrue(q.contains("?resClass"))
       },
       test("lists only restricted values, unlike the counts") {
         // The drill-down shows restrictions; the counts deliberately keep every literal so the population
         // stays derivable from the same rows.
-        val page = ViewRestrictionsByPropertyRepo
-          .drillDownPageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+        val rows = ViewRestrictionsByPropertyRepo
+          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, Seq("http://rdfh.ch/0001/a"))
           .getQueryString
         val counts =
           ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, hasText, ValueItemType.All).getQueryString
         assertTrue(
-          page.contains("knora-admin:UnknownUser"),
+          rows.contains("knora-admin:UnknownUser"),
           !counts.contains("knora-admin:UnknownUser"),
         )
       },
-      test("the page total counts distinct resources and is unwindowed") {
+      test("both drill-down queries restrict identically, so the total cannot describe a different row set") {
+        val page = ViewRestrictionsByPropertyRepo
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+          .getQueryString
+        val count =
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All).getQueryString
+        assertTrue(
+          page.contains("knora-admin:UnknownUser"),
+          count.contains("knora-admin:UnknownUser"),
+          page.contains(s"<$hasText>"),
+          count.contains(s"<$hasText>"),
+        )
+      },
+      test("the page total counts distinct resources — the same unit the page query windows") {
         val q =
           ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All).getQueryString
         assertTrue(
