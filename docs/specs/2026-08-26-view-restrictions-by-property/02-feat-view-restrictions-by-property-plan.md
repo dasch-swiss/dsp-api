@@ -222,7 +222,7 @@ never string concatenation.
 Deployed locally and called against the real project (`0820`, 105,983 resources):
 
 | | Result |
-|---|---|
+| --- | --- |
 | `/properties` | **182 properties in 552ms** — exactly the 182 SPARQL reports for `subPropertyOf* knora-base:hasValue`, so the `isValueProperty` predicate is confirmed rather than assumed. Both sources present: `lhtt:*` from the project's ontology and `knora-base:hasArchiveFileValue` from the separately fetched built-ins |
 | `/property-values` for `hasTitle` | 2,267ms, `totalValues` 66,484, all hidden from anonymous and authenticated. Cross-checked in SPARQL: 66,484 values, 66,484 distinct resources, and exactly **one** distinct permission literal — so "all hidden" is correct, not a bug |
 | `/property-items` for `hasTitle` | 6,827ms, `totalItems` 66,484, each row carrying its own class (`PhotographyArchaeology`) |

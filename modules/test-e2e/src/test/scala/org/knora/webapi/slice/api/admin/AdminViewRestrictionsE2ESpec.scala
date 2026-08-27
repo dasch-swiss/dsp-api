@@ -39,6 +39,17 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
   private def valuesUri(resourceClass: String, itemType: String = "All") =
     uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/values?resourceClass=$resourceClass&itemType=$itemType"
 
+  /**
+   * The first class reporting a resource-level restriction for any audience.
+   *
+   * The drill-down lists restrictions, so a test that opens a class with none gets an empty page and
+   * fails for a reason that has nothing to do with the drill-down.
+   */
+  private def restrictedClass(classes: ViewRestrictionsClasses): Option[String] =
+    classes.classes
+      .find(c => c.counts.anonymous.total > 0 || c.counts.authenticated.total > 0 || c.counts.projectMember.total > 0)
+      .map(_.id)
+
   val e2eSpec = suite("The view-restrictions admin endpoint")(
     suite("classes (step 1)")(
       test("returns every class with its population and resource-level counts, in one request") {
@@ -148,11 +159,13 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
       test("returns a paged list of affected resources for a class step 1 reports") {
         for {
           classes <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
-          // headOption, not head: a fixture change that opens up permissions should fail with a clear
-          // assertion rather than a NoSuchElementException from an unrelated-looking line.
+          // A class with something actually restricted, not simply the first one. /classes reports EVERY
+          // class ordered by label, so the first is usually one with nothing restricted and its drill-down
+          // is legitimately empty. The old /summary happened to order most-restricted-first, which made
+          // `headOption` work by accident; that ordering moved to the frontend when orderKey was deleted.
           group <- ZIO
-                     .fromOption(classes.classes.headOption.map(_.id))
-                     .orElseFail(new AssertionError("step 1 reported no classes to drill into"))
+                     .fromOption(restrictedClass(classes))
+                     .orElseFail(new AssertionError("no class in the fixture has a resource-level restriction"))
           itemsUri =
             uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=$group&itemType=All&page=1&page-size=25"
           page <- TestApiClient.getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser).flatMap(_.assert200)
@@ -173,14 +186,16 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
       test("returns the same page on a repeated request (stable ordering)") {
         for {
           classes <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
-          group   <- ZIO
-                     .fromOption(classes.classes.headOption.map(_.id))
-                     .orElseFail(new AssertionError("step 1 reported no classes to drill into"))
+          // Also a restricted class: comparing two empty pages passes without exercising ordering at all.
+          group <- ZIO
+                     .fromOption(restrictedClass(classes))
+                     .orElseFail(new AssertionError("no class in the fixture has a resource-level restriction"))
           itemsUri =
             uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=$group&itemType=All&page=1&page-size=5"
           first  <- TestApiClient.getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser).flatMap(_.assert200)
           second <- TestApiClient.getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser).flatMap(_.assert200)
         } yield assertTrue(
+          first.data.nonEmpty,
           first.data.map(_.resourceIri) == second.data.map(_.resourceIri),
           first.pagination.totalItems == second.pagination.totalItems,
         )
