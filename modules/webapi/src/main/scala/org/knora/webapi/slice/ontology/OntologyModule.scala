@@ -25,6 +25,9 @@ object OntologyModule { self =>
 
   type Dependencies = IriConverter & IriService & StringFormatter & TriplestoreService
 
+  // Note: OntologyTransformer lives in this package but is intentionally NOT part of this module. It depends on
+  // StandoffMappingService, which transitively needs the OntologyCache this module provides, so bundling it here would
+  // form a layer cycle. It is wired directly in core/LayersLive instead.
   type Provided =
     // format: off
     CardinalityService &

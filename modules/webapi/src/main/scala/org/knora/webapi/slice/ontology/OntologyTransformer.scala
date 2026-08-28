@@ -407,6 +407,8 @@ final class OntologyTransformer(
     val textValueAsXml = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
 
     // Materialise before mutating: this pass mints new tag and LinkValue nodes into the same model while iterating.
+    // Sort by value IRI so tag UUIDs are minted in a reproducible order across a resource's rich-text values (Jena
+    // subject iteration order is unspecified), matching the sorted minting in emitStandoffLinkValues.
     val richtextValues = model
       .listSubjects()
       .asScala
@@ -418,6 +420,7 @@ final class OntologyTransformer(
           s.hasProperty(textValueAsXml),
       )
       .toList
+      .sortBy(_.getURI)
 
     for {
       perValue <- ZIO.foreach(richtextValues)(convertRichtextValue(model, _))
@@ -437,7 +440,7 @@ final class OntologyTransformer(
       tags  <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.freshStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
       owner <- ZIO.attempt(owningResource(model, v))
       _     <- ZIO.attempt(emitStandoff(model, v, tws.text, tags))
-    } yield (owner, standoffLinkTargets(tags))
+    } yield (owner, StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tags).toSet)
 
   private def requireTextValueAsXml(model: Model, v: Resource): String = {
     val textValueAsXml = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
@@ -553,16 +556,6 @@ final class OntologyTransformer(
         throw new IllegalArgumentException(s"TextValue $v must have exactly one incoming edge, found ${other.size}")
     }
 
-  /** The distinct salsah-link targets a text value links to: the `standoffTagHasLink` of its `StandoffLinkTag` tags. */
-  private def standoffLinkTargets(tags: Seq[StandoffTagV2]): Set[String] =
-    tags.flatMap { tag =>
-      if (tag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag))
-        tag.attributes.collectFirst {
-          case a: StandoffTagIriAttributeV2 if a.standoffPropertyIri.toString == KnoraBase.StandoffTagHasLink => a.value
-        }
-      else None
-    }.toSet
-
   /**
    * Emits the system `hasStandoffLinkTo`/`hasStandoffLinkToValue` LinkValues for the salsah-links across a resource's
    * text values, mirroring `CreateResourceV2Handler.generateInsertSparqlForStandoffLinksInMultipleValues`. The
@@ -625,7 +618,8 @@ final class OntologyTransformer(
 
   private val systemUser: String = KnoraUserRepo.builtIn.SystemUser.id.value
 
-  /** The fixed permissions on every standoff-link LinkValue, built identically to the create path. */
+  // The fixed permissions on every standoff-link LinkValue. Built by construction (same PermissionADM set + formatter)
+  // to match CreateResourceV2Handler.standoffLinkValuePermissions; keep the two in sync if the policy ever changes.
   private val standoffLinkValuePermissions: String =
     PermissionUtilADM.formatPermissionADMs(
       Set(

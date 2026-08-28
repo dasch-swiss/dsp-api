@@ -53,9 +53,10 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
 
   private val transformer = ZIO.serviceWithZIO[OntologyTransformer]
 
-  private val shortcode   = Shortcode.unsafeFrom("9999")
-  private val resourceIri = ResourceIri.makeNew(shortcode)
-  private val valueIri    = ValueIri.makeNew(resourceIri)
+  private val shortcode    = Shortcode.unsafeFrom("9999")
+  private val resourceIri  = ResourceIri.makeNew(shortcode)
+  private val resourceIri2 = ResourceIri.makeNew(shortcode)
+  private val valueIri     = ValueIri.makeNew(resourceIri)
 
   private val onto         = "http://0.0.0.0:3333/ontology/9999/onto/v2#"
   private val internalOnto = "http://www.knora.org/ontology/9999/onto#"
@@ -962,6 +963,66 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |""".stripMargin,
       )
     },
+    test("converts nested formatting to a multi-level standoff tree with resolved parent IRIs") {
+      runTransformStage2(
+        richtextJsonLd(richtextXml("<p>text <strong>bold</strong></p>")),
+        expectedTurtle =
+          s"""
+             | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+             | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+             | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             | PREFIX standoff:   <http://www.knora.org/ontology/standoff#>
+             |
+             | <$resourceIri>
+             |     a                            onto:Example ;
+             |     rdfs:label                   "test" ;
+             |     onto:testRichtext            <$valueIri> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:isDeleted         false .
+             |
+             | <$valueIri>
+             |     a                                        knora-base:TextValue ;
+             |     knora-base:valueHasString                "text bold${StringFormatter.INFORMATION_SEPARATOR_TWO}" ;
+             |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+             |     knora-base:hasTextValueType              knora-base:FormattedText ;
+             |     knora-base:valueHasMaxStandoffStartIndex 2 ;
+             |     knora-base:valueHasStandoff              <$valueIri/standoff/0>, <$valueIri/standoff/1>, <$valueIri/standoff/2> ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
+             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
+             |     knora-base:isDeleted                     false .
+             |
+             | <$valueIri/standoff/0>
+             |     a                                  standoff:StandoffRootTag ;
+             |     knora-base:standoffTagHasStart      0 ;
+             |     knora-base:standoffTagHasEnd        10 ;
+             |     knora-base:standoffTagHasStartIndex 0 ;
+             |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
+             |
+             | <$valueIri/standoff/1>
+             |     a                                    standoff:StandoffParagraphTag ;
+             |     knora-base:standoffTagHasStart       0 ;
+             |     knora-base:standoffTagHasEnd         9 ;
+             |     knora-base:standoffTagHasStartIndex  1 ;
+             |     knora-base:standoffTagHasStartParent <$valueIri/standoff/0> ;
+             |     knora-base:standoffTagHasUUID        "${UuidUtil.base64Encode(new UUID(0L, 2L))}" .
+             |
+             | <$valueIri/standoff/2>
+             |     a                                    standoff:StandoffBoldTag ;
+             |     knora-base:standoffTagHasStart       5 ;
+             |     knora-base:standoffTagHasEnd         9 ;
+             |     knora-base:standoffTagHasStartIndex  2 ;
+             |     knora-base:standoffTagHasStartParent <$valueIri/standoff/1> ;
+             |     knora-base:standoffTagHasUUID        "${UuidUtil.base64Encode(new UUID(0L, 3L))}" .
+             |""".stripMargin,
+      )
+    },
     test("rejects a text value referencing a non-standard mapping") {
       assertRejected(
         richtextJsonLd(simpleRichtextXml, mappingIri = "http://rdfh.ch/standoff/mappings/CustomMapping"),
@@ -970,6 +1031,18 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
     test("rejects malformed XML") {
       assertRejected(richtextJsonLd("not valid xml <<<"), "Failed to restructure")
+    },
+    test("rejects a salsah-link whose href is not a valid resource IRI") {
+      assertRejected(
+        richtextJsonLd(richtextXml(salsahLink("not-a-valid-iri", "link"))),
+        "Invalid standoff resource reference",
+      )
+    },
+    test("rejects a rich-text TextValue that has more than one incoming edge") {
+      assertRejected(twoEdgeTextValueJsonLd, "must have exactly one incoming edge")
+    },
+    test("a minted standoff-tag IRI is not classified as a ValueIri (D4 collision guard)") {
+      assertTrue(ValueIri.from(s"$valueIri/standoff/0").isLeft)
     },
   )
 
@@ -1017,6 +1090,20 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
        |    "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } },
        |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
        |}]""".stripMargin
+
+  /** Two resources whose `testRichtext` both point at the same value IRI, giving that TextValue two incoming edges. */
+  private def twoEdgeTextValueJsonLd =
+    s"""
+       |[
+       |  { "@id": "$resourceIri", "@type": "${onto}Example", "rdfs:label": "test",
+       |    "${onto}testRichtext": { "@id": "$valueIri", "@type": "${knoraApi}TextValue",
+       |      "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$simpleRichtextXml" },
+       |      "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } },
+       |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" } },
+       |  { "@id": "$resourceIri2", "@type": "${onto}Example", "rdfs:label": "test2",
+       |    "${onto}testRichtext": { "@id": "$valueIri" },
+       |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" } }
+       |]""".stripMargin
 
   private def transformStage2Model(jsonLd: String) =
     ZIO.scoped {

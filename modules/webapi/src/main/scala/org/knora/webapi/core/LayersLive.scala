@@ -122,13 +122,15 @@ object LayersLive { self =>
       DspIngestClientLive.layer,
       ExportModule.layer,
       ExportApiModule.layer,
-      InfrastructureModule.layer,
       IdSourceLive.layer,
+      InfrastructureModule.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
+      // Wired here, not inside OntologyModule: OntologyTransformer now needs StandoffMappingService, which
+      // transitively needs the OntologyCache that OntologyModule provides — bundling it there would form a layer cycle.
       OntologyTransformer.layer,
       otelLayer,
       PermissionUtilADMLive.layer,
