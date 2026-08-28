@@ -144,7 +144,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
   /**
    * Stage-2: drives the full `toKnoraBase` with a fixed clock so synthesised dates are deterministic. The output is
    * NQuads with every quad in the project's data named graph; the assertion extracts that named model and checks
-   * nothing landed in any other graph.
+   * nothing landed in any other graph. On failure the assertion is labelled with the actual NQuads output to aid
+   * diagnosis of `isIsomorphicWith` mismatches.
    */
   private def runTransformStage2(jsonLd: String, expectedTurtle: String) =
     ZIO.scoped {
@@ -647,7 +648,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
-  /** Drives a GREGORIAN `DateValue` through stage 2 and asserts the collapsed JDN form. */
+  /** Drives a `DateValue` through stage 2 and asserts the collapsed JDN form; the calendar defaults to GREGORIAN. */
   private def runDateStage2(
     inner: String,
     startJDN: Int,
