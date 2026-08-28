@@ -407,7 +407,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
           case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
           case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
           case KnoraBase.RegionPreviewValue        => iriOf(v, isRegionPreviewOf)
-          case KnoraBase.IntervalValue =>
+          case KnoraBase.IntervalValue             =>
             for {
               start <- lexicalOf(v, valueHasIntervalStart)
               end   <- lexicalOf(v, valueHasIntervalEnd)
