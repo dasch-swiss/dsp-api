@@ -110,6 +110,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
+      _     <- ZIO.attempt(addTextValueType(model))
       _     <- ZIO.attempt(convertDateValues(model))
       _     <- ZIO.attempt(convertLinkValues(model))
       _     <- ZIO.attempt(addValueHasString(model))
@@ -202,6 +203,37 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       v.addProperty(valueCreationDate, creationDateLit)
       v.addProperty(valueHasUUID, iri.valueId.value)
       v.addProperty(isDeleted, falseLit)
+    }
+  }
+
+  /**
+   * Sets `knora-base:hasTextValueType` on every `TextValue`: `FormattedText` when it carries the rich-text
+   * `textValueAsXml`, otherwise `UnformattedText`. This is value-type metadata orthogonal to the standoff
+   * conversion, so it is its own step; it must run before [[convertRichtextValues]] drops `textValueAsXml`.
+   * Mirrors the create path, which persists `hasTextValueType` on every text value.
+   */
+  private def addTextValueType(model: Model): Unit = {
+    val rdfType          = model.createProperty(Rdf.Type)
+    val textValueType    = KnoraBase.TextValue
+    val textValueAsXml   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
+    val hasTextValueType = model.createProperty(KnoraBase.HasTextValueType)
+    val formattedText    = model.createResource(KnoraBase.FormattedText)
+    val unformattedText  = model.createResource(KnoraBase.UnformattedText)
+
+    val textValues = model
+      .listSubjects()
+      .asScala
+      .filter { s =>
+        isValue(s) &&
+        Option(s.getProperty(rdfType))
+          .map(_.getObject)
+          .exists(n => n.isURIResource && n.asResource.getURI == textValueType)
+      }
+      .toList
+
+    textValues.foreach { v =>
+      val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
+      v.addProperty(hasTextValueType, valueType)
     }
   }
 

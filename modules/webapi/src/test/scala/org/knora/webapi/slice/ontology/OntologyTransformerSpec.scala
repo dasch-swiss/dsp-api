@@ -786,6 +786,24 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val textValueTypeStage2 = suite("Stage 2 — hasTextValueType")(
+    test("tags a simple (non-XML) TextValue as UnformattedText") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testSimpleText",
+          s"${knoraApi}TextValue",
+          s""""${knoraApi}valueAsString": { "@type": "${xsd}string", "@value": "Text" }""",
+        ),
+        expectedStage2SingleValue(
+          "testSimpleText",
+          "TextValue",
+          "knora-base:hasTextValueType knora-base:UnformattedText",
+          "Text",
+        ),
+      )
+    },
+  )
+
   private val graphHandling = suite("Stage 1 — @graph handling")(
     test("flattens @graph declarations from the payload (the target graph comes from the project)") {
       runTransform(
@@ -821,5 +839,6 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     valueHasString,
     dateValuesStage2,
     linkValuesStage2,
+    textValueTypeStage2,
   ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
 }
