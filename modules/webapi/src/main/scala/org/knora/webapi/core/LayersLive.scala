@@ -38,7 +38,9 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
+import org.knora.webapi.slice.ontology.OntologyTransformer
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
@@ -77,6 +79,7 @@ object LayersLive { self =>
     OntologyInferencer &
     OntologyModule.Provided &
     OntologyResponderV2 &
+    OntologyTransformer &
     PermissionUtilADM &
     PermissionsResponder &
     ExportModule.Provided &
@@ -120,11 +123,13 @@ object LayersLive { self =>
       ExportModule.layer,
       ExportApiModule.layer,
       InfrastructureModule.layer,
+      IdSourceLive.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
+      OntologyTransformer.layer,
       otelLayer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,

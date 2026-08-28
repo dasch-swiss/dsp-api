@@ -7,29 +7,44 @@ package org.knora.webapi.slice.ontology
 
 import org.apache.jena.riot.Lang
 import org.junit.runner.RunWith
+import zio.Exit
 import zio.NonEmptyChunk
+import zio.Task
+import zio.ULayer
 import zio.ZIO
+import zio.ZLayer
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
+import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.IRI
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.TestAppConfig
+import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class OntologyTransformerSpec extends ZIOSpecDefault {
@@ -804,6 +819,157 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  // ---- Standoff mapping stub (D1): a hermetic standard mapping covering the tags the standoff fixtures use ----
+
+  private val standoffPrefix  = "http://www.knora.org/ontology/standoff#"
+  private val standoffRootTag = standoffPrefix + "StandoffRootTag"
+  private val standoffParaTag = standoffPrefix + "StandoffParagraphTag"
+  private val standoffBoldTag = standoffPrefix + "StandoffBoldTag"
+  private val standoffLinkTag = KnoraBase.StandoffLinkTag
+
+  private def xmlTag(name: String, cls: String, sep: Boolean, dataType: Option[XMLStandoffDataTypeClass] = None) =
+    XMLTag(name, XMLTagToStandoffClass(cls, Map.empty, dataType), separatorRequired = sep)
+
+  private val standardMapping: MappingXMLtoStandoff =
+    MappingXMLtoStandoff(
+      namespace = Map(
+        "noNamespace" -> Map(
+          "text"   -> Map("noClass" -> xmlTag("text", standoffRootTag, sep = false)),
+          "p"      -> Map("noClass" -> xmlTag("p", standoffParaTag, sep = true)),
+          "strong" -> Map("noClass" -> xmlTag("strong", standoffBoldTag, sep = false)),
+          "a"      -> Map(
+            "salsah-link" -> xmlTag(
+              "a",
+              standoffLinkTag,
+              sep = false,
+              Some(XMLStandoffDataTypeClass(StandoffDataTypeClasses.StandoffLinkTag, "href")),
+            ),
+          ),
+        ),
+      ),
+      defaultXSLTransformation = None,
+    )
+
+  private def standoffClassInfo(iri: String, dataType: Option[StandoffDataTypeClasses.Value]) = {
+    val smartIri = StringFormatter.getInitializedTestInstance.toSmartIri(iri)
+    smartIri -> ReadClassInfoV2(
+      entityInfoContent = ClassInfoContentV2(classIri = smartIri, ontologySchema = InternalSchema),
+      allBaseClasses = Seq.empty,
+      isStandoffClass = true,
+      standoffDataType = dataType,
+    )
+  }
+
+  private val standardMappingEntities: StandoffEntityInfoGetResponseV2 =
+    StandoffEntityInfoGetResponseV2(
+      standoffClassInfoMap = Map(
+        standoffClassInfo(standoffRootTag, None),
+        standoffClassInfo(standoffParaTag, None),
+        standoffClassInfo(standoffBoldTag, None),
+        standoffClassInfo(standoffLinkTag, Some(StandoffDataTypeClasses.StandoffLinkTag)),
+      ),
+      standoffPropertyInfoMap = Map.empty,
+    )
+
+  private val standardMappingResponse =
+    GetMappingResponseV2(StandoffMappingIri.StandardMapping, standardMapping, standardMappingEntities)
+
+  private val standoffMappingServiceStub: ULayer[StandoffMappingService] =
+    ZLayer.succeed(new StandoffMappingService {
+      override def getMappingV2(mappingIri: StandoffMappingIri): Task[GetMappingResponseV2] =
+        ZIO.succeed(standardMappingResponse)
+      override def getXSLTransformation(xslTransformationIri: IRI): Task[String] =
+        ZIO.die(new NotImplementedError("getXSLTransformation is not used in OntologyTransformerSpec"))
+      override def getStandoffEntitiesFromMappingV2(
+        mappingXMLtoStandoff: MappingXMLtoStandoff,
+      ): Task[StandoffEntityInfoGetResponseV2] =
+        ZIO.die(new NotImplementedError("getStandoffEntitiesFromMappingV2 is not used in OntologyTransformerSpec"))
+    })
+
+  private val standardMappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+
+  /** Wraps a rich-text value: `xmlEscaped` is the XML with its double quotes already escaped for the JSON string. */
+  private def richtextJsonLd(xmlEscaped: String, mappingIri: String = standardMappingIri) =
+    resourceWithValueJsonLd(
+      s"${onto}testRichtext",
+      s"${knoraApi}TextValue",
+      s""""${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$xmlEscaped" },
+         |    "${knoraApi}textValueHasMapping": { "@id": "$mappingIri" }""".stripMargin,
+    )
+
+  private val simpleRichtextXml = "<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<text>Text</text>"
+
+  private def transformStage2Exit(jsonLd: String) =
+    ZIO.scoped {
+      for {
+        inputPath <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _         <- TestClock.setTime(knownInstant)
+        exit      <- transformer(_.toKnoraBase(inputPath, ctx)).exit
+      } yield exit
+    }
+
+  private def assertRejected(jsonLd: String, substring: String) =
+    transformStage2Exit(jsonLd).map {
+      case Exit.Failure(cause) => assertTrue(cause.failureOption.exists(_.message.contains(substring)))
+      case Exit.Success(_)     => assertTrue(false)
+    }
+
+  private val standoffStage2 = suite("Stage 2 — rich text to standoff")(
+    test("converts a rich-text value to standoff (tag nodes, valueHasStandoff, mapping, plain-text projection)") {
+      runTransformStage2(
+        richtextJsonLd(simpleRichtextXml),
+        expectedTurtle =
+          s"""
+             | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+             | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+             | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             | PREFIX standoff:   <http://www.knora.org/ontology/standoff#>
+             |
+             | <$resourceIri>
+             |     a                            onto:Example ;
+             |     rdfs:label                   "test" ;
+             |     onto:testRichtext            <$valueIri> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:isDeleted         false .
+             |
+             | <$valueIri>
+             |     a                                        knora-base:TextValue ;
+             |     knora-base:valueHasString                "Text" ;
+             |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+             |     knora-base:hasTextValueType              knora-base:FormattedText ;
+             |     knora-base:valueHasMaxStandoffStartIndex 0 ;
+             |     knora-base:valueHasStandoff              <$valueIri/standoff/0> ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
+             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
+             |     knora-base:isDeleted                     false .
+             |
+             | <$valueIri/standoff/0>
+             |     a                                  standoff:StandoffRootTag ;
+             |     knora-base:standoffTagHasStart      0 ;
+             |     knora-base:standoffTagHasEnd        4 ;
+             |     knora-base:standoffTagHasStartIndex 0 ;
+             |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
+             |""".stripMargin,
+      )
+    },
+    test("rejects a text value referencing a non-standard mapping") {
+      assertRejected(
+        richtextJsonLd(simpleRichtextXml, mappingIri = "http://rdfh.ch/standoff/mappings/CustomMapping"),
+        "custom mapping",
+      )
+    },
+    test("rejects malformed XML") {
+      assertRejected(richtextJsonLd("not valid xml <<<"), "Failed to restructure")
+    },
+  )
+
   private val graphHandling = suite("Stage 1 — @graph handling")(
     test("flattens @graph declarations from the payload (the target graph comes from the project)") {
       runTransform(
@@ -840,5 +1006,12 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     dateValuesStage2,
     linkValuesStage2,
     textValueTypeStage2,
-  ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
+    standoffStage2,
+  ).provide(
+    OntologyTransformer.layer,
+    StringFormatter.test,
+    TestAppConfig.layer(),
+    IdSourceInMemory.layer,
+    standoffMappingServiceStub,
+  )
 }

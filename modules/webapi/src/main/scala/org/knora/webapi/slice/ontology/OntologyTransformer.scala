@@ -23,6 +23,7 @@ import org.apache.jena.riot.system.StreamRDFLib
 import org.apache.jena.sparql.core.Quad
 import zio.Clock
 import zio.Scope
+import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
@@ -35,6 +36,7 @@ import java.nio.file.Path
 import java.time.Instant
 import scala.jdk.CollectionConverters.*
 
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
@@ -42,12 +44,17 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
 import org.knora.webapi.messages.util.DateEraV2
+import org.knora.webapi.messages.util.standoff.StandoffStringUtil
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.RdfDataMgr
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 final case class TransformerError(message: String)
 
@@ -66,7 +73,11 @@ final case class ConversionContext(
   permissions: String,
 )
 
-final class OntologyTransformer(sf: StringFormatter) { self =>
+final class OntologyTransformer(
+  sf: StringFormatter,
+  standoffMappingService: StandoffMappingService,
+  idSource: IdSource,
+) { self =>
 
   /**
    * Converts a JSON-LD payload in the public Knora-API v2 representation into the internal `knora-base` graph
@@ -113,6 +124,7 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
       _     <- ZIO.attempt(addTextValueType(model))
       _     <- ZIO.attempt(convertDateValues(model))
       _     <- ZIO.attempt(convertLinkValues(model))
+      _     <- convertRichtextValues(model)
       _     <- ZIO.attempt(addValueHasString(model))
       kb    <- tempFile("onto-transformer-kb-", ".nq")
       graph  = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
@@ -373,6 +385,156 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
   }
 
   /**
+   * Step 5 — convert every rich-text `TextValue` (one carrying `textValueAsXml`) to `knora-base` standoff, reusing
+   * `StandoffTagUtilV2.convertXMLtoStandoffTagV2` and the standard mapping exactly as the resource-create path does.
+   * Emits the standoff-tag nodes, `valueHasStandoff`, `valueHasMaxStandoffStartIndex` and `valueHasMapping`, sets
+   * `valueHasString` to the plain-text projection and drops `textValueAsXml`. The naive-renamed
+   * `knora-base#textValueHasMapping` has no knora-base equivalent and is removed from every text value.
+   *
+   * This runs as a real effect (it loads the mapping and mints tag UUIDs), so rejections use `ZIO.fail` and every
+   * synchronous throw is wrapped in `ZIO.attempt`, keeping them in the typed error channel that `restructure`'s
+   * `.mapError` turns into a `TransformerError`.
+   */
+  private def convertRichtextValues(model: Model): Task[Unit] = {
+    val rdfType        = model.createProperty(Rdf.Type)
+    val textValueType  = KnoraBase.TextValue
+    val textValueAsXml = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
+
+    // Materialise before mutating: this pass mints new tag nodes into the same model while iterating.
+    val richtextValues = model
+      .listSubjects()
+      .asScala
+      .filter(s =>
+        isValue(s) &&
+          Option(s.getProperty(rdfType))
+            .map(_.getObject)
+            .exists(n => n.isURIResource && n.asResource.getURI == textValueType) &&
+          s.hasProperty(textValueAsXml),
+      )
+      .toList
+
+    ZIO.foreachDiscard(richtextValues)(convertRichtextValue(model, _)) *>
+      ZIO.attempt(dropTextValueHasMapping(model))
+  }
+
+  private def convertRichtextValue(model: Model, v: Resource): Task[Unit] =
+    for {
+      xml     <- ZIO.attempt(requireTextValueAsXml(model, v))
+      _       <- rejectCustomMapping(model, v)
+      mapping <- standoffMappingService.getMappingV2(StandoffMappingIri.StandardMapping)
+      tws     <-
+        ZIO.attempt(StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mapping, acceptStandoffLinksToClientIDs = false))
+      tags <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.freshStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
+      _    <- ZIO.attempt(emitStandoff(model, v, tws.text, tags))
+    } yield ()
+
+  private def requireTextValueAsXml(model: Model, v: Resource): String = {
+    val textValueAsXml = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
+    Option(v.getProperty(textValueAsXml))
+      .map(_.getObject)
+      .collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+      .getOrElse(throw new IllegalArgumentException(s"TextValue $v has no textValueAsXml"))
+  }
+
+  /** Rejects a `TextValue` referencing a non-standard mapping (REQ-6.2), before the mapping is loaded. */
+  private def rejectCustomMapping(model: Model, v: Resource): Task[Unit] = {
+    val textValueHasMapping = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueHasMapping")
+    Option(v.getProperty(textValueHasMapping))
+      .map(_.getObject)
+      .collect { case n if n.isURIResource => n.asResource.getURI } match {
+      case Some(iri) if iri != KnoraBase.StandardMapping =>
+        ZIO.fail(
+          new IllegalArgumentException(
+            s"TextValue $v references unsupported custom mapping <$iri>; only the standard mapping is supported",
+          ),
+        )
+      case _ => ZIO.unit
+    }
+  }
+
+  /** Removes the naive-renamed `knora-base#textValueHasMapping` (which has no knora-base equivalent) everywhere. */
+  private def dropTextValueHasMapping(model: Model): Unit = {
+    val textValueHasMapping = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueHasMapping")
+    val _                   = model.removeAll(null, textValueHasMapping, null)
+  }
+
+  private def emitStandoff(model: Model, v: Resource, plainText: String, tags: Seq[StandoffTagV2]): Unit = {
+    val textValueAsXml                = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
+    val valueHasString                = model.createProperty(KnoraBase.ValueHasString)
+    val valueHasMapping               = model.createProperty(KnoraBase.ValueHasMapping)
+    val valueHasStandoff              = model.createProperty(KnoraBase.ValueHasStandoff)
+    val valueHasMaxStandoffStartIndex = model.createProperty(KnoraBase.ValueHasMaxStandoffStartIndex)
+
+    val valueIri        = v.getURI
+    val startIndexToIri =
+      tags.map(t => t.startIndex -> StandoffStringUtil.makeRandomStandoffTagIri(valueIri, t.startIndex)).toMap
+
+    v.removeAll(textValueAsXml)
+    v.removeAll(valueHasString)
+    v.addProperty(valueHasString, plainText)
+    v.addProperty(valueHasMapping, model.createResource(KnoraBase.StandardMapping))
+    v.addProperty(valueHasMaxStandoffStartIndex, intLiteral(model, tags.map(_.startIndex).max))
+    tags.foreach { tag =>
+      val tagRes = model.createResource(startIndexToIri(tag.startIndex))
+      v.addProperty(valueHasStandoff, tagRes)
+      emitStandoffTag(model, tagRes, tag, startIndexToIri)
+    }
+  }
+
+  private def emitStandoffTag(
+    model: Model,
+    tagRes: Resource,
+    tag: StandoffTagV2,
+    startIndexToIri: Map[Int, String],
+  ): Unit = {
+    val rdfType                     = model.createProperty(Rdf.Type)
+    val standoffTagHasStart         = model.createProperty(KnoraBase.StandoffTagHasStart)
+    val standoffTagHasEnd           = model.createProperty(KnoraBase.StandoffTagHasEnd)
+    val standoffTagHasStartIndex    = model.createProperty(KnoraBase.StandoffTagHasStartIndex)
+    val standoffTagHasEndIndex      = model.createProperty(KnoraBase.StandoffTagHasEndIndex)
+    val standoffTagHasStartParent   = model.createProperty(KnoraBase.StandoffTagHasStartParent)
+    val standoffTagHasEndParent     = model.createProperty(KnoraBase.StandoffTagHasEndParent)
+    val standoffTagHasOriginalXMLID = model.createProperty(KnoraBase.StandoffTagHasOriginalXMLID)
+    val standoffTagHasUUID          = model.createProperty(KnoraBase.StandoffTagHasUUID)
+
+    tagRes.addProperty(rdfType, model.createResource(tag.standoffTagClassIri.toString))
+    tagRes.addProperty(standoffTagHasStart, intLiteral(model, tag.startPosition))
+    tagRes.addProperty(standoffTagHasEnd, intLiteral(model, tag.endPosition))
+    tagRes.addProperty(standoffTagHasStartIndex, intLiteral(model, tag.startIndex))
+    tag.endIndex.foreach(i => tagRes.addProperty(standoffTagHasEndIndex, intLiteral(model, i)))
+    tag.startParentIndex.foreach(p =>
+      tagRes.addProperty(standoffTagHasStartParent, model.createResource(startIndexToIri(p))),
+    )
+    tag.endParentIndex.foreach(p =>
+      tagRes.addProperty(standoffTagHasEndParent, model.createResource(startIndexToIri(p))),
+    )
+    tag.originalXMLID.foreach(id => tagRes.addProperty(standoffTagHasOriginalXMLID, id))
+    tagRes.addProperty(standoffTagHasUUID, UuidUtil.base64Encode(tag.uuid))
+    tag.attributes.foreach(attr => emitStandoffAttribute(model, tagRes, attr))
+  }
+
+  /** Emits one triple per standoff-tag attribute, typing the object as `standoffAttributeLiterals` does on write. */
+  private def emitStandoffAttribute(model: Model, tagRes: Resource, attr: StandoffTagAttributeV2): Unit = {
+    val p = model.createProperty(attr.standoffPropertyIri.toString)
+    val _ = attr match {
+      case a: StandoffTagIriAttributeV2               => tagRes.addProperty(p, model.createResource(a.value))
+      case a: StandoffTagInternalReferenceAttributeV2 => tagRes.addProperty(p, model.createResource(a.value))
+      case a: StandoffTagUriAttributeV2               =>
+        tagRes.addProperty(p, model.createTypedLiteral(a.value, XSDDatatype.XSDanyURI))
+      case a: StandoffTagStringAttributeV2  => tagRes.addProperty(p, a.value)
+      case a: StandoffTagIntegerAttributeV2 => tagRes.addProperty(p, intLiteral(model, a.value))
+      case a: StandoffTagDecimalAttributeV2 =>
+        tagRes.addProperty(p, model.createTypedLiteral(a.value.toString, XSDDatatype.XSDdecimal))
+      case a: StandoffTagBooleanAttributeV2 =>
+        tagRes.addProperty(p, model.createTypedLiteral(a.value.toString, XSDDatatype.XSDboolean))
+      case a: StandoffTagTimeAttributeV2 =>
+        tagRes.addProperty(p, model.createTypedLiteral(a.value.toString, XSDDatatype.XSDdateTime))
+    }
+  }
+
+  private def intLiteral(model: Model, n: Int) = model.createTypedLiteral(n.toString, XSDDatatype.XSDinteger)
+
+  /**
    * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
    * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
    * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
@@ -445,5 +607,6 @@ final class OntologyTransformer(sf: StringFormatter) { self =>
 }
 
 object OntologyTransformer {
-  val layer: ZLayer[StringFormatter, Nothing, OntologyTransformer] = ZLayer.derive[OntologyTransformer]
+  val layer: ZLayer[StringFormatter & StandoffMappingService & IdSource, Nothing, OntologyTransformer] =
+    ZLayer.derive[OntologyTransformer]
 }
