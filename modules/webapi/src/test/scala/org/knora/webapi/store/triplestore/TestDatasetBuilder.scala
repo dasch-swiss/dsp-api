@@ -47,5 +47,15 @@ object TestDatasetBuilder {
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
 
+  /**
+   * As [[datasetLayerFromTurtle]], but the fixture chooses its own named graphs.
+   *
+   * Needed by queries that scope with `GRAPH <…>` rather than filtering on `attachedToProject`: those only
+   * see triples in the graph they name, whereas `datasetFromTurtle` puts everything in one fixed graph
+   * (`http://www.example.org/graph`). A graph-scoped query against a Turtle fixture matches nothing and the
+   * test passes vacuously, so such fixtures must place their triples in the graph the query will look in.
+   */
+  def datasetLayerFromTriG(trig: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTriG(trig))
+
   val emptyDataset: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 }

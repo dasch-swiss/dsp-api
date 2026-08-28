@@ -15,17 +15,19 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
+import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.CountUnit
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.GroupCountRow
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
-import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.GroupBy
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
@@ -34,188 +36,114 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
  *
  * Two access patterns, deliberately different in shape:
  *
- *   - **Summary** ([[distinctPermissions]] + [[countByGroup]]): counts are computed by the triplestore.
- *     Because the per-audience visibility of an object depends only on its `knora-base:hasPermissions`
- *     literal (see [[ViewRestrictionsService]]), the service first asks for the project's *distinct*
- *     permission literals — a small set, since literals come from project-level default-permission
- *     templates rather than being authored per object — classifies those few literals in Scala with the
- *     real permission model, and then asks the triplestore to `COUNT` the objects whose literal falls in
- *     each visibility state (hidden / restricted view), once per audience. No per-object rows cross the
- *     wire, so the counts are exact at any project size.
+ *   - **Counts** ([[resourceCountsByClass]] + [[valueCountsForClass]]): computed by the triplestore and
+ *     grouped by `knora-base:hasPermissions`. Because an object's visibility for the three synthetic
+ *     audiences depends only on that literal (see [[ViewRestrictionsService]]), one grouped query answers
+ *     every audience and both restriction states at once, and a group's whole population falls out of the
+ *     same rows. No per-object data crosses the wire, so counts are exact at any project size.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
- *     query is always narrowed to one class or property, ordered deterministically, and windowed with
+ *     query is always narrowed to one resource class, ordered deterministically, and windowed with
  *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`.
  *
  * Values carry their own `hasPermissions`/`attachedToUser`, so resources and values are queried separately.
  * File values are distinguished by `rdfs:subClassOf* knora-base:FileValue`; a value carrying
  * `knora-base:valueHasComment` additionally yields a comment item (a comment is a plain literal on the
  * value and is not independently permissioned, so its visibility equals its parent value's).
- *
- * Grouping: `GroupBy.ResourceClass` groups by resource class; `GroupBy.Property` groups by the property
- * carrying the value (whole-resource rows are not emitted in property mode).
  */
 final case class ViewRestrictionsRepo(
   private val triplestore: TriplestoreService,
+  private val projectClassesCache: EhCache[ProjectIri, ProjectClasses],
 ) extends QueryBuilderHelper {
 
   /**
    * Resolves the project's asserted resource classes, and whether the most-specific-class filter is
    * needed at all — see [[ViewRestrictionsRepo.ProjectClasses]].
    *
-   * Two small anchored queries per request, in exchange for dropping two `rdfs:subClassOf` traversals
-   * that the store would otherwise re-evaluate on every result row of every query in that request.
+   * Cached per project, briefly. The stepped report calls this once for the class list and then once per
+   * class for that class's value counts, so on a 43-class project an uncached resolve is paid 44 times for
+   * an answer that is identical every time. The TTL is what keeps a newly added resource class from being
+   * invisible until restart: it only has to outlive one report run, not the deployment.
    */
   def projectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
+    ZIO.succeed(projectClassesCache.get(projectIri)).flatMap {
+      case Some(cached) => ZIO.succeed(cached)
+      case None         =>
+        resolveProjectClasses(projectIri).tap(resolved => ZIO.succeed(projectClassesCache.put(projectIri, resolved)))
+    }
+
+  private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     for {
       iris <- triplestore
                 .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri)))
                 .map(_.flatMap(_.get("resClass")))
-      multi <- triplestore
-                 .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri)))
-                 .map(_.nonEmpty)
+      // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
+      // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
+      // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
+      anyMultiTyped <- triplestore
+                         .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri)))
+                         .map(_.nonEmpty)
+      multi <- if (anyMultiTyped)
+                 triplestore.query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri))).map(_.nonEmpty)
+               else ZIO.succeed(false)
     } yield ProjectClasses(iris, multi)
-
-  /**
-   * The project's distinct `knora-base:hasPermissions` literals among restriction-bearing objects, across
-   * both resources and values. The service classifies these (and only these) with
-   * [[org.knora.webapi.messages.util.PermissionUtilADM]] to decide which literals mean hidden and which
-   * mean restricted view, per audience, then feeds each subset back into [[countByGroup]].
-   *
-   * Only the literal is projected — no creator, and no per-object data at all. That is sound because the
-   * creator cannot change the decision for a synthetic audience user (it only adds the `knora-admin:Creator`
-   * group when the requesting user *is* the creator, which these users never are). `ViewRestrictionsServiceSpec`
-   * pins that equivalence.
-   */
-  def distinctPermissions(
-    projectIri: ProjectIri,
-    itemType: ItemType,
-    groupBy: GroupBy,
-    classes: ProjectClasses,
-  ): Task[Set[String]] = {
-    val wantResources = ViewRestrictionsRepo.wantResources(groupBy, itemType)
-    val wantValues    = ViewRestrictionsRepo.wantValues(groupBy, itemType)
-    for {
-      fromResources <-
-        if (wantResources)
-          runDistinctPermissions(ViewRestrictionsRepo.distinctResourcePermissionsQuery(projectIri, classes), classes)
-        else ZIO.succeed(Set.empty[String])
-      fromValues <-
-        if (wantValues)
-          runDistinctPermissions(ViewRestrictionsRepo.distinctValuePermissionsQuery(projectIri, classes), classes)
-        else ZIO.succeed(Set.empty[String])
-    } yield fromResources ++ fromValues
-  }
-
-  private def runDistinctPermissions(query: SelectQuery, classes: ProjectClasses): Task[Set[String]] =
-    triplestore.query(select(query, classes)).map(_.map(_.getRequired("permissions")).toSet)
 
   /** Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block. */
   private def select(query: SelectQuery, classes: ProjectClasses): Select =
     Select(ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))))
 
   /**
-   * Per-group counts of the objects whose permission literal is in `permissions`, computed by the
-   * triplestore with `GROUP BY` + `COUNT`. Exact regardless of project size.
+   * Step 1 of the stepped report: every class's resource counts, broken down by permission literal, in a
+   * single unchunked query.
    *
-   * The caller supplies the literals that resolve to ONE visibility state for ONE audience (see
-   * [[ViewRestrictionsService]]), so this is invoked once per (audience, state) pair — it is not
-   * hidden-specific. An empty set means no literal resolves to that state, so the query is skipped rather
-   * than sent with an empty `FILTER IN` (which would match nothing anyway).
+   * One query rather than a fan-out, because grouping by the literal makes the six former
+   * (audience, state) counts and the separate population count all derivable from one row set — see
+   * [[ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery]]. A class present in the project but
+   * carrying no resources simply yields no rows; the caller reports it with a zero population.
    */
-  def countByGroup(
+  def resourceCountsByClass(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
+    classes: ProjectClasses,
+  ): Task[Seq[PermissionCountRow]] =
+    triplestore
+      .query(select(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes), classes))
+      .map(_.flatMap(row => permissionCountRow(row, groupCol = Some("resClass"))))
+
+  /**
+   * Step 2 of the stepped report: one class's value counts, broken down by permission literal.
+   *
+   * Scoped to a single class by the route, so there is nothing to chunk and no grouping key beyond the
+   * literal itself.
+   */
+  def valueCountsForClass(
+    projectIri: ProjectIri,
+    resourceClass: String,
     itemType: ItemType,
-    permissions: Set[String],
     classes: ProjectClasses,
-  ): Task[Seq[GroupCountRow]] =
-    if (permissions.isEmpty) ZIO.succeed(Seq.empty)
-    else {
-      val wantResources = ViewRestrictionsRepo.wantResources(groupBy, itemType)
-      val wantValues    = ViewRestrictionsRepo.wantValues(groupBy, itemType)
-      // The two results are kept in their own units (see CountUnit) rather than concatenated into one
-      // number: they count different things, and the resource figure is the only one comparable to the
-      // class's resource population.
-      for {
-        resourceCounts <-
-          if (wantResources)
-            runCountByGroup(
-              ViewRestrictionsRepo.resourceCountQuery(projectIri, permissions, _),
-              CountUnit.Resources,
-              classes,
-            )
-          else ZIO.succeed(Seq.empty[GroupCountRow])
-        valueCounts <-
-          if (wantValues)
-            runCountByGroup(
-              ViewRestrictionsRepo
-                .valueCountQuery(
-                  projectIri,
-                  groupBy,
-                  ViewRestrictionsRepo.effectiveItemType(groupBy, itemType),
-                  permissions,
-                  _,
-                ),
-              CountUnit.Items,
-              classes,
-            )
-          else ZIO.succeed(Seq.empty[GroupCountRow])
-      } yield resourceCounts ++ valueCounts
-    }
-
-  /**
-   * How many resources the project has in each resource class, regardless of any restriction — the
-   * denominator the summary's per-class counts are read against ("7 of 120 Things are hidden").
-   *
-   * Only meaningful when grouping by resource class: a property group has no resource population of its own,
-   * so the service asks for this in class mode only.
-   */
-  def totalResourcesByClass(projectIri: ProjectIri, classes: ProjectClasses): Task[Seq[GroupCountRow]] =
-    runCountByGroup(ViewRestrictionsRepo.resourceTotalByClassQuery(projectIri, _), CountUnit.Resources, classes)
-
-  /**
-   * Runs one grouped count as a fan-out over chunks of the project's classes, then merges.
-   *
-   * The whole-project query is a single scan whose cost grows with the project; Fuseki applies
-   * `query-timeout` per request, so past some size that one query is cancelled mid-stream and the request
-   * fails, however fast the rest of the pipeline is. Splitting the class list bounds each individual query
-   * instead: on a 46k-resource / 265k-value project the single query took 8.1s while the slowest chunk took
-   * 1.4s, so the same work survives a budget the whole-project form eventually will not.
-   *
-   * Merging depends on the grouping key, so both cases are handled by summing per `(groupId, unit)`:
-   *
-   *   - grouping by resource class, the chunks partition the groups themselves, so every `groupId` occurs in
-   *     exactly one chunk and the sum is a concatenation;
-   *   - grouping by property, every chunk can report every property — the classes partition the *rows*, not
-   *     the groups — so a property's total is the sum of its per-chunk counts.
-   *
-   * Summing is only sound because each counted object belongs to exactly one chunk: a value belongs to one
-   * resource, and `dedupeRows = true` (the default these count queries use) pins a resource to a single
-   * `?resClass` binding. Were a resource to bind several classes in the hierarchy, its objects would be
-   * counted once per chunk. `ViewRestrictionsQuerySpec` pins that the count queries keep the dedup filter.
-   */
-  private def runCountByGroup(
-    query: ProjectClasses => SelectQuery,
-    unit: CountUnit,
-    classes: ProjectClasses,
-  ): Task[Seq[GroupCountRow]] =
-    ZIO
-      .foreachPar(classes.chunked(ViewRestrictionsRepo.ClassChunkSize))(chunk =>
-        triplestore
-          .query(select(query(chunk), chunk))
-          .map(_.flatMap { row =>
-            row.get("groupId").flatMap(g => row.get("cnt").flatMap(c => c.toIntOption.map(GroupCountRow(g, _, unit))))
-          }),
+  ): Task[Seq[PermissionCountRow]] =
+    triplestore
+      .query(
+        select(
+          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes),
+          classes,
+        ),
       )
-      .withParallelism(ViewRestrictionsRepo.MaxConcurrentChunkQueries)
-      .map(mergeCounts)
+      .map(_.flatMap(row => permissionCountRow(row, groupCol = None)))
 
-  /** Sums chunk results per `(groupId, unit)`; see [[runCountByGroup]] for why summing is sound. */
-  private def mergeCounts(perChunk: Seq[Seq[GroupCountRow]]): Seq[GroupCountRow] =
-    perChunk.flatten
-      .groupMapReduce(r => (r.groupId, r.unit))(_.count)(_ + _)
-      .map { case ((groupId, unit), count) => GroupCountRow(groupId, count, unit) }
-      .toSeq
+  /**
+   * Parses one permission-grouped count row. A row missing `permissions` or with an unparseable `cnt` is
+   * dropped rather than failing the request: an aggregate row without its grouping key carries no usable
+   * information, and a report is more useful slightly incomplete than not at all.
+   */
+  private def permissionCountRow(
+    row: VariableResultsRow,
+    groupCol: Option[String],
+  ): Option[PermissionCountRow] =
+    for {
+      permissions <- row.get("permissions")
+      count       <- row.get("cnt").flatMap(_.toIntOption)
+      // In step 1 the class column must be present, since it is a grouping key; in step 2 there is none.
+      groupId <- groupCol.fold[Option[Option[String]]](Some(None))(col => row.get(col).map(Some(_)))
+    } yield PermissionCountRow(groupId, permissions, count)
 
   /**
    * The distinct resource IRIs of one page of the drill-down, ordered by label then IRI so paging is
@@ -226,43 +154,41 @@ final case class ViewRestrictionsRepo(
    */
   def findRestrictedObjects(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     offset: Int,
     limit: Int,
     classes: ProjectClasses,
   ): Task[Seq[RestrictedObjectRow]] = {
-    val effective = ViewRestrictionsRepo.effectiveItemType(groupBy, itemType)
+    val effective = itemType
     for {
       pageIris <-
         triplestore
           .query(
             select(
-              ViewRestrictionsRepo.resourcePageQuery(projectIri, groupBy, effective, group, offset, limit, classes),
+              ViewRestrictionsRepo.resourcePageQuery(projectIri, effective, group, offset, limit, classes),
               classes,
             ),
           )
           .map(_.flatMap(_.get("resource")))
       rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
-              else fetchRowsFor(projectIri, groupBy, effective, group, pageIris, classes)
+              else fetchRowsFor(projectIri, effective, group, pageIris, classes)
     } yield rows
   }
 
   private def fetchRowsFor(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     resourceIris: Seq[String],
     classes: ProjectClasses,
   ): Task[Seq[RestrictedObjectRow]] = {
-    val wantResources = ViewRestrictionsRepo.wantResources(groupBy, itemType)
-    val wantValues    = ViewRestrictionsRepo.wantValues(groupBy, itemType)
+    val wantResources = ViewRestrictionsRepo.wantResources(itemType)
+    val wantValues    = ViewRestrictionsRepo.wantValues(itemType)
     for {
       resources <- if (wantResources) runResourceQuery(projectIri, group, resourceIris, classes)
                    else ZIO.succeed(Seq.empty)
-      values <- if (wantValues) runValueQuery(projectIri, group, groupBy, itemType, resourceIris, classes)
+      values <- if (wantValues) runValueQuery(projectIri, group, itemType, resourceIris, classes)
                 else ZIO.succeed(Seq.empty)
     } yield resources ++ values
   }
@@ -270,16 +196,15 @@ final case class ViewRestrictionsRepo(
   /** Total number of distinct resources the drill-down would return — the exact `totalItems` for paging. */
   def countRestrictedResources(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     classes: ProjectClasses,
   ): Task[Int] = {
-    val effective = ViewRestrictionsRepo.effectiveItemType(groupBy, itemType)
+    val effective = itemType
     triplestore
       .query(
         select(
-          ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, groupBy, effective, group, classes),
+          ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, effective, group, classes),
           classes,
         ),
       )
@@ -318,14 +243,13 @@ final case class ViewRestrictionsRepo(
   private def runValueQuery(
     projectIri: ProjectIri,
     group: String,
-    groupBy: GroupBy,
     itemType: ItemType,
     resourceIris: Seq[String],
     classes: ProjectClasses,
   ): Task[Seq[RestrictedObjectRow]] =
     triplestore
       .query(
-        select(ViewRestrictionsRepo.valueQuery(projectIri, Some(group), groupBy, resourceIris, classes), classes),
+        select(ViewRestrictionsRepo.valueQuery(projectIri, Some(group), resourceIris, classes), classes),
       )
       .map(_.flatMap { row =>
         val resource   = row.getRequired("resource")
@@ -342,8 +266,8 @@ final case class ViewRestrictionsRepo(
         // The comment shares the value's permissions (a literal on the value, not independently permissioned).
         val baseType        = if (isFile) ItemType.File else ItemType.Value
         def mk(t: ItemType) = RestrictedObjectRow(
-          groupId = if (groupBy == GroupBy.Property) prop else resClass,
-          groupLabel = localName(if (groupBy == GroupBy.Property) prop else resClass),
+          groupId = resClass,
+          groupLabel = localName(resClass),
           ontology = Some(ontologyName(resClass)),
           propertyName = Some(localName(prop)),
           resourceIri = resource,
@@ -373,20 +297,41 @@ final case class ViewRestrictionsRepo(
 
 object ViewRestrictionsRepo extends QueryBuilderHelper {
 
-  val layer = ZLayer.derive[ViewRestrictionsRepo]
+  /**
+   * How long a resolved [[ProjectClasses]] stays cached.
+   *
+   * Sized to outlive one report run — step 1 plus one request per class, at the frontend's concurrency —
+   * and nothing more, so an ontology change shows up on the next report rather than the next restart.
+   */
+  private val ProjectClassesTtl: java.time.Duration = java.time.Duration.ofMinutes(1)
+
+  val layer: URLayer[TriplestoreService & CacheManager, ViewRestrictionsRepo] = ZLayer.fromZIO(
+    for {
+      cache <- ZIO.serviceWithZIO[CacheManager](
+                 _.createCache[ProjectIri, ProjectClasses](
+                   "viewRestrictionsProjectClasses",
+                   CacheManager
+                     .defaultCacheConfigBuilder[ProjectIri, ProjectClasses]()
+                     .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(ProjectClassesTtl))
+                     .build(),
+                 ),
+               )
+      triplestore <- ZIO.service[TriplestoreService]
+    } yield ViewRestrictionsRepo(triplestore, cache),
+  )
 
   /**
-   * What a [[GroupCountRow]]'s number counts. The two are different units and must never be added
-   * together: one resource carrying three hidden values contributes 1 resource and 3 items, and summing
-   * those to "4" is a number with no meaning (and one that can exceed the class's resource population).
+   * One row of a permission-grouped count: how many objects carry `permissions`, optionally within a group.
+   *
+   * `groupId` is the resource-class IRI for the step-1 query, which groups by class as well as by literal,
+   * and `None` for the step-2 query, which is already narrowed to a single class by the route.
+   *
+   * The literal is carried raw and unclassified on purpose: the caller resolves it against each audience
+   * with the real permission model, which is what lets one query answer all three audiences and both
+   * restriction states at once. No `CountUnit` here — the unit is decided by which query produced the row,
+   * so it cannot be mixed up in the first place.
    */
-  enum CountUnit {
-    case Resources // distinct resources whose own permissions restrict them
-    case Items     // distinct values (files, ordinary values, comments) that are restricted
-  }
-
-  /** One row of the aggregated summary: a grouping key, a count, and the unit that count is in. */
-  final case class GroupCountRow(groupId: String, count: Int, unit: CountUnit)
+  final case class PermissionCountRow(groupId: Option[String], permissions: String, count: Int)
 
   /**
    * The resource classes a project actually asserts, resolved once per request and reused by every query
@@ -441,17 +386,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
      *                   some other row still carries.
      */
-    /**
-     * Splits into groups of at most `size` classes, each carrying the same `multiTyped` flag, so a grouped
-     * count can be issued per chunk instead of once for the whole project — see `runCountByGroup`.
-     *
-     * An empty class list yields a single empty chunk rather than none: with no discovered class the queries
-     * fall back to the `subClassOf*` guard ([[resClassPatterns]]) and must still be run once.
-     */
-    def chunked(size: Int): Seq[ProjectClasses] =
-      if (iris.isEmpty) Seq(this)
-      else iris.grouped(math.max(1, size)).map(ProjectClasses(_, multiTyped)).toSeq
-
     def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
       val classGuard =
         Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
@@ -459,23 +393,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       (classGuard ++ specific).toSeq
     }
   }
-
-  /**
-   * How many of the project's classes one grouped-count query covers.
-   *
-   * Small enough that each query stays well inside the triplestore's `query-timeout`, large enough not to
-   * pay the fixed per-request overhead once per class: measured on a 46k-resource project, per-class queries
-   * bottomed out at ~25ms of overhead each, so grouping a few classes together costs nothing and cuts the
-   * number of round-trips.
-   */
-  private[repo] val ClassChunkSize = 3
-
-  /**
-   * Concurrent chunk queries per grouped count. Deliberately small: the service already fans out over
-   * (audience, state) with its own cap, and these multiply, so a large value here would put the product of
-   * the two on the triplestore for a single request.
-   */
-  private[repo] val MaxConcurrentChunkQueries = 2
 
   /** `VALUES ?v { <a> <b> … }` for a set of IRIs. */
   private[repo] def valuesOf(v: Variable, iris: Seq[String]): String =
@@ -528,22 +445,14 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     permissions: String,
   )
 
-  /**
-   * In property mode there are no whole-resource rows to group under a property, so `itemType=Resource`
-   * would return nothing. AC7 requires it to behave like `all` there (surface the value/file/comment rows
-   * instead), so coerce Resource → All when grouping by property.
-   */
-  private[repo] def effectiveItemType(groupBy: GroupBy, itemType: ItemType): ItemType =
-    if (groupBy == GroupBy.Property && itemType == ItemType.Resource) ItemType.All else itemType
-
-  /** Whole-resource restrictions are out of scope in property mode. */
-  private[repo] def wantResources(groupBy: GroupBy, itemType: ItemType): Boolean = {
-    val t = effectiveItemType(groupBy, itemType)
-    groupBy == GroupBy.ResourceClass && (t == ItemType.All || t == ItemType.Resource)
+  /** Whether the drill-down includes whole-resource rows under the active filter. */
+  private[repo] def wantResources(itemType: ItemType): Boolean = {
+    val t = itemType
+    t == ItemType.All || t == ItemType.Resource
   }
 
-  private[repo] def wantValues(groupBy: GroupBy, itemType: ItemType): Boolean = {
-    val t = effectiveItemType(groupBy, itemType)
+  private[repo] def wantValues(itemType: ItemType): Boolean = {
+    val t = itemType
     t == ItemType.All || t == ItemType.File || t == ItemType.Value || t == ItemType.Comment
   }
 
@@ -560,10 +469,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   /** `FILTER(!REGEX(?permissions, <grantsViewToAnonymous>))` — keep only rows restricted from someone. */
   private def onlyRestricted(permissions: Variable) =
     Expressions.not(Expressions.regex(permissions, Rdf.literalOf(grantsViewToAnonymousRegex)))
-
-  /** `FILTER(?permissions IN ("…", "…"))` — restrict to the literals the service classified for one state. */
-  private def permissionsIn(permissions: Variable, literals: Set[String]) =
-    Expressions.in(permissions, literals.toSeq.sorted.map(Rdf.literalOf)*)
 
   /** `FILTER(?resource IN (<…>, <…>))` — restrict to the resources on the current page. */
   private def resourceIn(resource: Variable, iris: Seq[String]) =
@@ -583,6 +488,16 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * drill-down.
    *
    * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
+   *
+   * NOTE — graph scoping does NOT apply here, and must not be reintroduced.
+   * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join
+   * (DEV-6827: 5.4×), and that holds for a caller which already knows the single graph it wants — the v2
+   * write path writes into one. It does **not** hold for a project-wide read: a project's resources span
+   * one data graph per ontology, while `ProjectService.projectDataNamedGraphV2` derives exactly one from
+   * shortcode + shortname. Measured on the local `anything` project: 65 resources in
+   * `…/data/0001/anything` and 6 more in `…/data/0001/freetest`, so scoping to the derived graph
+   * undercounts by those 6 — silently, since a graph with no matches yields no rows rather than an error.
+   * `ViewRestrictionsQuerySpec` pins that every query keeps the join.
    */
   private def resourceCore(
     projectIri: ProjectIri,
@@ -636,6 +551,9 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `bindCreator = false` drops the `attachedToUser ?creator` pattern for callers that neither project nor
    * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
    * multiply intermediate rows.
+   *
+   * Graph scoping does not apply here either — see [[resourceCore]] for why a project-wide read cannot
+   * substitute a single derived data graph for the `attachedToProject` join.
    */
   private def valueCore(
     projectIri: ProjectIri,
@@ -722,6 +640,35 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   }
 
   /**
+   * Does any non-deleted resource of the project carry **two distinct types at all**?
+   *
+   * A necessary condition for [[multiTypedQuery]]: asserting a class together with a strict subclass of it
+   * entails having two distinct types. So `false` here settles `multiTypedQuery` as `false` too, without
+   * the `subClassOf+` traversal — and it is the common case, since most resources carry exactly one class.
+   *
+   * Strictly weaker on purpose, so it can only ever over-approximate: a `true` answer proves nothing and
+   * the real traversal still runs. That keeps the correctness argument in [[multiTypedQuery]] intact —
+   * notably that `?subClass` must stay unconstrained.
+   *
+   * Measured on LHTT: 1.4s, against 27.3s for the query it gates.
+   */
+  private[repo] def anyMultiTypedResourceQuery(projectIri: ProjectIri): SelectQuery = {
+    val (resource, c1, c2) = (variable("resource"), variable("c1"), variable("c2"))
+    Queries
+      .SELECT(resource)
+      .prefix(prefix(KnoraBase.NS))
+      .where(
+        resource
+          .isA(c1)
+          .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
+          .andIsA(c2)
+          .filter(Expressions.notEquals(c1, c2)),
+      )
+      .limit(1)
+  }
+
+  /**
    * Whether [[mostSpecificClass]] can actually change the answer for this project: does any non-deleted
    * resource assert a class together with a **strict subclass** of that class?
    *
@@ -734,8 +681,13 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
    * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
    *
-   * The traversal is unavoidable here, but it runs **once per request** and stops at the first hit
-   * (`LIMIT 1`) — as opposed to the gated filter, which the store re-evaluates on every result row.
+   * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
+   * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
+   * on LHTT (105,983 resources) returning nothing. Anchoring `?resClass` with a `VALUES` clause makes it
+   * worse, not better (36.7s) — the closure-as-VALUES shape `CONVENTIONS.md` warns about.
+   *
+   * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
+   * needs no path, and a negative answer settles this one. See [[projectClasses]].
    */
   private[repo] def multiTypedQuery(projectIri: ProjectIri): SelectQuery = {
     val (resource, resClass, subClass) = (variable("resource"), variable("resClass"), variable("subClass"))
@@ -753,155 +705,87 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .limit(1)
   }
 
-  /** `SELECT DISTINCT ?permissions` over a project's restriction-bearing resources. */
-  private[repo] def distinctResourcePermissionsQuery(projectIri: ProjectIri, classes: ProjectClasses): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-
-    Queries
-      .SELECT(permissions)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        GraphPatterns
-          .and(
-            resourceCore(
-              projectIri,
-              resource,
-              resClass,
-              creator,
-              permissions,
-              classes,
-              dedupeRows = false,
-              bindCreator = false,
-            ),
-          )
-          .filter(onlyRestricted(permissions)),
-      )
-  }
-
   /**
-   * `SELECT DISTINCT ?permissions` over a project's restriction-bearing values. Independent of `GroupBy`:
-   * grouping changes how counts are bucketed, not which literals exist.
+   * `SELECT ?resClass ?permissions (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?resClass ?permissions`
+   * over all of a project's current resources — the whole of step 1 in one query.
+   *
+   * Built on the same [[resourceCore]] skeleton as the queries it replaces, so it counts the same universe
+   * (non-deleted, project-owned, keyed by the resource's most specific asserted class). `bindCreator =
+   * false` because the creator cannot change the decision for a synthetic audience, making
+   * `attachedToUser ?creator` an unconstrained join that only multiplies intermediate rows — the same
+   * reasoning [[valueCore]] already records for the permission probes.
    */
-  private[repo] def distinctValuePermissionsQuery(projectIri: ProjectIri, classes: ProjectClasses): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (prop, value)          = (variable("prop"), variable("value"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-
-    Queries
-      .SELECT(permissions)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        GraphPatterns
-          .and(
-            valueCore(
-              projectIri,
-              resource,
-              resClass,
-              prop,
-              value,
-              creator,
-              permissions,
-              classes,
-              dedupeRows = false,
-              bindCreator = false,
-            ),
-          )
-          .filter(onlyRestricted(permissions)),
-      )
-  }
-
-  /**
-   * `SELECT ?groupId (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?groupId` over the resources whose
-   * permission literal the service classified into the requested state. Exact at any project size.
-   */
-  private[repo] def resourceCountQuery(
+  private[repo] def resourceCountsByClassAndPermissionQuery(
     projectIri: ProjectIri,
-    statePermissions: Set[String],
     classes: ProjectClasses,
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
+    val cnt                    = variable("cnt")
 
     Queries
-      .SELECT(groupId, Expressions.count(resource).distinct().as(cnt))
+      .SELECT(resClass, permissions, Expressions.count(resource).distinct().as(cnt))
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
       .where(
-        GraphPatterns
-          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
-          .filter(permissionsIn(permissions, statePermissions))
-          .and(Expressions.bind(resClass, groupId)),
+        GraphPatterns.and(
+          resourceCore(
+            projectIri,
+            resource,
+            resClass,
+            creator,
+            permissions,
+            classes,
+            bindCreator = false,
+          ),
+        ),
       )
-      .groupBy(groupId)
+      .groupBy(resClass, permissions)
   }
 
   /**
-   * `SELECT ?groupId (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?groupId` over **all** of a project's
-   * current resources, with no permission filter at all — the per-class population size.
+   * `SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?permissions` over the values of ONE
+   * resource class — the whole of step 2 for that class in one query.
    *
-   * Deliberately built on the same [[resourceCore]] skeleton as [[resourceCountQuery]], so the restriction
-   * count and this total are counted over the same universe (non-deleted, project-owned, keyed by the
-   * resource's most specific asserted class) and the ratio between them is meaningful.
-   */
-  private[repo] def resourceTotalByClassQuery(projectIri: ProjectIri, classes: ProjectClasses): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
-
-    Queries
-      .SELECT(groupId, Expressions.count(resource).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        GraphPatterns
-          .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
-          .and(Expressions.bind(resClass, groupId)),
-      )
-      .groupBy(groupId)
-  }
-
-  /**
-   * `SELECT ?groupId (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?groupId` over the values whose permission
-   * literal the service classified into the requested state.
+   * Narrowed to a single class by a `FILTER (?resClass = <iri>)` rather than by chunking: the route is the
+   * unit of work now, so there is no second axis to split on.
    *
-   * Counts distinct *values*, matching the summary's semantics that a comment is a facet of its parent
-   * value rather than a separately counted item — except under `itemType=Comment`, where the comment is
-   * the thing being counted and the constraint restricts to commented values.
+   * NOTE: `valueCore` reaches values through `?prop rdfs:subPropertyOf* knora-base:hasValue` with `?prop`
+   * unbound. That is a knowingly accepted cost (see the PRD's Constraints): `CONVENTIONS.md` warns an
+   * unanchored property path cross-joins against the whole closure, and it is the first thing to revisit
+   * if a class turns out to be too slow.
    */
-  private[repo] def valueCountQuery(
+  private[repo] def valueCountsByPermissionQuery(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
+    resourceClass: String,
     itemType: ItemType,
-    statePermissions: Set[String],
     classes: ProjectClasses,
   ): SelectQuery = {
     val (resource, resClass)   = (variable("resource"), variable("resClass"))
     val (prop, value)          = (variable("prop"), variable("value"))
     val (creator, permissions) = (variable("creator"), variable("permissions"))
     val (fileClass, comment)   = (variable("fileClass"), variable("comment"))
-    val (groupId, cnt)         = (variable("groupId"), variable("cnt"))
-    val groupCol               = if (groupBy == GroupBy.Property) prop else resClass
+    val cnt                    = variable("cnt")
 
-    val core        = valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes)
+    val core = valueCore(
+      projectIri,
+      resource,
+      resClass,
+      prop,
+      value,
+      creator,
+      permissions,
+      classes,
+      bindCreator = false,
+    )
     val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
       .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
 
     Queries
-      .SELECT(groupId, Expressions.count(value).distinct().as(cnt))
+      .SELECT(permissions, Expressions.count(value).distinct().as(cnt))
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        constrained
-          .filter(permissionsIn(permissions, statePermissions))
-          .and(Expressions.bind(groupCol, groupId)),
-      )
-      .groupBy(groupId)
+      .where(constrained.filter(Expressions.equals(resClass, Rdf.iri(resourceClass))))
+      .groupBy(permissions)
   }
-
-  // ---------------------------------------------------------------------------------------------------
-  // Drill-down: a deterministic page of resources, then the rows belonging to that page.
-  // ---------------------------------------------------------------------------------------------------
 
   /**
    * One page of distinct resource IRIs for the drill-down, ordered by label then IRI so that paging is
@@ -912,7 +796,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    */
   private[repo] def resourcePageQuery(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     offset: Int,
@@ -926,7 +809,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .SELECT(resource, labelOrIri)
       .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(drillDownPattern(projectIri, groupBy, itemType, group, resource, Some(labelOrIri), classes))
+      .where(drillDownPattern(projectIri, itemType, group, resource, Some(labelOrIri), classes))
       .orderBy(labelOrIri.asc(), resource.asc())
       .offset(offset)
       .limit(limit)
@@ -935,7 +818,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   /** `SELECT (COUNT(DISTINCT ?resource) AS ?cnt)` matching [[resourcePageQuery]] — the exact page total. */
   private[repo] def resourceCountForDrillDownQuery(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     classes: ProjectClasses,
@@ -946,7 +828,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     Queries
       .SELECT(Expressions.count(resource).distinct().as(cnt))
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(drillDownPattern(projectIri, groupBy, itemType, group, resource, None, classes))
+      .where(drillDownPattern(projectIri, itemType, group, resource, None, classes))
   }
 
   /**
@@ -955,7 +837,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    */
   private def drillDownPattern(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
     itemType: ItemType,
     group: String,
     resource: Variable,
@@ -974,13 +855,13 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
         .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
       withGroupFilter(
         constrained.filter(onlyRestricted(permissions)),
-        if (groupBy == GroupBy.Property) prop else resClass,
+        resClass,
         Some(group),
       )
     }
 
     val branch =
-      if (!wantValues(groupBy, itemType)) {
+      if (!wantValues(itemType)) {
         // Resource-only filter: the resource itself must be restricted.
         withGroupFilter(
           GraphPatterns
@@ -989,7 +870,7 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
           resClass,
           Some(group),
         )
-      } else if (!wantResources(groupBy, itemType)) valueBranch
+      } else if (!wantResources(itemType)) valueBranch
       else {
         // Both are in scope: a resource qualifies via its own restriction OR via a restricted value.
         val resourceBranch = withGroupFilter(
@@ -1045,7 +926,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   private[repo] def valueQuery(
     projectIri: ProjectIri,
     group: Option[String],
-    groupBy: GroupBy,
     resourceIris: Seq[String],
     classes: ProjectClasses,
   ): SelectQuery = {
@@ -1067,6 +947,6 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
       .SELECT(resource, resClass, label, prop, value, fileClass, comment, creator, permissions)
       .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(withGroupFilter(pattern, if (groupBy == GroupBy.Property) prop else resClass, group))
+      .where(withGroupFilter(pattern, resClass, group))
   }
 }
