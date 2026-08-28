@@ -473,6 +473,48 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
         )
       },
+      test("deleted values are excluded from the export") {
+        // DEV-7008: Resource1 carries a deleted link value (target Resource0, still alive) and a deleted text
+        // value alongside its live ones. The export read collapses deleted values the way /v2/resources does,
+        // so neither may surface — not the deleted target's label, not its IRI, not the deleted paragraph.
+        // Before the fix the link cell read "Resource2 :: Resource0" and its IRI cell carried Resource0's IRI.
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#LinkPropertyValue")),
+                  PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#TextParagraph")),
+                ),
+                user,
+                LanguageCode.EN,
+                includeIris = true,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv          = new String(bytes.toArray, StandardCharsets.UTF_8)
+          resource1Row =
+            csv.linesIterator.find(_.startsWith("http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA,")).getOrElse("")
+        } yield
+          // The live link is still exported in full ...
+          assertTrue(resource1Row.contains("Resource2")) &&
+            assertTrue(resource1Row.contains("http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w")) &&
+            // ... while the deleted link contributes neither its target's label nor its target's IRI ...
+            assertTrue(!resource1Row.contains("Resource0")) &&
+            assertTrue(!resource1Row.contains("http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw")) &&
+            // ... and the deleted text value is gone too: the collapsing is not link-specific.
+            assertTrue(!csv.contains("Deleted paragraph that must not be exported")) &&
+            // Finally the reported shape: a live link value whose *target* is deleted must not leave a bare IRI
+            // behind in the _IRI column next to an empty label.
+            assertTrue(!resource1Row.contains("DeletedTarget")) &&
+            assertTrue(!resource1Row.contains("http://rdfh.ch/1612/DeletedTargetRes01"))
+      },
       test("link-value labels resolve across batch boundaries") {
         // Resource1 (TfZ6…) links to Resource2 (wQtV…) and vice versa. With batchSize = 1 each resource is its
         // own batch, so a link target lives in a different batch than its source. The cross-batch link-label

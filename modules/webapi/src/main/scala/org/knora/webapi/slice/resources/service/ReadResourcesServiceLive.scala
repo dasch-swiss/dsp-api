@@ -231,6 +231,9 @@ final case class ReadResourcesServiceLive(
           requestingUser,
           withDeleted = withDeleted,
           queryStandoff = queryStandoff,
+          // Same deleted-value collapsing as `readResourcesSequence` above — see the comment there (DEV-7008).
+          markDeletions = true,
+          showDeletedValues = false,
           skipRetrievalChecks = skipRetrievalChecks,
           standoffTagFilter = standoffTagFilter,
         )
@@ -433,6 +436,12 @@ final case class ReadResourcesServiceLive(
       requestingUser,
       withDeleted = withDeleted,
       queryStandoff = queryStandoff,
+      // The construct query has no value-level `isDeleted false` filter in the non-version branch, so deleted
+      // values come back from the triplestore. Collapse them the way `/v2/resources` does, otherwise a deleted
+      // value is indistinguishable from a live one downstream and gets exported as if it were current
+      // (DEV-7008).
+      markDeletions = true,
+      showDeletedValues = false,
       skipRetrievalChecks = skipRetrievalChecks,
       standoffTagFilter = standoffTagFilter,
     )

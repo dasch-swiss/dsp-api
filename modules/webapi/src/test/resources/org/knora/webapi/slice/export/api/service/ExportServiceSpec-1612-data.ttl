@@ -523,3 +523,87 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
         knora-base:hasSubListNode     <http://rdfh.ch/lists/1612/DQT8CDARQby8ysAKrjEDFA> , <http://rdfh.ch/lists/1612/ompno-X7T3qsJE417SyE8A> , <http://rdfh.ch/lists/1612/kd-EToXGRhiPnwFCAJTbbg> , <http://rdfh.ch/lists/1612/afx99e0aS0uGbsMaPhweoA>;
         knora-base:isRootNode         true .
+
+# ---------------------------------------------------------------------------------------------------------------
+# DEV-7008: deleted values on Resource1.
+#
+# A deleted link value (target Resource0, still alive) and a deleted text value. Both must be invisible to the
+# export: the export read collapses deleted values the way /v2/resources does, so Resource1's exported cells stay
+# exactly as if these two values did not exist. Without that collapsing the link cell reads
+# "Resource2 :: Resource0" and the paragraph cell gains the deleted text — i.e. the golden CSVs in this directory
+# are themselves the regression pin, and `deleted values are excluded from the export` asserts it explicitly.
+# ---------------------------------------------------------------------------------------------------------------
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/vcl2fAaeTNmRbHifdZxHdw>
+        rdf:type                      knora-base:LinkValue;
+        rdf:object                    <http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw>;
+        rdf:predicate                 <http://www.knora.org/ontology/1612/Data#LinkProperty>;
+        rdf:subject                   <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          true;
+        knora-base:deleteDate         "2025-11-25T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:valueCreationDate  "2025-11-24T09:32:35.114097Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      1;
+        knora-base:valueHasRefCount   1;
+        knora-base:valueHasString     "http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw";
+        knora-base:valueHasUUID       "vcl2fAaeTNmRbHifdZxHdw" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/SJi4NhMaQSOjHuW4xYQ0hw>
+        rdf:type                      knora-base:TextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:hasTextValueType   knora-base:UnformattedText;
+        knora-base:isDeleted          true;
+        knora-base:deleteDate         "2025-11-25T10:00:00.000000Z"^^xsd:dateTime;
+        knora-base:valueCreationDate  "2025-11-24T09:32:35.114097Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      1;
+        knora-base:valueHasString     "Deleted paragraph that must not be exported";
+        knora-base:valueHasUUID       "SJi4NhMaQSOjHuW4xYQ0hw" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>
+        <http://www.knora.org/ontology/1612/Data#LinkProperty>
+                <http://rdfh.ch/1612/Htygzo8mQDubd8gyinQ3Zw>;
+        <http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/vcl2fAaeTNmRbHifdZxHdw>;
+        <http://www.knora.org/ontology/1612/Data#TextParagraph>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/SJi4NhMaQSOjHuW4xYQ0hw> .
+
+# ---------------------------------------------------------------------------------------------------------------
+# DEV-7008: a *live* link value whose target resource is deleted — the shape reported by WordWeb, where the
+# label column came out empty but the IRI column still carried the deleted target's IRI.
+#
+# The deleted target is no longer enumerated for the export, so it contributes no label, and the construct query
+# returns no assertions for it, so the link value arrives with no nested resource. `valueColumns` therefore drops
+# the value entirely rather than emitting a bare IRI: Resource1's link cells stay "Resource2" / Resource2's IRI.
+# ---------------------------------------------------------------------------------------------------------------
+
+<http://rdfh.ch/1612/DeletedTargetRes01>
+        rdf:type                      <http://www.knora.org/ontology/1612/Data#Class1>;
+        rdfs:label                    "DeletedTarget";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:creationDate       "2025-11-24T09:46:24.126020Z"^^xsd:dateTime;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          true;
+        knora-base:deleteDate         "2025-11-26T10:00:00.000000Z"^^xsd:dateTime .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/KG-KH1lwRqK64YP5gUmsvw>
+        rdf:type                      knora-base:LinkValue;
+        rdf:object                    <http://rdfh.ch/1612/DeletedTargetRes01>;
+        rdf:predicate                 <http://www.knora.org/ontology/1612/Data#LinkProperty>;
+        rdf:subject                   <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>;
+        knora-base:attachedToUser     <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2025-11-24T09:32:35.114097Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      2;
+        knora-base:valueHasRefCount   1;
+        knora-base:valueHasString     "http://rdfh.ch/1612/DeletedTargetRes01";
+        knora-base:valueHasUUID       "KG-KH1lwRqK64YP5gUmsvw" .
+
+<http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA>
+        <http://www.knora.org/ontology/1612/Data#LinkProperty>
+                <http://rdfh.ch/1612/DeletedTargetRes01>;
+        <http://www.knora.org/ontology/1612/Data#LinkPropertyValue>
+                <http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA/values/KG-KH1lwRqK64YP5gUmsvw> .

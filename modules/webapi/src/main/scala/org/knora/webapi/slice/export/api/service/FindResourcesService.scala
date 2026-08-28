@@ -86,12 +86,20 @@ final case class FindResourcesServiceLive(
       (projectGraph.value, valuesClause)
     }
 
+  // All three query builders below exclude deleted resources. They used to return them and let the downstream
+  // read (which passes `withDeleted = false`) drop them, which produced no rows but two unwanted effects: the
+  // per-resource retrieval check logged an error for every deleted resource, and — because the ordered query's
+  // labels double as the export's cross-batch link-label map — a deleted resource still handed the exporter a
+  // label, so a link pointing at it was exported as if its target were alive (DEV-7008).
   private def buildClassQuery(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
     valuesClauseFor(project, classIri).map { (projectGraph, valuesClause) =>
       Select.gravsearch(
         s"""PREFIX knora-base: <${KB.NS.getName}>
            |SELECT DISTINCT ?$resourceIriVar WHERE {
-           |  GRAPH <$projectGraph> { ?$resourceIriVar a ?$classIriVar }
+           |  GRAPH <$projectGraph> {
+           |    ?$resourceIriVar a ?$classIriVar .
+           |    ?$resourceIriVar knora-base:isDeleted false .
+           |  }
            |  VALUES ?$classIriVar { $valuesClause }
            |}""".stripMargin,
       )
@@ -102,10 +110,12 @@ final case class FindResourcesServiceLive(
       // ?label is selected so findResourceIrisOrderedByLabel can sort in the JVM; Fuseki's ORDER BY tie-break
       // for equal labels is not reproducible, so the authoritative sort happens in Scala.
       Select.gravsearch(
-        s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        s"""PREFIX knora-base: <${KB.NS.getName}>
+           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
            |SELECT DISTINCT ?$resourceIriVar ?$labelVar WHERE {
            |  GRAPH <$projectGraph> {
            |    ?$resourceIriVar a ?$classIriVar .
+           |    ?$resourceIriVar knora-base:isDeleted false .
            |    OPTIONAL { ?$resourceIriVar rdfs:label ?$labelVar }
            |  }
            |  VALUES ?$classIriVar { $valuesClause }
@@ -144,6 +154,7 @@ final case class FindResourcesServiceLive(
     val resourceWhere =
       variable(resourceIriVar)
         .isA(variable(classIriVar))
+        .andHas(KB.isDeleted, Rdf.literalOf(false))
         .from(Rdf.iri(projectGraph.value))
 
     val classSubclassOfResource =
