@@ -34,30 +34,41 @@ final case class ViewRestrictionsRestService(
   private val auth: AuthorizationRestService,
 ) {
 
-  def getSummary(user: User)(
-    projectIri: ProjectIri,
-    groupBy: GroupBy,
-    itemType: ItemType,
-  ): Task[ViewRestrictionsSummary] =
+  /** Step 1: the whole class table. No filter, so nothing to validate beyond authorization. */
+  def getClasses(user: User)(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
       _       <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      summary <- service.summary(projectIri, groupBy, itemType)
-    } yield summary
+      classes <- service.classSummaries(projectIri)
+    } yield classes
+
+  /** Step 2: one class's value counts. */
+  def getValues(user: User)(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ValueItemType,
+  ): Task[ViewRestrictionsValues] =
+    for {
+      _ <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed IRI
+      // at the boundary: a malformed value is a client error (400), not a 500, and it must never reach the
+      // SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
+      _      <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
+      counts <- service.valueCounts(projectIri, resourceClass, itemType)
+    } yield counts
 
   def getItems(user: User)(
     projectIri: ProjectIri,
-    groupBy: GroupBy,
-    group: String,
+    resourceClass: String,
     itemType: ItemType,
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
       _ <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      // `group` is a class or property IRI chosen from the summary response. Validate it is a well-formed
+      // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed
       // IRI at the boundary: a malformed value is a client error (400), not a 500, and it must never reach
       // the SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
-      _     <- ZIO.fail(BadRequestException.invalidQueryParamValue("group")).unless(Iri.isIri(group))
-      items <- service.items(projectIri, groupBy, group, itemType, pageAndSize)
+      _     <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
+      items <- service.items(projectIri, resourceClass, itemType, pageAndSize)
     } yield items
 }
 
