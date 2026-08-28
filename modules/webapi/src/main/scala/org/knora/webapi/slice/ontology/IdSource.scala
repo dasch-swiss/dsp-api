@@ -33,6 +33,9 @@ final class IdSourceLive extends IdSource {
 
   // ValueIri.makeNew and UUID.randomUUID are impure, so suspend each call in ZIO.succeed rather than computing once:
   // a hoisted value would reuse the same id on every mint.
+  //
+  // No triplestore uniqueness check (unlike the create path's IriService.makeUnusedIri): import builds a fresh graph
+  // from scratch, so a random 128-bit UUID cannot collide with an existing value IRI. Deliberate, not an oversight.
   override def freshLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri] =
     ZIO.succeed(ValueIri.makeNew(resourceIri))
 

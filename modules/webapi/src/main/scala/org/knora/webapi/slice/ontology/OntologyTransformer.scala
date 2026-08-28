@@ -14,6 +14,7 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.rdf.model.Statement
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFParser
@@ -41,7 +42,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
@@ -51,9 +51,7 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
@@ -127,14 +125,16 @@ final class OntologyTransformer(
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
       _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
-      _     <- ZIO.attempt(addTextValueType(model))
-      _     <- ZIO.attempt(convertDateValues(model))
-      _     <- ZIO.attempt(convertLinkValues(model))
-      _     <- convertRichtextValues(model, now)
-      _     <- ZIO.attempt(addValueHasString(model))
-      kb    <- tempFile("onto-transformer-kb-", ".nq")
-      graph  = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
-      _     <- writeNQuads(model, graph.value, kb)
+      // addTextValueType must precede convertRichtextValues: the latter drops textValueAsXml, the FormattedText vs
+      // UnformattedText signal. Do not reorder these two.
+      _    <- ZIO.attempt(addTextValueType(model))
+      _    <- ZIO.attempt(convertDateValues(model))
+      _    <- ZIO.attempt(convertLinkValues(model))
+      _    <- convertRichtextValues(model, now)
+      _    <- ZIO.attempt(addValueHasString(model))
+      kb   <- tempFile("onto-transformer-kb-", ".nq")
+      graph = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
+      _    <- writeNQuads(model, graph.value, kb)
     } yield kb)
       .mapError(e => TransformerError(s"Failed to restructure RDF: ${e.getMessage}"))
 
@@ -366,11 +366,7 @@ final class OntologyTransformer(
     }
 
     linkValues.foreach { v =>
-      val parent = model.listStatements(null, null, v).asScala.toList match {
-        case st :: Nil => st
-        case other     =>
-          throw new IllegalArgumentException(s"LinkValue $v must have exactly one incoming edge, found ${other.size}")
-      }
+      val parent   = singleIncomingEdge(model, v, "LinkValue")
       val resource = parent.getSubject
       val linkProp = parent.getPredicate.getURI
       val target   = Option(v.getProperty(linkValueHasTarget))
@@ -423,19 +419,28 @@ final class OntologyTransformer(
       .sortBy(_.getURI)
 
     for {
-      perValue <- ZIO.foreach(richtextValues)(convertRichtextValue(model, _))
-      _        <- ZIO.attempt(dropTextValueHasMapping(model))
-      _        <- emitStandoffLinkValues(model, perValue, now)
+      // Reject any custom mapping before loading the standard one, so the rejection path stays hermetic (never calls
+      // getMappingV2). The mapping IRI is invariant, so resolve it once for the whole pass rather than per value.
+      _        <- ZIO.foreachDiscard(richtextValues)(rejectCustomMapping(model, _))
+      perValue <- if (richtextValues.isEmpty) ZIO.succeed(List.empty[(Resource, Set[String])])
+                  else
+                    standoffMappingService
+                      .getMappingV2(StandoffMappingIri.StandardMapping)
+                      .flatMap(mapping => ZIO.foreach(richtextValues)(convertRichtextValue(model, mapping, _)))
+      _ <- ZIO.attempt(dropTextValueHasMapping(model))
+      _ <- emitStandoffLinkValues(model, perValue, now)
     } yield ()
   }
 
   /** Converts one rich-text value and returns its owning resource and the salsah-link targets it references. */
-  private def convertRichtextValue(model: Model, v: Resource): Task[(Resource, Set[String])] =
+  private def convertRichtextValue(
+    model: Model,
+    mapping: GetMappingResponseV2,
+    v: Resource,
+  ): Task[(Resource, Set[String])] =
     for {
-      xml     <- ZIO.attempt(requireTextValueAsXml(model, v))
-      _       <- rejectCustomMapping(model, v)
-      mapping <- standoffMappingService.getMappingV2(StandoffMappingIri.StandardMapping)
-      tws     <-
+      xml <- ZIO.attempt(requireTextValueAsXml(model, v))
+      tws <-
         ZIO.attempt(StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mapping, acceptStandoffLinksToClientIDs = false))
       tags  <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.freshStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
       owner <- ZIO.attempt(owningResource(model, v))
@@ -548,13 +553,17 @@ final class OntologyTransformer(
 
   private def intLiteral(model: Model, n: Int) = model.createTypedLiteral(n.toString, XSDDatatype.XSDinteger)
 
+  /** The single `<s> <p> v` edge into `v`, or a descriptive throw for 0 or >1 — the write-path exactly-one contract. */
+  private def singleIncomingEdge(model: Model, v: Resource, label: String): Statement =
+    model.listStatements(null, null, v).asScala.toList match {
+      case st :: Nil => st
+      case other     =>
+        throw new IllegalArgumentException(s"$label $v must have exactly one incoming edge, found ${other.size}")
+    }
+
   /** Recovers a value's owning resource from its single incoming edge, mirroring [[convertLinkValues]]. */
   private def owningResource(model: Model, v: Resource): Resource =
-    model.listStatements(null, null, v).asScala.toList match {
-      case st :: Nil => st.getSubject
-      case other     =>
-        throw new IllegalArgumentException(s"TextValue $v must have exactly one incoming edge, found ${other.size}")
-    }
+    singleIncomingEdge(model, v, "TextValue").getSubject
 
   /**
    * Emits the system `hasStandoffLinkTo`/`hasStandoffLinkToValue` LinkValues for the salsah-links across a resource's
@@ -618,16 +627,10 @@ final class OntologyTransformer(
 
   private val systemUser: String = KnoraUserRepo.builtIn.SystemUser.id.value
 
-  // The fixed permissions on every standoff-link LinkValue. Built by construction (same PermissionADM set + formatter)
-  // to match CreateResourceV2Handler.standoffLinkValuePermissions; keep the two in sync if the policy ever changes.
+  // The fixed permissions on every standoff-link LinkValue, formatted from the shared grant set the create path also
+  // uses (PermissionUtilADM.standoffLinkValuePermissions) — one source of truth, identical output by construction.
   private val standoffLinkValuePermissions: String =
-    PermissionUtilADM.formatPermissionADMs(
-      Set(
-        PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraUserRepo.builtIn.SystemUser.id.value),
-        PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.UnknownUser.id.value),
-      ),
-      PermissionType.OAP,
-    )
+    PermissionUtilADM.formatPermissionADMs(PermissionUtilADM.standoffLinkValuePermissions, PermissionType.OAP)
 
   /**
    * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
