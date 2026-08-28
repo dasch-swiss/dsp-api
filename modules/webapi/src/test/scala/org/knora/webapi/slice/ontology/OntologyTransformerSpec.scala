@@ -10,7 +10,6 @@ import org.apache.jena.riot.Lang
 import org.junit.runner.RunWith
 import zio.Exit
 import zio.NonEmptyChunk
-import zio.Task
 import zio.ULayer
 import zio.ZIO
 import zio.ZLayer
@@ -25,7 +24,6 @@ import scala.jdk.CollectionConverters.*
 
 import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -47,6 +45,7 @@ import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class OntologyTransformerSpec extends ZIOSpecDefault {
@@ -879,16 +878,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     GetMappingResponseV2(StandoffMappingIri.StandardMapping, standardMapping, standardMappingEntities)
 
   private val standoffMappingServiceStub: ULayer[StandoffMappingService] =
-    ZLayer.succeed(new StandoffMappingService {
-      override def getMappingV2(mappingIri: StandoffMappingIri): Task[GetMappingResponseV2] =
-        ZIO.succeed(standardMappingResponse)
-      override def getXSLTransformation(xslTransformationIri: IRI): Task[String] =
-        ZIO.die(new NotImplementedError("getXSLTransformation is not used in OntologyTransformerSpec"))
-      override def getStandoffEntitiesFromMappingV2(
-        mappingXMLtoStandoff: MappingXMLtoStandoff,
-      ): Task[StandoffEntityInfoGetResponseV2] =
-        ZIO.die(new NotImplementedError("getStandoffEntitiesFromMappingV2 is not used in OntologyTransformerSpec"))
-    })
+    StandoffMappingServiceInMemory.layer(StandoffMappingIri.StandardMapping -> standardMappingResponse)
 
   private val standardMappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
@@ -1044,6 +1034,18 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     test("a minted standoff-tag IRI is not classified as a ValueIri (D4 collision guard)") {
       assertTrue(ValueIri.from(s"$valueIri/standoff/0").isLeft)
     },
+    test("rejects a rich-text TextValue that has no incoming edge") {
+      assertRejected(orphanTextValueJsonLd, "must have exactly one incoming edge")
+    },
+    test("leaves a TextValue with neither valueHasString nor textValueAsXml untouched by the standoff pass") {
+      for {
+        model <- transformStage2Model(bareTextValueJsonLd)
+      } yield assertTrue(
+        objectsOf(model, valueIri.value, KnoraBase.ValueHasStandoff).isEmpty,
+        objectsOf(model, valueIri.value, KnoraBase.ValueHasMapping).isEmpty,
+        objectsOf(model, valueIri.value, KnoraBase.HasTextValueType) == List(KnoraBase.UnformattedText),
+      )
+    },
   )
 
   // ---- Standoff-link (salsah-link) fixtures + model-query helpers ----
@@ -1104,6 +1106,27 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
        |    "${onto}testRichtext": { "@id": "$valueIri" },
        |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" } }
        |]""".stripMargin
+
+  /** A payload whose sole node is the value itself — a rich-text TextValue with no resource referencing it. */
+  private def orphanTextValueJsonLd =
+    s"""
+       |[{
+       |  "@id": "$valueIri",
+       |  "@type": "${knoraApi}TextValue",
+       |  "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$simpleRichtextXml" },
+       |  "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" }
+       |}]""".stripMargin
+
+  /** A resource carrying a TextValue with neither `valueHasString` nor `textValueAsXml` (structurally incomplete). */
+  private def bareTextValueJsonLd =
+    s"""
+       |[{
+       |  "@id": "$resourceIri",
+       |  "@type": "${onto}Example",
+       |  "rdfs:label": "test",
+       |  "${onto}testRichtext": { "@id": "$valueIri", "@type": "${knoraApi}TextValue" },
+       |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+       |}]""".stripMargin
 
   private def transformStage2Model(jsonLd: String) =
     ZIO.scoped {
