@@ -130,6 +130,7 @@ final class OntologyTransformer(
       _    <- ZIO.attempt(addTextValueType(model))
       _    <- ZIO.attempt(convertDateValues(model))
       _    <- ZIO.attempt(convertLinkValues(model))
+      _    <- ZIO.attempt(convertGeomValues(model))
       _    <- convertRichtextValues(model, now)
       _    <- ZIO.attempt(addValueHasString(model))
       kb   <- tempFile("onto-transformer-kb-", ".nq")
@@ -164,7 +165,7 @@ final class OntologyTransformer(
     } yield file
 
   /**
-   * Step 1 — synthesise the cardinality-1 `knora-base` metadata on every resource. Resources are identified by IRI
+   * Synthesise the cardinality-1 `knora-base` metadata on every resource. Resources are identified by IRI
    * shape ([[ResourceIri.from]] succeeds); value nodes carry an extra `/values/` segment and are skipped here.
    *
    * `isMainResource` is intentionally not emitted: `knora-base.ttl` documents it as a SPARQL-CONSTRUCT artifact that is
@@ -195,7 +196,7 @@ final class OntologyTransformer(
   }
 
   /**
-   * Step 2 — synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
+   * Synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
    * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
    * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
    */
@@ -256,7 +257,7 @@ final class OntologyTransformer(
   }
 
   /**
-   * Step 3 — collapse the v2 `dateValueHas{Calendar,Start*,End*}` properties of every `DateValue` into the
+   * Collapse the v2 `dateValueHas{Calendar,Start*,End*}` properties of every `DateValue` into the
    * `knora-base` JDN form: `valueHasCalendar`, `valueHasStart/EndJDN`, `valueHasStart/EndPrecision`, plus a
    * `valueHasString` rendering of the date range. Eras are not stored in `knora-base`; they only feed the JDN math.
    * JDN computation and the date-range string are delegated to [[CalendarDateRangeV2]].
@@ -341,7 +342,7 @@ final class OntologyTransformer(
   }
 
   /**
-   * Step 4 — reify every `LinkValue` as an `rdf:Statement` and add the direct-link triple, mirroring
+   * Reify every `LinkValue` as an `rdf:Statement` and add the direct-link triple, mirroring
    * `ResourcesRepoLive.buildLinkValuePatterns`. The link property is found from the unique `<resource> <linkProp>
    * <value>` edge; the direct property is the link property without its `Value` suffix. The `linkValueHasTargetIri`
    * is replaced by `rdf:subject`/`rdf:predicate`/`rdf:object` plus `valueHasRefCount` (always 1 for an explicit user
@@ -387,7 +388,7 @@ final class OntologyTransformer(
   }
 
   /**
-   * Step 5 — convert every rich-text `TextValue` (one carrying `textValueAsXml`) to `knora-base` standoff, reusing
+   * Convert every rich-text `TextValue` (one carrying `textValueAsXml`) to `knora-base` standoff, reusing
    * `StandoffTagUtilV2.convertXMLtoStandoffTagV2` and the standard mapping exactly as the resource-create path does.
    * Emits the standoff-tag nodes, `valueHasStandoff`, `valueHasMaxStandoffStartIndex` and `valueHasMapping`, sets
    * `valueHasString` to the plain-text projection and drops `textValueAsXml`. The naive-renamed
@@ -633,15 +634,45 @@ final class OntologyTransformer(
     PermissionUtilADM.formatPermissionADMs(PermissionUtilADM.standoffLinkValuePermissions, PermissionType.OAP)
 
   /**
-   * Step 2 (`valueHasString`) — derive the plain-text `knora-base:valueHasString` from each value's content. Scalar
-   * values use the lexical form of their content literal; `ListValue` falls back to the list-node IRI. `TextValue`
-   * already carries `valueHasString` from the stage-1 rename and is left untouched. `DateValue` (step 3), `LinkValue`
-   * (step 4), rich text (step 5) and file values (step 6) are handled where those structures are built.
+   * Renames the geometry predicate produced by stage 1 onto `knora-base:valueHasGeometry`. The correspondence table
+   * has no `geometryValueAsGeometry` entry, so stage 1 falls back to a local-name-preserving rewrite and emits the
+   * non-existent `knora-base#geometryValueAsGeometry`; this pass moves the literal onto the real property. It must run
+   * after `addValueMetadata` and before `addValueHasString`, which derives `valueHasString` from the renamed predicate.
+   * The geometry JSON literal is carried over verbatim; its well-formedness is validated at read time, not here.
+   */
+  private def convertGeomValues(model: Model): Unit = {
+    val rdfType          = model.createProperty(Rdf.Type)
+    val geomValue        = KnoraBase.GeomValue
+    val src              = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "geometryValueAsGeometry")
+    val valueHasGeometry = model.createProperty(KnoraBase.ValueHasGeometry)
+
+    val geomValues = model.listSubjects().asScala.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType)).map(_.getObject).exists(n => n.isURIResource && n.asResource.getURI == geomValue)
+    }
+
+    geomValues.foreach { v =>
+      Option(v.getProperty(src)).map(_.getObject).foreach { obj =>
+        v.removeAll(src)
+        v.addProperty(valueHasGeometry, obj)
+      }
+    }
+  }
+
+  /**
+   * Derive the plain-text `knora-base:valueHasString` from each value's content. Scalar values use the lexical form
+   * of their content literal; `ListValue` falls back to the list-node IRI, `RegionPreviewValue` to the region IRI,
+   * and `IntervalValue` composes its two decimal bounds as `"$start - $end"`. `TextValue` (from the stage-1 rename),
+   * `DateValue` (from `convertDateValues`) and `LinkValue` (from `convertLinkValues`) already carry `valueHasString`
+   * and are left untouched; any other value type is left without one.
    */
   private def addValueHasString(model: Model): Unit = {
-    val rdfType          = model.createProperty(Rdf.Type)
-    val valueHasString   = model.createProperty(KnoraBase.ValueHasString)
-    val valueHasListNode = model.createProperty(KnoraBase.ValueHasListNode)
+    val rdfType               = model.createProperty(Rdf.Type)
+    val valueHasString        = model.createProperty(KnoraBase.ValueHasString)
+    val valueHasListNode      = model.createProperty(KnoraBase.ValueHasListNode)
+    val isRegionPreviewOf     = model.createProperty(KnoraBase.IsRegionPreviewOf)
+    val valueHasIntervalStart = model.createProperty(KnoraBase.ValueHasIntervalStart)
+    val valueHasIntervalEnd   = model.createProperty(KnoraBase.ValueHasIntervalEnd)
 
     val literalContent: Map[String, Property] = Map(
       KnoraBase.BooleanValue -> KnoraBase.ValueHasBoolean,
@@ -651,6 +682,7 @@ final class OntologyTransformer(
       KnoraBase.UriValue     -> KnoraBase.ValueHasUri,
       KnoraBase.GeonameValue -> KnoraBase.ValueHasGeonameCode,
       KnoraBase.TimeValue    -> KnoraBase.ValueHasTimeStamp,
+      KnoraBase.GeomValue    -> KnoraBase.ValueHasGeometry,
     ).map { case (cls, prop) => cls -> model.createProperty(prop) }
 
     def iriOf(v: Resource, p: Property): Option[String] =
@@ -666,7 +698,13 @@ final class OntologyTransformer(
         val string = typeOf(v).flatMap {
           case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
           case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
-          case _                                   => None
+          case KnoraBase.RegionPreviewValue        => iriOf(v, isRegionPreviewOf)
+          case KnoraBase.IntervalValue             =>
+            for {
+              start <- lexicalOf(v, valueHasIntervalStart)
+              end   <- lexicalOf(v, valueHasIntervalEnd)
+            } yield s"$start - $end"
+          case _ => None
         }
         string.foreach(v.addProperty(valueHasString, _))
       }
