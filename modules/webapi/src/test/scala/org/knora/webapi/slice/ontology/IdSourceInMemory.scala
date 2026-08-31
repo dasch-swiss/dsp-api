@@ -20,10 +20,10 @@ import org.knora.webapi.slice.common.ValueIri
  */
 final class IdSourceInMemory(linkCounter: Ref[Int], tagCounter: Ref[Int]) extends IdSource {
 
-  override def freshLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri] =
+  override def makeLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri] =
     linkCounter.getAndUpdate(_ + 1).map(n => ValueIri.unsafeFrom(s"${resourceIri.value}/values/$n"))
 
-  override def freshStandoffTagUuid: UIO[UUID] =
+  override def makeStandoffTagUuid: UIO[UUID] =
     tagCounter.getAndUpdate(_ + 1).map(n => new UUID(0L, n.toLong))
 }
 

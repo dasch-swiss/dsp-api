@@ -14,6 +14,8 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoService
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
@@ -25,9 +27,10 @@ object OntologyModule { self =>
 
   type Dependencies = IriConverter & IriService & StringFormatter & TriplestoreService
 
-  // Note: OntologyTransformer lives in this package but is intentionally NOT part of this module. It depends on
-  // StandoffMappingService, which transitively needs the OntologyCache this module provides, so bundling it here would
-  // form a layer cycle. It is wired directly in core/LayersLive instead.
+  // This module exposes StandoffEntityInfoService: a lean, OntologyCache-only standoff lookup extracted from
+  // OntologyResponderV2. Standoff callers (StandoffMappingService, StandoffTagUtilV2) depend on it instead of the full
+  // responder, which keeps the layer graph acyclic. StandoffMappingService and OntologyTransformer belong to other
+  // slices and stay wired in core/LayersLive.
   type Provided =
     // format: off
     CardinalityService &
@@ -35,11 +38,13 @@ object OntologyModule { self =>
     OntologyCacheHelpers &
     OntologyRepo &
     OntologyTriplestoreHelpers &
+    StandoffEntityInfoService &
     ValueRepo
     // format: on
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     (OntologyCacheLive.layer ++ PredicateRepositoryLive.layer ++ ValueRepo.layer) >+>
       OntologyRepoLive.layer >+>
-      (CardinalityService.layer ++ OntologyCacheHelpers.layer ++ OntologyTriplestoreHelpers.layer)
+      (CardinalityService.layer ++ OntologyCacheHelpers.layer ++ OntologyTriplestoreHelpers.layer ++
+        StandoffEntityInfoServiceLive.layer)
 }

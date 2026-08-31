@@ -442,7 +442,7 @@ final class OntologyTransformer(
       xml <- ZIO.attempt(requireTextValueAsXml(model, v))
       tws <-
         ZIO.attempt(StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mapping, acceptStandoffLinksToClientIDs = false))
-      tags  <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.freshStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
+      tags  <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.makeStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
       owner <- ZIO.attempt(owningResource(model, v))
       _     <- ZIO.attempt(emitStandoff(model, v, tws.text, tags))
     } yield (owner, StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tags).toSet)
@@ -579,7 +579,7 @@ final class OntologyTransformer(
       ZIO.foreachDiscard(counts.keys.toList.sorted) { target =>
         for {
           resourceIri  <- ZIO.fromEither(ResourceIri.from(resource.getURI)).mapError(new IllegalArgumentException(_))
-          linkValueIri <- idSource.freshLinkValueIri(resourceIri)
+          linkValueIri <- idSource.makeLinkValueIri(resourceIri)
           _            <- ZIO.attempt(emitStandoffLinkValue(model, resource, target, counts(target), linkValueIri, now))
         } yield ()
       }

@@ -129,8 +129,9 @@ object LayersLive { self =>
       ListsResponder.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
-      // Wired here, not inside OntologyModule: OntologyTransformer now needs StandoffMappingService, which
-      // transitively needs the OntologyCache that OntologyModule provides — bundling it there would form a layer cycle.
+      // OntologyTransformer belongs to the ontology slice but depends on StandoffMappingService (standoff slice), so it
+      // is wired here rather than inside OntologyModule. No layer cycle: standoff services depend on the lean
+      // StandoffEntityInfoService, not on OntologyResponderV2.
       OntologyTransformer.layer,
       otelLayer,
       PermissionUtilADMLive.layer,

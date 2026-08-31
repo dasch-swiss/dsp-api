@@ -24,8 +24,8 @@ class IdSourceInMemorySpec extends ZIOSpecDefault {
   override def spec = suite("IdSourceInMemory")(
     test("mints sequential link-value IRIs whose value id becomes valueHasUUID") {
       for {
-        a <- idSource(_.freshLinkValueIri(resource))
-        b <- idSource(_.freshLinkValueIri(resource))
+        a <- idSource(_.makeLinkValueIri(resource))
+        b <- idSource(_.makeLinkValueIri(resource))
       } yield assertTrue(
         a.value == s"${resource.value}/values/1",
         b.value == s"${resource.value}/values/2",
@@ -34,9 +34,9 @@ class IdSourceInMemorySpec extends ZIOSpecDefault {
     },
     test("mints sequential tag UUIDs on a counter independent of the link counter") {
       for {
-        _  <- idSource(_.freshLinkValueIri(resource))
-        u1 <- idSource(_.freshStandoffTagUuid)
-        u2 <- idSource(_.freshStandoffTagUuid)
+        _  <- idSource(_.makeLinkValueIri(resource))
+        u1 <- idSource(_.makeStandoffTagUuid)
+        u2 <- idSource(_.makeStandoffTagUuid)
       } yield assertTrue(u1 == new UUID(0L, 1L), u2 == new UUID(0L, 2L))
     },
   ).provide(IdSourceInMemory.layer)

@@ -6,7 +6,9 @@
 package org.knora.webapi.slice.ontology
 
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang
+import org.apache.jena.update.UpdateAction
 import org.junit.runner.RunWith
 import zio.Exit
 import zio.NonEmptyChunk
@@ -30,10 +32,13 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
@@ -44,6 +49,7 @@ import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceInMemory
 
@@ -1302,6 +1308,68 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  // ---- Cross-emitter standoff equivalence ----
+  // Checks that the import transformer's standoff RDF matches the canonical create-path emission
+  // (InsertValueQueryBuilder.buildStandoffPatterns) for the same tags. standoffTagHasUUID is projected out: the
+  // transformer mints a fresh UUID, while the create path keeps the parse-time UUID.
+
+  /** Builds the canonical standoff RDF for `rawXml` through the create-path emitter, into a fresh Jena model. */
+  private def canonicalStandoffModel(rawXml: String): Model = {
+    val tws =
+      StandoffTagUtilV2.convertXMLtoStandoffTagV2(
+        rawXml,
+        standardMappingResponse,
+        acceptStandoffLinksToClientIDs = false,
+      )
+    val textValue = TextValueContentV2(
+      ontologySchema = InternalSchema,
+      maybeValueHasString = Some(tws.text),
+      textValueType = TextValueType.FormattedText,
+      standoff = tws.standoffTagV2,
+      mappingIri = Some(StandoffMappingIri.StandardMapping),
+    )
+    val patterns =
+      InsertValueQueryBuilder.buildStandoffPatterns(
+        org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri(valueIri.value),
+        textValue,
+      )
+    val insertData = patterns.map(_.getQueryString).mkString("INSERT DATA {\n", "\n", "\n}")
+    val model      = ModelFactory.createDefaultModel()
+    UpdateAction.parseExecute(insertData, model)
+    model
+  }
+
+  /** Keeps only the standoff triples: the value's `valueHasStandoff` edges and its standoff-node subjects. */
+  private def standoffSubgraph(model: Model): Model = {
+    val out              = ModelFactory.createDefaultModel()
+    val valueHasStandoff = model.createProperty(KnoraBase.ValueHasStandoff)
+    val standoffPrefix   = s"${valueIri.value}/standoff/"
+    model.listStatements().asScala.foreach { st =>
+      val subject = st.getSubject
+      val keep    = st.getPredicate == valueHasStandoff ||
+        (subject.isURIResource && subject.getURI.startsWith(standoffPrefix))
+      if (keep) { val _ = out.add(st) }
+    }
+    out
+  }
+
+  private def dropStandoffUuid(model: Model): Model = {
+    val _ = model.removeAll(null, model.createProperty(KnoraBase.StandoffTagHasUUID), null)
+    model
+  }
+
+  private val standoffEmissionEquivalence = suite("Stage 2 — standoff RDF equivalence with the create path")(
+    test("transformer standoff RDF is isomorphic to InsertValueQueryBuilder for nested formatting") {
+      val innerXml = "<p>text <strong>bold</strong></p>"
+      val rawXml   = s"""<?xml version="1.0" encoding="UTF-8"?><text>$innerXml</text>"""
+      for {
+        model   <- transformStage2Model(richtextJsonLd(richtextXml(innerXml)))
+        actual   = dropStandoffUuid(standoffSubgraph(model))
+        expected = dropStandoffUuid(canonicalStandoffModel(rawXml))
+      } yield assertTrue(actual.isIsomorphicWith(expected))
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
@@ -1315,6 +1383,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     textValueTypeStage2,
     standoffStage2,
     standoffLinkStage2,
+    standoffEmissionEquivalence,
   ).provide(
     OntologyTransformer.layer,
     StringFormatter.test,

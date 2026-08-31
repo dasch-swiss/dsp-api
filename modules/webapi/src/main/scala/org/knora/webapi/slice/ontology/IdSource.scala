@@ -17,30 +17,29 @@ import org.knora.webapi.slice.common.ValueIri
  * the system `hasStandoffLinkTo` LinkValues minted for salsah-links, and the per-standoff-tag UUIDs. Standoff-tag IRIs
  * are deterministic (`<valueIri>/standoff/<startIndex>`) and are minted directly, not through this service.
  *
- * The production layer delegates to the existing random generators. A deterministic test double lives at
- * `IdSourceInMemory` so `Model.isIsomorphicWith` assertions can pin exact identifiers.
+ * The production layer mints through ZIO's `Random`. A deterministic test double lives at `IdSourceInMemory` so
+ * `Model.isIsomorphicWith` assertions can pin exact identifiers.
  */
 trait IdSource {
 
   /** A fresh IRI for a standoff-link `LinkValue` on the given resource. Its value id becomes `valueHasUUID`. */
-  def freshLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri]
+  def makeLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri]
 
   /** A fresh UUID for a standoff tag, emitted as `standoffTagHasUUID` after base64 encoding. */
-  def freshStandoffTagUuid: UIO[UUID]
+  def makeStandoffTagUuid: UIO[UUID]
 }
 
 final class IdSourceLive extends IdSource {
 
-  // ValueIri.makeNew and UUID.randomUUID are impure, so suspend each call in ZIO.succeed rather than computing once:
-  // a hoisted value would reuse the same id on every mint.
+  // Mint through ZIO's Random rather than UUID.randomUUID, so a seeded Random makes the output reproducible in tests.
   //
   // No triplestore uniqueness check (unlike the create path's IriService.makeUnusedIri): import builds a fresh graph
   // from scratch, so a random 128-bit UUID cannot collide with an existing value IRI. Deliberate, not an oversight.
-  override def freshLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri] =
-    ZIO.succeed(ValueIri.makeNew(resourceIri))
+  override def makeLinkValueIri(resourceIri: ResourceIri): UIO[ValueIri] =
+    Random.nextUUID.map(uuid => ValueIri.from(resourceIri, uuid))
 
-  override def freshStandoffTagUuid: UIO[UUID] =
-    ZIO.succeed(UUID.randomUUID())
+  override def makeStandoffTagUuid: UIO[UUID] =
+    Random.nextUUID
 }
 
 object IdSourceLive {
