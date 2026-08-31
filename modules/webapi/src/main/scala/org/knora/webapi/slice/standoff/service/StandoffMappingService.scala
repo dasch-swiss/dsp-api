@@ -20,7 +20,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.StandoffMappingElementIri
@@ -29,6 +28,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoService
 import org.knora.webapi.slice.resources.repo.GetMappingQuery
 import org.knora.webapi.slice.resources.repo.model.MappingElement
 import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
@@ -74,7 +74,7 @@ trait StandoffMappingService {
 final class StandoffMappingServiceLive(
   appConfig: AppConfig,
   triplestore: TriplestoreService,
-  ontologyResponder: OntologyResponderV2,
+  standoffEntityInfoService: StandoffEntityInfoService,
   sipiService: SipiService,
   projectService: KnoraProjectService,
   xsltCache: EhCache[String, String],
@@ -250,7 +250,7 @@ final class StandoffMappingServiceLive(
       )
 
     for {
-      standoffClassEntities <- ontologyResponder.getStandoffEntityInfoResponseV2(
+      standoffClassEntities <- standoffEntityInfoService.getStandoffEntityInfoResponseV2(
                                  standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
                                )
 
@@ -267,7 +267,7 @@ final class StandoffMappingServiceLive(
             acc ++ standoffClassEntity.allCardinalities.keySet
         }
 
-      standoffPropertyEntities <- ontologyResponder.getStandoffEntityInfoResponseV2(
+      standoffPropertyEntities <- standoffEntityInfoService.getStandoffEntityInfoResponseV2(
                                     standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
                                   )
 
@@ -451,7 +451,7 @@ object StandoffMappingServiceLive {
       )
 
   val layer: URLayer[
-    AppConfig & TriplestoreService & OntologyResponderV2 & SipiService & KnoraProjectService & CacheManager,
+    AppConfig & TriplestoreService & StandoffEntityInfoService & SipiService & KnoraProjectService & CacheManager,
     StandoffMappingService,
   ] =
     cachesLayer >>> ZLayer.derive[StandoffMappingServiceLive]

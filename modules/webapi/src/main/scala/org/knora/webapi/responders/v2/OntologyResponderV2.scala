@@ -17,7 +17,6 @@ import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
@@ -101,71 +100,6 @@ final class OntologyResponderV2(
   knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
-
-  /**
-   * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
-   *
-   * @param standoffClassIris    the IRIs of the resource entities to be queried.
-   * @param standoffPropertyIris the IRIs of the property entities to be queried.
-   * @return a [[StandoffEntityInfoGetResponseV2]].
-   */
-  def getStandoffEntityInfoResponseV2(
-    standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
-    standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
-  ): Task[StandoffEntityInfoGetResponseV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-
-      entitiesInWrongSchema =
-        (standoffClassIris ++ standoffPropertyIris).filter(_.getOntologySchema.contains(ApiV2Simple))
-
-      _ <- ZIO.fail {
-             NotFoundException(
-               s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}",
-             )
-           }.when(entitiesInWrongSchema.nonEmpty)
-
-      classIrisForCache    = standoffClassIris.map(_.toOntologySchema(InternalSchema))
-      propertyIrisForCache = standoffPropertyIris.map(_.toOntologySchema(InternalSchema))
-
-      classOntologies =
-        cacheData.ontologies.view.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
-      propertyOntologies =
-        cacheData.ontologies.view.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
-
-      classDefsAvailable = classOntologies.flatMap { ontology =>
-                             ontology.classes.filter { case (classIri, classDef) =>
-                               classDef.isStandoffClass && standoffClassIris.contains(classIri)
-                             }
-                           }.toMap
-
-      propertyDefsAvailable = propertyOntologies.flatMap { ontology =>
-                                ontology.properties.filter { case (propertyIri, _) =>
-                                  standoffPropertyIris.contains(propertyIri) && cacheData.standoffProperties.contains(
-                                    propertyIri,
-                                  )
-                                }
-                              }.toMap
-
-      missingClassDefs    = classIrisForCache -- classDefsAvailable.keySet
-      missingPropertyDefs = propertyIrisForCache -- propertyDefsAvailable.keySet
-
-      _ <- ZIO.fail {
-             NotFoundException(s"Some requested standoff classes were not found: ${missingClassDefs.mkString(", ")}")
-           }.when(missingClassDefs.nonEmpty)
-
-      _ <- ZIO.fail {
-             NotFoundException(
-               s"Some requested standoff properties were not found: ${missingPropertyDefs.mkString(", ")}",
-             )
-           }.when(missingPropertyDefs.nonEmpty)
-
-      response =
-        StandoffEntityInfoGetResponseV2(
-          standoffClassInfoMap = new ErrorHandlingMap(classDefsAvailable, key => s"Resource class $key not found"),
-          standoffPropertyInfoMap = new ErrorHandlingMap(propertyDefsAvailable, key => s"Property $key not found"),
-        )
-    } yield response
 
   /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.

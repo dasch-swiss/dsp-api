@@ -28,11 +28,11 @@ import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoService
 
 trait StandoffTagUtilV2 {
 
@@ -59,7 +59,7 @@ trait StandoffTagUtilV2 {
   ): Task[Vector[StandoffTagV2]]
 }
 
-final class StandoffTagUtilV2Live(ontologyResponder: OntologyResponderV2)(implicit
+final class StandoffTagUtilV2Live(standoffEntityInfoService: StandoffEntityInfoService)(implicit
   stringFormatter: StringFormatter,
 ) extends StandoffTagUtilV2 {
 
@@ -103,7 +103,7 @@ final class StandoffTagUtilV2Live(ontologyResponder: OntologyResponderV2)(implic
     }.toSet
 
     for {
-      standoffEntities <- ontologyResponder.getStandoffEntityInfoResponseV2(
+      standoffEntities <- standoffEntityInfoService.getStandoffEntityInfoResponseV2(
                             standoffClassIris = standoffClassIris,
                             standoffPropertyIris = standoffPropertyIris,
                           )

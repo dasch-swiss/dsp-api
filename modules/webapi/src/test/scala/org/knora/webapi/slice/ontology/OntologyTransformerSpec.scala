@@ -5,45 +5,68 @@
 
 package org.knora.webapi.slice.ontology
 
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.Lang
+import org.apache.jena.update.UpdateAction
 import org.junit.runner.RunWith
 import zio.Exit
 import zio.NonEmptyChunk
+import zio.ULayer
 import zio.ZIO
+import zio.ZLayer
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
+import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.TestAppConfig
+import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.DatasetOps
 import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
+import org.knora.webapi.slice.standoff.service.StandoffMappingService
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class OntologyTransformerSpec extends ZIOSpecDefault {
 
   private val transformer = ZIO.serviceWithZIO[OntologyTransformer]
 
-  private val shortcode   = Shortcode.unsafeFrom("9999")
-  private val resourceIri = ResourceIri.makeNew(shortcode)
-  private val valueIri    = ValueIri.makeNew(resourceIri)
+  private val shortcode    = Shortcode.unsafeFrom("9999")
+  private val resourceIri  = ResourceIri.makeNew(shortcode)
+  private val resourceIri2 = ResourceIri.makeNew(shortcode)
+  private val valueIri     = ValueIri.makeNew(resourceIri)
 
-  private val onto     = "http://0.0.0.0:3333/ontology/9999/onto/v2#"
-  private val knoraApi = "http://api.knora.org/ontology/knora-api/v2#"
-  private val xsd      = "http://www.w3.org/2001/XMLSchema#"
+  private val onto         = "http://0.0.0.0:3333/ontology/9999/onto/v2#"
+  private val internalOnto = "http://www.knora.org/ontology/9999/onto#"
+  private val knoraApi     = "http://api.knora.org/ontology/knora-api/v2#"
+  private val xsd          = "http://www.w3.org/2001/XMLSchema#"
 
   private def writeTempFile(suffix: String, content: String): ZIO[Any, Throwable, Path] =
     ZIO.attemptBlocking {
@@ -872,6 +895,479 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val textValueTypeStage2 = suite("Stage 2 — hasTextValueType")(
+    test("tags a simple (non-XML) TextValue as UnformattedText") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testSimpleText",
+          s"${knoraApi}TextValue",
+          s""""${knoraApi}valueAsString": { "@type": "${xsd}string", "@value": "Text" }""",
+        ),
+        expectedStage2SingleValue(
+          "testSimpleText",
+          "TextValue",
+          "knora-base:hasTextValueType knora-base:UnformattedText",
+          "Text",
+        ),
+      )
+    },
+  )
+
+  // ---- Standoff mapping stub (D1): a hermetic standard mapping covering the tags the standoff fixtures use ----
+
+  private val standoffPrefix  = "http://www.knora.org/ontology/standoff#"
+  private val standoffRootTag = standoffPrefix + "StandoffRootTag"
+  private val standoffParaTag = standoffPrefix + "StandoffParagraphTag"
+  private val standoffBoldTag = standoffPrefix + "StandoffBoldTag"
+  private val standoffLinkTag = KnoraBase.StandoffLinkTag
+
+  private def xmlTag(name: String, cls: String, sep: Boolean, dataType: Option[XMLStandoffDataTypeClass] = None) =
+    XMLTag(name, XMLTagToStandoffClass(cls, Map.empty, dataType), separatorRequired = sep)
+
+  private val standardMapping: MappingXMLtoStandoff =
+    MappingXMLtoStandoff(
+      namespace = Map(
+        "noNamespace" -> Map(
+          "text"   -> Map("noClass" -> xmlTag("text", standoffRootTag, sep = false)),
+          "p"      -> Map("noClass" -> xmlTag("p", standoffParaTag, sep = true)),
+          "strong" -> Map("noClass" -> xmlTag("strong", standoffBoldTag, sep = false)),
+          "a"      -> Map(
+            "salsah-link" -> xmlTag(
+              "a",
+              standoffLinkTag,
+              sep = false,
+              Some(XMLStandoffDataTypeClass(StandoffDataTypeClasses.StandoffLinkTag, "href")),
+            ),
+          ),
+        ),
+      ),
+      defaultXSLTransformation = None,
+    )
+
+  private def standoffClassInfo(iri: String, dataType: Option[StandoffDataTypeClasses.Value]) = {
+    val smartIri = StringFormatter.getInitializedTestInstance.toSmartIri(iri)
+    smartIri -> ReadClassInfoV2(
+      entityInfoContent = ClassInfoContentV2(classIri = smartIri, ontologySchema = InternalSchema),
+      allBaseClasses = Seq.empty,
+      isStandoffClass = true,
+      standoffDataType = dataType,
+    )
+  }
+
+  private val standardMappingEntities: StandoffEntityInfoGetResponseV2 =
+    StandoffEntityInfoGetResponseV2(
+      standoffClassInfoMap = Map(
+        standoffClassInfo(standoffRootTag, None),
+        standoffClassInfo(standoffParaTag, None),
+        standoffClassInfo(standoffBoldTag, None),
+        standoffClassInfo(standoffLinkTag, Some(StandoffDataTypeClasses.StandoffLinkTag)),
+      ),
+      standoffPropertyInfoMap = Map.empty,
+    )
+
+  private val standardMappingResponse =
+    GetMappingResponseV2(StandoffMappingIri.StandardMapping, standardMapping, standardMappingEntities)
+
+  private val standoffMappingServiceStub: ULayer[StandoffMappingService] =
+    StandoffMappingServiceInMemory.layer(StandoffMappingIri.StandardMapping -> standardMappingResponse)
+
+  private val standardMappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+
+  /** Wraps a rich-text value: `xmlEscaped` is the XML with its double quotes already escaped for the JSON string. */
+  private def richtextJsonLd(xmlEscaped: String, mappingIri: String = standardMappingIri) =
+    resourceWithValueJsonLd(
+      s"${onto}testRichtext",
+      s"${knoraApi}TextValue",
+      s""""${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$xmlEscaped" },
+         |    "${knoraApi}textValueHasMapping": { "@id": "$mappingIri" }""".stripMargin,
+    )
+
+  private val simpleRichtextXml = "<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<text>Text</text>"
+
+  private def transformStage2Exit(jsonLd: String) =
+    ZIO.scoped {
+      for {
+        inputPath <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _         <- TestClock.setTime(knownInstant)
+        exit      <- transformer(_.toKnoraBase(inputPath, ctx)).exit
+      } yield exit
+    }
+
+  private def assertRejected(jsonLd: String, substring: String) =
+    transformStage2Exit(jsonLd).map {
+      case Exit.Failure(cause) => assertTrue(cause.failureOption.exists(_.message.contains(substring)))
+      case Exit.Success(_)     => assertTrue(false)
+    }
+
+  private val standoffStage2 = suite("Stage 2 — rich text to standoff")(
+    test("converts a rich-text value to standoff (tag nodes, valueHasStandoff, mapping, plain-text projection)") {
+      runTransformStage2(
+        richtextJsonLd(simpleRichtextXml),
+        expectedTurtle =
+          s"""
+             | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+             | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+             | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             | PREFIX standoff:   <http://www.knora.org/ontology/standoff#>
+             |
+             | <$resourceIri>
+             |     a                            onto:Example ;
+             |     rdfs:label                   "test" ;
+             |     onto:testRichtext            <$valueIri> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:isDeleted         false .
+             |
+             | <$valueIri>
+             |     a                                        knora-base:TextValue ;
+             |     knora-base:valueHasString                "Text" ;
+             |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+             |     knora-base:hasTextValueType              knora-base:FormattedText ;
+             |     knora-base:valueHasMaxStandoffStartIndex 0 ;
+             |     knora-base:valueHasStandoff              <$valueIri/standoff/0> ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
+             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
+             |     knora-base:isDeleted                     false .
+             |
+             | <$valueIri/standoff/0>
+             |     a                                  standoff:StandoffRootTag ;
+             |     knora-base:standoffTagHasStart      0 ;
+             |     knora-base:standoffTagHasEnd        4 ;
+             |     knora-base:standoffTagHasStartIndex 0 ;
+             |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
+             |""".stripMargin,
+      )
+    },
+    test("converts nested formatting to a multi-level standoff tree with resolved parent IRIs") {
+      runTransformStage2(
+        richtextJsonLd(richtextXml("<p>text <strong>bold</strong></p>")),
+        expectedTurtle =
+          s"""
+             | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+             | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+             | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             | PREFIX standoff:   <http://www.knora.org/ontology/standoff#>
+             |
+             | <$resourceIri>
+             |     a                            onto:Example ;
+             |     rdfs:label                   "test" ;
+             |     onto:testRichtext            <$valueIri> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:isDeleted         false .
+             |
+             | <$valueIri>
+             |     a                                        knora-base:TextValue ;
+             |     knora-base:valueHasString                "text bold${StringFormatter.INFORMATION_SEPARATOR_TWO}" ;
+             |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+             |     knora-base:hasTextValueType              knora-base:FormattedText ;
+             |     knora-base:valueHasMaxStandoffStartIndex 2 ;
+             |     knora-base:valueHasStandoff              <$valueIri/standoff/0>, <$valueIri/standoff/1>, <$valueIri/standoff/2> ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
+             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
+             |     knora-base:isDeleted                     false .
+             |
+             | <$valueIri/standoff/0>
+             |     a                                  standoff:StandoffRootTag ;
+             |     knora-base:standoffTagHasStart      0 ;
+             |     knora-base:standoffTagHasEnd        10 ;
+             |     knora-base:standoffTagHasStartIndex 0 ;
+             |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
+             |
+             | <$valueIri/standoff/1>
+             |     a                                    standoff:StandoffParagraphTag ;
+             |     knora-base:standoffTagHasStart       0 ;
+             |     knora-base:standoffTagHasEnd         9 ;
+             |     knora-base:standoffTagHasStartIndex  1 ;
+             |     knora-base:standoffTagHasStartParent <$valueIri/standoff/0> ;
+             |     knora-base:standoffTagHasUUID        "${UuidUtil.base64Encode(new UUID(0L, 2L))}" .
+             |
+             | <$valueIri/standoff/2>
+             |     a                                    standoff:StandoffBoldTag ;
+             |     knora-base:standoffTagHasStart       5 ;
+             |     knora-base:standoffTagHasEnd         9 ;
+             |     knora-base:standoffTagHasStartIndex  2 ;
+             |     knora-base:standoffTagHasStartParent <$valueIri/standoff/1> ;
+             |     knora-base:standoffTagHasUUID        "${UuidUtil.base64Encode(new UUID(0L, 3L))}" .
+             |""".stripMargin,
+      )
+    },
+    test("rejects a text value referencing a non-standard mapping") {
+      assertRejected(
+        richtextJsonLd(simpleRichtextXml, mappingIri = "http://rdfh.ch/standoff/mappings/CustomMapping"),
+        "custom mapping",
+      )
+    },
+    test("rejects malformed XML") {
+      assertRejected(richtextJsonLd("not valid xml <<<"), "Failed to restructure")
+    },
+    test("rejects a salsah-link whose href is not a valid resource IRI") {
+      assertRejected(
+        richtextJsonLd(richtextXml(salsahLink("not-a-valid-iri", "link"))),
+        "Invalid standoff resource reference",
+      )
+    },
+    test("rejects a rich-text TextValue that has more than one incoming edge") {
+      assertRejected(twoEdgeTextValueJsonLd, "must have exactly one incoming edge")
+    },
+    test("a minted standoff-tag IRI is not classified as a ValueIri (D4 collision guard)") {
+      assertTrue(ValueIri.from(s"$valueIri/standoff/0").isLeft)
+    },
+    test("rejects a rich-text TextValue that has no incoming edge") {
+      assertRejected(orphanTextValueJsonLd, "must have exactly one incoming edge")
+    },
+    test("leaves a TextValue with neither valueHasString nor textValueAsXml untouched by the standoff pass") {
+      for {
+        model <- transformStage2Model(bareTextValueJsonLd)
+      } yield assertTrue(
+        objectsOf(model, valueIri.value, KnoraBase.ValueHasStandoff).isEmpty,
+        objectsOf(model, valueIri.value, KnoraBase.ValueHasMapping).isEmpty,
+        objectsOf(model, valueIri.value, KnoraBase.HasTextValueType) == List(KnoraBase.UnformattedText),
+      )
+    },
+  )
+
+  // ---- Standoff-link (salsah-link) fixtures + model-query helpers ----
+
+  private val linkTarget  = "http://rdfh.ch/9999/CV9Lea7hSESPWPuILr8dyw"
+  private val linkTargetA = "http://rdfh.ch/9999/AAAAAAAAAAAAAAAAAAAAAA"
+  private val linkTargetB = "http://rdfh.ch/9999/BBBBBBBBBBBBBBBBBBBBBB"
+
+  private def salsahLink(target: String, label: String) =
+    s"<a class=\\\"salsah-link\\\" href=\\\"$target\\\">$label</a>"
+  private def richtextXml(body: String) = s"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><text>$body</text>"
+
+  /** A one-resource payload with two rich-text values on `onto:testRichtext`. */
+  private def twoRichtextJsonLd(xml1: String, xml2: String) =
+    s"""
+       |[{
+       |  "@id": "$resourceIri",
+       |  "@type": "${onto}Example",
+       |  "rdfs:label": "test",
+       |  "${onto}testRichtext": [
+       |    { "@id": "$valueIri",  "@type": "${knoraApi}TextValue",
+       |      "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$xml1" },
+       |      "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } },
+       |    { "@id": "$valueIri2", "@type": "${knoraApi}TextValue",
+       |      "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$xml2" },
+       |      "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } }
+       |  ],
+       |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+       |}]""".stripMargin
+
+  /** A one-resource payload with a user LinkValue and a rich-text value carrying a salsah-link, both to `target`. */
+  private def userLinkAndRichtextJsonLd(target: String) =
+    s"""
+       |[{
+       |  "@id": "$resourceIri",
+       |  "@type": "${onto}Example",
+       |  "rdfs:label": "test",
+       |  "${onto}testHasLinkToValue": { "@id": "$valueIri2", "@type": "${knoraApi}LinkValue",
+       |    "${knoraApi}linkValueHasTargetIri": { "@id": "$target" } },
+       |  "${onto}testRichtext": { "@id": "$valueIri", "@type": "${knoraApi}TextValue",
+       |    "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "${richtextXml(
+        salsahLink(target, "link"),
+      )}" },
+       |    "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } },
+       |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+       |}]""".stripMargin
+
+  /** Two resources whose `testRichtext` both point at the same value IRI, giving that TextValue two incoming edges. */
+  private def twoEdgeTextValueJsonLd =
+    s"""
+       |[
+       |  { "@id": "$resourceIri", "@type": "${onto}Example", "rdfs:label": "test",
+       |    "${onto}testRichtext": { "@id": "$valueIri", "@type": "${knoraApi}TextValue",
+       |      "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$simpleRichtextXml" },
+       |      "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" } },
+       |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" } },
+       |  { "@id": "$resourceIri2", "@type": "${onto}Example", "rdfs:label": "test2",
+       |    "${onto}testRichtext": { "@id": "$valueIri" },
+       |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" } }
+       |]""".stripMargin
+
+  /** A payload whose sole node is the value itself — a rich-text TextValue with no resource referencing it. */
+  private def orphanTextValueJsonLd =
+    s"""
+       |[{
+       |  "@id": "$valueIri",
+       |  "@type": "${knoraApi}TextValue",
+       |  "${knoraApi}textValueAsXml": { "@type": "${xsd}string", "@value": "$simpleRichtextXml" },
+       |  "${knoraApi}textValueHasMapping": { "@id": "$standardMappingIri" }
+       |}]""".stripMargin
+
+  /** A resource carrying a TextValue with neither `valueHasString` nor `textValueAsXml` (structurally incomplete). */
+  private def bareTextValueJsonLd =
+    s"""
+       |[{
+       |  "@id": "$resourceIri",
+       |  "@type": "${onto}Example",
+       |  "rdfs:label": "test",
+       |  "${onto}testRichtext": { "@id": "$valueIri", "@type": "${knoraApi}TextValue" },
+       |  "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+       |}]""".stripMargin
+
+  private def transformStage2Model(jsonLd: String) =
+    ZIO.scoped {
+      for {
+        inputPath  <- ZIO.acquireRelease(writeTempFile(".jsonld", jsonLd).orDie)(deleteIfExists)
+        _          <- TestClock.setTime(knownInstant)
+        outputPath <- transformer(_.toKnoraBase(inputPath, ctx))
+        actualNQ   <- ZIO.attempt(new String(Files.readAllBytes(outputPath), StandardCharsets.UTF_8))
+        dataset    <- DatasetOps.from(actualNQ, Lang.NQUADS).mapError(new RuntimeException(_))
+      } yield dataset.getNamedModel(dataNamedGraph)
+    }
+
+  private def objectsOf(m: Model, subject: String, prop: String): List[String] =
+    m.listObjectsOfProperty(m.getResource(subject), m.getProperty(prop)).asScala.map(_.toString).toList
+
+  private def intProp(m: Model, subject: String, prop: String): Int =
+    m.getResource(subject).getRequiredProperty(m.getProperty(prop)).getInt
+
+  private def standoffLinkValues(m: Model): List[String] =
+    objectsOf(m, resourceIri.value, KnoraBase.HasStandoffLinkToValue)
+
+  private def linkValueForTarget(m: Model, target: String): String =
+    standoffLinkValues(m).find(lv => objectsOf(m, lv, Rdf.Object).contains(target)).get
+
+  private val standoffLinkStage2 = suite("Stage 2 — standoff-link LinkValues")(
+    test("emits a system hasStandoffLinkTo LinkValue for a salsah-link (refCount 1)") {
+      runTransformStage2(
+        richtextJsonLd(richtextXml(salsahLink(linkTarget, "link"))),
+        expectedTurtle =
+          s"""
+             | PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+             | PREFIX rdfs:        <http://www.w3.org/2000/01/rdf-schema#>
+             | PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+             | PREFIX onto:        <http://www.knora.org/ontology/9999/onto#>
+             | PREFIX knora-base:  <http://www.knora.org/ontology/knora-base#>
+             | PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             | PREFIX standoff:    <http://www.knora.org/ontology/standoff#>
+             |
+             | <$resourceIri>
+             |     a                                 onto:Example ;
+             |     rdfs:label                        "test" ;
+             |     onto:testRichtext                 <$valueIri> ;
+             |     knora-base:hasStandoffLinkTo      <$linkTarget> ;
+             |     knora-base:hasStandoffLinkToValue <$resourceIri/values/1> ;
+             |     knora-base:attachedToUser         <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToProject      <${ctx.attachedToProject.id.value}> ;
+             |     knora-base:hasPermissions         "${ctx.permissions}" ;
+             |     knora-base:creationDate           "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:isDeleted              false .
+             |
+             | <$valueIri>
+             |     a                                        knora-base:TextValue ;
+             |     knora-base:valueHasString                "link" ;
+             |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+             |     knora-base:hasTextValueType              knora-base:FormattedText ;
+             |     knora-base:valueHasMaxStandoffStartIndex 1 ;
+             |     knora-base:valueHasStandoff              <$valueIri/standoff/0>, <$valueIri/standoff/1> ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
+             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
+             |     knora-base:isDeleted                     false .
+             |
+             | <$valueIri/standoff/0>
+             |     a                                  standoff:StandoffRootTag ;
+             |     knora-base:standoffTagHasStart      0 ;
+             |     knora-base:standoffTagHasEnd        4 ;
+             |     knora-base:standoffTagHasStartIndex 0 ;
+             |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
+             |
+             | <$valueIri/standoff/1>
+             |     a                                    knora-base:StandoffLinkTag ;
+             |     knora-base:standoffTagHasStart       0 ;
+             |     knora-base:standoffTagHasEnd         4 ;
+             |     knora-base:standoffTagHasStartIndex  1 ;
+             |     knora-base:standoffTagHasStartParent <$valueIri/standoff/0> ;
+             |     knora-base:standoffTagHasUUID        "${UuidUtil.base64Encode(new UUID(0L, 2L))}" ;
+             |     knora-base:standoffTagHasLink        <$linkTarget> .
+             |
+             | <$resourceIri/values/1>
+             |     a                            knora-base:LinkValue ;
+             |     rdf:subject                  <$resourceIri> ;
+             |     rdf:predicate                knora-base:hasStandoffLinkTo ;
+             |     rdf:object                   <$linkTarget> ;
+             |     knora-base:valueHasString    "$linkTarget" ;
+             |     knora-base:valueHasRefCount  1 ;
+             |     knora-base:isDeleted         false ;
+             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
+             |     knora-base:attachedToUser    knora-admin:SystemUser ;
+             |     knora-base:hasPermissions    "CR knora-admin:SystemUser|V knora-admin:UnknownUser" ;
+             |     knora-base:valueHasUUID      "1" .
+             |""".stripMargin,
+      )
+    },
+    test("counts a target's refCount across the resource's text values") {
+      for {
+        m <- transformStage2Model(
+               twoRichtextJsonLd(richtextXml(salsahLink(linkTarget, "a")), richtextXml(salsahLink(linkTarget, "b"))),
+             )
+      } yield assertTrue(
+        standoffLinkValues(m).size == 1,
+        objectsOf(m, resourceIri.value, KnoraBase.HasStandoffLinkTo) == List(linkTarget),
+        intProp(m, standoffLinkValues(m).head, KnoraBase.ValueHasRefCount) == 2,
+      )
+    },
+    test("collapses two links to one target within a single value to a refCount of 1") {
+      for {
+        m <- transformStage2Model(
+               richtextJsonLd(richtextXml(salsahLink(linkTarget, "a") + " " + salsahLink(linkTarget, "b"))),
+             )
+      } yield assertTrue(
+        standoffLinkValues(m).size == 1,
+        intProp(m, standoffLinkValues(m).head, KnoraBase.ValueHasRefCount) == 1,
+      )
+    },
+    test("mints one LinkValue per distinct target, in sorted-by-IRI order") {
+      for {
+        m <- transformStage2Model(
+               richtextJsonLd(richtextXml(salsahLink(linkTargetB, "b") + " " + salsahLink(linkTargetA, "a"))),
+             )
+      } yield assertTrue(
+        objectsOf(m, resourceIri.value, KnoraBase.HasStandoffLinkTo).toSet == Set(linkTargetA, linkTargetB),
+        linkValueForTarget(m, linkTargetA) == s"$resourceIri/values/1",
+        linkValueForTarget(m, linkTargetB) == s"$resourceIri/values/2",
+        intProp(m, linkValueForTarget(m, linkTargetA), KnoraBase.ValueHasRefCount) == 1,
+        intProp(m, linkValueForTarget(m, linkTargetB), KnoraBase.ValueHasRefCount) == 1,
+      )
+    },
+    test("keeps a user link and a standoff link to the same target as separate LinkValues") {
+      for {
+        m <- transformStage2Model(userLinkAndRichtextJsonLd(linkTarget))
+      } yield assertTrue(
+        objectsOf(m, resourceIri.value, s"${internalOnto}testHasLinkTo") == List(linkTarget),
+        objectsOf(m, resourceIri.value, KnoraBase.HasStandoffLinkTo) == List(linkTarget),
+        standoffLinkValues(m).size == 1,
+        intProp(m, standoffLinkValues(m).head, KnoraBase.ValueHasRefCount) == 1,
+        intProp(m, valueIri2.value, KnoraBase.ValueHasRefCount) == 1,
+      )
+    },
+    test("handles a self-referential salsah-link") {
+      for {
+        m <- transformStage2Model(richtextJsonLd(richtextXml(salsahLink(resourceIri.value, "self"))))
+      } yield assertTrue(
+        objectsOf(m, resourceIri.value, KnoraBase.HasStandoffLinkTo) == List(resourceIri.value),
+        standoffLinkValues(m).size == 1,
+        intProp(m, standoffLinkValues(m).head, KnoraBase.ValueHasRefCount) == 1,
+      )
+    },
+  )
+
   private val graphHandling = suite("Stage 1 — @graph handling")(
     test("flattens @graph declarations from the payload (the target graph comes from the project)") {
       runTransform(
@@ -894,6 +1390,68 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     rdfs:label "test" .
                             |""".stripMargin,
       )
+    },
+  )
+
+  // ---- Cross-emitter standoff equivalence ----
+  // Checks that the import transformer's standoff RDF matches the canonical create-path emission
+  // (InsertValueQueryBuilder.buildStandoffPatterns) for the same tags. standoffTagHasUUID is projected out: the
+  // transformer mints a fresh UUID, while the create path keeps the parse-time UUID.
+
+  /** Builds the canonical standoff RDF for `rawXml` through the create-path emitter, into a fresh Jena model. */
+  private def canonicalStandoffModel(rawXml: String): Model = {
+    val tws =
+      StandoffTagUtilV2.convertXMLtoStandoffTagV2(
+        rawXml,
+        standardMappingResponse,
+        acceptStandoffLinksToClientIDs = false,
+      )
+    val textValue = TextValueContentV2(
+      ontologySchema = InternalSchema,
+      maybeValueHasString = Some(tws.text),
+      textValueType = TextValueType.FormattedText,
+      standoff = tws.standoffTagV2,
+      mappingIri = Some(StandoffMappingIri.StandardMapping),
+    )
+    val patterns =
+      InsertValueQueryBuilder.buildStandoffPatterns(
+        org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri(valueIri.value),
+        textValue,
+      )
+    val insertData = patterns.map(_.getQueryString).mkString("INSERT DATA {\n", "\n", "\n}")
+    val model      = ModelFactory.createDefaultModel()
+    UpdateAction.parseExecute(insertData, model)
+    model
+  }
+
+  /** Keeps only the standoff triples: the value's `valueHasStandoff` edges and its standoff-node subjects. */
+  private def standoffSubgraph(model: Model): Model = {
+    val out              = ModelFactory.createDefaultModel()
+    val valueHasStandoff = model.createProperty(KnoraBase.ValueHasStandoff)
+    val standoffPrefix   = s"${valueIri.value}/standoff/"
+    model.listStatements().asScala.foreach { st =>
+      val subject = st.getSubject
+      val keep    = st.getPredicate == valueHasStandoff ||
+        (subject.isURIResource && subject.getURI.startsWith(standoffPrefix))
+      if (keep) { val _ = out.add(st) }
+    }
+    out
+  }
+
+  private def dropStandoffUuid(model: Model): Model = {
+    val _ = model.removeAll(null, model.createProperty(KnoraBase.StandoffTagHasUUID), null)
+    model
+  }
+
+  private val standoffEmissionEquivalence = suite("Stage 2 — standoff RDF equivalence with the create path")(
+    test("transformer standoff RDF is isomorphic to InsertValueQueryBuilder for nested formatting") {
+      val innerXml = "<p>text <strong>bold</strong></p>"
+      val rawXml   = s"""<?xml version="1.0" encoding="UTF-8"?><text>$innerXml</text>"""
+      for {
+        model   <- transformStage2Model(richtextJsonLd(richtextXml(innerXml)))
+        actual   = dropStandoffUuid(standoffSubgraph(model))
+        expected = dropStandoffUuid(canonicalStandoffModel(rawXml))
+      } yield assertTrue(actual.isIsomorphicWith(expected))
     },
   )
 
@@ -1079,9 +1637,19 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     valueHasString,
     dateValuesStage2,
     linkValuesStage2,
+    textValueTypeStage2,
+    standoffStage2,
+    standoffLinkStage2,
+    standoffEmissionEquivalence,
     regionPreviewStage2,
     geomStage2,
     intervalStage2,
     dateValueRejections,
-  ).provide(OntologyTransformer.layer, StringFormatter.test, TestAppConfig.layer())
+  ).provide(
+    OntologyTransformer.layer,
+    StringFormatter.test,
+    TestAppConfig.layer(),
+    IdSourceInMemory.layer,
+    standoffMappingServiceStub,
+  )
 }

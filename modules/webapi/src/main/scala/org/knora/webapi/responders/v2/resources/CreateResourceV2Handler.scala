@@ -14,7 +14,6 @@ import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.util.*
@@ -31,9 +30,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
@@ -888,14 +885,8 @@ final class CreateResourceV2Handler(
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
    */
-  private lazy val standoffLinkValuePermissions: String = {
-    val permissions: Set[PermissionADM] = Set(
-      PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraUserRepo.builtIn.SystemUser.id.value),
-      PermissionADM.from(Permission.ObjectAccess.View, KnoraGroupRepo.builtIn.UnknownUser.id.value),
-    )
-
-    PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
-  }
+  private lazy val standoffLinkValuePermissions: String =
+    PermissionUtilADM.formatPermissionADMs(PermissionUtilADM.standoffLinkValuePermissions, PermissionType.OAP)
 
 }
 

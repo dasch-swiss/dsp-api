@@ -316,7 +316,9 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     }
   }
 
-  private def buildStandoffPatterns(
+  // Package-private (`private[webapi]`) rather than `private` so the standoff-emission equivalence test can compare
+  // this canonical standoff RDF against the import transformer's own emission.
+  private[webapi] def buildStandoffPatterns(
     valueIri: rdf.Iri,
     textValue: org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2,
   ): List[TriplePattern] = {
