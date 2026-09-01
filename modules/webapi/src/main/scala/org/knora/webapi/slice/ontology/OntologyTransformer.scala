@@ -51,6 +51,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
@@ -683,17 +684,10 @@ final class OntologyTransformer(
    * `TransformerError`.
    */
   private def convertFileValues(model: Model, ctx: ConversionContext): Task[Unit] = {
-    val rdfType = model.createProperty(Rdf.Type)
-
     val fileValues = model
       .listSubjects()
       .asScala
-      .filter { s =>
-        isValue(s) &&
-        Option(s.getProperty(rdfType))
-          .map(_.getObject)
-          .exists(n => n.isURIResource && KnoraBase.FileValueClasses.contains(n.asResource.getURI))
-      }
+      .filter(s => isValue(s) && typeIriOf(model, s).exists(KnoraBase.FileValueClasses.contains))
       .toList
       .sortBy(_.getURI)
 
@@ -709,33 +703,29 @@ final class OntologyTransformer(
    * content type or write-model variant, REQ-8.3) and the abstract `FileValue` (never a valid concrete instance
    * type). `FileValueClasses` includes both, so this pre-pass keeps them out of [[convertFileValue]].
    */
-  private def rejectUnsupportedFileValue(model: Model, v: Resource): Task[Unit] = {
-    val rdfType = model.createProperty(Rdf.Type)
-    val typeIri = Option(v.getProperty(rdfType))
-      .map(_.getObject)
-      .collect { case n if n.isURIResource => n.asResource.getURI }
-    typeIri match {
+  private def rejectUnsupportedFileValue(model: Model, v: Resource): Task[Unit] =
+    typeIriOf(model, v) match {
       case Some(KnoraBase.DDDFileValue) =>
         ZIO.fail(new IllegalArgumentException(s"DDDFileValue $v is not yet implemented in the import pipeline"))
       case Some(KnoraBase.FileValue) =>
         ZIO.fail(new IllegalArgumentException(s"FileValue $v is abstract and cannot be a concrete file value"))
       case _ => ZIO.unit
     }
-  }
 
-  /** Converts one file value: external values reproduce the create-path placeholders; the rest fetch from ingest. */
-  private def convertFileValue(model: Model, ctx: ConversionContext, v: Resource): Task[Unit] = {
-    val rdfType = model.createProperty(Rdf.Type)
-    val typeIri = Option(v.getProperty(rdfType))
+  /** The concrete `rdf:type` IRI of a value node, if it has one. */
+  private def typeIriOf(model: Model, v: Resource): Option[String] =
+    Option(v.getProperty(model.createProperty(Rdf.Type)))
       .map(_.getObject)
       .collect { case n if n.isURIResource => n.asResource.getURI }
 
-    typeIri match {
+  /** Converts one file value: external values reproduce the create-path placeholders; the rest fetch from ingest. */
+  private def convertFileValue(model: Model, ctx: ConversionContext, v: Resource): Task[Unit] =
+    typeIriOf(model, v) match {
       case Some(KnoraBase.StillImageExternalFileValue) =>
         ZIO.attempt(emitExternalFileValue(model, v))
       case Some(cls) =>
         for {
-          filename <- requireFilename(model, v)
+          filename <- ZIO.attempt(requireFilename(model, v))
           assetId  <- ZIO.fromEither(AssetId.fromFilename(filename)).mapError(new IllegalArgumentException(_))
           meta     <- sipiService
                     .getFileMetadataFromDspIngest(ctx.attachedToProject.shortcode, assetId)
@@ -752,18 +742,15 @@ final class OntologyTransformer(
       case None =>
         ZIO.fail(new IllegalArgumentException(s"FileValue $v has no rdf:type"))
     }
-  }
 
-  /** The internal filename from the naive-renamed `knora-base#fileValueHasFilename`, or a descriptive failure. */
-  private def requireFilename(model: Model, v: Resource): Task[String] = {
+  /** The internal filename from the naive-renamed `knora-base#fileValueHasFilename`, or throws a descriptive error. */
+  private def requireFilename(model: Model, v: Resource): String = {
     val fileValueHasFilename = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "fileValueHasFilename")
     Option(v.getProperty(fileValueHasFilename))
       .map(_.getObject)
       .collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
-      .filter(_.nonEmpty) match {
-      case Some(filename) => ZIO.succeed(filename)
-      case None           => ZIO.fail(new IllegalArgumentException(s"FileValue $v has no fileValueHasFilename"))
-    }
+      .filter(_.nonEmpty)
+      .getOrElse(throw new IllegalArgumentException(s"FileValue $v has no fileValueHasFilename"))
   }
 
   /** Emits the base file-value triples plus the type-specific dimensions, and drops the naive filename predicate. */
@@ -825,12 +812,15 @@ final class OntologyTransformer(
         throw new IllegalArgumentException(s"StillImageExternalFileValue $v has no stillImageFileValueHasExternalUrl"),
       )
 
+    // Read the placeholder metadata from the create-path source so the two stay in parity.
+    val info = StillImageExternalFileValueContentV2.fakeInfo
+
     v.removeAll(src)
     v.addProperty(externalUrl, url)
-    v.addProperty(internalFilename, "internalFilename")
-    v.addProperty(internalMimeType, "internalMimeType")
-    v.addProperty(originalFilename, "originalFilename")
-    val _ = v.addProperty(originalMimeType, "originalMimeType")
+    v.addProperty(internalFilename, info.filename)
+    v.addProperty(internalMimeType, info.metadata.internalMimeType)
+    info.metadata.originalFilename.foreach(v.addProperty(originalFilename, _))
+    val _ = info.metadata.originalMimeType.foreach(v.addProperty(originalMimeType, _))
   }
 
   /**
