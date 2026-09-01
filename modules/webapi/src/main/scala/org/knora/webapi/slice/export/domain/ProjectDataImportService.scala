@@ -40,14 +40,23 @@ final class ProjectDataImportService(
   def dataGraphExists(project: KnoraProject): Task[Boolean] =
     triplestore.query(ProjectDataGraphExistsQuery.build(project))
 
+  /**
+   * @param createdBy  the triggering system admin, recorded as the task owner for audit.
+   * @param onBehalfOf the project user every imported resource and value is attributed to, and whose default object
+   *                   access permissions are resolved. Its eligibility is captured once at trigger time (no
+   *                   mid-flight re-check).
+   */
   def importDataGraph(
     project: KnoraProject,
     createdBy: User,
+    onBehalfOf: User,
     stream: ZStream[Any, Throwable, Byte],
   ): IO[ImportExistsError, CurrentDataTask] = for {
-    task <- state.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _    <- saveJsonLdStream(task.id, stream)
-    _    <- doImport(task.id, project, createdBy).whenZIO(state.isInProgress(task.id)).forkDaemon
+    task <- state
+              .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
+              .mapError { case StatesExistError(t) => ImportExistsError(t) }
+    _ <- saveJsonLdStream(task.id, stream)
+    _ <- doImport(task.id, project, onBehalfOf).whenZIO(state.isInProgress(task.id)).forkDaemon
   } yield task
 
   private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
@@ -58,16 +67,19 @@ final class ProjectDataImportService(
     } yield ()
   ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
 
-  private def doImport(taskId: DataTaskId, project: KnoraProject, createdBy: User): UIO[Unit] =
+  // Eligibility and the resolved permission string are captured once from the `onBehalfOf` snapshot passed in.
+  // `doImport` does not re-fetch or re-validate the user, so this service needs no `UserService`. A user deleted
+  // mid-flight still fails the SHACL validation step before the write.
+  private def doImport(taskId: DataTaskId, project: KnoraProject, onBehalfOf: User): UIO[Unit] =
     ZIO.scoped {
       for {
         _          <- ZIO.logInfo(s"$taskId: Starting data import for project '${project.id}'")
         jsonLdPath <- storage.dataImportJsonLdPath(taskId)
 
-        permissions <- permissionsResponder.newDataImportDefaultObjectAccessPermissions(project.id, createdBy)
+        permissions <- permissionsResponder.newDataImportDefaultObjectAccessPermissions(project.id, onBehalfOf)
         _           <- ZIO.logInfo(s"$taskId: Using permissions '$permissions' for project '${project.id}'")
 
-        ctx          = ConversionContext(createdBy.userIri, project, permissions)
+        ctx          = ConversionContext(onBehalfOf.userIri, project, permissions)
         transformed <- transformer
                          .toKnoraBase(jsonLdPath.toFile.toPath, ctx)
                          .mapError(e => new RuntimeException(s"Transformation failed: ${e.message}"))

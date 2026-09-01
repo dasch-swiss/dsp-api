@@ -19,9 +19,13 @@ import org.knora.webapi.slice.`export`.domain.ImportInProgressError
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
+import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.V3Authorizer
@@ -35,6 +39,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.export_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
+import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 
 final class V3ProjectsRestService(
@@ -43,6 +49,7 @@ final class V3ProjectsRestService(
   importService: ProjectMigrationImportService,
   dataImportService: ProjectDataImportService,
   projectService: KnoraProjectService,
+  userService: UserService,
 ) {
 
   private def ensureSystemAdminAndProjectExists(user: User, projectIri: ProjectIri) =
@@ -164,11 +171,67 @@ final class V3ProjectsRestService(
       Map("projectIri" -> projectIri.value),
     )
 
+  // Request-phase rejections for the on-behalf-of user are raised before any task exists, so they cannot use the
+  // generic `conflict`/`notFound` helpers (which need a DataTaskId). They are keyed on the project and the supplied
+  // identifier — the only value available for a not-found user (G4).
+  private def onBehalfOfUserNotFound(projectIri: ProjectIri, onBehalfOfUser: String): NotFound =
+    NotFound(
+      on_behalf_of_user_not_found,
+      on_behalf_of_user_not_found.template.replace("{id}", onBehalfOfUser).replace("{projectIri}", projectIri.value),
+      Map("id" -> onBehalfOfUser, "projectIri" -> projectIri.value),
+    )
+
+  private def onBehalfOfUserIneligible(
+    projectIri: ProjectIri,
+    onBehalfOfUser: String,
+    reason: OnBehalfOfIneligibility,
+  ): BadRequest =
+    BadRequest(
+      on_behalf_of_user_ineligible,
+      on_behalf_of_user_ineligible.template
+        .replace("{id}", onBehalfOfUser)
+        .replace("{projectIri}", projectIri.value)
+        .replace("{reason}", reason.reason),
+      Map("id" -> onBehalfOfUser, "projectIri" -> projectIri.value, "reason" -> reason.reason),
+    )
+
+  // Resolve the supplied identifier (email if it contains `@`, else username) to a User, then assert eligibility.
+  // A value that parses as neither is `400 malformed_identifier`; a well-formed identifier that matches no user is
+  // `404`. Eligibility and the resolved user are a trigger-time snapshot — not re-checked mid-import (G2/Q1).
+  private def resolveOnBehalfOfUser(projectIri: ProjectIri, onBehalfOfUser: String): IO[V3ErrorInfo, User] = {
+    val malformed                               = onBehalfOfUserIneligible(projectIri, onBehalfOfUser, OnBehalfOfIneligibility.MalformedIdentifier)
+    val resolved: IO[V3ErrorInfo, Option[User]] =
+      if (onBehalfOfUser.contains("@"))
+        ZIO
+          .fromEither(Email.from(onBehalfOfUser))
+          .orElseFail(malformed)
+          .flatMap(email => userService.findUserByEmail(email).orDie)
+      else
+        ZIO
+          .fromEither(Username.from(onBehalfOfUser))
+          .orElseFail(malformed)
+          .flatMap(username => userService.findUserByUsername(username).orDie)
+    for {
+      user <- resolved.someOrFail(onBehalfOfUserNotFound(projectIri, onBehalfOfUser))
+      _    <- OnBehalfOfUserEligibility.check(user, projectIri) match {
+             case Some(reason) => ZIO.fail(onBehalfOfUserIneligible(projectIri, onBehalfOfUser, reason))
+             case None         => ZIO.unit
+           }
+    } yield user
+  }
+
   def triggerProjectDataImportCreate(
     user: User,
-  )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
+  )(
+    projectIri: ProjectIri,
+    stream: ZStream[Any, Throwable, Byte],
+    onBehalfOfUser: String,
+  ): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failDataImportFeatureMissing.zipRight(for {
       project <- ensureSystemAdminAndProjectExists(user, projectIri)
+      // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
+      // project-exists check and before the create-only precondition (G1 order).
+      onBehalfOf <- resolveOnBehalfOfUser(projectIri, onBehalfOfUser)
       // Create-only precondition (synchronous, so the client receives a real 409). It is re-verified inside the
       // import task immediately before the upload.
       _ <- ZIO
@@ -176,7 +239,7 @@ final class V3ProjectsRestService(
              .whenZIO(dataImportService.dataGraphExists(project).orDie)
       state <-
         dataImportService
-          .importDataGraph(project, user, stream)
+          .importDataGraph(project = project, createdBy = user, onBehalfOf = onBehalfOf, stream = stream)
           .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
     } yield DataTaskStatusResponse.from(state))
 
