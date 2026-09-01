@@ -24,6 +24,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
+import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.InternalSchema
@@ -44,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
@@ -52,6 +54,9 @@ import org.knora.webapi.slice.common.jena.ModelOps
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceInMemory
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.impl.SipiServiceMock
+import org.knora.webapi.store.iiif.impl.SipiServiceMock.SipiMockMethodName
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class OntologyTransformerSpec extends ZIOSpecDefault {
@@ -1627,6 +1632,308 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private def fileValueJsonLd(valueClass: String, inner: String): String =
+    resourceWithValueJsonLd(s"${onto}testFile", s"$knoraApi$valueClass", inner)
+
+  private def filenameInner(filename: String): String =
+    s""""${knoraApi}fileValueHasFilename": { "@type": "${xsd}string", "@value": "$filename" }"""
+
+  private val fileValuesStage2 = suite("Stage 2 — file values")(
+    test("StillImageFileValue emits base fields + dimX/dimY and drops fileValueHasFilename") {
+      runTransformStage2(
+        fileValueJsonLd("StillImageFileValue", filenameInner("testasset.jp2")),
+        expectedStage2SingleValue(
+          "testFile",
+          "StillImageFileValue",
+          s"""knora-base:internalFilename "testasset.jp2" ;
+             |     knora-base:internalMimeType "image/jp2" ;
+             |     knora-base:originalFilename "test2.tiff" ;
+             |     knora-base:originalMimeType "image/tiff" ;
+             |     knora-base:dimX             512 ;
+             |     knora-base:dimY             256""".stripMargin,
+          "testasset.jp2",
+        ),
+      )
+    },
+    test("DocumentFileValue emits base fields + optional dimX/dimY and no pageCount") {
+      runTransformStage2(
+        fileValueJsonLd("DocumentFileValue", filenameInner("testasset.pdf")),
+        expectedStage2SingleValue(
+          "testFile",
+          "DocumentFileValue",
+          s"""knora-base:internalFilename "testasset.pdf" ;
+             |     knora-base:internalMimeType "image/jp2" ;
+             |     knora-base:originalFilename "test2.tiff" ;
+             |     knora-base:originalMimeType "image/tiff" ;
+             |     knora-base:dimX             512 ;
+             |     knora-base:dimY             256""".stripMargin,
+          "testasset.pdf",
+        ),
+      )
+    },
+    test("AudioFileValue (Other) emits base fields only — no dimX/dimY/duration/fps") {
+      runTransformStage2(
+        fileValueJsonLd("AudioFileValue", filenameInner("testasset.mp3")),
+        expectedStage2SingleValue(
+          "testFile",
+          "AudioFileValue",
+          s"""knora-base:internalFilename "testasset.mp3" ;
+             |     knora-base:internalMimeType "image/jp2" ;
+             |     knora-base:originalFilename "test2.tiff" ;
+             |     knora-base:originalMimeType "image/tiff"""".stripMargin,
+          "testasset.mp3",
+        ),
+      )
+    },
+    test("StillImageExternalFileValue reproduces fakeInfo placeholders with no ingest fetch") {
+      val url = "https://iiif.example.org/image.jp2"
+      for {
+        _   <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        res <- runTransformStage2(
+                 fileValueJsonLd(
+                   "StillImageExternalFileValue",
+                   s""""${knoraApi}stillImageFileValueHasExternalUrl": { "@type": "${xsd}anyURI", "@value": "$url" }""",
+                 ),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageExternalFileValue",
+                   s"""knora-base:externalUrl      "$url" ;
+                      |     knora-base:internalFilename "internalFilename" ;
+                      |     knora-base:internalMimeType "internalMimeType" ;
+                      |     knora-base:originalFilename "originalFilename" ;
+                      |     knora-base:originalMimeType "originalMimeType"""".stripMargin,
+                   "internalFilename",
+                 ),
+               )
+      } yield res
+    },
+    test("payload legal metadata (copyright/license/authorship) passes through unchanged") {
+      runTransformStage2(
+        fileValueJsonLd(
+          "StillImageFileValue",
+          s"""${filenameInner("testasset.jp2")},
+             |    "${knoraApi}hasCopyrightHolder": "DaSCH",
+             |    "${knoraApi}hasLicense": { "@id": "http://rdfh.ch/licenses/cc-by-4.0" },
+             |    "${knoraApi}hasAuthorship": "Jane Doe"""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testFile",
+          "StillImageFileValue",
+          s"""knora-base:internalFilename  "testasset.jp2" ;
+             |     knora-base:internalMimeType  "image/jp2" ;
+             |     knora-base:originalFilename  "test2.tiff" ;
+             |     knora-base:originalMimeType  "image/tiff" ;
+             |     knora-base:dimX              512 ;
+             |     knora-base:dimY              256 ;
+             |     knora-base:hasCopyrightHolder "DaSCH" ;
+             |     knora-base:hasLicense        <http://rdfh.ch/licenses/cc-by-4.0> ;
+             |     knora-base:hasAuthorship     "Jane Doe"""".stripMargin,
+          "testasset.jp2",
+        ),
+      )
+    },
+    test("optional ingest fields absent → no originalFilename/originalMimeType/dimX/dimY") {
+      val minimalMeta = FileMetadataSipiResponse(
+        originalFilename = None,
+        originalMimeType = None,
+        internalMimeType = "application/pdf",
+        width = None,
+        height = None,
+        numpages = None,
+        duration = None,
+        fps = None,
+      )
+      for {
+        _ <- ZIO.serviceWithZIO[SipiServiceMock](
+               _.setReturnValue(SipiMockMethodName.GetFileMetadataFromDspIngest, ZIO.succeed(minimalMeta)),
+             )
+        res <- runTransformStage2(
+                 fileValueJsonLd("DocumentFileValue", filenameInner("testasset.pdf")),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "DocumentFileValue",
+                   s"""knora-base:internalFilename "testasset.pdf" ;
+                      |     knora-base:internalMimeType "application/pdf"""".stripMargin,
+                   "testasset.pdf",
+                 ),
+               )
+      } yield res
+    },
+    test("un-ingested asset is rejected with a descriptive TransformerError") {
+      for {
+        _ <- ZIO.serviceWithZIO[SipiServiceMock](
+               _.setReturnValue(SipiMockMethodName.GetFileMetadataFromDspIngest, ZIO.fail(NotFoundException("nope"))),
+             )
+        exit <- runTransformStage2Failure(fileValueJsonLd("StillImageFileValue", filenameInner("testasset.jp2")))
+      } yield assertTrue(messageOf(exit).contains("was not found in dsp-ingest"))
+    },
+    test("missing fileValueHasFilename is rejected with a descriptive TransformerError") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${onto}testFile": {
+           |      "@id": "$valueIri",
+           |      "@type": "${knoraApi}StillImageFileValue"
+           |    },
+           |    "@context": {
+           |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+           |    }
+           |}]""".stripMargin
+      runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("has no fileValueHasFilename")))
+    },
+    test("StillImageFileValue with no ingest width/height falls back to dimX/dimY 0") {
+      val noDimsMeta = FileMetadataSipiResponse(
+        originalFilename = None,
+        originalMimeType = None,
+        internalMimeType = "image/jp2",
+        width = None,
+        height = None,
+        numpages = None,
+        duration = None,
+        fps = None,
+      )
+      for {
+        _ <- ZIO.serviceWithZIO[SipiServiceMock](
+               _.setReturnValue(SipiMockMethodName.GetFileMetadataFromDspIngest, ZIO.succeed(noDimsMeta)),
+             )
+        res <- runTransformStage2(
+                 fileValueJsonLd("StillImageFileValue", filenameInner("testasset.jp2")),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageFileValue",
+                   s"""knora-base:internalFilename "testasset.jp2" ;
+                      |     knora-base:internalMimeType "image/jp2" ;
+                      |     knora-base:dimX             0 ;
+                      |     knora-base:dimY             0""".stripMargin,
+                   "testasset.jp2",
+                 ),
+               )
+      } yield res
+    },
+    test("invalid fileValueHasFilename is rejected before any ingest fetch") {
+      // "ab" (stripped at the first '.') fails AssetId's ^[a-zA-Z0-9-_]{4,}$ regex, so the parse fails before the
+      // fetch. assertNoInteraction proves no ingest call happened (else the message would be "No interaction expected").
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(fileValueJsonLd("StillImageFileValue", filenameInner("ab.jp2")))
+        msg   = messageOf(exit)
+      } yield assertTrue(
+        exit.isFailure,
+        !msg.contains("was not found in dsp-ingest"),
+        !msg.contains("No interaction expected"),
+      )
+    },
+    test("abstract FileValue is rejected with no ingest interaction") {
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(fileValueJsonLd("FileValue", filenameInner("testasset.jp2")))
+      } yield assertTrue(messageOf(exit).contains("abstract"))
+    },
+    test("DDDFileValue is rejected as not yet implemented with no ingest interaction") {
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(fileValueJsonLd("DDDFileValue", filenameInner("testasset.gltf")))
+      } yield assertTrue(messageOf(exit).contains("not yet implemented"))
+    },
+    test("a placeholder-sentinel filename emits a placeholder file value when allow-placeholder is on") {
+      val placeholder = PlaceholderIri.instance.value
+      for {
+        _   <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        res <- runTransformStage2(
+                 fileValueJsonLd("StillImageFileValue", filenameInner(placeholder)),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageFileValue",
+                   s"""knora-base:internalFilename "$placeholder" ;
+                      |     knora-base:internalMimeType "$placeholder" ;
+                      |     knora-base:dimX             0 ;
+                      |     knora-base:dimY             0""".stripMargin,
+                   placeholder,
+                 ),
+               )
+      } yield res
+    },
+    test("a placeholder-sentinel filename is rejected when allow-placeholder is off") {
+      ZIO.withConfigProvider(TestAppConfig.provider("app.features.allow-placeholder" -> false)) {
+        for {
+          _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+          exit <- runTransformStage2Failure(
+                    fileValueJsonLd("StillImageFileValue", filenameInner(PlaceholderIri.instance.value)),
+                  )
+        } yield assertTrue(messageOf(exit).contains("placeholder sentinel"))
+      }
+    },
+    test("a placeholder sentinel in legal metadata is rejected when allow-placeholder is off") {
+      val sentinel = PlaceholderIri.instance.value
+      ZIO.withConfigProvider(TestAppConfig.provider("app.features.allow-placeholder" -> false)) {
+        for {
+          _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+          exit <- runTransformStage2Failure(
+                    fileValueJsonLd(
+                      "StillImageFileValue",
+                      s"""${filenameInner("testasset.jp2")},
+                         |    "${knoraApi}hasCopyrightHolder": "$sentinel",
+                         |    "${knoraApi}hasAuthorship": "$sentinel"""".stripMargin,
+                    ),
+                  )
+        } yield assertTrue(messageOf(exit).contains("legal metadata"))
+      }
+    },
+    test("a placeholder sentinel in legal metadata passes through when allow-placeholder is on") {
+      val sentinel = PlaceholderIri.instance.value
+      runTransformStage2(
+        fileValueJsonLd(
+          "StillImageFileValue",
+          s"""${filenameInner("testasset.jp2")},
+             |    "${knoraApi}hasCopyrightHolder": "$sentinel"""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testFile",
+          "StillImageFileValue",
+          s"""knora-base:internalFilename   "testasset.jp2" ;
+             |     knora-base:internalMimeType   "image/jp2" ;
+             |     knora-base:originalFilename   "test2.tiff" ;
+             |     knora-base:originalMimeType   "image/tiff" ;
+             |     knora-base:dimX               512 ;
+             |     knora-base:dimY               256 ;
+             |     knora-base:hasCopyrightHolder "$sentinel"""".stripMargin,
+          "testasset.jp2",
+        ),
+      )
+    },
+    test("a DDDFileValue rejects the whole batch before any other file value is fetched") {
+      // Hermetic rejection: assertNoInteraction fails on any ingest call, so a message of "not yet implemented"
+      // (not "No interaction expected") proves the ordinary StillImageFileValue was never fetched.
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${onto}testFile": {
+           |      "@id": "$valueIri",
+           |      "@type": "${knoraApi}StillImageFileValue",
+           |      ${filenameInner("ordinaryasset.jp2")}
+           |    },
+           |    "${onto}testDdd": {
+           |      "@id": "$valueIri2",
+           |      "@type": "${knoraApi}DDDFileValue",
+           |      ${filenameInner("ddd.gltf")}
+           |    },
+           |    "@context": {
+           |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+           |    }
+           |}]""".stripMargin
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(jsonLd)
+      } yield assertTrue(messageOf(exit).contains("not yet implemented"))
+    },
+  )
+
   override def spec = suite("OntologyTransformerSpec")(
     simpleScalarValues,
     iriRefValues,
@@ -1645,11 +1952,13 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     geomStage2,
     intervalStage2,
     dateValueRejections,
+    fileValuesStage2,
   ).provide(
     OntologyTransformer.layer,
     StringFormatter.test,
     TestAppConfig.layer(),
     IdSourceInMemory.layer,
     standoffMappingServiceStub,
+    SipiServiceMock.layer,
   )
 }

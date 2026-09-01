@@ -2087,7 +2087,9 @@ case class StillImageExternalFileValueContentV2(
  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object StillImageExternalFileValueContentV2 {
-  private val fakeInfo = FileInfo(
+  // Placeholder metadata persisted for external IIIF file values (no real ingest asset). The import pipeline's
+  // OntologyTransformer.emitExternalFileValue reads this same value to stay in parity with the create path.
+  val fakeInfo: FileInfo = FileInfo(
     "internalFilename",
     FileMetadataSipiResponse(
       Some("originalFilename"),

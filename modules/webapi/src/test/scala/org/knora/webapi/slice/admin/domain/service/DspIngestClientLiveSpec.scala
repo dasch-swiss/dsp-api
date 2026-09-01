@@ -36,13 +36,16 @@ import zio.json.EncoderOps
 import zio.json.JsonEncoder
 import zio.json.ast.Json
 import zio.nio.file.Files
+import zio.test.Assertion.failsWithA
 import zio.test.Spec
 import zio.test.TestAspect
 import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
+import zio.test.assert
 import zio.test.assertTrue
 
 import dsp.errors.BadCredentialsException
+import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
@@ -94,34 +97,44 @@ class DspIngestClientSpec extends ZIOSpecDefault {
     } yield assertTrue(contentIsDownloaded)
   })
 
-  private val getAssetInfoSuite = suite("getAssetInfo")(test("should return the assetInfo") {
-    implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
-    val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
-    val expectedUrl                                      = s"/projects/$testShortcode/assets/$assetId"
-    val expected                                         = AssetInfoResponse(
-      internalFilename = s"$assetId.txt",
-      originalInternalFilename = s"$assetId.txt.orig",
-      originalFilename = "test.txt",
-      checksumOriginal = "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
-      checksumDerivative = "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
-      internalMimeType = Some("text/plain"),
-      originalMimeType = Some("text/plain"),
-    )
-    for {
-      // given
-      _ <- HttpMockServer.stub.getResponseJsonBody(expectedUrl, 200, expected)
+  private val getAssetInfoSuite = suite("getAssetInfo")(
+    test("should return the assetInfo") {
+      implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
+      val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
+      val expectedUrl                                      = s"/projects/$testShortcode/assets/$assetId"
+      val expected                                         = AssetInfoResponse(
+        internalFilename = s"$assetId.txt",
+        originalInternalFilename = s"$assetId.txt.orig",
+        originalFilename = "test.txt",
+        checksumOriginal = "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
+        checksumDerivative = "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
+        internalMimeType = Some("text/plain"),
+        originalMimeType = Some("text/plain"),
+      )
+      for {
+        // given
+        _ <- HttpMockServer.stub.getResponseJsonBody(expectedUrl, 200, expected)
 
-      // when
-      assetInfo <- withDspIngestClient(_.getAssetInfo(testShortcode, assetId))
+        // when
+        assetInfo <- withDspIngestClient(_.getAssetInfo(testShortcode, assetId))
 
-      // then
-      mockJwt <- getTokenForDspIngest
-      _       <- HttpMockServer.verify.request(
-             getRequestedFor(urlPathEqualTo(expectedUrl))
-               .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
-           )
-    } yield assertTrue(assetInfo == expected)
-  })
+        // then
+        mockJwt <- getTokenForDspIngest
+        _       <- HttpMockServer.verify.request(
+               getRequestedFor(urlPathEqualTo(expectedUrl))
+                 .withHeader("Authorization", equalTo(s"Bearer $mockJwt")),
+             )
+      } yield assertTrue(assetInfo == expected)
+    },
+    test("should fail with NotFoundException when the asset does not exist (404)") {
+      val assetId     = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
+      val expectedUrl = s"/projects/$testShortcode/assets/$assetId"
+      for {
+        _    <- HttpMockServer.stub.getResponse(expectedUrl, aResponse().withStatus(404))
+        exit <- withDspIngestClient(_.getAssetInfo(testShortcode, assetId)).exit
+      } yield assert(exit)(failsWithA[NotFoundException])
+    },
+  )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("DspIngestClientLive")(
