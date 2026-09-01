@@ -700,8 +700,8 @@ final class OntologyTransformer(
 
   /**
    * Rejects file-value classes with no create-path parity, before any ingest fetch: `DDDFileValue` (no create-path
-   * content type or write-model variant, REQ-8.3) and the abstract `FileValue` (never a valid concrete instance
-   * type). `FileValueClasses` includes both, so this pre-pass keeps them out of [[convertFileValue]].
+   * content type or write-model variant) and the abstract `FileValue` (never a valid concrete instance type).
+   * `FileValueClasses` includes both, so this pre-pass keeps them out of [[convertFileValue]].
    */
   private def rejectUnsupportedFileValue(model: Model, v: Resource): Task[Unit] =
     typeIriOf(model, v) match {
@@ -780,7 +780,8 @@ final class OntologyTransformer(
       case KnoraBase.StillImageFileValue =>
         v.addProperty(dimX, intLiteral(model, meta.width.getOrElse(0)))
         v.addProperty(dimY, intLiteral(model, meta.height.getOrElse(0)))
-      // Document dims are optional; emit only when ingest supplies them. numpages/pageCount is never persisted (plan D2).
+      // Document dims are optional; emit only when ingest supplies them. numpages/pageCount is never persisted —
+      // the shipped write path only ever emits None for it, so emitting it here would diverge from create parity.
       case KnoraBase.DocumentFileValue =>
         meta.width.foreach(w => v.addProperty(dimX, intLiteral(model, w)))
         meta.height.foreach(h => v.addProperty(dimY, intLiteral(model, h)))
