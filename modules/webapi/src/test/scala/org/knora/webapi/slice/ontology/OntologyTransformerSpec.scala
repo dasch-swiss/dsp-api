@@ -45,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
@@ -1836,6 +1837,72 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
         exit <- runTransformStage2Failure(fileValueJsonLd("DDDFileValue", filenameInner("testasset.gltf")))
       } yield assertTrue(messageOf(exit).contains("not yet implemented"))
+    },
+    test("a placeholder-sentinel filename emits a placeholder file value when allow-placeholder is on") {
+      val placeholder = PlaceholderIri.instance.value
+      for {
+        _   <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        res <- runTransformStage2(
+                 fileValueJsonLd("StillImageFileValue", filenameInner(placeholder)),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageFileValue",
+                   s"""knora-base:internalFilename "$placeholder" ;
+                      |     knora-base:internalMimeType "$placeholder" ;
+                      |     knora-base:dimX             0 ;
+                      |     knora-base:dimY             0""".stripMargin,
+                   placeholder,
+                 ),
+               )
+      } yield res
+    },
+    test("a placeholder-sentinel filename is rejected when allow-placeholder is off") {
+      ZIO.withConfigProvider(TestAppConfig.provider("app.features.allow-placeholder" -> false)) {
+        for {
+          _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+          exit <- runTransformStage2Failure(
+                    fileValueJsonLd("StillImageFileValue", filenameInner(PlaceholderIri.instance.value)),
+                  )
+        } yield assertTrue(messageOf(exit).contains("placeholder sentinel"))
+      }
+    },
+    test("a placeholder sentinel in legal metadata is rejected when allow-placeholder is off") {
+      val sentinel = PlaceholderIri.instance.value
+      ZIO.withConfigProvider(TestAppConfig.provider("app.features.allow-placeholder" -> false)) {
+        for {
+          _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+          exit <- runTransformStage2Failure(
+                    fileValueJsonLd(
+                      "StillImageFileValue",
+                      s"""${filenameInner("testasset.jp2")},
+                         |    "${knoraApi}hasCopyrightHolder": "$sentinel",
+                         |    "${knoraApi}hasAuthorship": "$sentinel"""".stripMargin,
+                    ),
+                  )
+        } yield assertTrue(messageOf(exit).contains("legal metadata"))
+      }
+    },
+    test("a placeholder sentinel in legal metadata passes through when allow-placeholder is on") {
+      val sentinel = PlaceholderIri.instance.value
+      runTransformStage2(
+        fileValueJsonLd(
+          "StillImageFileValue",
+          s"""${filenameInner("testasset.jp2")},
+             |    "${knoraApi}hasCopyrightHolder": "$sentinel"""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testFile",
+          "StillImageFileValue",
+          s"""knora-base:internalFilename   "testasset.jp2" ;
+             |     knora-base:internalMimeType   "image/jp2" ;
+             |     knora-base:originalFilename   "test2.tiff" ;
+             |     knora-base:originalMimeType   "image/tiff" ;
+             |     knora-base:dimX               512 ;
+             |     knora-base:dimY               256 ;
+             |     knora-base:hasCopyrightHolder "$sentinel"""".stripMargin,
+          "testasset.jp2",
+        ),
+      )
     },
     test("a DDDFileValue rejects the whole batch before any other file value is fetched") {
       // Hermetic rejection: assertNoInteraction fails on any ingest call, so a message of "not yet implemented"

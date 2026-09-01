@@ -57,6 +57,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
@@ -693,8 +694,9 @@ final class OntologyTransformer(
 
     for {
       // Reject unsupported classes before any fetch, so the rejection path stays hermetic (never calls ingest).
-      _ <- ZIO.foreachDiscard(fileValues)(rejectUnsupportedFileValue(model, _))
-      _ <- ZIO.foreachDiscard(fileValues)(convertFileValue(model, ctx, _))
+      _                <- ZIO.foreachDiscard(fileValues)(rejectUnsupportedFileValue(model, _))
+      allowPlaceholder <- AppConfig.features(_.allowPlaceholder)
+      _                <- ZIO.foreachDiscard(fileValues)(convertFileValue(model, ctx, _, allowPlaceholder))
     } yield ()
   }
 
@@ -719,28 +721,103 @@ final class OntologyTransformer(
       .collect { case n if n.isURIResource => n.asResource.getURI }
 
   /** Converts one file value: external values reproduce the create-path placeholders; the rest fetch from ingest. */
-  private def convertFileValue(model: Model, ctx: ConversionContext, v: Resource): Task[Unit] =
-    typeIriOf(model, v) match {
-      case Some(KnoraBase.StillImageExternalFileValue) =>
-        ZIO.attempt(emitExternalFileValue(model, v))
-      case Some(cls) =>
-        for {
-          filename <- ZIO.attempt(requireFilename(model, v))
-          assetId  <- ZIO.fromEither(AssetId.fromFilename(filename)).mapError(new IllegalArgumentException(_))
-          meta     <- sipiService
-                    .getFileMetadataFromDspIngest(ctx.attachedToProject.shortcode, assetId)
-                    .mapError {
-                      case NotFoundException(_) =>
-                        new IllegalArgumentException(
-                          s"Asset '$filename' referenced by $v was not found in dsp-ingest; it must be " +
-                            s"pre-ingested before import",
-                        )
-                      case e => e
-                    }
-          _ <- ZIO.attempt(emitFileValue(model, v, cls, filename, meta))
-        } yield ()
-      case None =>
-        ZIO.fail(new IllegalArgumentException(s"FileValue $v has no rdf:type"))
+  private def convertFileValue(
+    model: Model,
+    ctx: ConversionContext,
+    v: Resource,
+    allowPlaceholder: Boolean,
+  ): Task[Unit] =
+    for {
+      _ <- rejectPlaceholderLegalMetadata(model, v, allowPlaceholder)
+      _ <- typeIriOf(model, v) match {
+             case Some(KnoraBase.StillImageExternalFileValue) =>
+               ZIO.attempt(emitExternalFileValue(model, v))
+             case Some(cls) =>
+               ZIO.attempt(requireFilename(model, v)).flatMap { filename =>
+                 if (filename == PlaceholderIri.instance.value)
+                   convertPlaceholderFileValue(model, v, cls, allowPlaceholder)
+                 else convertIngestedFileValue(model, ctx, v, cls, filename)
+               }
+             case None =>
+               ZIO.fail(new IllegalArgumentException(s"FileValue $v has no rdf:type"))
+           }
+    } yield ()
+
+  /**
+   * Rejects a file value carrying the placeholder sentinel (`urn:dasch:placeholder`) in a string-valued legal-metadata
+   * field (`hasCopyrightHolder` / `hasAuthorship`) when the `allow-placeholder` switch is off, mirroring the create
+   * path's [[FileValueV2.placeholderFields]] gate. When the switch is on it is a no-op — the legal metadata passes
+   * through untouched, exactly as on the create path. A placeholder `hasLicense` is an IRI object, so it is already
+   * rejected earlier by stage 1's IRI rewrite ("Couldn't parse IRI") in every environment; it is listed here too so
+   * a malformed literal-valued license sentinel is still caught.
+   */
+  private def rejectPlaceholderLegalMetadata(model: Model, v: Resource, allowPlaceholder: Boolean): Task[Unit] =
+    if (allowPlaceholder) ZIO.unit
+    else {
+      val sentinel        = PlaceholderIri.instance.value
+      val legalPredicates = List(KnoraBase.HasCopyrightHolder, KnoraBase.HasAuthorship, KnoraBase.HasLicense)
+      val hasSentinel     = legalPredicates.exists { p =>
+        v.listProperties(model.createProperty(p)).asScala.exists { stmt =>
+          val obj = stmt.getObject
+          (obj.isLiteral && obj.asLiteral.getLexicalForm == sentinel) ||
+          (obj.isURIResource && obj.asResource.getURI == sentinel)
+        }
+      }
+      if (hasSentinel)
+        ZIO.fail(
+          new IllegalArgumentException(
+            s"FileValue $v references the placeholder sentinel '$sentinel' in its legal metadata, " +
+              s"which is not allowed on this server",
+          ),
+        )
+      else ZIO.unit
+    }
+
+  /** Fetches the ingest metadata for a real pre-ingested asset and emits its file value. */
+  private def convertIngestedFileValue(
+    model: Model,
+    ctx: ConversionContext,
+    v: Resource,
+    cls: String,
+    filename: String,
+  ): Task[Unit] =
+    for {
+      assetId <- ZIO.fromEither(AssetId.fromFilename(filename)).mapError(new IllegalArgumentException(_))
+      meta    <- sipiService
+                .getFileMetadataFromDspIngest(ctx.attachedToProject.shortcode, assetId)
+                .mapError {
+                  case NotFoundException(_) =>
+                    new IllegalArgumentException(
+                      s"Asset '$filename' referenced by $v was not found in dsp-ingest; it must be " +
+                        s"pre-ingested before import",
+                    )
+                  case e => e
+                }
+      _ <- ZIO.attempt(emitFileValue(model, v, cls, filename, meta))
+    } yield ()
+
+  /**
+   * Handles a file value that references the placeholder sentinel (`urn:dasch:placeholder`), mirroring the create
+   * path's `allow-placeholder` deployment policy: rejected when the switch is off (production), otherwise emitted
+   * without an ingest fetch, with the sentinel as every asset field (as `ValueContentV2.placeholderFileInfo` does).
+   */
+  private def convertPlaceholderFileValue(
+    model: Model,
+    v: Resource,
+    cls: String,
+    allowPlaceholder: Boolean,
+  ): Task[Unit] =
+    if (!allowPlaceholder)
+      ZIO.fail(
+        new IllegalArgumentException(
+          s"FileValue $v references the placeholder sentinel '${PlaceholderIri.instance.value}', " +
+            s"which is not allowed on this server",
+        ),
+      )
+    else {
+      val placeholder = PlaceholderIri.instance.value
+      val meta        = FileMetadataSipiResponse(None, None, placeholder, None, None, None, None, None)
+      ZIO.attempt(emitFileValue(model, v, cls, placeholder, meta))
     }
 
   /** The internal filename from the naive-renamed `knora-base#fileValueHasFilename`, or throws a descriptive error. */
