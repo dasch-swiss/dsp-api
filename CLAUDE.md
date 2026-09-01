@@ -155,8 +155,7 @@ metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp
 
 ### Bumping the SIPI version
 
-See the `bump-sipi` skill (`.claude/skills/bump-sipi/SKILL.md`).
-
+See "Docker Image Versions" in `docs/05-internals/development/third-party.md`.
 
 ## Development Guidelines
 
