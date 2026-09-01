@@ -5,88 +5,83 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.sparqlbuilder.*
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
+import org.knora.webapi.messages.OntologyConstants.Rdfs.SubPropertyOf
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
-object GetResourceValueVersionHistoryQuery extends QueryBuilderHelper {
+object GetResourceValueVersionHistoryQuery {
+
+  private def kb(name: String): Iri = Iri.unsafeFrom(KnoraBasePrefixExpansion + name)
+
+  private val attachedToUser    = kb("attachedToUser")
+  private val deleteDate        = kb("deleteDate")
+  private val deletedBy         = kb("deletedBy")
+  private val hasValue          = kb("hasValue")
+  private val isDeleted         = kb("isDeleted")
+  private val previousValue     = kb("previousValue")
+  private val valueCreationDate = kb("valueCreationDate")
+  private val subPropertyOf     = Iri.unsafeFrom(SubPropertyOf)
+
+  private val author       = Variable("author")
+  private val currentValue = Variable("currentValue")
+  private val property     = Variable("property")
+  private val valueObject  = Variable("valueObject")
+  private val versionDate  = Variable("versionDate")
+
+  /** Indentation of the patterns inside the WHERE block, shared by the template and the joins. */
+  private val indent = Fragment.raw("\n  ")
 
   def build(
     resourceIri: ResourceIri,
     withDeletedResource: Boolean = false,
     maybeStartDate: Option[Instant] = None,
     maybeEndDate: Option[Instant] = None,
-  ): SelectQuery = {
-    val versionDate  = variable("versionDate")
-    val author       = variable("author")
-    val property     = variable("property")
-    val currentValue = variable("currentValue")
-    val valueObject  = variable("valueObject")
+  ): String = {
+    val resource = Iri.unsafeFrom(resourceIri.value)
 
-    val resource = Rdf.iri(resourceIri.value)
+    // A deleted resource's own deletion counts as a history entry only when deleted resources are
+    // requested; otherwise the resource itself must not be deleted.
+    val notDeleted      = Option.unless(withDeletedResource)(sparql"$resource $isDeleted false .")
+    val resourceDeleted = Option.when(withDeletedResource)(
+      join(
+        sparql"$resource $deleteDate $versionDate .",
+        sparql"$resource $attachedToUser $author .",
+      ),
+    )
 
-    // <resourceIri> ?property ?currentValue .
-    val resourcePattern = resource.has(property, currentValue)
+    val versionBranches = Seq(
+      join(
+        sparql"$valueObject $valueCreationDate $versionDate .",
+        sparql"$valueObject $attachedToUser $author .",
+      ),
+      join(
+        sparql"$valueObject $deleteDate $versionDate .",
+        sparql"$valueObject $deletedBy $author .",
+      ),
+    ) ++ resourceDeleted
 
-    // ?property rdfs:subPropertyOf* knora-base:hasValue .
-    val propertyPath = property.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)
+    val where = Fragment.join(
+      Seq(sparql"$resource $property $currentValue .") ++
+        notDeleted ++
+        Seq(
+          sparql"$property $subPropertyOf* $hasValue .",
+          sparql"$currentValue $previousValue* $valueObject .",
+          Fragments.union(versionBranches*),
+        ) ++
+        maybeStartDate.map(d => Fragments.filter(sparql"$versionDate >= ${Literal.dateTime(d)}")) ++
+        maybeEndDate.map(d => Fragments.filter(sparql"$versionDate < ${Literal.dateTime(d)}")),
+      indent,
+    )
 
-    // ?currentValue knora-base:previousValue* ?valueObject .
-    val previousValuePath = currentValue.has(zeroOrMore(KnoraBase.previousValue), valueObject)
-
-    // UNION branch 1: value creation
-    val creationBranch = valueObject
-      .has(KnoraBase.valueCreationDate, versionDate)
-      .and(valueObject.has(KnoraBase.attachedToUser, author))
-
-    // UNION branch 2: value deletion
-    val deletionBranch = valueObject
-      .has(KnoraBase.deleteDate, versionDate)
-      .and(valueObject.has(KnoraBase.deletedBy, author))
-
-    // UNION branch 3: resource deletion (only when withDeletedResource)
-    val resourceDeleteBranch = resource
-      .has(KnoraBase.deleteDate, versionDate)
-      .and(resource.has(KnoraBase.attachedToUser, author))
-
-    val unionPattern =
-      if (withDeletedResource) GraphPatterns.union(creationBranch, deletionBranch, resourceDeleteBranch)
-      else GraphPatterns.union(creationBranch, deletionBranch)
-
-    // Build WHERE clause
-    var whereClause =
-      if (withDeletedResource) resourcePattern.and(propertyPath).and(previousValuePath).and(unionPattern)
-      else
-        resourcePattern
-          .and(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
-          .and(propertyPath)
-          .and(previousValuePath)
-          .and(unionPattern)
-
-    // Optional date filters
-    maybeStartDate.foreach { startDate =>
-      whereClause = whereClause.filter(Expressions.gte(versionDate, toRdfLiteral(startDate)))
-    }
-
-    maybeEndDate.foreach { endDate =>
-      whereClause = whereClause.filter(Expressions.lt(versionDate, toRdfLiteral(endDate)))
-    }
-
-    Queries
-      .SELECT(versionDate, author)
-      .distinct()
-      .prefix(XSD.NS, RDFS.NS, KnoraBase.NS)
-      .where(whereClause)
-      .orderBy(versionDate.desc())
+    sparql"""SELECT DISTINCT $versionDate $author
+WHERE {
+  $where
+}
+ORDER BY DESC($versionDate)""".render
   }
+
+  private def join(patterns: Fragment*): Fragment = Fragment.join(patterns, indent)
 }
