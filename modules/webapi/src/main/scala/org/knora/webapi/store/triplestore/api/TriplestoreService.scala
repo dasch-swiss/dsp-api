@@ -221,6 +221,11 @@ object TriplestoreService {
       // reuses the search-timeout value but is a distinct tier so its cheap ~0.2-2.8s samples are not filed into
       // the search-tier metric alongside the 13-29s real queries (DEV-6864, PROBE).
       case SearchProbe
+      // The admin view-restrictions report. Its queries are whole-project scans grouped by permission literal
+      // rather than the bounded lookups Standard is sized for, so 20s cut them off on a large project. A tier of
+      // its own, not a longer Standard: nothing else should silently inherit a doubled budget, and the report's
+      // durations stay separable in the metrics.
+      case ViewRestrictions
     }
 
     sealed trait SparqlQuery {

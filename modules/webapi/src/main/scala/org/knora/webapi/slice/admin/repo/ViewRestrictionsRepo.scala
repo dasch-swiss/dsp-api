@@ -30,6 +30,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 /**
  * Reads a project's view-restriction data.
@@ -74,22 +75,33 @@ final case class ViewRestrictionsRepo(
   private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     for {
       iris <- triplestore
-                .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri)))
+                .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri), SparqlTimeout.ViewRestrictions))
                 .map(_.flatMap(_.get("resClass")))
       // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
       // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
       // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
-      anyMultiTyped <- triplestore
-                         .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri)))
-                         .map(_.nonEmpty)
+      anyMultiTyped <-
+        triplestore
+          .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri), SparqlTimeout.ViewRestrictions))
+          .map(_.nonEmpty)
       multi <- if (anyMultiTyped)
-                 triplestore.query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri))).map(_.nonEmpty)
+                 triplestore
+                   .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri), SparqlTimeout.ViewRestrictions))
+                   .map(_.nonEmpty)
                else ZIO.succeed(false)
     } yield ProjectClasses(iris, multi)
 
-  /** Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block. */
+  /**
+   * Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block.
+   *
+   * Every query of this report runs on [[SparqlTimeout.ViewRestrictions]] rather than the standard tier --
+   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
+   */
   private def select(query: SelectQuery, classes: ProjectClasses): Select =
-    Select(ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))))
+    Select(
+      ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))),
+      SparqlTimeout.ViewRestrictions,
+    )
 
   /**
    * Step 1 of the stepped report: every class's resource counts, broken down by permission literal, in a
