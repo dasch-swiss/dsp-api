@@ -37,6 +37,7 @@ import java.nio.file.Path
 import java.time.Instant
 import scala.jdk.CollectionConverters.*
 
+import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -54,11 +55,14 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.jena.RdfDataMgr
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.api.SipiService
 
 final case class TransformerError(message: String)
 
@@ -81,6 +85,7 @@ final class OntologyTransformer(
   sf: StringFormatter,
   standoffMappingService: StandoffMappingService,
   idSource: IdSource,
+  sipiService: SipiService,
 ) { self =>
 
   /**
@@ -127,11 +132,14 @@ final class OntologyTransformer(
       _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
       // addTextValueType must precede convertRichtextValues: the latter drops textValueAsXml, the FormattedText vs
       // UnformattedText signal. Do not reorder these two.
-      _    <- ZIO.attempt(addTextValueType(model))
-      _    <- ZIO.attempt(convertDateValues(model))
-      _    <- ZIO.attempt(convertLinkValues(model))
-      _    <- ZIO.attempt(convertGeomValues(model))
-      _    <- convertRichtextValues(model, now)
+      _ <- ZIO.attempt(addTextValueType(model))
+      _ <- ZIO.attempt(convertDateValues(model))
+      _ <- ZIO.attempt(convertLinkValues(model))
+      _ <- ZIO.attempt(convertGeomValues(model))
+      _ <- convertRichtextValues(model, now)
+      // convertFileValues must precede addValueHasString: it emits internalFilename, from which the string
+      // pass derives valueHasString. It is a real effect (it fetches file metadata from dsp-ingest).
+      _    <- convertFileValues(model, ctx)
       _    <- ZIO.attempt(addValueHasString(model))
       kb   <- tempFile("onto-transformer-kb-", ".nq")
       graph = ProjectService.projectDataNamedGraphV2(ctx.attachedToProject)
@@ -660,6 +668,164 @@ final class OntologyTransformer(
   }
 
   /**
+   * For every value node whose `rdf:type` is a concrete `knora-base` file-value class, emit the file-specific triples
+   * the resource-create/write path persists. Non-external values fetch their metadata from dsp-ingest, mirroring
+   * `ValueContentV2.getFileInfo`: read the naive-renamed `knora-base#fileValueHasFilename`, parse the `AssetId`, call
+   * `getFileMetadataFromDspIngest`, then emit the base fields plus the type-specific dimensions.
+   * `StillImageExternalFileValue` reproduces the create-path `fakeInfo` placeholder literals without a fetch.
+   * `DDDFileValue` has no create-path parity and is rejected. The naive `fileValueHasFilename` /
+   * `stillImageFileValueHasExternalUrl` predicates are dropped; `valueHasString` is derived downstream in
+   * [[addValueHasString]] from the emitted `internalFilename`.
+   *
+   * Runs as a real effect (it calls the ingest service). Materialises the node list before mutating, since it adds
+   * triples into the same model it iterates. Rejections use `ZIO.fail`; synchronous model mutation is wrapped in
+   * `ZIO.attempt` — every failure stays in the `Throwable` channel that `restructure`'s `.mapError` turns into a
+   * `TransformerError`.
+   */
+  private def convertFileValues(model: Model, ctx: ConversionContext): Task[Unit] = {
+    val rdfType = model.createProperty(Rdf.Type)
+
+    val fileValues = model
+      .listSubjects()
+      .asScala
+      .filter { s =>
+        isValue(s) &&
+        Option(s.getProperty(rdfType))
+          .map(_.getObject)
+          .exists(n => n.isURIResource && KnoraBase.FileValueClasses.contains(n.asResource.getURI))
+      }
+      .toList
+      .sortBy(_.getURI)
+
+    for {
+      // Reject DDDFileValue before any fetch, so the rejection path stays hermetic (never calls the ingest service).
+      _ <- ZIO.foreachDiscard(fileValues)(rejectDddFileValue(model, _))
+      _ <- ZIO.foreachDiscard(fileValues)(convertFileValue(model, ctx, _))
+    } yield ()
+  }
+
+  /** Rejects a `DDDFileValue`, which has no create-path content type or write-model variant (REQ-8.3). */
+  private def rejectDddFileValue(model: Model, v: Resource): Task[Unit] = {
+    val rdfType = model.createProperty(Rdf.Type)
+    val isDdd   = Option(v.getProperty(rdfType))
+      .map(_.getObject)
+      .exists(n => n.isURIResource && n.asResource.getURI == KnoraBase.DDDFileValue)
+    if (isDdd)
+      ZIO.fail(new IllegalArgumentException(s"DDDFileValue $v is not yet implemented in the import pipeline"))
+    else ZIO.unit
+  }
+
+  /** Converts one file value: external values reproduce the create-path placeholders; the rest fetch from ingest. */
+  private def convertFileValue(model: Model, ctx: ConversionContext, v: Resource): Task[Unit] = {
+    val rdfType = model.createProperty(Rdf.Type)
+    val typeIri = Option(v.getProperty(rdfType))
+      .map(_.getObject)
+      .collect { case n if n.isURIResource => n.asResource.getURI }
+
+    typeIri match {
+      case Some(KnoraBase.StillImageExternalFileValue) =>
+        ZIO.attempt(emitExternalFileValue(model, v))
+      case Some(cls) =>
+        for {
+          filename <- requireFilename(model, v)
+          assetId  <- ZIO.fromEither(AssetId.fromFilename(filename)).mapError(new IllegalArgumentException(_))
+          meta     <- sipiService
+                    .getFileMetadataFromDspIngest(ctx.attachedToProject.shortcode, assetId)
+                    .mapError {
+                      case NotFoundException(_) =>
+                        new IllegalArgumentException(
+                          s"Asset '$filename' referenced by $v was not found in dsp-ingest; it must be " +
+                            s"pre-ingested before import",
+                        )
+                      case e => e
+                    }
+          _ <- ZIO.attempt(emitFileValue(model, v, cls, filename, meta))
+        } yield ()
+      case None =>
+        ZIO.fail(new IllegalArgumentException(s"FileValue $v has no rdf:type"))
+    }
+  }
+
+  /** The internal filename from the naive-renamed `knora-base#fileValueHasFilename`, or a descriptive failure. */
+  private def requireFilename(model: Model, v: Resource): Task[String] = {
+    val fileValueHasFilename = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "fileValueHasFilename")
+    Option(v.getProperty(fileValueHasFilename))
+      .map(_.getObject)
+      .collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+      .filter(_.nonEmpty) match {
+      case Some(filename) => ZIO.succeed(filename)
+      case None           => ZIO.fail(new IllegalArgumentException(s"FileValue $v has no fileValueHasFilename"))
+    }
+  }
+
+  /** Emits the base file-value triples plus the type-specific dimensions, and drops the naive filename predicate. */
+  private def emitFileValue(
+    model: Model,
+    v: Resource,
+    cls: String,
+    filename: String,
+    meta: FileMetadataSipiResponse,
+  ): Unit = {
+    val fileValueHasFilename = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "fileValueHasFilename")
+    val internalFilename     = model.createProperty(KnoraBase.InternalFilename)
+    val internalMimeType     = model.createProperty(KnoraBase.InternalMimeType)
+    val originalFilename     = model.createProperty(KnoraBase.OriginalFilename)
+    val originalMimeType     = model.createProperty(KnoraBase.OriginalMimeType)
+    val dimX                 = model.createProperty(KnoraBase.DimX)
+    val dimY                 = model.createProperty(KnoraBase.DimY)
+
+    v.removeAll(fileValueHasFilename)
+    v.addProperty(internalFilename, filename)
+    v.addProperty(internalMimeType, meta.internalMimeType)
+    meta.originalFilename.foreach(v.addProperty(originalFilename, _))
+    meta.originalMimeType.foreach(v.addProperty(originalMimeType, _))
+
+    val _ = cls match {
+      // StillImage dims are required; the create path uses width/height.getOrElse(0) (StillImageFileValueContentV2).
+      case KnoraBase.StillImageFileValue =>
+        v.addProperty(dimX, intLiteral(model, meta.width.getOrElse(0)))
+        v.addProperty(dimY, intLiteral(model, meta.height.getOrElse(0)))
+      // Document dims are optional; emit only when ingest supplies them. numpages/pageCount is never persisted (plan D2).
+      case KnoraBase.DocumentFileValue =>
+        meta.width.foreach(w => v.addProperty(dimX, intLiteral(model, w)))
+        meta.height.foreach(h => v.addProperty(dimY, intLiteral(model, h)))
+      // Other (MovingImage/Audio/Text/Archive/StillImageVector): base fields only.
+      case _ => ()
+    }
+  }
+
+  /**
+   * Emits `externalUrl` plus the create-path `fakeInfo` placeholder literals for a `StillImageExternalFileValue`
+   * (`StillImageExternalFileValueContentV2`), and drops the naive `stillImageFileValueHasExternalUrl`. No ingest fetch.
+   */
+  private def emitExternalFileValue(model: Model, v: Resource): Unit = {
+    val src =
+      model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "stillImageFileValueHasExternalUrl")
+    val externalUrl      = model.createProperty(KnoraBase.ExternalUrl)
+    val internalFilename = model.createProperty(KnoraBase.InternalFilename)
+    val internalMimeType = model.createProperty(KnoraBase.InternalMimeType)
+    val originalFilename = model.createProperty(KnoraBase.OriginalFilename)
+    val originalMimeType = model.createProperty(KnoraBase.OriginalMimeType)
+
+    val url = Option(v.getProperty(src))
+      .map(_.getObject)
+      .collect {
+        case n if n.isLiteral     => n.asLiteral.getLexicalForm
+        case n if n.isURIResource => n.asResource.getURI
+      }
+      .getOrElse(
+        throw new IllegalArgumentException(s"StillImageExternalFileValue $v has no stillImageFileValueHasExternalUrl"),
+      )
+
+    v.removeAll(src)
+    v.addProperty(externalUrl, url)
+    v.addProperty(internalFilename, "internalFilename")
+    v.addProperty(internalMimeType, "internalMimeType")
+    v.addProperty(originalFilename, "originalFilename")
+    val _ = v.addProperty(originalMimeType, "originalMimeType")
+  }
+
+  /**
    * Derive the plain-text `knora-base:valueHasString` from each value's content. Scalar values use the lexical form
    * of their content literal; `ListValue` falls back to the list-node IRI, `RegionPreviewValue` to the region IRI,
    * and `IntervalValue` composes its two decimal bounds as `"$start - $end"`. `TextValue` (from the stage-1 rename),
@@ -683,6 +849,15 @@ final class OntologyTransformer(
       KnoraBase.GeonameValue -> KnoraBase.ValueHasGeonameCode,
       KnoraBase.TimeValue    -> KnoraBase.ValueHasTimeStamp,
       KnoraBase.GeomValue    -> KnoraBase.ValueHasGeometry,
+      // Every concrete file value derives valueHasString from its internalFilename (external uses the placeholder).
+      KnoraBase.StillImageFileValue         -> KnoraBase.InternalFilename,
+      KnoraBase.StillImageExternalFileValue -> KnoraBase.InternalFilename,
+      KnoraBase.StillImageVectorFileValue   -> KnoraBase.InternalFilename,
+      KnoraBase.MovingImageFileValue        -> KnoraBase.InternalFilename,
+      KnoraBase.AudioFileValue              -> KnoraBase.InternalFilename,
+      KnoraBase.TextFileValue               -> KnoraBase.InternalFilename,
+      KnoraBase.DocumentFileValue           -> KnoraBase.InternalFilename,
+      KnoraBase.ArchiveFileValue            -> KnoraBase.InternalFilename,
     ).map { case (cls, prop) => cls -> model.createProperty(prop) }
 
     def iriOf(v: Resource, p: Property): Option[String] =
@@ -743,6 +918,6 @@ final class OntologyTransformer(
 }
 
 object OntologyTransformer {
-  val layer: ZLayer[StringFormatter & StandoffMappingService & IdSource, Nothing, OntologyTransformer] =
+  val layer: ZLayer[StringFormatter & StandoffMappingService & IdSource & SipiService, Nothing, OntologyTransformer] =
     ZLayer.derive[OntologyTransformer]
 }
