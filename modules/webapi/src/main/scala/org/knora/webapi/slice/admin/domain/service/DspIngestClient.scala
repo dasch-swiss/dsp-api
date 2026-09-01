@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
+import sttp.model.StatusCode
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -19,6 +20,7 @@ import zio.stream.ZSink
 import java.io.IOException
 import scala.concurrent.duration.DurationInt
 
+import dsp.errors.NotFoundException
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
@@ -72,9 +74,12 @@ final class DspIngestClientLive(
       _        <- ZIO.logInfo(s"asset info for $shortcode/$assetId")
       _        <- ZIO.logDebug(s"Response from ingest: ${response.code}")
       _        <- ZIO.logDebug(s"Response from ingest body: ${response.body.fold(identity, identity)}")
-      result   <- ZIO
-                  .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
-                  .mapError(err => new IOException(s"Error parsing response: $err"))
+      result   <- if (response.code == StatusCode.NotFound)
+                  ZIO.fail(NotFoundException(s"Asset $assetId not found in project $shortcode"))
+                else
+                  ZIO
+                    .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
+                    .mapError(err => new IOException(s"Error parsing response: $err"))
     } yield result
 
   def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
@@ -86,7 +91,7 @@ final class DspIngestClientLive(
                  }
       response <- request.send(backend)
       result   <-
-        if (response.code == sttp.model.StatusCode.NotFound) ZIO.none
+        if (response.code == StatusCode.NotFound) ZIO.none
         else if (!response.code.isSuccess)
           ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
         else ZIO.some(outputFile)
