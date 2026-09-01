@@ -1783,6 +1783,54 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
            |}]""".stripMargin
       runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("has no fileValueHasFilename")))
     },
+    test("StillImageFileValue with no ingest width/height falls back to dimX/dimY 0") {
+      val noDimsMeta = FileMetadataSipiResponse(
+        originalFilename = None,
+        originalMimeType = None,
+        internalMimeType = "image/jp2",
+        width = None,
+        height = None,
+        numpages = None,
+        duration = None,
+        fps = None,
+      )
+      for {
+        _ <- ZIO.serviceWithZIO[SipiServiceMock](
+               _.setReturnValue(SipiMockMethodName.GetFileMetadataFromDspIngest, ZIO.succeed(noDimsMeta)),
+             )
+        res <- runTransformStage2(
+                 fileValueJsonLd("StillImageFileValue", filenameInner("testasset.jp2")),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageFileValue",
+                   s"""knora-base:internalFilename "testasset.jp2" ;
+                      |     knora-base:internalMimeType "image/jp2" ;
+                      |     knora-base:dimX             0 ;
+                      |     knora-base:dimY             0""".stripMargin,
+                   "testasset.jp2",
+                 ),
+               )
+      } yield res
+    },
+    test("invalid fileValueHasFilename is rejected before any ingest fetch") {
+      // "ab" (stripped at the first '.') fails AssetId's ^[a-zA-Z0-9-_]{4,}$ regex, so the parse fails before the
+      // fetch. assertNoInteraction proves no ingest call happened (else the message would be "No interaction expected").
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(fileValueJsonLd("StillImageFileValue", filenameInner("ab.jp2")))
+        msg   = messageOf(exit)
+      } yield assertTrue(
+        exit.isFailure,
+        !msg.contains("was not found in dsp-ingest"),
+        !msg.contains("No interaction expected"),
+      )
+    },
+    test("abstract FileValue is rejected with no ingest interaction") {
+      for {
+        _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        exit <- runTransformStage2Failure(fileValueJsonLd("FileValue", filenameInner("testasset.jp2")))
+      } yield assertTrue(messageOf(exit).contains("abstract"))
+    },
     test("DDDFileValue is rejected as not yet implemented with no ingest interaction") {
       for {
         _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)

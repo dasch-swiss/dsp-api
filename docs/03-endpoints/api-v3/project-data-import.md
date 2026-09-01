@@ -101,6 +101,8 @@ curl --request DELETE \
 - **Project and ontologies must already exist**: The import assumes class and property IRIs in the payload resolve
   against ontologies already in the triplestore.
 - **Create-only**: Re-importing requires deleting the project's data graph first, which is out of scope for this API.
-- **No assets**: Binary assets are not part of the import; only RDF data is handled.
+- **Assets must be pre-ingested**: The import does not ingest binary assets. File values must reference assets already
+  present in dsp-ingest. The import fetches their metadata by internal filename and rejects an asset that is not yet
+  ingested. 3D file values (`DDDFileValue`) are not yet supported.
 - **JSON-LD only**: Other RDF serializations are not accepted.
 - **Single instance**: Task state is held in memory per instance (same constraint as migration import/export).

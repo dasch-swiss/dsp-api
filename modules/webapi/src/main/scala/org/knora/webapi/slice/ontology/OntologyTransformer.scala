@@ -673,7 +673,7 @@ final class OntologyTransformer(
    * `ValueContentV2.getFileInfo`: read the naive-renamed `knora-base#fileValueHasFilename`, parse the `AssetId`, call
    * `getFileMetadataFromDspIngest`, then emit the base fields plus the type-specific dimensions.
    * `StillImageExternalFileValue` reproduces the create-path `fakeInfo` placeholder literals without a fetch.
-   * `DDDFileValue` has no create-path parity and is rejected. The naive `fileValueHasFilename` /
+   * `DDDFileValue` and the abstract `FileValue` have no create-path parity and are rejected. The naive `fileValueHasFilename` /
    * `stillImageFileValueHasExternalUrl` predicates are dropped; `valueHasString` is derived downstream in
    * [[addValueHasString]] from the emitted `internalFilename`.
    *
@@ -698,21 +698,29 @@ final class OntologyTransformer(
       .sortBy(_.getURI)
 
     for {
-      // Reject DDDFileValue before any fetch, so the rejection path stays hermetic (never calls the ingest service).
-      _ <- ZIO.foreachDiscard(fileValues)(rejectDddFileValue(model, _))
+      // Reject unsupported classes before any fetch, so the rejection path stays hermetic (never calls ingest).
+      _ <- ZIO.foreachDiscard(fileValues)(rejectUnsupportedFileValue(model, _))
       _ <- ZIO.foreachDiscard(fileValues)(convertFileValue(model, ctx, _))
     } yield ()
   }
 
-  /** Rejects a `DDDFileValue`, which has no create-path content type or write-model variant (REQ-8.3). */
-  private def rejectDddFileValue(model: Model, v: Resource): Task[Unit] = {
+  /**
+   * Rejects file-value classes with no create-path parity, before any ingest fetch: `DDDFileValue` (no create-path
+   * content type or write-model variant, REQ-8.3) and the abstract `FileValue` (never a valid concrete instance
+   * type). `FileValueClasses` includes both, so this pre-pass keeps them out of [[convertFileValue]].
+   */
+  private def rejectUnsupportedFileValue(model: Model, v: Resource): Task[Unit] = {
     val rdfType = model.createProperty(Rdf.Type)
-    val isDdd   = Option(v.getProperty(rdfType))
+    val typeIri = Option(v.getProperty(rdfType))
       .map(_.getObject)
-      .exists(n => n.isURIResource && n.asResource.getURI == KnoraBase.DDDFileValue)
-    if (isDdd)
-      ZIO.fail(new IllegalArgumentException(s"DDDFileValue $v is not yet implemented in the import pipeline"))
-    else ZIO.unit
+      .collect { case n if n.isURIResource => n.asResource.getURI }
+    typeIri match {
+      case Some(KnoraBase.DDDFileValue) =>
+        ZIO.fail(new IllegalArgumentException(s"DDDFileValue $v is not yet implemented in the import pipeline"))
+      case Some(KnoraBase.FileValue) =>
+        ZIO.fail(new IllegalArgumentException(s"FileValue $v is abstract and cannot be a concrete file value"))
+      case _ => ZIO.unit
+    }
   }
 
   /** Converts one file value: external values reproduce the create-path placeholders; the rest fetch from ingest. */
