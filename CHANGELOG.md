@@ -1,5 +1,30 @@
 # Changelog
 
+## [38.0.0](https://github.com/dasch-swiss/dsp-api/compare/v37.8.0...v38.0.0) (2026-08-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* stepped view-restrictions report, and a property-grouped sibling ([#4270](https://github.com/dasch-swiss/dsp-api/issues/4270))
+
+### Maintenances
+
+* bump sipi to v8.0.0 ([#4278](https://github.com/dasch-swiss/dsp-api/issues/4278)) ([9a831cc](https://github.com/dasch-swiss/dsp-api/commit/9a831ccf8861edd650ef3b57bfb7d3d3d607bcbe))
+* enable the admin SPARQL passthrough in run-with-dev-db (DEV-6734) ([#4273](https://github.com/dasch-swiss/dsp-api/issues/4273)) ([475a7bf](https://github.com/dasch-swiss/dsp-api/commit/475a7bf01e0f00193cff7c8c05067c64ebc23e15))
+
+
+### Enhancements
+
+* emit the target project(s) on the Gravsearch root span (DEV-7031) ([#4269](https://github.com/dasch-swiss/dsp-api/issues/4269)) ([3b1ca79](https://github.com/dasch-swiss/dsp-api/commit/3b1ca79fa7430532597ff22adef1872d2cdcb398))
+* **export:** expose sidecar file metadata on the OAI export (DEV-7025) ([#4266](https://github.com/dasch-swiss/dsp-api/issues/4266)) ([02193d1](https://github.com/dasch-swiss/dsp-api/commit/02193d1a281d24aea9a876fddf83008baf676fb4))
+* **grafana:** response-duration dashboard — route scoping, Gravsearch trace panel, table fix (DEV-7032) ([#4268](https://github.com/dasch-swiss/dsp-api/issues/4268)) ([024da64](https://github.com/dasch-swiss/dsp-api/commit/024da641fbe0f416904c0c452a60b8574f8fbb19))
+* stepped view-restrictions report, and a property-grouped sibling ([#4270](https://github.com/dasch-swiss/dsp-api/issues/4270)) ([e1c71e1](https://github.com/dasch-swiss/dsp-api/commit/e1c71e1a17f8b57ec27d866fd305fa3974914067))
+
+
+### Bug Fixes
+
+* **admin:** whole-subject findAll query with resilient skip-and-log (DEV-6798) ([#4271](https://github.com/dasch-swiss/dsp-api/issues/4271)) ([06cbc60](https://github.com/dasch-swiss/dsp-api/commit/06cbc6021694e76d50171ebfb9baddda6f607a41))
+
 ## [37.8.0](https://github.com/dasch-swiss/dsp-api/compare/v37.7.0...v37.8.0) (2026-08-24)
 
 
