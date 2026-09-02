@@ -250,14 +250,17 @@ docs-build: docs-build-dependent docs-ingest-build
 docs-ingest-build:
     (cd modules/ingest; mkdocs build --clean)
 
+# lints every markdown file tracked by git; the release-please CHANGELOGs are generated and excluded
 markdownlint:
     docker run \
     --rm \
     -v $PWD:/workdir \
     ghcr.io/igorshubovych/markdownlint-cli:latest \
     --config .markdownlint.yml \
-    --disable MD013 MD040 -- \
-    "docs/**/*.md"
+    --disable MD013 MD040 \
+    --ignore CHANGELOG.md \
+    --ignore modules/ingest/CHANGELOG.md \
+    -- $(git ls-files '*.md')
 
 ## Architecture docs
 
