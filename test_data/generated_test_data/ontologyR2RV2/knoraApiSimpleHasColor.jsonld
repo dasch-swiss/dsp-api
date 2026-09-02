@@ -8,7 +8,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
-            "rdfs:comment": "Specifies the color of a region.",
+            "rdfs:comment": "Specifies the color of an annotation.",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Region"
