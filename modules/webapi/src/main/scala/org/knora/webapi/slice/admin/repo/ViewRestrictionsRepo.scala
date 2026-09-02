@@ -30,6 +30,7 @@ import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 /**
  * Reads a project's view-restriction data.
@@ -74,22 +75,33 @@ final case class ViewRestrictionsRepo(
   private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     for {
       iris <- triplestore
-                .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri)))
+                .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri), SparqlTimeout.ViewRestrictions))
                 .map(_.flatMap(_.get("resClass")))
       // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
       // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
       // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
-      anyMultiTyped <- triplestore
-                         .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri)))
-                         .map(_.nonEmpty)
+      anyMultiTyped <-
+        triplestore
+          .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri), SparqlTimeout.ViewRestrictions))
+          .map(_.nonEmpty)
       multi <- if (anyMultiTyped)
-                 triplestore.query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri))).map(_.nonEmpty)
+                 triplestore
+                   .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri), SparqlTimeout.ViewRestrictions))
+                   .map(_.nonEmpty)
                else ZIO.succeed(false)
     } yield ProjectClasses(iris, multi)
 
-  /** Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block. */
+  /**
+   * Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block.
+   *
+   * Every query of this report runs on [[SparqlTimeout.ViewRestrictions]] rather than the standard tier --
+   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
+   */
   private def select(query: SelectQuery, classes: ProjectClasses): Select =
-    Select(ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))))
+    Select(
+      ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))),
+      SparqlTimeout.ViewRestrictions,
+    )
 
   /**
    * Step 1 of the stepped report: every class's resource counts, broken down by permission literal, in a
@@ -622,21 +634,41 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   /**
    * `SELECT DISTINCT ?resClass` — the resource classes the project actually asserts.
    *
-   * Anchored on `attachedToProject`, so the `subClassOf*` check runs over the handful of classes the
-   * project uses rather than per result row. Feeds [[ProjectClasses]].
+   * The `subClassOf*` guard is **not** redundant: `attachedToProject` is also carried by list nodes and by
+   * the project's own ontologies, so without it `?resClass` would pick up `knora-base:ListNode` and
+   * `owl:Ontology` and inflate every downstream count.
+   *
+   * It is, however, the reason this query timed out on a large project (Fuseki-cancelled at the 20s
+   * standard tier). A property path splits the BGP and is never reordered across, so with the guard in the
+   * same group the store first materializes one row per (resource, asserted type) for the *whole* project
+   * and then probes the closure once per row — the cross-join shape
+   * `docs/development/dsp-api-sparql-queries.md` records under "Anchor property paths" (DEV-6803, the same
+   * `subClassOf* knora-base:Resource` pattern, >60s).
+   *
+   * The sub-select fixes the row count rather than the path: Fuseki evaluates a sub-select bottom-up, so
+   * the project scan is deduplicated to the handful of classes the project uses *before* the closure walk
+   * sees them, and the walk runs once per class instead of once per resource-type pair. The result set is
+   * identical — `DISTINCT ?resClass` over a set the outer pattern only filters.
+   *
+   * The `attachedToProject` join stays inside the sub-select rather than becoming a `GRAPH` scope: a
+   * project's resources span one data graph per ontology, so a single derived graph undercounts (see
+   * [[resourceCore]]).
    */
   private[repo] def projectClassesQuery(projectIri: ProjectIri): SelectQuery = {
     val (resource, resClass) = (variable("resource"), variable("resClass"))
+    val usedClasses          = GraphPatterns
+      .select(resClass)
+      .distinct()
+      .where(
+        resource
+          .has(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
+          .andIsA(resClass),
+      )
     Queries
       .SELECT(resClass)
       .distinct()
       .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        resource
-          .isA(resClass)
-          .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-          .and(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource)),
-      )
+      .where(usedClasses, resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
   }
 
   /**
