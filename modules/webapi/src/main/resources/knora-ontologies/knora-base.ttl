@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v53" .
+    :ontologyVersion   "knora-base v54" .
 
 
 #################################################################
@@ -151,7 +151,7 @@
                             "Color"@en,
                             "Couleur"@fr,
                             "Colore"@it ;
-    rdfs:comment            """Specifies the color of a region."""@en ;
+    rdfs:comment            """Specifies the color of an annotation."""@en ;
     salsah-gui:guiAttribute "ncolors=8"^^xsd:string ;
     :objectClassConstraint  :ColorValue ;
     :subjectClassConstraint :Region ;
@@ -1911,10 +1911,10 @@
 
 :Region
     rdf:type           owl:Class ;
-    rdfs:label         "Region"@de,
-                       "Region"@en,
-                       "Région"@fr,
-                       "Regione"@it ;
+    rdfs:label         "Bildannotation"@de,
+                       "Image Annotation"@en,
+                       "Annotation d'image"@fr,
+                       "Annotazione immagine"@it ;
     rdfs:subClassOf    :Resource,
                        [ rdf:type        owl:Restriction ;
                          owl:onProperty  :hasColor ;
@@ -1933,7 +1933,7 @@
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     :resourceIcon      "region.gif"^^xsd:string ;
     :canBeInstantiated true ;
-    rdfs:comment       "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
+    rdfs:comment       "An annotation of a region of an image resource"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#Representation
