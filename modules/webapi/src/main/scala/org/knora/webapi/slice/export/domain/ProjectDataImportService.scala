@@ -41,6 +41,9 @@ final class ProjectDataImportService(
     triplestore.query(ProjectDataGraphExistsQuery.build(project))
 
   /**
+   * `createdBy` and `onBehalfOf` are both `User` and carry opposite meanings (actor vs subject) — call with named
+   * arguments to prevent a silent positional swap that would invert audit and ownership.
+   *
    * @param createdBy  the triggering system admin, recorded as the task owner for audit.
    * @param onBehalfOf the project user every imported resource and value is attributed to, and whose default object
    *                   access permissions are resolved. Its eligibility is captured once at trigger time (no

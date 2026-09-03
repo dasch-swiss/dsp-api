@@ -12,7 +12,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * The reason a supplied on-behalf-of user is rejected for a project data import. The `reason` string is a cross-repo
- * contract: dsp-tools reads `details["reason"]`, so the values are stable and must not change wording lightly.
+ * contract intended to be read by dsp-tools (plan 07) as `details["reason"]`; keep the values stable.
  */
 enum OnBehalfOfIneligibility(val reason: String) {
   case MalformedIdentifier extends OnBehalfOfIneligibility("malformed_identifier")

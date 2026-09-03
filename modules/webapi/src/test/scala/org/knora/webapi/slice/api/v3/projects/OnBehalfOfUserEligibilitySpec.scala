@@ -45,6 +45,16 @@ class OnBehalfOfUserEligibilitySpec extends ZIOSpecDefault {
       ),
     )
 
+  /** A project admin (not a plain member, not a system admin) with project-wide create rights. */
+  private val projectAdmin: User =
+    base.copy(
+      permissions = PermissionsDataADM(
+        groupsPerProject = Map(projectIri.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)),
+        administrativePermissionsPerProject =
+          Map(projectIri.value -> Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll))),
+      ),
+    )
+
   private val systemAdmin: User =
     base.copy(
       permissions = PermissionsDataADM(
@@ -60,6 +70,9 @@ class OnBehalfOfUserEligibilitySpec extends ZIOSpecDefault {
   override def spec: Spec[Any, Any] = suite("OnBehalfOfUserEligibility.check")(
     test("accepts an active project member with project-wide create rights") {
       assertTrue(OnBehalfOfUserEligibility.check(member(active = true, canCreate = true), projectIri).isEmpty)
+    },
+    test("accepts a project admin (the isProjectAdmin branch, REQ-2.5)") {
+      assertTrue(OnBehalfOfUserEligibility.check(projectAdmin, projectIri).isEmpty)
     },
     test("rejects a system admin (REQ-2.4)") {
       assertTrue(

@@ -168,6 +168,9 @@ class ProjectDataImportE2ESpec extends E2EZSpec {
         resourceResponse.body.exists(b => b.contains(valueIri.toString) && b.contains(titleText)),
         // The imported resource is attached to the on-behalf-of user, not the triggering admin.
         resourceResponse.body.exists(_.contains(incunabulaMemberUser.userIri.value)),
+        // Its permissions are resolved from that member's DOAP precedence (ProjectMember group), pinning REQ-3.1
+        // against a silent regression in DOAP resolution.
+        resourceResponse.body.exists(_.contains("M knora-admin:ProjectMember")),
         valueResponse.code == StatusCode.Ok,
         valueResponse.body.exists(b => b.contains(valueIri.toString) && b.contains(titleText)),
         deleteResponse.code == StatusCode.NoContent,

@@ -62,7 +62,8 @@ not) be supplied in the payload:
 The `onBehalfOfUser` is resolved once at trigger time. Eligibility and the resolved permissions are a snapshot:
 mid-flight changes to that user (deactivation, role change, removal) are not reconsidered. The parameter is
 per-request, so a retry after a delete may supply a different user. The import status response reports the
-`onBehalfOfUser` alongside `createdBy` (the triggering admin), so attribution is auditable without reading a resource.
+on-behalf-of user (the `onBehalfOf` field) alongside `createdBy` (the triggering admin), so attribution is auditable
+without reading a resource.
 
 `@graph` declarations in the payload are ignored: all data is written exclusively into the project's data named
 graph, which is derived from the project.

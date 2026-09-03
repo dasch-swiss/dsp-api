@@ -174,10 +174,12 @@ final class V3ProjectsRestService(
   // Request-phase rejections for the on-behalf-of user are raised before any task exists, so they cannot use the
   // generic `conflict`/`notFound` helpers (which need a DataTaskId). They are keyed on the project and the supplied
   // identifier — the only value available for a not-found user (G4).
+  // Substitute the caller-supplied `{id}` last: the fixed values (projectIri, reason) carry no `{…}` tokens, so a
+  // supplied identifier containing a literal `{reason}`/`{projectIri}` cannot be re-substituted into the message.
   private def onBehalfOfUserNotFound(projectIri: ProjectIri, onBehalfOfUser: String): NotFound =
     NotFound(
       on_behalf_of_user_not_found,
-      on_behalf_of_user_not_found.template.replace("{id}", onBehalfOfUser).replace("{projectIri}", projectIri.value),
+      on_behalf_of_user_not_found.template.replace("{projectIri}", projectIri.value).replace("{id}", onBehalfOfUser),
       Map("id" -> onBehalfOfUser, "projectIri" -> projectIri.value),
     )
 
@@ -189,9 +191,9 @@ final class V3ProjectsRestService(
     BadRequest(
       on_behalf_of_user_ineligible,
       on_behalf_of_user_ineligible.template
-        .replace("{id}", onBehalfOfUser)
         .replace("{projectIri}", projectIri.value)
-        .replace("{reason}", reason.reason),
+        .replace("{reason}", reason.reason)
+        .replace("{id}", onBehalfOfUser),
       Map("id" -> onBehalfOfUser, "projectIri" -> projectIri.value, "reason" -> reason.reason),
     )
 
