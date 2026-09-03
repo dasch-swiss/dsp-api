@@ -44,7 +44,7 @@ class ProjectDataImportOntologyMissingE2ESpec extends E2EZSpec {
     description = List(Description.unsafeFrom(StringLiteralV2.from("A project with no ontologies"))),
   )
 
-  override val e2eSpec: Spec[env, Any] = suite("Project Data Import — ontology-missing precondition E2E")(
+  override val e2eSpec: Spec[env, Any] = suite("Project Data Import - ontology-missing precondition E2E")(
     test("reject an import into a project with no ontologies, synchronously (REQ-9.1)") {
       for {
         project <- TestApiClient

@@ -14,7 +14,7 @@ object ProjectDataGraphExistsQuery extends QueryBuilderHelper {
 
   /**
    * ASK whether the project's data named graph contains any data other than list nodes. List-using projects carry
-   * their list nodes in the project data graph, so a subject typed `knora-base:ListNode` is excluded — the create-only
+   * their list nodes in the project data graph, so a subject typed `knora-base:ListNode` is excluded - the create-only
    * precondition treats a lists-only graph as absent.
    */
   def build(project: KnoraProject): Ask = {

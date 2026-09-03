@@ -63,7 +63,7 @@ class ProjectDataImportListsOnlyE2ESpec extends E2EZSpec {
   // The on-behalf-of project user: a member of incunabula, not a system admin, active, with project-wide create rights.
   private val memberUsername = incunabulaMemberUser.username
 
-  override val e2eSpec: Spec[env, Any] = suite("Project Data Import — lists-only precondition E2E")(
+  override val e2eSpec: Spec[env, Any] = suite("Project Data Import - lists-only precondition E2E")(
     test("import into a project whose data graph holds only list nodes (REQ-9.2)") {
       for {
         triggerResponse <- TestApiClient.postBinary[DataTaskStatusResponse](

@@ -164,8 +164,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
 
   // import a project data graph
-  // Three distinct 409s: `import_exists` (a previous data-graph import task still exists — the per-kind task mutex),
-  // `data_graph_exists` (the create-only precondition — the project already holds data other than list nodes), and
+  // Three distinct 409s: `import_exists` (a previous data-graph import task still exists - the per-kind task mutex),
+  // `data_graph_exists` (the create-only precondition - the project already holds data other than list nodes), and
   // `project_ontologies_missing` (the project has no ontologies, so no data can be imported).
   val postProjectIriDataImports = self.base
     .secured(
