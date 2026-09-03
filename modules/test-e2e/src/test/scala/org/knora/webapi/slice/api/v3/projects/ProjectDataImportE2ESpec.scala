@@ -28,8 +28,8 @@ import org.knora.webapi.testservices.TestApiClient
 @RunWith(classOf[DspZTestJUnitRunner])
 class ProjectDataImportE2ESpec extends E2EZSpec {
 
-  // The incunabula project with its ontology but WITHOUT any project data — the data graph must not exist yet
-  // for the create-only import to succeed.
+  // The incunabula project with its ontology but WITHOUT any project data - the create-only import needs a data
+  // graph holding no data other than list nodes, which an empty graph satisfies.
   override def rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfOntology)
 
   private val projectIri  = incunabulaProjectIri.value

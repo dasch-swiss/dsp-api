@@ -4,8 +4,9 @@ The project data import API creates a new project's data graph from a [knora-api
 JSON-LD payload. The server transforms the payload into the internal knora-base representation, validates it, and
 streams it into the triplestore.
 
-The data import handles **instance data only** — the resources and their values. The project and its ontologies
-must already exist on the instance, and the project's data graph must not exist yet (create-only).
+The data import handles **instance data only** — the resources and their values. The project and at least one of its
+ontologies must already exist on the instance. The project's data graph must contain no data other than list nodes
+(create-only): a graph holding only list nodes is permitted, because list-using projects carry their list nodes there.
 
 ## Endpoints
 
@@ -74,10 +75,15 @@ The import is **asynchronous**. Triggering an import returns `202 Accepted` with
 Poll the status endpoint until `status` is `completed` or `failed`.
 The `status` field is one of: `in_progress`, `completed`, `failed`.
 
-The import is **create-only**: if the project already has a data graph, the request is rejected with
-`409 Conflict` and error code `data_graph_exists`. The precondition is checked synchronously when the import is
-triggered and re-verified immediately before the upload. Updating or extending an existing data graph is not
+The import is **create-only**: if the project's data graph already holds data other than list nodes, the request is
+rejected with `409 Conflict` and error code `data_graph_exists`. A graph containing only list nodes is permitted —
+list-using projects carry their list nodes in the data graph. The precondition is checked synchronously when the
+import is triggered and re-verified immediately before the upload. Updating or extending an existing data graph is not
 possible with this API.
+
+The project must have **at least one ontology**. A project with no ontologies is rejected synchronously with
+`409 Conflict` and error code `project_ontologies_missing`. This check runs **before** the create-only check: a
+project with no ontologies is rejected whatever its data graph holds, so the list-node exception is not reached.
 
 Only **one data-graph import** can exist at a time. Attempting to create a second returns `409 Conflict` with the
 existing task's `id` in the error details. Delete the previous task before triggering a new one.
@@ -89,6 +95,10 @@ The upload to Fuseki is **atomic** — if the upload fails, no partial data is w
 Before anything is written to the triplestore, the transformed data is SHACL-validated against the knora-base data
 shapes. The project's ontologies are fetched from the triplestore to support the validation. Validation failure
 fails the task with a descriptive error message and leaves the triplestore untouched.
+
+The presence of at least one project ontology is checked synchronously at trigger time
+(`409 project_ontologies_missing`, see [Key Behaviors](#key-behaviors)). The task also re-checks it as a backstop
+before validation.
 
 ## Typical Workflow
 
@@ -117,7 +127,8 @@ curl --request DELETE \
 
 - **Project and ontologies must already exist**: The import assumes class and property IRIs in the payload resolve
   against ontologies already in the triplestore.
-- **Create-only**: Re-importing requires deleting the project's data graph first, which is out of scope for this API.
+- **Create-only**: The data graph must contain no data other than list nodes. Re-importing requires deleting the
+  project's data graph first, which is out of scope for this API.
 - **Assets must be pre-ingested**: The import does not ingest binary assets. File values must reference assets already
   present in dsp-ingest. The import fetches their metadata by internal filename and rejects an asset that is not yet
   ingested. 3D file values (`DDDFileValue`) are not yet supported.

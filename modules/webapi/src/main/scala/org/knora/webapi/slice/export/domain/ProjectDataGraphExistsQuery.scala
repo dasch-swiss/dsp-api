@@ -7,17 +7,23 @@ package org.knora.webapi.slice.`export`.domain
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 object ProjectDataGraphExistsQuery extends QueryBuilderHelper {
 
-  /** ASK whether the project's data named graph contains any triples. */
+  /**
+   * ASK whether the project's data named graph contains any data other than list nodes. List-using projects carry
+   * their list nodes in the project data graph, so a subject typed `knora-base:ListNode` is excluded - the create-only
+   * precondition treats a lists-only graph as absent.
+   */
   def build(project: KnoraProject): Ask = {
     val (s, p, o) = spo
+    val pattern   = s.has(p, o).filterNotExists(s.isA(Vocabulary.KnoraBase.ListNode)).from(graphIri(project))
     Ask(s"""
            |ASK
            |WHERE {
-           |  ${s.has(p, o).from(graphIri(project)).getQueryString}
+           |  ${pattern.getQueryString}
            |}
            |""".stripMargin)
   }

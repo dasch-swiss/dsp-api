@@ -41,6 +41,7 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 
 final class V3ProjectsRestService(
@@ -164,12 +165,10 @@ final class V3ProjectsRestService(
     .unlessZIO(AppConfig.features(_.allowProjectDataImport))
     .unit
 
-  private def dataGraphExistsConflict(projectIri: ProjectIri): Conflict =
-    Conflict(
-      data_graph_exists,
-      data_graph_exists.template.replace("{projectIri}", projectIri.value),
-      Map("projectIri" -> projectIri.value),
-    )
+  // Keyed on the project only: these rejections are raised before any import task exists, so they cannot use the
+  // generic `conflict` helper (which needs a DataTaskId).
+  private def conflictOnProject(code: Conflicts, projectIri: ProjectIri): Conflict =
+    Conflict(code, code.template.replace("{projectIri}", projectIri.value), Map("projectIri" -> projectIri.value))
 
   // Request-phase rejections for the on-behalf-of user are raised before any task exists, so they cannot use the
   // generic `conflict`/`notFound` helpers (which need a DataTaskId). They are keyed on the project and the supplied
@@ -234,11 +233,30 @@ final class V3ProjectsRestService(
       // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
       // project-exists check and before the create-only precondition (G1 order).
       onBehalfOf <- resolveOnBehalfOfUser(projectIri, onBehalfOfUser)
+      // Ontology-existence precondition (synchronous, so the client receives a real 409). Hoisted from the async
+      // import task: an ontology-less project is rejected at trigger time. Ordered before the create-only check
+      // (G1 order). `getOntologyGraphsForProject` reads the in-memory ontology cache, so this is cheap.
+      _ <- ZIO
+             .fail(conflictOnProject(project_ontologies_missing, projectIri))
+             .whenZIO(
+               projectService
+                 .getOntologyGraphsForProject(project)
+                 .orDieWith(e =>
+                   new IllegalStateException(s"Ontology-existence check failed for project '${projectIri.value}'.", e),
+                 )
+                 .map(_.isEmpty),
+             )
       // Create-only precondition (synchronous, so the client receives a real 409). It is re-verified inside the
       // import task immediately before the upload.
       _ <- ZIO
-             .fail(dataGraphExistsConflict(projectIri))
-             .whenZIO(dataImportService.dataGraphExists(project).orDie)
+             .fail(conflictOnProject(data_graph_exists, projectIri))
+             .whenZIO(
+               dataImportService
+                 .dataGraphExists(project)
+                 .orDieWith(e =>
+                   new IllegalStateException(s"Create-only check failed for project '${projectIri.value}'.", e),
+                 ),
+             )
       state <-
         dataImportService
           .importDataGraph(project = project, createdBy = user, onBehalfOf = onBehalfOf, stream = stream)

@@ -24,7 +24,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 /**
  * Imports a project's data graph from a knora-api JSON-LD payload: transforms it to knora-base NQuads (assigned to
  * the project's data named graph), SHACL-validates the result against the project's ontologies fetched from the
- * triplestore, and streams it into the triplestore. Create-only: the project's data graph must not exist yet.
+ * triplestore, and streams it into the triplestore. Create-only: the project's data graph must contain no data other
+ * than list nodes.
  */
 final class ProjectDataImportService(
   state: DataTaskState,
@@ -36,7 +37,7 @@ final class ProjectDataImportService(
   triplestore: TriplestoreService,
 ) { self =>
 
-  /** Whether the project's data named graph already contains any triples (create-only precondition, R7). */
+  /** Whether the project's data named graph already contains data other than list nodes (create-only precondition, R7). */
   def dataGraphExists(project: KnoraProject): Task[Boolean] =
     triplestore.query(ProjectDataGraphExistsQuery.build(project))
 
@@ -91,10 +92,10 @@ final class ProjectDataImportService(
         _ <- validate(taskId, project, Path.fromJava(transformed))
         _ <- ZIO.logInfo(s"$taskId: Validation passed for project '${project.id}'")
 
-        // Re-verify the create-only precondition immediately before the upload: a data graph may have appeared
+        // Re-verify the create-only precondition immediately before the upload: non-list data may have appeared
         // since the synchronous check in the RestService (e.g. via a concurrent migration import). This narrows but
         // does not fully close the race window — acceptable for an admin-only, single-in-flight-task operation.
-        // Wording kept aligned with `V3ErrorCode.data_graph_exists`.
+        // Wording kept aligned with `V3ErrorCode.data_graph_exists` ("exists" now means "holds non-list data").
         _ <- ZIO
                .fail(new RuntimeException(s"The data graph for project '${project.id}' already exists."))
                .whenZIO(dataGraphExists(project))
@@ -119,8 +120,10 @@ final class ProjectDataImportService(
    */
   private def validate(taskId: DataTaskId, project: KnoraProject, dataFile: Path): ZIO[Scope, Throwable, Unit] = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
-    _      <- ZIO
-           .fail(new RuntimeException(s"Project '${project.id}' has no ontologies in the triplestore."))
+    // Backstop for the synchronous `project_ontologies_missing` check in the RestService: defends against a project
+    // whose ontologies vanish between trigger and validation. Message aligned with `V3ErrorCode.project_ontologies_missing`.
+    _ <- ZIO
+           .fail(new RuntimeException(s"The project '${project.id}' has no ontologies in the triplestore."))
            .when(graphs.isEmpty)
     _             <- ZIO.logInfo(s"$taskId: Fetching ontologies '${graphs.map(_.value).mkString(",")}' for validation")
     tempDir       <- storage.tempDataImportScoped(taskId)
