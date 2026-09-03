@@ -1,12 +1,10 @@
-
-        DELETE {
-          ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate .
-          ?resource <http://example.org/hasLink> <http://example.org/target1> .
-?resource <http://example.org/hasLinkValue> ?linkValue0 .
-?linkValue0 <http://www.knora.org/ontology/knora-base#valueHasUUID> ?linkValueUUID0 .
-?linkValue0 <http://www.knora.org/ontology/knora-base#hasPermissions> ?linkValuePermissions0 .
-        }
-        WHERE {
-          ?resource a <http://www.knora.org/ontology/knora-base#Resource> .
-        }
-      
+DELETE {
+  ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate .
+  ?resource <http://example.org/hasLink> <http://example.org/target1> .
+  ?resource <http://example.org/hasLinkValue> ?linkValue0 .
+  ?linkValue0 <http://www.knora.org/ontology/knora-base#valueHasUUID> ?linkValueUUID0 .
+  ?linkValue0 <http://www.knora.org/ontology/knora-base#hasPermissions> ?linkValuePermissions0 .
+}
+WHERE {
+  ?resource a <http://www.knora.org/ontology/knora-base#Resource> .
+}

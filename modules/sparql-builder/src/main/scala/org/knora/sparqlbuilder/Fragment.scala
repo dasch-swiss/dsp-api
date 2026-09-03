@@ -22,6 +22,12 @@ final case class Fragment private (parts: Vector[Fragment.Part]) { self =>
   /** Render with a trailing newline for readability. */
   def renderLn: String = render + "\n"
 
+  /** Include this fragment only when `condition` is true. */
+  def when(condition: Boolean): Fragment = if (condition) self else Fragment.empty
+
+  /** Include this fragment only when `condition` is false. */
+  def unless(condition: Boolean): Fragment = if (condition) Fragment.empty else self
+
   override def toString: String = render
 }
 
@@ -40,6 +46,15 @@ object Fragment {
   /** An interpolated value (already escaped at construction time). */
   private[sparqlbuilder] final case class ValuePart(escaped: String) extends Part {
     def render: String = escaped
+  }
+
+  /** A nested fragment whose continuation lines inherit the indentation at its interpolation site. */
+  private[sparqlbuilder] final case class NestedPart(fragment: Fragment, continuationIndent: String) extends Part {
+    def render: String = {
+      val rendered = fragment.render
+      if (continuationIndent.isEmpty) rendered
+      else rendered.replace("\n", s"\n$continuationIndent")
+    }
   }
 
   /** The empty fragment — identity element for `++`. */
@@ -66,3 +81,8 @@ object Fragment {
   /** Extension to combine a collection of fragments via monoid. */
   extension (fragments: Iterable[Fragment]) def combineAll: Fragment = fragments.foldLeft(Fragment.empty)(_ ++ _)
 }
+
+extension [A](value: Option[A])
+
+  /** Render an optional value as a fragment, or return the empty fragment for `None`. */
+  def whenSome(f: A => Fragment): Fragment = value.fold(Fragment.empty)(f)

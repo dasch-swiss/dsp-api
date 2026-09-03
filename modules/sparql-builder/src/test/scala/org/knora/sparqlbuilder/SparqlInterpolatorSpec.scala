@@ -8,13 +8,15 @@ package org.knora.sparqlbuilder
 import org.junit.runner.RunWith
 import zio.test.*
 
+import scala.util.Try
+
 import org.knora.testrunner.DspZTestJUnitRunner
 
 /**
  * Doobie-style Fragment + `sparql"..."` interpolator.
  *
  * Demonstrates the library API against the benchmark queries. Whole queries are written as
- * `sparql"""..."""` templates; dynamic parts (conditionals, iteration) are composed as
+ * `sparql"""|..."""` templates; dynamic parts (conditionals, iteration) are composed as
  * `Fragment` values and dropped into template holes.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -38,6 +40,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
     combinatorsSuite,
     conditionalFragmentsSuite,
     iterationSuite,
+    layoutSuite,
   )
 
   // -------------------------------------------------------------------------
@@ -51,17 +54,16 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       val lmd           = Variable("lastModDate")
       val resourceClass = Iri.unsafeFrom("http://example.org/MyClass")
 
-      val query = sparql"""
-        SELECT $s $p $o
-        WHERE {
-          $s a $resourceClass .
-          $s $kbIsDeleted false .
-          ${Fragments.optional(sparql"$s $kbLastMod $lmd .")}
-          $s $p $o .
-        }
-        ORDER BY DESC($lmd)
-        LIMIT 25
-      """.render
+      val query = sparql"""|SELECT $s $p $o
+                            |WHERE {
+                            |  $s a $resourceClass .
+                            |  $s $kbIsDeleted false .
+                            |  ${Fragments.optional(sparql"$s $kbLastMod $lmd .")}
+                            |  $s $p $o .
+                            |}
+                            |ORDER BY DESC($lmd)
+                            |LIMIT 25
+                            |""".render
 
       assertGolden(query, "simpleSelect")
     },
@@ -129,15 +131,14 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
         Fragments.combine(deleteDirectLink, linkValueExistsPatterns)
       }.combineAll
 
-      val query = sparql"""
-        DELETE {
-          $resource $kbLastMod $resourceLastMod .
-          $linkValueDeletePatterns
-        }
-        WHERE {
-          $resource a $kbResource .
-        }
-      """.render
+      val query = sparql"""|DELETE {
+                            |  $resource $kbLastMod $resourceLastMod .
+                            |  $linkValueDeletePatterns
+                            |}
+                            |WHERE {
+                            |  $resource a $kbResource .
+                            |}
+                            |""".render
 
       assertGolden(query, "insertValueDeleteBlock")
     },
@@ -255,6 +256,93 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       )
 
       assertGolden(patterns.render, "iterationIndexed")
+    },
+  )
+
+  // -------------------------------------------------------------------------
+  // Multiline layout and conditional fragments
+  // -------------------------------------------------------------------------
+  val layoutSuite = suite("Multiline layout")(
+    test("multiline templates require a margin on every line") {
+      val noOpeningMargin = Try(sparql"""SELECT ?s
+WHERE { ?s ?p ?o }""")
+      val missingMargin = Try(sparql"""|SELECT ?s
+WHERE { ?s ?p ?o }""")
+
+      assertTrue(
+        noOpeningMargin.isFailure,
+        missingMargin.isFailure,
+      )
+    },
+    test("margins are stripped from multiline templates") {
+      val rendered = sparql"""|SELECT ?s
+                               |WHERE {
+                               |  ?s ?p ?o .
+                               |}""".render
+
+      assertTrue(rendered == "SELECT ?s\nWHERE {\n  ?s ?p ?o .\n}")
+    },
+    test("a standalone nested fragment inherits its parent indentation") {
+      val resource = Iri.unsafeFrom("http://rdfh.ch/0001/a-resource")
+      val branch   = sparql"""|UNION {
+                              |  $resource <http://example.org/date> ?date .
+                              |  $resource <http://example.org/author> ?author .
+                              |}"""
+
+      val rendered = sparql"""|WHERE {
+                                |  {
+                                |    ?value <http://example.org/date> ?date .
+                                |  }
+                                |  $branch
+                                |}""".render
+
+      assertTrue(
+        rendered ==
+          """WHERE {
+            |  {
+            |    ?value <http://example.org/date> ?date .
+            |  }
+            |  UNION {
+            |    <http://rdfh.ch/0001/a-resource> <http://example.org/date> ?date .
+            |    <http://rdfh.ch/0001/a-resource> <http://example.org/author> ?author .
+            |  }
+            |}""".stripMargin,
+      )
+    },
+    test("an empty standalone fragment removes its complete line") {
+      val omitted  = sparql"?s ?p ?o .".when(false)
+      val rendered = sparql"""|WHERE {
+                                |  ?before ?p ?o .
+                                |  $omitted
+                                |  ?after ?p ?o .
+                                |}""".render
+
+      assertTrue(rendered == "WHERE {\n  ?before ?p ?o .\n  ?after ?p ?o .\n}")
+    },
+    test("inline fragment interpolation does not alter layout") {
+      val expression = sparql"?date >= ${Literal.int(1)}"
+      val rendered   = sparql"FILTER($expression)".render
+
+      assertTrue(rendered == "FILTER(?date >= 1)")
+    },
+    test("postfix conditions include and omit fragments") {
+      val fragment = sparql"?s ?p ?o ."
+
+      assertTrue(
+        fragment.when(true).render == "?s ?p ?o .",
+        fragment.when(false).render.isEmpty,
+        fragment.unless(false).render == "?s ?p ?o .",
+        fragment.unless(true).render.isEmpty,
+      )
+    },
+    test("whenSome turns an optional value into a fragment") {
+      val present = Some(42).whenSome(value => sparql"FILTER(?n = ${Literal.int(value)})")
+      val absent  = Option.empty[Int].whenSome(value => sparql"FILTER(?n = ${Literal.int(value)})")
+
+      assertTrue(
+        present.render == "FILTER(?n = 42)",
+        absent.render.isEmpty,
+      )
     },
   )
 }

@@ -1,6 +1,6 @@
 # sparql-builder
 
-Safe, composable SPARQL query building: whole queries as `sparql"""..."""` interpolated
+Safe, composable SPARQL query building: whole queries as `sparql"""|..."""` interpolated
 templates with typed holes, dynamic structure composed as `Fragment` values. This is the
 **only** SPARQL generation style for new dsp-api code — see
 [the decision record](../../docs/development/dsp-api-sparql-builder.md) for why, and for
@@ -17,37 +17,42 @@ val userIri  = Iri.from(untrustedString)                      // Either[String, 
 val resource = Variable("resource")                           // VARNAME-restricted names
 val label    = Literal.string(userInput)                      // escaped at construction
 val labelDe  = Literal.langString("Haus", "de")               // lang tag validated
+val includeDeleted = false
 
-// A whole query is a template; only SparqlValue (Iri, Variable, Literal) and
-// Fragment can be interpolated — a raw String is a compile error.
-val query: String = sparql"""
-  SELECT $resource
-  WHERE {
-    $resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
-    ${Fragments.filterNotExists(sparql"$resource <http://www.knora.org/ontology/knora-base#isDeleted> true .")}
-  }
-""".render
+// Keep static SPARQL as SPARQL. Interpolate only dynamic values and structure.
+val query: String = sparql"""|SELECT ?resource
+                              |WHERE {
+                              |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
+                              |  ${sparql"?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .".unless(includeDeleted)}
+                              |}""".render
 ```
+
+Multiline templates require a `|` margin on every source line. The margin makes the
+rendered query independent of its Scala indentation. A `Fragment` on an otherwise empty
+line inherits that line's indentation for all of its continuation lines; if the fragment
+is empty, the complete line is omitted. Inline interpolation keeps its exact layout.
 
 ### Dynamic structure
 
-Conditionals are `Option[Fragment]` combined with `Fragments.combine`; iteration is
-`.map(...)` joined with `Fragment.join`; composed fragments drop into the template as
-ordinary holes:
+Use postfix `.when(condition)` and `.unless(condition)` for Boolean conditions, and
+`Option.whenSome` when a value is needed to build the fragment. Iteration is `.map(...)`
+joined with `Fragment.join`. Composed fragments drop into the template as ordinary holes:
 
 ```scala
-val commentPattern: Option[Fragment] =
-  maybeComment.map(c => sparql"$value <…#valueHasComment> ${Literal.string(c)} .")
+val commentPattern: Fragment =
+  maybeComment.whenSome(c => sparql"?value <…#valueHasComment> ${Literal.string(c)} .")
 
 val linkPatterns: Fragment = Fragment.join(
   linkUpdates.zipWithIndex.map { case (u, i) =>
     val linkValue = Variable(s"linkValue$i")             // indexed variables per iteration
-    sparql"$resource ${Iri.unsafeFrom(u.propertyIri)} $linkValue ."
+    sparql"?resource ${Iri.unsafeFrom(u.propertyIri)} $linkValue ."
   },
   Fragment.raw("\n"),
 )
 
-val where = Fragments.combine(Some(basePattern), commentPattern) ++ linkPatterns
+val where = sparql"""|$basePattern
+                    |$commentPattern
+                    |$linkPatterns"""
 ```
 
 Helpers: `Fragments.combine` (options, newline-separated), `Fragment.join` (separator),

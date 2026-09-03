@@ -8,7 +8,7 @@ for the general query-writing rules see
 
 ## Decision
 
-All SPARQL generation uses **one style**: whole queries as `sparql"""..."""` interpolated
+All SPARQL generation uses **one style**: whole queries as `sparql"""|..."""` interpolated
 templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic structure composed as
 `Fragment` values. RDF4J SparqlBuilder, the incumbent, is not used for new code; existing
 usage burns down to zero as query sites are migrated (enforced organisationally — code
@@ -28,7 +28,7 @@ onto RDF4J SparqlBuilder — and reading the migrated files sharpened the case:
   drift from code.
 - **Optionality is a staircase.** `InsertValueQueryBuilder.buildFileValuePatterns` threads
   five `match`/`foldLeft` steps to emit five optional patterns; the interpolator writes
-  each as one `Option.when(...)` fragment.
+  each as one fragment with a postfix `.when(...)`, `.unless(...)`, or `Option.whenSome`.
 
 The Twirl→RDF4J migration traded readable-but-unsafe templates for safe-but-unreadable
 builder code. The interpolated template (the Doobie/Skunk pattern) is the only point in
@@ -38,7 +38,7 @@ the design space that is both readable **and** safe:
 |--------------------------|-----------------------------------|----------------------------------------|
 | Readability              | Reads like SPARQL                 | Needs comment crutches                 |
 | Composability            | `Fragment` monoid                 | Patterns compose, clauses don't        |
-| Conditionals / iteration | `Option[Fragment]` / `combineAll` | `match`/`foldLeft` staircases          |
+| Conditionals / iteration | postfix conditions / `combineAll` | `match`/`foldLeft` staircases         |
 | Type safety              | Compile-time                      | Runtime (loosely typed Java API)       |
 | Injection safety         | By construction (validated types) | By construction                        |
 | New dependency           | None                              | None (present)                         |

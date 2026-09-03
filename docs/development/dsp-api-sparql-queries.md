@@ -9,22 +9,20 @@ description: "Write SPARQL and Gravsearch queries in Scala. NEW queries use the 
 
 All **new** SPARQL generation uses the in-house interpolated-template library in
 `modules/sparql-builder/` (package `org.knora.sparqlbuilder`): whole queries as
-`sparql"""..."""` templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic
+`sparql"""|..."""` templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic
 structure composed as `Fragment` values.
 
 ```scala
 import org.knora.sparqlbuilder.*
 
-val resource = Variable("resource")
-val project  = Iri.unsafeFrom("http://rdfh.ch/projects/0001")
+val project        = Iri.unsafeFrom("http://rdfh.ch/projects/0001")
+val includeDeleted = false
 
-val query = sparql"""
-  SELECT $resource
-  WHERE {
-    $resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
-    ${Fragments.filterNotExists(sparql"$resource <http://www.knora.org/ontology/knora-base#isDeleted> true .")}
-  }
-""".render
+val query = sparql"""|SELECT ?resource
+                      |WHERE {
+                      |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
+                      |  ${sparql"?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .".unless(includeDeleted)}
+                      |}""".render
 ```
 
 - API guide and safety model:
@@ -32,6 +30,10 @@ val query = sparql"""
 - Why, and the migration plan: [docs/development/dsp-api-sparql-builder.md](dsp-api-sparql-builder.md)
 - Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
   queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
+- Keep fixed variables, predicates, and syntax in the template. Interpolate only dynamic
+  values and dynamic structure. Multiline templates require a `|` margin on every line;
+  standalone nested fragments inherit their interpolation site's indentation, and empty
+  standalone fragments remove their complete line.
 
 **Do not write new queries with RDF4J SparqlBuilder.** This is a code-review convention
 (see `CONVENTIONS.md` / `REVIEW.md` § SPARQL), not a CI gate: existing query sites keep
