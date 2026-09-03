@@ -67,6 +67,9 @@ final case class CurrentDataTask private (
   createdBy: UserIri,
   createdAt: Instant,
   errorMessage: Option[String] = None,
+  // The project user imported data is attributed to. Distinct from `createdBy` (the triggering admin, for audit).
+  // Only set for data-graph imports; `None` for exports and migration imports.
+  onBehalfOf: Option[UserIri],
 ) { self =>
   def complete(): Either[StateFailedError, CurrentDataTask] = self.status match
     case DataTaskStatus.Completed  => Right(self)
@@ -84,11 +87,15 @@ final case class CurrentDataTask private (
 }
 
 object CurrentDataTask {
-  def makeNew(projectIri: ProjectIri, createdBy: UserIri): UIO[CurrentDataTask] =
+  def makeNew(
+    projectIri: ProjectIri,
+    createdBy: UserIri,
+    onBehalfOf: Option[UserIri] = None,
+  ): UIO[CurrentDataTask] =
     for {
       id  <- DataTaskId.makeNew
       now <- Clock.instant
-    } yield CurrentDataTask(id, projectIri, DataTaskStatus.InProgress, createdBy, now)
+    } yield CurrentDataTask(id, projectIri, DataTaskStatus.InProgress, createdBy, now, onBehalfOf = onBehalfOf)
 
   def restore(
     id: DataTaskId,
@@ -97,5 +104,6 @@ object CurrentDataTask {
     createdBy: UserIri,
     createdAt: Instant,
     errorMessage: Option[String] = None,
-  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt, errorMessage)
+    onBehalfOf: Option[UserIri] = None,
+  ): CurrentDataTask = CurrentDataTask(id, projectIri, status, createdBy, createdAt, errorMessage, onBehalfOf)
 }

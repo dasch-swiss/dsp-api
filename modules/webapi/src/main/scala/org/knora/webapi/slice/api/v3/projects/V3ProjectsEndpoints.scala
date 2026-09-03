@@ -30,6 +30,8 @@ final case class DataTaskStatusResponse(
   createdBy: UserIri,
   createdAt: Instant,
   errorMessage: Option[String] = None,
+  // The project user imported data is attributed to. Set for data-graph imports; absent for exports/migration imports.
+  onBehalfOf: Option[UserIri] = None,
 )
 object DataTaskStatusResponse {
   given JsonCodec[DataTaskStatusResponse] = DeriveJsonCodec.gen[DataTaskStatusResponse]
@@ -39,9 +41,10 @@ object DataTaskStatusResponse {
       state.id,
       state.projectIri,
       state.status,
-      state.createdBy.userIri,
+      state.createdBy,
       state.createdAt,
       state.errorMessage,
+      state.onBehalfOf,
     )
 }
 
@@ -166,7 +169,12 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   val postProjectIriDataImports = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.feature_missing),
+        notFoundVariant(
+          V3ErrorCode.project_not_found,
+          V3ErrorCode.feature_missing,
+          V3ErrorCode.on_behalf_of_user_not_found,
+        ),
+        badRequestVariant,
         conflictVariant(V3ErrorCode.import_exists, V3ErrorCode.data_graph_exists),
       ),
     )
@@ -176,11 +184,20 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       streamBinaryBody(ZioStreams)(JsonLdCodecFormat)
         .description("The project's data graph as knora-api (v2 external) JSON-LD"),
     )
+    .in(
+      query[String]("onBehalfOfUser")
+        .description(
+          "Required. The project user (email or username) every imported resource and value is attributed to, and " +
+            "whose default object access permissions are applied. Must be an active member or admin of the project " +
+            "and not a system admin.",
+        ),
+    )
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Initiates an import of a project's data graph from a knora-api JSON-LD payload. " +
         "The import will be performed asynchronously, and the response will contain an import ID that can be used to check the status of the import. " +
+        "Every imported resource and value is attributed to the `onBehalfOfUser`, not the triggering admin. " +
         "The import is create-only: it fails if the project already has a data graph. " +
         "An import can only be triggered when no other data-graph import exists.",
     )
