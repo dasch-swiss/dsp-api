@@ -24,14 +24,8 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
 
   // -- Common vocabulary (would live in the adapter layer in production) --
   val knoraBase      = "http://www.knora.org/ontology/knora-base#"
-  val rdf            = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   val rdfs           = "http://www.w3.org/2000/01/rdf-schema#"
-  val xsd            = "http://www.w3.org/2001/XMLSchema#"
-  val owl            = "http://www.w3.org/2002/07/owl#"
-  val kbIsDeleted    = Iri.unsafeFrom(knoraBase + "isDeleted")
   val kbResource     = Iri.unsafeFrom(knoraBase + "Resource")
-  val kbLastMod      = Iri.unsafeFrom(knoraBase + "lastModificationDate")
-  val rdfType        = Iri.unsafeFrom(rdf + "type")
   val rdfsSubClassOf = Iri.unsafeFrom(rdfs + "subClassOf")
 
   override def spec = suite("Fragment + sparql interpolator")(
@@ -48,20 +42,18 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
   // -------------------------------------------------------------------------
   val simpleSelectSuite = suite("Simple SELECT with OPTIONAL")(
     test("renders a basic SELECT with OPTIONAL") {
-      val s             = Variable("s")
-      val p             = Variable("p")
-      val o             = Variable("o")
-      val lmd           = Variable("lastModDate")
       val resourceClass = Iri.unsafeFrom("http://example.org/MyClass")
 
-      val query = sparql"""|SELECT $s $p $o
+      val query = sparql"""|SELECT ?s ?p ?o
                             |WHERE {
-                            |  $s a $resourceClass .
-                            |  $s $kbIsDeleted false .
-                            |  ${Fragments.optional(sparql"$s $kbLastMod $lmd .")}
-                            |  $s $p $o .
+                            |  ?s a $resourceClass .
+                            |  ?s <http://www.knora.org/ontology/knora-base#isDeleted> false .
+                            |  OPTIONAL {
+                            |    ?s <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModDate .
+                            |  }
+                            |  ?s ?p ?o .
                             |}
-                            |ORDER BY DESC($lmd)
+                            |ORDER BY DESC(?lastModDate)
                             |LIMIT 25
                             |""".render
 
@@ -85,11 +77,6 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
 
   val insertValueBenchmarkSketch = suite("Benchmark: InsertValueQueryBuilder sketch")(
     test("handles conditional link patterns and iteration with indexed variables") {
-      val resource         = Variable("resource")
-      val resourceLastMod  = Variable("resourceLastModificationDate")
-      val kbHasPermissions = Iri.unsafeFrom(knoraBase + "hasPermissions")
-      val kbValueHasUUID   = Iri.unsafeFrom(knoraBase + "valueHasUUID")
-
       val linkUpdates = List(
         LinkUpdate(
           "http://example.org/hasLink",
@@ -106,37 +93,33 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       )
 
       // Build delete patterns with conditional logic (mirrors InsertValueQueryBuilder.buildDeletePatterns)
-      val linkValueDeletePatterns: Fragment = linkUpdates.zipWithIndex.map { case (linkUpdate, index) =>
-        val deleteDirectLink = Option.when(linkUpdate.deleteDirectLink) {
-          val linkProp = Iri.unsafeFrom(linkUpdate.linkPropertyIri)
-          val target   = Iri.unsafeFrom(linkUpdate.linkTargetIri)
-          sparql"$resource $linkProp $target ."
-        }
+      val linkValueDeletePatterns: Fragment = Fragment.join(
+        linkUpdates.zipWithIndex.map { case (linkUpdate, index) =>
+          val linkProp         = Iri.unsafeFrom(linkUpdate.linkPropertyIri)
+          val target           = Iri.unsafeFrom(linkUpdate.linkTargetIri)
+          val deleteDirectLink = sparql"?resource $linkProp $target .".when(linkUpdate.deleteDirectLink)
 
-        val linkValueExistsPatterns = Option.when(linkUpdate.linkValueExists) {
-          val linkValue      = Variable(s"linkValue$index")
-          val linkValueUUID  = Variable(s"linkValueUUID$index")
-          val linkValuePerms = Variable(s"linkValuePermissions$index")
-          val linkPropValue  = Iri.unsafeFrom(linkUpdate.linkPropertyIri + "Value")
-          Fragment.join(
-            List(
-              sparql"$resource $linkPropValue $linkValue .",
-              sparql"$linkValue $kbValueHasUUID $linkValueUUID .",
-              sparql"$linkValue $kbHasPermissions $linkValuePerms .",
-            ),
-            Fragment.raw("\n"),
-          )
-        }
+          val linkValue               = Variable(s"linkValue$index")
+          val linkValueUUID           = Variable(s"linkValueUUID$index")
+          val linkValuePerms          = Variable(s"linkValuePermissions$index")
+          val linkPropValue           = Iri.unsafeFrom(linkUpdate.linkPropertyIri + "Value")
+          val linkValueExistsPatterns = sparql"""|?resource $linkPropValue $linkValue .
+                                                   |$linkValue <http://www.knora.org/ontology/knora-base#valueHasUUID> $linkValueUUID .
+                                                   |$linkValue <http://www.knora.org/ontology/knora-base#hasPermissions> $linkValuePerms ."""
+            .when(linkUpdate.linkValueExists)
 
-        Fragments.combine(deleteDirectLink, linkValueExistsPatterns)
-      }.combineAll
+          sparql"""|$deleteDirectLink
+                    |$linkValueExistsPatterns"""
+        },
+        Fragment.raw("\n"),
+      )
 
       val query = sparql"""|DELETE {
-                            |  $resource $kbLastMod $resourceLastMod .
+                            |  ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate .
                             |  $linkValueDeletePatterns
                             |}
                             |WHERE {
-                            |  $resource a $kbResource .
+                            |  ?resource a <http://www.knora.org/ontology/knora-base#Resource> .
                             |}
                             |""".render
 
@@ -148,13 +131,17 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
   // Fragments combinators
   // -------------------------------------------------------------------------
   val combinatorsSuite = suite("Fragments combinators")(
+    test("optional wraps a dynamic pattern") {
+      val rendered = Fragments.optional(sparql"?s ?p ?o .").render
+
+      assertTrue(rendered == "OPTIONAL {\n  ?s ?p ?o .\n}")
+    },
     test("union renders UNION branches") {
-      val s        = Variable("s")
       val nodeIri  = Iri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
       val rendered = Fragments
         .union(
-          sparql"$s <http://www.knora.org/ontology/salsah-gui#guiAttribute> ${Literal.string(s"hlist=${nodeIri.render}")} .",
-          sparql"$s $kbLastMod $nodeIri .",
+          sparql"?s <http://www.knora.org/ontology/salsah-gui#guiAttribute> ${Literal.string(s"hlist=${nodeIri.render}")} .",
+          sparql"?s <http://www.knora.org/ontology/knora-base#lastModificationDate> $nodeIri .",
         )
         .render
       assertGolden(rendered, "union")
@@ -191,29 +178,23 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
   // Conditional fragments (Twirl @if/@match equivalent)
   // -------------------------------------------------------------------------
   val conditionalFragmentsSuite = suite("Conditional fragments")(
-    test("Option[Fragment] with combine") {
+    test("whenSome builds a fragment from a present value") {
       val maybeComment: Option[String] = Some("A comment")
-      val commentIri                   = Iri.unsafeFrom(knoraBase + "valueHasComment")
-      val newValue                     = Variable("newValue")
 
-      val commentPattern: Option[Fragment] = maybeComment.map { c =>
-        sparql"$newValue $commentIri ${Literal.string(c)} ."
-      }
-
-      val result = Fragments.combine(
-        Some(sparql"$newValue a ${Iri.unsafeFrom(knoraBase + "TextValue")} ."),
-        commentPattern,
-      )
+      val result = sparql"""|?newValue a <http://www.knora.org/ontology/knora-base#TextValue> .
+                             |${maybeComment.whenSome(comment =>
+          sparql"?newValue <http://www.knora.org/ontology/knora-base#valueHasComment> ${Literal.string(comment)} .",
+        )}"""
 
       assertGolden(result.render, "conditionalCombine")
     },
-    test("None fragments are skipped") {
-      val noComment: Option[Fragment] = None
-      val result                      = Fragments.combine(
-        Some(sparql"?s a ?type ."),
-        noComment,
-      )
-      assertTrue(result.render == "?s a ?type .")
+    test("a false postfix condition removes its standalone line") {
+      val result = sparql"""|WHERE {
+                             |  ?s a ?type .
+                             |  ${sparql"?s <http://example.org/comment> ?comment .".when(false)}
+                             |}"""
+
+      assertTrue(result.render == "WHERE {\n  ?s a ?type .\n}")
     },
   )
 
@@ -229,13 +210,11 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
         ValueUpdate("http://example.org/hasAge", "30"),
       )
 
-      val newValue = Variable("newValue")
-
       val patterns: Fragment = Fragment.join(
         updates.map { update =>
           val pred = Iri.unsafeFrom(update.predicateIri)
           val lit  = Literal.string(update.value)
-          sparql"$newValue $pred $lit ."
+          sparql"?newValue $pred $lit ."
         },
         Fragment.raw("\n"),
       )
@@ -243,14 +222,14 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       assertGolden(patterns.render, "iterationMap")
     },
     test("indexed variables for link updates (Twirl @for equivalent)") {
-      val resource    = Variable("resource")
       val linkUpdates = List("target1", "target2", "target3")
 
       val patterns: Fragment = Fragment.join(
         linkUpdates.zipWithIndex.map { case (target, idx) =>
           val linkValue = Variable(s"linkValue$idx")
           val targetIri = Iri.unsafeFrom(s"http://example.org/$target")
-          sparql"$resource ${Iri.unsafeFrom(knoraBase + "hasLink")} $targetIri .\n$linkValue ${Iri.unsafeFrom(knoraBase + "valueHasRefCount")} ${Literal.int(1)} ."
+          sparql"""|?resource <http://www.knora.org/ontology/knora-base#hasLink> $targetIri .
+                    |$linkValue <http://www.knora.org/ontology/knora-base#valueHasRefCount> 1 ."""
         },
         Fragment.raw("\n"),
       )

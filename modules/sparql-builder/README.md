@@ -12,11 +12,11 @@ the RDF4J SparqlBuilder migration plan.
 import org.knora.sparqlbuilder.*
 
 // Typed values — all constructors validate; there is no unvalidated path.
-val project  = Iri.unsafeFrom("http://rdfh.ch/projects/0001") // throws on invalid input
-val userIri  = Iri.from(untrustedString)                      // Either[String, Iri]
-val resource = Variable("resource")                           // VARNAME-restricted names
-val label    = Literal.string(userInput)                      // escaped at construction
-val labelDe  = Literal.langString("Haus", "de")               // lang tag validated
+val project           = Iri.unsafeFrom("http://rdfh.ch/projects/0001") // throws on invalid input
+val userIri           = Iri.from(untrustedString)                      // Either[String, Iri]
+val generatedVariable = Variable(s"value$index")                       // dynamic names only
+val label             = Literal.string(userInput)                      // escaped at construction
+val labelDe           = Literal.langString("Haus", "de")               // lang tag validated
 val includeDeleted = false
 
 // Keep static SPARQL as SPARQL. Interpolate only dynamic values and structure.
@@ -35,31 +35,32 @@ is empty, the complete line is omitted. Inline interpolation keeps its exact lay
 ### Dynamic structure
 
 Use postfix `.when(condition)` and `.unless(condition)` for Boolean conditions, and
-`Option.whenSome` when a value is needed to build the fragment. Iteration is `.map(...)`
-joined with `Fragment.join`. Composed fragments drop into the template as ordinary holes:
+`Option.whenSome` when a value is needed to build the fragment. Use `Fragment.join` for
+dynamic collections. These fragments can be built directly at their interpolation site:
 
 ```scala
-val commentPattern: Fragment =
-  maybeComment.whenSome(c => sparql"?value <…#valueHasComment> ${Literal.string(c)} .")
-
-val linkPatterns: Fragment = Fragment.join(
-  linkUpdates.zipWithIndex.map { case (u, i) =>
-    val linkValue = Variable(s"linkValue$i")             // indexed variables per iteration
-    sparql"?resource ${Iri.unsafeFrom(u.propertyIri)} $linkValue ."
-  },
-  Fragment.raw("\n"),
-)
-
-val where = sparql"""|$basePattern
-                    |$commentPattern
-                    |$linkPatterns"""
+val query = sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                      |
+                      |INSERT {
+                      |  ?resource knora-base:hasValue ?value .
+                      |  ${maybeComment.whenSome(comment =>
+                        sparql"?value knora-base:valueHasComment ${Literal.string(comment)} ."
+                      )}
+                      |  ${Fragment.join(
+                        linkUpdates.zipWithIndex.map { case (update, index) =>
+                          val linkValue = Variable(s"linkValue$index")
+                          sparql"?resource ${Iri.unsafeFrom(update.propertyIri)} $linkValue ."
+                        },
+                        Fragment.raw("\n"),
+                      )}
+                      |}"""
 ```
 
-Helpers: `Fragments.combine` (options, newline-separated), `Fragment.join` (separator),
-plus `optional`, `union`, `graph`, `filter`, `filterNotExists`, `minus`, `bind`,
-`values`, `subquery` in `Fragments`. The raw monoid (`++`, `combineAll`,
-`Fragment.combine`) concatenates with **no** separator — fine for fragments that carry
-their own whitespace, wrong for joining bare triple patterns.
+`Fragments` also provides `optional`, `union`, `graph`, `filter`, `filterNotExists`,
+`minus`, `bind`, `values`, and `subquery` for constructs that are themselves dynamic.
+When a construct is fixed, write it directly in the query. The raw monoid (`++`,
+`combineAll`) concatenates with **no** separator; use `Fragment.join` when a dynamic
+collection needs one.
 
 ### Safety model
 
@@ -76,8 +77,9 @@ their own whitespace, wrong for joining bare triple patterns.
 
 ### Notes
 
-- Property paths: the operator sits *outside* the hole — `sparql"$cls $subClassOf* $t"`
-  renders `?cls <…#subClassOf>* ?t`. Never bake `*`/`+` into an IRI string.
+- Property paths: keep a fixed path directly in the template. If the predicate is dynamic,
+  the operator still sits *outside* its hole — `sparql"?cls $predicate* ?target"`. Never
+  bake `*`/`+` into an IRI string.
 - Non-finite doubles render as `"NaN"^^xsd:double` / `"INF"` / `"-INF"` typed literals
   (bare tokens would be invalid SPARQL).
 - The library renders strings; it deliberately does not model whole-query structure.
