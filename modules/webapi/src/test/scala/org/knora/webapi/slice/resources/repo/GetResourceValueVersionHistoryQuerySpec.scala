@@ -33,19 +33,22 @@ class GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
       )
       assertTrue(
         actual ==
-          s"""SELECT DISTINCT ?versionDate ?author
+          s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+             |PREFIX knora-base: <$kb>
+             |
+             |SELECT DISTINCT ?versionDate ?author
              |WHERE {
              |  $res ?property ?currentValue .
-             |  $res <${kb}isDeleted> false .
-             |  ?property <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <${kb}hasValue> .
-             |  ?currentValue <${kb}previousValue>* ?valueObject .
+             |  $res knora-base:isDeleted false .
+             |  ?property rdfs:subPropertyOf* knora-base:hasValue .
+             |  ?currentValue knora-base:previousValue* ?valueObject .
              |  {
-             |  ?valueObject <${kb}valueCreationDate> ?versionDate .
-             |  ?valueObject <${kb}attachedToUser> ?author .
-             |} UNION {
-             |  ?valueObject <${kb}deleteDate> ?versionDate .
-             |  ?valueObject <${kb}deletedBy> ?author .
-             |}
+             |    ?valueObject knora-base:valueCreationDate ?versionDate .
+             |    ?valueObject knora-base:attachedToUser ?author .
+             |  } UNION {
+             |    ?valueObject knora-base:deleteDate ?versionDate .
+             |    ?valueObject knora-base:deletedBy ?author .
+             |  }
              |}
              |ORDER BY DESC(?versionDate)""".stripMargin,
       )
@@ -59,21 +62,25 @@ class GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
       )
       assertTrue(
         actual ==
-          s"""SELECT DISTINCT ?versionDate ?author
+          s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+             |PREFIX knora-base: <$kb>
+             |
+             |SELECT DISTINCT ?versionDate ?author
              |WHERE {
              |  $res ?property ?currentValue .
-             |  ?property <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <${kb}hasValue> .
-             |  ?currentValue <${kb}previousValue>* ?valueObject .
+             |  ?property rdfs:subPropertyOf* knora-base:hasValue .
+             |  ?currentValue knora-base:previousValue* ?valueObject .
              |  {
-             |  ?valueObject <${kb}valueCreationDate> ?versionDate .
-             |  ?valueObject <${kb}attachedToUser> ?author .
-             |} UNION {
-             |  ?valueObject <${kb}deleteDate> ?versionDate .
-             |  ?valueObject <${kb}deletedBy> ?author .
-             |} UNION {
-             |  $res <${kb}deleteDate> ?versionDate .
-             |  $res <${kb}attachedToUser> ?author .
-             |}
+             |    ?valueObject knora-base:valueCreationDate ?versionDate .
+             |    ?valueObject knora-base:attachedToUser ?author .
+             |  } UNION {
+             |    ?valueObject knora-base:deleteDate ?versionDate .
+             |    ?valueObject knora-base:deletedBy ?author .
+             |  }
+             |  UNION {
+             |    $res knora-base:deleteDate ?versionDate .
+             |    $res knora-base:attachedToUser ?author .
+             |  }
              |}
              |ORDER BY DESC(?versionDate)""".stripMargin,
       )
@@ -87,19 +94,22 @@ class GetResourceValueVersionHistoryQuerySpec extends ZIOSpecDefault {
       )
       assertTrue(
         actual ==
-          s"""SELECT DISTINCT ?versionDate ?author
+          s"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+             |PREFIX knora-base: <$kb>
+             |
+             |SELECT DISTINCT ?versionDate ?author
              |WHERE {
              |  $res ?property ?currentValue .
-             |  $res <${kb}isDeleted> false .
-             |  ?property <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <${kb}hasValue> .
-             |  ?currentValue <${kb}previousValue>* ?valueObject .
+             |  $res knora-base:isDeleted false .
+             |  ?property rdfs:subPropertyOf* knora-base:hasValue .
+             |  ?currentValue knora-base:previousValue* ?valueObject .
              |  {
-             |  ?valueObject <${kb}valueCreationDate> ?versionDate .
-             |  ?valueObject <${kb}attachedToUser> ?author .
-             |} UNION {
-             |  ?valueObject <${kb}deleteDate> ?versionDate .
-             |  ?valueObject <${kb}deletedBy> ?author .
-             |}
+             |    ?valueObject knora-base:valueCreationDate ?versionDate .
+             |    ?valueObject knora-base:attachedToUser ?author .
+             |  } UNION {
+             |    ?valueObject knora-base:deleteDate ?versionDate .
+             |    ?valueObject knora-base:deletedBy ?author .
+             |  }
              |  FILTER(?versionDate >= "2018-06-04T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
              |  FILTER(?versionDate < "2018-06-05T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
              |}
