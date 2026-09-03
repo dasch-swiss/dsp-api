@@ -38,7 +38,7 @@ the design space that is both readable **and** safe:
 |--------------------------|-----------------------------------|----------------------------------------|
 | Readability              | Reads like SPARQL                 | Needs comment crutches                 |
 | Composability            | `Fragment` monoid                 | Patterns compose, clauses don't        |
-| Conditionals / iteration | postfix conditions / `combineAll` | `match`/`foldLeft` staircases         |
+| Conditionals / iteration | postfix conditions / `combineAll` | `match`/`foldLeft` staircases          |
 | Type safety              | Compile-time                      | Runtime (loosely typed Java API)       |
 | Injection safety         | By construction (validated types) | By construction                        |
 | New dependency           | None                              | None (present)                         |
