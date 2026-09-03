@@ -5,34 +5,25 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
-object GetAllResourcesInProjectPrequery extends QueryBuilderHelper {
+object GetAllResourcesInProjectPrequery {
 
-  def build(projectIri: IRI): SelectQuery = {
-    val resource     = variable("resource")
-    val resourceType = variable("resourceType")
-    val creationDate = variable("creationDate")
+  def build(projectIri: IRI): String = {
+    val project = Iri.unsafeFrom(projectIri)
 
-    val wherePattern = resource
-      .has(KnoraBase.attachedToProject, Rdf.iri(projectIri))
-      .and(resourceType.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
-      .and(resource.has(Rdf.iri(RDF.TYPE.stringValue()), resourceType))
-      .and(resource.has(KnoraBase.creationDate, creationDate))
-
-    Queries
-      .SELECT(resource)
-      .distinct()
-      .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
-      .where(wherePattern)
-      .orderBy(creationDate.desc())
+    sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              |
+              |SELECT DISTINCT ?resource
+              |WHERE {
+              |  ?resource knora-base:attachedToProject $project .
+              |  ?resourceType rdfs:subClassOf* knora-base:Resource .
+              |  ?resource rdf:type ?resourceType .
+              |  ?resource knora-base:creationDate ?creationDate .
+              |}
+              |ORDER BY DESC(?creationDate)""".render
   }
 }
