@@ -81,44 +81,9 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
 
 ### Module Structure
 
-The codebase is organized into several key modules:
-
-**Core Modules:**
-
-- `modules/webapi/` - Main API application
-- `modules/bagit/` - BagIt library for creating, reading, and validating BagIt packages (RFC 8493, <https://www.rfc-editor.org/rfc/rfc8493>)
-- `modules/testkit/` - Shared test utilities and base classes
-- `modules/test-it/` - Integration tests (service/repo/Sipi tests)
-- `modules/test-e2e/` - End-to-end HTTP API tests
-- `modules/sipi/` - Custom Sipi media server configuration
-
-**Slice Architecture** (`modules/webapi/src/main/scala/org/knora/webapi/slice/`):
-
-- `admin/` - Administrative endpoints (users, groups, projects, permissions)
-- `common/` - Shared utilities and base classes
-- `infrastructure/` - Cross-cutting concerns (metrics, caching, JWT)
-- `lists/` - List management functionality
-- `ontology/` - Ontology management
-- `resources/` - Resource and value management
-- `search/` - Search functionality
-- `security/` - Authentication and authorization
-- `shacl/` - SHACL validation
-
-Each slice typically contains:
-
-- `api/` - REST endpoints and routes
-- `domain/` - Business logic and domain models
-- `repo/` - Data access layer
-
-### Technology Stack
-
-- **Language**: Scala 3.8.4
-- **Framework**: ZIO 2.x for functional programming
-- **HTTP**: zio-http as the HTTP server, with Tapir for endpoint definition
-- **Database**: Apache Jena Fuseki (RDF triplestore)
-- **Media Server**: Sipi (C++ media server)
-- **Testing**: ZIO Test framework, some ScalaTests exist but will be migrated to ZIO Test
-- **JSON**: ZIO JSON for serialization
+- `modules/bagit/` implements BagIt packages per RFC 8493 (<https://www.rfc-editor.org/rfc/rfc8493>).
+- Each slice under `modules/webapi/src/main/scala/org/knora/webapi/slice/` contains `api/` (REST
+  endpoints and routes), `domain/` (business logic and domain models) and `repo/` (data access layer).
 
 ### Key Design Patterns
 
@@ -134,25 +99,6 @@ Each slice typically contains:
 
 1. **Verify instances, not just schema.** Confirm whether existing test data instances already exercise the scenario — finding that the schema supports a case is not sufficient.
 2. **Discover self-contained fixtures first.** Check if the component under test has its own fixture files before adding to a shared dataset. Shared datasets are loaded by many tests; a single new record can cause cascading failures across unrelated specs.
-
-### Test Organization
-
-- Unit tests: `modules/webapi/src/test/scala/`
-- Integration tests: `modules/test-it/src/test/scala/`
-- End-to-end tests: `modules/test-e2e/src/test/scala/`
-- Shared test utilities: `modules/testkit/src/main/scala/`
-- Tests are organized by module following the main source structure
-
-### Test Execution
-
-- Unit tests run against in-memory implementations
-- Integration tests use Testcontainers for real database/service instances
-
-### Test Data
-
-- Test data located in `test_data/` directory
-- Project ontologies in `test_data/project_ontologies/`
-- Project data in `test_data/project_data/`
 
 ## Development Environment
 
@@ -181,12 +127,6 @@ When changes are hard to test with local test data (e.g. they need realistic dat
 2. Run `just run-with-dev-db`
 3. The API will start connected to `db.dev.dasch.swiss` via HTTPS
 
-### Configuration
-
-- Main config: `modules/webapi/src/main/resources/application.conf`
-- Test config: `modules/webapi/src/test/resources/test.conf`
-- Docker config: `docker-compose.yml`
-
 ### Scala language intelligence (Metals MCP)
 
 This repo ships a checked-in `metals` MCP server intended to give agents Scala language intelligence
@@ -204,27 +144,6 @@ This is **not** a rules_scala 7.x issue. It's a vendored patch to bazel-bsp — 
 remove it once upstream supports Bazel 9. Bootstrap in a fresh worktree: `just metals-bootstrap`, then the
 metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp.md`.
 
-## API Structure
-
-### Endpoint Definition
-
-- Uses Tapir for type-safe endpoint definitions
-- Endpoints defined in `*Endpoints.scala` files
-- Handlers in `*EndpointsHandler.scala` files
-- Routes in `*Routes.scala` files
-
-### API Versions
-
-- **Admin API**: Administrative functions
-- **API v2**: Main application API
-- **Management API**: Health checks and metrics
-
-### Authentication
-
-- JWT-based authentication
-- Scopes for authorization
-- Session management
-
 ## Common Development Tasks
 
 ### Adding New Endpoints
@@ -236,55 +155,9 @@ metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp
 
 ### Bumping the SIPI version
 
-The sipi version lives in **one place**: the two `oci.pull` digests in `MODULE.bazel`. There is no
-duplicated tag string — the `/version` endpoint reads the tag from the pulled image's own
-`org.opencontainers.image.version` OCI label (`//tools/buildinfo:oci_config_label`).
+See "Docker Image Versions" in `docs/05-internals/development/third-party.md`.
 
-When applying a new `daschswiss/sipi` release, update `MODULE.bazel`: the two `oci.pull` blocks
-(`sipi_base_amd64`, `sipi_base_arm64`) are pinned by **per-arch single-manifest digest**, not the tag.
-The arm64 index entry carries a `v8` variant that a bare `linux/arm64` request does not match, so pull
-each platform's manifest directly. Also update the tag and the index digest in the comment above them
-(the comment tag is documentation + a Renovate anchor; the digests are what the build uses).
-
-Get the digests for the target tag with:
-
-```bash
-docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z --raw \
-  | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(.platform.variant // "") \(.digest)"'
-docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z | grep -i digest   # index digest
-```
-
-`docker-compose.yml` needs no change — it uses `daschswiss/knora-sipi:latest` (the derived image built
-from this base), not a pinned version. After bumping, remember to sync the same version in the
-**ops-deploy** repo when deploying the DSP release.
-
-(The **Fuseki** image is versioned by release-please like knora-api/dsp-ingest — its tag is the DSP
-release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist version**
-(`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the `/version`
-report, and the image's OTLP `service.version` resource attribute — see "Updating Jena/Fuseki" in
-`modules/fuseki/README.md`.)
-
-### Code Style
-
-- Use Scalafmt for formatting
-- Follow functional programming principles
-- Prefer ZIO effects over side effects
-- Use meaningful names and types
-
-## Troubleshooting
-
-### Common Issues
-
-- **Docker**: Ensure Docker Desktop is running
-- **Database**: Check Fuseki is accessible at localhost:3030
-- **Tests**: Integration tests require built Docker images
-
-### Debugging
-
-- Use `just stack-logs` to view all service logs
-- Check `just stack-health` for API health status
-- Use `just stack-status` to see container status
-
+## Development Guidelines
 
 ### Writing SPARQL queries
 

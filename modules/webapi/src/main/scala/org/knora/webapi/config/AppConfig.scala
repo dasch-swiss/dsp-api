@@ -188,6 +188,7 @@ final case class Triplestore(
   queryTimeout: Duration,
   gravsearchTimeout: Duration,
   searchTimeout: Duration,
+  viewRestrictionsTimeout: Duration,
   maintenanceTimeout: Duration,
   fuseki: Fuseki,
   profileQueries: Boolean,
@@ -272,6 +273,15 @@ object AppConfig {
     // (KNORA_WEBAPI_TRIPLESTORE_SEARCH_TIMEOUT) makes a bad value injectable at deploy time, so guard it.
     .validate("app.triplestore.search-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
       c.triplestore.searchTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
+    )
+    .validate("app.triplestore.view-restrictions-timeout must be positive")(
+      _.triplestore.viewRestrictionsTimeout.compareTo(Duration.ZERO) > 0,
+    )
+    // Same load-shed argument as the search tier: the report is an admin-facing read, so it must not be able to
+    // outlast a Gravsearch query. An env override (KNORA_WEBAPI_TRIPLESTORE_VIEW_RESTRICTIONS_TIMEOUT) makes a bad
+    // value injectable at deploy time, so guard it.
+    .validate("app.triplestore.view-restrictions-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
+      c.triplestore.viewRestrictionsTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
     )
     .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(
