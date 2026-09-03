@@ -2,8 +2,9 @@
 
 The design record for `modules/sparql-builder/` — dsp-api's SPARQL generation library —
 and the plan for migrating everything else onto it. For the day-to-day API guide see the
-[module README](../../modules/sparql-builder/README.md); for the general query-writing
-rules see [dsp-api-sparql-queries.md](dsp-api-sparql-queries.md).
+[module README](https://github.com/dasch-swiss/dsp-api/blob/main/modules/sparql-builder/README.md);
+for the general query-writing rules see
+[dsp-api-sparql-queries.md](dsp-api-sparql-queries.md).
 
 ## Decision
 
