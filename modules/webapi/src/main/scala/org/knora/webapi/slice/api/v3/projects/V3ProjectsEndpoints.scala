@@ -164,8 +164,9 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
 
   // import a project data graph
-  // Two distinct 409s: `import_exists` (a previous data-graph import task still exists — the per-kind task mutex)
-  // and `data_graph_exists` (the create-only precondition — the project already has a data graph).
+  // Three distinct 409s: `import_exists` (a previous data-graph import task still exists — the per-kind task mutex),
+  // `data_graph_exists` (the create-only precondition — the project already holds data other than list nodes), and
+  // `project_ontologies_missing` (the project has no ontologies, so no data can be imported).
   val postProjectIriDataImports = self.base
     .secured(
       oneOf(
@@ -175,7 +176,11 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
           V3ErrorCode.on_behalf_of_user_not_found,
         ),
         badRequestVariant,
-        conflictVariant(V3ErrorCode.import_exists, V3ErrorCode.data_graph_exists),
+        conflictVariant(
+          V3ErrorCode.import_exists,
+          V3ErrorCode.data_graph_exists,
+          V3ErrorCode.project_ontologies_missing,
+        ),
       ),
     )
     .post
@@ -198,7 +203,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Initiates an import of a project's data graph from a knora-api JSON-LD payload. " +
         "The import will be performed asynchronously, and the response will contain an import ID that can be used to check the status of the import. " +
         "Every imported resource and value is attributed to the `onBehalfOfUser`, not the triggering admin. " +
-        "The import is create-only: it fails if the project already has a data graph. " +
+        "The import is create-only: it fails with 409 `data_graph_exists` if the project data graph already holds data other than list nodes. A graph containing only list nodes is permitted. " +
+        "The project must have at least one ontology: an ontology-less project is rejected with 409 `project_ontologies_missing`, evaluated before the create-only check. " +
         "An import can only be triggered when no other data-graph import exists.",
     )
 

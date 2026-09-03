@@ -41,6 +41,7 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 
 final class V3ProjectsRestService(
@@ -171,6 +172,15 @@ final class V3ProjectsRestService(
       Map("projectIri" -> projectIri.value),
     )
 
+  // Keyed on the project only: this rejection is raised before any import task exists, so it cannot use the generic
+  // `conflict` helper (which needs a DataTaskId). Mirrors `dataGraphExistsConflict`.
+  private def projectOntologiesMissing(projectIri: ProjectIri): Conflict =
+    Conflict(
+      project_ontologies_missing,
+      project_ontologies_missing.template.replace("{projectIri}", projectIri.value),
+      Map("projectIri" -> projectIri.value),
+    )
+
   // Request-phase rejections for the on-behalf-of user are raised before any task exists, so they cannot use the
   // generic `conflict`/`notFound` helpers (which need a DataTaskId). They are keyed on the project and the supplied
   // identifier — the only value available for a not-found user (G4).
@@ -234,6 +244,12 @@ final class V3ProjectsRestService(
       // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
       // project-exists check and before the create-only precondition (G1 order).
       onBehalfOf <- resolveOnBehalfOfUser(projectIri, onBehalfOfUser)
+      // Ontology-existence precondition (synchronous, so the client receives a real 409). Hoisted from the async
+      // import task: an ontology-less project is rejected at trigger time. Ordered before the create-only check
+      // (G1 order). `getOntologyGraphsForProject` reads the in-memory ontology cache, so this is cheap.
+      _ <- ZIO
+             .fail(projectOntologiesMissing(projectIri))
+             .whenZIO(projectService.getOntologyGraphsForProject(project).orDie.map(_.isEmpty))
       // Create-only precondition (synchronous, so the client receives a real 409). It is re-verified inside the
       // import task immediately before the upload.
       _ <- ZIO
