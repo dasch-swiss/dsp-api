@@ -145,7 +145,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
           List(Keyword.unsafeFrom("keywords")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
         )
         for {
@@ -219,7 +218,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
           List(Keyword.unsafeFrom("keywords")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
         )
         projectRestService(_.createProject(rootUser)(createRequest))
@@ -249,7 +247,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           ),
           List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
         )
         projectRestService(_.createProject(rootUser)(createRequest))
@@ -278,7 +275,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from(value = "description", EN))),
           List("keywords").map(Keyword.unsafeFrom),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
         )
         projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
@@ -300,7 +296,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from(value = "description", EN))),
           List("keywords").map(Keyword.unsafeFrom),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
         )
         projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
@@ -323,7 +318,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
           ),
           Some(List("updated", "keywords").map(Keyword.unsafeFrom)),
           Some(Logo.unsafeFrom("/fu/bar/baz-updated.jpg")),
-          Some(Status.Active),
           Some(SelfJoin.CanJoin),
         )
         projectRestService(_.updateProject(rootUser)(newProjectIri.asProjectIri, updateRequest)).map(received =>
@@ -340,7 +334,6 @@ class ProjectRestServiceSpec extends E2EZSpec {
               ),
             received.project.keywords.sorted == Seq("updated", "keywords").sorted,
             received.project.logo.map(_.value).contains("/fu/bar/baz-updated.jpg"),
-            received.project.status == Status.Active,
             received.project.selfjoin == SelfJoin.CanJoin,
           ),
         )

@@ -30,7 +30,6 @@ import org.knora.webapi.slice.api.admin.Codecs.ZioJsonCodec.*
  * @param keywords    The project's keywords.
  * @param logo        The project's logo.
  * @param ontologies  The project's ontologies.
- * @param status      The project's status.
  * @param selfjoin    The project's self-join status.
  */
 case class Project(
@@ -42,7 +41,6 @@ case class Project(
   keywords: Seq[String],
   logo: Option[Logo],
   ontologies: Seq[IRI],
-  status: Status,
   selfjoin: SelfJoin,
   allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],

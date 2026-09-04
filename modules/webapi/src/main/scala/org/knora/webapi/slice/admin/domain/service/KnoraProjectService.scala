@@ -77,7 +77,6 @@ final case class KnoraProjectService(
                 descriptions,
                 req.keywords,
                 req.logo,
-                req.status,
                 req.selfjoin,
                 RestrictedView.default,
                 copyrightHolders,
@@ -129,7 +128,6 @@ final case class KnoraProjectService(
                        description = desc.getOrElse(project.description),
                        keywords = updateReq.keywords.getOrElse(project.keywords),
                        logo = updateReq.logo.orElse(project.logo),
-                       status = updateReq.status.getOrElse(project.status),
                        selfjoin = updateReq.selfjoin.getOrElse(project.selfjoin),
                      ),
                    )

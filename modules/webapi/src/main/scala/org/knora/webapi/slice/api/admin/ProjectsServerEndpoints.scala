@@ -52,7 +52,6 @@ final class ProjectsServerEndpoints(
       .serverLogic(restService.getProjectAdminMembersByShortcode),
     projectsEndpoints.Secured.getAdminProjectsByProjectShortnameAdminMembers
       .serverLogic(restService.getProjectAdminMembersByShortname),
-    projectsEndpoints.Secured.deleteAdminProjectsByIri.serverLogic(restService.deleteProject),
     projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeErase.serverLogic(restService.eraseProject),
     projectsEndpoints.Secured.postAdminProjects.serverLogic(restService.createProject),
     projectsEndpoints.Secured.putAdminProjectsByIri.serverLogic(restService.updateProject),

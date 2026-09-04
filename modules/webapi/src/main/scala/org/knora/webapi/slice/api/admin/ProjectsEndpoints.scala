@@ -158,13 +158,6 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
         "Returns all admin members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
       )
 
-    val deleteAdminProjectsByIri = baseEndpoints.securedEndpoint.delete
-      .in(projectsByIri)
-      .out(jsonBody[ProjectOperationResponseADM])
-      .description(
-        "Deletes a project identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
-
     val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.securedEndpoint.delete
       .in(projectsByShortcode / "erase")
       .in(

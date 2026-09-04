@@ -36,7 +36,6 @@ case class KnoraProject(
   description: NonEmptyChunk[Description],
   keywords: List[Keyword],
   logo: Option[Logo],
-  status: Status,
   selfjoin: SelfJoin,
   restrictedView: RestrictedView,
   allowedCopyrightHolders: Set[CopyrightHolder],
@@ -171,16 +170,6 @@ object KnoraProject {
     def from(str: String): Either[String, Logo] =
       if (str.isEmpty) Left("Logo cannot be empty.")
       else Right(Logo(str))
-  }
-
-  sealed trait Status extends BooleanValue
-
-  object Status {
-
-    case object Active   extends Status { val value = true  }
-    case object Inactive extends Status { val value = false }
-
-    def from(value: Boolean): Status = if (value) Active else Inactive
   }
 
   sealed trait SelfJoin extends BooleanValue

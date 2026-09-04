@@ -12,7 +12,6 @@
   knora-admin:projectShortcode "0666"^^xsd:string ;
   knora-admin:projectDescription "Test"^^xsd:string ;
   knora-admin:projectKeyword "test"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
   knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 # --- Utilisateurs ---

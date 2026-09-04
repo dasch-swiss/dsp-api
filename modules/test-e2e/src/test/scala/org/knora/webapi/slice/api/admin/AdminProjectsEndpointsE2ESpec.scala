@@ -102,7 +102,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("a project created with a custom IRI", EN))),
           List(Keyword.unsafeFrom("projectIRI")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
           None,
           Some(Set(LicenseIri.CC_BY_4_0)),
@@ -138,7 +137,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("a project created with a duplicate custom IRI", EN))),
           List(Keyword.unsafeFrom("projectDuplicateIRI")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
           None,
         )
@@ -162,7 +160,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
           List(Keyword.unsafeFrom("keywords")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
           None,
         )
@@ -183,7 +180,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               result.description == Seq(StringLiteralV2.from("project description", EN)),
               result.keywords == Seq("keywords"),
               result.logo.map(_.value) == Some("/fu/bar/baz.jpg"),
-              result.status == Status.Active,
               result.selfjoin == SelfJoin.CannotJoin,
             ),
           )
@@ -197,7 +193,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           List(Description.unsafeFrom(StringLiteralV2.from("project description", EN))),
           List(Keyword.unsafeFrom("keywords")),
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-          Status.Active,
           SelfJoin.CannotJoin,
           None,
         )
@@ -215,7 +210,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           description = Some(List(Description.unsafeFrom(StringLiteralV2.from("updated project description", EN)))),
           keywords = Some(List(Keyword.unsafeFrom("updated"), Keyword.unsafeFrom("keywords"))),
           logo = Some(Logo.unsafeFrom("/fu/bar/baz-updated.jpg")),
-          status = Some(Status.Active),
           selfjoin = Some(SelfJoin.CanJoin),
         )
         TestApiClient
@@ -234,7 +228,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               ),
               result.keywords.sorted == Seq("updated", "keywords").sorted,
               result.logo.map(_.value) == Some("/fu/bar/baz-updated.jpg"),
-              result.status == Status.Active,
               result.selfjoin == SelfJoin.CanJoin,
             ),
           )
@@ -263,13 +256,6 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               result.description.contains(StringLiteralV2.from("Test Projekt", DE)),
             ),
           )
-      },
-      test("DELETE a project") {
-        TestApiClient
-          .deleteJson[ProjectOperationResponseADM](uri"/admin/projects/iri/$imagesProjectIri", rootUser)
-          .flatMap(_.assert200)
-          .map(_.project)
-          .map(result => assertTrue(result.status == Status.Inactive))
       },
     ),
     suite("used to query members [FUNCTIONALITY]")(

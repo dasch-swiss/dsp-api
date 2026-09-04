@@ -44,7 +44,6 @@ final case class KnoraProjectRepoLive(
       Vocabulary.KnoraAdmin.projectDescription,
       Vocabulary.KnoraAdmin.projectShortcode,
       Vocabulary.KnoraAdmin.projectShortname,
-      Vocabulary.KnoraAdmin.status,
     ),
     Chunk(
       Vocabulary.KnoraAdmin.projectKeyword,
@@ -108,7 +107,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         description             <- resource.getLangStringLiteralsOrFail[Description](ProjectDescription)
         keywords                <- resource.getStringLiterals[Keyword](ProjectKeyword)
         logo                    <- resource.getStringLiteral[Logo](ProjectLogo)
-        status                  <- resource.getBooleanLiteralOrFail[Status](StatusProp)
         selfjoin                <- resource.getBooleanLiteralOrFail[SelfJoin](HasSelfJoinEnabled)
         allowedCopyrightHolders <-
           resource.getStringLiterals(hasAllowedCopyrightHolder)(using CopyrightHolder.from).map(_.toSet)
@@ -127,7 +125,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         description = description,
         keywords = keywords.toList.sortBy(_.value),
         logo = logo,
-        status = status,
         selfjoin = selfjoin,
         restrictedView = restrictedView,
         allowedCopyrightHolders = allowedCopyrightHolders,
@@ -144,7 +141,6 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
         .has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject)
         .andHas(Vocabulary.KnoraAdmin.projectShortname, project.shortname.value)
         .andHas(Vocabulary.KnoraAdmin.projectShortcode, project.shortcode.value)
-        .andHas(Vocabulary.KnoraAdmin.status, project.status.value)
         .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, project.selfjoin.value)
       project.longname.foreach(longname => pattern.andHas(Vocabulary.KnoraAdmin.projectLongname, longname.value))
       project.description.foreach(description =>

@@ -42,7 +42,6 @@ object Codecs {
     implicit val selfJoin: StringCodec[SelfJoin]   = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode] = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname] = stringCodec(Shortname.from)
-    implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user value objects
     implicit val username: StringCodec[Username] = stringCodec(Username.from)
@@ -88,7 +87,6 @@ object Codecs {
     implicit val selfJoin: StringCodec[SelfJoin]   = booleanCodec(SelfJoin.from)
     implicit val shortcode: StringCodec[Shortcode] = stringCodec(Shortcode.from)
     implicit val shortname: StringCodec[Shortname] = stringCodec(Shortname.from)
-    implicit val status: StringCodec[Status]       = booleanCodec(Status.from)
 
     // user
     implicit val username: StringCodec[Username]       = stringCodec(Username.from)

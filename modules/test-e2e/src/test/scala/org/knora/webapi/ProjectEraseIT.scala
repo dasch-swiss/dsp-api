@@ -86,7 +86,6 @@ class ProjectEraseIT extends E2EZSpec {
         List(Description.unsafeFrom("description", None)),
         List.empty,
         None,
-        KnoraProject.Status.Active,
         KnoraProject.SelfJoin.CanJoin,
       ),
     ),
