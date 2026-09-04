@@ -83,7 +83,6 @@
                                                "collection"^^xsd:string ;
     knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
     knora-admin:projectRestrictedViewWatermark "true"^^xsd:boolean;
-    knora-admin:status                         "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
@@ -180,7 +179,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectLogo                    "incunabula_logo.png"^^xsd:string ;
     knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
     knora-admin:projectRestrictedViewWatermark "true"^^xsd:boolean;
-    knora-admin:status                         "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
@@ -263,7 +261,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectShortcode   "0001"^^xsd:string ;
     knora-admin:projectLongname    "Anything Project"^^xsd:string ;
     knora-admin:projectDescription "Anything Project"^^xsd:string ;
-    knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
     knora-admin:projectKeyword     "things"^^xsd:string,
                                    "arbitrary test data"^^xsd:string .
@@ -325,7 +322,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectShortcode   "0804"^^xsd:string ;
     knora-admin:projectLongname    "Dokubib"^^xsd:string ;
     knora-admin:projectDescription "Dokubib"^^xsd:string ;
-    knora-admin:status             "false"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -339,7 +335,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectShortcode   "0801"^^xsd:string ;
     knora-admin:projectLongname    "Bernoulli-Euler Online"^^xsd:string ;
     knora-admin:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-    knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>
@@ -378,7 +373,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
     knora-admin:projectShortcode   "0806"^^xsd:string ;
     knora-admin:projectLongname    "Anton Webern Gesamtausgabe"^^xsd:string ;
     knora-admin:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
-    knora-admin:status             "true"^^xsd:boolean ;
     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 ## Project Member
