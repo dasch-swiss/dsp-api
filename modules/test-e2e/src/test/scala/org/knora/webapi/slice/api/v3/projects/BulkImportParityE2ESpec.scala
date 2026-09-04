@@ -103,8 +103,10 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     dataTtl,
   )
 
-  // Tier 0: no resource dependencies. `richtext_recursive_standoff_link` is a Tier-0 resource but
-  // needs a two-step create (self-referencing standoff link), so it is handled separately below.
+  // Tier 0: created before the dependent tiers. Most carry no resource dependency; where one exists it
+  // is satisfied by list order — `richtext_all_standoff` has a standoff link to `id_empty`, which is
+  // listed first. `richtext_recursive_standoff_link` is a Tier-0 resource but needs a two-step create
+  // (self-referencing standoff link), so it is handled separately below.
   private val tier0 = List(
     "id_empty",
     "all_dates",
@@ -306,10 +308,14 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   private def dumpProjectGraph: ZIO[TriplestoreService & Scope, Throwable, Model] =
     for {
-      javaFile <- ZIO.attemptBlocking(java.nio.file.Files.createTempFile("bulk-import-parity-", ".nq"))
-      file      = Path.fromJava(javaFile)
-      _        <- ZIO.serviceWithZIO[TriplestoreService](_.downloadGraph(InternalIri(projectDataGraph), file, NQuads))
-      model    <- DatasetOps.from(file, Lang.NQUADS).map(toModel)
+      javaFile <- ZIO.attemptBlocking {
+                    val f = java.nio.file.Files.createTempFile("bulk-import-parity-", ".nq")
+                    f.toFile.deleteOnExit()
+                    f
+                  }
+      file   = Path.fromJava(javaFile)
+      _     <- ZIO.serviceWithZIO[TriplestoreService](_.downloadGraph(InternalIri(projectDataGraph), file, NQuads))
+      model <- DatasetOps.from(file, Lang.NQUADS).map(toModel)
     } yield model
 
   private def toModel(ds: org.apache.jena.query.Dataset): Model = {
@@ -321,6 +327,10 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   // --- Comparison helpers ----------------------------------------------------------------------
 
+  // Objects of these predicates are replaced by one constant sentinel so minted UUIDs and timestamps
+  // do not defeat the compare. A Jena Model has set semantics, so two triples on the same sentinelled
+  // predicate for one subject would collapse into one; the ontology's maxCount 1 and the import's SHACL
+  // check prevent that, so it is a latent blind spot, not an active gap.
   private val sentinelPredicates =
     Set(kb + "valueHasUUID", kb + "standoffTagHasUUID", kb + "creationDate", kb + "valueCreationDate")
   private val lastModProp        = kb + "lastModificationDate"
