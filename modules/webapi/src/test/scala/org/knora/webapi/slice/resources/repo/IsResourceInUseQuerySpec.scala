@@ -20,21 +20,18 @@ class IsResourceInUseQuerySpec extends ZIOSpecDefault {
       val dataGraph   = "http://www.knora.org/data/0001/anything"
       val actual      = IsResourceInUseQuery.build(resourceIri, dataGraph).getQueryString
       val expected    =
-        """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT DISTINCT ?other
           |WHERE { { { SELECT ?other
           |WHERE { GRAPH <http://www.knora.org/data/0001/anything> { ?other ?p <http://rdfh.ch/0001/a-thing> . } }
           | }
-          |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false ;
-          |    a ?otherClass . } } UNION { { SELECT ?other ?valueNode
+          |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false . } } UNION { { SELECT ?other ?valueNode
           |WHERE { GRAPH <http://www.knora.org/data/0001/anything> { ?valueNode knora-base:isRegionPreviewOf <http://rdfh.ch/0001/a-thing> .
           |?other ?valueProp ?valueNode . } }
           | }
-          |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false ;
-          |    a ?otherClass .
+          |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false .
           |?valueNode knora-base:isDeleted false . } }
-          |?otherClass rdfs:subClassOf* knora-base:Resource . }
+          |FILTER NOT EXISTS { GRAPH <http://www.knora.org/data/0001/anything> { ?other a knora-base:LinkValue . } } }
           |""".stripMargin
       assertTrue(actual == expected)
     },

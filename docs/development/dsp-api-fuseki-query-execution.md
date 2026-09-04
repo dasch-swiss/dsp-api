@@ -66,6 +66,13 @@ probes — measured on `/v2/metadata`, where "fixing" the order made it 3× slow
 **disconnection**, not earliness. And the converse of this fact also holds — *removing* a path
 can be far more expensive than keeping it (Fact 11).
 
+**Corollary — a connected `subClassOf*` still scales with candidate count.** After pinning
+the incoming-reference probe (Fact 1 corollary), `/v2/resources/candelete` still spent ~1.5s
+of ~1.6s on a 3840-row dokubib hub inside `?otherClass rdfs:subClassOf* knora-base:Resource`
+over 13k incoming subjects. `FILTER NOT EXISTS { GRAPH <g> { ?other a knora-base:LinkValue } }`
+was byte-identical on that hub and the ticket empty case, ~190ms (DEV-6885). The path was
+doing real work (dropping LinkValues); it was just the expensive way to do it.
+
 ## Fact 4 — `MINUS` evaluates its right side without bindings; `FILTER NOT EXISTS` is per-row
 
 An un-scoped `MINUS { ?x knora-base:isDeleted true }` materializes the deleted-set of the whole
