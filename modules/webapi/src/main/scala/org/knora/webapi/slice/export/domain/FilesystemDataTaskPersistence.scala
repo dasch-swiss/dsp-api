@@ -25,6 +25,8 @@ final case class PersistedDataTask(
   createdBy: UserIri,
   createdAt: Instant,
   errorMessage: Option[String] = None,
+  // Optional so a task file written before this field still deserializes (decodes to `None`).
+  onBehalfOf: Option[UserIri] = None,
 )
 
 object PersistedDataTask {
@@ -38,6 +40,7 @@ object PersistedDataTask {
       createdBy = task.createdBy,
       createdAt = task.createdAt,
       errorMessage = task.errorMessage,
+      onBehalfOf = task.onBehalfOf,
     )
 
   def toCurrentDataTask(persisted: PersistedDataTask): CurrentDataTask =
@@ -48,6 +51,7 @@ object PersistedDataTask {
       persisted.createdBy,
       persisted.createdAt,
       persisted.errorMessage,
+      persisted.onBehalfOf,
     )
 }
 
