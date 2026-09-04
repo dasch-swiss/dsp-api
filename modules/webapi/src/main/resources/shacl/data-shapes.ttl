@@ -150,6 +150,10 @@ knora-base:AttachedToUserExistsShape
 # Rejects imports whose data graph attaches resources or values to the built-in
 # SystemUser or AnonymousUser. These IRIs exist on every target instance and
 # pre-migration cleanup is required to rebind such data to project-scoped users.
+# TODO(DEV-7149): the data-import transformer legitimately attaches standoff-link LinkValues to
+# SystemUser (OntologyTransformer.emitStandoffLinkValue, matching the v2 create path), so importing
+# any text with a resource standoff-link fails here. Exempt standoff-link LinkValues, or rebind them.
+# Surfaced by BulkImportParityE2ESpec.
 knora-base:AttachedToUserNotBuiltInShape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
