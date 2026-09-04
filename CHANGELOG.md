@@ -1,5 +1,33 @@
 # Changelog
 
+## [38.1.0](https://github.com/dasch-swiss/dsp-api/compare/v38.0.0...v38.1.0) (2026-09-04)
+
+
+### Documentation
+
+* trim the CLAUDE.md memory files and move the SIPI bump into the docs ([#4275](https://github.com/dasch-swiss/dsp-api/issues/4275)) ([cc71c4a](https://github.com/dasch-swiss/dsp-api/commit/cc71c4af526e0517f45f5bf56606c41c4cd67470))
+
+
+### Enhancements
+
+* attribute imported data to an on-behalf-of project user (DEV-6941) ([#4281](https://github.com/dasch-swiss/dsp-api/issues/4281)) ([f814ae1](https://github.com/dasch-swiss/dsp-api/commit/f814ae1007014db9432f8d6e1f06192fa7bc0321))
+* derive valueHasString for RegionPreview, Geom, and Interval values (DEV-6936) ([#4274](https://github.com/dasch-swiss/dsp-api/issues/4274)) ([394cd9c](https://github.com/dasch-swiss/dsp-api/commit/394cd9c149c4c51ed082ea0ad21ac345ccc8e52a))
+* **dsp-api:** transform rich-text TextValues to standoff in the import pipeline ([#4276](https://github.com/dasch-swiss/dsp-api/issues/4276)) ([2ed4436](https://github.com/dasch-swiss/dsp-api/commit/2ed4436d01fd87932806e36c1d32b5efd447cacd))
+* **import:** permit existing list nodes and require project ontologies (DEV-6942) ([#4285](https://github.com/dasch-swiss/dsp-api/issues/4285)) ([df2abf9](https://github.com/dasch-swiss/dsp-api/commit/df2abf98f51a9af1def09132939a09751c021c0a))
+* SPARQL interpolator library — port of the builder spike, RDF4J SparqlBuilder ratchet ([#4272](https://github.com/dasch-swiss/dsp-api/issues/4272)) ([9f68c31](https://github.com/dasch-swiss/dsp-api/commit/9f68c318a465aa3a7f22a3f55264c7d23d20678a))
+* transform file values for pre-ingested assets in the import pipeline (DEV-6939) ([#4280](https://github.com/dasch-swiss/dsp-api/issues/4280)) ([192e954](https://github.com/dasch-swiss/dsp-api/commit/192e9546cd044839c4f247c7275827aa6641d833))
+
+
+### Bug Fixes
+
+* label knora-base:Region "Image Annotation" in the UI (DEV-6853) ([#4284](https://github.com/dasch-swiss/dsp-api/issues/4284)) ([d71ab26](https://github.com/dasch-swiss/dsp-api/commit/d71ab26c67ad4545e4ca2df39f64abaef13c1026))
+* **view-restrictions:** stop the class report timing out on large projects ([#4282](https://github.com/dasch-swiss/dsp-api/issues/4282)) ([4acc839](https://github.com/dasch-swiss/dsp-api/commit/4acc839ee2ca68e4a989a28060fd86c748614152))
+
+
+### Performance Improvements
+
+* pin isResourceInUse so candelete skips project-wide scans (DEV-6885) ([#4286](https://github.com/dasch-swiss/dsp-api/issues/4286)) ([a2142bb](https://github.com/dasch-swiss/dsp-api/commit/a2142bb33aec4988fab99de0add372da6232ef01))
+
 ## [38.0.0](https://github.com/dasch-swiss/dsp-api/compare/v37.8.0...v38.0.0) (2026-08-31)
 
 
