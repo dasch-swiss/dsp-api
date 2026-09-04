@@ -417,6 +417,25 @@ materialized — but it was 8.6× slower regardless.) Benchmark a simplification
 query as generated, before believing it. See
 [`dsp-api-fuseki-query-execution.md` Fact 11](dsp-api-fuseki-query-execution.md).
 
+### Incoming-reference keep-set is IRI shape, not `¬LinkValue`
+
+`?s ?p <bound>` (“what points at me”) needs a subquery barrier so `isDeleted false` cannot
+win the bound-term heuristic — see
+[`dsp-api-fuseki-query-execution.md` Fact 1 corollary](dsp-api-fuseki-query-execution.md).
+Do **not** then replace `rdfs:subClassOf* knora-base:Resource` with
+`FILTER NOT EXISTS { ?s a knora-base:LinkValue }` and call it equivalent.
+
+`Resource` and `Value` are sibling trees. A live `RegionPreviewValue` (`isRegionPreviewOf`)
+is not a `LinkValue`, sits in object position on branch 1, and is a value IRI. Dropping the
+class path without an IRI-shape filter leaks that value into `?other`; `ResourceIri.from`
+fails and `GET /v2/resources/candelete` looks “protected” for the wrong reason.
+`IsResourceInUseQuery` keeps `ResourceIri.SparqlRegexPattern`. Identity-check any rewrite
+against a **live region preview**, not only `hasLinkTo` hubs. Stage preview instances are
+not durable (they disappear on the next prod mirror); the anything-project IT is.
+
+See the Fact 3 corollary in the engine-facts doc for the class table and the 2026-09-04
+stage check.
+
 ### Negation: `FILTER NOT EXISTS`, not `MINUS`, for per-row guards
 
 `MINUS` evaluates its right side *without* bindings from the left, so an un-scoped
