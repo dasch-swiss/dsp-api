@@ -33,7 +33,7 @@ whereas previously `knora-base:isSequenceOf` could be added to any `knora-base:R
 This means that you will have to change the type of the resources that you have been using
 to be of type `knora-base:AudioSegment` or `knora-base:VideoSegment`.
 
-### Planned: Removal of the project Active/Inactive concept
+### v54 to v55: Removal of the project Active/Inactive concept
 
 The project `status` field and the soft-delete endpoint `DELETE /admin/projects/iri/{iri}` are removed.
 The endpoint only flipped `status` to `false`, which deleted nothing.
