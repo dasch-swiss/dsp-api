@@ -93,26 +93,23 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       )
 
       // Build delete patterns with conditional logic (mirrors InsertValueQueryBuilder.buildDeletePatterns)
-      val linkValueDeletePatterns: Fragment = Fragment.join(
-        linkUpdates.zipWithIndex.map { case (linkUpdate, index) =>
-          val linkProp         = Iri.unsafeFrom(linkUpdate.linkPropertyIri)
-          val target           = Iri.unsafeFrom(linkUpdate.linkTargetIri)
-          val deleteDirectLink = sparql"?resource $linkProp $target .".when(linkUpdate.deleteDirectLink)
+      val linkValueDeletePatterns: Fragment = linkUpdates.zipWithIndex.map { case (linkUpdate, index) =>
+        val linkProp         = Iri.unsafeFrom(linkUpdate.linkPropertyIri)
+        val target           = Iri.unsafeFrom(linkUpdate.linkTargetIri)
+        val deleteDirectLink = sparql"?resource $linkProp $target .".when(linkUpdate.deleteDirectLink)
 
-          val linkValue               = Variable(s"linkValue$index")
-          val linkValueUUID           = Variable(s"linkValueUUID$index")
-          val linkValuePerms          = Variable(s"linkValuePermissions$index")
-          val linkPropValue           = Iri.unsafeFrom(linkUpdate.linkPropertyIri + "Value")
-          val linkValueExistsPatterns = sparql"""|?resource $linkPropValue $linkValue .
+        val linkValue               = Variable(s"linkValue$index")
+        val linkValueUUID           = Variable(s"linkValueUUID$index")
+        val linkValuePerms          = Variable(s"linkValuePermissions$index")
+        val linkPropValue           = Iri.unsafeFrom(linkUpdate.linkPropertyIri + "Value")
+        val linkValueExistsPatterns = sparql"""|?resource $linkPropValue $linkValue .
                                                    |$linkValue <http://www.knora.org/ontology/knora-base#valueHasUUID> $linkValueUUID .
                                                    |$linkValue <http://www.knora.org/ontology/knora-base#hasPermissions> $linkValuePerms ."""
-            .when(linkUpdate.linkValueExists)
+          .when(linkUpdate.linkValueExists)
 
-          sparql"""|$deleteDirectLink
+        sparql"""|$deleteDirectLink
                     |$linkValueExistsPatterns"""
-        },
-        Fragment.raw("\n"),
-      )
+      }.joinLines
 
       val query = sparql"""|DELETE {
                             |  ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate .
@@ -202,7 +199,7 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
   // Dynamic iteration (Twirl @for equivalent)
   // -------------------------------------------------------------------------
   val iterationSuite = suite("Dynamic iteration")(
-    test("collection to indexed variable patterns via map + join") {
+    test("collection to indexed variable patterns via map + joinLines") {
       case class ValueUpdate(predicateIri: String, value: String)
 
       val updates = List(
@@ -210,31 +207,42 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
         ValueUpdate("http://example.org/hasAge", "30"),
       )
 
-      val patterns: Fragment = Fragment.join(
-        updates.map { update =>
-          val pred = Iri.unsafeFrom(update.predicateIri)
-          val lit  = Literal.string(update.value)
-          sparql"?newValue $pred $lit ."
-        },
-        Fragment.raw("\n"),
-      )
+      val patterns: Fragment = updates.map { update =>
+        val pred = Iri.unsafeFrom(update.predicateIri)
+        val lit  = Literal.string(update.value)
+        sparql"?newValue $pred $lit ."
+      }.joinLines
 
       assertGolden(patterns.render, "iterationMap")
     },
     test("indexed variables for link updates (Twirl @for equivalent)") {
       val linkUpdates = List("target1", "target2", "target3")
 
-      val patterns: Fragment = Fragment.join(
-        linkUpdates.zipWithIndex.map { case (target, idx) =>
-          val linkValue = Variable(s"linkValue$idx")
-          val targetIri = Iri.unsafeFrom(s"http://example.org/$target")
-          sparql"""|?resource <http://www.knora.org/ontology/knora-base#hasLink> $targetIri .
+      val patterns: Fragment = linkUpdates.zipWithIndex.map { case (target, idx) =>
+        val linkValue = Variable(s"linkValue$idx")
+        val targetIri = Iri.unsafeFrom(s"http://example.org/$target")
+        sparql"""|?resource <http://www.knora.org/ontology/knora-base#hasLink> $targetIri .
                     |$linkValue <http://www.knora.org/ontology/knora-base#valueHasRefCount> 1 ."""
-        },
-        Fragment.raw("\n"),
-      )
+      }.joinLines
 
       assertGolden(patterns.render, "iterationIndexed")
+    },
+    test("joinLines handles empty, single, and multiline fragment collections") {
+      val multiline = sparql"""|?s <http://example.org/first> ?o .
+                                 |?s <http://example.org/second> ?o ."""
+      val fragments = List(multiline, sparql"?s <http://example.org/third> ?o .")
+      val indented  = sparql"""|WHERE {
+                                 |  ${fragments.joinLines}
+                                 |}""".render
+
+      assertTrue(
+        List.empty[Fragment].joinLines == Fragment.empty,
+        List(sparql"?s ?p ?o .").joinLines.render == "?s ?p ?o .",
+        fragments.joinLines.render ==
+          "?s <http://example.org/first> ?o .\n?s <http://example.org/second> ?o .\n?s <http://example.org/third> ?o .",
+        indented ==
+          "WHERE {\n  ?s <http://example.org/first> ?o .\n  ?s <http://example.org/second> ?o .\n  ?s <http://example.org/third> ?o .\n}",
+      )
     },
   )
 

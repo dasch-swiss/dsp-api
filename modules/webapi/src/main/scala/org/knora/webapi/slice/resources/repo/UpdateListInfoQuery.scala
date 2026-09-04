@@ -42,15 +42,15 @@ object UpdateListInfoQuery {
               |  ${sparql"$node rdfs:comment ?currentComments .".when(comments.isDefined)}
               |}
               |INSERT {
-              |  ${Fragment.join(
-        labels.toSeq.flatMap(_.value).map(label => sparql"$node rdfs:label ${literal(label)} ."),
-        Fragment.raw("\n"),
-      )}
+              |  ${labels.toSeq
+        .flatMap(_.value)
+        .map(label => sparql"$node rdfs:label ${literal(label)} .")
+        .joinLines}
               |  ${name.whenSome(value => sparql"$node knora-base:listNodeName ${Literal.string(value.value)} .")}
-              |  ${Fragment.join(
-        comments.toSeq.flatMap(_.value).map(comment => sparql"$node rdfs:comment ${literal(comment)} ."),
-        Fragment.raw("\n"),
-      )}
+              |  ${comments.toSeq
+        .flatMap(_.value)
+        .map(comment => sparql"$node rdfs:comment ${literal(comment)} .")
+        .joinLines}
               |}
               |WHERE {
               |  $node a knora-base:ListNode .

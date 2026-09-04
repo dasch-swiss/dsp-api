@@ -40,7 +40,7 @@ object Fragments {
 
   /** Combine multiple optional fragments, discarding None values, with newline separation. */
   def combine(fragments: Option[Fragment]*): Fragment =
-    Fragment.join(fragments.flatten, Fragment.raw("\n"))
+    fragments.flatten.joinLines
 
   /** Create a VALUES clause. */
   def values(variable: Variable, iris: Iterable[Iri]): Fragment = {

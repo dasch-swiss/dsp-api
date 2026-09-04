@@ -35,8 +35,9 @@ is empty, the complete line is omitted. Inline interpolation keeps its exact lay
 ### Dynamic structure
 
 Use postfix `.when(condition)` and `.unless(condition)` for Boolean conditions, and
-`Option.whenSome` when a value is needed to build the fragment. Use `Fragment.join` for
-dynamic collections. These fragments can be built directly at their interpolation site:
+`Option.whenSome` when a value is needed to build the fragment. Use postfix `.joinLines`
+for line-separated dynamic collections. These fragments can be built directly at their
+interpolation site:
 
 ```scala
 val query = sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -46,21 +47,18 @@ val query = sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-ba
                       |  ${maybeComment.whenSome(comment =>
                         sparql"?value knora-base:valueHasComment ${Literal.string(comment)} ."
                       )}
-                      |  ${Fragment.join(
-                        linkUpdates.zipWithIndex.map { case (update, index) =>
+                      |  ${linkUpdates.zipWithIndex.map { case (update, index) =>
                           val linkValue = Variable(s"linkValue$index")
                           sparql"?resource ${Iri.unsafeFrom(update.propertyIri)} $linkValue ."
-                        },
-                        Fragment.raw("\n"),
-                      )}
+                        }.joinLines}
                       |}"""
 ```
 
 `Fragments` also provides `optional`, `union`, `graph`, `filter`, `filterNotExists`,
 `minus`, `bind`, `values`, and `subquery` for constructs that are themselves dynamic.
 When a construct is fixed, write it directly in the query. The raw monoid (`++`,
-`combineAll`) concatenates with **no** separator; use `Fragment.join` when a dynamic
-collection needs one.
+`combineAll`) concatenates with **no** separator; `.joinLines` inserts one newline
+between each fragment. Use `Fragment.join` for other separators.
 
 ### Safety model
 

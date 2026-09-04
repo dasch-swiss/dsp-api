@@ -80,6 +80,9 @@ object Fragment {
 
   /** Extension to combine a collection of fragments via monoid. */
   extension (fragments: Iterable[Fragment]) def combineAll: Fragment = fragments.foldLeft(Fragment.empty)(_ ++ _)
+
+  /** Combine a collection of fragments with a newline between each fragment. */
+  extension (fragments: Iterable[Fragment]) def joinLines: Fragment = Fragment.join(fragments, Fragment.raw("\n"))
 }
 
 extension [A](value: Option[A])
