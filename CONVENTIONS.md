@@ -54,7 +54,12 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 
 ### SPARQL
 
-Never concatenate query strings. Use rdf4j SparqlBuilder via the helpers in `slice/common/repo`. See `docs/development/dsp-api-sparql-queries.md`.
+Never concatenate query strings. **New queries** use the `sparql"..."` interpolator from
+`modules/sparql-builder/` (whole-query templates, typed `Iri`/`Variable`/`Literal` holes,
+`Fragment` composition for dynamic structure). Do not write new queries with rdf4j
+SparqlBuilder; existing files keep it until they are migrated (verify a migration by
+diffing rendered SPARQL against the old `getQueryString` output). See
+`docs/development/dsp-api-sparql-queries.md`.
 
 - **Carve-out — the admin SPARQL passthrough.** `POST /admin/sparql/query` forwards a client-supplied query string to the store on purpose: being transparent is its contract, so it must not parse, validate or rewrite the SPARQL it carries, and no builder applies. This is the only such surface; everything else builds queries. See `docs/03-endpoints/api-admin/sparql-passthrough.md`.
 
@@ -168,5 +173,5 @@ See `.github/pull_request_template.md`. For the recommended section structure (M
 - `docs/development/dsp-api-iri-handling.md` — universal IRI handling rules
 - `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
 - `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
-- `docs/development/dsp-api-sparql-queries.md` — SPARQL with rdf4j SparqlBuilder
+- `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
 - `docs/05-internals/design/adr/` — architectural decisions

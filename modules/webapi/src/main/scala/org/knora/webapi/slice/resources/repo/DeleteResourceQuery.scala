@@ -5,23 +5,15 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 
-object DeleteResourceQuery extends QueryBuilderHelper {
+object DeleteResourceQuery {
 
   def build(
     project: Project,
@@ -29,47 +21,39 @@ object DeleteResourceQuery extends QueryBuilderHelper {
     maybeDeleteComment: Option[String],
     currentTime: Instant,
     requestingUser: UserIri,
-  ): ModifyQuery = {
-    val dataGraph                    = graphIri(project)
-    val resource                     = toRdfIri(resourceIri)
-    val resourceClass                = variable("resourceClass")
-    val resourceLastModificationDate = variable("resourceLastModificationDate")
-    val currentTimeLiteral           = Rdf.literalOfType(currentTime.toString, XSD.DATETIME)
+  ): String = {
+    val dataGraph     = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val resource      = Iri.unsafeFrom(resourceIri.value)
+    val deletingUser  = Iri.unsafeFrom(requestingUser.value)
+    val deletionDate  = Literal.dateTime(currentTime)
+    val deleteComment = maybeDeleteComment.map(Literal.string)
 
-    // DELETE patterns
-    val deletePatterns = List(
-      resource.has(KB.lastModificationDate, resourceLastModificationDate),
-      resource.has(KB.isDeleted, Rdf.literalOf(false)),
-    )
-
-    // INSERT patterns
-    val insertBase: TriplePattern = resource
-      .has(KB.isDeleted, Rdf.literalOf(true))
-      .andHas(KB.deletedBy, Rdf.iri(requestingUser.value))
-      .andHas(KB.deleteDate, currentTimeLiteral)
-
-    val insertComment: List[TriplePattern] =
-      maybeDeleteComment.map(c => resource.has(KB.deleteComment, Rdf.literalOf(c))).toList
-
-    val insertLastMod: TriplePattern = resource.has(KB.lastModificationDate, currentTimeLiteral)
-
-    val insertPatterns = insertBase :: insertComment ::: List(insertLastMod)
-
-    // WHERE patterns
-    val typeCheck = resource
-      .has(RDF.TYPE, resourceClass)
-      .andHas(KB.isDeleted, Rdf.literalOf(false))
-      .and(resourceClass.has(zeroOrMore(RDFS.SUBCLASSOF), KB.Resource))
-
-    val optionalLastMod = resource.has(KB.lastModificationDate, resourceLastModificationDate).optional()
-
-    Queries
-      .MODIFY()
-      .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
-      .from(dataGraph)
-      .delete(deletePatterns*)
-      .into(dataGraph)
-      .insert(insertPatterns*)
-      .where(typeCheck, optionalLastMod)
+    sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              |
+              |DELETE {
+              |  GRAPH $dataGraph {
+              |    $resource knora-base:lastModificationDate ?resourceLastModificationDate .
+              |    $resource knora-base:isDeleted false .
+              |  }
+              |}
+              |INSERT {
+              |  GRAPH $dataGraph {
+              |    $resource knora-base:isDeleted true .
+              |    $resource knora-base:deletedBy $deletingUser .
+              |    $resource knora-base:deleteDate $deletionDate .
+              |    ${deleteComment.whenSome(comment => sparql"$resource knora-base:deleteComment $comment .")}
+              |    $resource knora-base:lastModificationDate $deletionDate .
+              |  }
+              |}
+              |WHERE {
+              |  $resource rdf:type ?resourceClass .
+              |  $resource knora-base:isDeleted false .
+              |  ?resourceClass rdfs:subClassOf* knora-base:Resource .
+              |  OPTIONAL {
+              |    $resource knora-base:lastModificationDate ?resourceLastModificationDate .
+              |  }
+              |}""".render
   }
 }

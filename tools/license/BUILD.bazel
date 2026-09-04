@@ -9,6 +9,7 @@ _LICENSE_SRCS = [
     "//modules/ingest:license_srcs",
     "//modules/jwt:license_srcs",
     "//modules/shacl-validator:license_srcs",
+    "//modules/sparql-builder:license_srcs",
     "//modules/test-e2e:license_srcs",
     "//modules/test-ingest-integration:license_srcs",
     "//modules/test-it:license_srcs",

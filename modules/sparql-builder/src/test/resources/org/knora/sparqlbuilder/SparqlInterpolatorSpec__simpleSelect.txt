@@ -1,0 +1,11 @@
+SELECT ?s ?p ?o
+WHERE {
+  ?s a <http://example.org/MyClass> .
+  ?s <http://www.knora.org/ontology/knora-base#isDeleted> false .
+  OPTIONAL {
+    ?s <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModDate .
+  }
+  ?s ?p ?o .
+}
+ORDER BY DESC(?lastModDate)
+LIMIT 25
