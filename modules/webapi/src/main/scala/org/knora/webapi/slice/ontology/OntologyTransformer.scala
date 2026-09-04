@@ -196,6 +196,12 @@ final class OntologyTransformer(
     val resources = model.listSubjects().asScala.filter { s =>
       s.isURIResource && ResourceIri.from(s.getURI).isRight
     }
+    // TODO(DEV-7149): unlike addValueMetadata below, this pass does not strip before adding, so a
+    //   payload-supplied value coexists with the synthesized one and fails SHACL data-shapes
+    //   (maxCount 1). Affects hasPermissions (see resource_permissions) and creationDate (see
+    //   migration_creation_date, whose custom xsd:dateTimeStamp also fails the xsd:dateTime datatype
+    //   shape). Fix: removeAll then addProperty, and honor the payload value. Surfaced by
+    //   BulkImportParityE2ESpec.
     resources.foreach { r =>
       r.addProperty(attachedToUser, userResource)
       r.addProperty(attachedToProject, projectResource)
@@ -631,6 +637,11 @@ final class OntologyTransformer(
     linkValue.addProperty(valueHasRefCount, intLiteral(model, refCount))
     linkValue.addProperty(isDeleted, model.createTypedLiteral("false", XSDDatatype.XSDboolean))
     linkValue.addProperty(valueCreationDate, model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime))
+    // TODO(DEV-7149): standoff-link LinkValues are attached to the built-in SystemUser here (matching
+    //   the v2 create path), but the import's SHACL AttachedToUserNotBuiltInShape rejects any
+    //   attachedToUser referencing SystemUser/AnonymousUser, so importing any text with a resource
+    //   standoff-link fails validation. Reconcile the transformer and the shape. Surfaced by
+    //   BulkImportParityE2ESpec.
     linkValue.addProperty(attachedToUser, model.createResource(systemUser))
     linkValue.addProperty(hasPermissions, standoffLinkValuePermissions)
     val _ = linkValue.addProperty(valueHasUUID, linkValueIri.valueId.value)

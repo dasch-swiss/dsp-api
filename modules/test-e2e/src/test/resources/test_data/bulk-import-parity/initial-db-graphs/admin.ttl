@@ -1,0 +1,46 @@
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://rdfh.ch/users/root>
+        rdf:type                       knora-admin:User;
+        knora-admin:email              "root@example.com";
+        knora-admin:familyName         "Administrator";
+        knora-admin:givenName          "System";
+        knora-admin:isInSystemAdminGroup
+                true;
+        knora-admin:password           "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK";
+        knora-admin:phone              "123456";
+        knora-admin:preferredLanguage  "en";
+        knora-admin:status             true;
+        knora-admin:username           "root" .
+
+<http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>
+        rdf:type                        knora-admin:knoraProject;
+        knora-admin:hasAllowedCopyrightHolder
+                "AI-Generated Content - Not Protected by Copyright" , "Public Domain - Not Protected by Copyright";
+        knora-admin:hasEnabledLicense   <http://rdfh.ch/licenses/cc-by-4.0> , <http://rdfh.ch/licenses/cc-by-nc-4.0> , <http://rdfh.ch/licenses/unknown> , <http://rdfh.ch/licenses/ai-generated>;
+        knora-admin:hasSelfJoinEnabled  false;
+        knora-admin:projectDescription  "Test project for validate-data"@en;
+        knora-admin:projectKeyword      "validate";
+        knora-admin:projectLongname     "Test project for validate-data";
+        knora-admin:projectRestrictedViewSize
+                "!128,128";
+        knora-admin:projectShortcode    "9999";
+        knora-admin:projectShortname    "core-validation";
+        knora-admin:status              true .
+
+<http://rdfh.ch/users/quvChlufRtiUcF0VvtHjjA>
+        rdf:type                       knora-admin:User;
+        knora-admin:email              "tester.known@test.org";
+        knora-admin:familyName         "Known";
+        knora-admin:givenName          "Tester";
+        knora-admin:isInProject        <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        knora-admin:isInProjectAdminGroup
+                <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        knora-admin:isInSystemAdminGroup
+                false;
+        knora-admin:password           "$2a$12$65IE12s62xtWo2r6ggwKgOQhlqYjOZ9w9MJRnkf3ahvQwAzGvae.i";
+        knora-admin:preferredLanguage  "en";
+        knora-admin:status             true;
+        knora-admin:username           "testerKnownUser" .

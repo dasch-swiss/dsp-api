@@ -1,0 +1,2628 @@
+[
+  {
+    "@id": "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Empty"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/eIoF7ZpzRRest649Ronb7g",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestNormalResource"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Empty target 1"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/arhN0RVNSWO66IO_Hq9eyQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestNormalResource"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Empty target 2"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/H0bnUYsxR12U4c4KwtQsOQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#GeonameValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#geonameValueAsGeonameCode": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "1111111"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/chKmn38PTta3FPN0mGvsKg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#ColorValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "#00ff00"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/3fWETP4VSGmvs6dnfCjDVQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TimeValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#timeValueAsTimeStamp": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+        "@value": "2019-10-23T13:45:12.01-14:00"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/fXWiqeqeTaKe396B7DJI9g",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#UriValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+        "@value": "https://dasch.swiss"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/tGhyIHxZTGW5tQi5hzzYFw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DecimalValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#decimalValueAsDecimal": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "2.71"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/l3j4ugk_Qx2B57S9XFOWFw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Simple text value"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/Vjji9q9rTaW43hwLyI7iFQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#IntValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#int",
+        "@value": "42"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/AZkwf_WuTDmAlFq-x4PXHw"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testColor": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/chKmn38PTta3FPN0mGvsKg"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testDecimalSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/tGhyIHxZTGW5tQi5hzzYFw"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testGeoname": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/H0bnUYsxR12U4c4KwtQsOQ"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testIntegerSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/Vjji9q9rTaW43hwLyI7iFQ"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testListProp": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/DNDkKfQ8T5aDDo2X_L4C5Q"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/l3j4ugk_Qx2B57S9XFOWFw"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testTimeValue": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/3fWETP4VSGmvs6dnfCjDVQ"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testUriValue": [
+      {
+        "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/fXWiqeqeTaKe396B7DJI9g"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "All scalar values"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/DNDkKfQ8T5aDDo2X_L4C5Q",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#ListValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": [
+      {
+        "@id": "http://rdfh.ch/lists/9999/BjuTLY1aToyT1mc5yLYfjQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/vpzJLM0dRR6WGI9qtaMOcg/values/AZkwf_WuTDmAlFq-x4PXHw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#BooleanValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+        "@value": true
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/Z6kw_iTESX-3gG0U5Tzeow",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 3
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/KCMQ2qaOQJW_EAqHVuxFcA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 6
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 8
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 2024
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 6
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 8
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 2024
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 8
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/xPVslLl_TDOjwb0MlQiivg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1900
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/X5spVuNPSCGwWEstsfc5KQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "JULIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "BCE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 600
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "BCE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 700
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/YiNQSbCcSuOfF5toPjJiRg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "ISLAMIC"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1900
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 2
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/PAStQv7ETGif61LSKUFD3g",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 7
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSubDate1": [
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/RoJ_WoHrSy-qozHZvGcg1w"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/PAStQv7ETGif61LSKUFD3g"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/KCMQ2qaOQJW_EAqHVuxFcA"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/aqON5Fw5TMyI7zid4awVrw"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/Z6kw_iTESX-3gG0U5Tzeow"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/X5spVuNPSCGwWEstsfc5KQ"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/YiNQSbCcSuOfF5toPjJiRg"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/U_YgyAPvRKS7wWaNAyeGNw"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/xPVslLl_TDOjwb0MlQiivg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Date variants"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/U_YgyAPvRKS7wWaNAyeGNw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1900
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 6
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/RoJ_WoHrSy-qozHZvGcg1w",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1900
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 5
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ZgYh3838SSiOOpMXTX4W4A/values/aqON5Fw5TMyI7zid4awVrw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DateValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "GREGORIAN"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1900
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CE"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1800
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 4
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/jgih4kJRSA2306qegfp1qA/values/oLq_ejatSma1BHIbISLREg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Paragraph with <strong>bold</strong>, <em>italic</em>, <u>underline</u>, <strike>strikethrough</strike>, <sub>subscript</sub> and <sup>superscript</sup>. An external <a href=\"https://dasch.swiss\">link</a>, an internal <a class=\"salsah-link\" href=\"http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ\">resource link</a>, and an <a class=\"internal-link\" href=\"#anchor1\" id=\"ref1\">anchor reference</a> to an <a class=\"internal-link\" href=\"#ref1\" id=\"anchor1\">anchor target</a>.<footnote content=\"A footnote with &lt;strong&gt;markup&lt;/strong&gt;.\"/></p><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3><h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6><ul><li>Unordered item</li></ul><ol><li>Ordered item</li></ol><blockquote>A block quotation</blockquote><cite>A citation</cite><pre>preformatted   text</pre><code>code_sample()</code><table><thead><tr><th>Header cell</th></tr></thead><tbody><tr><td>Body cell</td></tr></tbody></table><hr/>Text before a break<br/>text after the break.</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/jgih4kJRSA2306qegfp1qA",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": [
+      {
+        "@id": "http://rdfh.ch/9999/jgih4kJRSA2306qegfp1qA/values/oLq_ejatSma1BHIbISLREg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "All standoff tags"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/msw8injcR6yPKdzYDGwYdw/values/fXhckypJQemZ9wLRM9k58A",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a text with <a class=\"salsah-link\" href=\"http://rdfh.ch/9999/msw8injcR6yPKdzYDGwYdw\">standoff</a>.</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/msw8injcR6yPKdzYDGwYdw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": [
+      {
+        "@id": "http://rdfh.ch/9999/msw8injcR6yPKdzYDGwYdw/values/fXhckypJQemZ9wLRM9k58A"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Recursive standoff link"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/H5mjbtpkR8Kb86gFkYkrmQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testUriValue": [
+      {
+        "@id": "http://rdfh.ch/9999/H5mjbtpkR8Kb86gFkYkrmQ/values/U-frjSi6Rm6jmJN_aE27Aw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Comment on value"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/H5mjbtpkR8Kb86gFkYkrmQ/values/U-frjSi6Rm6jmJN_aE27Aw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#UriValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+        "@value": "https://dasch.swiss"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasComment": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "This is a comment on the value"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/C3DxWwhBRmiKHp9pNpJ8cQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Second"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/0Ryn6wB6RaCUfcGavleixA"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/gclN5sGNSZGNxWZ12oKT5w"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/C3DxWwhBRmiKHp9pNpJ8cQ"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Explicit value order"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/0Ryn6wB6RaCUfcGavleixA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "First"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/eMrjpPZfQcCtmM3La1Ddzg/values/gclN5sGNSZGNxWZ12oKT5w",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Third"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 2
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/5-D63nrqSJaQiemLiFq0WA/values/hy7j9s66SsG2N8ppQuVwaQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Value one"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasComment": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "shared comment"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/5-D63nrqSJaQiemLiFq0WA",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/5-D63nrqSJaQiemLiFq0WA/values/IaESwVskSeKNJu7uDXSTVQ"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/5-D63nrqSJaQiemLiFq0WA/values/hy7j9s66SsG2N8ppQuVwaQ"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Same comment on two values"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/5-D63nrqSJaQiemLiFq0WA/values/IaESwVskSeKNJu7uDXSTVQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Value two"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasComment": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "shared comment"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/DiAmYQzQSzC7cdTo6OJMYA/values/cqimUaU0Qk6EPPPOg4t7jg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Resource created with a preset IRI"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/DiAmYQzQSzC7cdTo6OJMYA",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/DiAmYQzQSzC7cdTo6OJMYA/values/cqimUaU0Qk6EPPPOg4t7jg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Migration by IRI"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Ef9heHjPWDS7dMR_gGax2Q",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/Ef9heHjPWDS7dMR_gGax2Q/values/AOUxN7ejTQ63Y8_f8L5_kA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Migration by ARK"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Ef9heHjPWDS7dMR_gGax2Q/values/AOUxN7ejTQ63Y8_f8L5_kA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Resource created with a preset ARK"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ/values/FEgrOX_iRGy9f05l1hFLHw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#creationDate": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+        "@value": "2019-01-09T15:45:54.502951Z"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Migration by creation date"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ/values/FEgrOX_iRGy9f05l1hFLHw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Resource created with a preset creation date"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA/values/NHmmLMYURfyzmfhcVVUIUg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasLinkToValue": [
+      {
+        "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA/values/NHmmLMYURfyzmfhcVVUIUg"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasRegionPreview": [
+      {
+        "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA/values/OIFXF78tRcepsppA9LuOvw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "onto link properties"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA/values/OIFXF78tRcepsppA9LuOvw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#RegionPreviewValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#isRegionPreviewOf": [
+      {
+        "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/T96OopY3TNep04RWjWQDug",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestNormalResource"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/in-built/v2#testHasRepresentationValue": [
+      {
+        "@id": "http://rdfh.ch/9999/T96OopY3TNep04RWjWQDug/values/AGfrw1IZTxOyxzyDSFkVyw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "in-built link properties"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/T96OopY3TNep04RWjWQDug/values/AGfrw1IZTxOyxzyDSFkVyw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/joq116FtT3iZsPEaKGr7rw/values/DEBP5lPoR3-rMdLgP0Jykg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#BooleanValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+        "@value": true
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/joq116FtT3iZsPEaKGr7rw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/second-onto/v2#SecondOntoClass"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/joq116FtT3iZsPEaKGr7rw/values/Ijx3TJZOSDCdST7oRp9IqA"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/second-onto/v2#testBoolean": [
+      {
+        "@id": "http://rdfh.ch/9999/joq116FtT3iZsPEaKGr7rw/values/DEBP5lPoR3-rMdLgP0Jykg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Second onto class"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/joq116FtT3iZsPEaKGr7rw/values/Ijx3TJZOSDCdST7oRp9IqA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Cross-ontology resource"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/u6mcZkEiQhWKFQtj6RDuZw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestStillImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/u6mcZkEiQhWKFQtj6RDuZw/values/MZyhFWHvREyYFj4RrfOAww"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Still image"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/u6mcZkEiQhWKFQtj6RDuZw/values/MZyhFWHvREyYFj4RrfOAww",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "4u6NKBRcL3P-alABlxHHBJg.jpx"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "RV knora-admin:UnknownUser,knora-admin:KnownUser|D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/U3n4jvFESGOWJtxQ_5GCbw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestStillImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/U3n4jvFESGOWJtxQ_5GCbw/values/1npFXKKwR5O6ssEdCeq57Q"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Still image (vector SVG)"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/U3n4jvFESGOWJtxQ_5GCbw/values/1npFXKKwR5O6ssEdCeq57Q",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageVectorFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "3gV7rSuCp9W-hIjKlMnOpQr.svg"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestMovingImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasMovingImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A/values/nBbsguaASLi4KBw0Pn1rPA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Moving image"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A/values/nBbsguaASLi4KBw0Pn1rPA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#MovingImageFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "7bQ2mNpXk4R-cDeFgHiJkLm.mp4"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-nc-4.0"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A/values/MlZ2WfHIS2COeAY18TsKjw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#AudioFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "8cR3nOqYl5S-dEfGhIjKlMn.mp3"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/unknown"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestAudioRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAudioFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A/values/MlZ2WfHIS2COeAY18TsKjw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Audio"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/mps4l4BTRXGv8zDLN7WwXQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestDocumentRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasDocumentFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/mps4l4BTRXGv8zDLN7WwXQ/values/FQxZjqx1R-SJLyN2uId4tg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Document"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/mps4l4BTRXGv8zDLN7WwXQ/values/FQxZjqx1R-SJLyN2uId4tg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#DocumentFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "9dS4oPrZm6T-eFgHiJkLmNo.pdf"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Test Author"
+      },
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Nora Ammann"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "AI-Generated Content - Not Protected by Copyright"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/ai-generated"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/3_cmZYOpT2mCtdnzvnf9NQ/values/uKYfJyTcQxC1FNKeD-K5Xw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#ArchiveFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "1eT5pQsAn7U-fGhIjKlMnOp.zip"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/3_cmZYOpT2mCtdnzvnf9NQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestArchiveRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasArchiveFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/3_cmZYOpT2mCtdnzvnf9NQ/values/uKYfJyTcQxC1FNKeD-K5Xw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Archive"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/LgLEUhyqQ7yA514hwEcPBQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestTextRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasTextFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/LgLEUhyqQ7yA514hwEcPBQ/values/-qAwnaR3SSiwUGKHDc0l4A"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Text file"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/LgLEUhyqQ7yA514hwEcPBQ/values/-qAwnaR3SSiwUGKHDc0l4A",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "2fU6qRtBo8V-gHiJkLmNoPq.txt"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/unknown"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/CWfLZu49QvCgg5mcxEslAg/values/0qER5HcmSNSTZTY5BYFTAg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageExternalFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Cavanagh, Annie"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Wellcome Collection"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-nc-4.0"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasExternalUrl": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "https://iiif.wellcomecollection.org/image/b20432033_B0008608.JP2/full/1338%2C/0/default.jpg"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/CWfLZu49QvCgg5mcxEslAg",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestStillImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/CWfLZu49QvCgg5mcxEslAg/values/0qER5HcmSNSTZTY5BYFTAg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "IIIF image"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/1tuGkpp2QtGLQMEDShEI5A",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/eIoF7ZpzRRest649Ronb7g"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/OGpSacBYQkCyXAln1MNiSA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#IntValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#int",
+        "@value": "1"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestStillImageRepresentationWithSeqnum"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/REG46JGZTn24OOdRlFsw6g"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#isPartOfValue": [
+      {
+        "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/1tuGkpp2QtGLQMEDShEI5A"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#seqnum": [
+      {
+        "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/OGpSacBYQkCyXAln1MNiSA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Seqnum direct"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/68K01LHmTo2JQJCWxOLLug/values/REG46JGZTn24OOdRlFsw6g",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "4u6NKBRcL3P-alABlxHHBJg.jpx"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/unknown"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/pwDe4dcNTHScfBuT6m7yWw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestNormalResource"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Resource permissions"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/4pdrVQAUTZquONRRxQ4umg",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": [
+      {
+        "@id": "http://rdfh.ch/9999/4pdrVQAUTZquONRRxQ4umg/values/XwD_FFF0RW-xlZbJGLhh5Q"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Value permissions"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/4pdrVQAUTZquONRRxQ4umg/values/XwD_FFF0RW-xlZbJGLhh5Q",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#BooleanValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+        "@value": true
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/rra3lveWTIi2z1n9jYVzlQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#TestStillImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasResourceAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Test Author"
+      },
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Nora Ammann"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/rra3lveWTIi2z1n9jYVzlQ/values/9vcSytBUSROboZ8keE-daQ"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Bitstream and iiif permissions"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/rra3lveWTIi2z1n9jYVzlQ/values/9vcSytBUSROboZ8keE-daQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "4u6NKBRcL3P-alABlxHHBJg.jpx"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/unknown"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/zz5c5W6RQZG97D01SEHv7Q",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#PrivateResource"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/zz5c5W6RQZG97D01SEHv7Q/values/ki3UBY3jS2qLOg-dRcWDSw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Private resource"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/zz5c5W6RQZG97D01SEHv7Q/values/ki3UBY3jS2qLOg-dRcWDSw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Private content"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/dl8-YeNPRHaXdJoTIzlqtQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testPrivateProp": [
+      {
+        "@id": "http://rdfh.ch/9999/dl8-YeNPRHaXdJoTIzlqtQ/values/wDTGdk_PSEWMKinMCXFANg"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/dl8-YeNPRHaXdJoTIzlqtQ/values/bwXKe1nNRzOdecErh6oldA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Public resource with a private property"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/dl8-YeNPRHaXdJoTIzlqtQ/values/wDTGdk_PSEWMKinMCXFANg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Hidden note"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/dl8-YeNPRHaXdJoTIzlqtQ/values/bwXKe1nNRzOdecErh6oldA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Public note"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/5slbaFCWR4iojNS7-rqaFw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#RestrictedImageRepresentation"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
+      {
+        "@id": "http://rdfh.ch/9999/5slbaFCWR4iojNS7-rqaFw/values/30R7loulTc6CHJ7emMKDEg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Restricted-view image"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/5slbaFCWR4iojNS7-rqaFw/values/30R7loulTc6CHJ7emMKDEg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "4u6NKBRcL3P-alABlxHHBJg.jpx"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasAuthorship": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Johannes Nussbaum"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasCopyrightHolder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "DaSCH"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLicense": [
+      {
+        "@id": "http://rdfh.ch/licenses/cc-by-4.0"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/qN3fTCpXSVujoBXtchwLUg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/u6mcZkEiQhWKFQtj6RDuZw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#Region"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasColor": [
+      {
+        "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/AXNsRK7ARCymwkFJcLUjqQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasComment": [
+      {
+        "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/1xCIj28qTAKrUBoMd4PVFw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasGeometry": [
+      {
+        "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/vuAg4t4LRv6MzlWaoVwb3g"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#isRegionOfValue": [
+      {
+        "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/qN3fTCpXSVujoBXtchwLUg"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Region"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/AXNsRK7ARCymwkFJcLUjqQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#ColorValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "#5d1f1e"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/vuAg4t4LRv6MzlWaoVwb3g",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#GeomValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#geometryValueAsGeometry": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "{\"status\": \"active\", \"type\": \"polygon\", \"lineWidth\": 5, \"points\": [{\"x\": 0.4, \"y\": 0.6}, {\"x\": 0.5, \"y\": 0.9}, {\"x\": 0.8, \"y\": 0.9}, {\"x\": 0.7, \"y\": 0.6}]}"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/1xCIj28qTAKrUBoMd4PVFw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>A polygon region of interest.</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/Q5VHO76uRQu7yVhznbs3Bw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>A link object with a comment.</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/CxiVQySVQSaUd7Xgv9FYdw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/eIoF7ZpzRRest649Ronb7g"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkObj"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasComment": [
+      {
+        "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/Q5VHO76uRQu7yVhznbs3Bw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue": [
+      {
+        "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/arMpUcnXTlCZZDkGoJoemA"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/CxiVQySVQSaUd7Xgv9FYdw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Link object"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/bpTn9VoUQK6vk4HLxEY8Sg/values/arMpUcnXTlCZZDkGoJoemA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/arhN0RVNSWO66IO_Hq9eyQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/b3IZEwKETIu9FVtbYBrYaw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Keyword one"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/DgL6EMC4SsizRYMeCw-tzA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><strong>Bold</strong> comment of the video segment</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/Ob3N385NRnCNMH059WT0Mw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Description of the video segment</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/noqyt7yUQt-nSLWkFi2kUg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Title of the video segment"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/xNxAOAoKR8ewNtoLJi5cKg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Keyword two"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 1
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#VideoSegment"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasComment": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/DgL6EMC4SsizRYMeCw-tzA"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasDescription": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/Ob3N385NRnCNMH059WT0Mw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasKeyword": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/b3IZEwKETIu9FVtbYBrYaw"
+      },
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/xNxAOAoKR8ewNtoLJi5cKg"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasSegmentBounds": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/rjyj7IeYQYO0S_0kOa6YYg"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasTitle": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/noqyt7yUQt-nSLWkFi2kUg"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#isVideoSegmentOfValue": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/cE6n-NjHRzaX7Jfayl1EkQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#relatesToValue": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/9qR4E3iPSWqyPTwsVWX4_g"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Video segment"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/9qR4E3iPSWqyPTwsVWX4_g",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/cE6n-NjHRzaX7Jfayl1EkQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA/values/rjyj7IeYQYO0S_0kOa6YYg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#IntervalValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "0.234"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intervalValueHasStart": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "0.1"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/2LWrBOvlStCFFPqQ-YHdHQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Keyword of the audio segment"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/I4ATw5WAQ4mSoyDzksTRyg",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Comment of the audio segment</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/w-hLDiRxRD2T-GWe_zEK3A",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#IntervalValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "5.6"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#intervalValueHasStart": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "0.0"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/qkYXru3JQSK86TYoqeL7sw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Title of the audio segment"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/yN53NqXXTU6rLaFowR1KUQ",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Description of the audio segment</text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#AudioSegment"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasComment": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/I4ATw5WAQ4mSoyDzksTRyg"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasDescription": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/yN53NqXXTU6rLaFowR1KUQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasKeyword": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/2LWrBOvlStCFFPqQ-YHdHQ"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasSegmentBounds": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/w-hLDiRxRD2T-GWe_zEK3A"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasTitle": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/qkYXru3JQSK86TYoqeL7sw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#isAudioSegmentOfValue": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/uzfqabNpT0qjyQeOcIMQUw"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#relatesToValue": [
+      {
+        "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/_lHG3xAWSmq-2JoI8fq7dA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Audio segment"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/uzfqabNpT0qjyQeOcIMQUw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/c9J1D6fiTwebS6ibbfVDWA/values/_lHG3xAWSmq-2JoI8fq7dA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#LinkValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": [
+      {
+        "@id": "http://rdfh.ch/9999/Q8yER3x_Q5eA9rzG9e4NrA"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  }
+]
