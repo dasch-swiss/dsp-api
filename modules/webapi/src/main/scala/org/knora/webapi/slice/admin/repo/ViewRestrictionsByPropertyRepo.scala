@@ -29,6 +29,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 /**
  * Reads a project's view-restriction data **grouped by property**.
@@ -113,7 +114,12 @@ final case class ViewRestrictionsByPropertyRepo(
     itemType: ValueItemType,
   ): Task[Seq[ViewRestrictionsRepo.PermissionCountRow]] =
     triplestore
-      .query(Select(ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType)))
+      .query(
+        Select(
+          ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType),
+          SparqlTimeout.ViewRestrictions,
+        ),
+      )
       .map(_.flatMap(permissionCountRow))
 
   /**
@@ -136,6 +142,7 @@ final case class ViewRestrictionsByPropertyRepo(
                       Select(
                         ViewRestrictionsByPropertyRepo
                           .drillDownResourcePageQuery(projectIri, propertyIri, itemType, offset, limit),
+                        SparqlTimeout.ViewRestrictions,
                       ),
                     )
                     .map(_.flatMap(_.get("resource")))
@@ -147,6 +154,7 @@ final case class ViewRestrictionsByPropertyRepo(
                     Select(
                       ViewRestrictionsByPropertyRepo
                         .drillDownRowsQuery(projectIri, propertyIri, itemType, pageIris),
+                      SparqlTimeout.ViewRestrictions,
                     ),
                   )
                   .map(_.flatMap(restrictedRow))
@@ -159,7 +167,12 @@ final case class ViewRestrictionsByPropertyRepo(
     itemType: ValueItemType,
   ): Task[Int] =
     triplestore
-      .query(Select(ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType)))
+      .query(
+        Select(
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType),
+          SparqlTimeout.ViewRestrictions,
+        ),
+      )
       .map(_.flatMap(_.get("cnt").flatMap(_.toIntOption)).headOption.getOrElse(0))
 
   /**

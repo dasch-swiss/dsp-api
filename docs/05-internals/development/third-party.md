@@ -57,3 +57,36 @@ The required Docker image versions of Sipi and Fuseki are also declared in `MODU
 - **Sipi** is pinned by digest in the `oci.pull` blocks; its human-readable version is read from
   the image's OCI label rather than a separate version string.
 - **Fuseki** is declared via `image_versions.fuseki` and consumed through `@dsp_image_versions`.
+
+### Bumping Sipi
+
+The Sipi version lives in **one place**: the two `oci.pull` digests in `MODULE.bazel`. There is no
+duplicated tag string — the `/version` endpoint reads the tag from the pulled image's own
+`org.opencontainers.image.version` OCI label (`//tools/buildinfo:oci_config_label`).
+
+When applying a new `daschswiss/sipi` release, update the two `oci.pull` blocks
+(`sipi_base_amd64`, `sipi_base_arm64`). They are pinned by **per-arch single-manifest digest**, not
+by tag: the arm64 index entry carries a `v8` variant that a bare `linux/arm64` request does not
+match, so pull each platform's manifest directly. Also update the tag and the index digest in the
+comment above them — the comment tag is documentation and a Renovate anchor, while the digests are
+what the build actually uses.
+
+Get the digests for the target tag with:
+
+```bash
+docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z --raw \
+  | jq -r '.manifests[] | "\(.platform.os)/\(.platform.architecture)\(.platform.variant // "") \(.digest)"'
+docker buildx imagetools inspect daschswiss/sipi:vX.Y.Z | grep -i digest   # index digest
+```
+
+`docker-compose.yml` needs no change — it uses `daschswiss/knora-sipi:latest`, the derived image
+built from this base, rather than a pinned version. After bumping, sync the same version in the
+[ops-deploy](https://github.com/dasch-swiss/ops-deploy) repository when deploying the DSP release.
+
+### Bumping Fuseki
+
+The Fuseki image is versioned by release-please like knora-api and dsp-ingest — its tag is the DSP
+release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist
+version** (`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the
+`/version` report, and the image's OTLP `service.version` resource attribute. See
+"Updating Jena/Fuseki" in `modules/fuseki/README.md`.

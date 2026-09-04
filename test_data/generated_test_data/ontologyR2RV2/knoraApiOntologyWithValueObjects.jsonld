@@ -4177,7 +4177,7 @@
         },
         {
             "knora-api:isResourceClass": true,
-            "rdfs:label": "Region",
+            "rdfs:label": "Image Annotation",
             "knora-api:resourceIcon": "region.gif",
             "knora-api:canBeInstantiated": true,
             "rdfs:subClassOf": [
@@ -4364,7 +4364,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
+            "rdfs:comment": "An annotation of a region of an image resource",
             "@type": "owl:Class",
             "@id": "knora-api:Region"
         },
@@ -8914,7 +8914,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:Region"
             },
-            "rdfs:comment": "Specifies the color of a region."
+            "rdfs:comment": "Specifies the color of an annotation."
         },
         {
             "rdfs:label": "Comment",

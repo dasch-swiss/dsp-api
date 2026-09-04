@@ -39,8 +39,6 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -70,14 +68,11 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.CsvService
-import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
@@ -562,14 +557,9 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       KnoraProjectRepoLive.layer,
       KnoraProjectService.layer,
       LicenseRepo.layer,
-      CardinalityHandler.layer,
-      CardinalityService.layer,
-      OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
-      OntologyResponderV2.layer,
-      OntologyTriplestoreHelpers.layer,
-      PredicateRepositoryLive.layer,
+      StandoffEntityInfoServiceLive.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,
       StandoffMappingServiceFake.layer,

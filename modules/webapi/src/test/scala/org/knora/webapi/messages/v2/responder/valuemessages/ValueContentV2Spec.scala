@@ -9,10 +9,13 @@ import org.junit.runner.RunWith
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+import zio.test.Assertion.failsWithA
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
+import zio.test.assert
 import zio.test.assertTrue
 
+import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -42,6 +45,14 @@ class ValueContentV2Spec extends ZIOSpecDefault {
             } yield assertTrue(ingested.metadata == expected)
           },
         ).provide(mockSipi()),
+        suite("Given the asset is not ingested")(
+          test("When dsp-ingest returns a 404, then it fails with a descriptive NotFoundException") {
+            for {
+              exit <- ValueContentV2.getFileInfo(shortcode0001, jsonLdObj).exit
+              msg   = exit.causeOption.flatMap(_.failureOption).map(_.getMessage).getOrElse("")
+            } yield assert(exit)(failsWithA[NotFoundException]) && assertTrue(msg.contains("not found in dsp-ingest"))
+          },
+        ).provide(mockSipiNotFound()),
       ),
       suite("GeomValueContentV2.parsePoints")(
         test("parses a rectangle geometry into its list of points") {
@@ -95,6 +106,18 @@ class ValueContentV2Spec extends ZIOSpecDefault {
       assetId: AssetId,
     ): Task[FileMetadataSipiResponse] =
       ZIO.succeed(expected)
+
+    // The following are unsupported operations because they are not used in the test
+    def getTextFileRequest(fileUrl: String, senderName: String): Task[String] =
+      ZIO.dieMessage("unsupported operation")
+  })
+
+  private def mockSipiNotFound() = ZLayer.succeed(new SipiService {
+    override def getFileMetadataFromDspIngest(
+      shortcode: KnoraProject.Shortcode,
+      assetId: AssetId,
+    ): Task[FileMetadataSipiResponse] =
+      ZIO.fail(NotFoundException("asset missing"))
 
     // The following are unsupported operations because they are not used in the test
     def getTextFileRequest(fileUrl: String, senderName: String): Task[String] =

@@ -30,8 +30,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadLinkValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
@@ -56,12 +54,9 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
-import org.knora.webapi.slice.ontology.domain.service.OntologyTriplestoreHelpers
+import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -341,8 +336,6 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       AppConfig.layer,
       AuthorizationRestService.layer,
       CacheManager.layer,
-      CardinalityHandler.layer,
-      CardinalityService.layer,
       ConstructResponseUtilV2.layer,
       emptyDataset,
       IriConverter.layer,
@@ -355,14 +348,11 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       KnoraUserService.layer,
       LicenseRepo.layer,
       ListsResponder.layer,
-      OntologyCacheHelpers.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
-      OntologyResponderV2.layer,
-      OntologyTriplestoreHelpers.layer,
+      StandoffEntityInfoServiceLive.layer,
       PasswordService.layer,
       PredicateObjectMapper.layer,
-      PredicateRepositoryLive.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,
       StandoffMappingServiceFake.layer,

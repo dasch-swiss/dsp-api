@@ -38,6 +38,7 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 51, plugin = new MigrateOnlyBuiltInGraphs()),
       PluginForKnoraBaseVersion(versionNumber = 52, plugin = new MigrateOnlyBuiltInGraphs()),
       PluginForKnoraBaseVersion(versionNumber = 53, plugin = new MigrateOnlyBuiltInGraphs()),
+      PluginForKnoraBaseVersion(versionNumber = 54, plugin = new MigrateOnlyBuiltInGraphs()),
     )
 
   /**
