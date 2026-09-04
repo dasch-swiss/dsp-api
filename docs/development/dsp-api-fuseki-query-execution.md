@@ -32,6 +32,16 @@ Evidence: the tile-permission regression — a shortcode restriction placed afte
 made Fuseki evaluate every left-join for every project first (351ms; 7.9ms with the restriction
 hoisted). See DEV-6796.
 
+**Corollary — a bound-object wildcard-predicate loses to any `?s <P> <O>`.** The heuristic
+counts bound terms, not selectivity. `?s ?p <bound>` — the canonical “what points at me”
+probe — has one bound term, so it loses to `?s knora-base:isDeleted false` (two bound terms)
+even when the latter matches every non-deleted subject in the project. Two patterns of the
+same shape tie, and ties keep document order. Consequence: writing the selective pattern first
+is not always enough; sometimes the order has to be *forced* with a subquery barrier the
+optimizer cannot reorder across. Every “find incoming references” query has this shape.
+Measured on `/v2/resources/candelete` (`isResourceInUse`): 1801 ms → 317 ms with the barrier,
+byte-identical results (DEV-6885).
+
 ## Fact 2 — OPTIONAL is a left join, and independent OPTIONALs multiply
 
 Each `OPTIONAL` left-joins against everything matched so far, in document order (Fact 1). Two
@@ -55,6 +65,43 @@ Corollary: a "connected and small" closure evaluated early can be *good* (it dri
 probes — measured on `/v2/metadata`, where "fixing" the order made it 3× slower). The sin is
 **disconnection**, not earliness. And the converse of this fact also holds — *removing* a path
 can be far more expensive than keeping it (Fact 11).
+
+**Corollary — a connected `subClassOf*` still scales with candidate count.** After pinning
+the incoming-reference probe (Fact 1 corollary), `/v2/resources/candelete` still spent ~1.5s
+of ~1.6s on a 3840-row dokubib hub inside `?otherClass rdfs:subClassOf* knora-base:Resource`
+over 13k incoming subjects. `FILTER NOT EXISTS { GRAPH <g> { ?other a knora-base:LinkValue } }`
+dropped reifications in ~190ms on that hub (DEV-6885). The class path was doing real work; it
+was just the expensive way to drop non-resources.
+
+**Do not treat `¬LinkValue` as equivalent to `Resource`.** `knora-base:Resource` and
+`knora-base:Value` are sibling trees (`LinkValue` ⊑ `Value`, not `Resource`). That is a
+write-path invariant, not `owl:disjointWith`, and `Resource ≢ ¬LinkValue` in the TBox.
+`isResourceInUse` asks whether another **non-deleted resource** mentions the target. Branch 1
+is `?other ?p <target>`, so subjects in object-position include:
+
+| Subject class | Typical predicate | Keep? |
+| --- | --- | --- |
+| `Resource` (project subclasses) | `hasLinkTo` subproperties, `hasStandoffLinkTo`, … | yes |
+| `LinkValue` | `rdf:object` / `rdf:subject` | no |
+| `RegionPreviewValue` | `isRegionPreviewOf` | no — the **host** resource is branch 2 |
+| `StandoffLinkTag` | `standoffTagHasLink` | no — and they usually lack `isDeleted false` |
+
+On ordinary `hasLinkTo` hubs, `¬LinkValue` matched the Resource path (117/117 on stage,
+including the 3840-row dokubib hub). That is **not** a proof: a live `RegionPreviewValue` is
+not a `LinkValue`, has `isDeleted false`, and is a value IRI (`…/values/…`).
+`NOT EXISTS LinkValue` alone returns that value IRI as `?other`; `ResourceIri.from` then
+fails and `candelete` reports a conversion error instead of “still referenced by \<host\>”.
+The keep-set that matches the contract **and** the Scala parser is
+`FILTER REGEX(STR(?other), ResourceIri.SparqlRegexPattern)` (`IsResourceInUseQuery`).
+`NOT EXISTS LinkValue` can stay as a cheap extra; it is not what makes the answer correct.
+
+Checked 2026-09-04 on stage project `0854` / `daschland` against a Story that had one live and
+one deleted `annotationPreview` (different target Regions). Live: old Resource-guard and the
+IRI-shape query both returned only the host; `¬LinkValue` alone also returned the live value
+IRI. Deleted: both empty (`isDeleted true` on the value node). **Those instance triples will
+vanish on the next prod→stage mirror — do not treat them as fixtures.** Durable coverage is
+the anything-project IT in `ResourcesResponderV2Spec` (assert `cannotDoReason` contains the
+host IRI, not `/values/` and not “is not a Knora resource IRI”).
 
 ## Fact 4 — `MINUS` evaluates its right side without bindings; `FILTER NOT EXISTS` is per-row
 
