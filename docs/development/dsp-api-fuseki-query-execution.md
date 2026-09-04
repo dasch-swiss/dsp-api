@@ -32,6 +32,16 @@ Evidence: the tile-permission regression — a shortcode restriction placed afte
 made Fuseki evaluate every left-join for every project first (351ms; 7.9ms with the restriction
 hoisted). See DEV-6796.
 
+**Corollary — a bound-object wildcard-predicate loses to any `?s <P> <O>`.** The heuristic
+counts bound terms, not selectivity. `?s ?p <bound>` — the canonical “what points at me”
+probe — has one bound term, so it loses to `?s knora-base:isDeleted false` (two bound terms)
+even when the latter matches every non-deleted subject in the project. Two patterns of the
+same shape tie, and ties keep document order. Consequence: writing the selective pattern first
+is not always enough; sometimes the order has to be *forced* with a subquery barrier the
+optimizer cannot reorder across. Every “find incoming references” query has this shape.
+Measured on `/v2/resources/candelete` (`isResourceInUse`): 1801 ms → 317 ms with the barrier,
+byte-identical results (DEV-6885).
+
 ## Fact 2 — OPTIONAL is a left join, and independent OPTIONALs multiply
 
 Each `OPTIONAL` left-joins against everything matched so far, in document order (Fact 1). Two

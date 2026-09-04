@@ -5,15 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import java.time.Instant
@@ -46,7 +37,6 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.repo.ChangeResourceAuthorshipQuery
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
@@ -55,6 +45,7 @@ import org.knora.webapi.slice.resources.repo.EraseResourceQuery
 import org.knora.webapi.slice.resources.repo.GetAllResourcesInProjectPrequery
 import org.knora.webapi.slice.resources.repo.GetGraphDataQuery
 import org.knora.webapi.slice.resources.repo.GetResourceValueVersionHistoryQuery
+import org.knora.webapi.slice.resources.repo.IsResourceInUseQuery
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.search.repo.GetIncomingImageLinksGravsearchQuery
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
@@ -364,40 +355,8 @@ final class ResourcesResponderV2(
       prj <- projectService
                .findByShortcode(resourceIri.shortcode)
                .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
-
-      (other, otherClass, p, valueProp, valueNode) =
-        (variable("other"), variable("otherClass"), variable("p"), variable("valueProp"), variable("valueNode"))
-      dataGraph = Rdf.iri(projectService.getDataGraphForProject(prj).value)
-
-      // Branch 1: a non-deleted resource refers to <resource> directly in object position.
-      directBranch = other
-                       .has(p, Rdf.iri(resourceIri.toString))
-                       .andHas(KB.isDeleted, false)
-                       .andIsA(otherClass)
-
-      // Branch 2: a non-deleted resource refers to <resource> through one of its non-deleted value nodes via
-      // isRegionPreviewOf (a region preview points at the Region from a Value node, not from the Resource).
-      viaValueNodeBranch = other
-                             .has(valueProp, valueNode)
-                             .andHas(KB.isDeleted, false)
-                             .andIsA(otherClass)
-                             .and(
-                               valueNode
-                                 .has(KB.isRegionPreviewOf, Rdf.iri(resourceIri.toString))
-                                 .andHas(KB.isDeleted, false),
-                             )
-
-      // Scope both branches to the project data graph; the class-hierarchy guard stays in the default graph so
-      // the rdfs:subClassOf* traversal reaches the ontology (matching the pre-existing single-branch behaviour).
-      inUsePattern           = GraphPatterns.union(directBranch, viaValueNodeBranch).from(dataGraph)
-      subClassOfPropertyPath = PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build()
-      classConstraintPattern = otherClass.has(subClassOfPropertyPath, KB.Resource)
-
-      query = Queries
-                .SELECT(SparqlBuilder.select(other).distinct())
-                .where(inUsePattern, classConstraintPattern)
-                .prefix(prefix(RDFS.NS), prefix(KB.NS), prefix(XSD.NS))
-      result <- triplestore.query(Select(query))
+      dataGraph = projectService.getDataGraphForProject(prj).value
+      result   <- triplestore.query(Select(IsResourceInUseQuery.build(resourceIri, dataGraph)))
 
       otherResources <-
         ZIO
