@@ -294,8 +294,10 @@ Order: stdlib/ZIO → third-party → internal `org.knora` (alphabetical). Singl
 
 ## Writing SPARQL queries
 
-When writing SPARQL queries do not use String concatenation.
-Instead use rdf4j and the query helper in dsp-api.
+Do not build SPARQL with plain `s"..."` string concatenation. **New** queries use the
+in-house `sparql"..."` interpolator in `modules/sparql-builder/` (package
+`org.knora.sparqlbuilder`). Do not write new queries with RDF4J SparqlBuilder — it is
+grandfathered for existing sites only, until they are migrated.
 For more details see `dsp-api-sparql-queries.md`.
 
 ## Scala Idioms
