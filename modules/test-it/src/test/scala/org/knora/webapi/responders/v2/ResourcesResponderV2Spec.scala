@@ -1747,7 +1747,14 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
                  ),
                )
           release <- canDeleteRegion
-        } yield assertTrue(!protection.canDo.value, release.canDo.value)
+          reason   = protection.cannotDoReason.map(_.value).getOrElse("")
+        } yield assertTrue(
+          !protection.canDo.value,
+          reason.contains(previewHostIri.value),
+          !reason.contains("/values/"),
+          !reason.contains("is not a Knora resource IRI"),
+          release.canDo.value,
+        )
       },
       test("protect a resource referenced by a live incoming link, and release it once the link is deleted") {
         val targetIri            = ResourceIri.makeNew(anythingProject.shortcode)
@@ -1810,7 +1817,14 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
                  ),
                )
           release <- canDeleteTarget
-        } yield assertTrue(!protection.canDo.value, release.canDo.value)
+          reason   = protection.cannotDoReason.map(_.value).getOrElse("")
+        } yield assertTrue(
+          !protection.canDo.value,
+          reason.contains(sourceIri.value),
+          !reason.contains("/values/"),
+          !reason.contains("is not a Knora resource IRI"),
+          release.canDo.value,
+        )
       },
       test("reject creating a resource with an inline region preview whose target is not a Region") {
         val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri

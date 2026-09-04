@@ -22,7 +22,7 @@ class IsResourceInUseQuerySpec extends ZIOSpecDefault {
       val expected    =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT DISTINCT ?other
-          |WHERE { { { SELECT ?other
+          |WHERE { { { { SELECT ?other
           |WHERE { GRAPH <http://www.knora.org/data/0001/anything> { ?other ?p <http://rdfh.ch/0001/a-thing> . } }
           | }
           |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false . } } UNION { { SELECT ?other ?valueNode
@@ -31,7 +31,8 @@ class IsResourceInUseQuerySpec extends ZIOSpecDefault {
           | }
           |GRAPH <http://www.knora.org/data/0001/anything> { ?other knora-base:isDeleted false .
           |?valueNode knora-base:isDeleted false . } }
-          |FILTER NOT EXISTS { GRAPH <http://www.knora.org/data/0001/anything> { ?other a knora-base:LinkValue . } } }
+          |FILTER NOT EXISTS { GRAPH <http://www.knora.org/data/0001/anything> { ?other a knora-base:LinkValue . } }
+          |FILTER ( REGEX( STR( ?other ), "^http://rdfh\\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+$" ) ) } }
           |""".stripMargin
       assertTrue(actual == expected)
     },

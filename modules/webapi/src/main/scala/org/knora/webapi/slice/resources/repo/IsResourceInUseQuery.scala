@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
@@ -22,11 +23,13 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
  * (two bound terms) above `?s ?p <target>` (one bound term) and opens with a
  * project-wide scan.
  *
- * The class filter is `FILTER NOT EXISTS { GRAPH <g> { ?other a LinkValue } }`,
- * not `rdfs:subClassOf* Resource`. On a 3840-incoming dokubib hub the path was
- * ~1.5s of the remaining ~1.6s; the type check was ~190ms and byte-identical
- * on that hub plus the ticket empty case (DEV-6885). See engine Fact 1 and
- * Fact 3 corollaries.
+ * The keep-set is a resource-shaped IRI (`ResourceIri.SparqlRegexPattern`), not
+ * `rdfs:subClassOf* Resource`. Branch 1 also matches `LinkValue` / preview-value
+ * IRIs in object position; those are `…/values/…` and must not count as "in use".
+ * `FILTER NOT EXISTS { GRAPH <g> { ?other a LinkValue } }` is a cheap extra drop
+ * for reifications. On a 3840-incoming dokubib hub the class path was ~1.5s of
+ * the remaining ~1.6s; the type check was ~190ms (DEV-6885). See engine Fact 1
+ * and Fact 3 corollaries.
  */
 object IsResourceInUseQuery extends QueryBuilderHelper {
 
@@ -62,15 +65,21 @@ object IsResourceInUseQuery extends QueryBuilderHelper {
     val viaBranch = GraphPatterns.and(viaPinned, viaFilters)
 
     // LinkValue is not a Resource. Incoming rdf:object triples on the target's
-    // own outgoing LinkValues must not count as "in use"; a GRAPH-scoped type
-    // check is equivalent to the Resource closure here and does not pay the
-    // per-candidate path walk.
+    // own outgoing LinkValues must not count as "in use".
     val notLinkValue = GraphPatterns.filterNotExists(other.isA(KB.linkValue).from(dataGraph))
+    // Same keep-set the Scala parser requires: resource IRIs, not `…/values/…`.
+    val resourceIriShape =
+      Expressions.regex(Expressions.str(other), Rdf.literalOf(ResourceIri.SparqlRegexPattern))
 
     Queries
       .SELECT(other)
       .distinct()
       .prefix(KB.NS)
-      .where(GraphPatterns.union(directBranch, viaBranch), notLinkValue)
+      .where(
+        GraphPatterns
+          .union(directBranch, viaBranch)
+          .and(notLinkValue)
+          .filter(resourceIriShape),
+      )
   }
 }

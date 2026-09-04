@@ -355,15 +355,16 @@ final class ResourcesResponderV2(
       prj <- projectService
                .findByShortcode(resourceIri.shortcode)
                .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
-      dataGraph = projectService.getDataGraphForProject(prj).value
-      result   <- triplestore.query(Select(IsResourceInUseQuery.build(resourceIri, dataGraph)))
-
-      otherResources <-
-        ZIO
-          .foreach(result.results.bindings.map(_.rowMap.get("other")).flatten.toSet)(s =>
-            ZIO.fromEither(ResourceIri.from(s)),
-          )
-          .mapError(DataConversionException.apply)
+      dataGraph      = projectService.getDataGraphForProject(prj).value
+      result        <- triplestore.query(Select(IsResourceInUseQuery.build(resourceIri, dataGraph)))
+      candidates     = result.results.bindings.flatMap(_.rowMap.get("other")).toSet
+      otherResources = candidates.flatMap(ResourceIri.from(_).toOption)
+      dropped        = candidates.diff(otherResources.map(_.value))
+      _             <- ZIO
+             .logWarning(
+               s"isResourceInUse dropped non-resource IRIs pointing at $resourceIri: ${dropped.mkString(", ")}",
+             )
+             .when(dropped.nonEmpty)
     } yield otherResources
 
   /**
