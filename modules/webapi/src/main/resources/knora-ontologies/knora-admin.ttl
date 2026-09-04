@@ -322,7 +322,7 @@
 :status
     rdf:type                            owl:DatatypeProperty ;
     rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
-    rdfs:comment                        "The status of the user / group / project. It is false if the entity has been deactivated (deleted)."@en ;
+    rdfs:comment                        "The status of the user / group. It is false if the entity has been deactivated (deleted)."@en ;
     knora-base:objectDatatypeConstraint xsd:boolean .
 
 
@@ -426,9 +426,6 @@
                       owl:onProperty     :projectRestrictedViewWatermark ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :status ;
-                      owl:cardinality    "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasSelfJoinEnabled ;
                       owl:cardinality    "1"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
@@ -527,7 +524,6 @@
     :projectShortcode   "FFFF" ;
     :projectLongname    "Knora System Project" ;
     :projectDescription "Knora System Project"@en ;
-    :status             "true"^^xsd:boolean ;
     :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -539,7 +535,6 @@
     :projectShortcode   "0000" ;
     :projectLongname    "Knora Default Shared Ontologies Project" ;
     :projectDescription "Knora Shared Ontologies Project"@en ;
-    :status             "true"^^xsd:boolean ;
     :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 #

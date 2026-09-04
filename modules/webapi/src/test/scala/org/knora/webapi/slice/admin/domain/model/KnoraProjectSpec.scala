@@ -30,7 +30,6 @@ class KnoraProjectSpec extends ZIOSpecDefault {
     descriptionTest,
     keywordsTest,
     logoTest,
-    projectStatusTest,
     projectSelfJoinTest,
   )
 
@@ -170,18 +169,6 @@ class KnoraProjectSpec extends ZIOSpecDefault {
     test("pass a valid object and successfully create value object") {
       val validLogo = "/foo/bar/baz.jpg"
       assertTrue(Logo.from(validLogo).map(_.value).contains(validLogo))
-    },
-  )
-
-  private val projectStatusTest = suite("ProjectStatus")(
-    test("pass a valid object and successfully create value object") {
-      assertTrue(
-        Status.from(true) == Status.Active,
-        Status.from(false) == Status.Inactive,
-      )
-    },
-    test("value should be the correct boolean") {
-      assertTrue(Status.Active.value, !Status.Inactive.value)
     },
   )
 

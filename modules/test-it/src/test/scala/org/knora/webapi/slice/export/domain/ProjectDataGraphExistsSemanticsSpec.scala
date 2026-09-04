@@ -36,7 +36,6 @@ class ProjectDataGraphExistsSemanticsSpec extends E2EZSpec {
     NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Test project"))),
     List.empty,
     None,
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set.empty,

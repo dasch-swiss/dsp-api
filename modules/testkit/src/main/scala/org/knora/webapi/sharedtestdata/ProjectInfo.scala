@@ -18,7 +18,6 @@ import org.knora.webapi.slice.api.admin.model.Project
  * @param keywords    The project's keywords.
  * @param logo        The project's logo.
  * @param ontologies  The project's ontologies.
- * @param status      The project's status.
  * @param selfjoin    The project's self-join status.
  */
 case class ProjectInfo(
@@ -30,7 +29,6 @@ case class ProjectInfo(
   keywords: Option[IRI],
   logo: Option[IRI],
   ontologies: Seq[IRI],
-  status: Boolean,
   selfjoin: Boolean,
 )
 
@@ -45,7 +43,6 @@ object ProjectInfo {
       keywords = project.keywords.headOption.map(_ => project.keywords.mkString(", ")),
       logo = project.logo.map(_.value),
       ontologies = project.ontologies,
-      status = project.status.value,
       selfjoin = project.selfjoin.value,
     )
 }

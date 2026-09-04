@@ -35,7 +35,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
@@ -101,7 +100,6 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
           keywords = List("arbitrary test data", "things"),
           logo = None,
           ontologies = List.empty,
-          status = Status.Active,
           selfjoin = SelfJoin.CannotJoin,
           allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
