@@ -1,6 +1,6 @@
 # API Authentication
 
-### Authentication
+## Authentication
 
 Authentication is done via the `Authorization` header.
 For secured endpoints the value of the header must be `Bearer <token>`,
@@ -15,7 +15,7 @@ The token is a JSON Web Token (JWT) that must contain the following claims:
 * `iat` (issued at): The time at which the token was issued, in seconds since epoch
 * `jti` (JWT ID): A unique identifier for the token
 
-# Authorization and subject format
+## Authorization and subject format
 
 Subject should be either empty or contain an object of form `{"scope": "admin"}`
 where the value should contain space-delimited string combined from allowed values:
@@ -26,5 +26,6 @@ where the value should contain space-delimited string combined from allowed valu
 * `badvalue` – unrecognized values will be ignored for future-compatibility.
 
 Example subject contents:
+
 * "" or _empty_
 * `write:project:ABCD read:project:8F8F write:project:1A2B`.

@@ -196,7 +196,7 @@ traces) — read `docs/observability/` first. Key entry points:
 
 ### Markdown Formatting
 
-After editing any markdown files, run the `/fix-markdownlint` skill to ensure proper formatting.
+After editing any markdown files, run `just markdownlint`. It is the CI gate and covers every markdown file tracked by git.
 
 ### IRI Handling
 
