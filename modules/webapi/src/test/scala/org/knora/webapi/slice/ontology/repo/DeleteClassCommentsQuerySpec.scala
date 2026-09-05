@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -20,6 +21,12 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testClassIri = ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
@@ -29,10 +36,10 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
     test("should produce correct query for class comments deletion") {
       for {
         query   <- DeleteClassCommentsQuery.build(testClassIri, testLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -44,6 +51,7 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
              |anything:Thing rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different ontology") {
@@ -53,10 +61,10 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
 
       for {
         query   <- DeleteClassCommentsQuery.build(differentClassIri, differentLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -68,6 +76,7 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0803/incunabula> { <http://www.knora.org/ontology/0803/incunabula> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-06-20T14:45:30Z"^^xsd:dateTime .
              |incunabula:Book rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query with different last modification date") {
@@ -75,10 +84,10 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
 
       for {
         query   <- DeleteClassCommentsQuery.build(testClassIri, differentLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -90,6 +99,7 @@ class DeleteClassCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
              |    knora-base:lastModificationDate "2025-03-10T08:15:45Z"^^xsd:dateTime .
              |anything:Thing rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
   )

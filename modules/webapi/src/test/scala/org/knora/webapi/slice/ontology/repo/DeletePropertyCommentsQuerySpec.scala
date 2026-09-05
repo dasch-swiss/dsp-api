@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -20,6 +21,12 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testPropertyIri = PropertyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasName".toSmartIri)
@@ -29,10 +36,10 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
     test("should produce correct query for property without linkValueProperty") {
       for {
         query   <- DeletePropertyCommentsQuery.build(testPropertyIri, None, testLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -44,6 +51,7 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
              |anything:hasName rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for property with linkValueProperty") {
@@ -52,10 +60,10 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
 
       for {
         query   <- DeletePropertyCommentsQuery.build(testPropertyIri, Some(testLinkValuePropertyIri), testLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -68,6 +76,7 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
              |anything:hasName rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different ontology") {
@@ -77,10 +86,10 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
 
       for {
         query   <- DeletePropertyCommentsQuery.build(differentPropertyIri, None, differentLmd)
-        actual   = query.getQueryString
+        actual   = query
         instant <- Clock.instant
       } yield assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           s"""PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -92,6 +101,7 @@ class DeletePropertyCommentsQuerySpec extends ZIOSpecDefault {
              |WHERE { GRAPH <http://www.knora.org/ontology/0803/incunabula> { <http://www.knora.org/ontology/0803/incunabula> a owl:Ontology ;
              |    knora-base:lastModificationDate "2024-06-20T14:45:30Z"^^xsd:dateTime .
              |incunabula:title rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
   )

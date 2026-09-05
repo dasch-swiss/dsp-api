@@ -5,62 +5,48 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Query builder for deleting an ontology comment.
  */
-object DeleteOntologyCommentQuery extends QueryBuilderHelper {
+object DeleteOntologyCommentQuery {
 
   def build(
     ontologyIri: OntologyIri,
     lastModificationDate: LastModificationDate,
-  ): UIO[Update] = {
+  ): UIO[Update] = Clock.instant.map { now =>
+    val ontology     = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val previousDate = Literal.dateTime(lastModificationDate.value)
+    val currentDate  = Literal.dateTime(now)
 
-    val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
-    val oldComment             = variable("oldComment")
-
-    // Build DELETE patterns - delete old comment and lastModificationDate
-    val deletePatterns = List(
-      ontology.has(RDFS.COMMENT, oldComment),
-      ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |
+                |DELETE {
+                |  GRAPH $ontology {
+                |    $ontology rdfs:comment ?oldComment .
+                |    $ontology knora-base:lastModificationDate $previousDate .
+                |  }
+                |}
+                |INSERT {
+                |  GRAPH $ontology {
+                |    $ontology knora-base:lastModificationDate $currentDate .
+                |  }
+                |}
+                |WHERE {
+                |  $ontology a owl:Ontology ;
+                |    knora-base:lastModificationDate $previousDate .
+                |  $ontology rdfs:comment ?oldComment .
+                |}""".render,
     )
-
-    // Build WHERE patterns - comment must exist
-    val wherePatterns = List(
-      ontology
-        .isA(OWL.ONTOLOGY)
-        .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-      ontology.has(RDFS.COMMENT, oldComment),
-    )
-
-    for {
-      insertPatterns <- buildInsertPatterns(ontology)
-      query           = Queries
-                .MODIFY()
-                .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
-                .from(ontology)
-                .delete(deletePatterns*)
-                .into(ontology)
-                .insert(insertPatterns*)
-                .where(wherePatterns*)
-    } yield Update(query)
-  }
-
-  private def buildInsertPatterns(ontology: Iri): UIO[Seq[TriplePattern]] = Clock.instant.map { now =>
-    // Only update lastModificationDate, no comment to insert
-    List(ontology.has(KB.lastModificationDate, toRdfLiteral(now)))
   }
 }
