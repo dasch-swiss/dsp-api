@@ -193,20 +193,35 @@ final class OntologyTransformer(
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    val resources = model.listSubjects().asScala.filter { s =>
-      s.isURIResource && ResourceIri.from(s.getURI).isRight
-    }
-    // TODO(DEV-7149): unlike addValueMetadata below, this pass does not strip before adding, so a
-    //   payload-supplied value coexists with the synthesized one and fails SHACL data-shapes
-    //   (maxCount 1). Affects hasPermissions (see resource_permissions) and creationDate (see
-    //   migration_creation_date, whose custom xsd:dateTimeStamp also fails the xsd:dateTime datatype
-    //   shape). Fix: removeAll then addProperty, and honor the payload value. Surfaced by
-    //   BulkImportParityE2ESpec.
+    val resources = model
+      .listSubjects()
+      .asScala
+      .filter(s => s.isURIResource && ResourceIri.from(s.getURI).isRight)
+      .toList
     resources.foreach { r =>
+      // Strip any payload-supplied system metadata before synthesizing, mirroring addValueMetadata,
+      // so a payload value does not coexist with the synthesized one (the data graph enforces
+      // maxCount 1). A payload creationDate is honored but re-emitted as xsd:dateTime: the create
+      // path stores it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp)
+      // does not survive.
+      val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
+      r.removeAll(attachedToUser)
+        .removeAll(attachedToProject)
+        .removeAll(hasPermissions)
+        .removeAll(creationDate)
+        .removeAll(isDeleted)
       r.addProperty(attachedToUser, userResource)
       r.addProperty(attachedToProject, projectResource)
+      // TODO(DEV-7149, next PR): honor a payload-supplied hasPermissions and resolve class/property
+      //   DOAPs so the string matches the create path. Until then the group-level default is applied
+      //   and hasPermissions stays excluded from the parity compare.
       r.addProperty(hasPermissions, ctx.permissions)
-      r.addProperty(creationDate, creationDateLit)
+      val creationDateValue = payloadCreationDate
+        .filter(_.isLiteral)
+        .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
+        .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
+        .getOrElse(creationDateLit)
+      r.addProperty(creationDate, creationDateValue)
       r.addProperty(isDeleted, falseLit)
     }
   }
@@ -215,6 +230,11 @@ final class OntologyTransformer(
    * Synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
    * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
    * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
+   *
+   * TODO(DEV-7149, follow-up): this pass keeps only the payload's explicit `valueHasOrder`, but the create path
+   * also writes a positional-fallback order for values that omit it (`readOrderIndex`). BulkImportParityE2ESpec
+   * shows the bulk graph carries 62 `valueHasOrder` triples and the create graph 73. Apply the same positional
+   * fallback here so every value carries `valueHasOrder`.
    */
   private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
@@ -266,6 +286,10 @@ final class OntologyTransformer(
       }
       .toList
 
+    // TODO(DEV-7149, follow-up): BulkImportParityE2ESpec shows an off-by-one against the create path
+    //   (bulk emits one more hasTextValueType than create). Likely a text value added through the
+    //   two-step POST /v2/values path does not receive hasTextValueType from the create path. Pinpoint
+    //   the value and reconcile the two paths.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
       v.addProperty(hasTextValueType, valueType)
@@ -637,11 +661,8 @@ final class OntologyTransformer(
     linkValue.addProperty(valueHasRefCount, intLiteral(model, refCount))
     linkValue.addProperty(isDeleted, model.createTypedLiteral("false", XSDDatatype.XSDboolean))
     linkValue.addProperty(valueCreationDate, model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime))
-    // TODO(DEV-7149): standoff-link LinkValues are attached to the built-in SystemUser here (matching
-    //   the v2 create path), but the import's SHACL AttachedToUserNotBuiltInShape rejects any
-    //   attachedToUser referencing SystemUser/AnonymousUser, so importing any text with a resource
-    //   standoff-link fails validation. Reconcile the transformer and the shape. Surfaced by
-    //   BulkImportParityE2ESpec.
+    // Standoff-link LinkValues are attached to the built-in SystemUser, matching the v2 create path.
+    // The import shape AttachedToUserNotBuiltInShape exempts them (see data-shapes.ttl).
     linkValue.addProperty(attachedToUser, model.createResource(systemUser))
     linkValue.addProperty(hasPermissions, standoffLinkValuePermissions)
     val _ = linkValue.addProperty(valueHasUUID, linkValueIri.valueId.value)
@@ -868,8 +889,10 @@ final class OntologyTransformer(
       case KnoraBase.StillImageFileValue =>
         v.addProperty(dimX, intLiteral(model, meta.width.getOrElse(0)))
         v.addProperty(dimY, intLiteral(model, meta.height.getOrElse(0)))
-      // Document dims are optional; emit only when ingest supplies them. numpages/pageCount is never persisted —
-      // the shipped write path only ever emits None for it, so emitting it here would diverge from create parity.
+      // Document dims are optional; emit only when ingest supplies them.
+      // TODO(DEV-7149, follow-up): the create path persists knora-base:pageCount when ingest returns
+      //   numpages, but this pass never does. BulkImportParityE2ESpec shows create emits pageCount for
+      //   the PDF and the bulk import omits it. Emit it here from meta.numpages for document file values.
       case KnoraBase.DocumentFileValue =>
         meta.width.foreach(w => v.addProperty(dimX, intLiteral(model, w)))
         meta.height.foreach(h => v.addProperty(dimY, intLiteral(model, h)))
