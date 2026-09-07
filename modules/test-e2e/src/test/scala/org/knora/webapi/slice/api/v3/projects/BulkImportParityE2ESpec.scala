@@ -52,16 +52,20 @@ import org.knora.webapi.testservices.TestApiClient
  * (the two paths assign permissions differently), and `lastModificationDate` is stripped (only the
  * two-step create paths write it).
  *
- * Status: this test does not pass yet. It surfaced three independent defects that make the bulk
- * import fail its own SHACL validation (`data-shapes.ttl`), so there is no imported graph to compare.
- * Each fix site carries a `TODO(DEV-7149)` pointer:
- *   1. Standoff-link LinkValues are attached to the built-in SystemUser (`OntologyTransformer`),
- *      which the import shape `AttachedToUserNotBuiltInShape` rejects — any text with a resource
- *      standoff-link fails (richtext_all_standoff, richtext_recursive_standoff_link).
- *   2. `addResourceMetadata` adds a second `creationDate` over a payload-supplied one, and a payload
- *      `xsd:dateTimeStamp` fails the `xsd:dateTime` shape (migration_creation_date).
- *   3. `addResourceMetadata` adds a second `hasPermissions` over a payload-supplied one, breaking
- *      maxCount 1 (resource_permissions).
+ * Status: both imports now run and are compared, but the test does not pass yet. Three residual
+ * bulk-import parity gaps remain, each annotated with a `TODO(DEV-7149)` at its fix site in
+ * `OntologyTransformer`:
+ *   1. `valueHasOrder`: the create path writes a positional-fallback order for values that omit it;
+ *      the bulk import writes only the explicit ones (62 vs 73 triples).
+ *   2. `pageCount`: the create path persists a document page count from the ingest numpages; the
+ *      bulk import omits it.
+ *   3. `hasTextValueType`: an off-by-one against the create path (bulk emits one more).
+ * Permission-string parity is also deferred: `hasPermissions` is excluded from the compare until the
+ * bulk import honors the payload string and resolves class/property DOAPs (see the `hasPermissions`
+ * TODO in `addResourceMetadata`).
+ *
+ * The earlier SHACL-validation blockers (standoff-link SystemUser attribution, duplicate
+ * `creationDate`/`hasPermissions`) are fixed, so both paths now write a graph.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class BulkImportParityE2ESpec extends E2EZSpec {
@@ -173,7 +177,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         val creationDateA = creationDate(graphA, migrationCreationIri)
         val creationDateB = creationDate(graphB, migrationCreationIri)
 
-        val diff = if (iso) "" else canonicalDiff(normA, normB)
+        val diff = if (iso) "" else predicateDelta(normA, normB) + "\n" + canonicalDiff(normA, normB)
 
         assertTrue(
           // Proof the two-step creates ran: only they write lastModificationDate; the bulk path never does.
@@ -402,6 +406,23 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     val out = new ByteArrayOutputStream()
     RDFDataMgr.write(out, model, RDFFormat.NTRIPLES_C14N)
     out.toString(StandardCharsets.UTF_8)
+  }
+
+  // Blank-node-insensitive delta: which predicates occur a different number of times in A vs B. On a
+  // non-isomorphic pair the canonical line diff over-reports (blank labels get relabelled), so this
+  // per-predicate count is the reliable signal for triaging a structural divergence.
+  private def predicateDelta(a: Model, b: Model): String = {
+    def histogram(m: Model): Map[String, Int] =
+      m.listStatements().asScala.toList.groupBy(_.getPredicate.getURI).view.mapValues(_.size).toMap
+    val ha   = histogram(a)
+    val hb   = histogram(b)
+    val rows = (ha.keySet ++ hb.keySet).toList.sorted.flatMap { p =>
+      val ca = ha.getOrElse(p, 0)
+      val cb = hb.getOrElse(p, 0)
+      if (ca != cb) Some(s"  $p: A=$ca B=$cb") else None
+    }
+    if (rows.isEmpty) "per-predicate counts identical (divergence is value-level, not structural)"
+    else "per-predicate count differences (A=bulk, B=create):\n" + rows.mkString("\n")
   }
 
   private def canonicalDiff(a: Model, b: Model): String = {
