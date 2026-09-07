@@ -1,0 +1,6 @@
+?resource <http://www.knora.org/ontology/knora-base#hasLink> <http://example.org/target1> .
+?linkValue0 <http://www.knora.org/ontology/knora-base#valueHasRefCount> 1 .
+?resource <http://www.knora.org/ontology/knora-base#hasLink> <http://example.org/target2> .
+?linkValue1 <http://www.knora.org/ontology/knora-base#valueHasRefCount> 1 .
+?resource <http://www.knora.org/ontology/knora-base#hasLink> <http://example.org/target3> .
+?linkValue2 <http://www.knora.org/ontology/knora-base#valueHasRefCount> 1 .

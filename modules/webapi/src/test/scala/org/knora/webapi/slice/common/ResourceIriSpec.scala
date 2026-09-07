@@ -40,6 +40,17 @@ class ResourceIriSpec extends ZIOSpecDefault {
           assertTrue(actual == Left(s"<$iri> is not a Knora resource IRI"))
         }
       },
+      test("SparqlRegexPattern accepts the same strings as from") {
+        val samples = Seq(
+          validResourceIri,
+          "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A",
+          "http://example.com/ontology#Foo",
+          "http://www.knora.org/ontology/0001/anything#Thing",
+        )
+        check(Gen.fromIterable(samples)) { iri =>
+          assertTrue(ResourceIri.SparqlRegexPattern.r.matches(iri) == ResourceIri.from(iri).isRight)
+        }
+      },
     ),
     suite("makeNew")(
       test("should create a valid ResourceIri") {

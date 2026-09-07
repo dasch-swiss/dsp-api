@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
+import org.apache.jena.sparql.algebra.Algebra
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -21,12 +23,14 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
   private val testExcludePropIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
   private val testLimit          = 50
 
+  private def algebra(query: String): String = Algebra.compile(QueryFactory.create(query)).toString
+
   override def spec: Spec[TestEnvironment, Any] = suite("GetGraphDataQuerySpec")(
     suite("buildStartNodeOnly")(
       test("should produce correct query for start node") {
-        val actual = GetGraphDataQuery.buildStartNodeOnly(testStartNodeIri, testLimit).getQueryString
+        val actual = GetGraphDataQuery.buildStartNodeOnly(testStartNodeIri, testLimit)
         assertTrue(
-          actual ==
+          algebra(actual) == algebra(
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -40,15 +44,16 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
               |FILTER ( ?node = <http://rdfh.ch/0001/start> ) }
               |LIMIT 50
               |""".stripMargin,
+          ),
         )
       },
     ),
     suite("buildTraversal")(
       test("should produce correct query for outbound traversal without exclude property") {
         val actual =
-          GetGraphDataQuery.buildTraversal(testStartNodeIri, outbound = true, None, testLimit).getQueryString
+          GetGraphDataQuery.buildTraversal(testStartNodeIri, outbound = true, None, testLimit)
         assertTrue(
-          actual ==
+          algebra(actual) == algebra(
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -69,13 +74,14 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
               |    knora-base:hasPermissions ?linkValuePermissions . }
               |LIMIT 50
               |""".stripMargin,
+          ),
         )
       },
       test("should produce correct query for inbound traversal without exclude property") {
         val actual =
-          GetGraphDataQuery.buildTraversal(testStartNodeIri, outbound = false, None, testLimit).getQueryString
+          GetGraphDataQuery.buildTraversal(testStartNodeIri, outbound = false, None, testLimit)
         assertTrue(
-          actual ==
+          algebra(actual) == algebra(
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -96,15 +102,15 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
               |    knora-base:hasPermissions ?linkValuePermissions . }
               |LIMIT 50
               |""".stripMargin,
+          ),
         )
       },
       test("should produce correct query for outbound traversal with exclude property") {
         val actual =
           GetGraphDataQuery
             .buildTraversal(testStartNodeIri, outbound = true, Some(testExcludePropIri), testLimit)
-            .getQueryString
         assertTrue(
-          actual ==
+          algebra(actual) == algebra(
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -127,15 +133,15 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
               |    knora-base:hasPermissions ?linkValuePermissions . }
               |LIMIT 50
               |""".stripMargin,
+          ),
         )
       },
       test("should produce correct query for inbound traversal with exclude property") {
         val actual =
           GetGraphDataQuery
             .buildTraversal(testStartNodeIri, outbound = false, Some(testExcludePropIri), testLimit)
-            .getQueryString
         assertTrue(
-          actual ==
+          algebra(actual) == algebra(
             """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -158,6 +164,7 @@ class GetGraphDataQuerySpec extends ZIOSpecDefault {
               |    knora-base:hasPermissions ?linkValuePermissions . }
               |LIMIT 50
               |""".stripMargin,
+          ),
         )
       },
     ),

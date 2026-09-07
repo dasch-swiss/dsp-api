@@ -1747,7 +1747,84 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
                  ),
                )
           release <- canDeleteRegion
-        } yield assertTrue(!protection.canDo.value, release.canDo.value)
+          reason   = protection.cannotDoReason.map(_.value).getOrElse("")
+        } yield assertTrue(
+          !protection.canDo.value,
+          reason.contains(previewHostIri.value),
+          !reason.contains("/values/"),
+          !reason.contains("is not a Knora resource IRI"),
+          release.canDo.value,
+        )
+      },
+      test("protect a resource referenced by a live incoming link, and release it once the link is deleted") {
+        val targetIri            = ResourceIri.makeNew(anythingProject.shortcode)
+        val sourceIri            = ResourceIri.makeNew(anythingProject.shortcode)
+        val thingClassIri        = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+        val linkValuePropertyIri =
+          PropertyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri)
+        val canDeleteTarget = resourceResponder(
+          _.canDeleteResource(
+            DeleteOrEraseResourceRequestV2(
+              resourceIri = targetIri,
+              resourceClassIri = thingClassIri,
+              maybeLastModificationDate = None,
+              requestingUser = rootUser,
+              apiRequestID = randomUUID,
+            ),
+          ),
+        )
+        val createThing = (iri: ResourceIri, label: String, values: Map[SmartIri, Seq[CreateValueInNewResourceV2]]) =>
+          resourceResponder(
+            _.createResource(
+              CreateResourceRequestV2(
+                CreateResourceV2(
+                  resourceIri = Some(iri),
+                  resourceClassIri = thingClassIri,
+                  label = label,
+                  values = values,
+                  projectADM = anythingProject,
+                ),
+                anythingUser1,
+                randomUUID,
+              ),
+            ),
+          )
+        for {
+          _ <- createThing(targetIri, "candelete link target", Map.empty)
+          _ <- createThing(
+                 sourceIri,
+                 "candelete link source",
+                 Map(
+                   linkValuePropertyIri.smartIri -> Seq(
+                     CreateValueInNewResourceV2(LinkValueContentV2(ApiV2Complex, targetIri)),
+                   ),
+                 ),
+               )
+          protection <- canDeleteTarget
+          source     <- getResource(sourceIri.value)
+          linkValue   = source.findLinkValues(linkValuePropertyIri).head
+          _          <- ZIO.serviceWithZIO[ValuesResponderV2](
+                 _.deleteValueV2(
+                   DeleteValueV2(
+                     sourceIri,
+                     ResourceClassIri.unsafeFrom(thingClassIri),
+                     linkValuePropertyIri,
+                     linkValue.valueIri,
+                     valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+                     apiRequestId = randomUUID,
+                   ),
+                   anythingUser1,
+                 ),
+               )
+          release <- canDeleteTarget
+          reason   = protection.cannotDoReason.map(_.value).getOrElse("")
+        } yield assertTrue(
+          !protection.canDo.value,
+          reason.contains(sourceIri.value),
+          !reason.contains("/values/"),
+          !reason.contains("is not a Knora resource IRI"),
+          release.canDo.value,
+        )
       },
       test("reject creating a resource with an inline region preview whose target is not a Region") {
         val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRegionPreview".toSmartIri

@@ -43,8 +43,15 @@ final case class ResourceIri private (override val value: String, shortcode: Sho
 
 object ResourceIri extends WithFrom[String, ResourceIri] {
 
+  /**
+   * SPARQL `fn:matches` pattern for a resource IRI. Must accept the same strings as [[from]].
+   * Uses `[0-9A-Fa-f]` rather than Java `\p{XDigit}` because SPARQL regex is XQuery.
+   */
+  val SparqlRegexPattern: String =
+    """^http://rdfh\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+$"""
+
   private val ResourceIriRegex: Regex =
-    """^http://rdfh\.ch/(\p{XDigit}{4})/([A-Za-z0-9_-]+)$""".r
+    """^http://rdfh\.ch/([0-9A-Fa-f]{4})/([A-Za-z0-9_-]+)$""".r
 
   def makeNew(shortcode: Shortcode): ResourceIri = {
     val id = UuidUtil.base64Encode(UUID.randomUUID)
