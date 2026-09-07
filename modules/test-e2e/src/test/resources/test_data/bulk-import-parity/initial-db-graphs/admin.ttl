@@ -18,7 +18,7 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
 <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>
         rdf:type                        knora-admin:knoraProject;
         knora-admin:hasAllowedCopyrightHolder
-                "AI-Generated Content - Not Protected by Copyright" , "Public Domain - Not Protected by Copyright";
+                "AI-Generated Content - Not Protected by Copyright" , "Public Domain - Not Protected by Copyright" , "DaSCH" , "Wellcome Collection";
         knora-admin:hasEnabledLicense   <http://rdfh.ch/licenses/cc-by-4.0> , <http://rdfh.ch/licenses/cc-by-nc-4.0> , <http://rdfh.ch/licenses/unknown> , <http://rdfh.ch/licenses/ai-generated>;
         knora-admin:hasSelfJoinEnabled  false;
         knora-admin:projectDescription  "Test project for validate-data"@en;
