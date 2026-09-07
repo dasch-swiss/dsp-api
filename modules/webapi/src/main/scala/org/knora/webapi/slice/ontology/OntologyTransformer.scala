@@ -231,10 +231,9 @@ final class OntologyTransformer(
    * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
    * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
    *
-   * TODO(DEV-7149, follow-up): this pass keeps only the payload's explicit `valueHasOrder`, but the create path
-   * also writes a positional-fallback order for values that omit it (`readOrderIndex`). BulkImportParityE2ESpec
-   * shows the bulk graph carries 62 `valueHasOrder` triples and the create graph 73. Apply the same positional
-   * fallback here so every value carries `valueHasOrder`.
+   * `valueHasOrder` is intentionally not synthesized here: every imported value carries its order from the
+   * payload. The pipeline synthesizes an order only for values it creates itself (e.g. standoff-link LinkValues),
+   * never for values that come from outside.
    */
   private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)

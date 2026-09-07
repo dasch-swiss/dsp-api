@@ -52,14 +52,14 @@ import org.knora.webapi.testservices.TestApiClient
  * (the two paths assign permissions differently), and `lastModificationDate` is stripped (only the
  * two-step create paths write it).
  *
- * Status: both imports now run and are compared, but the test does not pass yet. Three residual
+ * Status: both imports now run and are compared, but the test does not pass yet. Two residual
  * bulk-import parity gaps remain, each annotated with a `TODO(DEV-7149)` at its fix site in
  * `OntologyTransformer`:
- *   1. `valueHasOrder`: the create path writes a positional-fallback order for values that omit it;
- *      the bulk import writes only the explicit ones (62 vs 73 triples).
- *   2. `pageCount`: the create path persists a document page count from the ingest numpages; the
+ *   1. `pageCount`: the create path persists a document page count from the ingest numpages; the
  *      bulk import omits it.
- *   3. `hasTextValueType`: an off-by-one against the create path (bulk emits one more).
+ *   2. `hasTextValueType`: an off-by-one against the create path (bulk emits one more).
+ * (`valueHasOrder` parity is achieved in the fixtures: every value carries its order in the payload,
+ * so neither path synthesizes one for imported values.)
  * Permission-string parity is also deferred: `hasPermissions` is excluded from the compare until the
  * bulk import honors the payload string and resolves class/property DOAPs (see the `hasPermissions`
  * TODO in `addResourceMetadata`).

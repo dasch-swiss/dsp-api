@@ -1355,7 +1355,11 @@
         "@type": "http://www.w3.org/2001/XMLSchema#string",
         "@value": "RV knora-admin:UnknownUser,knora-admin:KnownUser|D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/U3n4jvFESGOWJtxQ_5GCbw",
@@ -1401,7 +1405,11 @@
       {
         "@id": "http://rdfh.ch/licenses/cc-by-4.0"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/9KGCAPNxTOSa32aiaKdb1A",
@@ -1447,7 +1455,11 @@
       {
         "@id": "http://rdfh.ch/licenses/cc-by-nc-4.0"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A/values/MlZ2WfHIS2COeAY18TsKjw",
@@ -1476,7 +1488,11 @@
       {
         "@id": "http://rdfh.ch/licenses/unknown"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/DXm9BG2XQQCf96QjMUi05A",
@@ -1543,7 +1559,11 @@
       {
         "@id": "http://rdfh.ch/licenses/ai-generated"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/3_cmZYOpT2mCtdnzvnf9NQ/values/uKYfJyTcQxC1FNKeD-K5Xw",
@@ -1572,7 +1592,11 @@
       {
         "@id": "http://rdfh.ch/licenses/cc-by-4.0"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/3_cmZYOpT2mCtdnzvnf9NQ",
@@ -1635,7 +1659,11 @@
       {
         "@id": "http://rdfh.ch/licenses/unknown"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/CWfLZu49QvCgg5mcxEslAg/values/0qER5HcmSNSTZTY5BYFTAg",
@@ -1670,7 +1698,11 @@
         "@type": "http://www.w3.org/2001/XMLSchema#string",
         "@value": "https://iiif.wellcomecollection.org/image/b20432033_B0008608.JP2/full/1338%2C/0/default.jpg"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/CWfLZu49QvCgg5mcxEslAg",
@@ -1778,7 +1810,11 @@
       {
         "@id": "http://rdfh.ch/licenses/unknown"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/pwDe4dcNTHScfBuT6m7yWw",
@@ -1899,7 +1935,11 @@
         "@type": "http://www.w3.org/2001/XMLSchema#string",
         "@value": "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/zz5c5W6RQZG97D01SEHv7Q",
@@ -2038,7 +2078,11 @@
       {
         "@id": "http://rdfh.ch/licenses/cc-by-4.0"
       }
-    ]
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
   },
   {
     "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA/values/qN3fTCpXSVujoBXtchwLUg",
