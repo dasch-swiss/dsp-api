@@ -53,8 +53,11 @@ import org.knora.webapi.testservices.TestApiClient
  * two-step create paths write it).
  *
  * Status: both imports now run and are compared, but the test does not pass yet. One residual
- * bulk-import parity gap remains, annotated with a `TODO(DEV-7149)` in `OntologyTransformer`:
- *   - `hasTextValueType`: an off-by-one against the create path (bulk emits one more).
+ * difference remains, and it is a live-service bug, not a bulk-import gap:
+ *   - `hasTextValueType`: the v2 add-value path (POST /v2/values) omits it, while both the bulk import
+ *     and the v2 resource-create path write it. Tracked in DEV-7187 (probable data clean-up). The
+ *     parity test exercises the add-value path via the two-step create of the self-referencing
+ *     standoff resource, so its text value lacks the triple in the create run.
  * (`valueHasOrder` parity is achieved in the fixtures — every value carries its order in the payload,
  * so neither path synthesizes one for imported values. `pageCount` matches too: the live SipiService
  * never reports numpages, so neither path persists it, and the fake mirrors that.)

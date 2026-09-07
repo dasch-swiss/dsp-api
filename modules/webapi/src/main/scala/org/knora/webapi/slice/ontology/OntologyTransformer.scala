@@ -285,10 +285,10 @@ final class OntologyTransformer(
       }
       .toList
 
-    // TODO(DEV-7149, follow-up): BulkImportParityE2ESpec shows an off-by-one against the create path
-    //   (bulk emits one more hasTextValueType than create). Likely a text value added through the
-    //   two-step POST /v2/values path does not receive hasTextValueType from the create path. Pinpoint
-    //   the value and reconcile the two paths.
+    // This pass sets hasTextValueType on every text value, as the v2 resource-create path does. The
+    // v2 add-value path (POST /v2/values, InsertValueQueryBuilder) currently omits it — a live-service
+    // bug tracked in DEV-7187 (BulkImportParityE2ESpec surfaced it as a one-triple difference). This
+    // bulk pass is correct; no change needed here.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
       v.addProperty(hasTextValueType, valueType)
