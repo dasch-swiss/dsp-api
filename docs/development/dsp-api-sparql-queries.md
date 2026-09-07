@@ -1,11 +1,54 @@
 ---
 name: sparqlbuilder
-description: "Write SPARQL and Gravsearch queries in Scala using RDF4J SparqlBuilder. Use for building type-safe SPARQL SELECT, CONSTRUCT, MODIFY, and Gravsearch queries programmatically. Triggers on: sparqlbuilder, rdf4j query, scala sparql, build sparql query, gravsearch."
+description: "Write SPARQL and Gravsearch queries in Scala. NEW queries use the in-house sparql\"...\" interpolator (modules/sparql-builder); RDF4J SparqlBuilder is not used for new code and documented here only for maintaining existing query sites. Triggers on: sparqlbuilder, sparql interpolator, rdf4j query, scala sparql, build sparql query, gravsearch."
 ---
 
 # SPARQL and Gravsearch Queries in Scala
 
-Build type-safe SPARQL queries in Scala using the
+## The rule: new queries use the `sparql"..."` interpolator
+
+All **new** SPARQL generation uses the in-house interpolated-template library in
+`modules/sparql-builder/` (package `org.knora.sparqlbuilder`): whole queries as
+`sparql"""|..."""` templates with typed holes (`Iri`, `Variable`, `Literal`), dynamic
+structure composed as `Fragment` values.
+
+```scala
+import org.knora.sparqlbuilder.*
+
+val project        = Iri.unsafeFrom("http://rdfh.ch/projects/0001")
+val includeDeleted = false
+
+val query = sparql"""|SELECT ?resource
+                      |WHERE {
+                      |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> $project .
+                      |  ${sparql"?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .".unless(includeDeleted)}
+                      |}""".render
+```
+
+- API guide and safety model:
+  [modules/sparql-builder/README.md](https://github.com/dasch-swiss/dsp-api/blob/main/modules/sparql-builder/README.md)
+- Why, and the migration plan: [docs/development/dsp-api-sparql-builder.md](dsp-api-sparql-builder.md)
+- Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
+  queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
+- Keep fixed variables, predicates, and syntax in the template. Interpolate only dynamic
+  values and dynamic structure. Multiline templates require a `|` margin on every line;
+  standalone nested fragments inherit their interpolation site's indentation, and empty
+  standalone fragments remove their complete line.
+
+**Do not write new queries with RDF4J SparqlBuilder.** This is a code-review convention
+(see `CONVENTIONS.md` / `REVIEW.md` § SPARQL), not a CI gate: existing query sites keep
+the builder until they are migrated. Verify a migration by diffing the rendered SPARQL
+against the old builder's `getQueryString` output. Only new *SparqlBuilder* usage is out;
+RDF4J model classes (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain fine.
+
+---
+
+The rest of this document covers the **grandfathered** RDF4J SparqlBuilder style — needed
+when maintaining the existing query sites until they are migrated — and Gravsearch.
+
+## Maintaining grandfathered queries: RDF4J SparqlBuilder
+
+Existing query sites use the
 [RDF4J SparqlBuilder](https://rdf4j.org/documentation/tutorials/sparqlbuilder/)
 fluent API, and Gravsearch queries via string interpolation.
 

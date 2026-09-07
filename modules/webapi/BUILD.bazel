@@ -67,6 +67,7 @@ scala_library(
         "//modules/ingest:ingest_classes",
         "//modules/jwt",
         "//modules/shacl-validator",
+        "//modules/sparql-builder",
         "@maven//:com_apicatalog_titanium_json_ld",
         "@maven//:com_github_tototoshi_scala_csv_3",
         "@maven//:org_gwtproject_gwt_servlet",  # com.google.gwt:gwt-servlet relocates to org.gwtproject

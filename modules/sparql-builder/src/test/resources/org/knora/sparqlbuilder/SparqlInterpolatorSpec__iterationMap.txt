@@ -1,0 +1,2 @@
+?newValue <http://example.org/hasName> "Alice" .
+?newValue <http://example.org/hasAge> "30" .
