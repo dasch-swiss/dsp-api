@@ -888,10 +888,8 @@ final class OntologyTransformer(
       case KnoraBase.StillImageFileValue =>
         v.addProperty(dimX, intLiteral(model, meta.width.getOrElse(0)))
         v.addProperty(dimY, intLiteral(model, meta.height.getOrElse(0)))
-      // Document dims are optional; emit only when ingest supplies them.
-      // TODO(DEV-7149, follow-up): the create path persists knora-base:pageCount when ingest returns
-      //   numpages, but this pass never does. BulkImportParityE2ESpec shows create emits pageCount for
-      //   the PDF and the bulk import omits it. Emit it here from meta.numpages for document file values.
+      // Document dims are optional; emit only when ingest supplies them. numpages/pageCount is never persisted —
+      // the shipped write path only ever emits None for it, so emitting it here would diverge from create parity.
       case KnoraBase.DocumentFileValue =>
         meta.width.foreach(w => v.addProperty(dimX, intLiteral(model, w)))
         meta.height.foreach(h => v.addProperty(dimY, intLiteral(model, h)))

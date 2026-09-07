@@ -30,7 +30,6 @@ object BulkImportParityFakeSipiService {
     internalMimeType: String,
     width: Option[Int] = None,
     height: Option[Int] = None,
-    numpages: Option[Int] = None,
     duration: Option[BigDecimal] = None,
     fps: Option[BigDecimal] = None,
   ): FileMetadataSipiResponse =
@@ -40,7 +39,9 @@ object BulkImportParityFakeSipiService {
       internalMimeType = internalMimeType,
       width = width,
       height = height,
-      numpages = numpages,
+      // The live SipiService hardcodes numpages = None (dsp-ingest does not report a page count), so
+      // neither write path ever persists knora-base:pageCount. Keep the fake faithful to that.
+      numpages = None,
       duration = duration,
       fps = fps,
     )
@@ -57,7 +58,7 @@ object BulkImportParityFakeSipiService {
         fps = Some(BigDecimal("25")),
       ),
     "8cR3nOqYl5S-dEfGhIjKlMn" -> response("audio/mpeg", duration = Some(BigDecimal("10.5"))),
-    "9dS4oPrZm6T-eFgHiJkLmNo" -> response("application/pdf", numpages = Some(3)),
+    "9dS4oPrZm6T-eFgHiJkLmNo" -> response("application/pdf"),
     "1eT5pQsAn7U-fGhIjKlMnOp" -> response("application/zip"),
     "2fU6qRtBo8V-gHiJkLmNoPq" -> response("text/plain"),
   )
