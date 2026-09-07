@@ -147,6 +147,7 @@ scala_junit_test(
     format = True,
     resource_strip_prefix = "modules/webapi/src/test/resources",
     resources = glob(["src/test/resources/**"]),
+    data = ["//test-mimes:mime_samples"],  # TikaMimeTypeDetectionSpec reads these real files
     suffixes = [
         "Spec",
         "IT",
@@ -161,6 +162,7 @@ scala_junit_test(
         "@maven//:dev_zio_zio_cache_3",
         "@maven//:dev_zio_zio_json_3",
         "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_apache_tika_tika_core",
         "@maven//:org_wiremock_wiremock",
     ],
 )

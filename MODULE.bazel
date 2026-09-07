@@ -217,6 +217,10 @@ maven.install(
         "org.glassfish:jakarta.json:2.0.1",
         "net.sf.saxon:Saxon-HE:13.0",
         "com.apicatalog:titanium-json-ld:1.7.0",
+        # tika-core only (no parsers): filename + magic-byte mime-type detection.
+        # The parser packages pull ~80MB (POI, PDFBox, ...) and are only needed
+        # for content extraction, which we do not do.
+        "org.apache.tika:tika-core:3.3.2",
         "org.apache.commons:commons-lang3:3.20.0",
         "commons-io:commons-io:2.22.0",
         "org.slf4j:slf4j-api:2.0.18",

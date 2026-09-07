@@ -59,6 +59,7 @@
     "org.apache.commons:commons-lang3": -278168457,
     "org.apache.jena:jena-core": 633016333,
     "org.apache.jena:jena-text": -844953445,
+    "org.apache.tika:tika-core": 1288308206,
     "org.bouncycastle:bcprov-jdk15to18": 1499080404,
     "org.eclipse.rdf4j:rdf4j-client": 389304043,
     "org.eclipse.rdf4j:rdf4j-shacl": 1077405849,
@@ -509,6 +510,8 @@
     "org.apache.lucene:lucene-sandbox:jar:sources": -1295788593,
     "org.apache.thrift:libthrift": 1444732171,
     "org.apache.thrift:libthrift:jar:sources": 1163565392,
+    "org.apache.tika:tika-core": 158690159,
+    "org.apache.tika:tika-core:jar:sources": 1858609771,
     "org.bouncycastle:bcpkix-jdk18on": -294727450,
     "org.bouncycastle:bcpkix-jdk18on:jar:sources": 1412420619,
     "org.bouncycastle:bcprov-jdk15to18": -796422275,
@@ -2262,6 +2265,13 @@
       },
       "version": "0.22.0"
     },
+    "org.apache.tika:tika-core": {
+      "shasums": {
+        "jar": "84d0f2b6add29b97359113499a1e1e7c10dfbfa1e410c122d163c83f3fc5359b",
+        "sources": "8d042a72b07a78f2ddf96fa3267b6bf8b73c7457e7fc422499db4c048e48b6c1"
+      },
+      "version": "3.3.2"
+    },
     "org.bouncycastle:bcpkix-jdk18on": {
       "shasums": {
         "jar": "c87f16ed9e5ec61bc94151e9f3646ac44e50cd448121ce84367fa4b7ec7ec1bb",
@@ -3934,6 +3944,10 @@
       "org.apache.lucene:lucene-core",
       "org.apache.lucene:lucene-facet",
       "org.apache.lucene:lucene-queries"
+    ],
+    "org.apache.tika:tika-core": [
+      "commons-io:commons-io",
+      "org.slf4j:slf4j-api"
     ],
     "org.bouncycastle:bcpkix-jdk18on": [
       "org.bouncycastle:bcutil-jdk18on"
@@ -6859,6 +6873,45 @@
       "org.apache.thrift.transport.layered",
       "org.apache.thrift.transport.sasl",
       "org.apache.thrift.utils"
+    ],
+    "org.apache.tika:tika-core": [
+      "org.apache.tika",
+      "org.apache.tika.concurrent",
+      "org.apache.tika.config",
+      "org.apache.tika.detect",
+      "org.apache.tika.embedder",
+      "org.apache.tika.exception",
+      "org.apache.tika.extractor",
+      "org.apache.tika.fork",
+      "org.apache.tika.io",
+      "org.apache.tika.language.detect",
+      "org.apache.tika.language.translate",
+      "org.apache.tika.metadata",
+      "org.apache.tika.metadata.filter",
+      "org.apache.tika.metadata.listfilter",
+      "org.apache.tika.metadata.writefilter",
+      "org.apache.tika.mime",
+      "org.apache.tika.parser",
+      "org.apache.tika.parser.digest",
+      "org.apache.tika.parser.external",
+      "org.apache.tika.parser.external2",
+      "org.apache.tika.parser.multiple",
+      "org.apache.tika.pipes",
+      "org.apache.tika.pipes.async",
+      "org.apache.tika.pipes.emitter",
+      "org.apache.tika.pipes.extractor",
+      "org.apache.tika.pipes.fetcher",
+      "org.apache.tika.pipes.fetcher.config",
+      "org.apache.tika.pipes.fetcher.fs",
+      "org.apache.tika.pipes.fetcher.fs.config",
+      "org.apache.tika.pipes.fetcher.url",
+      "org.apache.tika.pipes.pipesiterator",
+      "org.apache.tika.pipes.pipesiterator.filelist",
+      "org.apache.tika.pipes.pipesiterator.fs",
+      "org.apache.tika.renderer",
+      "org.apache.tika.sax",
+      "org.apache.tika.sax.xpath",
+      "org.apache.tika.utils"
     ],
     "org.bouncycastle:bcpkix-jdk18on": [
       "org.bouncycastle.cert",
@@ -9793,6 +9846,8 @@
       "org.apache.lucene:lucene-sandbox:jar:sources",
       "org.apache.thrift:libthrift",
       "org.apache.thrift:libthrift:jar:sources",
+      "org.apache.tika:tika-core",
+      "org.apache.tika:tika-core:jar:sources",
       "org.bouncycastle:bcpkix-jdk18on",
       "org.bouncycastle:bcpkix-jdk18on:jar:sources",
       "org.bouncycastle:bcprov-jdk15to18",
@@ -10605,6 +10660,16 @@
     "org.apache.lucene:lucene-sandbox": {
       "org.apache.lucene.codecs.PostingsFormat": [
         "org.apache.lucene.sandbox.codecs.idversion.IDVersionPostingsFormat"
+      ]
+    },
+    "org.apache.tika:tika-core": {
+      "org.apache.tika.metadata.filter.MetadataFilter": [
+        "org.apache.tika.metadata.filter.NoOpFilter"
+      ]
+    },
+    "org.apache.tika:tika-core:jar:sources": {
+      "org.apache.tika.metadata.filter.MetadataFilter": [
+        "org.apache.tika.metadata.filter.NoOpFilter"
       ]
     },
     "org.bouncycastle:bcprov-jdk15to18": {
