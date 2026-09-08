@@ -204,11 +204,11 @@ maven.install(
         "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.2",
         "org.topbraid:shacl:1.5.0",
         # -- OpenTelemetry (Java) --
-        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.63.0",
-        "io.opentelemetry:opentelemetry-exporter-otlp:1.63.0",
-        "io.opentelemetry:opentelemetry-sdk:1.63.0",
-        "io.opentelemetry:opentelemetry-sdk-testing:1.63.0",
-        "io.opentelemetry.semconv:opentelemetry-semconv:1.42.0",
+        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.65.0",
+        "io.opentelemetry:opentelemetry-exporter-otlp:1.65.0",
+        "io.opentelemetry:opentelemetry-sdk:1.65.0",
+        "io.opentelemetry:opentelemetry-sdk-testing:1.65.0",
+        "io.opentelemetry.semconv:opentelemetry-semconv:1.43.0",
         # -- misc Java libs --
         "org.bouncycastle:bcprov-jdk15to18:1.85",
         "org.ehcache:ehcache:3.12.0",
@@ -373,8 +373,8 @@ http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_
 http_file(
     name = "otel_javaagent",
     downloaded_file_path = "opentelemetry-javaagent.jar",
-    sha256 = "cc4af5966ab72109cacc962ba3b9f99b3e88caf064c3144a451bcfe0f4950f19",
-    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar"],
+    sha256 = "bbf83c151b6400709e2f225bdd07a04f839d9d13b8b93464241333fd25d3e3ba",
+    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.31.1/opentelemetry-javaagent.jar"],
 )
 
 http_file(
