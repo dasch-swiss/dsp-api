@@ -15,27 +15,28 @@ import swiss.dasch.infrastructure.*
 import zio.*
 
 /**
- * One-off migration backfilling `sizeOriginal`/`sizeDerivative` into every `.info` sidecar in the store.
- * Reads `STORAGE_ASSET_DIR` like the service does, so point it at the same volume.
+ * One-off migration backfilling `originalMimeType` into every `.info` sidecar that lacks it, derived
+ * from `originalFilename`'s extension. Reads `STORAGE_ASSET_DIR` like the service does, so point it at
+ * the same volume.
  *
  * Locally, via Bazel:
  *
  * {{{
- *   bazel run //modules/ingest:migrate-sizes            # whole asset store
- *   bazel run //modules/ingest:migrate-sizes -- 0801    # a single project
+ *   bazel run //modules/ingest:migrate-mime-types            # whole asset store
+ *   bazel run //modules/ingest:migrate-mime-types -- 0801    # a single project
  * }}}
  *
  * Against a deployed image, swapping only the main class out of the image's own entrypoint:
  */
-// docker compose run --rm --no-deps --entrypoint java ingest -cp '/sipi/lib/*' swiss.dasch.MigrateSizes
-object MigrateSizes extends ZIOAppDefault {
+// docker compose run --rm --no-deps --entrypoint java ingest -cp '/sipi/lib/*' swiss.dasch.MigrateMimeTypes
+object MigrateMimeTypes extends ZIOAppDefault {
 
   override val bootstrap: Layer[Config.Error, ServiceConfig & JwtConfig & StorageConfig] =
     Configuration.layer >+> Logger.layer
 
   private def migrate(shortcodes: Chunk[String]) =
     for {
-      migration <- ZIO.service[AssetSizeMigrationService]
+      migration <- ZIO.service[AssetMimeTypeMigrationService]
       report    <- shortcodes match {
                   case Chunk() => migration.migrateAll()
                   case codes   =>
@@ -46,7 +47,7 @@ object MigrateSizes extends ZIOAppDefault {
                           .mapError(e => IllegalArgumentException(s"Invalid project shortcode '$code': $e"))
                           .flatMap(migration.migrateProject)
                       }
-                      .map(_.fold(AssetSizeMigrationReport.zero)(_ + _))
+                      .map(_.fold(AssetMimeTypeMigrationReport.zero)(_ + _))
                 }
     } yield report
 
@@ -59,7 +60,7 @@ object MigrateSizes extends ZIOAppDefault {
     } yield exitCode)
       .provideSome[ZIOAppArgs](
         AssetInfoServiceLive.layer,
-        AssetSizeMigrationService.layer,
+        AssetMimeTypeMigrationService.layer,
         Configuration.layer,
         Db.dataSourceLive,
         FileChecksumServiceLive.layer,

@@ -52,6 +52,9 @@ final private case class AssetInfoFileContent(
 
   def withSizes(original: Option[SizeInBytes], derivative: Option[SizeInBytes]): AssetInfoFileContent =
     copy(sizeOriginal = original, sizeDerivative = derivative)
+
+  def withOriginalMimeType(mimeType: MimeType): AssetInfoFileContent =
+    copy(originalMimeType = Some(mimeType.value))
 }
 
 private object AssetInfoFileContent {
@@ -103,6 +106,13 @@ trait AssetInfoService {
    * — checksums included — untouched. A file that is not on disk is logged and its size left absent.
    */
   def updateSizes(infoFile: Path, original: Path, derivative: Path): Task[Unit]
+
+  /**
+   * Fills in `originalMimeType` from `originalFilename`'s extension, leaving every other field
+   * untouched. A sidecar that already has the field, or whose extension is unknown, is left as it is;
+   * the returned value says which happened.
+   */
+  def backfillOriginalMimeType(infoFile: Path): Task[MimeTypeBackfillOutcome]
   def createAssetInfo(asset: Asset): IO[IOException, AssetInfo]
 }
 
@@ -115,13 +125,16 @@ object AssetInfoService {
     ZIO.serviceWithZIO[AssetInfoService](_.updateAssetInfoForDerivative(derivative))
   def updateSizes(infoFile: Path, original: Path, derivative: Path): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.updateSizes(infoFile, original, derivative))
+  def backfillOriginalMimeType(infoFile: Path): ZIO[AssetInfoService, Throwable, MimeTypeBackfillOutcome] =
+    ZIO.serviceWithZIO[AssetInfoService](_.backfillOriginalMimeType(infoFile))
   def getInfoFilePath(asset: AssetRef): ZIO[AssetInfoService, Nothing, Path] =
     ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(asset))
   def createAssetInfo(asset: Asset): ZIO[AssetInfoService, IOException, AssetInfo] =
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
 }
 
-final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfoService {
+final case class AssetInfoServiceLive(storage: StorageService, mimeTypeGuesser: MimeTypeGuesser)
+    extends AssetInfoService {
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
       content   <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
@@ -208,6 +221,22 @@ final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfo
     sizeDerivative <- sizeIfPresent(derivative, "derivative")
     _              <- storage.saveJsonFile(infoFile, content.withSizes(sizeOriginal, sizeDerivative))
   } yield ()
+
+  override def backfillOriginalMimeType(infoFile: Path): Task[MimeTypeBackfillOutcome] =
+    storage.loadJsonFile[AssetInfoFileContent](infoFile).flatMap { content =>
+      content.originalMimeType match {
+        case Some(_) => ZIO.succeed(MimeTypeBackfillOutcome.AlreadyPresent)
+        case None    =>
+          mimeTypeGuesser.guess(content.originalFilename) match {
+            case Some(mimeType) =>
+              storage
+                .saveJsonFile(infoFile, content.withOriginalMimeType(mimeType))
+                .as(MimeTypeBackfillOutcome.Updated(mimeType))
+            case None =>
+              ZIO.succeed(MimeTypeBackfillOutcome.UnknownExtension(content.originalFilename.value))
+          }
+      }
+    }
 
   private def sizeIfPresent(file: Path, role: String): UIO[Option[SizeInBytes]] =
     SizeInBytes
