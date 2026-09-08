@@ -535,7 +535,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |
                             | <$valueIri>
                             |     a                            knora-base:IntValue ;
-                            |     knora-base:valueHasInteger   "1"^^xsd:int ;
+                            |     knora-base:valueHasInteger   "1"^^xsd:integer ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
@@ -545,7 +545,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |
                             | <$valueIri2>
                             |     a                            knora-base:IntValue ;
-                            |     knora-base:valueHasInteger   "2"^^xsd:int ;
+                            |     knora-base:valueHasInteger   "2"^^xsd:integer ;
                             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
                             |     knora-base:hasPermissions    "${ctx.permissions}" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
@@ -677,7 +677,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         ),
       )
     },
-    test("TimeValue uses the timestamp lexical form") {
+    test("TimeValue is canonicalized to a UTC xsd:dateTime and drives valueHasString") {
       runTransformStage2(
         resourceWithValueJsonLd(
           s"${onto}testTimeValue",
@@ -687,8 +687,25 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         expectedStage2SingleValue(
           "testTimeValue",
           "TimeValue",
-          """knora-base:valueHasTimeStamp "2019-10-23T13:45:12.01-14:00"^^xsd:dateTimeStamp""",
-          "2019-10-23T13:45:12.01-14:00",
+          """knora-base:valueHasTimeStamp "2019-10-24T03:45:12.010Z"^^xsd:dateTime""",
+          "2019-10-24T03:45:12.010Z",
+        ),
+      )
+    },
+    test("IntValue is re-typed to xsd:integer with a canonical lexical form") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testInteger",
+          s"${knoraApi}IntValue",
+          s""""${knoraApi}intValueAsInt": { "@type": "${xsd}int", "@value": "007" }""",
+        ),
+        // Payload xsd:int "007" does not satisfy sh:datatype xsd:integer; re-typed to xsd:integer and
+        // canonicalized to "7". valueHasString is derived from the canonical form.
+        expectedStage2SingleValue(
+          "testInteger",
+          "IntValue",
+          """knora-base:valueHasInteger "7"^^xsd:integer""",
+          "7",
         ),
       )
     },
@@ -964,11 +981,12 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
 
   // ---- Standoff mapping stub (D1): a hermetic standard mapping covering the tags the standoff fixtures use ----
 
-  private val standoffPrefix  = "http://www.knora.org/ontology/standoff#"
-  private val standoffRootTag = standoffPrefix + "StandoffRootTag"
-  private val standoffParaTag = standoffPrefix + "StandoffParagraphTag"
-  private val standoffBoldTag = standoffPrefix + "StandoffBoldTag"
-  private val standoffLinkTag = KnoraBase.StandoffLinkTag
+  private val standoffPrefix         = "http://www.knora.org/ontology/standoff#"
+  private val standoffRootTag        = standoffPrefix + "StandoffRootTag"
+  private val standoffParaTag        = standoffPrefix + "StandoffParagraphTag"
+  private val standoffBoldTag        = standoffPrefix + "StandoffBoldTag"
+  private val standoffLinkTag        = KnoraBase.StandoffLinkTag
+  private val standoffInternalRefTag = KnoraBase.StandoffInternalReferenceTag
 
   private def xmlTag(name: String, cls: String, sep: Boolean, dataType: Option[XMLStandoffDataTypeClass] = None) =
     XMLTag(name, XMLTagToStandoffClass(cls, Map.empty, dataType), separatorRequired = sep)
@@ -986,6 +1004,12 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
               standoffLinkTag,
               sep = false,
               Some(XMLStandoffDataTypeClass(StandoffDataTypeClasses.StandoffLinkTag, "href")),
+            ),
+            "internal-link" -> xmlTag(
+              "a",
+              standoffInternalRefTag,
+              sep = false,
+              Some(XMLStandoffDataTypeClass(StandoffDataTypeClasses.StandoffInternalReferenceTag, "href")),
             ),
           ),
         ),
@@ -1010,6 +1034,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         standoffClassInfo(standoffParaTag, None),
         standoffClassInfo(standoffBoldTag, None),
         standoffClassInfo(standoffLinkTag, Some(StandoffDataTypeClasses.StandoffLinkTag)),
+        standoffClassInfo(standoffInternalRefTag, Some(StandoffDataTypeClasses.StandoffInternalReferenceTag)),
       ),
       standoffPropertyInfoMap = Map.empty,
     )
@@ -1091,6 +1116,26 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     knora-base:standoffTagHasStartIndex 0 ;
              |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
              |""".stripMargin,
+      )
+    },
+    test("resolves a standoff internal reference to the target standoff tag's node IRI") {
+      val xml = richtextXml(anchor("anchor1", "bold") + " " + internalLink("anchor1", "ref"))
+      for {
+        m          <- transformStage2Model(richtextJsonLd(xml))
+        refTargets  = m.listObjectsOfProperty(m.getProperty(KnoraBase.StandoffTagHasInternalReference)).asScala.toList
+        anchorNodes = m
+                        .listStatements(null, m.getProperty(KnoraBase.StandoffTagHasOriginalXMLID), null)
+                        .asScala
+                        .filter(_.getObject.asLiteral.getLexicalForm == "anchor1")
+                        .map(_.getSubject.getURI)
+                        .toList
+      } yield assertTrue(
+        refTargets.size == 1,
+        refTargets.head.isURIResource,
+        anchorNodes.size == 1,
+        // The reference resolves to the anchor tag's node IRI, not the relative file:// IRI the pre-fix code wrote.
+        refTargets.head.asResource.getURI == anchorNodes.head,
+        anchorNodes.head.startsWith(s"$valueIri/standoff/"),
       )
     },
     test("converts nested formatting to a multi-level standoff tree with resolved parent IRIs") {
@@ -1196,6 +1241,10 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
 
   private def salsahLink(target: String, label: String) =
     s"<a class=\\\"salsah-link\\\" href=\\\"$target\\\">$label</a>"
+  private def internalLink(targetId: String, label: String) =
+    s"<a class=\\\"internal-link\\\" href=\\\"#$targetId\\\">$label</a>"
+  private def anchor(id: String, label: String) =
+    s"<strong id=\\\"$id\\\">$label</strong>"
   private def richtextXml(body: String) = s"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?><text>$body</text>"
 
   /** A one-resource payload with two rich-text values on `onto:testRichtext`. */

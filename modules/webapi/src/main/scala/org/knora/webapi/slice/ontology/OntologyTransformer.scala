@@ -10,6 +10,7 @@ import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.query.DatasetFactory
+import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
@@ -136,6 +137,7 @@ final class OntologyTransformer(
       // UnformattedText signal. Do not reorder these two.
       _ <- ZIO.attempt(addTextValueType(model))
       _ <- ZIO.attempt(convertDateValues(model))
+      _ <- ZIO.attempt(canonicalizeScalarLiterals(model))
       _ <- ZIO.attempt(convertLinkValues(model))
       _ <- ZIO.attempt(convertGeomValues(model))
       _ <- convertRichtextValues(model, now)
@@ -381,6 +383,39 @@ final class OntologyTransformer(
   }
 
   /**
+   * Re-type the scalar value literals that arrive from the payload with a non-canonical datatype so they satisfy their
+   * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path (which re-emits every scalar from a typed
+   * model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a UTC `xsd:dateTime`, each with a canonical
+   * lexical form. Jena's `createTypedLiteral` stores the lexical string verbatim, so both the datatype IRI and the
+   * lexical form are set explicitly. A malformed literal fails the import, matching [[convertDateValues]]. Other scalar
+   * datatypes already match the create path today and are left untouched. Runs before [[addValueHasString]] so the
+   * derived `valueHasString` reflects the canonical form.
+   */
+  private def canonicalizeScalarLiterals(model: Model): Unit = {
+    retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
+      model.createTypedLiteral(BigInt(lexical.trim).toString, XSDDatatype.XSDinteger),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasTimeStamp)(lexical =>
+      model.createTypedLiteral(Instant.parse(lexical.trim).toString, XSDDatatype.XSDdateTime),
+    )
+  }
+
+  /** Replaces every literal object of `property` with the literal that `retype` derives from its lexical form. */
+  private def retypeLiterals(model: Model, property: String)(retype: String => Literal): Unit = {
+    val prop    = model.createProperty(property)
+    val updates = model
+      .listStatements(null, prop, null)
+      .asScala
+      .collect { case st if st.getObject.isLiteral => (st, retype(st.getObject.asLiteral.getLexicalForm)) }
+      .toList
+    updates.foreach { case (st, literal) =>
+      val subject = st.getSubject
+      model.remove(st)
+      subject.addProperty(prop, literal)
+    }
+  }
+
+  /**
    * Reify every `LinkValue` as an `rdf:Statement` and add the direct-link triple, mirroring
    * `ResourcesRepoLive.buildLinkValuePatterns`. The link property is found from the unique `<resource> <linkProp>
    * <value>` edge; the direct property is the link property without its `Value` suffix. The `linkValueHasTargetIri`
@@ -527,6 +562,10 @@ final class OntologyTransformer(
     val valueIri        = v.getURI
     val startIndexToIri =
       tags.map(t => t.startIndex -> StandoffStringUtil.makeRandomStandoffTagIri(valueIri, t.startIndex)).toMap
+    // Resolve a standoff internal reference (a `StandoffTagInternalReferenceAttributeV2`, carrying the target's XML
+    // id) to the target standoff tag's node IRI, mirroring the create path's `prepareForSparqlInsert`. Both paths
+    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide.
+    val xmlIdToIri = tags.flatMap(t => t.originalXMLID.map(_ -> startIndexToIri(t.startIndex))).toMap
 
     v.removeAll(textValueAsXml)
     v.removeAll(valueHasString)
@@ -536,7 +575,7 @@ final class OntologyTransformer(
     tags.foreach { tag =>
       val tagRes = model.createResource(startIndexToIri(tag.startIndex))
       v.addProperty(valueHasStandoff, tagRes)
-      emitStandoffTag(model, tagRes, tag, startIndexToIri)
+      emitStandoffTag(model, tagRes, tag, startIndexToIri, xmlIdToIri)
     }
   }
 
@@ -545,6 +584,7 @@ final class OntologyTransformer(
     tagRes: Resource,
     tag: StandoffTagV2,
     startIndexToIri: Map[Int, String],
+    xmlIdToIri: Map[String, String],
   ): Unit = {
     val rdfType                     = model.createProperty(Rdf.Type)
     val standoffTagHasStart         = model.createProperty(KnoraBase.StandoffTagHasStart)
@@ -569,16 +609,30 @@ final class OntologyTransformer(
     )
     tag.originalXMLID.foreach(id => tagRes.addProperty(standoffTagHasOriginalXMLID, id))
     tagRes.addProperty(standoffTagHasUUID, UuidUtil.base64Encode(tag.uuid))
-    tag.attributes.foreach(attr => emitStandoffAttribute(model, tagRes, attr))
+    tag.attributes.foreach(attr => emitStandoffAttribute(model, tagRes, attr, xmlIdToIri))
   }
 
   /** Emits one triple per standoff-tag attribute, typing the object as `standoffAttributeLiterals` does on write. */
-  private def emitStandoffAttribute(model: Model, tagRes: Resource, attr: StandoffTagAttributeV2): Unit = {
+  private def emitStandoffAttribute(
+    model: Model,
+    tagRes: Resource,
+    attr: StandoffTagAttributeV2,
+    xmlIdToIri: Map[String, String],
+  ): Unit = {
     val p = model.createProperty(attr.standoffPropertyIri.toString)
     val _ = attr match {
       case a: StandoffTagIriAttributeV2               => tagRes.addProperty(p, model.createResource(a.value))
-      case a: StandoffTagInternalReferenceAttributeV2 => tagRes.addProperty(p, model.createResource(a.value))
-      case a: StandoffTagUriAttributeV2               =>
+      case a: StandoffTagInternalReferenceAttributeV2 =>
+        // a.value is the target's XML id, already validated to exist during XML→standoff conversion. Resolve it to
+        // the target standoff tag's node IRI: the create path writes the resolved IRI, not the relative XML id.
+        val targetIri = xmlIdToIri.getOrElse(
+          a.value,
+          throw new IllegalArgumentException(
+            s"standoff internal reference '${a.value}' has no target standoff tag with that XML id",
+          ),
+        )
+        tagRes.addProperty(p, model.createResource(targetIri))
+      case a: StandoffTagUriAttributeV2 =>
         tagRes.addProperty(p, model.createTypedLiteral(a.value, XSDDatatype.XSDanyURI))
       case a: StandoffTagStringAttributeV2  => tagRes.addProperty(p, a.value)
       case a: StandoffTagIntegerAttributeV2 => tagRes.addProperty(p, intLiteral(model, a.value))
