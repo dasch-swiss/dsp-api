@@ -1133,7 +1133,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         refTargets.size == 1,
         refTargets.head.isURIResource,
         anchorNodes.size == 1,
-        // The reference resolves to the anchor tag's node IRI, not the relative file:// IRI the pre-fix code wrote.
+        // The reference resolves to the anchor tag's node IRI (a valueIri/standoff/* IRI), never a relative file:// IRI.
         refTargets.head.asResource.getURI == anchorNodes.head,
         anchorNodes.head.startsWith(s"$valueIri/standoff/"),
       )

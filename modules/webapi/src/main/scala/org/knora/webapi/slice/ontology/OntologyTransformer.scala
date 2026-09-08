@@ -36,6 +36,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.time.format.DateTimeParseException
 import scala.jdk.CollectionConverters.*
 
 import dsp.errors.NotFoundException
@@ -287,10 +288,9 @@ final class OntologyTransformer(
       }
       .toList
 
-    // This pass sets hasTextValueType on every text value, as the v2 resource-create path does. The
-    // v2 add-value path (POST /v2/values, InsertValueQueryBuilder) currently omits it — a live-service
-    // bug tracked in DEV-7187 (BulkImportParityE2ESpec surfaced it as a one-triple difference). This
-    // bulk pass is correct; no change needed here.
+    // Set hasTextValueType on every text value, matching the v2 resource-create path (ResourcesRepoLive)
+    // and the v2 add-value path (POST /v2/values, InsertValueQueryBuilder): all three write paths carry
+    // the same marker, so an imported text value and a create-path text value hold identical triples.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
       v.addProperty(hasTextValueType, valueType)
@@ -391,8 +391,8 @@ final class OntologyTransformer(
    * matching [[convertDateValues]]. Other scalar datatypes already match the create path today and are left untouched.
    * Runs before [[addValueHasString]] so the derived `valueHasString` reflects the canonical form.
    *
-   * Corrects future imports only. Projects imported before this fix keep non-canonical `valueHasInteger` /
-   * `valueHasTimeStamp` literals; remediating them is a separate DEV-7149 data-migration follow-up, not done here.
+   * Applies to the values this pass writes. Non-canonical `valueHasInteger` / `valueHasTimeStamp` literals
+   * from prior imports stay as they are; remediating them is a separate DEV-7149 data-migration follow-up.
    */
   private def canonicalizeScalarLiterals(model: Model): Unit = {
     retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
@@ -415,7 +415,7 @@ final class OntologyTransformer(
           val literal =
             try retype(lexical)
             catch {
-              case e: RuntimeException =>
+              case e: (NumberFormatException | DateTimeParseException) =>
                 throw new IllegalArgumentException(
                   s"Value ${st.getSubject} has a <$property> literal that cannot be canonicalized: '$lexical'",
                   e,
@@ -580,8 +580,8 @@ final class OntologyTransformer(
       tags.map(t => t.startIndex -> StandoffStringUtil.makeRandomStandoffTagIri(valueIri, t.startIndex)).toMap
     // Resolve a standoff internal reference (a `StandoffTagInternalReferenceAttributeV2`, carrying the target's XML
     // id) to the target standoff tag's node IRI, mirroring the create path's `prepareForSparqlInsert`. Both paths
-    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide. Corrects
-    // future imports only: projects imported before this fix keep broken relative anchor IRIs (DEV-7149 follow-up).
+    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide.
+    // Anchor references from prior imports keep their relative IRIs; remediating them is a separate DEV-7149 follow-up.
     val xmlIdToIri = tags.flatMap(t => t.originalXMLID.map(_ -> startIndexToIri(t.startIndex))).toMap
 
     v.removeAll(textValueAsXml)
