@@ -193,14 +193,35 @@ final class OntologyTransformer(
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    val resources = model.listSubjects().asScala.filter { s =>
-      s.isURIResource && ResourceIri.from(s.getURI).isRight
-    }
+    val resources = model
+      .listSubjects()
+      .asScala
+      .filter(s => s.isURIResource && ResourceIri.from(s.getURI).isRight)
+      .toList
     resources.foreach { r =>
+      // Strip any payload-supplied system metadata before synthesizing, mirroring addValueMetadata,
+      // so a payload value does not coexist with the synthesized one (the data graph enforces
+      // maxCount 1). A payload creationDate is honored but re-emitted as xsd:dateTime: the create
+      // path stores it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp)
+      // does not survive.
+      val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
+      r.removeAll(attachedToUser)
+        .removeAll(attachedToProject)
+        .removeAll(hasPermissions)
+        .removeAll(creationDate)
+        .removeAll(isDeleted)
       r.addProperty(attachedToUser, userResource)
       r.addProperty(attachedToProject, projectResource)
+      // TODO(DEV-7149, next PR): honor a payload-supplied hasPermissions and resolve class/property
+      //   DOAPs so the string matches the create path. Until then the group-level default is applied
+      //   and hasPermissions stays excluded from the parity compare.
       r.addProperty(hasPermissions, ctx.permissions)
-      r.addProperty(creationDate, creationDateLit)
+      val creationDateValue = payloadCreationDate
+        .filter(_.isLiteral)
+        .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
+        .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
+        .getOrElse(creationDateLit)
+      r.addProperty(creationDate, creationDateValue)
       r.addProperty(isDeleted, falseLit)
     }
   }
@@ -209,6 +230,10 @@ final class OntologyTransformer(
    * Synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
    * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
    * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
+   *
+   * `valueHasOrder` is intentionally not synthesized here: every imported value carries its order from the
+   * payload. The pipeline synthesizes an order only for values it creates itself (e.g. standoff-link LinkValues),
+   * never for values that come from outside.
    */
   private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
@@ -260,6 +285,10 @@ final class OntologyTransformer(
       }
       .toList
 
+    // This pass sets hasTextValueType on every text value, as the v2 resource-create path does. The
+    // v2 add-value path (POST /v2/values, InsertValueQueryBuilder) currently omits it — a live-service
+    // bug tracked in DEV-7187 (BulkImportParityE2ESpec surfaced it as a one-triple difference). This
+    // bulk pass is correct; no change needed here.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
       v.addProperty(hasTextValueType, valueType)
@@ -631,6 +660,8 @@ final class OntologyTransformer(
     linkValue.addProperty(valueHasRefCount, intLiteral(model, refCount))
     linkValue.addProperty(isDeleted, model.createTypedLiteral("false", XSDDatatype.XSDboolean))
     linkValue.addProperty(valueCreationDate, model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime))
+    // Standoff-link LinkValues are attached to the built-in SystemUser, matching the v2 create path.
+    // The import shape AttachedToUserNotBuiltInShape exempts them (see data-shapes.ttl).
     linkValue.addProperty(attachedToUser, model.createResource(systemUser))
     linkValue.addProperty(hasPermissions, standoffLinkValuePermissions)
     val _ = linkValue.addProperty(valueHasUUID, linkValueIri.valueId.value)

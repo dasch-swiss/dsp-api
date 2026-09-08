@@ -555,6 +555,50 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |""".stripMargin,
       )
     },
+    test("honors a payload creationDate, re-emitted as one xsd:dateTime, and strips the payload copy") {
+      runTransformStage2(
+        jsonLd =
+          s"""
+             |[{
+             |    "@id": "$resourceIri",
+             |    "@type": "${onto}Example",
+             |    "rdfs:label": "test",
+             |    "${knoraApi}creationDate": { "@type": "${xsd}dateTimeStamp", "@value": "2020-05-15T09:00:00+02:00" },
+             |    "${onto}testBoolean": { "@id": "$valueIri", "@type": "${knoraApi}BooleanValue",
+             |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true } },
+             |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+             |}]""".stripMargin,
+        // Payload offset 09:00+02:00 normalizes to 07:00Z; the datatype changes from xsd:dateTimeStamp to
+        // xsd:dateTime. isIsomorphicWith enforces exactly one creationDate triple, so the strip is proven.
+        expectedTurtle = s"""
+                            | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     a                            onto:Example ;
+                            |     rdfs:label                   "test" ;
+                            |     onto:testBoolean             <$valueIri> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:creationDate      "2020-05-15T07:00:00Z"^^xsd:dateTime ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri>
+                            |     a                            knora-base:BooleanValue ;
+                            |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
+                            |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
+                            |     knora-base:valueHasString    "true" ;
+                            |     knora-base:isDeleted         false .
+                            |""".stripMargin,
+      )
+    },
   )
 
   /** Full expected `knora-base` graph for a single-value resource, including synthesised resource + value metadata. */
