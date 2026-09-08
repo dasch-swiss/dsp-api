@@ -343,15 +343,15 @@ use_repo(
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
 #   crane manifest eclipse-temurin:25-jre-noble | jq -r \
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="arm64") | .digest'
-# Index digest: sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+# Index digest: sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
 oci.pull(
     name = "temurin_base_amd64",
-    digest = "sha256:7161e12dbcd2791d1fc8b9cf6f1c1519a84c4acea5706c6a0659bc254a4c55d7",
+    digest = "sha256:8c6736fa623090b057a5bbd36d42f90c9de4c7d2d4b6c285921a4f85ce65a445",
     image = "index.docker.io/library/eclipse-temurin",
 )
 oci.pull(
     name = "temurin_base_arm64",
-    digest = "sha256:06abf087c093e27c71ed507e87f950f055c185d2ddb1eaff8a120f4198be661e",
+    digest = "sha256:6c3e50fade4ae5257eed863323b1efe19162a913446cd3dd166747eac8f76298",
     image = "index.docker.io/library/eclipse-temurin",
 )
 use_repo(
