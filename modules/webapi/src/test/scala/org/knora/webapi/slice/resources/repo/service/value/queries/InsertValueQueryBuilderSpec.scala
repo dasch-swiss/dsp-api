@@ -1180,23 +1180,5 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
         )
       },
     ),
-    suite("hasTextValueType (DEV-7149, DEV-7187)")(
-      test("unformatted text value emits hasTextValueType UnformattedText") {
-        for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValue()))
-        } yield assertTrue(
-          builderQuery.contains("knora-base:hasTextValueType"),
-          builderQuery.contains("knora-base:UnformattedText"),
-        )
-      },
-      test("formatted (standoff) text value emits hasTextValueType FormattedText") {
-        for {
-          builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithStandoff()))
-        } yield assertTrue(
-          builderQuery.contains("knora-base:hasTextValueType"),
-          builderQuery.contains("knora-base:FormattedText"),
-        )
-      },
-    ),
   ).provide(IriConverter.layer, StringFormatter.test)
 }

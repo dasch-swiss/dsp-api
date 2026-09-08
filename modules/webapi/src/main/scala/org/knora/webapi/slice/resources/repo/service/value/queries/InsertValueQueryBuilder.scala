@@ -284,8 +284,9 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     }
 
     // Persist knora-base:hasTextValueType on every text value, mirroring the v2 resource-create path
-    // (ResourcesRepoLive.buildFormattedTextValuePatterns). The IRI is derived from the value's own
-    // TextValueType tag, which is set when the payload is parsed.
+    // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
+    // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
+    // when the payload is parsed.
     val textValueTypePattern = textValueTypeIri(textValue.textValueType).toList.map { typeIri =>
       valueIri.has(KB.hasTextValueType, typeIri)
     }
@@ -313,7 +314,8 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       case TextValueType.UnformattedText        => Some(KB.UnformattedText)
       case TextValueType.FormattedText          => Some(KB.FormattedText)
       case TextValueType.CustomFormattedText(_) => Some(KB.CustomFormattedText)
-      case TextValueType.UndefinedTextType      => None
+      // Unreachable on this path: TextValueContentV2.getTextValue never parses a payload to UndefinedTextType.
+      case TextValueType.UndefinedTextType => None
     }
 
   private def standoffAttributeToRdfValue(

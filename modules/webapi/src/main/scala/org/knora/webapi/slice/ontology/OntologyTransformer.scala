@@ -384,12 +384,15 @@ final class OntologyTransformer(
 
   /**
    * Re-type the scalar value literals that arrive from the payload with a non-canonical datatype so they satisfy their
-   * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path (which re-emits every scalar from a typed
-   * model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a UTC `xsd:dateTime`, each with a canonical
-   * lexical form. Jena's `createTypedLiteral` stores the lexical string verbatim, so both the datatype IRI and the
-   * lexical form are set explicitly. A malformed literal fails the import, matching [[convertDateValues]]. Other scalar
-   * datatypes already match the create path today and are left untouched. Runs before [[addValueHasString]] so the
-   * derived `valueHasString` reflects the canonical form.
+   * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path's `InsertValueQueryBuilder.buildTypeSpecificPatterns`
+   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a
+   * UTC `xsd:dateTime`, each with a canonical lexical form. Jena's `createTypedLiteral` stores the lexical string
+   * verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed literal fails the import,
+   * matching [[convertDateValues]]. Other scalar datatypes already match the create path today and are left untouched.
+   * Runs before [[addValueHasString]] so the derived `valueHasString` reflects the canonical form.
+   *
+   * Corrects future imports only. Projects imported before this fix keep non-canonical `valueHasInteger` /
+   * `valueHasTimeStamp` literals; remediating them is a separate DEV-7149 data-migration follow-up, not done here.
    */
   private def canonicalizeScalarLiterals(model: Model): Unit = {
     retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
@@ -406,7 +409,20 @@ final class OntologyTransformer(
     val updates = model
       .listStatements(null, prop, null)
       .asScala
-      .collect { case st if st.getObject.isLiteral => (st, retype(st.getObject.asLiteral.getLexicalForm)) }
+      .collect {
+        case st if st.getObject.isLiteral =>
+          val lexical = st.getObject.asLiteral.getLexicalForm
+          val literal =
+            try retype(lexical)
+            catch {
+              case e: RuntimeException =>
+                throw new IllegalArgumentException(
+                  s"Value ${st.getSubject} has a <$property> literal that cannot be canonicalized: '$lexical'",
+                  e,
+                )
+            }
+          (st, literal)
+      }
       .toList
     updates.foreach { case (st, literal) =>
       val subject = st.getSubject
@@ -564,7 +580,8 @@ final class OntologyTransformer(
       tags.map(t => t.startIndex -> StandoffStringUtil.makeRandomStandoffTagIri(valueIri, t.startIndex)).toMap
     // Resolve a standoff internal reference (a `StandoffTagInternalReferenceAttributeV2`, carrying the target's XML
     // id) to the target standoff tag's node IRI, mirroring the create path's `prepareForSparqlInsert`. Both paths
-    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide.
+    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide. Corrects
+    // future imports only: projects imported before this fix keep broken relative anchor IRIs (DEV-7149 follow-up).
     val xmlIdToIri = tags.flatMap(t => t.originalXMLID.map(_ -> startIndexToIri(t.startIndex))).toMap
 
     v.removeAll(textValueAsXml)
@@ -623,8 +640,8 @@ final class OntologyTransformer(
     val _ = attr match {
       case a: StandoffTagIriAttributeV2               => tagRes.addProperty(p, model.createResource(a.value))
       case a: StandoffTagInternalReferenceAttributeV2 =>
-        // a.value is the target's XML id, already validated to exist during XML→standoff conversion. Resolve it to
-        // the target standoff tag's node IRI: the create path writes the resolved IRI, not the relative XML id.
+        // a.value is the target's XML id, already validated to exist during XML-to-standoff conversion. Resolve it
+        // to the target standoff tag's node IRI: the create path writes the resolved IRI, not the relative XML id.
         val targetIri = xmlIdToIri.getOrElse(
           a.value,
           throw new IllegalArgumentException(
