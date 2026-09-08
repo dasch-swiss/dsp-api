@@ -57,8 +57,8 @@
     "net.datafaker:datafaker": 697936770,
     "net.sf.saxon:Saxon-HE": 2018956298,
     "org.apache.commons:commons-lang3": -278168457,
-    "org.apache.jena:jena-core": 633016333,
-    "org.apache.jena:jena-text": -844953445,
+    "org.apache.jena:jena-core": -1163935026,
+    "org.apache.jena:jena-text": 1653062492,
     "org.bouncycastle:bcprov-jdk15to18": 1499080404,
     "org.eclipse.rdf4j:rdf4j-client": 389304043,
     "org.eclipse.rdf4j:rdf4j-shacl": 1077405849,
@@ -104,8 +104,8 @@
     "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:sources": -212458373,
     "com.github.andrewoma.dexx:collection": 417166690,
     "com.github.andrewoma.dexx:collection:jar:sources": 1070451876,
-    "com.github.ben-manes.caffeine:caffeine": 254783836,
-    "com.github.ben-manes.caffeine:caffeine:jar:sources": -594702079,
+    "com.github.ben-manes.caffeine:caffeine": -1739797235,
+    "com.github.ben-manes.caffeine:caffeine:jar:sources": -57104877,
     "com.github.curious-odd-man:rgxgen": -434367601,
     "com.github.curious-odd-man:rgxgen:jar:sources": 792448481,
     "com.github.docker-java:docker-java-api": 1073735645,
@@ -135,8 +135,8 @@
     "com.google.guava:listenablefuture": 1079558157,
     "com.google.j2objc:j2objc-annotations": 248818742,
     "com.google.j2objc:j2objc-annotations:jar:sources": -378364028,
-    "com.google.protobuf:protobuf-java": 1198356280,
-    "com.google.protobuf:protobuf-java:jar:sources": 2013970572,
+    "com.google.protobuf:protobuf-java": 911577887,
+    "com.google.protobuf:protobuf-java:jar:sources": 773608461,
     "com.googlecode.libphonenumber:libphonenumber": -1682836104,
     "com.googlecode.libphonenumber:libphonenumber:jar:sources": -612353298,
     "com.ibm.icu:icu4j": -1667183492,
@@ -145,7 +145,7 @@
     "com.jayway.jsonpath:json-path:jar:sources": -1185551957,
     "com.lihaoyi:unroll-annotation_3": 42736306,
     "com.lihaoyi:unroll-annotation_3:jar:sources": -1102142611,
-    "com.lihaoyi:unroll-plugin_3": 1408339440,
+    "com.lihaoyi:unroll-plugin_3": -432682312,
     "com.lihaoyi:unroll-plugin_3:jar:sources": -1267756075,
     "com.networknt:json-schema-validator": 1869634875,
     "com.networknt:json-schema-validator:jar:sources": 668026887,
@@ -205,7 +205,7 @@
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:jar:sources": 574898639,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3": 589616964,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3:jar:sources": -1441421400,
-    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": 1357636513,
+    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": -1044025726,
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:jar:sources": -666502806,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": -1231404933,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:jar:sources": 989691084,
@@ -225,8 +225,8 @@
     "com.zaxxer:HikariCP:jar:sources": 1316483434,
     "commons-beanutils:commons-beanutils": 852036681,
     "commons-beanutils:commons-beanutils:jar:sources": 1596942423,
-    "commons-cli:commons-cli": -1049205324,
-    "commons-cli:commons-cli:jar:sources": -215239787,
+    "commons-cli:commons-cli": -32742453,
+    "commons-cli:commons-cli:jar:sources": -2017835649,
     "commons-codec:commons-codec": -1266557082,
     "commons-codec:commons-codec:jar:sources": 1982466183,
     "commons-collections:commons-collections": 7509648,
@@ -263,7 +263,7 @@
     "dev.zio:zio-config_3:jar:sources": 1348924478,
     "dev.zio:zio-constraintless_3": -992019704,
     "dev.zio:zio-constraintless_3:jar:sources": -1765365602,
-    "dev.zio:zio-http_3": 878478906,
+    "dev.zio:zio-http_3": 1048852354,
     "dev.zio:zio-http_3:jar:sources": 497099896,
     "dev.zio:zio-internal-macros_3": -1586160431,
     "dev.zio:zio-internal-macros_3:jar:sources": 1422710146,
@@ -317,9 +317,9 @@
     "dev.zio:zio-test_3:jar:sources": 895591478,
     "dev.zio:zio_3": -1077749875,
     "dev.zio:zio_3:jar:sources": 1513395708,
-    "eu.neverblink.jelly:jelly-core": -1517588263,
+    "eu.neverblink.jelly:jelly-core": -1445513065,
     "eu.neverblink.jelly:jelly-core:jar:sources": 1505168369,
-    "eu.neverblink.jelly:jelly-jena": -1103741368,
+    "eu.neverblink.jelly:jelly-jena": -2045205721,
     "eu.neverblink.jelly:jelly-jena:jar:sources": -440860059,
     "eu.timepit:refined_3": -2008737203,
     "eu.timepit:refined_3:jar:sources": -399125617,
@@ -455,40 +455,40 @@
     "org.apache.httpcomponents:httpclient:jar:sources": -779528763,
     "org.apache.httpcomponents:httpcore": 67453319,
     "org.apache.httpcomponents:httpcore:jar:sources": 2134002822,
-    "org.apache.jena:jena-arq": 1089233143,
-    "org.apache.jena:jena-arq:jar:sources": 429451487,
-    "org.apache.jena:jena-base": -363376198,
-    "org.apache.jena:jena-base:jar:sources": -1413057785,
-    "org.apache.jena:jena-cmds": -1088744888,
-    "org.apache.jena:jena-cmds:jar:sources": 44754717,
-    "org.apache.jena:jena-core": -1379927941,
-    "org.apache.jena:jena-core:jar:sources": -1907069772,
-    "org.apache.jena:jena-dboe-base": 648858979,
-    "org.apache.jena:jena-dboe-base:jar:sources": 70927043,
-    "org.apache.jena:jena-dboe-index": -1976790553,
-    "org.apache.jena:jena-dboe-index:jar:sources": -365920055,
-    "org.apache.jena:jena-dboe-storage": -278172467,
-    "org.apache.jena:jena-dboe-storage:jar:sources": -1550926469,
-    "org.apache.jena:jena-dboe-trans-data": -1446647680,
-    "org.apache.jena:jena-dboe-trans-data:jar:sources": 577312802,
-    "org.apache.jena:jena-dboe-transaction": 294863595,
-    "org.apache.jena:jena-dboe-transaction:jar:sources": -291237470,
-    "org.apache.jena:jena-iri3986": -2003186786,
-    "org.apache.jena:jena-iri3986:jar:sources": 767562045,
-    "org.apache.jena:jena-langtag": -970180726,
-    "org.apache.jena:jena-langtag:jar:sources": 1081127545,
-    "org.apache.jena:jena-rdfpatch": -816607901,
-    "org.apache.jena:jena-rdfpatch:jar:sources": -800822881,
-    "org.apache.jena:jena-shacl": 1369373344,
-    "org.apache.jena:jena-shacl:jar:sources": 331577716,
-    "org.apache.jena:jena-shex": 1043127546,
-    "org.apache.jena:jena-shex:jar:sources": 750935071,
-    "org.apache.jena:jena-tdb1": -464733916,
-    "org.apache.jena:jena-tdb1:jar:sources": 512400289,
-    "org.apache.jena:jena-tdb2": 2035545168,
-    "org.apache.jena:jena-tdb2:jar:sources": -1726923645,
-    "org.apache.jena:jena-text": 143189938,
-    "org.apache.jena:jena-text:jar:sources": -1909740219,
+    "org.apache.jena:jena-arq": 1290768947,
+    "org.apache.jena:jena-arq:jar:sources": -1251142382,
+    "org.apache.jena:jena-base": 1902499006,
+    "org.apache.jena:jena-base:jar:sources": 751570737,
+    "org.apache.jena:jena-cmds": -1652929511,
+    "org.apache.jena:jena-cmds:jar:sources": -1778860030,
+    "org.apache.jena:jena-core": 1595957699,
+    "org.apache.jena:jena-core:jar:sources": -905523005,
+    "org.apache.jena:jena-dboe-base": 22028132,
+    "org.apache.jena:jena-dboe-base:jar:sources": 1027899319,
+    "org.apache.jena:jena-dboe-index": -1000574282,
+    "org.apache.jena:jena-dboe-index:jar:sources": -987863113,
+    "org.apache.jena:jena-dboe-storage": -1169858123,
+    "org.apache.jena:jena-dboe-storage:jar:sources": -459757568,
+    "org.apache.jena:jena-dboe-trans-data": 2060249514,
+    "org.apache.jena:jena-dboe-trans-data:jar:sources": -637642007,
+    "org.apache.jena:jena-dboe-transaction": -1783367503,
+    "org.apache.jena:jena-dboe-transaction:jar:sources": -1510629321,
+    "org.apache.jena:jena-iri3986": -576098119,
+    "org.apache.jena:jena-iri3986:jar:sources": -353291809,
+    "org.apache.jena:jena-langtag": -1490712533,
+    "org.apache.jena:jena-langtag:jar:sources": 1812448984,
+    "org.apache.jena:jena-rdfpatch": -2075153748,
+    "org.apache.jena:jena-rdfpatch:jar:sources": -357896811,
+    "org.apache.jena:jena-shacl": -255672801,
+    "org.apache.jena:jena-shacl:jar:sources": -1547654159,
+    "org.apache.jena:jena-shex": -1043251163,
+    "org.apache.jena:jena-shex:jar:sources": 808045162,
+    "org.apache.jena:jena-tdb1": -849989345,
+    "org.apache.jena:jena-tdb1:jar:sources": 82011924,
+    "org.apache.jena:jena-tdb2": -322427439,
+    "org.apache.jena:jena-tdb2:jar:sources": -533888260,
+    "org.apache.jena:jena-text": 859546109,
+    "org.apache.jena:jena-text:jar:sources": 1129578297,
     "org.apache.lucene:lucene-analysis-common": 1642364254,
     "org.apache.lucene:lucene-analysis-common:jar:sources": 1950222684,
     "org.apache.lucene:lucene-backward-codecs": 1756547680,
@@ -507,8 +507,8 @@
     "org.apache.lucene:lucene-queryparser:jar:sources": -424927242,
     "org.apache.lucene:lucene-sandbox": -2003395502,
     "org.apache.lucene:lucene-sandbox:jar:sources": -1295788593,
-    "org.apache.thrift:libthrift": 1444732171,
-    "org.apache.thrift:libthrift:jar:sources": 1163565392,
+    "org.apache.thrift:libthrift": 1951516276,
+    "org.apache.thrift:libthrift:jar:sources": 168996178,
     "org.bouncycastle:bcpkix-jdk18on": -294727450,
     "org.bouncycastle:bcpkix-jdk18on:jar:sources": 1412420619,
     "org.bouncycastle:bcprov-jdk15to18": -796422275,
@@ -699,8 +699,8 @@
     "org.reactivestreams:reactive-streams:jar:sources": -1454226778,
     "org.rnorth.duct-tape:duct-tape": -1059401544,
     "org.rnorth.duct-tape:duct-tape:jar:sources": -1798015648,
-    "org.roaringbitmap:RoaringBitmap": 1640516570,
-    "org.roaringbitmap:RoaringBitmap:jar:sources": -1639062104,
+    "org.roaringbitmap:RoaringBitmap": -193479411,
+    "org.roaringbitmap:RoaringBitmap:jar:sources": 956527586,
     "org.scala-graph:graph-core_3": -2098830282,
     "org.scala-graph:graph-core_3:jar:sources": 847535680,
     "org.scala-lang.modules:scala-asm": -679780990,
@@ -709,11 +709,11 @@
     "org.scala-lang.modules:scala-collection-compat_3:jar:sources": 214419088,
     "org.scala-lang.modules:scala-xml_3": 195602550,
     "org.scala-lang.modules:scala-xml_3:jar:sources": -1176012239,
-    "org.scala-lang:scala3-compiler_3": -1718406073,
+    "org.scala-lang:scala3-compiler_3": 691797605,
     "org.scala-lang:scala3-compiler_3:jar:sources": -1029692100,
     "org.scala-lang:scala3-interfaces": 573462442,
     "org.scala-lang:scala3-interfaces:jar:sources": 109369527,
-    "org.scala-sbt:compiler-interface": 943503627,
+    "org.scala-sbt:compiler-interface": -680869281,
     "org.scala-sbt:compiler-interface:jar:sources": 1557741819,
     "org.scala-sbt:test-interface": -896079610,
     "org.scala-sbt:test-interface:jar:sources": -427347570,
@@ -741,7 +741,7 @@
     "org.springframework:spring-expression:jar:sources": 735232192,
     "org.testcontainers:testcontainers": -331363360,
     "org.testcontainers:testcontainers:jar:sources": 375219890,
-    "org.topbraid:shacl": -279784144,
+    "org.topbraid:shacl": -1453383225,
     "org.topbraid:shacl:jar:sources": -998749544,
     "org.typelevel:cats-core_3": 91902594,
     "org.typelevel:cats-core_3:jar:sources": 856599929,
@@ -854,10 +854,10 @@
     },
     "com.github.ben-manes.caffeine:caffeine": {
       "shasums": {
-        "jar": "ca70c90a5d1ce1511880ce9c93d4ad22108f61111d3daf91eb52762b571bd179",
-        "sources": "60434a548af57d0dbe13b1aa4aaf08816e5bf1d3442264c669246f8929f4b757"
+        "jar": "9d9d2cfd681fd9272ded3d27c9930db12f89f732345975aa113ebc223bbf1224",
+        "sources": "5079e1b327d79e2fc8ae3f5927587e59c968603e63785fb33479acd8b732211d"
       },
-      "version": "3.2.3"
+      "version": "3.2.4"
     },
     "com.github.curious-odd-man:rgxgen": {
       "shasums": {
@@ -965,10 +965,10 @@
     },
     "com.google.protobuf:protobuf-java": {
       "shasums": {
-        "jar": "ae0459030b54a6f3058ad349aa01fc2edcbb2d4a84b73699675bbd125df2e96d",
-        "sources": "240db630888d78b6d67c0977416c8a48dd4bce42fb48424d054b128b72420b20"
+        "jar": "a4345ba2aa009912ff6f90467fea2d104605256b72c50840d75f13256638a472",
+        "sources": "83b680c10572c930de7631cd3376ead12fc11387d3515d8cfb15bd5a381dea1a"
       },
-      "version": "4.34.1"
+      "version": "4.35.1"
     },
     "com.googlecode.libphonenumber:libphonenumber": {
       "shasums": {
@@ -1280,10 +1280,10 @@
     },
     "commons-cli:commons-cli": {
       "shasums": {
-        "jar": "d3d530d0f28fd0fbbffe2b0b338f70e8cb96f1605579e2e3abd4db29cac24e69",
-        "sources": "d551046d6abf01a6cd27cacb607b320daa90ade1b7a6e96ea98d142b18d9170e"
+        "jar": "8f7f8605d68e15bf32db61ec94eac6fdafc51b1bdbe1e0e0802b57d23f387792",
+        "sources": "c65b544468eafd3e1036671fb22fd9ba4c3f67c03f76298e8aaeb6943755a70b"
       },
-      "version": "1.9.0"
+      "version": "1.11.0"
     },
     "commons-codec:commons-codec": {
       "shasums": {
@@ -2075,122 +2075,122 @@
     },
     "org.apache.jena:jena-arq": {
       "shasums": {
-        "jar": "bc0fac2551db4b8616c861aab5b3bb5c7a3897e4516e8990bbab234a5a8f904c",
-        "sources": "65e524a3933531cef92cf531be1a7df0cf81ebb5b97f86638ea996e806b71c26"
+        "jar": "154ec73b3a5a2b1e1a664d563b39d1674855c79553dd0da1a030de8128ee118e",
+        "sources": "62960a39dcb767bbec36264631f89c29e3713eefc3f37db84fae1bfea8673293"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-base": {
       "shasums": {
-        "jar": "e5bf4dfd42ccd5e0ab731d4f6e405ad7273866fbb73fb2665be6045f52e94d15",
-        "sources": "94055e2f1d6a5c06052e78083d29581f96fb922fc89f1a289381ca2cd9dc73db"
+        "jar": "2c5c9ed7f5c4ad1c976abbf5b002710f5b8f31bd4270fca2699b5d891af1273c",
+        "sources": "60ae77b934ed88db578330817fd95e0b594c6906f915e3df6a3c1ff831d47666"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-cmds": {
       "shasums": {
-        "jar": "32ec620a29ecedcc2e57f7142aac36b9c6c8d0a62e22341083a23fddab3bf1e7",
-        "sources": "63eb897dec09e0ab54dd651234e3b9438874254a2756eb789c34b2230abc1729"
+        "jar": "7fdeeec2f996c31220c9c15e3cedd2ebe9b034aaebce8b360d2492414fb926d9",
+        "sources": "f3d84bbc1528b82541fdd3db750664a8cbf5e24f778fde6ddb136c68c57edaaf"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-core": {
       "shasums": {
-        "jar": "53378ad0a542d4ea467b79ecc1224ab7d2d28b2336772d351251778e692312b4",
-        "sources": "ef74a19221a7f2943972e48a087b2272f657884b21205e0c85bb47c0f1efd86a"
+        "jar": "697bd31b75b4c95bbfa3f73103fc54aea7452de69da099c50124f202f447b1aa",
+        "sources": "6b599538f1af461d6ca7b6c093671212e4e715e8a93b05d4958bd38e37afb16a"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-base": {
       "shasums": {
-        "jar": "43346e73901683577cf1accb609a2bf1bfa17d6f7545439ef8601ddb698ca06b",
-        "sources": "e9792eb5851de5f3c585b8bfd4a01a6f920b3a5e6fa8550a20631d936e5c5296"
+        "jar": "b3e84ffdb48e2d5ecab33e4d2a500b4207508d780d730d8b6d1255514a9b5a2e",
+        "sources": "079b70d5356b9e78cfbf3f44d6e7518d6711d4544dc0b3ee46f7b948d0bccac5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-index": {
       "shasums": {
-        "jar": "d8bcc5fb7e157e918033c463e1d4e758c8ba98f9b2804d2453d40981034ab646",
-        "sources": "93c9fc8733eb26539866efc012d9e2e0781e621d43fecaa030bd26e531dc1fda"
+        "jar": "9501cae1f734d2987a90f3a361714561bc247aeeb6b76b518c348413f52918b6",
+        "sources": "8e39d5915399b21f8a044e067998171c007d8a4edb9d6c67b1258ae4c4cda076"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-storage": {
       "shasums": {
-        "jar": "fa85d7728509e19196fc4d0d1e51f501b78fa07f2e8badedc43f3415bac1f1ff",
-        "sources": "d139eaf66e3b3cea0edbdef243794fb8ec3bbc40973aa9a66690617b5c67a51e"
+        "jar": "b75b933ba03ed4cf51df4bb058c77645e1d7c198ff655b19a69827d6283d4871",
+        "sources": "c377409b76c69d0331eda47bf4da68ae77942fcce2e4ab53db7d70c228d5c704"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-trans-data": {
       "shasums": {
-        "jar": "424c2cc6320c74109f24bee4c9bc3111ec9949e601e909e20957d0b146960e83",
-        "sources": "1e157a924d9726374a6754d42ab2e4b5bb3f0c8cef9220de6bdd8e4e6a69e4b2"
+        "jar": "5a622649fca43b6ae987180df1ceeb4d73634393b55a1e7df28a975c1a8e668a",
+        "sources": "7e1cf4e189be9f0640ee85164feee26eef4be5e53942abec5f5a94dd2680aef5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-transaction": {
       "shasums": {
-        "jar": "ecc36d0f024a777a5c3c9339d5883a61c0eb85a6daa90f6dfa67439c4e6d5a62",
-        "sources": "8273948672f31d1f9c4e3e187a5dc904ac21327ab98a8141cf41a094230e406d"
+        "jar": "538973f6707f03ba9b255e43e0d761bf769a330f51fb8e11da3626418b38d033",
+        "sources": "184c11c78e55dffd344136547e6c93c2b2fe60581a15c43e282913bf8327e921"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-iri3986": {
       "shasums": {
-        "jar": "8aa4be44c8715807608b2594feb2f03ddb59070998a8e5c2fe298b9cbeca6903",
-        "sources": "872bbf863cb06803829c194f4563d033195a1c4e0f8cd0edea2070ad5a2617bb"
+        "jar": "8f9b2ec3f0de18bc40f416f62f99e9e818b187674490f82999e3168beec4da7e",
+        "sources": "c293412da866b33e6b2073bc2ef2ddf8ef30ad04042134233d27c8e98f4055f5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-langtag": {
       "shasums": {
-        "jar": "165f4167c7857cacf3358010c9b70670f8b16d314b3123dbf84132c9f6b5cb90",
-        "sources": "5fdc8bd07ef263bf94f296117dfee1b7cf7cf17e43c5aec135ac79542ff896ac"
+        "jar": "54d3066af347853d48fddb5aac9f26ce79d71263b21271abf78464e6f01932e3",
+        "sources": "9cbe34ad5723690947d14b9a74cb956345481cd69566d0f527b82f696159a835"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-rdfpatch": {
       "shasums": {
-        "jar": "aab6afa5972736401614e899b3ac00c20a2019c9a8b23912a2de04da782acf9f",
-        "sources": "f3c8703207775439052f784435ca83960b87b88c405bf89838efc6e610de9338"
+        "jar": "30ede77b085e4735d962fcaceb84a09bc72234e8d2b710da4c73bd3bf434d2c1",
+        "sources": "305fd833cbea543aa8a95a66be3b43ea301960f76d9c8b71747e42723318ca72"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-shacl": {
       "shasums": {
-        "jar": "d03e61141624b45ea601c4bf10dc65f9b17c9637cbf534425e88edecb74c2f9b",
-        "sources": "c8f764fe142c2f88af0ac01344c21996264464778979c51f53d2dbf1a4494405"
+        "jar": "4ca38c60f3c4f0473368d51e01977ac8d1d257ba8c0eb493dcfac855b620d904",
+        "sources": "7a5eaf0dffeeb1ead968aa47bf8ffaad8423f915df563c6eb06d864ae100cdf2"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-shex": {
       "shasums": {
-        "jar": "3e5f95afc7cd8b559dca076b5c126bdeea81a2f96d22b84cc650d85e1eb52a13",
-        "sources": "4f13a15e89760a22aa8628c317a1a9e37b311ad7bfd22a1efbee9580eb434b85"
+        "jar": "e2c849b156871eb178db65e5d9018aa6c61e1bc59c1797b39990d00c28b4cb6c",
+        "sources": "3716e228a9b011feb0328567c712c2c0e8e63d62a608355481a2ebebc252e4d0"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-tdb1": {
       "shasums": {
-        "jar": "3dff2308f65af44c5c5b2e1211defe84c9879cfd2e5da35d3c0e05804dff8a24",
-        "sources": "ccfc9bf357623fdb830b5ea62992ee0010d6a60299e44ed9a99ce38c3d4f6413"
+        "jar": "009229d986bfd08ab446c205ea6453c885afa9af9d1b01d694c1b8637b3b266e",
+        "sources": "3e075c3b1b0eef1ca2453b28a74222b553ffe191ad8220093964656e33264c70"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-tdb2": {
       "shasums": {
-        "jar": "61624aeea711b91e5a9841612423309c2bea5fae82038c450ef2f54d5f3cd263",
-        "sources": "906754b463cd1d09fe5618b6855a6dc9dc5fca8b13cb224c4728746ee14cd1ab"
+        "jar": "cb526a91e1b39ca0851a7a8e980c94c262815b3a0377e6f239414519219882d7",
+        "sources": "8f08ef50a83fdbad7eacc91c9da43baf343bc8de46d78587675e8f91d4086387"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-text": {
       "shasums": {
-        "jar": "8057bdd26dc2af20e84943a056832bc6c213bda5d0f8967461406f73747c2f13",
-        "sources": "983f97c696d1e87d11332b5d3236a3f8a0bcfb6effdfce677fe7c3a1e169dac7"
+        "jar": "b681f2c3b9dc0e11b6bd6a01bc59267ef64416678467f1a1c6e0af6cbd21a395",
+        "sources": "27487e067aa70b7ff5ac87d877c78b3d0d91a7750134ffd2c8f73cb955ac78b7"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.lucene:lucene-analysis-common": {
       "shasums": {
@@ -2257,10 +2257,10 @@
     },
     "org.apache.thrift:libthrift": {
       "shasums": {
-        "jar": "dfd26d55b0c88e065ec795cdf8a823128021eebd310e4895cbb4289b56445383",
-        "sources": "8496afccf06b06b57c3809983675e7aacf089b908eba1bcec52af65efd073478"
+        "jar": "b72e321ff144e3e5211964764bd45794b96fdf250085f153c44416b35df89a07",
+        "sources": "1dbed1da410790ca98bded6e38cc07cd2154bf742814c927ff7e1d8f93ae3207"
       },
-      "version": "0.22.0"
+      "version": "0.24.0"
     },
     "org.bouncycastle:bcpkix-jdk18on": {
       "shasums": {
@@ -2929,10 +2929,10 @@
     },
     "org.roaringbitmap:RoaringBitmap": {
       "shasums": {
-        "jar": "78ae7a6261b5b03f53b8db991047d06959cfadbd0b08af54bd95dda40af9acba",
-        "sources": "dee9e58cd8110debc9504f667d9276673b6f45a5298eebb02cdb9d5d0acb15fc"
+        "jar": "5ea0add939911c977289fc2dd542bd73faf39c521da79ef41e18b6cf2223e4fd",
+        "sources": "5b1761f03e04c6ad95293c1a7ac686f21ef94a155d3b154ac72652aea291c330"
       },
-      "version": "1.6.14"
+      "version": "1.6.15"
     },
     "org.scala-graph:graph-core_3": {
       "shasums": {
@@ -5168,7 +5168,8 @@
       "org.apache.commons.beanutils.locale.converters"
     ],
     "commons-cli:commons-cli": [
-      "org.apache.commons.cli"
+      "org.apache.commons.cli",
+      "org.apache.commons.cli.help"
     ],
     "commons-codec:commons-codec": [
       "org.apache.commons.codec",
@@ -6473,9 +6474,10 @@
       "org.apache.jena.mem.spliterator",
       "org.apache.jena.mem.store",
       "org.apache.jena.mem.store.fast",
+      "org.apache.jena.mem.store.indexed",
       "org.apache.jena.mem.store.legacy",
       "org.apache.jena.mem.store.roaring",
-      "org.apache.jena.mem.store.roaring.strategies",
+      "org.apache.jena.mem.store.strategies",
       "org.apache.jena.memvalue",
       "org.apache.jena.ontology",
       "org.apache.jena.ontology.impl",
