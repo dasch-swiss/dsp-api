@@ -798,6 +798,19 @@ object GravsearchParser {
     override def meet(node: algebra.Lang): Unit =
       unsupported(node)
 
+    // RDF 1.2 directional language-tagged strings (added in RDF4J 6).
+    override def meet(node: algebra.LangDir): Unit =
+      unsupported(node)
+
+    override def meet(node: algebra.StrLangDir): Unit =
+      unsupported(node)
+
+    override def meet(node: algebra.HasLang): Unit =
+      unsupported(node)
+
+    override def meet(node: algebra.HasLangDir): Unit =
+      unsupported(node)
+
     override def meet(node: algebra.Label): Unit =
       unsupported(node)
 
