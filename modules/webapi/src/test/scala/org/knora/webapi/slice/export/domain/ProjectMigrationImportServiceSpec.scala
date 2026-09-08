@@ -1142,9 +1142,11 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
             task   <- env.service.importDataExport(testProjectIri, testUser, stream)
             result <- pollUntilDone(env.service, task.id)
             _      <- cleanupImport(env, task.id)
+            // The AttachedToUserNotBuiltInShape now uses sh:or (to exempt standoff-link LinkValues), so the SHACL
+            // report names the shape via OrConstraintComponent rather than echoing the built-in user IRI.
           } yield assertTrue(
             result.status == DataTaskStatus.Failed,
-            result.errorMessage.exists(_.contains("SystemUser")),
+            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltInShape")),
           )
         }
       },
@@ -1171,7 +1173,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
             _      <- cleanupImport(env, task.id)
           } yield assertTrue(
             result.status == DataTaskStatus.Failed,
-            result.errorMessage.exists(_.contains("AnonymousUser")),
+            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltInShape")),
           )
         }
       },
