@@ -5,22 +5,16 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
-object CheckIriExistsQuery extends QueryBuilderHelper {
+object CheckIriExistsQuery {
 
-  def build(iri: SmartIri): Ask = build(toRdfIri(iri))
+  def build(iri: SmartIri): Ask = build(iri.toInternalSchema.toIri)
 
-  def build(iri: String): Ask = build(Rdf.iri(iri))
-
-  private def build(iri: Iri) = {
-    val triplePattern = iri.has(variable("p"), variable("o"))
-    val query         = s"""ASK { ${triplePattern.getQueryString} }""".stripMargin
-    Ask(query)
+  def build(iri: String): Ask = {
+    val subject = Iri.unsafeFrom(iri)
+    Ask(sparql"ASK { $subject ?p ?o . }".render)
   }
 }

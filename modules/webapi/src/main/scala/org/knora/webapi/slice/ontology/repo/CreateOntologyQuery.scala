@@ -6,23 +6,15 @@
 package org.knora.webapi.slice.ontology.repo
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreateOntologyQuery extends QueryBuilderHelper {
+object CreateOntologyQuery {
 
   def build(
     ontologyIri: OntologyIri,
@@ -31,36 +23,34 @@ object CreateOntologyQuery extends QueryBuilderHelper {
     ontologyLabel: String,
     ontologyComment: Option[NonEmptyString],
   ): UIO[(LastModificationDate, Update)] = LastModificationDate.instant.map { lmd =>
-    val ontology = toRdfIri(ontologyIri)
-    val project  = Rdf.iri(projectIri.value)
+    val ontology = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val shared   = Literal.bool(isShared)
+    val label    = Literal.string(ontologyLabel)
+    val comment  = ontologyComment.map(c => Literal.string(c.value))
+    val created  = Literal.dateTime(lmd.value)
 
-    val basePattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.attachedToProject, project)
-      .andHas(KB.isShared, Rdf.literalOf(isShared))
-      .andHas(RDFS.LABEL, Rdf.literalOfType(ontologyLabel, XSD.STRING))
-
-    val withComment = ontologyComment.fold(basePattern) { comment =>
-      basePattern.andHas(RDFS.COMMENT, Rdf.literalOfType(comment.value, XSD.STRING))
-    }
-
-    val insertPattern = withComment.andHas(KB.lastModificationDate, toRdfLiteral(lmd))
-
-    val existingOntologyType = variable("existingOntologyType")
-    val filterNotExists      = GraphPatterns.filterNotExists(ontology.isA(existingOntologyType))
-
-    // Workaround: rdf4j drops FILTER NOT EXISTS when it's the only WHERE pattern.
-    // See https://github.com/eclipse-rdf4j/rdf4j/issues/5561
-    val insertQuery = Queries
-      .MODIFY()
-      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS)
-      .insert(insertPattern)
-      .into(ontology)
-      .getQueryString
-      .replaceFirst("WHERE \\{\\s*}", "")
-      .strip()
-
-    val sparql = s"$insertQuery\nWHERE { ${filterNotExists.getQueryString} }"
-    (lmd, Update(sparql))
+    val update = Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:attachedToProject $project ;
+               |      knora-base:isShared $shared ;
+               |      rdfs:label $label ;
+               |      ${comment.whenSome(c => sparql"rdfs:comment $c ;")}
+               |      knora-base:lastModificationDate $created .
+               |  }
+               |}
+               |WHERE {
+               |  FILTER NOT EXISTS { $ontology a ?existingOntologyType . }
+               |}""".render,
+    )
+    (lmd, update)
   }
 }
