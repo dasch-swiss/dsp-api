@@ -12,6 +12,7 @@ import swiss.dasch.domain.AssetId as IngestAssetId
 import swiss.dasch.domain.AssetInfoService
 import swiss.dasch.domain.AssetInfoServiceLive
 import swiss.dasch.domain.AssetRef
+import swiss.dasch.domain.MimeTypeGuesser
 import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
 import swiss.dasch.domain.StorageServiceLive
 import zio.*
@@ -116,7 +117,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   private val assetInfoServiceLayer: ULayer[AssetInfoService] =
     ZLayer.succeed(StorageConfig(assetDir.toString, assetDir.toString)) >>>
-      StorageServiceLive.layer >>> ZLayer.derive[AssetInfoServiceLive]
+      (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
 
   private def assetRefOf(assetId: String): IO[IllegalArgumentException, AssetRef] =
     ZIO
