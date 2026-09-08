@@ -129,6 +129,7 @@ class ImportServiceSpec extends ZIOSpecDefault {
       },
     ).provide(
       AssetInfoServiceLive.layer,
+      MimeTypeGuesser.layer,
       FileChecksumServiceLive.layer,
       ImportServiceLive.layer,
       ProjectService.layer,

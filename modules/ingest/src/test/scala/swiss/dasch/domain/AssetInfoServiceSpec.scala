@@ -160,6 +160,7 @@ class AssetInfoServiceSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("AssetInfoServiceSpec")(findByAssetRefSuite).provide(
       AssetInfoServiceLive.layer,
+      MimeTypeGuesser.layer,
       StorageServiceLive.layer,
       SpecConfigurations.storageConfigLayer,
     )
