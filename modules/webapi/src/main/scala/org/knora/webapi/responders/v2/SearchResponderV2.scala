@@ -1129,7 +1129,7 @@ final class SearchResponderV2Live(
                    limit = appConfig.v2.resourcesSequence.resultsPerPage,
                    offset = page * appConfig.v2.resourcesSequence.resultsPerPage,
                  )
-      sparqlSelectResponse      <- triplestore.query(Select(prequery))
+      sparqlSelectResponse      <- triplestore.query(prequery)
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.getColOrThrow("resource")
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
