@@ -5,19 +5,12 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-object GetResourcesByClassInProjectPrequery extends QueryBuilderHelper {
+object GetResourcesByClassInProjectPrequery {
 
   def build(
     projectIri: IRI,
@@ -26,67 +19,48 @@ object GetResourcesByClassInProjectPrequery extends QueryBuilderHelper {
     maybeOrderByValuePredicate: Option[SmartIri],
     offset: Int,
     limit: Int,
-  ): SelectQuery = {
-    val resource = variable("resource")
+  ): Select = {
+    val project       = Iri.unsafeFrom(projectIri)
+    val resourceClass = Iri.unsafeFrom(resourceClassIri.toInternalSchema.toIri)
 
-    val basePattern = resource
-      .has(KnoraBase.attachedToProject, Rdf.iri(projectIri))
-      .andHas(Rdf.iri(RDF.TYPE.stringValue()), toRdfIri(resourceClassIri))
-
-    val notDeleted = GraphPatterns.filterNotExists(
-      resource.has(KnoraBase.isDeleted, Rdf.literalOf(true)),
-    )
-
-    var wherePattern = basePattern.and(notDeleted)
-
-    val query = maybeOrderByProperty match {
+    // When ordering is requested, the OPTIONAL block binds the resource's lowest value for the
+    // order-by property (the inner FILTER NOT EXISTS rules out any smaller one), and the query is
+    // ordered by that literal first. The inner group braces are kept as the previous builder emitted
+    // them; NOT EXISTS substitutes the outer bindings before evaluating, so they are semantically inert.
+    val (orderByOptional, orderByClause) = maybeOrderByProperty match {
       case Some(orderByProperty) =>
-        val orderByValue             = variable("orderByValue")
-        val orderByValueLiteral      = variable("orderByValueLiteral")
-        val otherOrderByValue        = variable("otherOrderByValue")
-        val otherOrderByValueLiteral = variable("otherOrderByValueLiteral")
-
-        val orderByPropIri = toRdfIri(orderByProperty)
-        val valuePredIri   = toRdfIri(maybeOrderByValuePredicate.get)
-
-        val innerNotExists = GraphPatterns.filterNotExists(
-          resource
-            .has(orderByPropIri, otherOrderByValue)
-            .and(
-              otherOrderByValue
-                .has(valuePredIri, otherOrderByValueLiteral)
-                .filter(Expressions.lt(otherOrderByValueLiteral, orderByValueLiteral)),
-            ),
-        )
-
-        val optionalBlock = resource
-          .has(orderByPropIri, orderByValue)
-          .and(orderByValue.has(valuePredIri, orderByValueLiteral))
-          .and(innerNotExists)
-          .optional()
-
-        wherePattern = wherePattern.and(optionalBlock)
-
-        Queries
-          .SELECT(resource)
-          .distinct()
-          .prefix(KnoraBase.NS, RDF.NS)
-          .where(wherePattern)
-          .orderBy(orderByValueLiteral.asc(), resource.asc())
-          .offset(offset)
-          .limit(limit)
-
-      case None =>
-        Queries
-          .SELECT(resource)
-          .distinct()
-          .prefix(KnoraBase.NS, RDF.NS)
-          .where(wherePattern)
-          .orderBy(resource.asc())
-          .offset(offset)
-          .limit(limit)
+        val orderByProp = Iri.unsafeFrom(orderByProperty.toInternalSchema.toIri)
+        val valuePred   = Iri.unsafeFrom(maybeOrderByValuePredicate.get.toInternalSchema.toIri)
+        val optional    =
+          sparql"""|OPTIONAL {
+                   |  ?resource $orderByProp ?orderByValue .
+                   |  ?orderByValue $valuePred ?orderByValueLiteral .
+                   |  FILTER NOT EXISTS {
+                   |    ?resource $orderByProp ?otherOrderByValue .
+                   |    {
+                   |      ?otherOrderByValue $valuePred ?otherOrderByValueLiteral .
+                   |      FILTER(?otherOrderByValueLiteral < ?orderByValueLiteral)
+                   |    }
+                   |  }
+                   |}"""
+        (optional, sparql"ASC(?orderByValueLiteral) ASC(?resource)")
+      case None => (Fragment.empty, sparql"ASC(?resource)")
     }
 
-    query
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |
+               |SELECT DISTINCT ?resource
+               |WHERE {
+               |  ?resource knora-base:attachedToProject $project ;
+               |    rdf:type $resourceClass .
+               |  FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+               |  $orderByOptional
+               |}
+               |ORDER BY $orderByClause
+               |OFFSET ${Literal.int(offset)}
+               |LIMIT ${Literal.int(limit)}""".render,
+    )
   }
 }

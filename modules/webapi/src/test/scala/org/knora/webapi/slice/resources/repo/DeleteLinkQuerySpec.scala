@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
@@ -22,6 +23,12 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeleteLinkQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -71,7 +78,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -109,6 +116,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
               |    knora-base:isDeleted false ;
               |    knora-base:valueHasUUID ?currentLinkUUID .
               |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin,
+          ),
         )
       },
       test("should produce correct query for deleting a link with a delete comment") {
@@ -122,7 +130,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -161,6 +169,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
               |    knora-base:isDeleted false ;
               |    knora-base:valueHasUUID ?currentLinkUUID .
               |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin,
+          ),
         )
       },
       test("should produce correct query for different link property") {
@@ -182,7 +191,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
                      UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaUser"),
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -220,6 +229,7 @@ class DeleteLinkQuerySpec extends ZIOSpecDefault {
               |    knora-base:isDeleted false ;
               |    knora-base:valueHasUUID ?currentLinkUUID .
               |OPTIONAL { <http://rdfh.ch/0803/page123> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin,
+          ),
         )
       },
     ),

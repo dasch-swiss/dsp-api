@@ -5,27 +5,18 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
 import dsp.errors.BadRequestException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangeResourceMetadataQuery extends QueryBuilderHelper {
+object ChangeResourceMetadataQuery {
 
   def build(
     project: KnoraProject,
@@ -50,61 +41,60 @@ object ChangeResourceMetadataQuery extends QueryBuilderHelper {
       }
 
     newModificationDateEffect.map { newModificationDate =>
-      val dataGraph               = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-      val resource                = toRdfIri(resourceIri)
-      val resourceClass           = toRdfIri(resourceClassIri)
-      val oldLabel                = variable("oldLabel")
-      val oldPermissions          = variable("oldPermissions")
-      val anyLastModificationDate = variable("anyLastModificationDate")
+      val dataGraph     = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+      val resource      = Iri.unsafeFrom(resourceIri.value)
+      val resourceClass = Iri.unsafeFrom(resourceClassIri.toInternalSchema.toIri)
+      val newDate       = Literal.dateTime(newModificationDate.value)
+      val currentDate   = maybeLastModificationDate.map(lmd => Literal.dateTime(lmd.value))
 
-      // Build DELETE patterns - delete old values only if we're replacing them
-      val deletePatterns: List[TriplePattern] = {
-        val lastModDelete =
-          maybeLastModificationDate.map(toRdfLiteral).map(resource.has(KB.lastModificationDate, _)).toList
-        val labelDelete       = maybeLabel.map(_ => resource.has(RDFS.LABEL, oldLabel)).toList
-        val permissionsDelete = maybePermissions.map(_ => resource.has(KB.hasPermissions, oldPermissions)).toList
-        lastModDelete ::: labelDelete ::: permissionsDelete
-      }
+      // DELETE the previous last modification date (if any) and the old values that are being replaced.
+      val lastModDelete     = currentDate.whenSome(d => sparql"$resource knora-base:lastModificationDate $d .")
+      val labelDelete       = maybeLabel.whenSome(_ => sparql"$resource rdfs:label ?oldLabel .")
+      val permissionsDelete =
+        maybePermissions.whenSome(_ => sparql"$resource knora-base:hasPermissions ?oldPermissions .")
 
-      // Build INSERT patterns - always insert new modification date, plus label and/or permissions if provided
-      val insertPatterns: List[TriplePattern] = {
-        val modificationDateInsert = resource.has(KB.lastModificationDate, toRdfLiteral(newModificationDate))
-        val labelInsert            = maybeLabel.map(resource.has(RDFS.LABEL, _)).toList
-        val permissionsInsert      = maybePermissions.map(resource.has(KB.hasPermissions, _)).toList
-        modificationDateInsert :: (labelInsert ::: permissionsInsert)
-      }
+      // INSERT the new modification date, plus label and/or permissions if provided.
+      val labelInsert       = maybeLabel.whenSome(label => sparql"$resource rdfs:label ${Literal.string(label)} .")
+      val permissionsInsert =
+        maybePermissions.whenSome(p => sparql"$resource knora-base:hasPermissions ${Literal.string(p)} .")
 
-      // Build WHERE patterns - check resource exists with correct type and lastModificationDate
-      val wherePatterns: List[GraphPattern] = {
-        val resourceTypePattern = resource.isA(resourceClass)
+      // WHERE: the resource must exist with the expected class and lastModificationDate.
+      val lastModWhere = currentDate.fold(
+        sparql"FILTER NOT EXISTS { $resource knora-base:lastModificationDate ?anyLastModificationDate . }",
+      )(d => sparql"$resource knora-base:lastModificationDate $d .")
 
-        val lastModPattern: GraphPattern = maybeLastModificationDate match {
-          case Some(lmd) => resource.has(KB.lastModificationDate, toRdfLiteral(lmd))
-          case None      => // If no lastModificationDate provided, ensure the resource doesn't have one
-            GraphPatterns.filterNotExists(resource.has(KB.lastModificationDate, anyLastModificationDate))
-        }
+      val labelWhere       = maybeLabel.whenSome(_ => sparql"OPTIONAL { $resource rdfs:label ?oldLabel . }")
+      val permissionsWhere =
+        maybePermissions.whenSome(_ => sparql"OPTIONAL { $resource knora-base:hasPermissions ?oldPermissions . }")
 
-        val labelPattern =
-          maybeLabel.map(_ => resource.has(RDFS.LABEL, oldLabel).optional()).toList
-
-        val permissionsPattern =
-          maybePermissions.map(_ => resource.has(KB.hasPermissions, oldPermissions).optional()).toList
-
-        List(resourceTypePattern, lastModPattern) ::: labelPattern ::: permissionsPattern
-      }
-
-      // `WITH <graph>` scopes the named graph to the WHERE clause too, not just DELETE/INSERT;
+      // WITH <graph> scopes the named graph to the WHERE clause too, not just DELETE/INSERT;
       // an ungraphed WHERE matches the default graph, which is empty (so the update no-ops) on a
       // store without a union default graph, e.g. the in-memory test store. Safe only because the
       // WHERE matches the resource's own data-graph triples; a cross-graph pattern (e.g. an ontology
-      // check) would need USING/GRAPH. (`with` is backticked because it is a Scala keyword.)
-      val query = Queries
-        .MODIFY()
-        .prefix(KB.NS, RDFS.NS, XSD.NS, RDF.NS)
-        .`with`(dataGraph)
-        .delete(deletePatterns*)
-        .insert(insertPatterns*)
-        .where(wherePatterns*)
+      // check) would need USING/GRAPH.
+      val query =
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |
+                 |WITH $dataGraph
+                 |DELETE {
+                 |  $lastModDelete
+                 |  $labelDelete
+                 |  $permissionsDelete
+                 |}
+                 |INSERT {
+                 |  $resource knora-base:lastModificationDate $newDate .
+                 |  $labelInsert
+                 |  $permissionsInsert
+                 |}
+                 |WHERE {
+                 |  $resource a $resourceClass .
+                 |  $lastModWhere
+                 |  $labelWhere
+                 |  $permissionsWhere
+                 |}""".render
 
       (newModificationDate, Update(query))
     }

@@ -5,23 +5,17 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
+import zio.ZIO
 
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Deletes an existing link between two resources.
@@ -32,7 +26,10 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
  * 3. Creates a new version of the LinkValue marked as deleted with reference count 0
  * 4. Updates the link source's last modification date
  */
-object DeleteLinkQuery extends QueryBuilderHelper {
+object DeleteLinkQuery {
+
+  private def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
+    ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   /**
    * Builds a SPARQL UPDATE query to delete a link between two resources.
@@ -51,92 +48,86 @@ object DeleteLinkQuery extends QueryBuilderHelper {
     maybeComment: Option[String],
     deletedAt: Instant,
     userIri: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] =
+  ): IO[SparqlGenerationException, Update] =
     for {
       _ <- failIf(!linkUpdate.deleteDirectLink, "linkUpdate.deleteDirectLink must be true in this SPARQL template")
       _ <- failIf(!linkUpdate.linkValueExists, "linkUpdate.linkValueExists must be true in this SPARQL template")
       _ <- failIf(!linkUpdate.directLinkExists, "linkUpdate.directLinkExists must be true in this SPARQL template")
       _ <- failIf(linkUpdate.newReferenceCount != 0, "linkUpdate.newReferenceCount must be 0 in this SPARQL template")
     } yield {
-      val dataGraph                      = Rdf.iri(dataNamedGraph)
-      val linkSource                     = Rdf.iri(linkSourceIri)
-      val linkProperty                   = toRdfIri(linkUpdate.linkPropertyIri)
-      val linkValueProperty              = Rdf.iri(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
-      val linkTarget                     = Rdf.iri(linkUpdate.linkTargetIri)
-      val newLinkValue                   = Rdf.iri(linkUpdate.newLinkValueIri.value)
-      val linkSourceClass                = variable("linkSourceClass")
-      val currentLinkValue               = variable("currentLinkValue")
-      val currentLinkUUID                = variable("currentLinkUUID")
-      val linkSourceLastModificationDate = variable("linkSourceLastModificationDate")
+      val dataGraph         = Iri.unsafeFrom(dataNamedGraph)
+      val linkSource        = Iri.unsafeFrom(linkSourceIri)
+      val linkProperty      = Iri.unsafeFrom(linkUpdate.linkPropertyIri.toInternalSchema.toIri)
+      val linkValueProperty = Iri.unsafeFrom(linkUpdate.linkPropertyIri.toInternalSchema.toIri + "Value")
+      val linkTarget        = Iri.unsafeFrom(linkUpdate.linkTargetIri)
+      val newLinkValue      = Iri.unsafeFrom(linkUpdate.newLinkValueIri.value)
+      val deletedByUser     = Iri.unsafeFrom(userIri.value)
+      val newValueCreator   = Iri.unsafeFrom(linkUpdate.newLinkValueCreator)
+      val deletionDate      = Literal.dateTime(deletedAt)
 
-      // DELETE patterns
-      val deletePatterns = Seq(
-        // Delete the link source's last modification date so we can update it
-        linkSource.has(KB.lastModificationDate, linkSourceLastModificationDate),
-        // Delete the direct link
-        linkSource.has(linkProperty, linkTarget),
-        // Detach the LinkValue from the link source
-        linkSource.has(linkValueProperty, currentLinkValue),
-        // Delete the UUID from the current version of the link value
-        currentLinkValue.has(KB.valueHasUUID, currentLinkUUID),
+      val commentInsert =
+        maybeComment.whenSome(comment => sparql"$newLinkValue knora-base:deleteComment ${Literal.string(comment)} .")
+
+      Update(
+        sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |
+                 |DELETE {
+                 |  GRAPH $dataGraph {
+                 |    # Delete the link source's last modification date so we can update it
+                 |    $linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+                 |    # Delete the direct link
+                 |    $linkSource $linkProperty $linkTarget .
+                 |    # Detach the LinkValue from the link source
+                 |    $linkSource $linkValueProperty ?currentLinkValue .
+                 |    # Delete the UUID from the current version of the link value
+                 |    ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $dataGraph {
+                 |    $newLinkValue a knora-base:LinkValue ;
+                 |      rdf:subject $linkSource ;
+                 |      rdf:predicate $linkProperty ;
+                 |      rdf:object $linkTarget ;
+                 |      knora-base:valueHasString ${Literal.string(linkUpdate.linkTargetIri)} ;
+                 |      knora-base:valueHasRefCount ${Literal.int(linkUpdate.newReferenceCount)} ;
+                 |      knora-base:valueCreationDate $deletionDate ;
+                 |      knora-base:deleteDate $deletionDate ;
+                 |      knora-base:deletedBy $deletedByUser ;
+                 |      knora-base:previousValue ?currentLinkValue ;
+                 |      knora-base:valueHasUUID ?currentLinkUUID ;
+                 |      knora-base:isDeleted true ;
+                 |      knora-base:attachedToUser $newValueCreator ;
+                 |      knora-base:hasPermissions ${Literal.string(linkUpdate.newLinkValuePermissions)} .
+                 |    # Attach the new LinkValue to its containing resource
+                 |    $linkSource $linkValueProperty $newLinkValue .
+                 |    # Update the link source's last modification date
+                 |    $linkSource knora-base:lastModificationDate $deletionDate .
+                 |    $commentInsert
+                 |  }
+                 |}
+                 |WHERE {
+                 |  # Check that the link source exists, is not deleted, and is a knora-base:Resource
+                 |  $linkSource a ?linkSourceClass ;
+                 |    knora-base:isDeleted false .
+                 |  ?linkSourceClass rdfs:subClassOf* knora-base:Resource .
+                 |  # Make sure a direct link exists between the two resources
+                 |  $linkSource $linkProperty $linkTarget .
+                 |  # Make sure a LinkValue exists describing the direct link with the correct reference count
+                 |  $linkSource $linkValueProperty ?currentLinkValue .
+                 |  ?currentLinkValue a knora-base:LinkValue ;
+                 |    rdf:subject $linkSource ;
+                 |    rdf:predicate $linkProperty ;
+                 |    rdf:object $linkTarget ;
+                 |    knora-base:valueHasRefCount ${Literal.int(linkUpdate.currentReferenceCount)} ;
+                 |    knora-base:isDeleted false ;
+                 |    knora-base:valueHasUUID ?currentLinkUUID .
+                 |  # Get the link source's last modification date, if it has one, so we can update it
+                 |  OPTIONAL { $linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate . }
+                 |}""".render,
       )
-
-      // INSERT patterns - build new LinkValue
-      val baseLinkValueInserts = Seq(
-        newLinkValue.isA(KB.linkValue),
-        newLinkValue.has(RDF.SUBJECT, linkSource),
-        newLinkValue.has(RDF.PREDICATE, linkProperty),
-        newLinkValue.has(RDF.OBJECT, linkTarget),
-        newLinkValue.has(KB.valueHasString, Rdf.literalOfType(linkUpdate.linkTargetIri, XSD.STRING)),
-        newLinkValue.has(KB.valueHasRefCount, Rdf.literalOf(linkUpdate.newReferenceCount)),
-        newLinkValue.has(KB.valueCreationDate, toRdfLiteral(deletedAt)),
-        newLinkValue.has(KB.deleteDate, toRdfLiteral(deletedAt)),
-        newLinkValue.has(KB.deletedBy, toRdfIri(userIri)),
-        newLinkValue.has(KB.previousValue, currentLinkValue),
-        newLinkValue.has(KB.valueHasUUID, currentLinkUUID),
-        newLinkValue.has(KB.isDeleted, Rdf.literalOf(true)),
-        newLinkValue.has(KB.attachedToUser, Rdf.iri(linkUpdate.newLinkValueCreator)),
-        newLinkValue.has(KB.hasPermissions, Rdf.literalOfType(linkUpdate.newLinkValuePermissions, XSD.STRING)),
-        // Attach the new LinkValue to its containing resource
-        linkSource.has(linkValueProperty, newLinkValue),
-        // Update the link source's last modification date
-        linkSource.has(KB.lastModificationDate, toRdfLiteral(deletedAt)),
-      )
-
-      val commentInsert = maybeComment.map(comment => newLinkValue.has(KB.deleteComment, Rdf.literalOf(comment))).toSeq
-
-      val insertPatterns = baseLinkValueInserts ++ commentInsert
-
-      // WHERE patterns - verify preconditions (flat structure matching original Twirl template)
-      val subClassOfPath = zeroOrMore(RDFS.SUBCLASSOF)
-
-      val wherePatterns: Seq[GraphPattern] = Seq(
-        // Check link source exists, is not deleted, and is a knora-base:Resource
-        linkSource.isA(linkSourceClass).andHas(KB.isDeleted, Rdf.literalOf(false)),
-        linkSourceClass.has(subClassOfPath, KB.Resource),
-        // Make sure a direct link exists between the two resources
-        linkSource.has(linkProperty, linkTarget),
-        // Make sure a LinkValue exists describing the direct link with correct reference count
-        linkSource.has(linkValueProperty, currentLinkValue),
-        currentLinkValue
-          .isA(KB.linkValue)
-          .andHas(RDF.SUBJECT, linkSource)
-          .andHas(RDF.PREDICATE, linkProperty)
-          .andHas(RDF.OBJECT, linkTarget)
-          .andHas(KB.valueHasRefCount, Rdf.literalOf(linkUpdate.currentReferenceCount))
-          .andHas(KB.isDeleted, Rdf.literalOf(false))
-          .andHas(KB.valueHasUUID, currentLinkUUID),
-        // Get the link source's last modification date, if it has one, so we can update it
-        linkSource.has(KB.lastModificationDate, linkSourceLastModificationDate).optional(),
-      )
-
-      Queries
-        .MODIFY()
-        .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
-        .from(dataGraph)
-        .delete(deletePatterns*)
-        .into(dataGraph)
-        .insert(insertPatterns*)
-        .where(wherePatterns*)
     }
 }
