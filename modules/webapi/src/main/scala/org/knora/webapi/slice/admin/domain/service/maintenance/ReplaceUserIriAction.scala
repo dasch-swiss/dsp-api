@@ -5,25 +5,22 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.ConflictException
 import dsp.errors.NotFoundException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) extends QueryBuilderHelper {
+final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) {
 
   def execute(oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
     for {
@@ -38,40 +35,26 @@ final case class ReplaceUserIriAction(triplestoreService: TriplestoreService) ex
       _ <- ZIO.logInfo(s"Replaced user IRI ${oldIri.value} with ${newIri.value} (requested by ${requester.id})")
     } yield ()
 
-  private def existsInAdminGraph(iri: UserIri): Ask = {
-    val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
-    val iriRdf        = Rdf.iri(iri.value)
-    val p             = variable("p")
-    val o             = variable("o")
-    Ask(s"""ASK { ${GraphPatterns.tp(iriRdf, p, o).from(adminGraphIri).getQueryString} }""")
+  private[maintenance] def existsInAdminGraph(iri: UserIri): Ask = {
+    val adminGraph = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+    val user       = Iri.unsafeFrom(iri.value)
+    Ask(sparql"ASK { GRAPH $adminGraph { $user ?p ?o . } }".render)
   }
 
-  private def replaceUpdate(oldIri: UserIri, newIri: UserIri): Update = {
-    val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
-    val oldIriRdf     = Rdf.iri(oldIri.value)
-    val newIriRdf     = Rdf.iri(newIri.value)
-    val p             = variable("p")
-    val o             = variable("o")
-    val s             = variable("s")
-    val p2            = variable("p2")
-    val g             = variable("g")
-
-    val partA = Queries
-      .MODIFY()
-      .`with`(adminGraphIri)
-      .delete(oldIriRdf.has(p, o))
-      .insert(newIriRdf.has(p, o))
-      .where(oldIriRdf.has(p, o))
-
-    val partB = Queries
-      .MODIFY()
-      .delete(GraphPatterns.tp(s, p2, oldIriRdf))
-      .from(g)
-      .insert(GraphPatterns.tp(s, p2, newIriRdf))
-      .into(g)
-      .where(GraphPatterns.tp(s, p2, oldIriRdf).from(g))
-
-    Update(partA.getQueryString + ";\n" + partB.getQueryString, SparqlTimeout.Maintenance)
+  private[maintenance] def replaceUpdate(oldIri: UserIri, newIri: UserIri): Update = {
+    val adminGraph = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+    val oldUser    = Iri.unsafeFrom(oldIri.value)
+    val newUser    = Iri.unsafeFrom(newIri.value)
+    Update(
+      sparql"""|WITH $adminGraph
+               |DELETE { $oldUser ?p ?o . }
+               |INSERT { $newUser ?p ?o . }
+               |WHERE { $oldUser ?p ?o . };
+               |DELETE { GRAPH ?g { ?s ?p2 $oldUser . } }
+               |INSERT { GRAPH ?g { ?s ?p2 $newUser . } }
+               |WHERE { GRAPH ?g { ?s ?p2 $oldUser . } }""".render,
+      SparqlTimeout.Maintenance,
+    )
   }
 }
 

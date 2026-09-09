@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.UUID
 
+import org.knora.sparqlbuilder.Iri
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.StringFormatter
@@ -179,6 +180,22 @@ class TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
           for {
             result <- ZIO.serviceWithZIO[TriplestoreService](_.query(Ask(query))).negate
           } yield assertTrue(result)
+        },
+      ),
+      suite("isIriInObjectPosition")(
+        test("should return true for an IRI that occurs in object position") {
+          for {
+            result <- ZIO.serviceWithZIO[TriplestoreService](
+                        _.isIriInObjectPosition(Iri.unsafeFrom(Biblio.Class.Article.value)),
+                      )
+          } yield assertTrue(result)
+        },
+        test("should return false for an IRI that does not occur in object position") {
+          for {
+            result <- ZIO.serviceWithZIO[TriplestoreService](
+                        _.isIriInObjectPosition(Iri.unsafeFrom("http://rdfh.ch/0001/nonexisting")),
+                      )
+          } yield assertTrue(!result)
         },
       ),
       suite("SELECT")(
