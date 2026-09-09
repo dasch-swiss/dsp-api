@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
+import org.apache.jena.query.QueryFactory
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
@@ -61,6 +63,18 @@ class ReplaceUserIriActionSpec extends ZIOSpecDefault {
     )
 
   private def service = ZIO.serviceWithZIO[ReplaceUserIriAction]
+
+  private def canonicalAsk(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
+  private def canonicalUpdate(query: String): String = {
+    val parsed = UpdateFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
 
   val spec: Spec[Any, Throwable] = suite("ReplaceUserIriAction")(
     suite("execute - happy path")(
@@ -137,6 +151,31 @@ class ReplaceUserIriActionSpec extends ZIOSpecDefault {
           _   <- TestTripleStore.setDatasetFromTriG(conflictFixture)
           res <- service(_.execute(oldIri, newIri, requester)).exit
         } yield assert(res)(Assertion.failsWithA[ConflictException])
+      },
+    ),
+    suite("query rendering")(
+      test("existsInAdminGraph renders the legacy ASK") {
+        for {
+          actual <- service(a => ZIO.succeed(a.existsInAdminGraph(oldIri).sparql))
+        } yield assertTrue(
+          canonicalAsk(actual) ==
+            canonicalAsk(s"ASK { GRAPH <$adminGraph> { <${oldIri.value}> ?p ?o . } }"),
+        )
+      },
+      test("replaceUpdate renders the legacy two-operation update") {
+        for {
+          actual <- service(a => ZIO.succeed(a.replaceUpdate(oldIri, newIri).sparql))
+        } yield assertTrue(
+          canonicalUpdate(actual) == canonicalUpdate(
+            s"""WITH <$adminGraph>
+               |DELETE { <${oldIri.value}> ?p ?o . }
+               |INSERT { <${newIri.value}> ?p ?o . }
+               |WHERE { <${oldIri.value}> ?p ?o . };
+               |DELETE { GRAPH ?g { ?s ?p2 <${oldIri.value}> . } }
+               |INSERT { GRAPH ?g { ?s ?p2 <${newIri.value}> . } }
+               |WHERE { GRAPH ?g { ?s ?p2 <${oldIri.value}> . } }""".stripMargin,
+          ),
+        )
       },
     ),
   ).provide(
