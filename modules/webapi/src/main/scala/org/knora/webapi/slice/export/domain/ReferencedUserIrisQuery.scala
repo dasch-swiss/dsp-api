@@ -5,24 +5,21 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-object ReferencedUserIrisQuery extends QueryBuilderHelper {
+object ReferencedUserIrisQuery {
 
-  def build(dataNamedGraph: InternalIri): SelectQuery = {
-    val user     = variable("user")
-    val resource = variable("resource")
-    Queries
-      .SELECT(user)
-      .distinct()
-      .where(
-        resource.has(KB.attachedToUser, user).from(Rdf.iri(dataNamedGraph.value)),
-      )
+  def build(dataNamedGraph: InternalIri): Select = {
+    val dataGraph = Iri.unsafeFrom(dataNamedGraph.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT DISTINCT ?user
+               |WHERE {
+               |  GRAPH $dataGraph { ?resource knora-base:attachedToUser ?user . }
+               |}""".render,
+    )
   }
 }
