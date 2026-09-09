@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
+import org.apache.jena.query.QueryFactory
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.*
@@ -73,6 +75,18 @@ class ReplaceUserIriInProjectActionSpec extends ZIOSpecDefault {
     )
 
   private def service = ZIO.serviceWithZIO[ReplaceUserIriInProjectAction]
+
+  private def canonicalAsk(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
+  private def canonicalUpdate(query: String): String = {
+    val parsed = UpdateFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
 
   val spec: Spec[Any, Throwable] = suite("ReplaceUserIriInProjectAction")(
     suite("execute - happy path")(
@@ -192,6 +206,47 @@ class ReplaceUserIriInProjectActionSpec extends ZIOSpecDefault {
           _   <- TestTripleStore.setDatasetFromTriG(fixtureNoRefs)
           res <- service(_.execute(testProject.shortcode, oldIri, newIri, requester)).exit
         } yield assert(res)(Assertion.failsWithA[NotFoundException])
+      },
+    ),
+    suite("query rendering")(
+      test("existsInAdminGraph renders the legacy ASK") {
+        for {
+          actual <- service(a => ZIO.succeed(a.existsInAdminGraph(oldIri).sparql))
+        } yield assertTrue(
+          canonicalAsk(actual) ==
+            canonicalAsk(s"ASK { GRAPH <$adminGraph> { <${oldIri.value}> ?p ?o . } }"),
+        )
+      },
+      test("isMemberOfProject renders the legacy ASK") {
+        for {
+          actual <- service(a => ZIO.succeed(a.isMemberOfProject(newIri, testProject).sparql))
+        } yield assertTrue(
+          canonicalAsk(actual) == canonicalAsk(
+            s"""ASK { GRAPH <$adminGraph> { <${newIri.value}>
+               |  <http://www.knora.org/ontology/knora-admin#isInProject>
+               |  <${testProject.id.value}> . } }""".stripMargin,
+          ),
+        )
+      },
+      test("hasRefsInProjectGraph renders the legacy ASK") {
+        for {
+          actual <- service(a => ZIO.succeed(a.hasRefsInProjectGraph(oldIri, testProject).sparql))
+        } yield assertTrue(
+          canonicalAsk(actual) ==
+            canonicalAsk(s"ASK { GRAPH <$projectAGraph> { ?s ?p <${oldIri.value}> . } }"),
+        )
+      },
+      test("replaceInProjectGraph renders the legacy WITH update") {
+        for {
+          actual <- service(a => ZIO.succeed(a.replaceInProjectGraph(oldIri, newIri, testProject).sparql))
+        } yield assertTrue(
+          canonicalUpdate(actual) == canonicalUpdate(
+            s"""WITH <$projectAGraph>
+               |DELETE { ?s ?p <${oldIri.value}> . }
+               |INSERT { ?s ?p <${newIri.value}> . }
+               |WHERE { ?s ?p <${oldIri.value}> . }""".stripMargin,
+          ),
+        )
       },
     ),
   ).provide(

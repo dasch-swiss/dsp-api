@@ -4,13 +4,13 @@
  */
 
 package org.knora.webapi.slice.admin.domain.service
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.UpdateNotPerformedException
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.DefaultObjectAccessPermissionPart
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat
@@ -46,7 +46,7 @@ final class DefaultObjectAccessPermissionService(
   def delete(entity: DefaultObjectAccessPermission): Task[Unit] = for {
     _ <- ZIO
            .fail(UpdateNotPerformedException(s"Permission ${entity.id} is in use and cannot be deleted."))
-           .whenZIO(triplestore.isIriInObjectPosition(Rdf.iri(entity.id.value)))
+           .whenZIO(triplestore.isIriInObjectPosition(Iri.unsafeFrom(entity.id.value)))
     _ <- repo.delete(entity)
   } yield ()
 
