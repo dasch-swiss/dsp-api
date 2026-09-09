@@ -5,25 +5,15 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
+object ChangePropertyGuiElementQuery {
 
   def build(
     ontologyIri: OntologyIri,
@@ -34,123 +24,57 @@ object ChangePropertyGuiElementQuery extends QueryBuilderHelper {
     lastModificationDate: Instant,
     currentTime: Instant,
   ): Update = {
-    val ontology = toRdfIri(ontologyIri)
-    val property = toRdfIri(propertyIri)
-    val linkProp = maybeLinkValuePropertyIri.map(toRdfIri)
+    val ontology = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val property = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
+    // A link property's link value property carries the same GUI element and attributes,
+    // so it is cleared and re-set alongside the property itself.
+    val linkProperty  = maybeLinkValuePropertyIri.map(iri => Iri.unsafeFrom(iri.toInternalSchema.toIri))
+    val guiElement    = maybeNewGuiElement.map(iri => Iri.unsafeFrom(iri.toInternalSchema.toIri))
+    val guiAttributes = newGuiAttributes.toList.map(Literal.string)
+    val previousDate  = Literal.dateTime(lastModificationDate)
+    val currentDate   = Literal.dateTime(currentTime)
 
-    val deleteOld      = buildDeleteOldQuery(ontology, property, linkProp, lastModificationDate)
-    val maybeInsertNew = buildInsertNewQuery(
-      ontology,
-      property,
-      linkProp,
-      maybeNewGuiElement,
-      newGuiAttributes,
-      lastModificationDate,
+    Update(
+      sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $previousDate .
+               |    $property salsah-gui:guiElement ?oldGuiElement .
+               |    $property salsah-gui:guiAttribute ?oldGuiAttribute .
+               |    ${linkProperty.whenSome(lp => sparql"$lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .")}
+               |    ${linkProperty.whenSome(lp =>
+          sparql"$lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .",
+        )}
+               |  }
+               |}
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $currentDate .
+               |    ${guiElement.whenSome(e => sparql"$property salsah-gui:guiElement $e .")}
+               |    ${guiAttributes.map(a => sparql"$property salsah-gui:guiAttribute $a .").joinLines}
+               |    ${linkProperty.whenSome(lp => guiElement.whenSome(e => sparql"$lp salsah-gui:guiElement $e ."))}
+               |    ${linkProperty.whenSome(lp =>
+          guiAttributes.map(a => sparql"$lp salsah-gui:guiAttribute $a .").joinLines,
+        )}
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |    OPTIONAL { $property salsah-gui:guiElement ?oldGuiElement . }
+               |    OPTIONAL { $property salsah-gui:guiAttribute ?oldGuiAttribute . }
+               |    ${linkProperty.whenSome(lp =>
+          sparql"OPTIONAL { $lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement . }",
+        )}
+               |    ${linkProperty.whenSome(lp =>
+          sparql"OPTIONAL { $lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . }",
+        )}
+               |  }
+               |}""".render,
     )
-    val updateTimestamp = buildUpdateTimestampQuery(ontology, lastModificationDate, currentTime)
-
-    val queries = List(Some(deleteOld.getQueryString), maybeInsertNew, Some(updateTimestamp.getQueryString)).flatten
-    Update(queries.mkString(";\n"))
-  }
-
-  private def buildDeleteOldQuery(
-    ontology: Iri,
-    property: Iri,
-    maybeLinkProp: Option[Iri],
-    lastModificationDate: Instant,
-  ) = {
-    val oldGuiElement   = variable("oldGuiElement")
-    val oldGuiAttribute = variable("oldGuiAttribute")
-
-    val deletePatterns: List[TriplePattern] =
-      List(
-        property.has(SalsahGui.guiElement, oldGuiElement),
-        property.has(SalsahGui.guiAttribute, oldGuiAttribute),
-      ) ::: maybeLinkProp.toList.flatMap { lp =>
-        val oldLinkGuiElement   = variable("oldLinkValuePropertyGuiElement")
-        val oldLinkGuiAttribute = variable("oldLinkValuePropertyGuiAttribute")
-        List(
-          lp.has(SalsahGui.guiElement, oldLinkGuiElement),
-          lp.has(SalsahGui.guiAttribute, oldLinkGuiAttribute),
-        )
-      }
-
-    val wherePatterns =
-      List(
-        ontology.isA(OWL.ONTOLOGY).andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-        property.has(SalsahGui.guiElement, oldGuiElement).optional(),
-        property.has(SalsahGui.guiAttribute, oldGuiAttribute).optional(),
-      ) ::: maybeLinkProp.toList.flatMap { lp =>
-        val oldLinkGuiElement   = variable("oldLinkValuePropertyGuiElement")
-        val oldLinkGuiAttribute = variable("oldLinkValuePropertyGuiAttribute")
-        List(
-          lp.has(SalsahGui.guiElement, oldLinkGuiElement).optional(),
-          lp.has(SalsahGui.guiAttribute, oldLinkGuiAttribute).optional(),
-        )
-      }
-
-    Queries
-      .MODIFY()
-      .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-      .from(ontology)
-      .delete(deletePatterns*)
-      .where(wherePatterns.reduceLeft(_.and(_)).from(ontology))
-  }
-
-  private def buildInsertNewQuery(
-    ontology: Iri,
-    property: Iri,
-    maybeLinkProp: Option[Iri],
-    maybeNewGuiElement: Option[SmartIri],
-    newGuiAttributes: Set[String],
-    lastModificationDate: Instant,
-  ): Option[String] = {
-    val newGuiElementIri = maybeNewGuiElement.map(toRdfIri)
-
-    val insertPatterns: List[TriplePattern] =
-      newGuiElementIri.map(property.has(SalsahGui.guiElement, _)).toList :::
-        newGuiAttributes.toList.map(attr => property.has(SalsahGui.guiAttribute, Rdf.literalOf(attr))) :::
-        maybeLinkProp.toList.flatMap { lp =>
-          newGuiElementIri.map(lp.has(SalsahGui.guiElement, _)).toList :::
-            newGuiAttributes.toList.map(attr => lp.has(SalsahGui.guiAttribute, Rdf.literalOf(attr)))
-        }
-
-    Option.when(insertPatterns.nonEmpty) {
-      val wherePattern = ontology
-        .isA(OWL.ONTOLOGY)
-        .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-        .from(ontology)
-
-      Queries
-        .MODIFY()
-        .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-        .into(ontology)
-        .insert(insertPatterns*)
-        .where(wherePattern)
-        .getQueryString
-    }
-  }
-
-  private def buildUpdateTimestampQuery(
-    ontology: Iri,
-    lastModificationDate: Instant,
-    currentTime: Instant,
-  ) = {
-    val deletePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-    val insertPattern = ontology.has(KB.lastModificationDate, toRdfLiteral(currentTime))
-
-    val wherePattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .from(ontology)
-
-    Queries
-      .MODIFY()
-      .prefix(RDF.NS, XSD.NS, OWL.NS, KB.NS, SalsahGui.NS)
-      .from(ontology)
-      .delete(deletePattern)
-      .into(ontology)
-      .insert(insertPattern)
-      .where(wherePattern)
   }
 }
