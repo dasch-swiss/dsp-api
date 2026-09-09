@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -16,6 +17,12 @@ import org.knora.webapi.slice.common.ResourceIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class EraseResourceQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   private val testProject = Project(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
@@ -35,9 +42,9 @@ class EraseResourceQuerySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment, Any] = suite("EraseResourceQuery")(
     test("build should produce the expected SPARQL query") {
-      val actual = EraseResourceQuery.build(testProject, resourceIri).getQueryString
+      val actual = EraseResourceQuery.build(testProject, resourceIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -55,6 +62,7 @@ class EraseResourceQuerySpec extends ZIOSpecDefault {
             |    knora-base:previousValue* ?textValue .
             |?textValue knora-base:valueHasStandoff ?standoff .
             |?standoff ?standoffPred ?standoffObj . } }""".stripMargin,
+        ),
       )
     },
   )
