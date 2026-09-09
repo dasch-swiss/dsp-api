@@ -128,7 +128,7 @@ final class ProjectMigrationExportService(
 
       // Step 1: Find all user IRIs referenced by attachedToUser in the project's data graph
       dataGraph         = projectService.getDataGraphForProject(project)
-      referencedResult <- triplestore.select(ReferencedUserIrisQuery.build(dataGraph))
+      referencedResult <- triplestore.query(ReferencedUserIrisQuery.build(dataGraph))
       referencedIris    = referencedResult.getCol("user").flatMap(UserIri.from(_).toOption).toSet
       _                <- ZIO.when(referencedIris.nonEmpty)(
              ZIO.logInfo(s"$taskId: Found ${referencedIris.size} users referenced by attachedToUser in data graph"),
@@ -185,7 +185,7 @@ final class ProjectMigrationExportService(
       _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
       permissionFile = rdfPath / "permission.nq"
       query          = PermissionDataQuery.build(project.id)
-      _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.getQueryString}")
+      _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.sparql}")
       _             <- Files.createFile(permissionFile) *>
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()
