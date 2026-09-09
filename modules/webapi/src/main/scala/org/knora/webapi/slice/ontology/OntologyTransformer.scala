@@ -10,6 +10,7 @@ import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.query.DatasetFactory
+import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
@@ -35,6 +36,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.time.format.DateTimeParseException
 import scala.jdk.CollectionConverters.*
 
 import dsp.errors.NotFoundException
@@ -136,6 +138,7 @@ final class OntologyTransformer(
       // UnformattedText signal. Do not reorder these two.
       _ <- ZIO.attempt(addTextValueType(model))
       _ <- ZIO.attempt(convertDateValues(model))
+      _ <- ZIO.attempt(canonicalizeScalarLiterals(model))
       _ <- ZIO.attempt(convertLinkValues(model))
       _ <- ZIO.attempt(convertGeomValues(model))
       _ <- convertRichtextValues(model, now)
@@ -193,14 +196,35 @@ final class OntologyTransformer(
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    val resources = model.listSubjects().asScala.filter { s =>
-      s.isURIResource && ResourceIri.from(s.getURI).isRight
-    }
+    val resources = model
+      .listSubjects()
+      .asScala
+      .filter(s => s.isURIResource && ResourceIri.from(s.getURI).isRight)
+      .toList
     resources.foreach { r =>
+      // Strip any payload-supplied system metadata before synthesizing, mirroring addValueMetadata,
+      // so a payload value does not coexist with the synthesized one (the data graph enforces
+      // maxCount 1). A payload creationDate is honored but re-emitted as xsd:dateTime: the create
+      // path stores it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp)
+      // does not survive.
+      val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
+      r.removeAll(attachedToUser)
+        .removeAll(attachedToProject)
+        .removeAll(hasPermissions)
+        .removeAll(creationDate)
+        .removeAll(isDeleted)
       r.addProperty(attachedToUser, userResource)
       r.addProperty(attachedToProject, projectResource)
+      // TODO(DEV-7149, next PR): honor a payload-supplied hasPermissions and resolve class/property
+      //   DOAPs so the string matches the create path. Until then the group-level default is applied
+      //   and hasPermissions stays excluded from the parity compare.
       r.addProperty(hasPermissions, ctx.permissions)
-      r.addProperty(creationDate, creationDateLit)
+      val creationDateValue = payloadCreationDate
+        .filter(_.isLiteral)
+        .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
+        .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
+        .getOrElse(creationDateLit)
+      r.addProperty(creationDate, creationDateValue)
       r.addProperty(isDeleted, falseLit)
     }
   }
@@ -209,6 +233,10 @@ final class OntologyTransformer(
    * Synthesise the cardinality-1 `knora-base` metadata on every value. Values are identified by IRI shape
    * ([[ValueIri.from]] succeeds) and keep their input IRI; `valueHasUUID` is the IRI's own UUID segment. Any incoming
    * system metadata is dropped first so synthesized values win. `valueHasString` is deferred.
+   *
+   * `valueHasOrder` is intentionally not synthesized here: every imported value carries its order from the
+   * payload. The pipeline synthesizes an order only for values it creates itself (e.g. standoff-link LinkValues),
+   * never for values that come from outside.
    */
   private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
@@ -260,6 +288,9 @@ final class OntologyTransformer(
       }
       .toList
 
+    // Set hasTextValueType on every text value, matching the v2 resource-create path (ResourcesRepoLive)
+    // and the v2 add-value path (POST /v2/values, InsertValueQueryBuilder): all three write paths carry
+    // the same marker, so an imported text value and a create-path text value hold identical triples.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
       v.addProperty(hasTextValueType, valueType)
@@ -348,6 +379,55 @@ final class OntologyTransformer(
       v.addProperty(valueHasStartPrecision, range.startCalendarDate.precision.toString)
       v.addProperty(valueHasEndPrecision, range.endCalendarDate.precision.toString)
       v.addProperty(valueHasString, range.toString)
+    }
+  }
+
+  /**
+   * Re-type the scalar value literals that arrive from the payload with a non-canonical datatype so they satisfy their
+   * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path's `InsertValueQueryBuilder.buildTypeSpecificPatterns`
+   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a
+   * UTC `xsd:dateTime`, each with a canonical lexical form. Jena's `createTypedLiteral` stores the lexical string
+   * verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed literal fails the import,
+   * matching [[convertDateValues]]. Other scalar datatypes already match the create path today and are left untouched.
+   * Runs before [[addValueHasString]] so the derived `valueHasString` reflects the canonical form.
+   *
+   * Applies to the values this pass writes. Non-canonical `valueHasInteger` / `valueHasTimeStamp` literals
+   * from prior imports stay as they are; remediating them is a separate DEV-7149 data-migration follow-up.
+   */
+  private def canonicalizeScalarLiterals(model: Model): Unit = {
+    retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
+      model.createTypedLiteral(BigInt(lexical.trim).toString, XSDDatatype.XSDinteger),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasTimeStamp)(lexical =>
+      model.createTypedLiteral(Instant.parse(lexical.trim).toString, XSDDatatype.XSDdateTime),
+    )
+  }
+
+  /** Replaces every literal object of `property` with the literal that `retype` derives from its lexical form. */
+  private def retypeLiterals(model: Model, property: String)(retype: String => Literal): Unit = {
+    val prop    = model.createProperty(property)
+    val updates = model
+      .listStatements(null, prop, null)
+      .asScala
+      .collect {
+        case st if st.getObject.isLiteral =>
+          val lexical = st.getObject.asLiteral.getLexicalForm
+          val literal =
+            try retype(lexical)
+            catch {
+              case e: (NumberFormatException | DateTimeParseException) =>
+                throw new IllegalArgumentException(
+                  s"Value ${st.getSubject} has a <$property> literal that cannot be canonicalized: '$lexical'",
+                  e,
+                )
+            }
+          (st, literal)
+      }
+      .toList
+    updates.foreach { case (st, literal) =>
+      val subject = st.getSubject
+      model.remove(st)
+      subject.addProperty(prop, literal)
     }
   }
 
@@ -498,6 +578,11 @@ final class OntologyTransformer(
     val valueIri        = v.getURI
     val startIndexToIri =
       tags.map(t => t.startIndex -> StandoffStringUtil.makeRandomStandoffTagIri(valueIri, t.startIndex)).toMap
+    // Resolve a standoff internal reference (a `StandoffTagInternalReferenceAttributeV2`, carrying the target's XML
+    // id) to the target standoff tag's node IRI, mirroring the create path's `prepareForSparqlInsert`. Both paths
+    // build the node IRI via makeRandomStandoffTagIri(valueIri, startIndex), so the resolved IRIs coincide.
+    // Anchor references from prior imports keep their relative IRIs; remediating them is a separate DEV-7149 follow-up.
+    val xmlIdToIri = tags.flatMap(t => t.originalXMLID.map(_ -> startIndexToIri(t.startIndex))).toMap
 
     v.removeAll(textValueAsXml)
     v.removeAll(valueHasString)
@@ -507,7 +592,7 @@ final class OntologyTransformer(
     tags.foreach { tag =>
       val tagRes = model.createResource(startIndexToIri(tag.startIndex))
       v.addProperty(valueHasStandoff, tagRes)
-      emitStandoffTag(model, tagRes, tag, startIndexToIri)
+      emitStandoffTag(model, tagRes, tag, startIndexToIri, xmlIdToIri)
     }
   }
 
@@ -516,6 +601,7 @@ final class OntologyTransformer(
     tagRes: Resource,
     tag: StandoffTagV2,
     startIndexToIri: Map[Int, String],
+    xmlIdToIri: Map[String, String],
   ): Unit = {
     val rdfType                     = model.createProperty(Rdf.Type)
     val standoffTagHasStart         = model.createProperty(KnoraBase.StandoffTagHasStart)
@@ -540,16 +626,30 @@ final class OntologyTransformer(
     )
     tag.originalXMLID.foreach(id => tagRes.addProperty(standoffTagHasOriginalXMLID, id))
     tagRes.addProperty(standoffTagHasUUID, UuidUtil.base64Encode(tag.uuid))
-    tag.attributes.foreach(attr => emitStandoffAttribute(model, tagRes, attr))
+    tag.attributes.foreach(attr => emitStandoffAttribute(model, tagRes, attr, xmlIdToIri))
   }
 
   /** Emits one triple per standoff-tag attribute, typing the object as `standoffAttributeLiterals` does on write. */
-  private def emitStandoffAttribute(model: Model, tagRes: Resource, attr: StandoffTagAttributeV2): Unit = {
+  private def emitStandoffAttribute(
+    model: Model,
+    tagRes: Resource,
+    attr: StandoffTagAttributeV2,
+    xmlIdToIri: Map[String, String],
+  ): Unit = {
     val p = model.createProperty(attr.standoffPropertyIri.toString)
     val _ = attr match {
       case a: StandoffTagIriAttributeV2               => tagRes.addProperty(p, model.createResource(a.value))
-      case a: StandoffTagInternalReferenceAttributeV2 => tagRes.addProperty(p, model.createResource(a.value))
-      case a: StandoffTagUriAttributeV2               =>
+      case a: StandoffTagInternalReferenceAttributeV2 =>
+        // a.value is the target's XML id, already validated to exist during XML-to-standoff conversion. Resolve it
+        // to the target standoff tag's node IRI: the create path writes the resolved IRI, not the relative XML id.
+        val targetIri = xmlIdToIri.getOrElse(
+          a.value,
+          throw new IllegalArgumentException(
+            s"standoff internal reference '${a.value}' has no target standoff tag with that XML id",
+          ),
+        )
+        tagRes.addProperty(p, model.createResource(targetIri))
+      case a: StandoffTagUriAttributeV2 =>
         tagRes.addProperty(p, model.createTypedLiteral(a.value, XSDDatatype.XSDanyURI))
       case a: StandoffTagStringAttributeV2  => tagRes.addProperty(p, a.value)
       case a: StandoffTagIntegerAttributeV2 => tagRes.addProperty(p, intLiteral(model, a.value))
@@ -631,6 +731,8 @@ final class OntologyTransformer(
     linkValue.addProperty(valueHasRefCount, intLiteral(model, refCount))
     linkValue.addProperty(isDeleted, model.createTypedLiteral("false", XSDDatatype.XSDboolean))
     linkValue.addProperty(valueCreationDate, model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime))
+    // Standoff-link LinkValues are attached to the built-in SystemUser, matching the v2 create path.
+    // The import shape AttachedToUserNotBuiltInShape exempts them (see data-shapes.ttl).
     linkValue.addProperty(attachedToUser, model.createResource(systemUser))
     linkValue.addProperty(hasPermissions, standoffLinkValuePermissions)
     val _ = linkValue.addProperty(valueHasUUID, linkValueIri.valueId.value)

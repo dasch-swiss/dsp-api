@@ -8,6 +8,7 @@ package org.knora.webapi.slice.`export`.api
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AssetInfoService
 import swiss.dasch.domain.AssetInfoServiceLive
+import swiss.dasch.domain.MimeTypeGuesser
 import swiss.dasch.domain.StorageServiceLive
 import zio.URLayer
 import zio.ZLayer
@@ -52,7 +53,7 @@ object ExportApiModule { self =>
     ZLayer
       .service[AppConfig]
       .project(c => StorageConfig(assetDir = c.dspIngest.assetDir, tempDir = c.dspIngest.assetDir)) >>>
-      StorageServiceLive.layer >>> ZLayer.derive[AssetInfoServiceLive]
+      (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
 
   val layer: URLayer[self.Dependencies, self.Provided] =
     (FindResourcesService.layer ++ assetInfoServiceLayer) >+> ExportService.layer

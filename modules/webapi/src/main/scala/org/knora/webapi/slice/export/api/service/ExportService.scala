@@ -402,11 +402,18 @@ final case class ExportService(
     vcs.foldMap { vc =>
       vc match
         case lvc: LinkValueContentV2 =>
-          val label = lvc.nestedResource.map(_.label).orElse(linkLabels.get(lvc.referredResourceIri))
-          LinkValue(
-            List(label.getOrElse("")),
-            List(stringFormat(vc.valueHasString)).filter(_ => includeIris),
-          )
+          lvc.nestedResource.map(_.label).orElse(linkLabels.get(lvc.referredResourceIri)) match {
+            case Some(label) =>
+              LinkValue(
+                List(label),
+                List(stringFormat(vc.valueHasString)).filter(_ => includeIris),
+              )
+            // The target resolves to no label from either source, which means it could not be read back at all
+            // — it is deleted or erased. Emitting `valueHasString` here would put a bare IRI pointing at a
+            // resource that no longer exists into the `_IRI` column, next to an empty label cell (DEV-7008).
+            // Drop both halves so the two columns stay consistent and no dangling reference is exported.
+            case None => LinkValue(Nil, Nil)
+          }
         case rpvc: RegionPreviewValueContentV2 =>
           // Crop cell + region IRI, mirroring the link-value case. The crop URL is empty only for non-rectangle
           // geometry; the row is never dropped (own-permission gate), and Sipi enforces on dereference.

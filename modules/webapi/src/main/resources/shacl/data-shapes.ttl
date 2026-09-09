@@ -150,12 +150,20 @@ knora-base:AttachedToUserExistsShape
 # Rejects imports whose data graph attaches resources or values to the built-in
 # SystemUser or AnonymousUser. These IRIs exist on every target instance and
 # pre-migration cleanup is required to rebind such data to project-scoped users.
+# System standoff-link LinkValues are exempt: both the data-import transformer
+# (OntologyTransformer.emitStandoffLinkValue) and the v2 create path attach them to SystemUser by
+# design. They are identified by rdf:predicate knora-base:hasStandoffLinkTo.
 knora-base:AttachedToUserNotBuiltInShape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:attachedToUser ;
-    sh:not [ sh:in ( knora-admin:SystemUser knora-admin:AnonymousUser ) ] ;
-    sh:message "knora-base:attachedToUser must not reference the built-in SystemUser or AnonymousUser" ;
-  ] .
+  sh:or (
+    [
+      sh:path rdf:predicate ;
+      sh:hasValue knora-base:hasStandoffLinkTo ;
+    ]
+    [
+      sh:path knora-base:attachedToUser ;
+      sh:not [ sh:in ( knora-admin:SystemUser knora-admin:AnonymousUser ) ] ;
+      sh:message "knora-base:attachedToUser must not reference the built-in SystemUser or AnonymousUser" ;
+    ]
+  ) .

@@ -34,6 +34,7 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -282,6 +283,14 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       valueIri.has(KB.valueHasLanguage, literalOf(lang))
     }
 
+    // Persist knora-base:hasTextValueType on every text value, mirroring the v2 resource-create path
+    // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
+    // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
+    // when the payload is parsed.
+    val textValueTypePattern = textValueTypeIri(textValue.textValueType).toList.map { typeIri =>
+      valueIri.has(KB.hasTextValueType, typeIri)
+    }
+
     if (textValue.standoff.nonEmpty) {
       val mappingPattern = textValue.mappingIri.map { mappingIri =>
         valueIri.has(KB.valueHasMapping, iri(mappingIri.toString))
@@ -293,11 +302,21 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
 
       val standoffPatterns = buildStandoffPatterns(valueIri, textValue)
 
-      languagePattern ::: mappingPattern ::: maxIndexPattern ::: standoffPatterns
+      languagePattern ::: textValueTypePattern ::: mappingPattern ::: maxIndexPattern ::: standoffPatterns
     } else {
-      languagePattern
+      languagePattern ::: textValueTypePattern
     }
   }
+
+  /** The knora-base:hasTextValueType IRI for a text value, mirroring ResourcesRepoLive.buildFormattedTextValuePatterns. */
+  private def textValueTypeIri(textValueType: TextValueType): Option[rdf.Iri] =
+    textValueType match {
+      case TextValueType.UnformattedText        => Some(KB.UnformattedText)
+      case TextValueType.FormattedText          => Some(KB.FormattedText)
+      case TextValueType.CustomFormattedText(_) => Some(KB.CustomFormattedText)
+      // Unreachable on this path: TextValueContentV2.getTextValue never parses a payload to UndefinedTextType.
+      case TextValueType.UndefinedTextType => None
+    }
 
   private def standoffAttributeToRdfValue(
     attr: org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2,
