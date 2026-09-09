@@ -170,10 +170,12 @@ stack-start:
     ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started"
 
-# Start Stack without API for development
-stack-start-dev: stack-start
-    @echo "Stopping API"
-    docker compose down api
+# Start Stack without API for development: fuseki, sipi, ingest and alloy
+stack-start-dev:
+    @echo "Starting Stack without API"
+    docker compose stop api app
+    docker compose up -d db sipi ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started without API"
 
 # Start stack and pull latest images before starting
@@ -268,7 +270,7 @@ structurizer:
 
 ## DSP stack (local dev)
 
-# starts the dsp-stack: fuseki, sipi, api and app
+# starts the dsp-stack: fuseki, sipi, ingest, api, app and alloy
 stack-up: docker-build
     docker compose -f docker-compose.yml up -d db
     ./modules/webapi/scripts/wait-for-db.sh
@@ -279,7 +281,7 @@ stack-up: docker-build
 stack-up-fast: docker-build-dsp-api-image
     docker compose -f docker-compose.yml up -d
 
-# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, api
+# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, ingest, api, app and alloy
 stack-up-ci: docker-build
     docker compose -f docker-compose.yml up -d
 
@@ -336,18 +338,25 @@ stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp
 stack-config:
     docker compose -f docker-compose.yml config
 
-# starts the dsp-stack without dsp-api: fuseki and sipi only
-stack-without-api: stack-up
-    docker compose -f docker-compose.yml stop api
+# starts the dsp-stack without dsp-api: fuseki, sipi, ingest and alloy
+stack-without-api: docker-build
+    docker compose -f docker-compose.yml stop api app
+    docker compose -f docker-compose.yml up -d db sipi ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
 
-# starts the dsp-stack without dsp-app
-stack-without-app: stack-up
+# starts the dsp-stack without dsp-app: fuseki, sipi, ingest, api and alloy
+stack-without-app: docker-build
     docker compose -f docker-compose.yml stop app
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+    docker compose -f docker-compose.yml up -d db sipi ingest api alloy
+    ./modules/webapi/scripts/wait-for-api.sh
 
-# starts the dsp-stack without dsp-api and sipi: fuseki only
-stack-without-api-and-sipi: stack-up
-    docker compose -f docker-compose.yml stop api
-    docker compose -f docker-compose.yml stop sipi
+# starts the dsp-stack without dsp-api and sipi: fuseki, ingest and alloy
+stack-without-api-and-sipi: docker-build
+    docker compose -f docker-compose.yml stop api sipi app
+    docker compose -f docker-compose.yml up -d db ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
 
 # starts only fuseki
 stack-db-only:
