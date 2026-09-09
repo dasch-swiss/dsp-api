@@ -5,95 +5,77 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object AdminDataQuery extends QueryBuilderHelper {
+object AdminDataQuery {
 
-  // NOTE: If you change the query structure here, also update buildWithReferencedUsers below.
-  // Project members who are also system admins are included in the export. The
-  // `isInSystemAdminGroup` flag is rewritten to false later by AdminModelScoping.clearSystemAdminFlag
-  // so the exported package does not carry the source instance's system-admin membership.
-  def build(project: ProjectIri): ConstructQuery = {
-    val projectIri                   = toRdfIri(project)
-    val (projectPred, projectObj)    = (variable("projectPred"), variable("projectObj"))
-    val (user, userPred, userObj)    = (variable("user"), variable("userPred"), variable("userObj"))
-    val (group, groupPred, groupObj) = (variable("group"), variable("groupPred"), variable("groupObj"))
-    val userPattern                  =
-      user.isA(KA.User).andHas(userPred, userObj).andHas(KA.isInProject, projectIri)
-    Queries
-      .CONSTRUCT(
-        projectIri.has(projectPred, projectObj),
-        user.has(userPred, userObj),
-        group.has(groupPred, groupObj),
-      )
-      .where(
-        projectIri
-          .isA(KA.KnoraProject)
-          .andHas(projectPred, projectObj)
-          .union(userPattern)
-          .union(group.isA(KA.UserGroup).andHas(groupPred, groupObj).andHas(KA.belongsToProject, projectIri))
-          .from(toRdfIri(adminDataNamedGraph)),
-      )
-      .prefix(KA.NS)
-  }
+  /**
+   * Builds the admin data CONSTRUCT query for the given project.
+   *
+   * Project members who are also system admins are included in the export. The
+   * `isInSystemAdminGroup` flag is rewritten to false later by AdminModelScoping.clearSystemAdminFlag
+   * so the exported package does not carry the source instance's system-admin membership.
+   */
+  def build(project: ProjectIri): Construct = buildWithReferencedUsers(project, Set.empty)
 
   /**
    * Builds the admin data CONSTRUCT query including an additional UNION branch for
-   * users referenced by attachedToUser in the project's data graph.
-   *
-   * Since SparqlBuilder does not support VALUES blocks, the query is assembled via
-   * string interpolation.
+   * users referenced by attachedToUser in the project's data graph. With an empty set
+   * of referenced users the branch is omitted and the query is identical to [[build]].
    *
    * Note: The referenced user IRIs are inlined in a VALUES clause. For projects with
    * a very large number of distinct referenced users, this could produce a long query
    * string. Fuseki handles this in practice, but if projects with thousands of distinct
    * referenced users appear, consider batching or a subquery approach.
-   *
-   * NOTE: This duplicates the query structure from build() above as a raw string.
-   * If you change build(), update this method to match.
-   *
-   * @return the SPARQL query string (callers must wrap in [[TriplestoreService.Queries.Construct]])
    */
-  def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): String =
-    if (referencedUserIris.isEmpty) build(project).getQueryString
-    else {
-      val ka           = KA.NS.getName
-      val adminGraph   = adminDataNamedGraph.value
-      val projectIri   = project.value
-      val valuesClause = referencedUserIris.map(iri => s"<${iri.value}>").mkString(" ")
+  def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): Construct = {
+    val adminGraph = Iri.unsafeFrom(adminDataNamedGraph.value)
+    val projectIri = Iri.unsafeFrom(project.value)
+    val user       = Variable("user")
+    // Sorted so that the rendered VALUES rows are deterministic for a given set of users.
+    val userIris = referencedUserIris.toList.map(_.value).sorted.map(Iri.unsafeFrom)
 
-      s"""PREFIX knora-admin: <$ka>
-         |CONSTRUCT {
-         |  <$projectIri> ?projectPred ?projectObj .
-         |  ?user ?userPred ?userObj .
-         |  ?group ?groupPred ?groupObj .
-         |}
-         |WHERE {
-         |  GRAPH <$adminGraph> {
-         |    {
-         |      <$projectIri> a knora-admin:knoraProject ;
-         |        ?projectPred ?projectObj .
-         |    } UNION {
-         |      ?user a knora-admin:User ;
-         |        ?userPred ?userObj ;
-         |        knora-admin:isInProject <$projectIri> .
-         |    } UNION {
-         |      ?user a knora-admin:User ;
-         |        ?userPred ?userObj .
-         |      VALUES ?user { $valuesClause }
-         |    } UNION {
-         |      ?group a knora-admin:UserGroup ;
-         |        ?groupPred ?groupObj ;
-         |        knora-admin:belongsToProject <$projectIri> .
-         |    }
-         |  }
-         |}""".stripMargin
-    }
+    val projectBranch =
+      sparql"""|$projectIri a knora-admin:knoraProject ;
+               |  ?projectPred ?projectObj ."""
+
+    val projectMembersBranch =
+      sparql"""|$user a knora-admin:User ;
+               |  ?userPred ?userObj ;
+               |  knora-admin:isInProject $projectIri ."""
+
+    // Guarded: Fragments.values requires a non-empty collection.
+    val referencedUsersBranch = Option.when(userIris.nonEmpty)(
+      sparql"""|$user a knora-admin:User ;
+               |  ?userPred ?userObj .
+               |${Fragments.values(user, userIris)}""",
+    )
+
+    val groupsBranch =
+      sparql"""|?group a knora-admin:UserGroup ;
+               |  ?groupPred ?groupObj ;
+               |  knora-admin:belongsToProject $projectIri ."""
+
+    val branches =
+      List(projectBranch, projectMembersBranch) ::: referencedUsersBranch.toList ::: List(groupsBranch)
+
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |CONSTRUCT {
+               |  $projectIri ?projectPred ?projectObj .
+               |  $user ?userPred ?userObj .
+               |  ?group ?groupPred ?groupObj .
+               |}
+               |WHERE {
+               |  GRAPH $adminGraph {
+               |    ${Fragments.union(branches*)}
+               |  }
+               |}""".render,
+    )
+  }
 }
