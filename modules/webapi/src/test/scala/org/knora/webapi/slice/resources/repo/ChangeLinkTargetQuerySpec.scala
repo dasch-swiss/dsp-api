@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
@@ -27,6 +28,12 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -184,7 +191,7 @@ class ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://www.knora.org/ontology/0001/anything#hasOtherThing> knora-base:objectClassConstraint ?expectedTargetClass .
                |?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin
-          assertTrue(query.sparql == expected)
+          assertTrue(canonical(query.sparql) == canonical(expected))
         }
       },
       test("should produce correct query for changing link target with comment") {
@@ -269,7 +276,7 @@ class ChangeLinkTargetQuerySpec extends ZIOSpecDefault {
                |<http://www.knora.org/ontology/0001/anything#hasOtherThing> knora-base:objectClassConstraint ?expectedTargetClass .
                |?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?linkSourceLastModificationDate . } }""".stripMargin
-          assertTrue(query.sparql == expected)
+          assertTrue(canonical(query.sparql) == canonical(expected))
         }
       },
     ),
