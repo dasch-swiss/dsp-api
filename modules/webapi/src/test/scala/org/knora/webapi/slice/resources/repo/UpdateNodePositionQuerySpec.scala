@@ -35,7 +35,6 @@ class UpdateNodePositionQuerySpec extends ZIOSpecDefault {
     NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Test project"))),
     List.empty,
     None,
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set.empty,
