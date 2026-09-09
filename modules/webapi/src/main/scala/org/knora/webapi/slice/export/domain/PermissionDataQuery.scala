@@ -5,23 +5,26 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object PermissionDataQuery extends QueryBuilderHelper {
+object PermissionDataQuery {
 
-  def build(project: ProjectIri): ConstructQuery = {
-    val (s, p, o)  = spo
-    val projectIri = toRdfIri(project)
-    val where      = s
-      .has(KA.forProject, projectIri)
-      .andHas(p, o)
-      .from(toRdfIri(permissionsDataNamedGraph))
-    Queries.CONSTRUCT(s.has(p, o)).where(where).prefix(KA.NS)
+  def build(project: ProjectIri): Construct = {
+    val permissionsGraph = Iri.unsafeFrom(permissionsDataNamedGraph.value)
+    val projectIri       = Iri.unsafeFrom(project.value)
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |CONSTRUCT { ?s ?p ?o . }
+               |WHERE {
+               |  GRAPH $permissionsGraph {
+               |    ?s knora-admin:forProject $projectIri ;
+               |      ?p ?o .
+               |  }
+               |}""".render,
+    )
   }
 }
