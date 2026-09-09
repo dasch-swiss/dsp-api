@@ -4,38 +4,51 @@
  */
 
 package org.knora.webapi.slice.resources.repo
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object DeleteNodeQuery extends QueryBuilderHelper {
-  def buildForChildNode(nodeIri: ListIri, project: KnoraProject): ModifyQuery =
-    val node               = toRdfIri(nodeIri)
-    val (parentNode, p, o) = (variable("parentNode"), variable("p"), variable("o"))
-    Queries
-      .MODIFY()
-      .prefix(KnoraBase.NS, RDF.NS)
-      .delete(node.has(p, o), parentNode.has(KnoraBase.hasSubListNode, node))
-      .from(graphIri(project))
-      .where(
-        node
-          .isA(KnoraBase.ListNode)
-          .andHas(p, o)
-          .and(parentNode.isA(KnoraBase.ListNode).andHas(KnoraBase.hasSubListNode, node)),
-      )
+object DeleteNodeQuery {
 
-  def buildForRootNode(nodeIri: ListIri, project: KnoraProject): ModifyQuery =
-    val node   = toRdfIri(nodeIri)
-    val (p, o) = (variable("p"), variable("o"))
-    Queries
-      .MODIFY()
-      .prefix(KnoraBase.NS, RDF.NS)
-      .delete(node.has(p, o))
-      .from(graphIri(project))
-      .where(node.isA(KnoraBase.ListNode).andHas(p, o))
+  def buildForChildNode(nodeIri: ListIri, project: KnoraProject): Update = {
+    val graph = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val node  = Iri.unsafeFrom(nodeIri.value)
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |DELETE {
+               |  GRAPH $graph {
+               |    $node ?p ?o .
+               |    ?parentNode knora-base:hasSubListNode $node .
+               |  }
+               |}
+               |WHERE {
+               |  $node a knora-base:ListNode ;
+               |    ?p ?o .
+               |  ?parentNode a knora-base:ListNode ;
+               |    knora-base:hasSubListNode $node .
+               |}""".render,
+    )
+  }
+
+  def buildForRootNode(nodeIri: ListIri, project: KnoraProject): Update = {
+    val graph = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val node  = Iri.unsafeFrom(nodeIri.value)
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |DELETE {
+               |  GRAPH $graph {
+               |    $node ?p ?o .
+               |  }
+               |}
+               |WHERE {
+               |  $node a knora-base:ListNode ;
+               |    ?p ?o .
+               |}""".render,
+    )
+  }
 }
