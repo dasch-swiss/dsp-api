@@ -36,7 +36,6 @@ import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 import org.knora.webapi.slice.standoff.repo.GetXslTransformationMetadataQuery
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Looks up XML→standoff mappings and the XSL transformations they reference.
@@ -163,7 +162,7 @@ final class StandoffMappingServiceLive(
    */
   private def getMappingFromTriplestore(mappingIri: StandoffMappingIri): Task[MappingXMLtoStandoff] =
     for {
-      mappingResponse <- triplestore.query(Construct(GetMappingQuery.build(mappingIri.value)))
+      mappingResponse <- triplestore.query(GetMappingQuery.build(mappingIri.value))
 
       _ = if (mappingResponse.statements.isEmpty) {
             throw BadRequestException(s"mapping $mappingIri does not exist in triplestore")
