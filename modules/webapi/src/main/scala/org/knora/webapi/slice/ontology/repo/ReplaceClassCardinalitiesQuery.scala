@@ -5,29 +5,16 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.SalsahGui
-import org.knora.webapi.slice.ontology.domain.model.Cardinality
+import org.knora.webapi.slice.ontology.repo.OntologyLiteralFragments.cardinalityTriples
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ReplaceClassCardinalitiesQuery extends QueryBuilderHelper {
+object ReplaceClassCardinalitiesQuery {
 
   def build(
     ontologyIri: OntologyIri,
@@ -36,111 +23,68 @@ object ReplaceClassCardinalitiesQuery extends QueryBuilderHelper {
     lastModificationDate: Instant,
     currentTime: Instant,
   ): Update = {
-    val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
-    val classRdfIri            = toRdfIri(classIri)
+    val ontology     = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val clazz        = Iri.unsafeFrom(classIri.toInternalSchema.toIri)
+    val previousDate = Literal.dateTime(lastModificationDate)
+    val currentDate  = Literal.dateTime(currentTime)
 
-    val deleteRestrictions  = buildDeleteRestrictionsQuery(ontology, ontologyNS, classRdfIri, lastModificationDate)
-    val insertAndUpdateDate =
-      buildInsertAndUpdateDateQuery(
-        ontology,
-        ontologyNS,
-        classRdfIri,
-        newCardinalities,
-        lastModificationDate,
-        currentTime,
-      )
-
-    Update(deleteRestrictions.getQueryString + ";\n" + insertAndUpdateDate.getQueryString)
-  }
-
-  private def buildDeleteRestrictionsQuery(
-    ontology: Iri,
-    ontologyNS: org.eclipse.rdf4j.model.impl.SimpleNamespace,
-    classIri: Iri,
-    lastModificationDate: Instant,
-  ) = {
-    val restriction     = variable("restriction")
-    val restrictionPred = variable("restrictionPred")
-    val restrictionObj  = variable("restrictionObj")
-
-    val deletePatterns = List(
-      classIri.has(RDFS.SUBCLASSOF, restriction),
-      restriction.has(restrictionPred, restrictionObj),
+    // Two statements: the first drops the class's existing blank-node cardinality restrictions, the second
+    // inserts the new cardinalities and moves the ontology's last modification date on. They cannot be merged
+    // into one statement: the restriction OPTIONAL yields one solution per existing restriction triple, and
+    // the INSERT template's blank nodes are freshly allocated per solution, so a merged statement would
+    // insert one copy of the new restrictions per matched row.
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $clazz rdfs:subClassOf ?restriction .
+               |    ?restriction ?restrictionPred ?restrictionObj .
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |    $clazz a owl:Class .
+               |    OPTIONAL {
+               |      $clazz rdfs:subClassOf ?restriction .
+               |      ?restriction a owl:Restriction ;
+               |        ?restrictionPred ?restrictionObj .
+               |      FILTER ( isBlank(?restriction) )
+               |    }
+               |  }
+               |} ;
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $previousDate .
+               |  }
+               |}
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $currentDate .
+               |    ${cardinalityTriples(clazz, newCardinalities)}
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |    $clazz a owl:Class .
+               |  }
+               |}""".render,
     )
-
-    val optionalPattern = GraphPatterns.optional(
-      classIri
-        .has(RDFS.SUBCLASSOF, restriction)
-        .filter(Expressions.isBlank(restriction))
-        .and(
-          restriction
-            .isA(OWL.RESTRICTION)
-            .andHas(restrictionPred, restrictionObj),
-        ),
-    )
-
-    val wherePattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .and(classIri.isA(OWL.CLASS))
-      .and(optionalPattern)
-      .from(ontology)
-
-    Queries
-      .MODIFY()
-      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS, SalsahGui.NS)
-      .from(ontology)
-      .delete(deletePatterns*)
-      .where(wherePattern)
   }
-
-  private def buildInsertAndUpdateDateQuery(
-    ontology: Iri,
-    ontologyNS: org.eclipse.rdf4j.model.impl.SimpleNamespace,
-    classIri: Iri,
-    newCardinalities: Map[SmartIri, KnoraCardinalityInfo],
-    lastModificationDate: Instant,
-    currentTime: Instant,
-  ) = {
-    val deletePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-
-    val ontologyModPattern  = ontology.has(KB.lastModificationDate, toRdfLiteral(currentTime))
-    val cardinalityPatterns = buildCardinalityPatterns(classIri, newCardinalities)
-    val insertPatterns      = List(ontologyModPattern) ::: cardinalityPatterns
-
-    val wherePattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .and(classIri.isA(OWL.CLASS))
-      .from(ontology)
-
-    Queries
-      .MODIFY()
-      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS, SalsahGui.NS)
-      .from(ontology)
-      .delete(deletePattern)
-      .into(ontology)
-      .insert(insertPatterns*)
-      .where(wherePattern)
-  }
-
-  private def buildCardinalityPatterns(
-    classIri: Iri,
-    cardinalities: Map[SmartIri, KnoraCardinalityInfo],
-  ): List[TriplePattern] =
-    cardinalities.zipWithIndex.foldLeft(List.empty[TriplePattern]) {
-      case (acc, ((propertyIri, cardinalityInfo), index)) =>
-        val bNode        = Rdf.bNode(s"node${index + 1}")
-        val classPattern = classIri.has(RDFS.SUBCLASSOF, bNode)
-        val owlPattern   = List(bNode.isA(OWL.RESTRICTION), bNode.has(OWL.ONPROPERTY, toRdfIri(propertyIri)))
-        val guiOrder     = cardinalityInfo.guiOrder
-          .map(guiOrder => bNode.has(SalsahGui.guiOrder, toRdfLiteralNonNegative(guiOrder)))
-          .toList
-        val owlCardinality     = Cardinality.toOwl(cardinalityInfo.cardinality)
-        val cardinalityPattern = bNode.has(
-          Rdf.iri(owlCardinality.owlCardinalityIri),
-          toRdfLiteralNonNegative(owlCardinality.owlCardinalityValue),
-        )
-        acc ::: List(classPattern) ::: owlPattern ::: List(cardinalityPattern) ::: guiOrder
-    }
 }
