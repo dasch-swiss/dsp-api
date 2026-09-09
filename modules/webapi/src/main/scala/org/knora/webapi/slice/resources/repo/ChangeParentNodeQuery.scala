@@ -4,33 +4,36 @@
  */
 
 package org.knora.webapi.slice.resources.repo
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangeParentNodeQuery extends QueryBuilderHelper {
+object ChangeParentNodeQuery {
 
   def build(project: KnoraProject, nodeIri: ListIri, currentParentIri: ListIri, newParentIri: ListIri): Update = {
-    val graph         = graphIri(project)
-    val node          = toRdfIri(nodeIri)
-    val currentParent = toRdfIri(currentParentIri)
-    val newParent     = toRdfIri(newParentIri)
+    val graph         = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val node          = Iri.unsafeFrom(nodeIri.value)
+    val currentParent = Iri.unsafeFrom(currentParentIri.value)
+    val newParent     = Iri.unsafeFrom(newParentIri.value)
     Update(
-      Queries
-        .MODIFY()
-        .`with`(graph)
-        .delete(currentParent.has(KnoraBase.hasSubListNode, node))
-        .insert(newParent.has(KnoraBase.hasSubListNode, node))
-        .where(
-          node
-            .isA(KnoraBase.ListNode)
-            .and(currentParent.isA(KnoraBase.ListNode).andHas(KnoraBase.hasSubListNode, node))
-            .and(newParent.isA(KnoraBase.ListNode)),
-        ),
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |WITH $graph
+               |DELETE {
+               |  $currentParent knora-base:hasSubListNode $node .
+               |}
+               |INSERT {
+               |  $newParent knora-base:hasSubListNode $node .
+               |}
+               |WHERE {
+               |  $node a knora-base:ListNode .
+               |  $currentParent a knora-base:ListNode ;
+               |    knora-base:hasSubListNode $node .
+               |  $newParent a knora-base:ListNode .
+               |}""".render,
     )
   }
 }
