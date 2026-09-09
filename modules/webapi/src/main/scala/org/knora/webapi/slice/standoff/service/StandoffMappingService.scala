@@ -103,7 +103,7 @@ final class StandoffMappingServiceLive(
   ): Task[String] = {
     val Q       = GetXslTransformationMetadataQuery
     val xsltUrl = (for {
-      result <- triplestore.select(Q.build(xslTransformationIri))
+      result <- triplestore.query(Q.build(xslTransformationIri))
 
       row <- result.results.bindings match {
                case head +: Nil => ZIO.succeed(head.rowMap)

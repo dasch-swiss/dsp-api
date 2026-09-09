@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -17,6 +18,12 @@ import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class RemoveMappingQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val ontologyIri                       = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
@@ -25,6 +32,24 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
   private val externalIri                       = OntologyMappingExternalIri.unsafeFrom("http://schema.org/Thing")
   private val propExtIri                        = OntologyMappingExternalIri.unsafeFrom("http://purl.org/dc/terms/title")
   override def spec: Spec[TestEnvironment, Any] = suite("RemoveMappingQuerySpec")(
+    test("should produce the same UPDATE as the legacy builder") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
+      for {
+        _      <- TestClock.setTime(knownInstant)
+        update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
+      } yield assertTrue(
+        canonical(update.sparql) == canonical(
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+            |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { anything:Thing rdfs:subClassOf <http://schema.org/Thing> .
+            |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }
+            |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2026-01-01T00:00:00Z"^^xsd:dateTime . } }
+            |WHERE { OPTIONAL { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }""".stripMargin,
+        ),
+      )
+    },
     // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
       test("query contains the subClassOf triple in the DELETE clause") {
