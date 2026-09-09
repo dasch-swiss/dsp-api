@@ -5,19 +5,12 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.slice.resources.repo.model.MappingElement
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreateNewMappingQuery extends QueryBuilderHelper {
+object CreateNewMappingQuery {
 
   def build(
     dataNamedGraph: IRI,
@@ -25,73 +18,57 @@ object CreateNewMappingQuery extends QueryBuilderHelper {
     label: String,
     defaultXSLTransformation: Option[IRI],
     mappingElements: Seq[MappingElement],
-  ): String = {
-    val graphName  = Rdf.iri(dataNamedGraph)
-    val mappingIRI = Rdf.iri(mappingIri)
+  ): Update = {
+    val graphName  = Iri.unsafeFrom(dataNamedGraph)
+    val mapping    = Iri.unsafeFrom(mappingIri)
+    val mappingLbl = Literal.string(label)
 
-    val mappingBase: TriplePattern =
-      mappingIRI.isA(KnoraBase.XMLToStandoffMapping).andHas(RDFS.LABEL, Rdf.literalOf(label))
-
-    val xslPatterns: Seq[TriplePattern] = defaultXSLTransformation.toSeq.map { xsl =>
-      mappingIRI.has(KnoraBase.mappingHasDefaultXSLTransformation, Rdf.iri(xsl))
-    }
-
-    val elementPatterns: Seq[TriplePattern] = mappingElements.flatMap { ele =>
-      val eleIri = Rdf.iri(ele.mappingElementIri.value)
-
-      val hasMappingEle = mappingIRI.has(KnoraBase.hasMappingElement, eleIri)
-
-      val elementProps = eleIri
-        .isA(KnoraBase.MappingElement)
-        .andHas(KnoraBase.mappingHasXMLTagname, Rdf.literalOf(ele.tagName))
-        .andHas(KnoraBase.mappingHasXMLNamespace, Rdf.literalOf(ele.namespace))
-        .andHas(KnoraBase.mappingHasXMLClass, Rdf.literalOf(ele.className))
-        .andHas(KnoraBase.mappingHasStandoffClass, Rdf.iri(ele.standoffClass))
-        .andHas(KnoraBase.mappingElementRequiresSeparator, ele.separatorRequired)
-
-      val attrPatterns = ele.attributes.flatMap { attr =>
-        val attrIri = Rdf.iri(attr.mappingXMLAttributeElementIri.value)
-        Seq(
-          eleIri.has(KnoraBase.mappingHasXMLAttribute, attrIri),
-          attrIri
-            .isA(KnoraBase.MappingXMLAttribute)
-            .andHas(KnoraBase.mappingHasXMLAttributename, Rdf.literalOf(attr.attributeName))
-            .andHas(KnoraBase.mappingHasXMLNamespace, Rdf.literalOf(attr.namespace))
-            .andHas(KnoraBase.mappingHasStandoffProperty, Rdf.iri(attr.standoffProperty)),
-        )
-      }
-
-      val dtcPatterns = ele.standoffDataTypeClass.toSeq.flatMap { dtc =>
-        val dtcIri = Rdf.iri(dtc.mappingStandoffDataTypeClassElementIri.value)
-        Seq(
-          eleIri.has(KnoraBase.mappingHasStandoffDataTypeClass, dtcIri),
-          dtcIri
-            .isA(KnoraBase.MappingStandoffDataTypeClass)
-            .andHas(KnoraBase.mappingHasXMLAttributename, Rdf.literalOf(dtc.attributeName))
-            .andHas(KnoraBase.mappingHasStandoffClass, Rdf.iri(dtc.datatype)),
-        )
-      }
-
-      Seq(hasMappingEle, elementProps) ++ attrPatterns ++ dtcPatterns
-    }
-
-    val allInsertPatterns = Seq(mappingBase) ++ xslPatterns ++ elementPatterns
-
-    val p              = variable("p")
-    val o              = variable("o")
-    val filterNotExist = GraphPatterns.filterNotExists(mappingIRI.has(p, o))
-
-    // Workaround: rdf4j drops FILTER NOT EXISTS when it's the only WHERE pattern.
-    // See https://github.com/eclipse-rdf4j/rdf4j/issues/5561 — fixed in rdf4j 5.3.0.
-    val insertQuery = Queries
-      .MODIFY()
-      .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
-      .insert(allInsertPatterns*)
-      .into(graphName)
-      .getQueryString
-      .replaceFirst("WHERE \\{\\s*}", "")
-      .strip()
-
-    s"$insertQuery\nWHERE { ${filterNotExist.getQueryString} }"
+    Update(
+      sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |INSERT {
+               |  GRAPH $graphName {
+               |    $mapping a knora-base:XMLToStandoffMapping ;
+               |      rdfs:label $mappingLbl .
+               |    ${defaultXSLTransformation.whenSome(xsl =>
+          sparql"$mapping knora-base:mappingHasDefaultXSLTransformation ${Iri.unsafeFrom(xsl)} .",
+        )}
+               |    ${mappingElements.map { ele =>
+          val eleIri           = Iri.unsafeFrom(ele.mappingElementIri.value)
+          val attributeTriples = Option.when(ele.attributes.nonEmpty) {
+            ele.attributes.map { attr =>
+              val attrIri = Iri.unsafeFrom(attr.mappingXMLAttributeElementIri.value)
+              sparql"""|$eleIri knora-base:mappingHasXMLAttribute $attrIri .
+                       |$attrIri a knora-base:MappingXMLAttribute ;
+                       |  knora-base:mappingHasXMLAttributename ${Literal.string(attr.attributeName)} ;
+                       |  knora-base:mappingHasXMLNamespace ${Literal.string(attr.namespace)} ;
+                       |  knora-base:mappingHasStandoffProperty ${Iri.unsafeFrom(attr.standoffProperty)} ."""
+            }.joinLines
+          }
+          val datatypeClassTriples = ele.standoffDataTypeClass.map { dtc =>
+            val dtcIri = Iri.unsafeFrom(dtc.mappingStandoffDataTypeClassElementIri.value)
+            sparql"""|$eleIri knora-base:mappingHasStandoffDataTypeClass $dtcIri .
+                     |$dtcIri a knora-base:MappingStandoffDataTypeClass ;
+                     |  knora-base:mappingHasXMLAttributename ${Literal.string(dtc.attributeName)} ;
+                     |  knora-base:mappingHasStandoffClass ${Iri.unsafeFrom(dtc.datatype)} ."""
+          }
+          val elementCore =
+            sparql"""|$mapping knora-base:hasMappingElement $eleIri .
+                     |$eleIri a knora-base:MappingElement ;
+                     |  knora-base:mappingHasXMLTagname ${Literal.string(ele.tagName)} ;
+                     |  knora-base:mappingHasXMLNamespace ${Literal.string(ele.namespace)} ;
+                     |  knora-base:mappingHasXMLClass ${Literal.string(ele.className)} ;
+                     |  knora-base:mappingHasStandoffClass ${Iri.unsafeFrom(ele.standoffClass)} ;
+                     |  knora-base:mappingElementRequiresSeparator ${Literal.bool(ele.separatorRequired)} ."""
+          (Seq(elementCore) ++ attributeTriples ++ datatypeClassTriples).joinLines
+        }.joinLines}
+               |  }
+               |}
+               |WHERE {
+               |  FILTER NOT EXISTS { $mapping ?p ?o . }
+               |}""".render,
+    )
   }
 }
