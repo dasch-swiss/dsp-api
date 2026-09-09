@@ -31,7 +31,7 @@ final class PredicateRepositoryLive(tripleStore: TriplestoreService, iriConverte
     classIri: ResourceClassIri,
   ): Task[List[(ResourceClassIri, Int)]] =
     tripleStore
-      .select(CountPropertyUsedWithClassQuery.build(propertyIri, classIri))
+      .query(CountPropertyUsedWithClassQuery.build(propertyIri, classIri))
       .map(_.map(row => (row.rowMap("subject"), row.rowMap("count").toInt)).toList)
       .flatMap(row =>
         ZIO.foreach(row) { case (subjectIri, count) =>
