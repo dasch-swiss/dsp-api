@@ -5,75 +5,48 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-
+import org.knora.sparqlbuilder.*
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object EraseResourceQuery extends QueryBuilderHelper {
-  def build(project: Project, resourceIri: ResourceIri): ModifyQuery = {
-    val resourcePred      = variable("resourcePred")
-    val resourceObj       = variable("resourceObj")
-    val value             = variable("value")
-    val valuePred         = variable("valuePred")
-    val valueObj          = variable("valueObj")
-    val standoff          = variable("standoff")
-    val standoffPred      = variable("standoffPred")
-    val standoffObj       = variable("standoffObj")
-    val resourceClass     = variable("resourceClass")
-    val valueProp         = variable("valueProp")
-    val currentValue      = variable("currentValue")
-    val currentValueClass = variable("currentValueClass")
-    val currentTextValue  = variable("currentTextValue")
-    val textValue         = variable("textValue")
+object EraseResourceQuery {
 
-    val resIri       = toRdfIri(resourceIri)
-    val dataGraphIri = graphIri(project)
-
-    // Resource type check
-    val typeCheck = resIri
-      .isA(resourceClass)
-      .and(resourceClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
-
-    // Union pattern 1: all statements whose subject is the resource
-    val pattern1 = resIri.has(resourcePred, resourceObj)
-
-    // Union pattern 2: all statements whose subject is a value of the resource
-    val pattern2 = resIri
-      .has(valueProp, currentValue)
-      .and(currentValue.isA(currentValueClass))
-      .and(currentValueClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Value))
-      .and(currentValue.has(zeroOrMore(KnoraBase.previousValue), value))
-      .and(value.has(valuePred, valueObj))
-
-    // Union pattern 3: all statements whose subject is a standoff tag attached to a value
-    val pattern3 = resIri
-      .has(valueProp, currentTextValue)
-      .and(
-        currentTextValue
-          .isA(KnoraBase.TextValue)
-          .andHas(zeroOrMore(KnoraBase.previousValue), textValue),
-      )
-      .and(textValue.has(KnoraBase.valueHasStandoff, standoff))
-      .and(standoff.has(standoffPred, standoffObj))
-
-    val union = GraphPatterns.union(pattern1, pattern2, pattern3)
-
-    Queries
-      .MODIFY()
-      .prefix(KnoraBase.NS, RDF.NS, RDFS.NS)
-      .delete(
-        resIri.has(resourcePred, resourceObj),
-        value.has(valuePred, valueObj),
-        standoff.has(standoffPred, standoffObj),
-      )
-      .from(dataGraphIri)
-      .where(typeCheck.and(union))
+  def build(project: Project, resourceIri: ResourceIri): Update = {
+    val graph = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val res   = Iri.unsafeFrom(resourceIri.value)
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |DELETE {
+               |  GRAPH $graph {
+               |    $res ?resourcePred ?resourceObj .
+               |    ?value ?valuePred ?valueObj .
+               |    ?standoff ?standoffPred ?standoffObj .
+               |  }
+               |}
+               |WHERE {
+               |  $res a ?resourceClass .
+               |  ?resourceClass rdfs:subClassOf* knora-base:Resource .
+               |  {
+               |    $res ?resourcePred ?resourceObj .
+               |  } UNION {
+               |    $res ?valueProp ?currentValue .
+               |    ?currentValue a ?currentValueClass .
+               |    ?currentValueClass rdfs:subClassOf* knora-base:Value .
+               |    ?currentValue knora-base:previousValue* ?value .
+               |    ?value ?valuePred ?valueObj .
+               |  } UNION {
+               |    $res ?valueProp ?currentTextValue .
+               |    ?currentTextValue a knora-base:TextValue ;
+               |      knora-base:previousValue* ?textValue .
+               |    ?textValue knora-base:valueHasStandoff ?standoff .
+               |    ?standoff ?standoffPred ?standoffObj .
+               |  }
+               |}""".render,
+    )
   }
 }

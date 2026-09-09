@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.NonEmptyChunk
@@ -27,6 +28,12 @@ import org.knora.webapi.slice.common.domain.LanguageCode.IT
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreateListNodeQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   private val testProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
@@ -71,7 +78,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -84,6 +91,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "This is a test list"@en .
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Ceci est une liste de test"@fr . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for root node with labels and comments") {
@@ -107,7 +115,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -117,6 +125,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Simple List"@en .
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "A simple list"@en . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for child node with parent, position, name, labels, and comments") {
@@ -143,7 +152,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -155,6 +164,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Child Node"@en .
             |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "A child node"@en . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for child node at position 5") {
@@ -172,7 +182,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -183,6 +193,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Node Five"@en .
             |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "Fifth node"@en . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for root node with multilingual labels and comments") {
@@ -211,7 +222,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -227,6 +238,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Deutscher Kommentar"@de .
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Commentaire français"@fr . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different project") {
@@ -256,7 +268,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -267,6 +279,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/00FF/image-types> rdfs:label "Image Types"@en .
             |<http://rdfh.ch/lists/00FF/image-types> rdfs:comment "Types of images"@en . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
     test("should handle labels with special characters") {
@@ -290,7 +303,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query.sparql) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -300,6 +313,7 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Label with \"quotes\" and \'apostrophes\'"@en .
             |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Comment with special chars"@en . } }
             |WHERE {}""".stripMargin,
+        ),
       )
     },
   )

@@ -621,7 +621,7 @@ final case class ListsResponder(
                     c.comments,
                   )
               }
-      _ <- triplestore.query(Update(query))
+      _ <- triplestore.query(query)
     } yield newListNodeIri
   }
 
