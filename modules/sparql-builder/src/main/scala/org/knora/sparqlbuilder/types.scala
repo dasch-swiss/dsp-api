@@ -74,6 +74,34 @@ object Variable {
     else Left(s"Variable name must match [A-Za-z0-9_]+: $name")
 }
 
+/** A SPARQL blank node — rendered as `_:label`. */
+final case class BlankNode private (label: String) extends SparqlValue {
+  def render: String = s"_:$label"
+}
+
+object BlankNode {
+
+  /**
+   * SPARQL `BLANK_NODE_LABEL` production restricted to an ASCII-safe subset: the label starts
+   * with `[A-Za-z0-9_]`, continues with `[A-Za-z0-9_.-]`, and must not end with a `.`.
+   */
+  private val ValidLabel = "[A-Za-z0-9_]([A-Za-z0-9_.-]*[A-Za-z0-9_-])?".r
+
+  /**
+   * Create a blank node. Labels are developer-written constants (`node1`, `node2`, ...),
+   * so `apply` fails fast, mirroring [[Variable.apply]].
+   */
+  def apply(label: String): BlankNode = unsafeFrom(label)
+
+  def from(label: String): Either[String, BlankNode] =
+    if (ValidLabel.matches(label)) Right(new BlankNode(label))
+    else Left(s"Blank node label must match [A-Za-z0-9_][A-Za-z0-9_.-]* and not end with '.': $label")
+
+  /** Create a blank node from a label known to be valid; throws [[IllegalArgumentException]] otherwise. */
+  def unsafeFrom(label: String): BlankNode =
+    from(label).fold(msg => throw new IllegalArgumentException(msg), identity)
+}
+
 /**
  * A SPARQL literal value — rendered with proper escaping.
  *
@@ -92,10 +120,11 @@ final class Literal private (val render: String) extends SparqlValue {
 
 object Literal {
 
-  private val XsdDecimal  = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#decimal")
-  private val XsdDouble   = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#double")
-  private val XsdDateTime = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#dateTime")
-  private val XsdAnyUri   = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#anyURI")
+  private val XsdDecimal            = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#decimal")
+  private val XsdDouble             = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#double")
+  private val XsdDateTime           = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#dateTime")
+  private val XsdAnyUri             = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#anyURI")
+  private val XsdNonNegativeInteger = Iri.unsafeFrom("http://www.w3.org/2001/XMLSchema#nonNegativeInteger")
 
   /** SPARQL `LANGTAG` production: `[a-zA-Z]+ ('-' [a-zA-Z0-9]+)*`. */
   private val ValidLangTag = "[A-Za-z]+(-[A-Za-z0-9]+)*".r
@@ -115,6 +144,11 @@ object Literal {
   def bool(value: Boolean): Literal                = new Literal(value.toString)
   def dateTime(value: java.time.Instant): Literal  = typed(value.toString, XsdDateTime)
   def anyUri(value: String): Literal               = typed(value, XsdAnyUri)
+
+  /** Create an `xsd:nonNegativeInteger` literal; throws [[IllegalArgumentException]] on a negative value. */
+  def nonNegativeInteger(value: Int): Literal =
+    if (value < 0) throw new IllegalArgumentException(s"Value must not be negative: $value")
+    else typed(value.toString, XsdNonNegativeInteger)
 
   /**
    * Escape a string for use inside a double-quoted SPARQL string literal.
