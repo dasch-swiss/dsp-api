@@ -18,5 +18,4 @@
         knora-admin:projectRestrictedViewSize
                 "!128,128";
         knora-admin:projectShortcode    "1612";
-        knora-admin:projectShortname    "funk";
-        knora-admin:status              true .
+        knora-admin:projectShortname    "funk" .

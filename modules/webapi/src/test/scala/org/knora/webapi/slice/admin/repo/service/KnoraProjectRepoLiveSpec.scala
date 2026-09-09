@@ -31,7 +31,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.SelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -50,7 +49,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     NonEmptyChunk(Description.unsafeFrom("A project", Some("en"))),
     List(Keyword.unsafeFrom("project1")),
     Some(Logo.unsafeFrom("logo.png")),
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
@@ -74,7 +72,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         |    knora-admin:projectDescription "A project"@en ;
         |    knora-admin:projectKeyword "project1" ;
         |    knora-admin:projectLogo "logo.png" ;
-        |    knora-admin:status true ;
         |    knora-admin:hasSelfJoinEnabled false ;
         |    knora-admin:projectRestrictedViewSize "!128,128" ;
         |    knora-admin:hasAllowedCopyrightHolder "foo", "bar" ;
@@ -126,7 +123,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
               |  <http://rdfh.ch/projects/missingShortname> a knora-admin:knoraProject ;
               |    knora-admin:projectShortcode "9999" ;
               |    knora-admin:projectDescription "Broken project"@en ;
-              |    knora-admin:status true ;
               |    knora-admin:hasSelfJoinEnabled false .
               |}
               |""".stripMargin
@@ -146,7 +142,6 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
               |    knora-admin:projectShortcode "not-a-shortcode" ;
               |    knora-admin:projectShortname "brokenproject" ;
               |    knora-admin:projectDescription "Broken project"@en ;
-              |    knora-admin:status true ;
               |    knora-admin:hasSelfJoinEnabled false .
               |}
               |""".stripMargin
@@ -279,34 +274,32 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
               |    knora-admin:projectDescription ?n1 ;
               |    knora-admin:projectShortcode ?n2 ;
               |    knora-admin:projectShortname ?n3 ;
-              |    knora-admin:status ?n4 ;
-              |    knora-admin:projectKeyword ?n5 ;
-              |    knora-admin:projectLogo ?n6 ;
-              |    knora-admin:projectLongname ?n7 ;
-              |    knora-admin:projectRestrictedViewSize ?n8 ;
-              |    knora-admin:projectRestrictedViewWatermark ?n9 ;
-              |    knora-admin:hasAllowedCopyrightHolder ?n10 ;
-              |    knora-admin:hasEnabledLicense ?n11 ;
-              |    knora-admin:hasDataLicense ?n12 ;
-              |    knora-admin:hasDataCopyrightHolder ?n13 ;
-              |    knora-admin:hasDefaultDataAuthorship ?n14 . }
+              |    knora-admin:projectKeyword ?n4 ;
+              |    knora-admin:projectLogo ?n5 ;
+              |    knora-admin:projectLongname ?n6 ;
+              |    knora-admin:projectRestrictedViewSize ?n7 ;
+              |    knora-admin:projectRestrictedViewWatermark ?n8 ;
+              |    knora-admin:hasAllowedCopyrightHolder ?n9 ;
+              |    knora-admin:hasEnabledLicense ?n10 ;
+              |    knora-admin:hasDataLicense ?n11 ;
+              |    knora-admin:hasDataCopyrightHolder ?n12 ;
+              |    knora-admin:hasDefaultDataAuthorship ?n13 . }
               |WHERE { GRAPH <http://www.knora.org/data/admin> { ?s knora-admin:projectShortcode "1234" .
               |?s a knora-admin:knoraProject ;
               |    knora-admin:hasSelfJoinEnabled ?n0 ;
               |    knora-admin:projectDescription ?n1 ;
               |    knora-admin:projectShortcode ?n2 ;
-              |    knora-admin:projectShortname ?n3 ;
-              |    knora-admin:status ?n4 .
-              |OPTIONAL { ?s knora-admin:projectKeyword ?n5 . }
-              |OPTIONAL { ?s knora-admin:projectLogo ?n6 . }
-              |OPTIONAL { ?s knora-admin:projectLongname ?n7 . }
-              |OPTIONAL { ?s knora-admin:projectRestrictedViewSize ?n8 . }
-              |OPTIONAL { ?s knora-admin:projectRestrictedViewWatermark ?n9 . }
-              |OPTIONAL { ?s knora-admin:hasAllowedCopyrightHolder ?n10 . }
-              |OPTIONAL { ?s knora-admin:hasEnabledLicense ?n11 . }
-              |OPTIONAL { ?s knora-admin:hasDataLicense ?n12 . }
-              |OPTIONAL { ?s knora-admin:hasDataCopyrightHolder ?n13 . }
-              |OPTIONAL { ?s knora-admin:hasDefaultDataAuthorship ?n14 . } } }
+              |    knora-admin:projectShortname ?n3 .
+              |OPTIONAL { ?s knora-admin:projectKeyword ?n4 . }
+              |OPTIONAL { ?s knora-admin:projectLogo ?n5 . }
+              |OPTIONAL { ?s knora-admin:projectLongname ?n6 . }
+              |OPTIONAL { ?s knora-admin:projectRestrictedViewSize ?n7 . }
+              |OPTIONAL { ?s knora-admin:projectRestrictedViewWatermark ?n8 . }
+              |OPTIONAL { ?s knora-admin:hasAllowedCopyrightHolder ?n9 . }
+              |OPTIONAL { ?s knora-admin:hasEnabledLicense ?n10 . }
+              |OPTIONAL { ?s knora-admin:hasDataLicense ?n11 . }
+              |OPTIONAL { ?s knora-admin:hasDataCopyrightHolder ?n12 . }
+              |OPTIONAL { ?s knora-admin:hasDefaultDataAuthorship ?n13 . } } }
               |""".stripMargin
         } yield assertTrue(query.sparql == expected)
       },

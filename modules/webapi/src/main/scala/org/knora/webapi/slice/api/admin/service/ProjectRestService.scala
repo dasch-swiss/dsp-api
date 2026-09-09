@@ -20,7 +20,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectEraseService
@@ -112,26 +111,6 @@ final class ProjectRestService(
     _        <- permissionResponder.createPermissionsForAdminsAndMembersOfNewProject(knoraProject)
     external <- format.toExternal(internal)
   } yield external
-
-  /**
-   * Deletes the project by its [[ProjectIri]].
-   *
-   * @param projectIri  the [[ProjectIri]] of the project
-   * @param user        the [[User]] making the request
-   * @return
-   *     '''success''': a [[ProjectOperationResponseADM]]
-   *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
-   */
-  def deleteProject(user: User)(projectIri: ProjectIri): Task[ProjectOperationResponseADM] =
-    for {
-      project  <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      internal <- projectService
-                    .updateProject(project, ProjectUpdateRequest(status = Some(Status.Inactive)))
-                    .map(ProjectOperationResponseADM.apply)
-      external <- format.toExternal(internal)
-    } yield external
 
   def eraseProject(user: User)(shortcode: Shortcode, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {

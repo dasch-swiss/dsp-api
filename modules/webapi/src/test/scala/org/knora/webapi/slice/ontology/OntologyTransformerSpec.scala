@@ -154,7 +154,6 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Some description"))),
     List.empty,
     None,
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set.empty,

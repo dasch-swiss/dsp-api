@@ -27,7 +27,6 @@ object ProjectsEndpointsRequestsAndResponses {
     description: List[Description] = List.empty,
     keywords: List[Keyword] = List.empty,
     logo: Option[Logo] = None,
-    status: Status = Status.Active,
     selfjoin: SelfJoin = SelfJoin.CannotJoin,
     allowedCopyrightHolders: Option[Set[CopyrightHolder]] = None,
     enabledLicenses: Option[Set[LicenseIri]] = None,
@@ -41,7 +40,6 @@ object ProjectsEndpointsRequestsAndResponses {
     description: Option[List[Description]] = None,
     keywords: Option[List[Keyword]] = None,
     logo: Option[Logo] = None,
-    status: Option[Status] = None,
     selfjoin: Option[SelfJoin] = None,
   )
   object ProjectUpdateRequest {

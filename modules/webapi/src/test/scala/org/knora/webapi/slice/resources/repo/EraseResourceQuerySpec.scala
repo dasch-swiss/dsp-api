@@ -26,7 +26,6 @@ class EraseResourceQuerySpec extends ZIOSpecDefault {
     List.empty,
     None,
     Seq.empty,
-    Status.Active,
     SelfJoin.CannotJoin,
     Set.empty,
     Set.empty,
