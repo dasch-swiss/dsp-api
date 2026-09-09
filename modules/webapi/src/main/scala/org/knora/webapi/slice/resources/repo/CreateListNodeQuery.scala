@@ -4,12 +4,10 @@
  */
 
 package org.knora.webapi.slice.resources.repo
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 
+import org.knora.sparqlbuilder.*
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
@@ -17,10 +15,15 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreateListNodeQuery extends QueryBuilderHelper {
+object CreateListNodeQuery {
+
+  private def toLiteral(literal: StringLiteralV2): Literal = literal match {
+    case LanguageTaggedStringLiteralV2(value, lang) => Literal.langString(value, lang.value)
+    case PlainStringLiteralV2(value)                => Literal.string(value)
+  }
 
   def createRootNode(
     project: KnoraProject,
@@ -28,55 +31,61 @@ object CreateListNodeQuery extends QueryBuilderHelper {
     name: Option[ListName],
     labels: Labels,
     comments: Comments,
-  ): ModifyQuery = build(project, node, None, name, labels, Some(comments))
+  ): Update = {
+    val graph      = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val nodeIri    = Iri.unsafeFrom(node.value)
+    val projectIri = Iri.unsafeFrom(project.id.value)
+
+    Update(
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |INSERT DATA {
+               |  GRAPH $graph {
+               |    $nodeIri a knora-base:ListNode ;
+               |      knora-base:attachedToProject $projectIri ;
+               |      knora-base:isRootNode true .
+               |    ${name.whenSome(n => sparql"$nodeIri knora-base:listNodeName ${Literal.string(n.value)} .")}
+               |    ${labels.value.map(l => sparql"$nodeIri rdfs:label ${toLiteral(l)} .").joinLines}
+               |    ${comments.value.map(c => sparql"$nodeIri rdfs:comment ${toLiteral(c)} .").joinLines}
+               |  }
+               |}""".render,
+    )
+  }
 
   def createChildNode(
     project: KnoraProject,
     node: ListIri,
-    parent: (ListIri, ListIri, Position),
+    parentNode: ListIri,
+    rootNode: ListIri,
+    position: Position,
     name: Option[ListName],
     labels: Labels,
     comments: Option[Comments],
-  ): ModifyQuery = build(project, node, Some(parent), name, labels, comments)
+  ): Update = {
+    val graph        = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val nodeIri      = Iri.unsafeFrom(node.value)
+    val parentIri    = Iri.unsafeFrom(parentNode.value)
+    val rootIri      = Iri.unsafeFrom(rootNode.value)
+    val nodePosition = Literal.int(position.value)
 
-  private def build(
-    project: KnoraProject,
-    node: ListIri,
-    parent: Option[(ListIri, ListIri, Position)],
-    name: Option[ListName],
-    labels: Labels,
-    comments: Option[Comments],
-  ) = {
-    val graphName                          = graphIri(project)
-    val nodeIri                            = toRdfIri(node)
-    val insertPatterns: Seq[TriplePattern] = {
-      val nodePatterns = parent
-        .map((a, b, c) => (toRdfIri(a), toRdfIri(b), c))
-        .map { case (parentNodeIri, rootNodeIri, position) =>
-          List(
-            parentNodeIri.has(KnoraBase.hasSubListNode, nodeIri),
-            nodeIri
-              .has(KnoraBase.hasRootNode, rootNodeIri)
-              .andHas(KnoraBase.listNodePosition, position.value),
-          )
-        }
-        .getOrElse(
-          List(
-            nodeIri
-              .has(KnoraBase.attachedToProject, toRdfIri(project.id))
-              .andHas(KnoraBase.isRootNode, true),
-          ),
-        )
-      val namePatterns    = name.toList.map(n => nodeIri.has(KnoraBase.listNodeName, n.value))
-      val labelPatterns   = labels.value.map(toRdfLiteral).map(nodeIri.has(RDFS.LABEL, _))
-      val commentPatterns = comments.toList.flatMap(_.value).map(toRdfLiteral).map(nodeIri.has(RDFS.COMMENT, _))
-      Seq(nodeIri.isA(KnoraBase.ListNode)) ++ nodePatterns ++ namePatterns ++ labelPatterns ++ commentPatterns
-    }
-
-    Queries
-      .MODIFY()
-      .prefix(RDF.NS, RDFS.NS, KnoraBase.NS)
-      .insert(insertPatterns*)
-      .into(graphName)
+    Update(
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |INSERT DATA {
+               |  GRAPH $graph {
+               |    $parentIri knora-base:hasSubListNode $nodeIri .
+               |    $nodeIri a knora-base:ListNode ;
+               |      knora-base:hasRootNode $rootIri ;
+               |      knora-base:listNodePosition $nodePosition .
+               |    ${name.whenSome(n => sparql"$nodeIri knora-base:listNodeName ${Literal.string(n.value)} .")}
+               |    ${labels.value.map(l => sparql"$nodeIri rdfs:label ${toLiteral(l)} .").joinLines}
+               |    ${comments.whenSome(cs =>
+          cs.value.map(c => sparql"$nodeIri rdfs:comment ${toLiteral(c)} .").joinLines,
+        )}
+               |  }
+               |}""".render,
+    )
   }
 }

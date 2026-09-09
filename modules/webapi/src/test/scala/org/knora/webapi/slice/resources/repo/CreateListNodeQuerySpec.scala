@@ -5,6 +5,11 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.DatasetFactory
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.sparql.modify.request.UpdateDataInsert
+import org.apache.jena.update.UpdateAction
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.NonEmptyChunk
@@ -24,9 +29,39 @@ import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.domain.LanguageCode.FR
 import org.knora.webapi.slice.common.domain.LanguageCode.IT
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
+/**
+ * The query builder emits a single `INSERT DATA` statement, whereas the legacy implementation
+ * emitted an `INSERT { GRAPH … } WHERE {}` statement. The shapes therefore differ on purpose;
+ * equivalence is asserted at the data level by running both against identical empty datasets.
+ */
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreateListNodeQuerySpec extends ZIOSpecDefault {
+
+  private val anythingGraph = "http://www.knora.org/data/0001/anything"
+  private val imagesGraph   = "http://www.knora.org/data/00FF/images"
+
+  /** Run `update` against a fresh empty dataset and return the resulting named graph. */
+  private def execute(update: String, graph: String): Model = {
+    val dataset = DatasetFactory.create()
+    UpdateAction.parseExecute(update, dataset)
+    dataset.getNamedModel(graph)
+  }
+
+  /** Run the legacy and the new rendering against identical datasets and compare the outcome. */
+  private def assertSameData(legacy: String, actual: Update, graph: String = anythingGraph) = {
+    val legacyResult = execute(legacy, graph)
+    val actualResult = execute(actual.sparql, graph)
+    val operations   = UpdateFactory.create(actual.sparql).getOperations
+    assertTrue(
+      actualResult.isIsomorphicWith(legacyResult),
+      // guards against both updates inserting nothing at all
+      !actualResult.isEmpty,
+      operations.size == 1,
+      operations.get(0).isInstanceOf[UpdateDataInsert],
+    )
+  }
 
   private val testProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
@@ -70,20 +105,20 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
         comments = comments,
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-            |    knora-base:isRootNode true .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:listNodeName "testList" .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Test List"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Liste de test"@fr .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "This is a test list"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Ceci est une liste de test"@fr . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+          |    knora-base:isRootNode true .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:listNodeName "testList" .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Test List"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Liste de test"@fr .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "This is a test list"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Ceci est une liste de test"@fr . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
     test("should produce correct query for root node with labels and comments") {
@@ -106,17 +141,17 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
         comments = comments,
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-            |    knora-base:isRootNode true .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Simple List"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "A simple list"@en . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+          |    knora-base:isRootNode true .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Simple List"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "A simple list"@en . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
     test("should produce correct query for child node with parent, position, name, labels, and comments") {
@@ -136,25 +171,27 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       val query = CreateListNodeQuery.createChildNode(
         project = testProject,
         node = childNodeIri,
-        parent = (parentNodeIri, rootNodeIri, position),
+        parentNode = parentNodeIri,
+        rootNode = rootNodeIri,
+        position = position,
         name = Some(listName),
         labels = labels,
         comments = Some(comments),
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/child-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/parent-node> knora-base:hasSubListNode <http://rdfh.ch/lists/0001/child-node> .
-            |<http://rdfh.ch/lists/0001/child-node> knora-base:hasRootNode <http://rdfh.ch/lists/0001/root-node> ;
-            |    knora-base:listNodePosition 0 .
-            |<http://rdfh.ch/lists/0001/child-node> knora-base:listNodeName "childNode" .
-            |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Child Node"@en .
-            |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "A child node"@en . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/child-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/parent-node> knora-base:hasSubListNode <http://rdfh.ch/lists/0001/child-node> .
+          |<http://rdfh.ch/lists/0001/child-node> knora-base:hasRootNode <http://rdfh.ch/lists/0001/root-node> ;
+          |    knora-base:listNodePosition 0 .
+          |<http://rdfh.ch/lists/0001/child-node> knora-base:listNodeName "childNode" .
+          |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Child Node"@en .
+          |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "A child node"@en . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
     test("should produce correct query for child node at position 5") {
@@ -165,24 +202,26 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
       val query = CreateListNodeQuery.createChildNode(
         project = testProject,
         node = childNodeIri,
-        parent = (parentNodeIri, rootNodeIri, position),
+        parentNode = parentNodeIri,
+        rootNode = rootNodeIri,
+        position = position,
         name = None,
         labels = labels,
         comments = Some(comments),
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/child-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/parent-node> knora-base:hasSubListNode <http://rdfh.ch/lists/0001/child-node> .
-            |<http://rdfh.ch/lists/0001/child-node> knora-base:hasRootNode <http://rdfh.ch/lists/0001/root-node> ;
-            |    knora-base:listNodePosition 5 .
-            |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Node Five"@en .
-            |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "Fifth node"@en . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/child-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/parent-node> knora-base:hasSubListNode <http://rdfh.ch/lists/0001/child-node> .
+          |<http://rdfh.ch/lists/0001/child-node> knora-base:hasRootNode <http://rdfh.ch/lists/0001/root-node> ;
+          |    knora-base:listNodePosition 5 .
+          |<http://rdfh.ch/lists/0001/child-node> rdfs:label "Node Five"@en .
+          |<http://rdfh.ch/lists/0001/child-node> rdfs:comment "Fifth node"@en . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
     test("should produce correct query for root node with multilingual labels and comments") {
@@ -210,23 +249,23 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
         comments = comments,
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-            |    knora-base:isRootNode true .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:listNodeName "multilingualList" .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "English Label"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Deutsche Bezeichnung"@de .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Étiquette française"@fr .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Etichetta italiana"@it .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "English comment"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Deutscher Kommentar"@de .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Commentaire français"@fr . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+          |    knora-base:isRootNode true .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:listNodeName "multilingualList" .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "English Label"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Deutsche Bezeichnung"@de .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Étiquette française"@fr .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Etichetta italiana"@it .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "English comment"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Deutscher Kommentar"@de .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Commentaire français"@fr . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
     test("should produce correct query for different project") {
@@ -255,18 +294,19 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
         comments = comments,
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/00FF/images> { <http://rdfh.ch/lists/00FF/image-types> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/00FF/image-types> knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
-            |    knora-base:isRootNode true .
-            |<http://rdfh.ch/lists/00FF/image-types> knora-base:listNodeName "imageTypes" .
-            |<http://rdfh.ch/lists/00FF/image-types> rdfs:label "Image Types"@en .
-            |<http://rdfh.ch/lists/00FF/image-types> rdfs:comment "Types of images"@en . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/00FF/images> { <http://rdfh.ch/lists/00FF/image-types> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/00FF/image-types> knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
+          |    knora-base:isRootNode true .
+          |<http://rdfh.ch/lists/00FF/image-types> knora-base:listNodeName "imageTypes" .
+          |<http://rdfh.ch/lists/00FF/image-types> rdfs:label "Image Types"@en .
+          |<http://rdfh.ch/lists/00FF/image-types> rdfs:comment "Types of images"@en . } }
+          |WHERE {}""".stripMargin,
+        query,
+        imagesGraph,
       )
     },
     test("should handle labels with special characters") {
@@ -289,17 +329,17 @@ class CreateListNodeQuerySpec extends ZIOSpecDefault {
         comments = comments,
       )
 
-      assertTrue(
-        query.getQueryString ==
-          """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-            |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
-            |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-            |    knora-base:isRootNode true .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Label with \"quotes\" and \'apostrophes\'"@en .
-            |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Comment with special chars"@en . } }
-            |WHERE {}""".stripMargin,
+      assertSameData(
+        """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/root-node> a knora-base:ListNode .
+          |<http://rdfh.ch/lists/0001/root-node> knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+          |    knora-base:isRootNode true .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:label "Label with \"quotes\" and \'apostrophes\'"@en .
+          |<http://rdfh.ch/lists/0001/root-node> rdfs:comment "Comment with special chars"@en . } }
+          |WHERE {}""".stripMargin,
+        query,
       )
     },
   )
