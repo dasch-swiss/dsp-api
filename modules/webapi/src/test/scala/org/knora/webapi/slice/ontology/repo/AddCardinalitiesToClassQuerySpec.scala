@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -19,6 +20,12 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -49,7 +56,7 @@ class AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -71,6 +78,7 @@ class AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
             |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
             |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
             |anything:TestClass a owl:Class . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query with single cardinality without guiOrder") {
@@ -88,7 +96,7 @@ class AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -105,6 +113,7 @@ class AddCardinalitiesToClassQuerySpec extends ZIOSpecDefault {
             |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
             |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
             |anything:TestClass a owl:Class . } }""".stripMargin,
+        ),
       )
     },
   )
