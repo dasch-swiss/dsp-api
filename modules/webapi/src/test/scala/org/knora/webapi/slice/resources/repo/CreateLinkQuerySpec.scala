@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
@@ -26,6 +27,12 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreateLinkQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -84,7 +91,7 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                      None,
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             s"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -123,6 +130,7 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                |?otherLinkValue knora-base:valueHasOrder ?order ;
                |    knora-base:isDeleted false . }
                | } }""".stripMargin,
+          ),
         )
       },
       test("should produce correct query when linkTargetExists with comment") {
@@ -136,7 +144,7 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                      Some("This is a test comment"),
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             s"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -176,6 +184,7 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                |?otherLinkValue knora-base:valueHasOrder ?order ;
                |    knora-base:isDeleted false . }
                | } }""".stripMargin,
+          ),
         )
       },
       test("should produce correct query when linkTargetExists is false") {
@@ -189,7 +198,7 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                      None,
                    )
         } yield assertTrue(
-          query.getQueryString ==
+          canonical(query.sparql) == canonical(
             s"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -220,6 +229,29 @@ class CreateLinkQuerySpec extends ZIOSpecDefault {
                |?otherLinkValue knora-base:valueHasOrder ?order ;
                |    knora-base:isDeleted false . }
                | } }""".stripMargin,
+          ),
+        )
+      },
+      // The legacy RDF4J builder could not express `BIND(<literal> AS ?var)` and therefore emitted
+      // `BIND(IF(true, N, 0) AS ?nextOrder)` as a workaround. That IF was never intended SPARQL, so the
+      // interpolated query emits the plain `BIND(N AS ?nextOrder)` form instead.
+      test("should bind an explicitly supplied order instead of computing it in a subquery") {
+        for {
+          query <- CreateLinkQuery.build(
+                     testProject,
+                     testResourceIri,
+                     createValidSparqlTemplateLinkUpdate(),
+                     testNewValueUUID,
+                     testCreationDate,
+                     None,
+                     valueHasOrder = Some(5),
+                   )
+          rendered = query.sparql
+        } yield assertTrue(
+          rendered.contains("BIND(5 AS ?nextOrder)"),
+          !rendered.contains("SELECT"),
+          !rendered.contains("?maxOrder"),
+          canonical(rendered).contains("?nextOrder"),
         )
       },
     ),
