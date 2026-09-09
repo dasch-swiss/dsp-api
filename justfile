@@ -10,12 +10,31 @@ scalafmt_targets := "//modules/bagit:bagit //modules/bagit:test //modules/jwt:jw
 default:
     @just --list
 
+# Aborts with the dev-shell activation command when bazel is missing from PATH.
+# flake.nix sets no marker variable, so the guard tests for the executable itself.
+[private]
+require-bazel:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if command -v bazel >/dev/null 2>&1; then exit 0; fi
+    echo "ERROR: 'bazel' is not on PATH." >&2
+    echo "This repository builds through Bazel inside the Nix dev shell." >&2
+    echo "" >&2
+    echo "Enter the dev shell, then re-run:" >&2
+    echo "    nix develop" >&2
+    echo "" >&2
+    echo "Or run the recipe through it directly:" >&2
+    echo "    nix develop --command just <recipe>" >&2
+    echo "" >&2
+    echo "With direnv installed, run 'direnv allow' once in the repository root." >&2
+    exit 1
+
 alias ssl := stack-start-latest
 alias stop := stack-stop
 alias ssd := stack-start-dev
 
 # Format Scala (scalafmt via Bazel) and apply license headers
-fmt:
+fmt: require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     for t in {{scalafmt_targets}}; do bazel run "$t.format"; done
@@ -26,37 +45,37 @@ fmt:
 # Locally FLAGS is empty (dev never contacts the remote backend) and the recipes run as before.
 
 # Run unit tests for dsp-api (webapi only; use `test-unit` for the full pure-JVM suite)
-test *FLAGS='':
+test *FLAGS='': require-bazel
     bazel test //modules/webapi:test {{FLAGS}}
 
 # Run all pure-JVM unit tests (matches the CI `unit-tests` job; RBE-safe: runs remotely + result-caches)
-test-unit *FLAGS='':
+test-unit *FLAGS='': require-bazel
     bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test //modules/sparql-builder:test {{FLAGS}}
 
 # Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
-docker-load-test-images *FLAGS='':
+docker-load-test-images *FLAGS='': require-bazel
     bazel run {{FLAGS}} //modules/sipi:load
     bazel run {{FLAGS}} //modules/ingest:load
     bazel run {{FLAGS}} //modules/fuseki:load
 
 # Run integration tests for dsp-api
-test-it *FLAGS='': (docker-load-test-images FLAGS)
+test-it *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span {{FLAGS}}
 
 # Run End-2-End tests for dsp-api
-test-e2e *FLAGS='': (docker-load-test-images FLAGS)
+test-e2e *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-e2e:test {{FLAGS}}
 
 # Run unit tests for ingest
-test-ingest *FLAGS='':
+test-ingest *FLAGS='': require-bazel
     bazel test //modules/ingest:test {{FLAGS}}
 
 # Run integration tests for ingest
-test-ingest-integration *FLAGS='': (docker-load-test-images FLAGS)
+test-ingest-integration *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-ingest-integration:test {{FLAGS}}
 
 # Check Scala formatting (scalafmt via Bazel) + license headers (CI gate, no writes)
-check *FLAGS='':
+check *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     # scalafmt format-test runs LOCALLY (no {{FLAGS}}): `bazel run <t>.format-test` diffs the
@@ -66,7 +85,7 @@ check *FLAGS='':
     bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
 
 # Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
-header-fix:
+header-fix: require-bazel
     bazel run //tools/license:fix
 
 ## Scala language intelligence (Metals MCP)
@@ -82,7 +101,7 @@ header-fix:
 # and a bazel_binary wrapper (tools/metals/bazel-bsp-wrapper.sh, set in .bazelproject) that patches
 # bazel-bsp's struct-returning aspect on each invocation. So compile/get-usages work. Vendored patch,
 # not a rules_scala issue; tracked at scalameta/metals#8268. See docs/development/dsp-api-metals-mcp.md.
-metals-bootstrap:
+metals-bootstrap: require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     test -f .bazelproject || { echo "ERROR: .bazelproject missing (should be committed)"; exit 1; }
@@ -98,7 +117,7 @@ docker-image-tag:
     @tools/workspace_status.sh | awk '/^STABLE_GIT_VERSION /{print $2}'
 
 # Build the knora-api image with Bazel + load it into the local Docker daemon (:latest and :<version>)
-docker-build-dsp-api-image *FLAGS='':
+docker-build-dsp-api-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
@@ -107,7 +126,7 @@ docker-build-dsp-api-image *FLAGS='':
     echo "Loaded daschswiss/knora-api: latest + $TAG"
 
 # Build the knora-sipi image with Bazel + load it into the local Docker daemon (:latest and :<version>)
-docker-build-sipi-image *FLAGS='':
+docker-build-sipi-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
@@ -116,7 +135,7 @@ docker-build-sipi-image *FLAGS='':
     echo "Loaded daschswiss/knora-sipi: latest + $TAG"
 
 # Build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
-docker-build-ingest-image *FLAGS='':
+docker-build-ingest-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
@@ -128,21 +147,21 @@ docker-build-ingest-image *FLAGS='':
 docker-build *FLAGS='': (docker-build-dsp-api-image FLAGS) (docker-build-sipi-image FLAGS) (docker-build-ingest-image FLAGS)
 
 # Build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
-docker-publish-dsp-api-image *FLAGS='':
+docker-publish-dsp-api-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
     bazel run {{FLAGS}} //modules/webapi:push -- -t latest -t "$TAG"
 
 # Build + publish the multi-arch knora-sipi image with Bazel (tags: latest + <version>)
-docker-publish-sipi-image *FLAGS='':
+docker-publish-sipi-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
     bazel run {{FLAGS}} //modules/sipi:push -- -t latest -t "$TAG"
 
 # Build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
-docker-publish-ingest-image *FLAGS='':
+docker-publish-ingest-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
@@ -152,12 +171,12 @@ docker-publish-ingest-image *FLAGS='':
 docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS) (docker-publish-fuseki-image FLAGS)
 
 # Build the Fuseki image with Bazel + load it into the local Docker daemon (at :latest)
-docker-build-fuseki-image *FLAGS='':
+docker-build-fuseki-image *FLAGS='': require-bazel
     bazel run {{FLAGS}} //modules/fuseki:load
 
 # Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
 # The Fuseki image is versioned by release-please (git version), same as the other three images.
-docker-publish-fuseki-image *FLAGS='':
+docker-publish-fuseki-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     TAG=$(just docker-image-tag)
@@ -170,10 +189,12 @@ stack-start:
     ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started"
 
-# Start Stack without API for development
-stack-start-dev: stack-start
-    @echo "Stopping API"
-    docker compose down api
+# Start Stack without API for development: fuseki, sipi, ingest and alloy
+stack-start-dev:
+    @echo "Starting Stack without API"
+    docker compose stop api app
+    docker compose up -d db sipi ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started without API"
 
 # Start stack and pull latest images before starting
@@ -210,7 +231,7 @@ stack-init-test: && stack-start
     just init-db-test
 
 # Run API locally against the dev Fuseki (requires VPN)
-run-with-dev-db:
+run-with-dev-db: require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
     if [ ! -f .env ]; then
@@ -268,7 +289,7 @@ structurizer:
 
 ## DSP stack (local dev)
 
-# starts the dsp-stack: fuseki, sipi, api and app
+# starts the dsp-stack: fuseki, sipi, ingest, api, app and alloy
 stack-up: docker-build
     docker compose -f docker-compose.yml up -d db
     ./modules/webapi/scripts/wait-for-db.sh
@@ -279,7 +300,7 @@ stack-up: docker-build
 stack-up-fast: docker-build-dsp-api-image
     docker compose -f docker-compose.yml up -d
 
-# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, api
+# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, ingest, api, app and alloy
 stack-up-ci: docker-build
     docker compose -f docker-compose.yml up -d
 
@@ -336,18 +357,25 @@ stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp
 stack-config:
     docker compose -f docker-compose.yml config
 
-# starts the dsp-stack without dsp-api: fuseki and sipi only
-stack-without-api: stack-up
-    docker compose -f docker-compose.yml stop api
+# starts the dsp-stack without dsp-api: fuseki, sipi, ingest and alloy
+stack-without-api: docker-build
+    docker compose -f docker-compose.yml stop api app
+    docker compose -f docker-compose.yml up -d db sipi ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
 
-# starts the dsp-stack without dsp-app
-stack-without-app: stack-up
+# starts the dsp-stack without dsp-app: fuseki, sipi, ingest, api and alloy
+stack-without-app: docker-build
     docker compose -f docker-compose.yml stop app
+    docker compose -f docker-compose.yml up -d db
+    ./modules/webapi/scripts/wait-for-db.sh
+    docker compose -f docker-compose.yml up -d db sipi ingest api alloy
+    ./modules/webapi/scripts/wait-for-api.sh
 
-# starts the dsp-stack without dsp-api and sipi: fuseki only
-stack-without-api-and-sipi: stack-up
-    docker compose -f docker-compose.yml stop api
-    docker compose -f docker-compose.yml stop sipi
+# starts the dsp-stack without dsp-api and sipi: fuseki, ingest and alloy
+stack-without-api-and-sipi: docker-build
+    docker compose -f docker-compose.yml stop api sipi app
+    docker compose -f docker-compose.yml up -d db ingest alloy
+    ./modules/webapi/scripts/wait-for-db.sh
 
 # starts only fuseki
 stack-db-only:

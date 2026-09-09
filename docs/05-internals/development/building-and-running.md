@@ -7,6 +7,19 @@
    ![screenshot 'Docker Desktop'](figures/dockerPreferences.png)
    The stack's memory usage is limited to ~20GB, though it should only use that much during heavy workloads. You should
    be good to go in any case if you allocate 22GB or more.
+3. Add the dsp-api repository directory to Docker Desktop's file-sharing allowlist, under
+   Settings > Resources > File Sharing.
+
+   The `app` service bind-mounts `app-config.dev.json` from the repository. When the
+   repository sits outside the allowlist, Docker refuses the mount:
+
+   ```text
+   Error response from daemon: mounts denied:
+   The path .../app-config.dev.json is not shared from the host and is not known to Docker.
+   ```
+
+   The error names only the mount, not the service. Recipes that exclude `app`, such as
+   `just stack-without-app`, never touch that mount and therefore need no allowlist entry.
 
 ## Running the stack
 
@@ -20,7 +33,7 @@ With Docker installed and configured,
 
    to initialize Fuseki's dsp-repo dataset with loading some test data into the triplestore 
 
-1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
+1. Start the entire dsp-stack (fuseki (db), sipi, ingest, api, app, alloy) with the following command:
 
    ```bash
    just stack-up
