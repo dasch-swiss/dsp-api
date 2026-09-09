@@ -31,7 +31,6 @@ object RdfConversions {
   implicit val longnameConverter: String => Either[String, Longname]           = Longname.from
   implicit val keywordConverter: String => Either[String, Keyword]             = Keyword.from
   implicit val logoConverter: String => Either[String, Logo]                   = Logo.from
-  implicit val statusConverter: Boolean => Either[String, Status]              = value => Right(Status.from(value))
   implicit val selfjoinConverter: Boolean => Either[String, SelfJoin]          = value => Right(SelfJoin.from(value))
   implicit val descriptionConverter: LangString => Either[String, Description] = langString =>
     Description.from(StringLiteralV2.unsafeFrom(langString.value, langString.lang))
