@@ -17,6 +17,8 @@ val userIri           = Iri.from(untrustedString)                      // Either
 val generatedVariable = Variable(s"value$index")                       // dynamic names only
 val label             = Literal.string(userInput)                      // escaped at construction
 val labelDe           = Literal.langString("Haus", "de")               // lang tag validated
+val guiOrder          = Literal.nonNegativeInteger(1)                  // "1"^^xsd:nonNegativeInteger
+val restriction       = BlankNode(s"node$index")                       // renders as _:node1
 val includeDeleted = false
 
 // Keep static SPARQL as SPARQL. Interpolate only dynamic values and structure.
@@ -64,8 +66,9 @@ between each fragment. Use `Fragment.join` for other separators.
 
 - **Compile time:** the interpolator accepts only `SparqlValue | Fragment`.
 - **Construction time:** `Iri` rejects every character that could terminate the `<...>`
-  wrapper (SPARQL `IRIREF`), `Variable` names are `VARNAME`-restricted, language tags must
-  match `LANGTAG`, and `Literal` holds only its final escaped rendering.
+  wrapper (SPARQL `IRIREF`), `Variable` names are `VARNAME`-restricted, `BlankNode` labels are
+  restricted to an ASCII-safe `BLANK_NODE_LABEL` subset, language tags must match `LANGTAG`, and
+  `Literal` holds only its final escaped rendering.
 - **Escaping:** byte-for-byte identical to RDF4J's, covering the full `ECHAR` set
   (`\ " ' \t \b \n \r \f`) — pinned by `Rdf4jEscapingSpec` (RDF4J is a test-only
   dependency). Migrations are verified by diffing rendered SPARQL against the old
