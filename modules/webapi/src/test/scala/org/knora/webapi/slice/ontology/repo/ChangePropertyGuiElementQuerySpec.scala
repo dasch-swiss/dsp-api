@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -18,6 +19,12 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -74,7 +81,7 @@ class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
           |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }""".stripMargin
 
       val expected = deleteOldQuery + ";\n" + insertNewQuery + ";\n" + updateTimestampQuery
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
     test("with guiElement and guiAttributes, with link value property") {
       val actual = ChangePropertyGuiElementQuery.build(
@@ -110,7 +117,7 @@ class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
           |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }""".stripMargin
 
       val expected = deleteOldQuery + ";\n" + insertNewQuery + ";\n" + updateTimestampQuery
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
     test("no guiElement, no guiAttributes (delete only)") {
       val actual = ChangePropertyGuiElementQuery.build(
@@ -133,7 +140,7 @@ class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
           |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiAttribute ?oldGuiAttribute . } } }""".stripMargin
 
       val expected = deleteOldQuery + ";\n" + updateTimestampQuery
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
   )
 }
