@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -17,6 +18,12 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testPropertyIri: PropertyIri =
@@ -28,9 +35,9 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment, Any] = suite("CountPropertyUsedWithClassQuerySpec")(
     test("should produce correct SELECT query counting property usage with class") {
       val query  = CountPropertyUsedWithClassQuery.build(testPropertyIri, testClassIri)
-      val actual = query.getQueryString
+      val actual = query.sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |SELECT ?subject ( COUNT( ?object ) AS ?count )
             |WHERE { ?subject a <http://www.knora.org/ontology/0001/anything#Thing> .
@@ -39,6 +46,7 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
             |MINUS { ?object knora-base:isDeleted true . } } }
             |GROUP BY ?subject
             |""".stripMargin,
+        ),
       )
     },
     test("should handle property and class from different ontologies") {
@@ -48,9 +56,9 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
         ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/images#Image".toSmartIri)
 
       val query  = CountPropertyUsedWithClassQuery.build(propertyIri, classIri)
-      val actual = query.getQueryString
+      val actual = query.sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |SELECT ?subject ( COUNT( ?object ) AS ?count )
             |WHERE { ?subject a <http://www.knora.org/ontology/0001/images#Image> .
@@ -59,6 +67,7 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
             |MINUS { ?object knora-base:isDeleted true . } } }
             |GROUP BY ?subject
             |""".stripMargin,
+        ),
       )
     },
     test("should handle knora-base property and class") {
@@ -68,9 +77,9 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
         ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/knora-base#Resource".toSmartIri)
 
       val query  = CountPropertyUsedWithClassQuery.build(propertyIri, classIri)
-      val actual = query.getQueryString
+      val actual = query.sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |SELECT ?subject ( COUNT( ?object ) AS ?count )
             |WHERE { ?subject a knora-base:Resource .
@@ -79,6 +88,7 @@ class CountPropertyUsedWithClassQuerySpec extends ZIOSpecDefault {
             |MINUS { ?object knora-base:isDeleted true . } } }
             |GROUP BY ?subject
             |""".stripMargin,
+        ),
       )
     },
   )

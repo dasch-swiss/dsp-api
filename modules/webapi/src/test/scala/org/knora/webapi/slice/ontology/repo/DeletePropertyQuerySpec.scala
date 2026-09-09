@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -20,6 +21,12 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeletePropertyQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -37,9 +44,9 @@ class DeletePropertyQuerySpec extends ZIOSpecDefault {
       DeletePropertyQuery
         .build(testPropertyIri, Some(testLinkValuePropertyIri), testLastModificationDate)
         .map { case (_, query) =>
-          val queryString = query.getQueryString
+          val queryString = query.sparql
           assertTrue(
-            queryString ==
+            canonical(queryString) == canonical(
               """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -54,6 +61,7 @@ class DeletePropertyQuerySpec extends ZIOSpecDefault {
                 |    ?propertyPred ?propertyObj .
                 |FILTER NOT EXISTS { ?s ?p anything:hasTestProperty . }
                 |anything:hasTestPropertyValue ?linkValuePropertyObj ?linkValuePropertyPred . }""".stripMargin,
+            ),
           )
         }
     },
@@ -61,9 +69,9 @@ class DeletePropertyQuerySpec extends ZIOSpecDefault {
       DeletePropertyQuery
         .build(testPropertyIri, None, testLastModificationDate)
         .map { case (_, query) =>
-          val queryString = query.getQueryString
+          val queryString = query.sparql
           assertTrue(
-            queryString ==
+            canonical(queryString) == canonical(
               """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -76,6 +84,7 @@ class DeletePropertyQuerySpec extends ZIOSpecDefault {
                 |anything:hasTestProperty a owl:ObjectProperty ;
                 |    ?propertyPred ?propertyObj .
                 |FILTER NOT EXISTS { ?s ?p anything:hasTestProperty . } }""".stripMargin,
+            ),
           )
         }
     },
