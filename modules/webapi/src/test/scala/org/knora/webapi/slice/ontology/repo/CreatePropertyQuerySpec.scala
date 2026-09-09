@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -26,6 +27,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreatePropertyQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -85,25 +92,27 @@ class CreatePropertyQuerySpec extends ZIOSpecDefault {
         .build(testPropertyDef, testLinkValuePropertyDef, testLastModificationDate)
         .map((actual: Update) =>
           assertTrue(
-            actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                               |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                               |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                               |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |anything:hasTestProperty rdfs:label "Test \"Property\""@en .
-                               |anything:hasTestProperty rdfs:comment "A test \"property\""@en .
-                               |anything:hasTestProperty knora-base:objectType knora-base:TextValue .
-                               |anything:hasTestProperty knora-base:subjectType knora-base:Resource .
-                               |anything:hasTestProperty rdfs:subPropertyOf knora-base:hasValue .
-                               |anything:hasTestPropertyValue rdfs:label "Test Property Value"@en .
-                               |anything:hasTestPropertyValue rdfs:subPropertyOf knora-base:hasLinkToValue . } }
-                               |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                               |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
-                               |FILTER NOT EXISTS { anything:hasTestProperty rdf:type ?existingPropertyType . }
-                               |FILTER NOT EXISTS { anything:hasTestPropertyValue a ?existingLinkValuePropertyType . } }""".stripMargin,
+            canonical(actual.sparql) == canonical(
+              """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                |anything:hasTestProperty rdfs:label "Test \"Property\""@en .
+                |anything:hasTestProperty rdfs:comment "A test \"property\""@en .
+                |anything:hasTestProperty knora-base:objectType knora-base:TextValue .
+                |anything:hasTestProperty knora-base:subjectType knora-base:Resource .
+                |anything:hasTestProperty rdfs:subPropertyOf knora-base:hasValue .
+                |anything:hasTestPropertyValue rdfs:label "Test Property Value"@en .
+                |anything:hasTestPropertyValue rdfs:subPropertyOf knora-base:hasLinkToValue . } }
+                |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
+                |FILTER NOT EXISTS { anything:hasTestProperty rdf:type ?existingPropertyType . }
+                |FILTER NOT EXISTS { anything:hasTestPropertyValue a ?existingLinkValuePropertyType . } }""".stripMargin,
+            ),
           ),
         )
     },
@@ -112,22 +121,24 @@ class CreatePropertyQuerySpec extends ZIOSpecDefault {
         .build(testPropertyDef, None, testLastModificationDate)
         .map((actual: Update) =>
           assertTrue(
-            actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                               |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                               |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                               |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |anything:hasTestProperty rdfs:label "Test \"Property\""@en .
-                               |anything:hasTestProperty rdfs:comment "A test \"property\""@en .
-                               |anything:hasTestProperty knora-base:objectType knora-base:TextValue .
-                               |anything:hasTestProperty knora-base:subjectType knora-base:Resource .
-                               |anything:hasTestProperty rdfs:subPropertyOf knora-base:hasValue . } }
-                               |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                               |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
-                               |FILTER NOT EXISTS { anything:hasTestProperty rdf:type ?existingPropertyType . } }""".stripMargin,
+            canonical(actual.sparql) == canonical(
+              """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                |anything:hasTestProperty rdfs:label "Test \"Property\""@en .
+                |anything:hasTestProperty rdfs:comment "A test \"property\""@en .
+                |anything:hasTestProperty knora-base:objectType knora-base:TextValue .
+                |anything:hasTestProperty knora-base:subjectType knora-base:Resource .
+                |anything:hasTestProperty rdfs:subPropertyOf knora-base:hasValue . } }
+                |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
+                |FILTER NOT EXISTS { anything:hasTestProperty rdf:type ?existingPropertyType . } }""".stripMargin,
+            ),
           ),
         )
     },

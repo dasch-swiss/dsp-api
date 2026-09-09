@@ -5,107 +5,70 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import java.time.Instant
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.slice.ontology.repo.OntologyLiteralFragments.predicateTriples
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object CreatePropertyQuery extends QueryBuilderHelper {
+object CreatePropertyQuery {
 
   def build(
     propertyDef: PropertyInfoContentV2,
     linkValuePropertyDef: Option[PropertyInfoContentV2],
     lastModificationDate: Instant,
-  ): UIO[Update] = Clock.instant.map(now =>
-    val ontologyIri            = PropertyIri.unsafeFrom(propertyDef.propertyIri).ontologyIri
-    val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
+  ): UIO[Update] = Clock.instant.map { now =>
+    val ontologyIri  = PropertyIri.unsafeFrom(propertyDef.propertyIri).ontologyIri
+    val ontology     = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val property     = Iri.unsafeFrom(propertyDef.propertyIri.toInternalSchema.toIri)
+    val previousDate = Literal.dateTime(lastModificationDate)
+    val currentDate  = Literal.dateTime(now)
 
-    val deletePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
+    val linkValueProperty = linkValuePropertyDef.map(d => Iri.unsafeFrom(d.propertyIri.toInternalSchema.toIri))
 
-    val insertPatterns = buildInsertPatterns(ontology, propertyDef, linkValuePropertyDef, now)
-
-    val wherePatterns = buildWherePatterns(ontology, propertyDef, linkValuePropertyDef, lastModificationDate)
-
-    val query: ModifyQuery = Queries
-      .MODIFY()
-      .prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
-      .from(ontology)
-      .delete(deletePattern)
-      .into(ontology)
-      .insert(insertPatterns*)
-      .where(wherePatterns*)
-
-    Update(query),
-  )
-
-  private def buildInsertPatterns(
-    ontology: Iri,
-    propertyDef: PropertyInfoContentV2,
-    maybeLinkValuePropertyDef: Option[PropertyInfoContentV2],
-    currentTime: Instant,
-  ): List[TriplePattern] = {
-    val ontologyModPattern = ontology.has(KB.lastModificationDate, toRdfLiteral(currentTime))
-
-    val propertyPatterns = buildPropertyPatterns(propertyDef)
-
-    val linkValuePropertyPatterns = maybeLinkValuePropertyDef.fold(List.empty[TriplePattern])(buildPropertyPatterns)
-
-    List(ontologyModPattern) ::: propertyPatterns ::: linkValuePropertyPatterns
-  }
-
-  private def buildPropertyPatterns(propertyDef: PropertyInfoContentV2): List[TriplePattern] = {
-    val property = toRdfIri(propertyDef.propertyIri)
-
-    // Build predicate-object patterns
-    val predicateObjectPatterns = toPropertyPatterns(property, propertyDef.predicates.values).toList
-
-    // Build sub-property patterns
-    val subPropertyPatterns = propertyDef.subPropertyOf
-      .map(superProp => property.has(RDFS.SUBPROPERTYOF, toRdfIri(superProp)))
-      .toList
-
-    predicateObjectPatterns ::: subPropertyPatterns
-  }
-
-  private def buildWherePatterns(
-    ontology: Iri,
-    propertyDef: PropertyInfoContentV2,
-    maybeLinkValuePropertyDef: Option[PropertyInfoContentV2],
-    lastModificationDate: Instant,
-  ): List[GraphPattern] = {
-
-    val ontologyPattern = ontology
-      .isA(OWL.ONTOLOGY)
-      .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate))
-      .from(ontology)
-
-    // Property existence check
-    val propertyExistsPattern = GraphPatterns.filterNotExists(
-      toRdfIri(propertyDef.propertyIri).has(RDF.TYPE, variable("existingPropertyType")),
+    // The legacy builder emitted the predicate triples before the rdfs:subPropertyOf triples.
+    Update(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $previousDate .
+               |  }
+               |}
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $currentDate .
+               |    ${(Seq(predicateTriples(property, propertyDef.predicates.values)) ++ propertyDef.subPropertyOf.toSeq
+          .map(sp => sparql"$property rdfs:subPropertyOf ${Iri.unsafeFrom(sp.toInternalSchema.toIri)} ."))
+          .filterNot(_.render.isEmpty)
+          .joinLines}
+               |    ${linkValuePropertyDef.whenSome { d =>
+          val lvProperty = Iri.unsafeFrom(d.propertyIri.toInternalSchema.toIri)
+          (Seq(predicateTriples(lvProperty, d.predicates.values)) ++ d.subPropertyOf.toSeq
+            .map(sp => sparql"$lvProperty rdfs:subPropertyOf ${Iri.unsafeFrom(sp.toInternalSchema.toIri)} ."))
+            .filterNot(_.render.isEmpty)
+            .joinLines
+        }}
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |  }
+               |  FILTER NOT EXISTS { $property rdf:type ?existingPropertyType . }
+               |  ${linkValueProperty.whenSome(iri =>
+          sparql"FILTER NOT EXISTS { $iri a ?existingLinkValuePropertyType . }",
+        )}
+               |}""".render,
     )
-
-    // Link value property existence check if provided
-    val linkValuePropertyExistsPattern = maybeLinkValuePropertyDef.map { linkValuePropertyDef =>
-      GraphPatterns.filterNotExists(
-        toRdfIri(linkValuePropertyDef.propertyIri).isA(variable("existingLinkValuePropertyType")),
-      )
-    }.toList
-
-    List(ontologyPattern, propertyExistsPattern) ::: linkValuePropertyExistsPattern
   }
 }
