@@ -34,8 +34,6 @@ import org.knora.webapi.slice.resources.repo.model.MappingStandoffDatatypeClass
 import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -278,23 +276,23 @@ final class StandoffResponderV2(
 
       // check if the mapping IRI already exists
       getExistingMappingQuery  = GetMappingQuery.build(mappingIri.value)
-      existingMappingResponse <- triplestore.query(Construct(getExistingMappingQuery))
+      existingMappingResponse <- triplestore.query(getExistingMappingQuery)
 
       _ = if (existingMappingResponse.statements.nonEmpty) {
             throw BadRequestException(s"mapping IRI $mappingIri already exists")
           }
 
-      createNewMappingSparql = CreateNewMappingQuery.build(
-                                 dataNamedGraph = namedGraph,
-                                 mappingIri = mappingIri.value,
-                                 label = request.label,
-                                 defaultXSLTransformation = defaultXSLTransformation,
-                                 mappingElements = mappingElements,
-                               )
-      _ <- triplestore.query(Update(createNewMappingSparql))
+      createNewMappingQuery = CreateNewMappingQuery.build(
+                                dataNamedGraph = namedGraph,
+                                mappingIri = mappingIri.value,
+                                label = request.label,
+                                defaultXSLTransformation = defaultXSLTransformation,
+                                mappingElements = mappingElements,
+                              )
+      _ <- triplestore.query(createNewMappingQuery)
 
       // check if the mapping has been created
-      newMappingResponse <- triplestore.query(Construct(getExistingMappingQuery))
+      newMappingResponse <- triplestore.query(getExistingMappingQuery)
 
       _ = if (newMappingResponse.statements.isEmpty) {
             throw UpdateNotPerformedException(

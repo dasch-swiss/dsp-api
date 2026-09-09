@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -13,13 +14,19 @@ import org.knora.testrunner.DspZTestJUnitRunner
 @RunWith(classOf[DspZTestJUnitRunner])
 class GetMappingQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
   private val testMappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
   override def spec: Spec[TestEnvironment, Any] = suite("GetMappingQuerySpec")(
     test("should produce correct CONSTRUCT query for a mapping IRI") {
-      val actual = GetMappingQuery.build(testMappingIri).getQueryString
+      val actual = GetMappingQuery.build(testMappingIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -61,13 +68,14 @@ class GetMappingQuerySpec extends ZIOSpecDefault {
             |    knora-base:mappingHasXMLAttributename ?datatypeAttributeName ;
             |    knora-base:mappingHasStandoffClass ?datatypeStandoffClass . } }
             |""".stripMargin,
+        ),
       )
     },
     test("should produce correct CONSTRUCT query for a different mapping IRI") {
       val differentMappingIri = "http://rdfh.ch/projects/0001/mappings/CustomMapping"
-      val actual              = GetMappingQuery.build(differentMappingIri).getQueryString
+      val actual              = GetMappingQuery.build(differentMappingIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -109,6 +117,7 @@ class GetMappingQuerySpec extends ZIOSpecDefault {
             |    knora-base:mappingHasXMLAttributename ?datatypeAttributeName ;
             |    knora-base:mappingHasStandoffClass ?datatypeStandoffClass . } }
             |""".stripMargin,
+        ),
       )
     },
   )
