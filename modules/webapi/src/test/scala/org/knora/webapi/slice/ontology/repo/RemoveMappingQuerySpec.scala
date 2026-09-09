@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -17,6 +18,12 @@ import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class RemoveMappingQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val ontologyIri                       = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
@@ -25,13 +32,31 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
   private val externalIri                       = OntologyMappingExternalIri.unsafeFrom("http://schema.org/Thing")
   private val propExtIri                        = OntologyMappingExternalIri.unsafeFrom("http://purl.org/dc/terms/title")
   override def spec: Spec[TestEnvironment, Any] = suite("RemoveMappingQuerySpec")(
+    test("should produce the same UPDATE as the legacy builder") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
+      for {
+        _      <- TestClock.setTime(knownInstant)
+        update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
+      } yield assertTrue(
+        canonical(update.sparql) == canonical(
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+            |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { anything:Thing rdfs:subClassOf <http://schema.org/Thing> .
+            |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }
+            |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2026-01-01T00:00:00Z"^^xsd:dateTime . } }
+            |WHERE { OPTIONAL { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }""".stripMargin,
+        ),
+      )
+    },
     // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
       test("query contains the subClassOf triple in the DELETE clause") {
         for {
           update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield assertTrue(
-          update.sparql.contains("rdfs:subClassOf"),
+          update.sparql.contains("rdf-schema#subClassOf>"),
           update.sparql.contains("http://schema.org/Thing"),
         )
       },
@@ -52,7 +77,7 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
           update <- RemoveMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, externalIri)
         } yield {
           val insertSection = update.sparql.substring(update.sparql.indexOf("INSERT"))
-          assertTrue(!insertSection.contains("rdfs:subClassOf"))
+          assertTrue(!insertSection.contains("rdf-schema#subClassOf>"))
         }
       },
       test("removed triple is fully specified in DELETE (no variables for the subClassOf triple)") {
@@ -62,7 +87,7 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
           val sparql        = update.sparql
           val deleteSection = sparql.substring(sparql.indexOf("DELETE"), sparql.indexOf("INSERT"))
           assertTrue(
-            deleteSection.contains("rdfs:subClassOf"),
+            deleteSection.contains("rdf-schema#subClassOf>"),
             deleteSection.contains("http://schema.org/Thing"),
             !deleteSection.contains("?externalIri"),
           )
@@ -75,8 +100,8 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
         for {
           update <- RemoveMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, propExtIri)
         } yield assertTrue(
-          update.sparql.contains("rdfs:subPropertyOf"),
-          !update.sparql.contains("rdfs:subClassOf"),
+          update.sparql.contains("rdf-schema#subPropertyOf>"),
+          !update.sparql.contains("rdf-schema#subClassOf>"),
         )
       },
       test("removed subPropertyOf triple does NOT appear in INSERT clause") {
@@ -84,7 +109,7 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
           update <- RemoveMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, propExtIri)
         } yield {
           val insertSection = update.sparql.substring(update.sparql.indexOf("INSERT"))
-          assertTrue(!insertSection.contains("rdfs:subPropertyOf"))
+          assertTrue(!insertSection.contains("rdf-schema#subPropertyOf>"))
         }
       },
       test("removed triple is fully specified in DELETE (no variables for the subPropertyOf triple)") {
@@ -94,7 +119,7 @@ class RemoveMappingQuerySpec extends ZIOSpecDefault {
           val sparql        = update.sparql
           val deleteSection = sparql.substring(sparql.indexOf("DELETE"), sparql.indexOf("INSERT"))
           assertTrue(
-            deleteSection.contains("rdfs:subPropertyOf"),
+            deleteSection.contains("rdf-schema#subPropertyOf>"),
             deleteSection.contains("http://purl.org/dc/terms/title"),
             !deleteSection.contains("?externalIri"),
           )

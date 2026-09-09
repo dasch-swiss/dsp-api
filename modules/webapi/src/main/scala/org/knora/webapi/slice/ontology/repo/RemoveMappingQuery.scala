@@ -5,16 +5,13 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import zio.*
 
+import java.time.Instant
+
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -36,7 +33,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  *
  * Primary validation: [[OntologyMappingExternalIri]] ensures IRI syntax and forbidden namespace/host checks.
  */
-object RemoveMappingQuery extends QueryBuilderHelper {
+object RemoveMappingQuery {
 
   def build(
     ontologyIri: OntologyIri,
@@ -51,32 +48,32 @@ object RemoveMappingQuery extends QueryBuilderHelper {
     subjectIri: SmartIri,
     predicate: MappingPredicate,
     externalObjectIri: OntologyMappingExternalIri,
-    now: java.time.Instant,
+    now: Instant,
   ): Update = {
-    val ontology   = toRdfIri(ontologyIri)
-    val subjIri    = toRdfIri(subjectIri)
-    val extIri     = toRdfIri(externalObjectIri)
-    val oldDate    = variable("oldDate")
-    val ontologyNS = NS(ontologyIri)
-
-    val deletePatterns: List[TriplePattern] = List(
-      subjIri.has(predicate.iri, extIri),
-      ontology.has(KB.lastModificationDate, oldDate),
-    )
-
-    val insertPattern: TriplePattern = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
-
-    val wherePattern = ontology.has(KB.lastModificationDate, oldDate).optional()
+    val ontology    = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    val subject     = Iri.unsafeFrom(subjectIri.toInternalSchema.toIri)
+    val external    = Iri.unsafeFrom(externalObjectIri.value)
+    val currentDate = Literal.dateTime(now)
 
     Update(
-      Queries
-        .MODIFY()
-        .prefix(KB.NS, RDFS.NS, XSD.NS, ontologyNS)
-        .from(ontology)
-        .delete(deletePatterns*)
-        .into(ontology)
-        .insert(insertPattern)
-        .where(wherePattern),
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $subject ${predicate.iri} $external .
+               |    $ontology knora-base:lastModificationDate ?oldDate .
+               |  }
+               |}
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $currentDate .
+               |  }
+               |}
+               |WHERE {
+               |  OPTIONAL { $ontology knora-base:lastModificationDate ?oldDate . }
+               |}""".render,
     )
   }
 }
