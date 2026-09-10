@@ -86,11 +86,11 @@ object FulltextBreadthGuard {
 
   /**
    * The cache key. `probeSparql` uniquely encodes the term and the standoff restriction — the only inputs the
-   * current probe measures — so it doubles as the SPARQL the lookup runs. `project` / `resourceClass` are part of
+   * current probe measures — so it doubles as the query the lookup runs. `project` / `resourceClass` are part of
    * the key but not the current probe: they are future-proofing (Spike A), keeping the cache correct if the probe
    * ever becomes restriction-aware.
    */
-  final case class BreadthKey(probeSparql: String, project: Option[String], resourceClass: Option[String])
+  final case class BreadthKey(probeSparql: Select, project: Option[String], resourceClass: Option[String])
 
   /**
    * Testable core. `probe` is injected so a unit test can supply a counting or failing double — the in-memory
@@ -109,10 +109,10 @@ object FulltextBreadthGuard {
                }
     } yield FulltextBreadthGuard(cap, cache)
 
-  /** The production probe: run the pre-built COUNT SPARQL on the dedicated probe tier and read the count. */
+  /** The production probe: run the pre-built COUNT query (already on the probe tier) and read the count. */
   private def runProbe(triplestore: TriplestoreService)(key: BreadthKey): Task[Long] =
     triplestore
-      .query(Select.searchProbe(key.probeSparql))
+      .query(key.probeSparql)
       .flatMap(result => ZIO.attempt(result.results.bindings.head.rowMap("count").toLong))
 
   val layer: URLayer[AppConfig & TriplestoreService, FulltextBreadthGuard] =
