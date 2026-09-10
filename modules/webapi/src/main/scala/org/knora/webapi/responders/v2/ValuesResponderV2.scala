@@ -61,7 +61,6 @@ import org.knora.webapi.slice.resources.service.ValueContentValidator
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final class ValuesResponderV2(
   auth: AuthorizationRestService,
@@ -1438,7 +1437,7 @@ final class ValuesResponderV2(
                         currentTime = deleteDate.getOrElse(Instant.now),
                         requestingUser = requestingUser.userIri,
                       )
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      _ <- triplestoreService.query(sparqlUpdate)
     } yield currentValue.valueIri
   }
 
