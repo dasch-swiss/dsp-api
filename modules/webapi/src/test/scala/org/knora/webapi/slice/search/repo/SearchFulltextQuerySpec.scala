@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.search.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.IO
 import zio.Runtime
@@ -13,15 +14,16 @@ import zio.test.*
 
 import dsp.errors.SparqlGenerationException
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
+class SearchFulltextQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -30,16 +32,35 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val testResourceIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testStandoffIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag".toSmartIri
-  private val separator       = '\u001F'
+  private val separator       = StringFormatter.INFORMATION_SEPARATOR_ONE
 
-  // `build` is effectful but pure for valid arguments; render it to a String and pass that expression straight to
-  // `assertGolden`. A bare local val bound to the result collides with `assertGolden`'s own `actual` parameter during
-  // inlining and makes its `assertTrue` macro lose the source position (a None.get in zio-test's showExpr).
-  private def render(query: IO[SparqlGenerationException, String]): String =
+  // `build` is effectful but pure for valid arguments; run it and compare the resulting query.
+  private def render(query: IO[SparqlGenerationException, Select]): Select =
     Unsafe.unsafe(implicit u => Runtime.default.unsafe.run(query).getOrThrow())
 
-  // Invariants these goldens exist to protect. A golden pins the query text and cannot tell a correct query from a
-  // plausible one — check them by eye when regenerating:
+  // The `SearchFulltextQuerySpec__*.txt` files next to this spec are the verbatim output of the
+  // string-interpolating predecessor of SearchFulltextQuery — they are kept byte-unchanged and are compared after
+  // canonicalisation by Jena, which normalises whitespace and prefix expansion but nothing else. Every invariant
+  // listed below is visible in the canonical form, so it is still pinned.
+  private def legacy(name: String): String = {
+    val resource = s"org/knora/webapi/slice/search/repo/SearchFulltextQuerySpec__$name.txt"
+    val stream   = Option(getClass.getClassLoader.getResourceAsStream(resource))
+      .getOrElse(throw new IllegalStateException(s"Legacy query fixture not found on the classpath: $resource"))
+    try new String(stream.readAllBytes(), "UTF-8")
+    finally stream.close()
+  }
+
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
+  private def matchesLegacy(actual: Select, name: String) =
+    assertTrue(canonical(actual.sparql) == canonical(legacy(name)))
+
+  // Invariants these fixtures exist to protect. A fixture pins the query and cannot tell a correct query from a
+  // plausible one — check them by eye when changing a query:
   //
   //  - The text:query list must carry an explicit hit limit (1000000). Without one Jena caps the Lucene lookup at
   //    10'000 hits and silently drops matches before the project/class filters apply (DEV-6716, DEV-6822).
@@ -54,7 +75,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   override def spec: Spec[TestEnvironment, Any] = suite("SearchFulltextQuery")(
     suite("count query")(
       test("minimal count query") {
-        val sparql = render(
+        val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
             limitToProject = None,
@@ -67,10 +88,10 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = true,
           ),
         )
-        assertGolden(sparql, "countNoFilters")
+        matchesLegacy(query, "countNoFilters") && assertTrue(query.timeout == SparqlTimeout.Search)
       },
       test("count query with project and resource class limit") {
-        val sparql = render(
+        val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
             limitToProject = Some(testProjectIri),
@@ -83,12 +104,12 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = true,
           ),
         )
-        assertGolden(sparql, "countWithProjectAndClass")
+        matchesLegacy(query, "countWithProjectAndClass")
       },
     ),
     suite("regular query")(
       test("minimal regular query") {
-        val sparql = render(
+        val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
             limitToProject = None,
@@ -101,10 +122,10 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = false,
           ),
         )
-        assertGolden(sparql, "searchNoFilters")
+        matchesLegacy(query, "searchNoFilters")
       },
       test("regular query with all filters") {
-        val sparql = render(
+        val query = render(
           SearchFulltextQuery.build(
             searchTerms = LuceneQueryString("test search"),
             limitToProject = Some(testProjectIri),
@@ -117,22 +138,22 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = false,
           ),
         )
-        assertGolden(sparql, "searchWithAllFilters")
+        matchesLegacy(query, "searchWithAllFilters")
       },
     ),
     suite("probe query")(
       test("probe query without standoff") {
-        val sparql = SearchFulltextQuery.buildProbe(searchTerms, None)
-        assertGolden(sparql, "probeNoStandoff")
+        val query = SearchFulltextQuery.buildProbe(searchTerms, None)
+        matchesLegacy(query, "probeNoStandoff") && assertTrue(query.timeout == SparqlTimeout.SearchProbe)
       },
       test("probe query with standoff") {
-        val sparql = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri))
-        assertGolden(sparql, "probeWithStandoff")
+        val query = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri))
+        matchesLegacy(query, "probeWithStandoff")
       },
     ),
     suite("escaping of user input")(
       test("apostrophe in search term is correctly escaped") {
-        // The caller passes the raw user input — Rdf.literalOf handles SPARQL escaping.
+        // The caller passes the raw user input — the typed Literal hole handles SPARQL escaping.
         val actual = SearchFulltextQuery.build(
           searchTerms = LuceneQueryString("Knight's"),
           limitToProject = None,
@@ -144,8 +165,9 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
           offset = 0,
           countQuery = true,
         )
-        // rdf4j escapes ' even in double-quoted literals (valid SPARQL, just conservative)
-        assertZIO(actual)(Assertion.containsString(""""Knight\'s""""))
+        // ' is escaped even inside a double-quoted literal (valid SPARQL, just conservative). The escape set is
+        // byte-for-byte the one Rdf.literalOf applied before the migration.
+        assertZIO(actual.map(_.sparql))(Assertion.containsString(""""Knight\'s""""))
       },
       test("double quote in search term is correctly escaped") {
         val actual = SearchFulltextQuery.build(
@@ -159,8 +181,8 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
           offset = 0,
           countQuery = true,
         )
-        // " is escaped to \" by Rdf.literalOf for the SPARQL double-quoted literal
-        assertZIO(actual)(Assertion.containsString(""""say \"hello\"""""))
+        // " is escaped to \" for the SPARQL double-quoted literal
+        assertZIO(actual.map(_.sparql))(Assertion.containsString(""""say \"hello\"""""))
       },
     ),
     suite("validation")(
