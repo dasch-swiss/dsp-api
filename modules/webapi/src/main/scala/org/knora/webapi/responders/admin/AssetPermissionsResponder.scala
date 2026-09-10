@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.FileValuePermissionsQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * Decides what a caller may receive for a binary representation of a resource: the whole policy is
@@ -32,7 +31,7 @@ final class AssetPermissionsResponder(
 
   def getAssetAccess(user: User)(filename: InternalFilename): Task[AssetAccess] =
     for {
-      result <- triplestoreService.query(Select(FileValuePermissionsQuery.build(filename)))
+      result <- triplestoreService.query(FileValuePermissionsQuery.build(filename))
       row    <- ZIO
                .fromOption(result.getFirstRow)
                .orElseFail(NotFoundException(s"No file value was found for filename $filename"))
