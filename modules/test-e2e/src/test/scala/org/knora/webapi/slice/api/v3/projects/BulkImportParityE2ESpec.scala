@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.rdf.model.Statement
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFFormat
@@ -44,29 +45,21 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.testservices.TestApiClient
 
 /**
- * Guards against drift between the two write paths. The v3 bulk data-import and the v2
- * single-resource create must produce the same graph for one project. The test imports the shared
- * fixture set through both paths into the same project data graph and compares the two graphs: equal
- * triple count, identical resource-IRI set, and RDF isomorphism after normalizing minted
- * value/standoff IRIs, UUIDs, and creation timestamps. `hasPermissions` is excluded from the compare
- * (the two paths assign permissions differently), and `lastModificationDate` is stripped (only the
- * two-step create paths write it).
+ * Guards against drift between the v3 bulk data-import and the v2 single-resource create: both write
+ * paths must produce the same graph for one project. The test imports the shared fixture set through
+ * both paths into the same project data graph and compares the two graphs: equal triple count,
+ * identical resource-IRI set, and RDF isomorphism after normalizing minted value/standoff IRIs,
+ * UUIDs, and creation timestamps.
  *
- * Status: both imports run, are compared, and the test passes — but with one deliberate tolerance,
- * so it does not yet assert full parity:
- *   - `hasPermissions` is excluded pending full permission-string parity (honor payload + resolve
- *     class/property DOAPs). See the `hasPermissions` TODO in `addResourceMetadata`.
- * `hasTextValueType` parity is checked: all three write paths (bulk import, v2 resource-create, and
- * the v2 add-value path via POST /v2/values) write the marker, so it is not stripped from the compare.
- * (`valueHasOrder` parity is achieved in the fixtures — every value carries its order in the payload,
- * so neither path synthesizes one for imported values. `pageCount` matches too: the live SipiService
- * never reports numpages, so neither path persists it, and the fake mirrors that.)
- * Permission-string parity is also deferred: `hasPermissions` is excluded from the compare until the
- * bulk import honors the payload string and resolves class/property DOAPs (see the `hasPermissions`
- * TODO in `addResourceMetadata`).
+ * One deliberate tolerance remains: `hasPermissions` is excluded from the compare, because the two
+ * paths assign permissions differently. Full parity waits on the bulk import honoring a payload
+ * `hasPermissions` and resolving class/property DOAPs — see the `hasPermissions` TODO in
+ * `OntologyTransformer.addResourceMetadata`. `lastModificationDate` is stripped too, since only the
+ * two-step create paths write it.
  *
- * The earlier SHACL-validation blockers (standoff-link SystemUser attribution, duplicate
- * `creationDate`/`hasPermissions`) are fixed, so both paths now write a graph.
+ * Nothing else is stripped: `hasTextValueType` is written by all three write paths, `valueHasOrder`
+ * is carried explicitly by every fixture value (so neither path synthesizes one), and `pageCount` is
+ * persisted by neither (the live SipiService reports no page count, and the fake mirrors that).
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class BulkImportParityE2ESpec extends E2EZSpec {
@@ -180,7 +173,10 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
         val diff =
           if (iso) ""
-          else predicateDelta(normA, normB) + "\n" + objectDelta(normA, normB) + "\n" + canonicalDiff(normA, normB)
+          else
+            predicateDelta(normA, normB) + "\n" + objectDelta(normA, normB) +
+              "\n\n-- raw canonical N-Triples diff (over-reports on a non-isomorphic pair; read the two deltas above first) --\n" +
+              canonicalDiff(normA, normB)
 
         assertTrue(
           // Proof the two-step creates ran: only they write lastModificationDate; the bulk path never does.
@@ -235,13 +231,24 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         }
       }
 
-  private def deleteImportTask(importId: DataTaskId): ZIO[TestApiClient, Throwable, Response[Either[String, Json]]] =
-    TestApiClient.deleteJson[Json](uri"/v3/projects/$projectIri/data-imports/${importId.value}", rootUser)
+  // 2xx = deleted, 404 = already gone (the reset path or a prior finalizer removed it). Any other
+  // status — notably 409 while the import is still in progress — means the per-JVM import-task mutex may
+  // still be held, which would block every later bulk-import spec in this shared JVM. Surface it as a
+  // warning so a stuck import shows in the test log instead of silently leaking the slot.
+  private def deleteImportTask(importId: DataTaskId): ZIO[TestApiClient, Throwable, Unit] =
+    TestApiClient
+      .deleteJson[Json](uri"/v3/projects/$projectIri/data-imports/${importId.value}", rootUser)
+      .flatMap(resp =>
+        ZIO
+          .logWarning(s"import-task delete for $importId returned ${resp.code}; the per-JVM import slot may still be held")
+          .when(!resp.code.isSuccess && resp.code != StatusCode.NotFound)
+          .unit,
+      )
 
   // --- Reset -----------------------------------------------------------------------------------
 
   private def resetProjectGraph(importId: DataTaskId): ZIO[TriplestoreService & TestApiClient, Throwable, Unit] =
-    deleteImportTask(importId).unit *>
+    deleteImportTask(importId) *>
       ZIO.serviceWithZIO[TriplestoreService] { ts =>
         ts.dropGraphByIri(InternalIri(projectDataGraph)) *>
           ts.insertDataIntoTriplestore(List(dataTtl), prependDefaults = false)
@@ -411,14 +418,16 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     out.toString(StandardCharsets.UTF_8)
   }
 
+  // Statements grouped by predicate URI — the shared traversal behind the two per-predicate deltas.
+  private def byPredicate(m: Model): Map[String, List[Statement]] =
+    m.listStatements().asScala.toList.groupBy(_.getPredicate.getURI)
+
   // Blank-node-insensitive delta: which predicates occur a different number of times in A vs B. On a
   // non-isomorphic pair the canonical line diff over-reports (blank labels get relabelled), so this
   // per-predicate count is the reliable signal for triaging a structural divergence.
   private def predicateDelta(a: Model, b: Model): String = {
-    def histogram(m: Model): Map[String, Int] =
-      m.listStatements().asScala.toList.groupBy(_.getPredicate.getURI).view.mapValues(_.size).toMap
-    val ha   = histogram(a)
-    val hb   = histogram(b)
+    val ha   = byPredicate(a).view.mapValues(_.size).toMap
+    val hb   = byPredicate(b).view.mapValues(_.size).toMap
     val rows = (ha.keySet ++ hb.keySet).toList.sorted.flatMap { p =>
       val ca = ha.getOrElse(p, 0)
       val cb = hb.getOrElse(p, 0)
@@ -435,16 +444,10 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       if (n.isAnon) "_:_"
       else if (n.isLiteral) s""""${n.asLiteral.getLexicalForm}"^^${n.asLiteral.getDatatypeURI}"""
       else n.toString
-    def byPredicate(m: Model): Map[String, List[String]] =
-      m.listStatements()
-        .asScala
-        .toList
-        .groupBy(_.getPredicate.getURI)
-        .view
-        .mapValues(_.map(st => render(st.getObject)).sorted)
-        .toMap
-    val ha   = byPredicate(a)
-    val hb   = byPredicate(b)
+    def objects(m: Model): Map[String, List[String]] =
+      byPredicate(m).view.mapValues(_.map(st => render(st.getObject)).sorted).toMap
+    val ha   = objects(a)
+    val hb   = objects(b)
     val rows = (ha.keySet ++ hb.keySet).toList.sorted.flatMap { p =>
       val oa = ha.getOrElse(p, Nil)
       val ob = hb.getOrElse(p, Nil)
