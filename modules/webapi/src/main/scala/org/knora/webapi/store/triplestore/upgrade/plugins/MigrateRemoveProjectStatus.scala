@@ -5,13 +5,13 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
+import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
+import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * Remove the `knora-admin:status` triple from every project. The property is no longer part of the
@@ -23,18 +23,19 @@ class MigrateRemoveProjectStatus extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  private val removeProjectStatus: ModifyQuery = {
-    val project = variable("project")
-    val status  = variable("status")
-    // `WITH <admin graph>` scopes both the DELETE template and the WHERE evaluation to the admin
-    // data graph, so no USING or nested GRAPH clause is needed.
-    Queries
-      .MODIFY()
-      .`with`(Vocabulary.NamedGraphs.dataAdmin)
-      .delete(project.has(KA.status, status))
-      .where(project.isA(KA.KnoraProject).andHas(KA.status, status))
-      .prefix(KA.NS)
-  }
+  // `WITH <admin graph>` scopes both the DELETE template and the WHERE evaluation to the admin
+  // data graph, so no USING or nested GRAPH clause is needed.
+  private[plugins] val removeProjectStatus: Update = Update(
+    sparql"""|$knoraAdminPrefix
+             |WITH $adminGraph
+             |DELETE {
+             |  ?project knora-admin:status ?status .
+             |}
+             |WHERE {
+             |  ?project a knora-admin:knoraProject ;
+             |           knora-admin:status ?status .
+             |}""".render,
+  )
 
-  override def getQueries: List[ModifyQuery] = List(removeProjectStatus)
+  override def getQueries: List[Update] = List(removeProjectStatus)
 }

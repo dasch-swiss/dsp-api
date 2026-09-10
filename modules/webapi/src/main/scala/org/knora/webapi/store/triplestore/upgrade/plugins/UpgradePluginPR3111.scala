@@ -5,13 +5,13 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
+import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
+import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * Certain restricted views have a watermark that is not a boolean. This plugin removes the invalid watermark triples.
@@ -21,18 +21,18 @@ class UpgradePluginPR3111 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  private val removeInvalidRestrictedViewWatermarkTriples: ModifyQuery = {
-    val invalidTriple = variable("s").has(
-      Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
-      Rdf.literalOf("path_to_image"),
+  private[plugins] val removeInvalidRestrictedViewWatermarkTriples: Update = {
+    val invalidWatermark = Literal.string("path_to_image")
+    Update(
+      sparql"""|$knoraAdminPrefix
+               |DELETE {
+               |  GRAPH $adminGraph { ?s knora-admin:projectRestrictedViewWatermark $invalidWatermark . }
+               |}
+               |WHERE {
+               |  GRAPH $adminGraph { ?s knora-admin:projectRestrictedViewWatermark $invalidWatermark . }
+               |}""".render,
     )
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS)
-      .delete(invalidTriple)
-      .from(Vocabulary.NamedGraphs.dataAdmin)
-      .where(invalidTriple.from(Vocabulary.NamedGraphs.dataAdmin))
   }
 
-  override def getQueries: List[ModifyQuery] = List(removeInvalidRestrictedViewWatermarkTriples)
+  override def getQueries: List[Update] = List(removeInvalidRestrictedViewWatermarkTriples)
 }
