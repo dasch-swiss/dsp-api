@@ -1,0 +1,388 @@
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://www.knora.org/ontology/9999/onto>
+        rdf:type  <http://www.w3.org/2002/07/owl#Ontology>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Ontology";
+        <http://www.knora.org/ontology/knora-base#attachedToProject>
+                <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#isShared>
+                false;
+        <http://www.knora.org/ontology/knora-base#lastModificationDate>
+                "2026-09-04T11:22:37.126124876Z"^^xsd:dateTime .
+
+<http://www.knora.org/ontology/9999/onto#ClassWithEverything>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Resource with every property"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#Resource>;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#maxCardinality>
+                          "1"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testBoolean>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "1"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testColor>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "2"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testSubDate1>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "3"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testDecimalSimpleText>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "4"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testGeoname>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "5"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testIntegerSimpleText>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "6"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testListProp>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "7"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testSimpleText>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "8"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testRichtext>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "9"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testTimeValue>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "10"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testUriValue>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "11"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testHasLinkTo>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "11"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testHasLinkToValue>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "12"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testHasRegionPreview>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "13"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testPrivateProp>
+                ] .
+
+<http://www.knora.org/ontology/9999/onto#TestArchiveRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "ArchiveRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#ArchiveRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#TestAudioRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "AudioRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#AudioRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#TestDocumentRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "DocumentRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#DocumentRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#TestMovingImageRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "MovingImageRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#MovingImageRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#TestStillImageRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "StillImageRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#StillImageRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#TestTextRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "TextRepresentation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#TextRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#PrivateResource>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Resource with private default permissions"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#Resource>;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testSimpleText>
+                ] .
+
+<http://www.knora.org/ontology/9999/onto#RestrictedImageRepresentation>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "StillImageRepresentation with restricted view"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#StillImageRepresentation> .
+
+<http://www.knora.org/ontology/9999/onto#testBoolean>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Boolean"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#BooleanValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Checkbox> .
+
+<http://www.knora.org/ontology/9999/onto#testColor>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Color"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasColor>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#ColorValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Colorpicker> .
+
+<http://www.knora.org/ontology/9999/onto#testSubDate1>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Date"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#DateValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Date> .
+
+<http://www.knora.org/ontology/9999/onto#testDecimalSimpleText>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Decimal"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#DecimalValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#SimpleText> .
+
+<http://www.knora.org/ontology/9999/onto#testGeoname>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Geoname"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#GeonameValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Geonames> .
+
+<http://www.knora.org/ontology/9999/onto#testIntegerSimpleText>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Integer"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#IntValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#SimpleText> .
+
+<http://www.knora.org/ontology/9999/onto#testListProp>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test List"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#ListValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiAttribute>
+                "hlist=<http://rdfh.ch/lists/9999/pURVwyebScyA6bjm11lL1Q>";
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#List> .
+
+<http://www.knora.org/ontology/9999/onto#testSimpleText>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test SimpleText"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#TextValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#SimpleText> .
+
+<http://www.knora.org/ontology/9999/onto#testRichtext>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Richtext"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#TextValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Richtext> .
+
+<http://www.knora.org/ontology/9999/onto#testTimeValue>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Time"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#TimeValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#TimeStamp> .
+
+<http://www.knora.org/ontology/9999/onto#testUriValue>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test URI"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#UriValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#SimpleText> .
+
+<http://www.knora.org/ontology/9999/onto#testHasLinkTo>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test In-built hasLinkTo"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasLinkTo>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#Resource>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Searchbox> .
+
+<http://www.knora.org/ontology/9999/onto#testHasLinkToValue>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test In-built hasLinkTo"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasLinkToValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#LinkValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Searchbox> .
+
+<http://www.knora.org/ontology/9999/onto#testHasRegionPreview>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test region preview"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasRegionPreview>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#RegionPreviewValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#RegionPreview> .
+
+<http://www.knora.org/ontology/9999/onto#testPrivateProp>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Private Property"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#TextValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#SimpleText> .
