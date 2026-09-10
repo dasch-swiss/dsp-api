@@ -61,6 +61,11 @@ SparqlBuilder; existing files keep it until they are migrated (verify a migratio
 diffing rendered SPARQL against the old `getQueryString` output). See
 `docs/development/dsp-api-sparql-queries.md`.
 
+- **One explicit template per query.** Prefixes written out in every template, no pulled-out `prefixes` val and no
+  static sub-segment fragments; holes are for values and genuinely dynamic structure only, and two substantially
+  different runtime shapes are two complete templates. See `docs/development/dsp-api-sparql-queries.md`
+  § Keep the query readable: one explicit template per query.
+
 - **Carve-out — the admin SPARQL passthrough.** `POST /admin/sparql/query` forwards a client-supplied query string to the store on purpose: being transparent is its contract, so it must not parse, validate or rewrite the SPARQL it carries, and no builder applies. This is the only such surface; everything else builds queries. See `docs/03-endpoints/api-admin/sparql-passthrough.md`.
 
 - **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance.

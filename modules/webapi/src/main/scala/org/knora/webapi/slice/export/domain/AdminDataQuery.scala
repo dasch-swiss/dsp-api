@@ -39,43 +39,62 @@ object AdminDataQuery {
     // Sorted so that the rendered VALUES rows are deterministic for a given set of users.
     val userIris = referencedUserIris.toList.map(_.value).sorted.map(Iri.unsafeFrom)
 
-    val projectBranch =
-      sparql"""|$projectIri a knora-admin:knoraProject ;
-               |  ?projectPred ?projectObj ."""
-
-    val projectMembersBranch =
-      sparql"""|$user a knora-admin:User ;
-               |  ?userPred ?userObj ;
-               |  knora-admin:isInProject $projectIri ."""
-
-    // Guarded: Fragments.values requires a non-empty collection.
-    val referencedUsersBranch = Option.when(userIris.nonEmpty)(
-      sparql"""|$user a knora-admin:User ;
-               |  ?userPred ?userObj .
-               |${Fragments.values(user, userIris)}""",
-    )
-
-    val groupsBranch =
-      sparql"""|?group a knora-admin:UserGroup ;
-               |  ?groupPred ?groupObj ;
-               |  knora-admin:belongsToProject $projectIri ."""
-
-    val branches =
-      List(projectBranch, projectMembersBranch) ::: referencedUsersBranch.toList ::: List(groupsBranch)
-
-    Construct(
-      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-               |
-               |CONSTRUCT {
-               |  $projectIri ?projectPred ?projectObj .
-               |  $user ?userPred ?userObj .
-               |  ?group ?groupPred ?groupObj .
-               |}
-               |WHERE {
-               |  GRAPH $adminGraph {
-               |    ${Fragments.union(branches*)}
-               |  }
-               |}""".render,
-    )
+    if (userIris.isEmpty) {
+      Construct(
+        sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+                 |
+                 |CONSTRUCT {
+                 |  $projectIri ?projectPred ?projectObj .
+                 |  $user ?userPred ?userObj .
+                 |  ?group ?groupPred ?groupObj .
+                 |}
+                 |WHERE {
+                 |  GRAPH $adminGraph {
+                 |    {
+                 |      $projectIri a knora-admin:knoraProject ;
+                 |        ?projectPred ?projectObj .
+                 |    } UNION {
+                 |      $user a knora-admin:User ;
+                 |        ?userPred ?userObj ;
+                 |        knora-admin:isInProject $projectIri .
+                 |    } UNION {
+                 |      ?group a knora-admin:UserGroup ;
+                 |        ?groupPred ?groupObj ;
+                 |        knora-admin:belongsToProject $projectIri .
+                 |    }
+                 |  }
+                 |}""".render,
+      )
+    } else {
+      Construct(
+        sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+                 |
+                 |CONSTRUCT {
+                 |  $projectIri ?projectPred ?projectObj .
+                 |  $user ?userPred ?userObj .
+                 |  ?group ?groupPred ?groupObj .
+                 |}
+                 |WHERE {
+                 |  GRAPH $adminGraph {
+                 |    {
+                 |      $projectIri a knora-admin:knoraProject ;
+                 |        ?projectPred ?projectObj .
+                 |    } UNION {
+                 |      $user a knora-admin:User ;
+                 |        ?userPred ?userObj ;
+                 |        knora-admin:isInProject $projectIri .
+                 |    } UNION {
+                 |      $user a knora-admin:User ;
+                 |        ?userPred ?userObj .
+                 |      ${Fragments.values(user, userIris)}
+                 |    } UNION {
+                 |      ?group a knora-admin:UserGroup ;
+                 |        ?groupPred ?groupObj ;
+                 |        knora-admin:belongsToProject $projectIri .
+                 |    }
+                 |  }
+                 |}""".render,
+      )
+    }
   }
 }

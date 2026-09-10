@@ -17,16 +17,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 /** The SPARQL queries backing [[ValueRepo]]. Pure rendering, so they can be tested without a triplestore. */
 private[service] object ValueQueries {
 
-  private val knoraBasePrefix = sparql"PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>"
-  private val rdfPrefix       = sparql"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
-  private val rdfsPrefix      = sparql"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-
   /** Construct the value's type, modification date, deletion flag and predecessor, if present. */
   def findById(valueIri: ValueIri): Construct = {
     val value = Iri.unsafeFrom(valueIri.value)
     Construct(
-      sparql"""|$rdfsPrefix
-               |$knoraBasePrefix
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |CONSTRUCT {
                |  $value a ?valueClass ;
@@ -48,7 +44,7 @@ private[service] object ValueQueries {
   def findPreviousValue(valueIri: ValueIri): Select = {
     val value = Iri.unsafeFrom(valueIri.value)
     Select(
-      sparql"""|$knoraBasePrefix
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT ?previous
                |WHERE {
@@ -66,32 +62,33 @@ private[service] object ValueQueries {
     val graph = Iri.unsafeFrom(projectDataGraph.value)
     val value = Iri.unsafeFrom(valueIri.value)
 
-    val eraseStandoff =
-      sparql"""|$knoraBasePrefix
-               |
-               |WITH $graph
-               |DELETE {
-               |  ?standoffLink ?standoffProp ?standoffObj .
-               |}
-               |WHERE {
-               |  $value ?p ?o .
-               |  ?s ?oo $value .
-               |  $value knora-base:valueHasStandoff ?standoffLink .
-               |  ?standoffLink ?standoffProp ?standoffObj .
-               |}"""
-
-    val eraseTheValue =
-      sparql"""|WITH $graph
-               |DELETE {
-               |  $value ?p ?o .
-               |  ?s ?oo $value .
-               |}
-               |WHERE {
-               |  $value ?p ?o .
-               |  ?s ?oo $value .
-               |}"""
-
-    List(Update(eraseStandoff.render), Update(eraseTheValue.render))
+    List(
+      Update(
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |
+                 |WITH $graph
+                 |DELETE {
+                 |  ?standoffLink ?standoffProp ?standoffObj .
+                 |}
+                 |WHERE {
+                 |  $value ?p ?o .
+                 |  ?s ?oo $value .
+                 |  $value knora-base:valueHasStandoff ?standoffLink .
+                 |  ?standoffLink ?standoffProp ?standoffObj .
+                 |}""".render,
+      ),
+      Update(
+        sparql"""|WITH $graph
+                 |DELETE {
+                 |  $value ?p ?o .
+                 |  ?s ?oo $value .
+                 |}
+                 |WHERE {
+                 |  $value ?p ?o .
+                 |  ?s ?oo $value .
+                 |}""".render,
+      ),
+    )
   }
 
   /** Delete the subject/predicate/object triple that a LinkValue reifies. */
@@ -99,7 +96,7 @@ private[service] object ValueQueries {
     val graph = Iri.unsafeFrom(projectDataGraph.value)
     val value = Iri.unsafeFrom(valueIri.value)
     Update(
-      sparql"""|$rdfPrefix
+      sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                |
                |WITH $graph
                |DELETE {
@@ -128,7 +125,7 @@ private[service] object ValueQueries {
     val now         = Literal.dateTime(currentTime)
 
     Update(
-      sparql"""|$knoraBasePrefix
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |WITH $graph
                |DELETE {
@@ -165,7 +162,7 @@ private[service] object ValueQueries {
     }.joinLines
 
     Update(
-      sparql"""|$knoraBasePrefix
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |WITH $graph
                |DELETE {

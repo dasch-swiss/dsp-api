@@ -10,8 +10,6 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * After removing `knora-admin:Institution` class and its properties from the knora-admin ontology this cleans up the DB.
@@ -22,8 +20,10 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+
   private[plugins] val removeAllInstitutions: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |DELETE {
              |  GRAPH $adminGraph { ?s ?p ?o . }
              |}
@@ -36,7 +36,7 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
   )
 
   private[plugins] val removeAllBelongsToInstitutionTriples: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |DELETE {
              |  GRAPH $adminGraph { ?s knora-admin:belongsToInstitution ?o . }
              |}

@@ -11,8 +11,6 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView.Size
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * Certain restricted views have a watermark that is not a boolean. This plugin removes the invalid watermark triples.
@@ -22,10 +20,12 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+
   private val defaultSize = Literal.string(Size.default.value)
 
   private[plugins] val removeWatermarkIfBothSet: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |DELETE {
              |  GRAPH $adminGraph { ?project knora-admin:projectRestrictedViewWatermark ?prevWatermark . }
              |}
@@ -39,7 +39,7 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
   )
 
   private[plugins] val addDefaultRestrictedViewSizeToProjectsWithout: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |WITH $adminGraph
              |INSERT {
              |  ?project knora-admin:projectRestrictedViewSize $defaultSize .
@@ -54,7 +54,7 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
   )
 
   private[plugins] val replaceWatermarkFalseWithDefaultRestrictedViewSize: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |WITH $adminGraph
              |DELETE {
              |  GRAPH $adminGraph { ?project knora-admin:projectRestrictedViewWatermark false . }

@@ -10,8 +10,6 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.permissionsGraph
 
 /**
  * Configuring default object access permissions on the SystemProject is not supported anymore.
@@ -22,32 +20,39 @@ class UpgradePluginPR3383 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.permissionsDataNamedGraph)
 
-  /** Every triple of a default object access permission restricted by the given predicate and object. */
-  private def permissionPattern(predicate: Fragment, obj: Fragment): Fragment =
-    sparql"""|?permissionIri a knora-admin:DefaultObjectAccessPermission ;
-             |               $predicate $obj ;
-             |               ?p ?o ."""
+  private val permissionsGraph: Iri = Iri.unsafeFrom(AdminConstants.permissionsDataNamedGraph.value)
 
-  /** `WITH <permissions graph>` scopes both the DELETE template and the WHERE evaluation. */
-  private def removeDefaultObjectAccessPermissions(predicate: Fragment, obj: Fragment): Update = {
-    val pattern = permissionPattern(predicate, obj)
-    Update(
-      sparql"""|$knoraAdminPrefix
-               |WITH $permissionsGraph
-               |DELETE {
-               |  $pattern
-               |}
-               |WHERE {
-               |  $pattern
-               |}""".render,
-    )
-  }
+  // `WITH <permissions graph>` scopes both the DELETE template and the WHERE evaluation.
+  private[plugins] val removeSystemProjectDefaultObjectAccessPermissions: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH $permissionsGraph
+             |DELETE {
+             |  ?permissionIri a knora-admin:DefaultObjectAccessPermission ;
+             |                 knora-admin:forProject knora-admin:SystemProject ;
+             |                 ?p ?o .
+             |}
+             |WHERE {
+             |  ?permissionIri a knora-admin:DefaultObjectAccessPermission ;
+             |                 knora-admin:forProject knora-admin:SystemProject ;
+             |                 ?p ?o .
+             |}""".render,
+  )
 
-  private[plugins] val removeSystemProjectDefaultObjectAccessPermissions: Update =
-    removeDefaultObjectAccessPermissions(sparql"knora-admin:forProject", sparql"knora-admin:SystemProject")
-
-  private[plugins] val removeKnownUserDefaultObjectAccessPermissions: Update =
-    removeDefaultObjectAccessPermissions(sparql"knora-admin:forGroup", sparql"knora-admin:KnownUser")
+  // `WITH <permissions graph>` scopes both the DELETE template and the WHERE evaluation.
+  private[plugins] val removeKnownUserDefaultObjectAccessPermissions: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH $permissionsGraph
+             |DELETE {
+             |  ?permissionIri a knora-admin:DefaultObjectAccessPermission ;
+             |                 knora-admin:forGroup knora-admin:KnownUser ;
+             |                 ?p ?o .
+             |}
+             |WHERE {
+             |  ?permissionIri a knora-admin:DefaultObjectAccessPermission ;
+             |                 knora-admin:forGroup knora-admin:KnownUser ;
+             |                 ?p ?o .
+             |}""".render,
+  )
 
   override def getQueries: List[Update] = List(
     removeSystemProjectDefaultObjectAccessPermissions,

@@ -41,8 +41,11 @@ object CreatePropertyQuery {
         .joinLines
     }
 
-    def linkValuePropertyTriples(definition: PropertyInfoContentV2): Fragment =
-      propertyTriples(Iri.unsafeFrom(definition.propertyIri.toInternalSchema.toIri), definition)
+    val linkValuePropertyTriples =
+      linkValuePropertyDef.whenSome(d => propertyTriples(Iri.unsafeFrom(d.propertyIri.toInternalSchema.toIri), d))
+
+    val linkValuePropertyNotExists =
+      linkValueProperty.whenSome(iri => sparql"FILTER NOT EXISTS { $iri a ?existingLinkValuePropertyType . }")
 
     Update(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -60,7 +63,7 @@ object CreatePropertyQuery {
                |  GRAPH $ontology {
                |    $ontology knora-base:lastModificationDate $currentDate .
                |    ${propertyTriples(property, propertyDef)}
-               |    ${linkValuePropertyDef.whenSome(linkValuePropertyTriples)}
+               |    $linkValuePropertyTriples
                |  }
                |}
                |WHERE {
@@ -69,9 +72,7 @@ object CreatePropertyQuery {
                |      knora-base:lastModificationDate $previousDate .
                |  }
                |  FILTER NOT EXISTS { $property rdf:type ?existingPropertyType . }
-               |  ${linkValueProperty.whenSome(iri =>
-          sparql"FILTER NOT EXISTS { $iri a ?existingLinkValuePropertyType . }",
-        )}
+               |  $linkValuePropertyNotExists
                |}""".render,
     )
   }

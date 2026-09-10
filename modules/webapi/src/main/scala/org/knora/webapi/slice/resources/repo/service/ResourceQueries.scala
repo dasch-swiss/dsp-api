@@ -15,9 +15,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 /** The read queries backing [[ResourcesRepo]]. Pure rendering, so they can be tested without a triplestore. */
 private[service] object ResourceQueries {
 
-  private val knoraBasePrefix = sparql"PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>"
-  private val rdfsPrefix      = sparql"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"
-
   /**
    * Construct every value the resource points at: all triples whose object is an instance of a
    * `knora-base:Value` subclass. The subject is additionally constrained to be a resource so that
@@ -26,8 +23,8 @@ private[service] object ResourceQueries {
   def findValues(resourceIri: ResourceIri): Construct = {
     val resource = Iri.unsafeFrom(resourceIri.value)
     Construct(
-      sparql"""|$rdfsPrefix
-               |$knoraBasePrefix
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |CONSTRUCT {
                |  $resource ?valueProperty ?value .
@@ -53,8 +50,8 @@ private[service] object ResourceQueries {
   def findLinks(resourceIri: ResourceIri): Construct = {
     val resource = Iri.unsafeFrom(resourceIri.value)
     Construct(
-      sparql"""|$rdfsPrefix
-               |$knoraBasePrefix
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |CONSTRUCT {
                |  $resource ?valueProperty ?value .
@@ -80,8 +77,8 @@ private[service] object ResourceQueries {
   def findById(resourceIri: ResourceIri): Select = {
     val resource = Iri.unsafeFrom(resourceIri.value)
     Select(
-      sparql"""|$rdfsPrefix
-               |$knoraBasePrefix
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT *
                |WHERE {
@@ -110,7 +107,7 @@ private[service] object ResourceQueries {
     val graph = Iri.unsafeFrom(projectDataGraph.value)
     val clazz = Iri.unsafeFrom(classIri.toInternalSchema.toIri)
     Select(
-      sparql"""|$knoraBasePrefix
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT (COUNT(?s) AS ?count)
                |WHERE {

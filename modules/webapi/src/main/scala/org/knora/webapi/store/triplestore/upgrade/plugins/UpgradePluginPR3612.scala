@@ -13,8 +13,6 @@ import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * Add default values for the `hasAllowedCopyrightHolder` and `hasEnabledLicense` properties to every existing project.
@@ -23,52 +21,73 @@ class UpgradePluginPR3612 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+
   private val projectIri = Variable("projectIri")
 
-  /** `?projectIri a knora-admin:knoraProject ; <predicate> <value> ; ... .` */
-  private def projectPattern(predicate: Fragment, values: Seq[Fragment]): Fragment = {
-    val head  = sparql"$projectIri a knora-admin:knoraProject"
-    val lines = values.map(value => sparql"$predicate $value")
-    Fragment.join(head +: lines, Fragment.raw(" ;\n")) ++ sparql" ."
-  }
-
-  /** One `FILTER NOT EXISTS` per value, so that the update only fires for projects missing a default. */
-  private def missingValues(predicate: Fragment, values: Seq[Fragment]): Fragment =
-    values.map(value => Fragments.filterNotExists(sparql"$projectIri $predicate $value .")).joinLines
-
-  /** `WITH <admin graph>` scopes the DELETE and INSERT templates as well as the WHERE evaluation. */
-  private def addDefaults(predicate: Fragment, values: Seq[Fragment]): Update = {
-    val pattern = projectPattern(predicate, values)
+  /**
+   * `WITH <admin graph>` scopes the DELETE and INSERT templates as well as the WHERE evaluation.
+   * The DELETE/INSERT pair rewrites the whole pattern so that the defaults end up on the project
+   * exactly once; one `FILTER NOT EXISTS` per value makes the update fire only for projects that
+   * are still missing a default.
+   */
+  private[plugins] val addDefaultCopyrightHolder: Update = {
+    val defaults            = CopyrightHolder.default.toSeq.map(holder => Literal.string(holder.value).toFragment)
+    val projectWithDefaults =
+      Fragment.join(
+        sparql"$projectIri a knora-admin:knoraProject" +:
+          defaults.map(value => sparql"knora-admin:hasAllowedCopyrightHolder $value"),
+        Fragment.raw(" ;\n"),
+      ) ++ sparql" ."
+    val missingDefaults =
+      defaults
+        .map(value => Fragments.filterNotExists(sparql"$projectIri knora-admin:hasAllowedCopyrightHolder $value ."))
+        .joinLines
     Update(
-      sparql"""|$knoraAdminPrefix
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
                |WITH $adminGraph
                |DELETE {
-               |  $pattern
+               |  $projectWithDefaults
                |}
                |INSERT {
-               |  $pattern
+               |  $projectWithDefaults
                |}
                |WHERE {
                |  $projectIri a knora-admin:knoraProject .
-               |  ${missingValues(predicate, values)}
+               |  $missingDefaults
                |}""".render,
     )
   }
 
-  private[plugins] val addDefaultCopyrightHolder: Update =
-    addDefaults(
-      sparql"knora-admin:hasAllowedCopyrightHolder",
-      CopyrightHolder.default.toSeq.map(holder => Literal.string(holder.value).toFragment),
+  /** Same shape as `addDefaultCopyrightHolder`, for the enabled licenses. */
+  private[plugins] val addDefaultEnabledLicenses: Update = {
+    val defaults =
+      License.BUILT_IN.filter(_.isRecommended == Yes).map(license => Iri.unsafeFrom(license.id.value).toFragment).toSeq
+    val projectWithDefaults =
+      Fragment.join(
+        sparql"$projectIri a knora-admin:knoraProject" +:
+          defaults.map(value => sparql"knora-admin:hasEnabledLicense $value"),
+        Fragment.raw(" ;\n"),
+      ) ++ sparql" ."
+    val missingDefaults =
+      defaults
+        .map(value => Fragments.filterNotExists(sparql"$projectIri knora-admin:hasEnabledLicense $value ."))
+        .joinLines
+    Update(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |WITH $adminGraph
+               |DELETE {
+               |  $projectWithDefaults
+               |}
+               |INSERT {
+               |  $projectWithDefaults
+               |}
+               |WHERE {
+               |  $projectIri a knora-admin:knoraProject .
+               |  $missingDefaults
+               |}""".render,
     )
-
-  private[plugins] val addDefaultEnabledLicenses: Update =
-    addDefaults(
-      sparql"knora-admin:hasEnabledLicense",
-      License.BUILT_IN
-        .filter(_.isRecommended == Yes)
-        .map(license => Iri.unsafeFrom(license.id.value).toFragment)
-        .toSeq,
-    )
+  }
 
   override def getQueries: List[Update] = List(addDefaultCopyrightHolder, addDefaultEnabledLicenses)
 }

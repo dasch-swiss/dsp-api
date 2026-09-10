@@ -142,12 +142,12 @@ object GetResourcePropertiesAndValuesQuery {
         )
       else sparql"$resource knora-base:isDeleted false ."
 
-    val versionDateFilter = maybeVersionDate.whenSome(vd =>
+    val versionDateFilter = maybeVersionDate.whenSome { vd =>
       sparql"""|{
-                                                                     |  $resource knora-base:creationDate ?creationDate .
-                                                                     |  FILTER(?creationDate <= ${Literal.dateTime(vd)})
-                                                                     |}""",
-    )
+               |  $resource knora-base:creationDate ?creationDate .
+               |  FILTER(?creationDate <= ${Literal.dateTime(vd)})
+               |}"""
+    }
 
     val values = Fragments
       .optional(
@@ -195,10 +195,12 @@ object GetResourcePropertiesAndValuesQuery {
       case None              => currentValuePatterns(maybePropertyIri, maybeValueUuid)
     }
 
-    val valueIriFilter = maybeValueIri.whenSome(vi => sparql"""|{
-                                                               |  $valueObject ?valueObjectProperty ?valueObjectValue .
-                                                               |  FILTER($valueObject = ${Iri.unsafeFrom(vi)})
-                                                               |}""")
+    val valueIriFilter = maybeValueIri.whenSome { vi =>
+      sparql"""|{
+               |  $valueObject ?valueObjectProperty ?valueObjectValue .
+               |  FILTER($valueObject = ${Iri.unsafeFrom(vi)})
+               |}"""
+    }
 
     // The value object's type and its non-standoff properties.
     val valueObjectBody =
@@ -256,14 +258,12 @@ object GetResourcePropertiesAndValuesQuery {
   ): Fragment = {
     val versionDateLiteral = Literal.dateTime(versionDate)
 
-    val propertyFilter = maybePropertyIri.whenSome(pi =>
+    val propertyFilter = maybePropertyIri.whenSome { pi =>
       sparql"""|{
-                                                                  |  $resource ?resourceValueProperty $currentValue .
-                                                                  |  FILTER(?resourceValueProperty = ${Iri.unsafeFrom(
-          pi.toIri,
-        )})
-                                                                  |}""",
-    )
+               |  $resource ?resourceValueProperty $currentValue .
+               |  FILTER(?resourceValueProperty = ${Iri.unsafeFrom(pi.toIri)})
+               |}"""
+    }
 
     val deleteFilter = Fragments
       .filterNotExists(
@@ -272,13 +272,18 @@ object GetResourcePropertiesAndValuesQuery {
       )
       .unless(withDeleted)
 
-    val uuidFilter = maybeValueUuid.whenSome(uuid =>
+    val uuidFilter = maybeValueUuid.whenSome { uuid =>
       sparql"""|{
-                                                              |  $currentValue knora-base:valueHasUUID $currentValueUUID .
-                                                              |  FILTER($currentValueUUID = ${Literal.string(
-          UuidUtil.base64Encode(uuid),
-        )})
-                                                              |}""",
+               |  $currentValue knora-base:valueHasUUID $currentValueUUID .
+               |  FILTER($currentValueUUID = ${Literal.string(UuidUtil.base64Encode(uuid))})
+               |}"""
+    }
+
+    // No version of the value was created later than the one selected but still at or before the version date.
+    val noLaterVersion = Fragments.filterNotExists(
+      sparql"""|$currentValue knora-base:previousValue* ?otherValueObject .
+               |?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
+               |FILTER(?otherValueObjectCreationDate <= $versionDateLiteral && ?otherValueObjectCreationDate > ?valueObjectCreationDate)""",
     )
 
     sparql"""|$resource ?resourceValueProperty $currentValue .
@@ -292,11 +297,7 @@ object GetResourcePropertiesAndValuesQuery {
              |  $valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
              |  FILTER(?valueObjectCreationDate <= $versionDateLiteral)
              |}
-             |${Fragments.filterNotExists(
-        sparql"""|$currentValue knora-base:previousValue* ?otherValueObject .
-                       |?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
-                       |FILTER(?otherValueObjectCreationDate <= $versionDateLiteral && ?otherValueObjectCreationDate > ?valueObjectCreationDate)""",
-      )}
+             |$noLaterVersion
              |$currentValue knora-base:hasPermissions ?currentValuePermissions ."""
   }
 
@@ -305,14 +306,12 @@ object GetResourcePropertiesAndValuesQuery {
     maybePropertyIri: Option[SmartIri],
     maybeValueUuid: Option[UUID],
   ): Fragment = {
-    val propertyFilter = maybePropertyIri.whenSome(pi =>
+    val propertyFilter = maybePropertyIri.whenSome { pi =>
       sparql"""|{
-                                                                  |  $resource ?resourceValueProperty $valueObject .
-                                                                  |  FILTER(?resourceValueProperty = ${Iri.unsafeFrom(
-          pi.toIri,
-        )})
-                                                                  |}""",
-    )
+               |  $resource ?resourceValueProperty $valueObject .
+               |  FILTER(?resourceValueProperty = ${Iri.unsafeFrom(pi.toIri)})
+               |}"""
+    }
 
     val uuidPattern = maybeValueUuid.whenSome(uuid =>
       sparql"$valueObject knora-base:valueHasUUID ${Literal.string(UuidUtil.base64Encode(uuid))} .",

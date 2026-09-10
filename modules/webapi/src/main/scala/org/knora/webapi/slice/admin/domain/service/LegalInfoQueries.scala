@@ -17,31 +17,25 @@ private[service] object AuthorshipQueries {
   val authorVar: Variable = Variable("author")
   val countVar: Variable  = Variable("count")
 
-  /**
-   * The graph pattern shared by both queries. The search term is lowercased before it is
-   * turned into a literal, so that it matches the `LCASE(STR(...))` on the left-hand side.
-   */
-  private def graphPattern(projectGraph: Iri, filterAndOrder: FilterAndOrder): Fragment = {
-    val searchFilter = filterAndOrder.filter.whenSome { term =>
-      Fragments.filter(sparql"CONTAINS(LCASE(STR($authorVar)), ${Literal.string(term.toLowerCase)})")
-    }
-    Fragments.graph(sparql"$projectGraph")(
-      sparql"""|?fileValue knora-base:hasAuthorship $authorVar .
-               |$searchFilter""",
-    )
-  }
-
   def authorships(projectGraph: Iri, paging: PageAndSize, filterAndOrder: FilterAndOrder): Select = {
     val order = filterAndOrder.order match {
       case Order.Asc  => sparql"ASC"
       case Order.Desc => sparql"DESC"
+    }
+    // The search term is lowercased before it is turned into a literal, so that it matches the
+    // `LCASE(STR(...))` on the left-hand side.
+    val searchFilter = filterAndOrder.filter.whenSome { term =>
+      Fragments.filter(sparql"CONTAINS(LCASE(STR($authorVar)), ${Literal.string(term.toLowerCase)})")
     }
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT DISTINCT $authorVar
                |WHERE {
-               |  ${graphPattern(projectGraph, filterAndOrder)}
+               |  GRAPH $projectGraph {
+               |    ?fileValue knora-base:hasAuthorship $authorVar .
+               |    $searchFilter
+               |  }
                |}
                |ORDER BY $order($authorVar)
                |LIMIT ${Literal.int(paging.size)}
@@ -49,13 +43,21 @@ private[service] object AuthorshipQueries {
     )
   }
 
-  def count(projectGraph: Iri, filterAndOrder: FilterAndOrder): Select =
+  def count(projectGraph: Iri, filterAndOrder: FilterAndOrder): Select = {
+    // Same lowercasing as in `authorships`, so that both queries filter on the same term.
+    val searchFilter = filterAndOrder.filter.whenSome { term =>
+      Fragments.filter(sparql"CONTAINS(LCASE(STR($authorVar)), ${Literal.string(term.toLowerCase)})")
+    }
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT (COUNT(DISTINCT $authorVar) AS $countVar)
                |WHERE {
-               |  ${graphPattern(projectGraph, filterAndOrder)}
+               |  GRAPH $projectGraph {
+               |    ?fileValue knora-base:hasAuthorship $authorVar .
+               |    $searchFilter
+               |  }
                |}""".render,
     )
+  }
 }

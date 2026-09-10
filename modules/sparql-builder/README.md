@@ -56,6 +56,14 @@ val query = sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-ba
                       |}"""
 ```
 
+Fragments are for **dynamic structure only** — an optional block, a repeated block, or an
+alternative chosen at runtime. Never use one to factor out static SPARQL that several
+queries happen to share, and write the `PREFIX` declarations literally in every template:
+one whole-query template a reader can follow top to bottom beats a query assembled from
+named pieces. When two runtime shapes differ substantially, write two complete templates
+rather than threading one template with conditional holes. See
+[the convention](../../docs/development/dsp-api-sparql-queries.md#keep-the-query-readable-one-explicit-template-per-query).
+
 `Fragments` also provides `optional`, `union`, `graph`, `filter`, `filterNotExists`,
 `minus`, `bind`, `values`, and `subquery` for constructs that are themselves dynamic.
 When a construct is fixed, write it directly in the query. The raw monoid (`++`,

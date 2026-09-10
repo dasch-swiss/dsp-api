@@ -26,9 +26,6 @@ object DeletePropertyQuery {
       val previousDate      = Literal.dateTime(lmd.value)
       val currentDate       = Literal.dateTime(now)
 
-      def linkValueTriple(iri: Iri): Fragment =
-        sparql"$iri ?linkValuePropertyPred ?linkValuePropertyObj ."
-
       val update = Update(
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -38,7 +35,7 @@ object DeletePropertyQuery {
                  |  GRAPH $ontology {
                  |    $ontology knora-base:lastModificationDate $previousDate .
                  |    $property ?propertyPred ?propertyObj .
-                 |    ${linkValueProperty.whenSome(linkValueTriple)}
+                 |    ${linkValueProperty.whenSome(iri => sparql"$iri ?linkValuePropertyPred ?linkValuePropertyObj .")}
                  |  }
                  |}
                  |INSERT {
@@ -52,7 +49,7 @@ object DeletePropertyQuery {
                  |  $property a owl:ObjectProperty ;
                  |    ?propertyPred ?propertyObj .
                  |  FILTER NOT EXISTS { ?s ?p $property . }
-                 |  ${linkValueProperty.whenSome(linkValueTriple)}
+                 |  ${linkValueProperty.whenSome(iri => sparql"$iri ?linkValuePropertyPred ?linkValuePropertyObj .")}
                  |}""".render,
       )
       (LastModificationDate.from(now), update)

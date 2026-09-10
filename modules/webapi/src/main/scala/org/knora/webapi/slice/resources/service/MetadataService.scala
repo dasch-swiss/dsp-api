@@ -49,18 +49,6 @@ private[service] object ResourcesMetadataQuery {
       case many               => Fragments.union(many.map(cls => sparql"$resourceIriVar a $cls .")*)
     }
 
-    val resourcePattern =
-      Fragments.graph(sparql"$graph")(
-        sparql"""|$resourceIriVar a $classIriVar ;
-                 |  knora-base:creationDate $creationDateVar ;
-                 |  knora-base:attachedToUser $creatorIriVar ;
-                 |  rdfs:label $labelVar .
-                 |${Fragments.optional(
-            sparql"$resourceIriVar knora-base:lastModificationDate $lastModificationDateVar .",
-          )}
-                 |${Fragments.optional(sparql"$resourceIriVar knora-base:deleteDate $deleteDateVar .")}""",
-      )
-
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -68,7 +56,18 @@ private[service] object ResourcesMetadataQuery {
                |SELECT DISTINCT $classIriVar $creationDateVar $creatorIriVar $deleteDateVar $labelVar $lastModificationDateVar $resourceIriVar
                |WHERE {
                |  $classConstraint
-               |  $resourcePattern
+               |  GRAPH $graph {
+               |    $resourceIriVar a $classIriVar ;
+               |      knora-base:creationDate $creationDateVar ;
+               |      knora-base:attachedToUser $creatorIriVar ;
+               |      rdfs:label $labelVar .
+               |    OPTIONAL {
+               |      $resourceIriVar knora-base:lastModificationDate $lastModificationDateVar .
+               |    }
+               |    OPTIONAL {
+               |      $resourceIriVar knora-base:deleteDate $deleteDateVar .
+               |    }
+               |  }
                |}""".render,
       // A whole-project scan, so it runs on the long timeout tier, as it did before.
       SparqlTimeout.Gravsearch,

@@ -10,8 +10,6 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.adminGraph
-import org.knora.webapi.store.triplestore.upgrade.plugins.AbstractSparqlUpdatePlugin.knoraAdminPrefix
 
 /**
  * Remove the `knora-admin:status` triple from every project. The property is no longer part of the
@@ -23,10 +21,12 @@ class MigrateRemoveProjectStatus extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+
   // `WITH <admin graph>` scopes both the DELETE template and the WHERE evaluation to the admin
   // data graph, so no USING or nested GRAPH clause is needed.
   private[plugins] val removeProjectStatus: Update = Update(
-    sparql"""|$knoraAdminPrefix
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
              |WITH $adminGraph
              |DELETE {
              |  ?project knora-admin:status ?status .

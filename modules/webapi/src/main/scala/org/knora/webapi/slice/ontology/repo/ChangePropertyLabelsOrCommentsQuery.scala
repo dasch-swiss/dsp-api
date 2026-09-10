@@ -24,25 +24,20 @@ object ChangePropertyLabelsOrCommentsQuery {
     lastModificationDate: LastModificationDate,
   ): UIO[Update] =
     Clock.instant.map { now =>
-      val ontology          = Iri.unsafeFrom(propertyIri.ontologyIri.toInternalSchema.toIri)
-      val property          = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
-      val linkValueProperty = maybeLinkValuePropertyIri.map(iri => Iri.unsafeFrom(iri.toInternalSchema.toIri))
+      val ontology = Iri.unsafeFrom(propertyIri.ontologyIri.toInternalSchema.toIri)
+      val property = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
+      // A link property's link value property carries the same labels/comments,
+      // so its old values are replaced alongside the property's own.
+      val linkValueProp     = maybeLinkValuePropertyIri.map(iri => Iri.unsafeFrom(iri.toInternalSchema.toIri))
       val labelOrCommentIri = Iri.unsafeFrom(labelOrComment.toString) // rdfs:label or rdfs:comment
       val previousDate      = Literal.dateTime(lastModificationDate.value)
       val currentDate       = Literal.dateTime(now)
 
-      // One <subject> rdfs:label|rdfs:comment "..."@lang . triple per new value.
+      /** One `<subject> rdfs:label|rdfs:comment "..."@lang .` triple per new value. */
       def newValueTriples(subject: Iri): Fragment =
         newValues
           .map(v => sparql"$subject $labelOrCommentIri ${Literal.langString(v.value, v.language.value)} .")
           .joinLines
-
-      // A link property's link value property carries the same labels/comments,
-      // so its old values are replaced alongside the property's own.
-      val linkValueDelete = linkValueProperty.whenSome(p => sparql"$p $labelOrCommentIri ?oldLinkValueValues .")
-      val linkValueInsert = linkValueProperty.whenSome(newValueTriples)
-      val linkValueWhere  =
-        linkValueProperty.whenSome(p => sparql"OPTIONAL { $p $labelOrCommentIri ?oldLinkValueValues . }")
 
       Update(
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -54,21 +49,21 @@ object ChangePropertyLabelsOrCommentsQuery {
                  |  GRAPH $ontology {
                  |    $ontology knora-base:lastModificationDate $previousDate .
                  |    $property $labelOrCommentIri ?oldValues .
-                 |    $linkValueDelete
+                 |    ${linkValueProp.whenSome(p => sparql"$p $labelOrCommentIri ?oldLinkValueValues .")}
                  |  }
                  |}
                  |INSERT {
                  |  GRAPH $ontology {
                  |    $ontology knora-base:lastModificationDate $currentDate .
                  |    ${newValueTriples(property)}
-                 |    $linkValueInsert
+                 |    ${linkValueProp.whenSome(newValueTriples)}
                  |  }
                  |}
                  |WHERE {
                  |  $ontology a owl:Ontology ;
                  |    knora-base:lastModificationDate $previousDate .
                  |  OPTIONAL { $property $labelOrCommentIri ?oldValues . }
-                 |  $linkValueWhere
+                 |  ${linkValueProp.whenSome(p => sparql"OPTIONAL { $p $labelOrCommentIri ?oldLinkValueValues . }")}
                  |}""".render,
       )
     }

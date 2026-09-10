@@ -41,6 +41,69 @@ the builder until they are migrated. Verify a migration by diffing the rendered 
 against the old builder's `getQueryString` output. Only new *SparqlBuilder* usage is out;
 RDF4J model classes (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain fine.
 
+## Keep the query readable: one explicit template per query
+
+A reader should be able to read the whole query, top to bottom, inside a single
+`sparql"""|..."""` literal. Prefer a bit of repetition over indirection:
+
+- **One whole-query template per query.** For a multi-statement update (`;`-joined),
+  one complete template per statement.
+- **Write `PREFIX` declarations literally in every template.** No shared `prefixes`
+  val or fragment, not even within one file.
+- **Never pull static SPARQL into a local `val`/`def` "sub-segment" fragment.** Write it
+  inline, even when the same lines appear in several queries of the same file.
+- **Holes are for values and for genuinely dynamic structure.** Typed `Iri`, `Variable`
+  and `Literal` holes; plus an optional block (`Fragment.when` / `.unless` / `.whenSome`),
+  a repeated block (`.joinLines` over a collection), or an alternative chosen at runtime.
+  Name such a fragment after the SPARQL it emits and keep it as small as possible; the
+  fixed part around it stays in the template.
+- **If two runtime shapes differ substantially, write two complete templates** (with the
+  repetition that implies) rather than one template threaded with conditional holes. A
+  `whenSome` hole that needs a multi-line lambda inside the template is the signal to
+  split. See `ChangePropertyGuiElementQuery` for both halves of this rule: its optional
+  link-value-property DELETE is two full templates selected by a `match`, while
+  `ChangePropertyLabelsOrCommentsQuery` keeps its optional parts as single-line
+  `whenSome` holes.
+
+Bad — the query is spread over a shared prefix val and a pulled-out skeleton, so no one
+place shows what is sent to the store:
+
+```scala
+private val prefixes = sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>"""
+
+val whereClause = sparql"""|$ontology a owl:Ontology ;
+                          |  knora-base:lastModificationDate $previousDate ."""
+val optionalComment = maybeComment.whenSome(c => sparql"OPTIONAL { $ontology rdfs:comment $c . }")
+
+val query = sparql"""|$prefixes
+                    |
+                    |DELETE { GRAPH $ontology { $ontology rdfs:comment ?oldComment . } }
+                    |WHERE {
+                    |  $whereClause
+                    |  $optionalComment
+                    |}"""
+```
+
+Good — the same query inline, with only value holes and one short optional hole:
+
+```scala
+val query = sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                    |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                    |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                    |
+                    |DELETE {
+                    |  GRAPH $ontology {
+                    |    $ontology rdfs:comment ?oldComment .
+                    |  }
+                    |}
+                    |WHERE {
+                    |  $ontology a owl:Ontology ;
+                    |    knora-base:lastModificationDate $previousDate .
+                    |  ${maybeComment.whenSome(c => sparql"OPTIONAL { $ontology rdfs:comment $c . }")}
+                    |}"""
+```
+
 ---
 
 The rest of this document covers the **grandfathered** RDF4J SparqlBuilder style — needed

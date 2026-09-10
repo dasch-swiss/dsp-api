@@ -15,13 +15,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 object ChangePropertyGuiElementQuery {
 
-  private val prefixes =
-    sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-             |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-             |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-             |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>"""
-
   def build(
     ontologyIri: OntologyIri,
     propertyIri: PropertyIri,
@@ -39,45 +32,70 @@ object ChangePropertyGuiElementQuery {
     val previousDate  = Literal.dateTime(lastModificationDate)
     val currentDate   = Literal.dateTime(currentTime)
 
-    // A link property's link value property carries the same GUI element and attributes,
-    // so it is cleared and re-set alongside the property itself.
-    val deleteLinkPropertyGui = linkProperty.whenSome { lp =>
-      sparql"""|$lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
-               |$lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute ."""
-    }
-    val matchLinkPropertyGui = linkProperty.whenSome { lp =>
-      sparql"""|OPTIONAL { $lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement . }
-               |OPTIONAL { $lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . }"""
-    }
-
     /** The new `salsah-gui:guiElement` triple (if any) plus one triple per new gui attribute. */
     def insertGuiTriples(subject: Iri): Fragment =
       (guiElement.map(e => sparql"$subject salsah-gui:guiElement $e .").toList :::
         guiAttributes.map(a => sparql"$subject salsah-gui:guiAttribute $a .")).joinLines
 
-    val deleteOldGui =
-      sparql"""|$prefixes
-               |
-               |DELETE {
-               |  GRAPH $ontology {
-               |    $property salsah-gui:guiElement ?oldGuiElement .
-               |    $property salsah-gui:guiAttribute ?oldGuiAttribute .
-               |    $deleteLinkPropertyGui
-               |  }
-               |}
-               |WHERE {
-               |  GRAPH $ontology {
-               |    $ontology a owl:Ontology ;
-               |      knora-base:lastModificationDate $previousDate .
-               |    OPTIONAL { $property salsah-gui:guiElement ?oldGuiElement . }
-               |    OPTIONAL { $property salsah-gui:guiAttribute ?oldGuiAttribute . }
-               |    $matchLinkPropertyGui
-               |  }
-               |}"""
+    // A link property's link value property carries the same GUI element and attributes,
+    // so it is cleared and re-set alongside the property itself. The two shapes differ too
+    // much for conditional holes, so each is written out as its own complete statement.
+    val deleteOldGui = linkProperty match {
+      case Some(lp) =>
+        sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+                 |
+                 |DELETE {
+                 |  GRAPH $ontology {
+                 |    $property salsah-gui:guiElement ?oldGuiElement .
+                 |    $property salsah-gui:guiAttribute ?oldGuiAttribute .
+                 |    $lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
+                 |    $lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .
+                 |  }
+                 |}
+                 |WHERE {
+                 |  GRAPH $ontology {
+                 |    $ontology a owl:Ontology ;
+                 |      knora-base:lastModificationDate $previousDate .
+                 |    OPTIONAL { $property salsah-gui:guiElement ?oldGuiElement . }
+                 |    OPTIONAL { $property salsah-gui:guiAttribute ?oldGuiAttribute . }
+                 |    OPTIONAL { $lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement . }
+                 |    OPTIONAL { $lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . }
+                 |  }
+                 |}"""
+      case None =>
+        sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+                 |
+                 |DELETE {
+                 |  GRAPH $ontology {
+                 |    $property salsah-gui:guiElement ?oldGuiElement .
+                 |    $property salsah-gui:guiAttribute ?oldGuiAttribute .
+                 |  }
+                 |}
+                 |WHERE {
+                 |  GRAPH $ontology {
+                 |    $ontology a owl:Ontology ;
+                 |      knora-base:lastModificationDate $previousDate .
+                 |    OPTIONAL { $property salsah-gui:guiElement ?oldGuiElement . }
+                 |    OPTIONAL { $property salsah-gui:guiAttribute ?oldGuiAttribute . }
+                 |  }
+                 |}"""
+    }
 
     // Omitted entirely when there is nothing to set (the GUI element was only removed).
     val insertNewGui = Option.when(guiElement.isDefined || guiAttributes.nonEmpty)(
-      sparql"""|$prefixes
+      sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
                |
                |INSERT {
                |  GRAPH $ontology {
@@ -94,7 +112,11 @@ object ChangePropertyGuiElementQuery {
     )
 
     val updateLastModificationDate =
-      sparql"""|$prefixes
+      sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
                |
                |DELETE {
                |  GRAPH $ontology {

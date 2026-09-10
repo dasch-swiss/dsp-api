@@ -230,10 +230,6 @@ object ViewRestrictionsByPropertyRepo {
   /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   private[repo] val KnoraBaseOntologyIri: String = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 
-  private val prefixes =
-    sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
-
   /**
    * `SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?permissions` for ONE property.
    *
@@ -252,23 +248,45 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val skeleton =
-      sparql"""|?resource knora-base:attachedToProject $project ;
-               |  knora-base:isDeleted false ;
-               |  $property ?value .
-               |?value knora-base:hasPermissions ?permissions ;
-               |  knora-base:isDeleted false .
-               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
-    Select(
-      sparql"""|$prefixes
-               |
-               |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
-               |WHERE {
-               |  ${narrowedTo(itemType, skeleton)}
-               |}
-               |GROUP BY ?permissions""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
+    itemTypeConstraint(itemType) match {
+      case None =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
+                   |WHERE {
+                   |  ?resource knora-base:attachedToProject $project ;
+                   |    knora-base:isDeleted false ;
+                   |    $property ?value .
+                   |  ?value knora-base:hasPermissions ?permissions ;
+                   |    knora-base:isDeleted false .
+                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |}
+                   |GROUP BY ?permissions""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+      case Some(constraint) =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
+                   |WHERE {
+                   |  {
+                   |    ?resource knora-base:attachedToProject $project ;
+                   |      knora-base:isDeleted false ;
+                   |      $property ?value .
+                   |    ?value knora-base:hasPermissions ?permissions ;
+                   |      knora-base:isDeleted false .
+                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  }
+                   |  $constraint
+                   |}
+                   |GROUP BY ?permissions""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+    }
   }
 
   /**
@@ -281,6 +299,10 @@ object ViewRestrictionsByPropertyRepo {
    * the pages consumed rows, leaving the resources past that point unreachable by any page number the
    * pagination block admits. [[ViewRestrictionsRepo.resourcePageQuery]] has this shape for the same reason.
    * [[drillDownRowsQuery]] then fetches the rows for exactly this page's IRIs.
+   *
+   * The restriction filter stays inside the inner group, i.e. before the label OPTIONAL is joined in.
+   * Ordering by the label when present and the IRI otherwise keeps unlabelled resources paging
+   * deterministically.
    */
   private[repo] def drillDownResourcePageQuery(
     projectIri: ProjectIri,
@@ -291,33 +313,59 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val skeleton =
-      sparql"""|?resource knora-base:attachedToProject $project ;
-               |  knora-base:isDeleted false ;
-               |  $property ?value .
-               |?value knora-base:hasPermissions ?permissions ;
-               |  knora-base:isDeleted false .
-               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
-    Select(
-      // The restriction filter stays inside the inner group, i.e. before the label OPTIONAL is joined in.
-      // Ordering by the label when present and the IRI otherwise keeps unlabelled resources paging
-      // deterministically.
-      sparql"""|$prefixes
-               |
-               |SELECT DISTINCT ?resource ?labelOrIri
-               |WHERE {
-               |  {
-               |    ${narrowedTo(itemType, skeleton)}
-               |    $onlyRestricted
-               |  }
-               |  OPTIONAL { ?resource rdfs:label ?label . }
-               |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
-               |}
-               |ORDER BY ASC(?labelOrIri) ASC(?resource)
-               |LIMIT ${Literal.int(limit)}
-               |OFFSET ${Literal.int(offset)}""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
+    itemTypeConstraint(itemType) match {
+      case None =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT DISTINCT ?resource ?labelOrIri
+                   |WHERE {
+                   |  {
+                   |    ?resource knora-base:attachedToProject $project ;
+                   |      knora-base:isDeleted false ;
+                   |      $property ?value .
+                   |    ?value knora-base:hasPermissions ?permissions ;
+                   |      knora-base:isDeleted false .
+                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |    FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  }
+                   |  OPTIONAL { ?resource rdfs:label ?label . }
+                   |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+                   |}
+                   |ORDER BY ASC(?labelOrIri) ASC(?resource)
+                   |LIMIT ${Literal.int(limit)}
+                   |OFFSET ${Literal.int(offset)}""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+      case Some(constraint) =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT DISTINCT ?resource ?labelOrIri
+                   |WHERE {
+                   |  {
+                   |    {
+                   |      ?resource knora-base:attachedToProject $project ;
+                   |        knora-base:isDeleted false ;
+                   |        $property ?value .
+                   |      ?value knora-base:hasPermissions ?permissions ;
+                   |        knora-base:isDeleted false .
+                   |      FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |    }
+                   |    $constraint
+                   |    FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  }
+                   |  OPTIONAL { ?resource rdfs:label ?label . }
+                   |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+                   |}
+                   |ORDER BY ASC(?labelOrIri) ASC(?resource)
+                   |LIMIT ${Literal.int(limit)}
+                   |OFFSET ${Literal.int(offset)}""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+    }
   }
 
   /**
@@ -339,30 +387,65 @@ object ViewRestrictionsByPropertyRepo {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
     val pageIris = Fragment.join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))
-    val skeleton =
-      sparql"""|?resource knora-base:attachedToProject $project ;
-               |  knora-base:isDeleted false ;
-               |  $property ?value .
-               |?value knora-base:hasPermissions ?permissions ;
-               |  knora-base:isDeleted false .
-               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-               |?resource a ?resClass .
-               |?value knora-base:attachedToUser ?creator .
-               |OPTIONAL { ?resource rdfs:label ?label . }
-               |$optionalFileClass
-               |OPTIONAL { ?value knora-base:valueHasComment ?comment . }"""
-    Select(
-      sparql"""|$prefixes
-               |
-               |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
-               |WHERE {
-               |  ${narrowedTo(itemType, skeleton)}
-               |  $onlyRestricted
-               |  FILTER (?resource IN ($pageIris))
-               |}
-               |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
+    itemTypeConstraint(itemType) match {
+      case None =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
+                   |WHERE {
+                   |  ?resource knora-base:attachedToProject $project ;
+                   |    knora-base:isDeleted false ;
+                   |    $property ?value .
+                   |  ?value knora-base:hasPermissions ?permissions ;
+                   |    knora-base:isDeleted false .
+                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  ?resource a ?resClass .
+                   |  ?value knora-base:attachedToUser ?creator .
+                   |  OPTIONAL { ?resource rdfs:label ?label . }
+                   |  OPTIONAL {
+                   |    ?value a ?fileClass .
+                   |    ?fileClass rdfs:subClassOf* knora-base:FileValue .
+                   |  }
+                   |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  FILTER (?resource IN ($pageIris))
+                   |}
+                   |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+      case Some(constraint) =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
+                   |WHERE {
+                   |  {
+                   |    ?resource knora-base:attachedToProject $project ;
+                   |      knora-base:isDeleted false ;
+                   |      $property ?value .
+                   |    ?value knora-base:hasPermissions ?permissions ;
+                   |      knora-base:isDeleted false .
+                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |    ?resource a ?resClass .
+                   |    ?value knora-base:attachedToUser ?creator .
+                   |    OPTIONAL { ?resource rdfs:label ?label . }
+                   |    OPTIONAL {
+                   |      ?value a ?fileClass .
+                   |      ?fileClass rdfs:subClassOf* knora-base:FileValue .
+                   |    }
+                   |    OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+                   |  }
+                   |  $constraint
+                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  FILTER (?resource IN ($pageIris))
+                   |}
+                   |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+    }
   }
 
   /**
@@ -376,105 +459,96 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val skeleton =
-      sparql"""|?resource knora-base:attachedToProject $project ;
-               |  knora-base:isDeleted false ;
-               |  $property ?value .
-               |?value knora-base:hasPermissions ?permissions ;
-               |  knora-base:isDeleted false .
-               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
-    Select(
-      sparql"""|$prefixes
-               |
-               |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
-               |WHERE {
-               |  ${narrowedTo(itemType, skeleton)}
-               |  $onlyRestricted
-               |}""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
+    itemTypeConstraint(itemType) match {
+      case None =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+                   |WHERE {
+                   |  ?resource knora-base:attachedToProject $project ;
+                   |    knora-base:isDeleted false ;
+                   |    $property ?value .
+                   |  ?value knora-base:hasPermissions ?permissions ;
+                   |    knora-base:isDeleted false .
+                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |}""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+      case Some(constraint) =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+                   |WHERE {
+                   |  {
+                   |    ?resource knora-base:attachedToProject $project ;
+                   |      knora-base:isDeleted false ;
+                   |      $property ?value .
+                   |    ?value knora-base:hasPermissions ?permissions ;
+                   |      knora-base:isDeleted false .
+                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  }
+                   |  $constraint
+                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |}""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+    }
   }
 
   /*
-   * The four templates above repeat the same WHERE skeleton — a project's current, non-deleted values of
-   * ONE property — rather than sharing it, so that each query can be read as one whole piece of SPARQL.
+   * The four queries above repeat the same WHERE skeleton — a project's current, non-deleted values of ONE
+   * property — rather than sharing it, so that each template can be read as one whole piece of SPARQL.
    *
    * No `?resClass` and no `ProjectClasses` — see the class doc for why, and for the measurement.
    * `attachedToProject` on the resource is the whole project scope this needs. The property IRI is bound in
    * the pattern, not filtered: 1,053ms against 3,060ms on LHTT.
    *
-   * Each template holds its skeleton as a local `skeleton` fragment and hands it to `narrowedTo`, which is
-   * the one place that decides whether the skeleton is wrapped in a group of its own. It is wrapped exactly
-   * when an item-type constraint follows it — the constraint then cannot be merged into the skeleton's
-   * basic graph pattern, nor reordered against its triples — and left bare when there is no constraint, so
-   * no template adds a group that has nothing to separate.
-   */
-
-  /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
-  private val optionalFileClass =
-    sparql"""|OPTIONAL {
-             |  ?value a ?fileClass .
-             |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
-             |}"""
-
-  /**
-   * The WHERE skeleton, narrowed to one kind of value.
+   * Each query is written as two whole templates chosen by whether an item-type constraint applies. The
+   * skeleton is wrapped in a group of its own exactly when a constraint follows it — the constraint then
+   * cannot be merged into the skeleton's basic graph pattern, nor reordered against its triples — and left
+   * bare when there is no constraint, so no template adds a group that has nothing to separate.
    *
-   * `All` has no constraint, so the skeleton is returned exactly as the template wrote it. Every other item
-   * type puts the skeleton in a group of its own and appends the constraint beside it, which keeps the
-   * skeleton a basic graph pattern the constraint can neither be merged into nor reordered against.
+   * The counts deliberately do NOT apply the `!REGEX` restriction filter that the drill-down does: keeping
+   * every permission literal is what makes the property's whole population derivable from the same rows.
    */
-  private def narrowedTo(itemType: ValueItemType, skeleton: Fragment): Fragment =
-    itemTypeConstraint(itemType) match {
-      case None             => skeleton
-      case Some(constraint) =>
-        sparql"""|{
-                 |  $skeleton
-                 |}
-                 |$constraint"""
-    }
 
   /**
    * Narrows to one kind of value. Copied rather than shared with [[ViewRestrictionsRepo]]: reusing it would
    * couple the two repos through the exact seam this split exists to remove, and the fragment is small.
    *
    * `All` has no constraint at all; the group that isolates the skeleton exists only to separate it from a
-   * constraint, so `narrowedTo` omits both.
+   * constraint, so the callers omit both.
    */
-  private def itemTypeConstraint(itemType: ValueItemType): Option[Fragment] = {
-    val isFile =
-      sparql"""|?value a ?fileClass .
-               |?fileClass rdfs:subClassOf* knora-base:FileValue ."""
+  private def itemTypeConstraint(itemType: ValueItemType): Option[Fragment] =
     itemType match {
       case ValueItemType.File =>
         Some(sparql"""|{
-                      |  $isFile
+                      |  ?value a ?fileClass .
+                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
                       |}""")
       case ValueItemType.Value =>
         Some(sparql"""|FILTER NOT EXISTS {
-                      |  $isFile
+                      |  ?value a ?fileClass .
+                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
                       |}""")
       case ValueItemType.Comment =>
         Some(sparql"?value knora-base:valueHasComment ?comment .")
       case ValueItemType.All => None
     }
-  }
 
   /**
    * Matches a permission literal that grants full view to anonymous users. Copied from
    * [[ViewRestrictionsRepo]] rather than shared, like `itemTypeConstraint` above.
+   *
+   * The drill-down queries use it in a `FILTER(!REGEX(?permissions, …))` to keep only rows restricted from
+   * someone. The authoritative per-audience decision still happens in Scala via `PermissionUtilADM`; the
+   * filter only removes provably-open rows, so it is conservative.
    */
   private val grantsViewToAnonymousRegex = "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser"
-
-  /**
-   * `FILTER(!REGEX(?permissions, …))` — keep only rows restricted from someone.
-   *
-   * The drill-down lists restrictions, so provably-open values are dropped here. The counts deliberately do
-   * NOT apply this: keeping every literal is what makes the property's whole population derivable from the
-   * same rows. The authoritative per-audience decision still happens in Scala via `PermissionUtilADM`;
-   * this only removes provably-open rows, so it is conservative.
-   */
-  private val onlyRestricted =
-    sparql"FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))"
 
 }
