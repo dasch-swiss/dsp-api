@@ -153,7 +153,6 @@ final case class ReadResourcesServiceLive(
                   maybePropertyIri = propertyIri,
                   maybeValueUuid = valueUuid,
                   maybeVersionDate = versionDate.map(_.value),
-                  queryAllNonStandoff = true,
                   queryStandoff = queryStandoff,
                   standoffTagFilter = standoffTagFilter,
                 )

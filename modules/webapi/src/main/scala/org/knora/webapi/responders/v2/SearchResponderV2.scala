@@ -57,8 +57,8 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.SanitizedSpan
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.resources.repo.SearchResultResourcesQuery
 import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.slice.search.FulltextSearchTerms
 import org.knora.webapi.slice.search.SearchTimeoutException
@@ -1146,15 +1146,7 @@ final class SearchResponderV2Live(
           // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
           // at most one page of standoff per text value.
           val resourceRequestSparql =
-            GetResourcePropertiesAndValuesQuery.build(
-              resourceIris = mainResourceIris,
-              preview = false,
-              withDeleted = false,
-              queryAllNonStandoff = true,
-              queryStandoff = queryStandoff,
-              maybePropertyIri = None,
-              maybeVersionDate = None,
-            )
+            SearchResultResourcesQuery.build(mainResourceIris, queryStandoff)
 
           for {
             resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)

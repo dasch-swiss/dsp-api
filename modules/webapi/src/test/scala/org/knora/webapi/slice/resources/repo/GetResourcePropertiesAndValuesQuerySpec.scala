@@ -31,30 +31,25 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
   private val propertyIri  = sf.toSmartIri("http://www.knora.org/ontology/0001/anything#hasText")
   private val valueUuid    = UUID.fromString("12345678-1234-1234-1234-123456789012")
   private val versionDate  = Instant.parse("2019-08-30T10:36:54.024Z")
-  private val valueIri     = "http://rdfh.ch/0001/resource1/values/value1"
 
   private def render(
     resourceIris: Seq[String] = Seq(resourceIri1),
     preview: Boolean = false,
     withDeleted: Boolean = false,
-    queryAllNonStandoff: Boolean = true,
     queryStandoff: Boolean = false,
     maybePropertyIri: Option[org.knora.webapi.messages.SmartIri] = None,
     maybeValueUuid: Option[UUID] = None,
     maybeVersionDate: Option[Instant] = None,
-    maybeValueIri: Option[String] = None,
   ): String =
     GetResourcePropertiesAndValuesQuery
       .build(
         resourceIris = resourceIris,
         preview = preview,
         withDeleted = withDeleted,
-        queryAllNonStandoff = queryAllNonStandoff,
         queryStandoff = queryStandoff,
         maybePropertyIri = maybePropertyIri,
         maybeValueUuid = maybeValueUuid,
         maybeVersionDate = maybeVersionDate,
-        maybeValueIri = maybeValueIri,
       )
       .sparql
 
@@ -432,59 +427,6 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#isDeleted> false . } }
        |}""".stripMargin
 
-  private val expectedValueIri =
-    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-       |
-       |CONSTRUCT {
-       |  ?resource a <http://www.knora.org/ontology/knora-base#Resource> ;
-       |    <http://www.knora.org/ontology/knora-base#isMainResource> true ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label ;
-       |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
-       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
-       |    ?resourceValueProperty ?valueObject .
-       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
-       |    <http://www.knora.org/ontology/knora-base#valueHasUUID> ?currentValueUUID ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |  ?resource <http://www.knora.org/ontology/knora-base#hasLinkTo> ?referredResource ;
-       |    ?resourceLinkProperty ?referredResource .
-       |  ?referredResource a <http://www.knora.org/ontology/knora-base#Resource> ;
-       |    ?referredResourcePred ?referredResourceObj .
-       |} WHERE {
-       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
-       |  { ?resource <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType .
-       |?resourceType <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Resource> . }
-       |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
-       |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
-       |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
-       |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |{ ?valueObject ?valueObjectProperty ?valueObjectValue .
-       |FILTER ( ?valueObject = <http://rdfh.ch/0001/resource1/values/value1> ) }
-       |{ ?valueObject a ?valueObjectType ;
-       |    ?valueObjectProperty ?valueObjectValue .
-       |FILTER ( ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasStandoff> && ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#hasPermissions> ) ) } UNION { ?valueObject a <http://www.knora.org/ontology/knora-base#LinkValue> ;
-       |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate> ?resourceLinkProperty ;
-       |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?referredResource .
-       |?referredResource ?referredResourcePred ?referredResourceObj ;
-       |    <http://www.knora.org/ontology/knora-base#isDeleted> false . } }
-       |}""".stripMargin
-
   private val expectedMultipleResources =
     """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
        |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -534,50 +476,6 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?referredResource .
        |?referredResource ?referredResourcePred ?referredResourceObj ;
        |    <http://www.knora.org/ontology/knora-base#isDeleted> false . } }
-       |}""".stripMargin
-
-  private val expectedNoNonStandoff =
-    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-       |
-       |CONSTRUCT {
-       |  ?resource a <http://www.knora.org/ontology/knora-base#Resource> ;
-       |    <http://www.knora.org/ontology/knora-base#isMainResource> true ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label ;
-       |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
-       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
-       |    ?resourceValueProperty ?valueObject .
-       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
-       |    <http://www.knora.org/ontology/knora-base#valueHasUUID> ?currentValueUUID ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |} WHERE {
-       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
-       |  { ?resource <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType .
-       |?resourceType <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Resource> . }
-       |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
-       |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
-       |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
-       |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |{ ?valueObject a ?valueObjectType ;
-       |    ?valueObjectProperty ?valueObjectValue .
-       |FILTER ( ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasStandoff> && ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#hasPermissions> ) )
-       |FILTER ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasString> ) } }
        |}""".stripMargin
 
   private val expectedVersionDateWithDeleted =
@@ -766,56 +664,6 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |    <http://www.knora.org/ontology/knora-base#isDeleted> false . } }
        |}""".stripMargin
 
-  private val expectedStandoffTagFilterNoLinks =
-    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-       |
-       |CONSTRUCT {
-       |  ?resource a <http://www.knora.org/ontology/knora-base#Resource> ;
-       |    <http://www.knora.org/ontology/knora-base#isMainResource> true ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label ;
-       |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate ;
-       |    <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  ?resource <http://www.knora.org/ontology/knora-base#hasValue> ?valueObject ;
-       |    ?resourceValueProperty ?valueObject .
-       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
-       |    <http://www.knora.org/ontology/knora-base#valueHasUUID> ?currentValueUUID ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |  ?valueObject <http://www.knora.org/ontology/knora-base#valueHasStandoff> ?standoffNode .
-       |  ?standoffNode a <http://www.knora.org/ontology/standoff#StandoffFootnoteTag> ;
-       |    ?standoffProperty ?standoffValue .
-       |} WHERE {
-       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
-       |  { ?resource <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?resourceType .
-       |?resourceType <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://www.knora.org/ontology/knora-base#Resource> . }
-       |  ?resource <http://www.knora.org/ontology/knora-base#attachedToProject> ?resourceProject ;
-       |    <http://www.knora.org/ontology/knora-base#attachedToUser> ?resourceCreator ;
-       |    <http://www.knora.org/ontology/knora-base#hasPermissions> ?resourcePermissions ;
-       |    <http://www.knora.org/ontology/knora-base#creationDate> ?creationDate ;
-       |    <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-       |  ?resource <http://www.knora.org/ontology/knora-base#isDeleted> false .
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#lastModificationDate> ?lastModificationDate . }
-       |  OPTIONAL { ?resource <http://www.knora.org/ontology/knora-base#hasResourceAuthorship> ?resourceAuthorship . }
-       |  OPTIONAL { ?resource ?resourceValueProperty ?valueObject .
-       |?resourceValueProperty <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>* <http://www.knora.org/ontology/knora-base#hasValue> .
-       |?valueObject <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
-       |{ ?valueObject a ?valueObjectType ;
-       |    ?valueObjectProperty ?valueObjectValue .
-       |FILTER ( ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasStandoff> && ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#hasPermissions> ) )
-       |FILTER ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasString> ) } UNION { ?valueObject <http://www.knora.org/ontology/knora-base#valueHasStandoff> ?standoffNode .
-       |?standoffNode a <http://www.knora.org/ontology/standoff#StandoffFootnoteTag> .
-       |?standoffNode ?standoffProperty ?standoffValue ;
-       |    <http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex> ?startIndex .
-       |FILTER ( ?startIndex >= 0 ) } }
-       |}""".stripMargin
   // @formatter:on
 
   override val spec: Spec[Any, Nothing] = suite("GetResourcePropertiesAndValuesQuery")(
@@ -847,17 +695,9 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
       val actual = render(maybeValueUuid = Some(valueUuid))
       assertTrue(canonical(actual) == canonical(expectedValueUuid))
     },
-    test("valueIri - maybeValueIri=Some(valueIri)") {
-      val actual = render(maybeValueIri = Some(valueIri))
-      assertTrue(canonical(actual) == canonical(expectedValueIri))
-    },
     test("multipleResources - resourceIris=Seq(resourceIri1, resourceIri2)") {
       val actual = render(resourceIris = Seq(resourceIri1, resourceIri2))
       assertTrue(canonical(actual) == canonical(expectedMultipleResources))
-    },
-    test("noNonStandoff - queryAllNonStandoff=false") {
-      val actual = render(queryAllNonStandoff = false)
-      assertTrue(canonical(actual) == canonical(expectedNoNonStandoff))
     },
     test("versionDateWithDeleted - withDeleted=true, maybeVersionDate=Some(versionDate)") {
       val actual = render(withDeleted = true, maybeVersionDate = Some(versionDate))
@@ -867,33 +707,18 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
       val actual = render(maybeVersionDate = Some(versionDate), maybeValueUuid = Some(valueUuid))
       assertTrue(canonical(actual) == canonical(expectedVersionDateWithUuid))
     },
-    test("standoffTagFilter - matches the legacy rendering (queryAllNonStandoff=true)") {
+    test("standoffTagFilter - matches the legacy rendering") {
       val footnoteTagIri = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
       val actual         = GetResourcePropertiesAndValuesQuery
         .build(
           resourceIris = Seq(resourceIri1),
           preview = false,
           withDeleted = false,
-          queryAllNonStandoff = true,
           queryStandoff = true,
           standoffTagFilter = Some(footnoteTagIri),
         )
         .sparql
       assertTrue(canonical(actual) == canonical(expectedStandoffTagFilter))
-    },
-    test("standoffTagFilter - matches the legacy rendering (queryAllNonStandoff=false)") {
-      val footnoteTagIri = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
-      val actual         = GetResourcePropertiesAndValuesQuery
-        .build(
-          resourceIris = Seq(resourceIri1),
-          preview = false,
-          withDeleted = false,
-          queryAllNonStandoff = false,
-          queryStandoff = true,
-          standoffTagFilter = Some(footnoteTagIri),
-        )
-        .sparql
-      assertTrue(canonical(actual) == canonical(expectedStandoffTagFilterNoLinks))
     },
     test("standoffTagFilter - type constraint in SPARQL, no targetHasOriginalXMLID (U-2)") {
       val footnoteTagIri = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
@@ -902,7 +727,6 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
           resourceIris = Seq(resourceIri1),
           preview = false,
           withDeleted = false,
-          queryAllNonStandoff = true,
           queryStandoff = true,
           standoffTagFilter = Some(footnoteTagIri),
         )
