@@ -33,6 +33,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.GeolocationValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
@@ -423,6 +424,10 @@ final case class ExportService(
           )
         case gvc: GeonameValueContentV2 =>
           RegularValue(List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
+        // The full literal, CRS prefix included: a bare POINT in an export cell would reproduce
+        // exactly the ambiguity this value type removes. valueHasString holds only the coordinates.
+        case gvc: GeolocationValueContentV2 =>
+          RegularValue(List(gvc.valueHasGeolocation))
         case lvc: HierarchicalListValueContentV2 =>
           RegularValue(List(vocabularies.get(lvc.valueHasString).getOrElse("")))
         case tvc: TextValueContentV2 => textValueColumn(tvc)

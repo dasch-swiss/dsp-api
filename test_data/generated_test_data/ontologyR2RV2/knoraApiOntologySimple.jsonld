@@ -518,6 +518,15 @@
             "rdfs:comment": "Indicates that a text value is formatted in terms of its ontology and when instantiated, using DSP standard standoff formatting."
         },
         {
+            "rdfs:label": "Geolocation literal",
+            "rdfs:comment": "Represents a geographic location as an OGC GeoSPARQL wktLiteral.",
+            "@type": "rdfs:Datatype",
+            "owl:onDatatype": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:Geolocation"
+        },
+        {
             "rdfs:label": "Geometry specification",
             "rdfs:comment": "Represents a geometry specification in JSON.",
             "@type": "rdfs:Datatype",

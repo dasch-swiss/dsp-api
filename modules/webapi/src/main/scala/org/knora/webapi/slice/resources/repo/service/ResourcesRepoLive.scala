@@ -456,6 +456,8 @@ object ResourcesRepoLive {
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
         case GeonameValueInfo(valueHasGeonameCode) =>
           List(iri(valueIri).has(KB.valueHasGeonameCode, literalOf(valueHasGeonameCode)))
+        case GeolocationValueInfo(valueHasGeolocation) =>
+          List(iri(valueIri).has(KB.valueHasGeolocation, literalOf(valueHasGeolocation)))
         case RegionPreviewValueInfo(regionIri) =>
           List(iri(valueIri).has(KB.isRegionPreviewOf, iri(regionIri.value)))
 

@@ -132,6 +132,7 @@ object Vocabulary {
     val valueHasIntervalEnd: Iri           = iri(kb + "valueHasIntervalEnd")
     val valueHasTimeStamp: Iri             = iri(kb + "valueHasTimeStamp")
     val valueHasGeonameCode: Iri           = iri(kb + "valueHasGeonameCode")
+    val valueHasGeolocation: Iri           = iri(kb + "valueHasGeolocation")
     val valueHasRefCount: Iri              = iri(kb + "valueHasRefCount")
     val valueHasLanguage: Iri              = iri(kb + "valueHasLanguage")
     val valueHasMapping: Iri               = iri(kb + "valueHasMapping")

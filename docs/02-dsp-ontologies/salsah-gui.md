@@ -88,6 +88,12 @@ integer specifying the number of colors to display.
 
 `Date` is a GUI element for selecting a date.
 
+### Geolocation
+
+`Geolocation` is a GUI element for entering a geographic location: a coordinate pair and the
+coordinate reference system it is expressed in (see
+[GeolocationValue](knora-base.md#geolocationvalue)).
+
 ### Geometry
 
 `Geometry` is a GUI element for selecting the geometry of a two-dimensional

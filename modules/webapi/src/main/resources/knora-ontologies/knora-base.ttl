@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v55" .
+    :ontologyVersion   "knora-base v56" .
 
 
 #################################################################
@@ -1223,6 +1223,17 @@
     :objectDatatypeConstraint xsd:decimal .
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasGeolocation
+
+:valueHasGeolocation
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:label                "value has geolocation"@en ;
+    rdfs:comment              "A geographic location as an OGC GeoSPARQL 1.1 wktLiteral: an optional coordinate reference system definition IRI in angle brackets, linear whitespace, then a WKT geometry."@en ;
+    rdfs:subPropertyOf        :valueHas ;
+    :subjectClassConstraint   :GeolocationValue ;
+    :objectDatatypeConstraint xsd:string .
+
+
 ###  http://www.knora.org/ontology/knora-base#valueHasGeometry
 
 :valueHasGeometry
@@ -1667,6 +1678,18 @@
                     :DecimalBase ;
     rdfs:label      "decimal value"@en ;
     rdfs:comment    "Represents an arbitrary-precision decimal value"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#GeolocationValue
+
+:GeolocationValue
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :Value,
+                    [ rdf:type        owl:Restriction ;
+                      owl:onProperty  :valueHasGeolocation ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "geolocation value"@en ;
+    rdfs:comment    "Represents a geographic location as coordinates in a known coordinate reference system"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#GeomValue

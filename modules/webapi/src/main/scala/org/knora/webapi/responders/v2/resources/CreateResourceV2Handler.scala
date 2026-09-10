@@ -471,6 +471,8 @@ final class CreateResourceV2Handler(
                   ZIO.succeed(UriValueInfo(valueHasUri))
                 case GeonameValueContentV2(_, valueHasGeonameCode, _) =>
                   ZIO.succeed(GeonameValueInfo(valueHasGeonameCode))
+                case GeolocationValueContentV2(_, valueHasGeolocation, _) =>
+                  ZIO.succeed(GeolocationValueInfo(valueHasGeolocation))
                 case StillImageFileValueContentV2(_, fileValue, dimX, dimY, _) =>
                   ZIO.succeed(StillImageFileValueInfo(fileValue, dimX, dimY))
                 case StillImageExternalFileValueContentV2(_, fileValue, externalUrl, _) =>

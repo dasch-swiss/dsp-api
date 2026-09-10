@@ -330,6 +330,32 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           csv = new String(bytes.toArray, StandardCharsets.UTF_8)
         } yield assertGolden(csv, "includeArkUrlsTrue")
       },
+      // REQ-4.3: the cell carries the full CRS-prefixed literal. Falling through to valueHasString would
+      // emit a bare "8.550 47.37", stripped of its CRS - exactly the ambiguity this value type removes.
+      test("a geolocation is exported as the full CRS-prefixed literal, not as its bare coordinates") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                resourceClassIri,
+                List(PropertyIri.unsafeFrom(sf.toSmartIri("http://www.knora.org/ontology/1612/Data#Coordinates"))),
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+              )
+              .flatMap(_.runCollect)
+          csv = new String(bytes.toArray, StandardCharsets.UTF_8)
+        } yield assertTrue(
+          csv.contains("<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)"),
+          !csv.contains("\"8.550 47.37\""),
+        )
+      },
       test("with footnotes in text value") {
         for {
           _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
