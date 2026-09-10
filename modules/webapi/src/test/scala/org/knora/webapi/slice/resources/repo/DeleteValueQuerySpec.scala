@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 import zio.test.Assertion.*
@@ -27,6 +28,12 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeleteValueQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -93,22 +100,24 @@ class DeleteValueQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
-            """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
-              |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false . } }
-              |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
-              |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
-              |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
-              |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
-              |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
-              |    knora-base:isDeleted false .
-              |?valueClass rdfs:subClassOf* knora-base:Value .
-              |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+          canonical(query.sparql) ==
+            canonical(
+              """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
+                |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false . } }
+                |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
+                |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
+                |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
+                |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
+                |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
+                |    knora-base:isDeleted false .
+                |?valueClass rdfs:subClassOf* knora-base:Value .
+                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+            ),
         )
       },
       test("should produce correct query with a delete comment") {
@@ -124,23 +133,25 @@ class DeleteValueQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
-            """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
-              |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false . } }
-              |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
-              |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
-              |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/value1> knora-base:deleteComment "This value is no longer needed" .
-              |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
-              |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
-              |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
-              |    knora-base:isDeleted false .
-              |?valueClass rdfs:subClassOf* knora-base:Value .
-              |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+          canonical(query.sparql) ==
+            canonical(
+              """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
+                |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false . } }
+                |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
+                |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
+                |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/value1> knora-base:deleteComment "This value is no longer needed" .
+                |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
+                |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
+                |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
+                |    knora-base:isDeleted false .
+                |?valueClass rdfs:subClassOf* knora-base:Value .
+                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+            ),
         )
       },
       test("should produce correct query with one link update (newReferenceCount > 0)") {
@@ -157,46 +168,48 @@ class DeleteValueQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
-            """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
-              |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
-              |?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 . } }
-              |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
-              |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
-              |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> a knora-base:LinkValue .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:subject <http://rdfh.ch/0001/thing1> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:predicate knora-base:hasStandoffLinkTo .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:object <http://rdfh.ch/0001/thing2> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasString "http://rdfh.ch/0001/thing2"^^xsd:string .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 1 .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted false .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/systemUser> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:previousValue ?linkValue0 .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID ?linkValueUUID0 .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/thing1/values/newLinkValue> .
-              |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
-              |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
-              |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
-              |    knora-base:isDeleted false .
-              |?valueClass rdfs:subClassOf* knora-base:Value .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
-              |?linkValue0 a knora-base:LinkValue ;
-              |    rdf:subject <http://rdfh.ch/0001/thing1> ;
-              |    rdf:predicate knora-base:hasStandoffLinkTo ;
-              |    rdf:object <http://rdfh.ch/0001/thing2> ;
-              |    knora-base:valueHasRefCount 2 ;
-              |    knora-base:isDeleted false ;
-              |    knora-base:valueHasUUID ?linkValueUUID0 .
-              |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+          canonical(query.sparql) ==
+            canonical(
+              """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
+                |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
+                |?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 . } }
+                |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
+                |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
+                |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> a knora-base:LinkValue .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:subject <http://rdfh.ch/0001/thing1> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:predicate knora-base:hasStandoffLinkTo .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:object <http://rdfh.ch/0001/thing2> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasString "http://rdfh.ch/0001/thing2"^^xsd:string .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 1 .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted false .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/systemUser> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:previousValue ?linkValue0 .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID ?linkValueUUID0 .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/thing1/values/newLinkValue> .
+                |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
+                |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
+                |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
+                |    knora-base:isDeleted false .
+                |?valueClass rdfs:subClassOf* knora-base:Value .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
+                |?linkValue0 a knora-base:LinkValue ;
+                |    rdf:subject <http://rdfh.ch/0001/thing1> ;
+                |    rdf:predicate knora-base:hasStandoffLinkTo ;
+                |    rdf:object <http://rdfh.ch/0001/thing2> ;
+                |    knora-base:valueHasRefCount 2 ;
+                |    knora-base:isDeleted false ;
+                |    knora-base:valueHasUUID ?linkValueUUID0 .
+                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+            ),
         )
       },
       test("should produce correct query with one link update (newReferenceCount == 0, with deleteDirectLink)") {
@@ -216,49 +229,51 @@ class DeleteValueQuerySpec extends ZIOSpecDefault {
                      testRequestingUser,
                    )
         } yield assertTrue(
-          query.getQueryString ==
-            """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-              |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-              |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
-              |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
-              |?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 . } }
-              |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
-              |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
-              |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> a knora-base:LinkValue .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:subject <http://rdfh.ch/0001/thing1> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:predicate knora-base:hasStandoffLinkTo .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:object <http://rdfh.ch/0001/thing2> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasString "http://rdfh.ch/0001/thing2"^^xsd:string .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 0 .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted true .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:deletedBy <http://rdfh.ch/users/systemUser> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/systemUser> .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:previousValue ?linkValue0 .
-              |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID ?linkValueUUID0 .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/thing1/values/newLinkValue> .
-              |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
-              |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
-              |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
-              |    knora-base:isDeleted false .
-              |?valueClass rdfs:subClassOf* knora-base:Value .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
-              |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
-              |?linkValue0 a knora-base:LinkValue ;
-              |    rdf:subject <http://rdfh.ch/0001/thing1> ;
-              |    rdf:predicate knora-base:hasStandoffLinkTo ;
-              |    rdf:object <http://rdfh.ch/0001/thing2> ;
-              |    knora-base:valueHasRefCount 1 ;
-              |    knora-base:isDeleted false ;
-              |    knora-base:valueHasUUID ?linkValueUUID0 .
-              |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+          canonical(query.sparql) ==
+            canonical(
+              """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate .
+                |<http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted false .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
+                |?linkValue0 knora-base:valueHasUUID ?linkValueUUID0 . } }
+                |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/thing1/values/value1> knora-base:isDeleted true ;
+                |    knora-base:deletedBy <http://rdfh.ch/users/root> ;
+                |    knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> a knora-base:LinkValue .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:subject <http://rdfh.ch/0001/thing1> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:predicate knora-base:hasStandoffLinkTo .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> rdf:object <http://rdfh.ch/0001/thing2> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasString "http://rdfh.ch/0001/thing2"^^xsd:string .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasRefCount 0 .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:isDeleted true .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:deletedBy <http://rdfh.ch/users/systemUser> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:deleteDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueCreationDate "2024-01-15T10:30:00Z"^^xsd:dateTime .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:attachedToUser <http://rdfh.ch/users/systemUser> .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:hasPermissions "CR knora-admin:Creator"^^xsd:string .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:previousValue ?linkValue0 .
+                |<http://rdfh.ch/0001/thing1/values/newLinkValue> knora-base:valueHasUUID ?linkValueUUID0 .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/thing1/values/newLinkValue> .
+                |<http://rdfh.ch/0001/thing1> knora-base:lastModificationDate "2024-01-15T10:30:00Z"^^xsd:dateTime . } }
+                |WHERE { <http://rdfh.ch/0001/thing1> <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/thing1/values/value1> .
+                |<http://rdfh.ch/0001/thing1/values/value1> a ?valueClass ;
+                |    knora-base:isDeleted false .
+                |?valueClass rdfs:subClassOf* knora-base:Value .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/thing2> .
+                |<http://rdfh.ch/0001/thing1> knora-base:hasStandoffLinkToValue ?linkValue0 .
+                |?linkValue0 a knora-base:LinkValue ;
+                |    rdf:subject <http://rdfh.ch/0001/thing1> ;
+                |    rdf:predicate knora-base:hasStandoffLinkTo ;
+                |    rdf:object <http://rdfh.ch/0001/thing2> ;
+                |    knora-base:valueHasRefCount 1 ;
+                |    knora-base:isDeleted false ;
+                |    knora-base:valueHasUUID ?linkValueUUID0 .
+                |OPTIONAL { <http://rdfh.ch/0001/thing1> knora-base:lastModificationDate ?resourceLastModificationDate . } }""".stripMargin,
+            ),
         )
       },
     ),

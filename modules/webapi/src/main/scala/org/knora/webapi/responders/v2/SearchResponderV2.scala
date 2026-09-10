@@ -1145,16 +1145,14 @@ final class SearchResponderV2Live(
           // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
           // at most one page of standoff per text value.
           val resourceRequestSparql =
-            Construct(
-              GetResourcePropertiesAndValuesQuery.build(
-                resourceIris = mainResourceIris,
-                preview = false,
-                withDeleted = false,
-                queryAllNonStandoff = true,
-                queryStandoff = queryStandoff,
-                maybePropertyIri = None,
-                maybeVersionDate = None,
-              ),
+            GetResourcePropertiesAndValuesQuery.build(
+              resourceIris = mainResourceIris,
+              preview = false,
+              withDeleted = false,
+              queryAllNonStandoff = true,
+              queryStandoff = queryStandoff,
+              maybePropertyIri = None,
+              maybeVersionDate = None,
             )
 
           for {
