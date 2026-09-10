@@ -549,8 +549,9 @@ final class SearchResponderV2Live(
    */
   // HONEST-TIMEOUT (DEV-6864): a triplestore timeout on the fulltext prequery/count reaches the client as a bare
   // 500 via BaseEndpoints' catch-all. Translate it into a search-specific 503 with a hedged message so the residue
-  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied at the Select.search call sites — the
-  // search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the prequery.
+  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied where SearchFulltextQuery.build's queries
+  // run — the search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the
+  // prequery.
   private def translateSearchTimeout(searchValue: String): PartialFunction[Throwable, Task[Nothing]] = {
     // Only TriplestoreTimeoutException matches, so a query the breadth guard interrupts (a fast refusal winning
     // the race) never triggers this — the interruption propagates as such and is not logged as a failure.
@@ -584,7 +585,7 @@ final class SearchResponderV2Live(
       bindings <-
         fulltextBreadthGuard
           .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
-            triplestore.query(Select.search(countSparql)).catchSome(translateSearchTimeout(searchValue)),
+            triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
@@ -640,7 +641,7 @@ final class SearchResponderV2Live(
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
           .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
-            triplestore.query(Select.search(searchSparql)).catchSome(translateSearchTimeout(searchValue)),
+            triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 
       mainResourceVar = QueryVariable("resource")

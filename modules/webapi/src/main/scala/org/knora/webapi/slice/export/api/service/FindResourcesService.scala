@@ -5,26 +5,19 @@
 
 package org.knora.webapi.slice.api.v3.export_
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.ZLayer
 
 import dsp.errors.InconsistentRepositoryDataException as InconsistentDataException
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 trait FindResourcesService {
   def findResources(
@@ -71,57 +64,28 @@ final case class FindResourcesServiceLive(
               }
     } yield rows
 
-  private val (classIriVar, resourceIriVar, labelVar) = ("classIri", "resourceIri", "label")
+  private val resourceIriVar = FindResourcesQueries.resourceIriVar.name
+  private val labelVar       = FindResourcesQueries.labelVar.name
 
-  // Resolves the class plus its subclasses to (projectGraph, VALUES clause) for the VALUES-based queries below.
+  // Resolves the class plus its subclasses to (projectGraph, class IRIs) for the VALUES-based queries below.
   // Shared by both query builders so the subclass-expansion invariant — which avoids the expensive
   // rdfs:subClassOf* triplestore traversal that times out for projects like BEOL (basicLetter has subclasses
   // across multiple ontologies) — lives in one place and cannot drift between the two query shapes.
-  // String interpolation is used by the callers because rdf4j SparqlBuilder does not support VALUES blocks.
-  private def valuesClauseFor(project: KnoraProject, classIri: ResourceClassIri): Task[(String, String)] =
+  // The class itself is always the head of the list, so the VALUES clause never sees an empty list.
+  private def graphAndClassIrisFor(project: KnoraProject, classIri: ResourceClassIri): Task[(Iri, Seq[Iri])] =
     ontologyRepo.findAllSubclassesBy(classIri).map { subclasses =>
       val projectGraph = projectService.getDataGraphForProject(project)
       val allClassIris = classIri.toInternalSchema.toIri +: subclasses.map(_.entityInfoContent.classIri.toIri)
-      val valuesClause = allClassIris.map(iri => s"<$iri>").mkString(" ")
-      (projectGraph.value, valuesClause)
+      (Iri.unsafeFrom(projectGraph.value), allClassIris.map(Iri.unsafeFrom))
     }
 
-  // All three query builders below exclude deleted resources. They used to return them and let the downstream
-  // read (which passes `withDeleted = false`) drop them, which produced no rows but two unwanted effects: the
-  // per-resource retrieval check logged an error for every deleted resource, and — because the ordered query's
-  // labels double as the export's cross-batch link-label map — a deleted resource still handed the exporter a
-  // label, so a link pointing at it was exported as if its target were alive (DEV-7008).
+  // The rendered SPARQL lives in FindResourcesQueries; all three queries there exclude deleted resources
+  // (DEV-7008).
   private def buildClassQuery(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
-    valuesClauseFor(project, classIri).map { (projectGraph, valuesClause) =>
-      Select.gravsearch(
-        s"""PREFIX knora-base: <${KB.NS.getName}>
-           |SELECT DISTINCT ?$resourceIriVar WHERE {
-           |  GRAPH <$projectGraph> {
-           |    ?$resourceIriVar a ?$classIriVar .
-           |    ?$resourceIriVar knora-base:isDeleted false .
-           |  }
-           |  VALUES ?$classIriVar { $valuesClause }
-           |}""".stripMargin,
-      )
-    }
+    graphAndClassIrisFor(project, classIri).map(FindResourcesQueries.byClass)
 
   private def buildClassQueryOrderedByLabel(project: KnoraProject, classIri: ResourceClassIri): Task[Select] =
-    valuesClauseFor(project, classIri).map { (projectGraph, valuesClause) =>
-      // ?label is selected so findResourceIrisOrderedByLabel can sort in the JVM; Fuseki's ORDER BY tie-break
-      // for equal labels is not reproducible, so the authoritative sort happens in Scala.
-      Select.gravsearch(
-        s"""PREFIX knora-base: <${KB.NS.getName}>
-           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-           |SELECT DISTINCT ?$resourceIriVar ?$labelVar WHERE {
-           |  GRAPH <$projectGraph> {
-           |    ?$resourceIriVar a ?$classIriVar .
-           |    ?$resourceIriVar knora-base:isDeleted false .
-           |    OPTIONAL { ?$resourceIriVar rdfs:label ?$labelVar }
-           |  }
-           |  VALUES ?$classIriVar { $valuesClause }
-           |}""".stripMargin,
-      )
-    }
+    graphAndClassIrisFor(project, classIri).map(FindResourcesQueries.byClassOrderedByLabel)
 
   // Returns (resourceIri, label) pairs sorted by (label, resourceIri) in the JVM. Label ordering is
   // case-sensitive lexicographic, matching the pre-streaming Scala `.sortBy(_.label)`; resourceIri is the
@@ -145,28 +109,8 @@ final case class FindResourcesServiceLive(
                }
     } yield pairs.sortBy { case (resourceIri, label) => (label, resourceIri.value) }
 
-  private def buildAllResourcesQuery(project: KnoraProject): Select = {
-    val selectPattern = SparqlBuilder
-      .select(variable(resourceIriVar))
-      .distinct()
-
-    val projectGraph  = projectService.getDataGraphForProject(project)
-    val resourceWhere =
-      variable(resourceIriVar)
-        .isA(variable(classIriVar))
-        .andHas(KB.isDeleted, Rdf.literalOf(false))
-        .from(Rdf.iri(projectGraph.value))
-
-    val classSubclassOfResource =
-      variable(classIriVar).has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build(), KB.Resource)
-
-    val query = Queries
-      .SELECT(selectPattern)
-      .where(resourceWhere, classSubclassOfResource)
-      .prefix(KB.NS, RDFS.NS)
-
-    Select(query, SparqlTimeout.Gravsearch)
-  }
+  private def buildAllResourcesQuery(project: KnoraProject): Select =
+    FindResourcesQueries.allResources(Iri.unsafeFrom(projectService.getDataGraphForProject(project).value))
 }
 
 object FindResourcesService {
