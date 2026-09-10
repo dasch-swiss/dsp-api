@@ -9,7 +9,6 @@ import org.apache.jena.rdf.model.Resource
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.vocabulary.RDFS
 import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.query.*
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
@@ -34,10 +33,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
@@ -54,8 +53,6 @@ import org.knora.webapi.slice.resources.repo.model.ValueInfo
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.DeletedResource
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 trait ResourcesRepo {
@@ -125,8 +122,7 @@ object ResourceModel {
 }
 
 final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
-    extends ResourcesRepo
-    with QueryBuilderHelper {
+    extends ResourcesRepo {
   import org.knora.webapi.messages.IriConversions.ConvertibleIri
 
   def createNewResource(
@@ -137,53 +133,19 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
   ): Task[Unit] =
     triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
 
-  def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] = {
-    val resource = iri(id.toString)
-
-    val (resourceClass, valueProp, value, valueClass) =
-      (variable("resourceClass"), variable("valueProperty"), variable("value"), variable("valueClass"))
-
-    val resourceSubclass = resource
-      .isA(resourceClass)
-      .and(resourceClass.has(RDFS.SUBCLASSOF, KB.Resource))
-
-    val valueAValueClass = value
-      .isA(valueClass)
-      .and(valueClass.has(RDFS.SUBCLASSOF, KB.Value))
-
-    val queryP = resource.has(valueProp, value)
-
-    val query = Queries.CONSTRUCT(queryP).where(queryP, resourceSubclass, valueAValueClass)
+  def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] =
     for {
-      rdfModel <- triplestore.queryRdfModel(Construct(query))
-      resource <- rdfModel.getResource(id.toString)
+      rdfModel <- triplestore.queryRdfModel(ResourceQueries.findValues(id))
+      resource <- rdfModel.getResource(id.value)
       result    = resource.map(_.res).map(mapPropertyValues).getOrElse(Map.empty)
     } yield result
-  }
 
-  def findLinks(id: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]] = {
-    val resource = iri(id.toString)
-
-    val (resourceClass, valueProp, value, valueClass) =
-      (variable("resourceClass"), variable("valueProperty"), variable("value"), variable("valueClass"))
-
-    val resourceSubclass = resource
-      .isA(resourceClass)
-      .and(resourceClass.has(RDFS.SUBCLASSOF, KB.Resource))
-
-    val valueAValueClass = value
-      .isA(valueClass)
-      .and(valueClass.has(RDFS.SUBCLASSOF, KB.Resource))
-
-    val queryP = resource.has(valueProp, value)
-
-    val query = Queries.CONSTRUCT(queryP).where(queryP, resourceSubclass, valueAValueClass)
+  def findLinks(id: ResourceIri): Task[Map[PropertyIri, Seq[ResourceIri]]] =
     for {
-      rdfModel <- triplestore.queryRdfModel(Construct(query))
-      resource <- rdfModel.getResource(id.toString)
+      rdfModel <- triplestore.queryRdfModel(ResourceQueries.findLinks(id))
+      resource <- rdfModel.getResource(id.value)
       result    = resource.map(_.res).map(mapPropertyResources).getOrElse(Map.empty)
     } yield result
-  }
 
   private def mapPropertyResources(res: Resource): Map[PropertyIri, Seq[ResourceIri]] = res
     .listProperties()
@@ -207,28 +169,10 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     .toList
     .groupMap((p, _) => p)((_, v) => v)
 
-  def findById(id: ResourceIri): Task[Option[ResourceModel]] = {
-    val s                = iri(id.toString)
-    val clazz            = variable("clazz")
-    val resourceSubclass = clazz.has(RDFS.SUBCLASSOF, KB.Resource)
-    val whereClause      = s
-      .isA(clazz)
-      .andHas(RDFS.LABEL, variable("label"))
-      .andHas(KB.isDeleted, variable("isDeleted"))
-      .andHas(KB.attachedToUser, variable("attachedToUser"))
-      .andHas(KB.attachedToProject, variable("attachedToProject"))
-      .andHas(KB.creationDate, variable("creationDate"))
-      .andHas(KB.hasPermissions, variable("hasPermissions"))
-      .and(s.has(KB.lastModificationDate, variable("lastModificationDate")).optional)
-      .and(s.has(KB.hasStandoffLinkTo, variable("hasStandoffLinkTo")).optional)
-      .and(s.has(KB.hasStandoffLinkToValue, variable("hasStandoffLinkToValue")).optional)
-      .and(s.has(KB.deleteDate, variable("deleteDate")).optional)
-      .and(s.has(KB.deleteComment, variable("deleteComment")).optional)
-      .and(s.has(KB.deletedBy, variable("deletedBy")).optional)
-
-    val query = Queries.SELECT().where(whereClause, resourceSubclass).prefix(KB.NS, RDF.NS, RDFS.NS, XSD.NS)
-    triplestore.query(Select(query)).map(result => if result.nonEmpty then Some(mapToResource(id, result)) else None)
-  }
+  def findById(id: ResourceIri): Task[Option[ResourceModel]] =
+    triplestore
+      .query(ResourceQueries.findById(id))
+      .map(result => if result.nonEmpty then Some(mapToResource(id, result)) else None)
 
   private def mapToResource(iri: ResourceIri, result: SparqlSelectResult): ResourceModel = {
     val row                    = result.getFirstRowOrThrow
@@ -285,16 +229,13 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
   ): Task[Map[ResourceClassIri, Int]] =
     if (classIris.isEmpty) ZIO.succeed(Map.empty)
     else
-      val countAs = "count"
-      val graph   = graphIri(project)
-      val s       = variable("s")
-      val select  = Expressions.count(s).as(variable(countAs))
-
+      val graph = ProjectService.projectDataNamedGraphV2(project)
       ZIO // Run one count query per class in parallel and collect results into a Map
         .foreachPar(classIris) { c =>
-          val where = s.isA(toRdfIri(c)).filterNotExists(s.has(KB.isDeleted, true)).from(graph)
-          val query = Queries.SELECT(select).where(where)
-          triplestore.select(query).map(_.getFirst(countAs).map(_.toInt).getOrElse(0)).map(c -> _)
+          triplestore
+            .query(ResourceQueries.countByResourceClass(c, graph))
+            .map(_.getFirst("count").map(_.toInt).getOrElse(0))
+            .map(c -> _)
         }
         .withParallelism(4)
         .map(_.toMap)
