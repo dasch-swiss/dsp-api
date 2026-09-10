@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
@@ -16,6 +12,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
@@ -34,7 +31,6 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 
@@ -44,15 +40,15 @@ final case class AdministrativePermissionRepoLive(
 ) extends AbstractEntityRepo[AdministrativePermission, PermissionIri](triplestore, mapper)
     with AdministrativePermissionRepo {
 
-  override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.AdministrativePermission)
-  override protected val namedGraphIri: Iri       = Rdf.iri(permissionsDataNamedGraph.value)
+  override protected val resourceClass: Iri = Iri.unsafeFrom(KnoraAdmin.AdministrativePermission)
+  override protected val namedGraphIri: Iri = Iri.unsafeFrom(permissionsDataNamedGraph.value)
 
   override protected def entityProperties: EntityProperties =
     EntityProperties(
       NonEmptyChunk(
-        Vocabulary.KnoraBase.hasPermissions,
-        Vocabulary.KnoraAdmin.forGroup,
-        Vocabulary.KnoraAdmin.forProject,
+        Iri.unsafeFrom(KnoraBase.HasPermissions),
+        Iri.unsafeFrom(KnoraAdmin.ForGroup),
+        Iri.unsafeFrom(KnoraAdmin.ForProject),
       ),
     )
 
@@ -61,12 +57,12 @@ final case class AdministrativePermissionRepoLive(
     projectIri: ProjectIri,
   ): Task[Option[AdministrativePermission]] =
     findOneByPattern(
-      _.has(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(groupIri.value))
-        .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)),
+      sparql"""|$s knora-admin:forGroup ${Iri.unsafeFrom(groupIri.value)} ;
+               |  knora-admin:forProject ${Iri.unsafeFrom(projectIri.value)} .""",
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[AdministrativePermission]] =
-    findAllByPattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(sparql"$s knora-admin:forProject ${Iri.unsafeFrom(projectIri.value)} .")
 }
 
 object AdministrativePermissionRepoLive {
@@ -120,12 +116,14 @@ object AdministrativePermissionRepoLive {
         }
         .map(_.flatten)
 
-    override def toTriples(entity: AdministrativePermission): TriplePattern = {
-      val id = Rdf.iri(entity.id.value)
-      id.isA(Vocabulary.KnoraAdmin.AdministrativePermission)
-        .andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(entity.forGroup.value))
-        .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(entity.forProject.value))
-        .andHas(Vocabulary.KnoraBase.hasPermissions, toStringLiteral(entity.permissions))
+    override def toTriples(entity: AdministrativePermission): Fragment = {
+      val id = Iri.unsafeFrom(entity.id.value)
+      sparql"""|$id a knora-admin:AdministrativePermission ;
+               |  knora-admin:forGroup ${Iri.unsafeFrom(entity.forGroup.value)} ;
+               |  knora-admin:forProject ${Iri.unsafeFrom(entity.forProject.value)} ;
+               |  ${Iri.unsafeFrom(KnoraBase.HasPermissions)} ${Literal.string(
+          toStringLiteral(entity.permissions),
+        )} ."""
     }
     private def toStringLiteral(permissions: Chunk[AdministrativePermissionPart]): String = {
       def useKnoraAdminPrefix(str: String) = str.replace(KnoraAdminPrefixExpansion, KnoraAdminPrefix)
