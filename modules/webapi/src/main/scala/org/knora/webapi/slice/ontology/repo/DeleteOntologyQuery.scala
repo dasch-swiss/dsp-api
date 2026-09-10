@@ -5,15 +5,20 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object DeleteOntologyQuery extends QueryBuilderHelper {
-  def build(ontologyIri: OntologyIri): ModifyQuery =
-    val (s, p, o)     = spo
-    val ontologyGraph = toRdfIri(ontologyIri)
-    Queries.MODIFY().delete(s.has(p, o)).from(ontologyGraph).where(s.has(p, o).from(ontologyGraph))
+object DeleteOntologyQuery {
+  def build(ontologyIri: OntologyIri): Update = {
+    val ontologyGraph = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    Update(
+      sparql"""|DELETE {
+               |  GRAPH $ontologyGraph { ?s ?p ?o . }
+               |}
+               |WHERE {
+               |  GRAPH $ontologyGraph { ?s ?p ?o . }
+               |}""".render,
+    )
+  }
 }

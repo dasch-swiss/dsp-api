@@ -5,19 +5,19 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
+import org.knora.sparqlbuilder.*
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-import org.knora.webapi.slice.common.QueryBuilderHelper
-
-object GetAllOntologiesMetadataQuery extends QueryBuilderHelper {
-  def build: SelectQuery = {
-    val (ontologyGraph, ontologyIri, ontologyPred, ontologyObj) =
-      (variable("ontologyGraph"), variable("ontologyIri"), variable("ontologyPred"), variable("ontologyObj"))
-    Queries
-      .SELECT(ontologyGraph, ontologyIri, ontologyPred, ontologyObj)
-      .prefix(OWL.NS)
-      .where(ontologyIri.isA(OWL.ONTOLOGY).andHas(ontologyPred, ontologyObj).from(ontologyGraph))
-  }
+object GetAllOntologiesMetadataQuery {
+  def build: Select = Select(
+    sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+             |
+             |SELECT ?ontologyGraph ?ontologyIri ?ontologyPred ?ontologyObj
+             |WHERE {
+             |  GRAPH ?ontologyGraph {
+             |    ?ontologyIri a owl:Ontology ;
+             |      ?ontologyPred ?ontologyObj .
+             |  }
+             |}""".render,
+  )
 }

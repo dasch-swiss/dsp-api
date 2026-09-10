@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.repo
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -19,6 +20,12 @@ import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 class CreateOntologyQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   private val ontologyIri     = OntologyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything".toSmartIri)
   private val projectIri      = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
@@ -38,7 +45,7 @@ class CreateOntologyQuerySpec extends ZIOSpecDefault {
         .map { case (lmd, update) =>
           val ts = lmd.value.toString
           assertTrue(
-            update.sparql ==
+            canonical(update.sparql) == canonical(
               s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -51,6 +58,7 @@ class CreateOntologyQuerySpec extends ZIOSpecDefault {
                  |    rdfs:comment "A test ontology"^^xsd:string ;
                  |    knora-base:lastModificationDate "$ts"^^xsd:dateTime . } }
                  |WHERE { FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything> a ?existingOntologyType . } }""".stripMargin,
+            ),
           )
         }
     },
@@ -66,7 +74,7 @@ class CreateOntologyQuerySpec extends ZIOSpecDefault {
         .map { case (lmd, update) =>
           val ts = lmd.value.toString
           assertTrue(
-            update.sparql ==
+            canonical(update.sparql) == canonical(
               s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -78,6 +86,7 @@ class CreateOntologyQuerySpec extends ZIOSpecDefault {
                  |    rdfs:label "The anything ontology"^^xsd:string ;
                  |    knora-base:lastModificationDate "$ts"^^xsd:dateTime . } }
                  |WHERE { FILTER NOT EXISTS { <http://www.knora.org/ontology/0001/anything> a ?existingOntologyType . } }""".stripMargin,
+            ),
           )
         }
     },
@@ -105,7 +114,7 @@ class CreateOntologyQuerySpec extends ZIOSpecDefault {
         )
         .map { case (lmd, update) =>
           assertTrue(
-            update.sparql.contains(s""""${lmd.value}"^^xsd:dateTime"""),
+            update.sparql.contains(s""""${lmd.value}"^^<http://www.w3.org/2001/XMLSchema#dateTime>"""),
           )
         }
     },
