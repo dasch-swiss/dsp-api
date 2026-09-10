@@ -39,99 +39,81 @@ object ChangePropertyGuiElementQuery {
     val previousDate  = Literal.dateTime(lastModificationDate)
     val currentDate   = Literal.dateTime(currentTime)
 
-    val parts = List(
-      Some(deleteOld(ontology, property, linkProperty, previousDate)),
-      Option.when(guiElement.isDefined || guiAttributes.nonEmpty)(
-        insertNew(ontology, property, linkProperty, guiElement, guiAttributes, previousDate),
-      ),
-      Some(updateTimestamp(ontology, previousDate, currentDate)),
-    ).flatten
+    // A link property's link value property carries the same GUI element and attributes,
+    // so it is cleared and re-set alongside the property itself.
+    val deleteLinkPropertyGui = linkProperty.whenSome { lp =>
+      sparql"""|$lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
+               |$lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute ."""
+    }
+    val matchLinkPropertyGui = linkProperty.whenSome { lp =>
+      sparql"""|OPTIONAL { $lp salsah-gui:guiElement ?oldLinkValuePropertyGuiElement . }
+               |OPTIONAL { $lp salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . }"""
+    }
 
-    Update(Fragment.join(parts, Fragment.raw(";\n")).render)
+    /** The new `salsah-gui:guiElement` triple (if any) plus one triple per new gui attribute. */
+    def insertGuiTriples(subject: Iri): Fragment =
+      (guiElement.map(e => sparql"$subject salsah-gui:guiElement $e .").toList :::
+        guiAttributes.map(a => sparql"$subject salsah-gui:guiAttribute $a .")).joinLines
+
+    val deleteOldGui =
+      sparql"""|$prefixes
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $property salsah-gui:guiElement ?oldGuiElement .
+               |    $property salsah-gui:guiAttribute ?oldGuiAttribute .
+               |    $deleteLinkPropertyGui
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |    OPTIONAL { $property salsah-gui:guiElement ?oldGuiElement . }
+               |    OPTIONAL { $property salsah-gui:guiAttribute ?oldGuiAttribute . }
+               |    $matchLinkPropertyGui
+               |  }
+               |}"""
+
+    // Omitted entirely when there is nothing to set (the GUI element was only removed).
+    val insertNewGui = Option.when(guiElement.isDefined || guiAttributes.nonEmpty)(
+      sparql"""|$prefixes
+               |
+               |INSERT {
+               |  GRAPH $ontology {
+               |    ${insertGuiTriples(property)}
+               |    ${linkProperty.whenSome(insertGuiTriples)}
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |  }
+               |}""",
+    )
+
+    val updateLastModificationDate =
+      sparql"""|$prefixes
+               |
+               |DELETE {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $previousDate .
+               |  }
+               |}
+               |INSERT {
+               |  GRAPH $ontology {
+               |    $ontology knora-base:lastModificationDate $currentDate .
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $ontology {
+               |    $ontology a owl:Ontology ;
+               |      knora-base:lastModificationDate $previousDate .
+               |  }
+               |}"""
+
+    val statements = List(Some(deleteOldGui), insertNewGui, Some(updateLastModificationDate)).flatten
+    Update(Fragment.join(statements, Fragment.raw(";\n")).render)
   }
-
-  private def deleteOld(
-    ontology: Iri,
-    property: Iri,
-    linkProperty: Option[Iri],
-    previousDate: Literal,
-  ): Fragment = {
-    def deleteTriples(subject: Iri, elementVar: Variable, attributeVar: Variable): Fragment =
-      sparql"""|$subject salsah-gui:guiElement $elementVar .
-               |$subject salsah-gui:guiAttribute $attributeVar ."""
-
-    def optionalPatterns(subject: Iri, elementVar: Variable, attributeVar: Variable): Fragment =
-      sparql"""|OPTIONAL { $subject salsah-gui:guiElement $elementVar . }
-               |OPTIONAL { $subject salsah-gui:guiAttribute $attributeVar . }"""
-
-    val oldGuiElement            = Variable("oldGuiElement")
-    val oldGuiAttribute          = Variable("oldGuiAttribute")
-    val oldLinkValueGuiElement   = Variable("oldLinkValuePropertyGuiElement")
-    val oldLinkValueGuiAttribute = Variable("oldLinkValuePropertyGuiAttribute")
-
-    sparql"""|$prefixes
-             |
-             |DELETE {
-             |  GRAPH $ontology {
-             |    ${deleteTriples(property, oldGuiElement, oldGuiAttribute)}
-             |    ${linkProperty.whenSome(deleteTriples(_, oldLinkValueGuiElement, oldLinkValueGuiAttribute))}
-             |  }
-             |}
-             |WHERE {
-             |  GRAPH $ontology {
-             |    $ontology a owl:Ontology ;
-             |      knora-base:lastModificationDate $previousDate .
-             |    ${optionalPatterns(property, oldGuiElement, oldGuiAttribute)}
-             |    ${linkProperty.whenSome(optionalPatterns(_, oldLinkValueGuiElement, oldLinkValueGuiAttribute))}
-             |  }
-             |}"""
-  }
-
-  private def insertNew(
-    ontology: Iri,
-    property: Iri,
-    linkProperty: Option[Iri],
-    guiElement: Option[Iri],
-    guiAttributes: List[Literal],
-    previousDate: Literal,
-  ): Fragment = {
-    def insertTriples(subject: Iri): Fragment =
-      (guiElement.map(iri => sparql"$subject salsah-gui:guiElement $iri .").toList :::
-        guiAttributes.map(attr => sparql"$subject salsah-gui:guiAttribute $attr .")).joinLines
-
-    sparql"""|$prefixes
-             |
-             |INSERT {
-             |  GRAPH $ontology {
-             |    ${insertTriples(property)}
-             |    ${linkProperty.whenSome(insertTriples)}
-             |  }
-             |}
-             |WHERE {
-             |  GRAPH $ontology {
-             |    $ontology a owl:Ontology ;
-             |      knora-base:lastModificationDate $previousDate .
-             |  }
-             |}"""
-  }
-
-  private def updateTimestamp(ontology: Iri, previousDate: Literal, currentDate: Literal): Fragment =
-    sparql"""|$prefixes
-             |
-             |DELETE {
-             |  GRAPH $ontology {
-             |    $ontology knora-base:lastModificationDate $previousDate .
-             |  }
-             |}
-             |INSERT {
-             |  GRAPH $ontology {
-             |    $ontology knora-base:lastModificationDate $currentDate .
-             |  }
-             |}
-             |WHERE {
-             |  GRAPH $ontology {
-             |    $ontology a owl:Ontology ;
-             |      knora-base:lastModificationDate $previousDate .
-             |  }
-             |}"""
 }

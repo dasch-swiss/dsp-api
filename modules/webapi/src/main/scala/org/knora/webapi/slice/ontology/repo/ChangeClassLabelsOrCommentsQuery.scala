@@ -23,14 +23,15 @@ object ChangeClassLabelsOrCommentsQuery {
     lastModificationDate: LastModificationDate,
   ): UIO[Update] =
     Clock.instant.map { now =>
-      val ontology     = Iri.unsafeFrom(resourceClassIri.ontologyIri.toInternalSchema.toIri)
-      val classIri     = Iri.unsafeFrom(resourceClassIri.toInternalSchema.toIri)
-      val predicate    = Iri.unsafeFrom(labelOrComment.toString)
-      val previousDate = Literal.dateTime(lastModificationDate.value)
-      val currentDate  = Literal.dateTime(now)
+      val ontology          = Iri.unsafeFrom(resourceClassIri.ontologyIri.toInternalSchema.toIri)
+      val classIri          = Iri.unsafeFrom(resourceClassIri.toInternalSchema.toIri)
+      val labelOrCommentIri = Iri.unsafeFrom(labelOrComment.toString) // rdfs:label or rdfs:comment
+      val previousDate      = Literal.dateTime(lastModificationDate.value)
+      val currentDate       = Literal.dateTime(now)
 
+      // One <class> rdfs:label|rdfs:comment "..."@lang . triple per new value.
       val newValueTriples = newValues
-        .map(v => sparql"$classIri $predicate ${Literal.langString(v.value, v.language.value)} .")
+        .map(v => sparql"$classIri $labelOrCommentIri ${Literal.langString(v.value, v.language.value)} .")
         .joinLines
 
       Update(
@@ -42,7 +43,7 @@ object ChangeClassLabelsOrCommentsQuery {
                  |DELETE {
                  |  GRAPH $ontology {
                  |    $ontology knora-base:lastModificationDate $previousDate .
-                 |    $classIri $predicate ?oldValues .
+                 |    $classIri $labelOrCommentIri ?oldValues .
                  |  }
                  |}
                  |INSERT {
@@ -55,7 +56,7 @@ object ChangeClassLabelsOrCommentsQuery {
                  |  $ontology a owl:Ontology ;
                  |    knora-base:lastModificationDate $previousDate .
                  |  $classIri ?p ?o .
-                 |  OPTIONAL { $classIri $predicate ?oldValues . }
+                 |  OPTIONAL { $classIri $labelOrCommentIri ?oldValues . }
                  |}""".render,
       )
     }

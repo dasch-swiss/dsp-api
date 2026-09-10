@@ -142,5 +142,32 @@ class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
       val expected = deleteOldQuery + ";\n" + updateTimestampQuery
       assertTrue(canonical(actual.sparql) == canonical(expected))
     },
+    test("no guiElement, no guiAttributes (delete only), with link value property") {
+      val actual = ChangePropertyGuiElementQuery.build(
+        ontologyIri = ontologyIri,
+        propertyIri = propertyIri,
+        maybeLinkValuePropertyIri = Some(linkValuePropertyIri),
+        maybeNewGuiElement = None,
+        newGuiAttributes = Set.empty,
+        lastModificationDate = lastModDate,
+        currentTime = currentTime,
+      )
+
+      val deleteOldQuery = prefixes +
+        """
+          |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiElement ?oldGuiElement .
+          |<http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiAttribute ?oldGuiAttribute .
+          |<http://www.knora.org/ontology/0001/anything#hasTextValue> salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
+          |<http://www.knora.org/ontology/0001/anything#hasTextValue> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . } }
+          |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+          |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+          |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiElement ?oldGuiElement . }
+          |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasText> salsah-gui:guiAttribute ?oldGuiAttribute . }
+          |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasTextValue> salsah-gui:guiElement ?oldLinkValuePropertyGuiElement . }
+          |OPTIONAL { <http://www.knora.org/ontology/0001/anything#hasTextValue> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute . } } }""".stripMargin
+
+      val expected = deleteOldQuery + ";\n" + updateTimestampQuery
+      assertTrue(canonical(actual.sparql) == canonical(expected))
+    },
   )
 }
