@@ -5,12 +5,10 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.RestrictedView.Size
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
@@ -22,57 +20,58 @@ class UpgradePluginPR3112 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  private val removeWatermarkIfBothSet: ModifyQuery = {
-    val (project, prevWatermark, prevSize) = (variable("project"), variable("prevWatermark"), variable("prevSize"))
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS)
-      .delete(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark))
-      .from(Vocabulary.NamedGraphs.dataAdmin)
-      .where(
-        project
-          .isA(Vocabulary.KnoraAdmin.KnoraProject)
-          .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, prevWatermark)
-          .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewSize, prevSize)
-          .from(Vocabulary.NamedGraphs.dataAdmin),
-      )
-  }
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
 
-  private val addDefaultRestrictedViewSizeToProjectsWithout = {
-    val project = variable("project")
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS)
-      .`with`(Vocabulary.NamedGraphs.dataAdmin)
-      .insert(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, Rdf.literalOf(Size.default.value)))
-      .where(
-        project
-          .isA(Vocabulary.KnoraAdmin.KnoraProject)
-          .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, variable("size")))
-          .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, variable("watermark")))
-          .from(Vocabulary.NamedGraphs.dataAdmin),
-      )
-  }
+  private val defaultSize = Literal.string(Size.default.value)
 
-  private val replaceWatermarkFalseWithDefaultRestrictedViewSize = {
-    val project = variable("project")
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS)
-      .`with`(Vocabulary.NamedGraphs.dataAdmin)
-      .insert(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, Rdf.literalOf(Size.default.value)))
-      .delete(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, Rdf.literalOf(false)))
-      .from(Vocabulary.NamedGraphs.dataAdmin)
-      .where(
-        project
-          .isA(Vocabulary.KnoraAdmin.KnoraProject)
-          .andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, Rdf.literalOf(false))
-          .filterNotExists(project.has(Vocabulary.KnoraAdmin.projectRestrictedViewSize, variable("size")))
-          .from(Vocabulary.NamedGraphs.dataAdmin),
-      )
-  }
+  private[plugins] val removeWatermarkIfBothSet: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |DELETE {
+             |  GRAPH $adminGraph { ?project knora-admin:projectRestrictedViewWatermark ?prevWatermark . }
+             |}
+             |WHERE {
+             |  GRAPH $adminGraph {
+             |    ?project a knora-admin:knoraProject ;
+             |             knora-admin:projectRestrictedViewWatermark ?prevWatermark ;
+             |             knora-admin:projectRestrictedViewSize ?prevSize .
+             |  }
+             |}""".render,
+  )
 
-  override def getQueries: List[ModifyQuery] = List(
+  private[plugins] val addDefaultRestrictedViewSizeToProjectsWithout: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH $adminGraph
+             |INSERT {
+             |  ?project knora-admin:projectRestrictedViewSize $defaultSize .
+             |}
+             |WHERE {
+             |  GRAPH $adminGraph {
+             |    ?project a knora-admin:knoraProject .
+             |    FILTER NOT EXISTS { ?project knora-admin:projectRestrictedViewSize ?size . }
+             |    FILTER NOT EXISTS { ?project knora-admin:projectRestrictedViewWatermark ?watermark . }
+             |  }
+             |}""".render,
+  )
+
+  private[plugins] val replaceWatermarkFalseWithDefaultRestrictedViewSize: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH $adminGraph
+             |DELETE {
+             |  GRAPH $adminGraph { ?project knora-admin:projectRestrictedViewWatermark false . }
+             |}
+             |INSERT {
+             |  ?project knora-admin:projectRestrictedViewSize $defaultSize .
+             |}
+             |WHERE {
+             |  GRAPH $adminGraph {
+             |    ?project a knora-admin:knoraProject ;
+             |             knora-admin:projectRestrictedViewWatermark false .
+             |    FILTER NOT EXISTS { ?project knora-admin:projectRestrictedViewSize ?size . }
+             |  }
+             |}""".render,
+  )
+
+  override def getQueries: List[Update] = List(
     removeWatermarkIfBothSet,
     addDefaultRestrictedViewSizeToProjectsWithout,
     replaceWatermarkFalseWithDefaultRestrictedViewSize,
