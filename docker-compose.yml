@@ -102,7 +102,7 @@ services:
       - STORAGE_TEMP_DIR=/opt/temp
       - JWT_AUDIENCE=http://localhost:3340
       - JWT_ISSUER=0.0.0.0:3333
-      - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
+      - JWT_SECRET=dev-only-insecure-jwt-secret-change-me
       - SIPI_USE_LOCAL_DEV=false
       - ALLOW_ERASE_PROJECTS=true
       - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
