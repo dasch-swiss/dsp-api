@@ -240,7 +240,9 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .deleteJson[Json](uri"/v3/projects/$projectIri/data-imports/${importId.value}", rootUser)
       .flatMap(resp =>
         ZIO
-          .logWarning(s"import-task delete for $importId returned ${resp.code}; the per-JVM import slot may still be held")
+          .logWarning(
+            s"import-task delete for $importId returned ${resp.code}; the per-JVM import slot may still be held",
+          )
           .when(!resp.code.isSuccess && resp.code != StatusCode.NotFound)
           .unit,
       )
@@ -452,7 +454,10 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       val oa = ha.getOrElse(p, Nil)
       val ob = hb.getOrElse(p, Nil)
       if (oa == ob) None
-      else Some(s"  $p:\n    A-only: ${(oa diff ob).take(6).mkString(", ")}\n    B-only: ${(ob diff oa).take(6).mkString(", ")}")
+      else
+        Some(
+          s"  $p:\n    A-only: ${(oa diff ob).take(6).mkString(", ")}\n    B-only: ${(ob diff oa).take(6).mkString(", ")}",
+        )
     }
     if (rows.isEmpty) "per-predicate non-blank objects identical (difference is blank-node wiring only)"
     else "per-predicate non-blank object differences (A=bulk, B=create):\n" + rows.mkString("\n")
