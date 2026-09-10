@@ -53,14 +53,14 @@ class DeletePropertyQuerySpec extends ZIOSpecDefault {
                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
                 |anything:hasTestProperty ?propertyPred ?propertyObj .
-                |anything:hasTestPropertyValue ?linkValuePropertyObj ?linkValuePropertyPred . } }
+                |anything:hasTestPropertyValue ?linkValuePropertyPred ?linkValuePropertyObj . } }
                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime . } }
                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
                 |anything:hasTestProperty a owl:ObjectProperty ;
                 |    ?propertyPred ?propertyObj .
                 |FILTER NOT EXISTS { ?s ?p anything:hasTestProperty . }
-                |anything:hasTestPropertyValue ?linkValuePropertyObj ?linkValuePropertyPred . }""".stripMargin,
+                |anything:hasTestPropertyValue ?linkValuePropertyPred ?linkValuePropertyObj . }""".stripMargin,
             ),
           )
         }

@@ -26,10 +26,8 @@ object DeletePropertyQuery {
       val previousDate      = Literal.dateTime(lmd.value)
       val currentDate       = Literal.dateTime(now)
 
-      // The rendered variable names are intentionally kept as in the previous builder,
-      // where the predicate position renders as ?linkValuePropertyObj and vice versa.
       def linkValueTriple(iri: Iri): Fragment =
-        sparql"$iri ?linkValuePropertyObj ?linkValuePropertyPred ."
+        sparql"$iri ?linkValuePropertyPred ?linkValuePropertyObj ."
 
       val update = Update(
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
