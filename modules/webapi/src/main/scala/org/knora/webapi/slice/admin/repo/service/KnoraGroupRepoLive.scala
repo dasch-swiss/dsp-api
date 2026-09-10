@@ -5,11 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
@@ -17,19 +12,20 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraGroup.Conversions.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.projectIriConverter
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraGroupRepoLive(
@@ -38,11 +34,16 @@ final case class KnoraGroupRepoLive(
   private val cache: EntityCache[GroupIri, KnoraGroup],
 ) extends CachingEntityRepo[KnoraGroup, GroupIri](triplestore, mapper, cache)
     with KnoraGroupRepo {
-  override protected def resourceClass: ParsedIRI           = ParsedIRI.create(KnoraAdmin.UserGroup)
-  override protected def namedGraphIri: Iri                 = Vocabulary.NamedGraphs.dataAdmin
+  override protected def resourceClass: Iri                 = Iri.unsafeFrom(KnoraAdmin.UserGroup)
+  override protected def namedGraphIri: Iri                 = Iri.unsafeFrom(adminDataNamedGraph.value)
   override protected def entityProperties: EntityProperties = EntityProperties(
-    NonEmptyChunk(groupName, groupDescriptions, status, hasSelfJoinEnabled),
-    Chunk(belongsToProject),
+    NonEmptyChunk(
+      Iri.unsafeFrom(KnoraAdmin.GroupName),
+      Iri.unsafeFrom(KnoraAdmin.GroupDescriptions),
+      Iri.unsafeFrom(KnoraAdmin.StatusProp),
+      Iri.unsafeFrom(KnoraAdmin.HasSelfJoinEnabled),
+    ),
+    Chunk(Iri.unsafeFrom(KnoraAdmin.BelongsToProject)),
   )
 
   override def findById(id: GroupIri): Task[Option[KnoraGroup]] =
@@ -57,14 +58,19 @@ final case class KnoraGroupRepoLive(
       super.save(group)
 
   override def findByName(name: GroupName): Task[Option[KnoraGroup]] =
-    findOneByPattern(_.has(groupName, Rdf.literalOf(name.value)))
+    findOneByPattern(sparql"$s knora-admin:groupName ${Literal.string(name.value)} .")
       .map(_.orElse(KnoraGroupRepo.builtIn.findOneBy(_.groupName == name)))
 
   override def findByProjectIri(projectIri: ProjectIri): Task[Chunk[KnoraGroup]] =
-    findAllByPattern(_.has(belongsToProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(sparql"$s knora-admin:belongsToProject ${Iri.unsafeFrom(projectIri.value)} .")
 }
 
-object KnoraGroupRepoLive extends QueryBuilderHelper {
+object KnoraGroupRepoLive {
+
+  private def toLiteral(literal: StringLiteralV2): Literal = literal match {
+    case LanguageTaggedStringLiteralV2(value, lang) => Literal.langString(value, lang.value)
+    case PlainStringLiteralV2(value)                => Literal.string(value)
+  }
 
   private val mapper = new RdfEntityMapper[KnoraGroup] {
     override def toEntity(resource: RdfResource): IO[RdfError, KnoraGroup] =
@@ -85,15 +91,19 @@ object KnoraGroupRepoLive extends QueryBuilderHelper {
         hasSelfJoinEnabled,
       )
 
-    override def toTriples(group: KnoraGroup): TriplePattern =
-      Rdf
-        .iri(group.id.value)
-        .has(RDF.TYPE, Rdf.iri(KnoraAdmin.UserGroup))
-        .andHas(groupName, Rdf.literalOf(group.groupName.value))
-        .andHas(groupDescriptions, group.groupDescriptions.value.map(toRdfLiteral)*)
-        .andHas(status, Rdf.literalOf(group.status.value))
-        .andHas(belongsToProject, group.belongsToProject.map(p => Rdf.iri(p.value)).toList*)
-        .andHas(hasSelfJoinEnabled, Rdf.literalOf(group.hasSelfJoinEnabled.value))
+    override def toTriples(group: KnoraGroup): Fragment = {
+      val id = Iri.unsafeFrom(group.id.value)
+      sparql"""|$id a knora-admin:UserGroup ;
+               |  knora-admin:groupName ${Literal.string(group.groupName.value)} .
+               |${group.groupDescriptions.value
+          .map(d => sparql"$id knora-admin:groupDescriptions ${toLiteral(d)} .")
+          .joinLines}
+               |$id knora-admin:status ${Literal.bool(group.status.value)} .
+               |${group.belongsToProject.whenSome(p =>
+          sparql"$id knora-admin:belongsToProject ${Iri.unsafeFrom(p.value)} .",
+        )}
+               |$id knora-admin:hasSelfJoinEnabled ${Literal.bool(group.hasSelfJoinEnabled.value)} ."""
+    }
   }
 
   val layer = (ZLayer.succeed(mapper) >+> EntityCache.layer[GroupIri, KnoraGroup]("knoraGroup")) >>> ZLayer

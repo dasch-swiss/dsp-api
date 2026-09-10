@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
@@ -16,6 +12,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -35,7 +32,6 @@ import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraUserRepoLive(
@@ -45,12 +41,25 @@ final case class KnoraUserRepoLive(
 ) extends CachingEntityRepo[KnoraUser, UserIri](triplestore, mapper, entityCache)
     with KnoraUserRepo {
 
-  override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.User)
-  override protected val namedGraphIri: Iri       = Rdf.iri(adminDataNamedGraph.value)
+  override protected val resourceClass: Iri = Iri.unsafeFrom(KnoraAdmin.User)
+  override protected val namedGraphIri: Iri = Iri.unsafeFrom(adminDataNamedGraph.value)
 
   override protected def entityProperties: EntityProperties = EntityProperties(
-    NonEmptyChunk(username, email, givenName, familyName, status, preferredLanguage, password),
-    Chunk(isInSystemAdminGroup, isInProject, isInGroup, isInProjectAdminGroup),
+    NonEmptyChunk(
+      Iri.unsafeFrom(KnoraAdmin.Username),
+      Iri.unsafeFrom(KnoraAdmin.Email),
+      Iri.unsafeFrom(KnoraAdmin.GivenName),
+      Iri.unsafeFrom(KnoraAdmin.FamilyName),
+      Iri.unsafeFrom(KnoraAdmin.StatusProp),
+      Iri.unsafeFrom(KnoraAdmin.PreferredLanguage),
+      Iri.unsafeFrom(KnoraAdmin.Password),
+    ),
+    Chunk(
+      Iri.unsafeFrom(KnoraAdmin.IsInSystemAdminGroup),
+      Iri.unsafeFrom(KnoraAdmin.IsInProject),
+      Iri.unsafeFrom(KnoraAdmin.IsInGroup),
+      Iri.unsafeFrom(KnoraAdmin.IsInProjectAdminGroup),
+    ),
   )
 
   override def findAll(): Task[Chunk[KnoraUser]] = super.findAll().map(_ ++ KnoraUserRepo.builtIn.all)
@@ -59,23 +68,23 @@ final case class KnoraUserRepoLive(
     super.findById(id).map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.id == id)))
 
   override def findByProjectAdminMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    findAllByPattern(_.has(isInProjectAdminGroup, Rdf.iri(projectIri.value)))
+    findAllByPattern(sparql"$s knora-admin:isInProjectAdminGroup ${Iri.unsafeFrom(projectIri.value)} .")
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProjectAdminGroup.contains(projectIri)))
 
   override def findByProjectMembership(projectIri: ProjectIri): Task[Chunk[KnoraUser]] =
-    findAllByPattern(_.has(isInProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(sparql"$s knora-admin:isInProject ${Iri.unsafeFrom(projectIri.value)} .")
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInProject.contains(projectIri)))
 
   override def findByGroupMembership(groupIri: GroupIri): Task[Chunk[KnoraUser]] =
-    findAllByPattern(_.has(isInGroup, Rdf.iri(groupIri.value)))
+    findAllByPattern(sparql"$s knora-admin:isInGroup ${Iri.unsafeFrom(groupIri.value)} .")
       .map(_ ++ KnoraUserRepo.builtIn.findAllBy(_.isInGroup.contains(groupIri)))
 
   override def findByEmail(mail: Email): Task[Option[KnoraUser]] =
-    findOneByPattern(_.has(email, Rdf.literalOf(mail.value)))
+    findOneByPattern(sparql"$s knora-admin:email ${Literal.string(mail.value)} .")
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.email == mail)))
 
   override def findByUsername(name: Username): Task[Option[KnoraUser]] =
-    findOneByPattern(_.has(username, Rdf.literalOf(name.value)))
+    findOneByPattern(sparql"$s knora-admin:username ${Literal.string(name.value)} .")
       .map(_.orElse(KnoraUserRepo.builtIn.findOneBy(_.username == name)))
 
   override def save(user: KnoraUser): Task[KnoraUser] =
@@ -117,21 +126,23 @@ object KnoraUserRepoLive {
         isInProjectAdminGroupIris,
       )
 
-    override def toTriples(u: KnoraUser): TriplePattern =
-      Rdf
-        .iri(u.id.value)
-        .isA(User)
-        .andHas(username, Rdf.literalOf(u.username.value))
-        .andHas(email, Rdf.literalOf(u.email.value))
-        .andHas(givenName, Rdf.literalOf(u.givenName.value))
-        .andHas(familyName, Rdf.literalOf(u.familyName.value))
-        .andHas(preferredLanguage, Rdf.literalOf(u.preferredLanguage.value))
-        .andHas(status, Rdf.literalOf(u.status.value))
-        .andHas(password, Rdf.literalOf(u.password.value))
-        .andHas(isInSystemAdminGroup, Rdf.literalOf(u.isInSystemAdminGroup.value))
-        .andHas(isInProject, u.isInProject.map(p => Rdf.iri(p.value)).toList*)
-        .andHas(isInGroup, u.isInGroup.map(p => Rdf.iri(p.value)).toList*)
-        .andHas(isInProjectAdminGroup, u.isInProjectAdminGroup.map(p => Rdf.iri(p.value)).toList*)
+    override def toTriples(u: KnoraUser): Fragment = {
+      val id = Iri.unsafeFrom(u.id.value)
+      sparql"""|$id a knora-admin:User ;
+               |  knora-admin:username ${Literal.string(u.username.value)} ;
+               |  knora-admin:email ${Literal.string(u.email.value)} ;
+               |  knora-admin:givenName ${Literal.string(u.givenName.value)} ;
+               |  knora-admin:familyName ${Literal.string(u.familyName.value)} ;
+               |  knora-admin:preferredLanguage ${Literal.string(u.preferredLanguage.value)} ;
+               |  knora-admin:status ${Literal.bool(u.status.value)} ;
+               |  knora-admin:password ${Literal.string(u.password.value)} ;
+               |  knora-admin:isInSystemAdminGroup ${Literal.bool(u.isInSystemAdminGroup.value)} .
+               |${u.isInProject.map(p => sparql"$id knora-admin:isInProject ${Iri.unsafeFrom(p.value)} .").joinLines}
+               |${u.isInGroup.map(g => sparql"$id knora-admin:isInGroup ${Iri.unsafeFrom(g.value)} .").joinLines}
+               |${u.isInProjectAdminGroup
+          .map(p => sparql"$id knora-admin:isInProjectAdminGroup ${Iri.unsafeFrom(p.value)} .")
+          .joinLines}"""
+    }
   }
 
   val layer =
