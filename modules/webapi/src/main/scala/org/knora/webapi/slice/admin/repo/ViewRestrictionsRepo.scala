@@ -5,27 +5,16 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.Variable
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -54,7 +43,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 final case class ViewRestrictionsRepo(
   private val triplestore: TriplestoreService,
   private val projectClassesCache: EhCache[ProjectIri, ProjectClasses],
-) extends QueryBuilderHelper {
+) {
 
   /**
    * Resolves the project's asserted resource classes, and whether the most-specific-class filter is
@@ -75,33 +64,18 @@ final case class ViewRestrictionsRepo(
   private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     for {
       iris <- triplestore
-                .query(Select(ViewRestrictionsRepo.projectClassesQuery(projectIri), SparqlTimeout.ViewRestrictions))
+                .query(ViewRestrictionsRepo.projectClassesQuery(projectIri))
                 .map(_.flatMap(_.get("resClass")))
       // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
       // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
       // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
       anyMultiTyped <-
         triplestore
-          .query(Select(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri), SparqlTimeout.ViewRestrictions))
+          .query(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri))
           .map(_.nonEmpty)
-      multi <- if (anyMultiTyped)
-                 triplestore
-                   .query(Select(ViewRestrictionsRepo.multiTypedQuery(projectIri), SparqlTimeout.ViewRestrictions))
-                   .map(_.nonEmpty)
+      multi <- if (anyMultiTyped) triplestore.query(ViewRestrictionsRepo.multiTypedQuery(projectIri)).map(_.nonEmpty)
                else ZIO.succeed(false)
     } yield ProjectClasses(iris, multi)
-
-  /**
-   * Renders `query` with the project's `VALUES ?resClass { … }` spliced into its WHERE block.
-   *
-   * Every query of this report runs on [[SparqlTimeout.ViewRestrictions]] rather than the standard tier --
-   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
-   */
-  private def select(query: SelectQuery, classes: ProjectClasses): Select =
-    Select(
-      ViewRestrictionsRepo.withValues(query, classes.valuesClause(variable("resClass"))),
-      SparqlTimeout.ViewRestrictions,
-    )
 
   /**
    * Step 1 of the stepped report: every class's resource counts, broken down by permission literal, in a
@@ -117,7 +91,7 @@ final case class ViewRestrictionsRepo(
     classes: ProjectClasses,
   ): Task[Seq[PermissionCountRow]] =
     triplestore
-      .query(select(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes), classes))
+      .query(ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, classes))
       .map(_.flatMap(row => permissionCountRow(row, groupCol = Some("resClass"))))
 
   /**
@@ -133,12 +107,7 @@ final case class ViewRestrictionsRepo(
     classes: ProjectClasses,
   ): Task[Seq[PermissionCountRow]] =
     triplestore
-      .query(
-        select(
-          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes),
-          classes,
-        ),
-      )
+      .query(ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes))
       .map(_.flatMap(row => permissionCountRow(row, groupCol = None)))
 
   /**
@@ -176,12 +145,7 @@ final case class ViewRestrictionsRepo(
     for {
       pageIris <-
         triplestore
-          .query(
-            select(
-              ViewRestrictionsRepo.resourcePageQuery(projectIri, effective, group, offset, limit, classes),
-              classes,
-            ),
-          )
+          .query(ViewRestrictionsRepo.resourcePageQuery(projectIri, effective, group, offset, limit, classes))
           .map(_.flatMap(_.get("resource")))
       rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
               else fetchRowsFor(projectIri, effective, group, pageIris, classes)
@@ -214,12 +178,7 @@ final case class ViewRestrictionsRepo(
   ): Task[Int] = {
     val effective = itemType
     triplestore
-      .query(
-        select(
-          ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, effective, group, classes),
-          classes,
-        ),
-      )
+      .query(ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, effective, group, classes))
       .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
   }
 
@@ -230,7 +189,7 @@ final case class ViewRestrictionsRepo(
     classes: ProjectClasses,
   ): Task[Seq[RestrictedObjectRow]] =
     triplestore
-      .query(select(ViewRestrictionsRepo.resourceQuery(projectIri, Some(group), resourceIris, classes), classes))
+      .query(ViewRestrictionsRepo.resourceQuery(projectIri, Some(group), resourceIris, classes))
       .map(_.map { row =>
         val resource = row.getRequired("resource")
         val resClass = row.getRequired("resClass")
@@ -260,9 +219,7 @@ final case class ViewRestrictionsRepo(
     classes: ProjectClasses,
   ): Task[Seq[RestrictedObjectRow]] =
     triplestore
-      .query(
-        select(ViewRestrictionsRepo.valueQuery(projectIri, Some(group), resourceIris, classes), classes),
-      )
+      .query(ViewRestrictionsRepo.valueQuery(projectIri, Some(group), resourceIris, classes))
       .map(_.flatMap { row =>
         val resource   = row.getRequired("resource")
         val resClass   = row.getRequired("resClass")
@@ -307,7 +264,7 @@ final case class ViewRestrictionsRepo(
   }
 }
 
-object ViewRestrictionsRepo extends QueryBuilderHelper {
+object ViewRestrictionsRepo {
 
   /**
    * How long a resolved [[ProjectClasses]] stays cached.
@@ -355,8 +312,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    *   - `?resClass rdfs:subClassOf* knora-base:Resource` — restricting `?resClass` to resource classes.
    *     Superseded by binding `?resClass` to this list, which is *already* the set of resource classes the
    *     project uses.
-   *   - `FILTER NOT EXISTS { … subClassOf+ … }` ([[mostSpecificClass]]) — needed only when a project
-   *     asserts both a class and one of its ancestors on the same resource, which `multiTyped` records.
+   *   - `FILTER NOT EXISTS { … subClassOf+ … }` — needed only when a project asserts both a class and one
+   *     of its ancestors on the same resource, which `multiTyped` records.
    *
    * The list is deliberately the classes **present in the project's data**, not the `Resource` subclass
    * closure from the ontology: `docs/development/dsp-api-sparql-queries.md` (DEV-6803) measured that
@@ -371,24 +328,35 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
   final case class ProjectClasses(iris: Seq[String], multiTyped: Boolean) {
 
     /**
-     * `VALUES ?resClass { <…> }`, or `None` when no class was discovered.
+     * `VALUES ?resClass { <…> }`, or the empty fragment when no class was discovered.
      *
-     * `None` does **not** mean "no constraint": [[resClassPatterns]] falls back to the original
-     * `subClassOf*` guard in that case, so `?resClass` is never left unconstrained.
+     * Empty does **not** mean "no constraint": [[resClassPatterns]] falls back to the original
+     * `subClassOf*` guard in that case, so `?resClass` is never left unconstrained. It is a hole rather
+     * than literal template text because both its presence and its length are decided per project;
+     * `Fragments.values` throws on an empty collection, hence the explicit branch here.
+     *
+     * Every template interpolates it as the first thing inside its `WHERE` block, where it binds
+     * `?resClass` before the patterns that consume it — the position the previous string splice used.
      */
-    def valuesClause(resClass: Variable): Option[String] =
-      Option.when(iris.nonEmpty)(ViewRestrictionsRepo.valuesOf(resClass, iris))
+    def valuesClause: Fragment =
+      if (iris.isEmpty) Fragment.empty else Fragments.values(Variable("resClass"), iris.map(Iri.unsafeFrom))
 
     /**
-     * The patterns that pin `?resClass`, beyond the `VALUES` clause spliced in by [[withValues]].
+     * The patterns that pin `?resClass`, beyond the `VALUES` clause of [[valuesClause]]. Also a hole
+     * rather than template text: which of the two blocks appear is a per-project decision.
      *
-     *   - When no class was discovered, the `VALUES` clause is omitted, so the original
+     *   - When no class was discovered, the `VALUES` clause is empty, so the original
      *     `?resClass rdfs:subClassOf* knora-base:Resource` guard is emitted instead. Dropping both would
      *     leave `?resClass` matching every asserted type — including value and non-resource classes —
      *     and inflate every count.
-     *   - The most-specific-class filter is added only when the project's data can actually produce an
-     *     ambiguous binding (see [[multiTypedQuery]]) *and* the caller's result depends on how many rows
-     *     a resource contributes — see `dedupeRows`.
+     *   - The most-specific-class filter keeps only the most specific asserted class of a resource, so one
+     *     resource yields exactly one `?resClass` binding even when the triplestore asserts or infers its
+     *     superclasses too. It is added only when the project's data can actually produce an ambiguous
+     *     binding (see [[multiTypedQuery]]) *and* the caller's result depends on how many rows a resource
+     *     contributes — see `dedupeRows`. The filter is a `subClassOf+` traversal re-evaluated per result
+     *     row — rows scale as resources × properties × values — so on the common case where every resource
+     *     carries exactly one class it is pure overhead and is left out entirely (measured on
+     *     `incunabula`: 2.46s → 0.78s for that pattern alone).
      *
      * @param dedupeRows whether the caller needs one `?resClass` binding per resource. True for the
      *                   counting and paging queries, whose answer changes if a multi-typed resource is
@@ -398,39 +366,16 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
      *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
      *                   some other row still carries.
      */
-    def resClassPatterns(resource: Variable, resClass: Variable, dedupeRows: Boolean): Seq[GraphPattern] = {
-      val classGuard =
-        Option.when(iris.isEmpty)(resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
-      val specific = Option.when(multiTyped && dedupeRows)(mostSpecificClass(resource, resClass))
-      (classGuard ++ specific).toSeq
-    }
-  }
-
-  /** `VALUES ?v { <a> <b> … }` for a set of IRIs. */
-  private[repo] def valuesOf(v: Variable, iris: Seq[String]): String =
-    s"VALUES ${v.getQueryString} { ${iris.map(i => s"<$i>").mkString(" ")} }"
-
-  /**
-   * Splices a `VALUES` clause into a built query's WHERE block.
-   *
-   * The rdf4j SparqlBuilder cannot express `VALUES` (see the SparqlBuilder limitations in
-   * `docs/development/dsp-api-sparql-queries.md`), so the documented string fallback is used. The clause
-   * is inserted immediately after the opening brace of the WHERE block, where it binds `?resClass` before
-   * the patterns that consume it.
-   *
-   * The insertion point is located from the `WHERE` keyword rather than the first brace in the query, and
-   * a serialization without it is a programming error rather than something to paper over: splicing into
-   * an arbitrary brace would silently produce a wrong query.
-   */
-  private[repo] def withValues(query: SelectQuery, clause: Option[String]): String = {
-    val sparql = query.getQueryString
-    clause.fold(sparql) { v =>
-      val whereAt = sparql.indexOf("WHERE")
-      require(whereAt >= 0, s"cannot splice VALUES: no WHERE clause in rendered query:\n$sparql")
-      val idx = sparql.indexOf('{', whereAt)
-      require(idx >= 0, s"cannot splice VALUES: no group graph pattern after WHERE:\n$sparql")
-      s"${sparql.substring(0, idx + 1)}\n$v${sparql.substring(idx + 1)}"
-    }
+    def resClassPatterns(dedupeRows: Boolean): Fragment =
+      Seq(
+        Option.when(iris.isEmpty)(sparql"?resClass rdfs:subClassOf* knora-base:Resource ."),
+        Option.when(multiTyped && dedupeRows)(
+          sparql"""|FILTER NOT EXISTS {
+                   |  ?resource a ?subClass .
+                   |  ?subClass rdfs:subClassOf+ ?resClass .
+                   |}""",
+        ),
+      ).flatten.joinLines
   }
 
   /**
@@ -475,33 +420,53 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * dropped in the query — this keeps every query proportional to the number of *restrictions* rather than
    * the total number of values. The authoritative per-audience decision still happens in Scala via
    * PermissionUtilADM; this only removes provably-open rows, so it is conservative.
+   *
+   * The drill-down queries use it in `FILTER(!REGEX(?permissions, …))`; the count queries deliberately do
+   * not, since keeping every literal is what makes a group's whole population derivable from its rows.
    */
   private val grantsViewToAnonymousRegex = "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser"
 
-  /** `FILTER(!REGEX(?permissions, <grantsViewToAnonymous>))` — keep only rows restricted from someone. */
-  private def onlyRestricted(permissions: Variable) =
-    Expressions.not(Expressions.regex(permissions, Rdf.literalOf(grantsViewToAnonymousRegex)))
-
-  /** `FILTER(?resource IN (<…>, <…>))` — restrict to the resources on the current page. */
-  private def resourceIn(resource: Variable, iris: Seq[String]) =
-    Expressions.in(resource, iris.map(Rdf.iri)*)
-
-  // ---------------------------------------------------------------------------------------------------
-  // Shared WHERE fragments. Kept in one place so the count queries and the row queries can never drift
-  // apart — a count that matched a different row set than the drill-down would be worse than no count.
-  // ---------------------------------------------------------------------------------------------------
-
   /**
-   * The resource skeleton: a project's current, non-deleted resources with class, creator, permissions.
+   * Narrows a value pattern to one item type. `File`/`Value` need the file-ness of the value decided in
+   * the query (not just reported), and `Comment` needs the comment to exist; `All` and `Resource` add
+   * nothing, and their templates then also omit the group that would isolate the skeleton from a
+   * constraint — there is nothing to separate.
+   */
+  private def itemTypeConstraint(itemType: ItemType): Option[Fragment] =
+    itemType match {
+      case ItemType.File =>
+        Some(sparql"""|{
+                      |  ?value a ?fileClass .
+                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
+                      |}""")
+      case ItemType.Value =>
+        Some(sparql"""|FILTER NOT EXISTS {
+                      |  ?value a ?fileClass .
+                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
+                      |}""")
+      case ItemType.Comment => Some(sparql"?value knora-base:valueHasComment ?comment .")
+      case _                => None
+    }
+
+  /*
+   * The queries below repeat the same two WHERE skeletons — a project's current, non-deleted resources,
+   * and its current, non-deleted values reached through a sub-property of `knora-base:hasValue` — rather
+   * than sharing them, so that each template can be read as one whole piece of SPARQL. The count queries
+   * and the row queries must nevertheless describe the same universe: a count that matched a different row
+   * set than the drill-down would be worse than no count, and `ViewRestrictionsQuerySpec` pins that.
    *
-   * `?resClass` is pinned to the resource's **most specific asserted** class — see [[mostSpecificClass]].
-   * Without that, a resource asserted as (or inferred to be) several classes in one hierarchy would bind
-   * `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in the
-   * drill-down.
+   * Two skeleton details are load-bearing and repeated deliberately in every template:
    *
-   * `bindCreator = false` drops the `attachedToUser ?creator` pattern — see [[valueCore]].
+   *   - `?resClass` is pinned to the resource's **most specific asserted** class whenever the caller's
+   *     answer depends on how many rows a resource contributes — see `ProjectClasses.resClassPatterns`.
+   *     Without that, a resource asserted as (or inferred to be) several classes in one hierarchy binds
+   *     `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in
+   *     the drill-down.
+   *   - `knora-base:attachedToUser ?creator` is present only where the creator is projected or
+   *     constrained. In the permission probes it is an unconstrained join whose only effect is to multiply
+   *     intermediate rows, and the creator cannot change the decision for a synthetic audience anyway.
    *
-   * NOTE — graph scoping does NOT apply here, and must not be reintroduced.
+   * NOTE — graph scoping does NOT apply to any of them, and must not be introduced.
    * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join
    * (DEV-6827: 5.4×), and that holds for a caller which already knows the single graph it wants — the v2
    * write path writes into one. It does **not** hold for a project-wide read: a project's resources span
@@ -510,126 +475,10 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * `…/data/0001/anything` and 6 more in `…/data/0001/freetest`, so scoping to the derived graph
    * undercounts by those 6 — silently, since a graph with no matches yields no rows rather than an error.
    * `ViewRestrictionsQuerySpec` pins that every query keeps the join.
-   */
-  private def resourceCore(
-    projectIri: ProjectIri,
-    resource: Variable,
-    resClass: Variable,
-    creator: Variable,
-    permissions: Variable,
-    classes: ProjectClasses,
-    dedupeRows: Boolean = true,
-    bindCreator: Boolean = true,
-  ) = {
-    val withProject = resource.isA(resClass).andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-    // The creator keeps its position in the chain rather than being appended, so enabling/disabling it
-    // cannot reorder the other patterns.
-    val withCreator = if (bindCreator) withProject.andHas(KnoraBase.attachedToUser, creator) else withProject
-    withCreator
-      .andHas(KnoraBase.hasPermissions, permissions)
-      .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
-  }
-
-  /**
-   * `FILTER NOT EXISTS { ?resource a ?subClass . ?subClass rdfs:subClassOf+ ?resClass }` — keeps only the
-   * most specific asserted class of a resource, so one resource yields exactly one `?resClass` binding even
-   * when the triplestore asserts or infers its superclasses too.
    *
-   * Only emitted when the project actually asserts a class together with one of its ancestors
-   * ([[ViewRestrictionsRepo.needsMostSpecificClassFilter]]). The filter is a `subClassOf+` traversal
-   * re-evaluated per result row — rows scale as resources × properties × values — so on the common case
-   * where every resource carries exactly one class it is pure overhead and is left out entirely
-   * (measured on `incunabula`: 2.46s → 0.78s for that pattern alone).
+   * Every query of this report runs on `SparqlTimeout.ViewRestrictions` rather than the standard tier —
+   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
    */
-  private def mostSpecificClass(resource: Variable, resClass: Variable): GraphPattern = {
-    val subClass = variable("subClass")
-    GraphPatterns.filterNotExists(
-      resource
-        .isA(subClass)
-        .and(subClass.has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).oneOrMore().build(), resClass)),
-    )
-  }
-
-  /**
-   * The value skeleton: a project's current, non-deleted values reached through a sub-property of
-   * `knora-base:hasValue`, with the carrying property captured and link values excluded. Values carry their
-   * own creator and permission literal.
-   *
-   * `?resClass` is pinned to the most specific asserted class for the same reason as in [[resourceCore]]:
-   * in class mode it is the grouping key, so a multi-typed resource would otherwise count its values once
-   * per class in the hierarchy.
-   *
-   * `bindCreator = false` drops the `attachedToUser ?creator` pattern for callers that neither project nor
-   * constrain the creator — the permission probes. It is an unconstrained join whose only effect there is to
-   * multiply intermediate rows.
-   *
-   * Graph scoping does not apply here either — see [[resourceCore]] for why a project-wide read cannot
-   * substitute a single derived data graph for the `attachedToProject` join.
-   */
-  private def valueCore(
-    projectIri: ProjectIri,
-    resource: Variable,
-    resClass: Variable,
-    prop: Variable,
-    value: Variable,
-    creator: Variable,
-    permissions: Variable,
-    classes: ProjectClasses,
-    dedupeRows: Boolean = true,
-    bindCreator: Boolean = true,
-  ) = {
-    // As in resourceCore, the creator keeps its leading position in the value block so toggling it cannot
-    // reorder the remaining patterns.
-    val valuePatterns =
-      if (bindCreator)
-        value
-          .has(KnoraBase.attachedToUser, creator)
-          .andHas(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      else value.has(KnoraBase.hasPermissions, permissions).andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-    resource
-      .isA(resClass)
-      .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-      .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      .and(classes.resClassPatterns(resource, resClass, dedupeRows)*)
-      .and(
-        resource
-          .has(prop, value)
-          .and(prop.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)),
-      )
-      .and(valuePatterns)
-      .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
-  }
-
-  /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
-  private def optionalFileClass(value: Variable, fileClass: Variable): GraphPattern =
-    value
-      .isA(fileClass)
-      .and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
-      .optional()
-
-  /**
-   * Restricts a value pattern to one item type. `File`/`Value` need the file-ness of the value decided in
-   * the query (not just reported), and `Comment` needs the comment to exist; `All` adds nothing.
-   */
-  private def itemTypeConstraint(value: Variable, fileClass: Variable, comment: Variable, itemType: ItemType) = {
-    val isFile    = value.isA(fileClass).and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
-    val hasCommnt = value.has(KnoraBase.valueHasComment, comment)
-    itemType match {
-      case ItemType.File    => Some(isFile)
-      case ItemType.Value   => Some(GraphPatterns.filterNotExists(isFile))
-      case ItemType.Comment => Some(hasCommnt)
-      case _                => None
-    }
-  }
-
-  private def withGroupFilter(pattern: GraphPattern, col: Variable, group: Option[String]): GraphPattern =
-    group.fold(pattern)(g => GraphPatterns.and(pattern).filter(Expressions.equals(col, Rdf.iri(g))))
-
-  // ---------------------------------------------------------------------------------------------------
-  // Summary: distinct permission literals, then aggregated counts.
-  // ---------------------------------------------------------------------------------------------------
 
   /**
    * `SELECT DISTINCT ?resClass` — the resource classes the project actually asserts.
@@ -651,24 +500,27 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * identical — `DISTINCT ?resClass` over a set the outer pattern only filters.
    *
    * The `attachedToProject` join stays inside the sub-select rather than becoming a `GRAPH` scope: a
-   * project's resources span one data graph per ontology, so a single derived graph undercounts (see
-   * [[resourceCore]]).
+   * project's resources span one data graph per ontology, so a single derived graph undercounts.
    */
-  private[repo] def projectClassesQuery(projectIri: ProjectIri): SelectQuery = {
-    val (resource, resClass) = (variable("resource"), variable("resClass"))
-    val usedClasses          = GraphPatterns
-      .select(resClass)
-      .distinct()
-      .where(
-        resource
-          .has(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-          .andIsA(resClass),
-      )
-    Queries
-      .SELECT(resClass)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(usedClasses, resClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.Resource))
+  private[repo] def projectClassesQuery(projectIri: ProjectIri): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |SELECT DISTINCT ?resClass
+               |WHERE {
+               |  {
+               |    SELECT DISTINCT ?resClass
+               |    WHERE {
+               |      ?resource knora-base:attachedToProject $project ;
+               |        a ?resClass .
+               |    }
+               |  }
+               |  ?resClass rdfs:subClassOf* knora-base:Resource .
+               |}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
@@ -684,25 +536,27 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    *
    * Measured on LHTT: 1.4s, against 27.3s for the query it gates.
    */
-  private[repo] def anyMultiTypedResourceQuery(projectIri: ProjectIri): SelectQuery = {
-    val (resource, c1, c2) = (variable("resource"), variable("c1"), variable("c2"))
-    Queries
-      .SELECT(resource)
-      .prefix(prefix(KnoraBase.NS))
-      .where(
-        resource
-          .isA(c1)
-          .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-          .andIsA(c2)
-          .filter(Expressions.notEquals(c1, c2)),
-      )
-      .limit(1)
+  private[repo] def anyMultiTypedResourceQuery(projectIri: ProjectIri): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?resource
+               |WHERE {
+               |  ?resource a ?c1 ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:isDeleted false ;
+               |    a ?c2 .
+               |  FILTER (?c1 != ?c2)
+               |}
+               |LIMIT 1""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
-   * Whether [[mostSpecificClass]] can actually change the answer for this project: does any non-deleted
-   * resource assert a class together with a **strict subclass** of that class?
+   * Whether the most-specific-class filter can actually change the answer for this project: does any
+   * non-deleted resource assert a class together with a **strict subclass** of that class?
    *
    * This mirrors the gated filter exactly, which is what makes omitting the filter sound. In particular
    * `?subClass` is **not** restricted to the project's discovered classes: the filter's own `?subClass` is
@@ -710,8 +564,8 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * appears in [[projectClassesQuery]]) still makes the filter load-bearing. Narrowing the probe to the
    * discovered list would answer "no" for exactly that case and silently inflate the counts.
    *
-   * The `isDeleted false` guard matches [[resourceCore]]/[[valueCore]]: a deleted resource can never
-   * produce a `?resClass` binding there, so it must not drag the expensive filter back on for the request.
+   * The `isDeleted false` guard matches the query skeletons: a deleted resource can never produce a
+   * `?resClass` binding there, so it must not drag the expensive filter back on for the request.
    *
    * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
    * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
@@ -721,57 +575,54 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
    * needs no path, and a negative answer settles this one. See [[projectClasses]].
    */
-  private[repo] def multiTypedQuery(projectIri: ProjectIri): SelectQuery = {
-    val (resource, resClass, subClass) = (variable("resource"), variable("resClass"), variable("subClass"))
-    Queries
-      .SELECT(resource)
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        resource
-          .isA(resClass)
-          .andHas(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-          .andIsA(subClass)
-          .and(subClass.has(PropertyPathBuilder.of(RDFS.SUBCLASSOF).oneOrMore().build(), resClass)),
-      )
-      .limit(1)
+  private[repo] def multiTypedQuery(projectIri: ProjectIri): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |SELECT ?resource
+               |WHERE {
+               |  ?resource a ?resClass ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:isDeleted false ;
+               |    a ?subClass .
+               |  ?subClass rdfs:subClassOf+ ?resClass .
+               |}
+               |LIMIT 1""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
    * `SELECT ?resClass ?permissions (COUNT(DISTINCT ?resource) AS ?cnt) … GROUP BY ?resClass ?permissions`
    * over all of a project's current resources — the whole of step 1 in one query.
    *
-   * Built on the same [[resourceCore]] skeleton as the queries it replaces, so it counts the same universe
-   * (non-deleted, project-owned, keyed by the resource's most specific asserted class). `bindCreator =
-   * false` because the creator cannot change the decision for a synthetic audience, making
-   * `attachedToUser ?creator` an unconstrained join that only multiplies intermediate rows — the same
-   * reasoning [[valueCore]] already records for the permission probes.
+   * One query rather than a fan-out: grouping by the literal makes the six former (audience, state) counts
+   * and the separate population count all derivable from one row set. No permission filter at all, which
+   * is exactly what makes a class's whole population the sum of its rows.
    */
   private[repo] def resourceCountsByClassAndPermissionQuery(
     projectIri: ProjectIri,
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val cnt                    = variable("cnt")
-
-    Queries
-      .SELECT(resClass, permissions, Expressions.count(resource).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        GraphPatterns.and(
-          resourceCore(
-            projectIri,
-            resource,
-            resClass,
-            creator,
-            permissions,
-            classes,
-            bindCreator = false,
-          ),
-        ),
-      )
-      .groupBy(resClass, permissions)
+  ): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |SELECT ?resClass ?permissions (COUNT(DISTINCT ?resource) AS ?cnt)
+               |WHERE {
+               |  ${classes.valuesClause}
+               |  ?resource a ?resClass ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:hasPermissions ?permissions ;
+               |    knora-base:isDeleted false .
+               |  ${classes.resClassPatterns(dedupeRows = true)}
+               |}
+               |GROUP BY ?resClass ?permissions""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
@@ -781,42 +632,76 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * Narrowed to a single class by a `FILTER (?resClass = <iri>)` rather than by chunking: the route is the
    * unit of work now, so there is no second axis to split on.
    *
-   * NOTE: `valueCore` reaches values through `?prop rdfs:subPropertyOf* knora-base:hasValue` with `?prop`
-   * unbound. That is a knowingly accepted cost (see the PRD's Constraints): `CONVENTIONS.md` warns an
-   * unanchored property path cross-joins against the whole closure, and it is the first thing to revisit
-   * if a class turns out to be too slow.
+   * NOTE: values are reached through `?prop rdfs:subPropertyOf* knora-base:hasValue` with `?prop` unbound.
+   * That is a knowingly accepted cost (see the PRD's Constraints): `CONVENTIONS.md` warns an unanchored
+   * property path cross-joins against the whole closure, and it is the first thing to revisit if a class
+   * turns out to be too slow.
+   *
+   * Two templates, chosen by whether an item-type constraint applies. The skeleton is wrapped in a group of
+   * its own exactly when a constraint follows it — the constraint then cannot be merged into the skeleton's
+   * basic graph pattern, nor reordered against its triples — and left bare when there is none.
    */
   private[repo] def valueCountsByPermissionQuery(
     projectIri: ProjectIri,
     resourceClass: String,
     itemType: ItemType,
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (prop, value)          = (variable("prop"), variable("value"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val (fileClass, comment)   = (variable("fileClass"), variable("comment"))
-    val cnt                    = variable("cnt")
-
-    val core = valueCore(
-      projectIri,
-      resource,
-      resClass,
-      prop,
-      value,
-      creator,
-      permissions,
-      classes,
-      bindCreator = false,
-    )
-    val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
-      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-
-    Queries
-      .SELECT(permissions, Expressions.count(value).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(constrained.filter(Expressions.equals(resClass, Rdf.iri(resourceClass))))
-      .groupBy(permissions)
+  ): Select = {
+    val project    = Iri.unsafeFrom(projectIri.value)
+    val groupClass = Iri.unsafeFrom(resourceClass)
+    itemTypeConstraint(itemType) match {
+      case None =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
+                   |WHERE {
+                   |  ${classes.valuesClause}
+                   |  ?resource a ?resClass ;
+                   |    knora-base:attachedToProject $project ;
+                   |    knora-base:isDeleted false .
+                   |  ${classes.resClassPatterns(dedupeRows = true)}
+                   |  {
+                   |    ?resource ?prop ?value .
+                   |    ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                   |  }
+                   |  ?value knora-base:hasPermissions ?permissions ;
+                   |    knora-base:isDeleted false .
+                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  FILTER (?resClass = $groupClass)
+                   |}
+                   |GROUP BY ?permissions""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+      case Some(constraint) =>
+        Select(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |
+                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
+                   |WHERE {
+                   |  ${classes.valuesClause}
+                   |  {
+                   |    ?resource a ?resClass ;
+                   |      knora-base:attachedToProject $project ;
+                   |      knora-base:isDeleted false .
+                   |    ${classes.resClassPatterns(dedupeRows = true)}
+                   |    {
+                   |      ?resource ?prop ?value .
+                   |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                   |    }
+                   |    ?value knora-base:hasPermissions ?permissions ;
+                   |      knora-base:isDeleted false .
+                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                   |  }
+                   |  $constraint
+                   |  FILTER (?resClass = $groupClass)
+                   |}
+                   |GROUP BY ?permissions""".render,
+          SparqlTimeout.ViewRestrictions,
+        )
+    }
   }
 
   /**
@@ -824,7 +709,13 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
    * reproducible, windowed in SPARQL with `LIMIT`/`OFFSET`.
    *
    * A resource qualifies if it is itself restricted or carries a restricted value under the active filter,
-   * mirroring what the row queries return.
+   * mirroring what the row queries return — hence three templates, one per branch shape the filter
+   * produces: whole resources only, values only, or a `UNION` of both. Paging is over *resources*, the unit
+   * the API returns, so that a resource can never straddle a page boundary.
+   *
+   * The restriction filter stays inside the branch, i.e. before the label `OPTIONAL` is joined in.
+   * [[resourceCountForDrillDownQuery]] repeats these branches verbatim so the page and its total cannot
+   * describe different row sets.
    */
   private[repo] def resourcePageQuery(
     projectIri: ProjectIri,
@@ -833,94 +724,208 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     offset: Int,
     limit: Int,
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val resource   = variable("resource")
-    val labelOrIri = variable("labelOrIri")
-
-    Queries
-      .SELECT(resource, labelOrIri)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(drillDownPattern(projectIri, itemType, group, resource, Some(labelOrIri), classes))
-      .orderBy(labelOrIri.asc(), resource.asc())
-      .offset(offset)
-      .limit(limit)
+  ): Select = {
+    val project    = Iri.unsafeFrom(projectIri.value)
+    val groupClass = Iri.unsafeFrom(group)
+    val open       = Literal.string(grantsViewToAnonymousRegex)
+    val sparqlText =
+      if (!wantValues(itemType))
+        // Resource-only filter: the resource itself must be restricted.
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT DISTINCT ?resource ?labelOrIri
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |  OPTIONAL { ?resource rdfs:label ?label . }
+                 |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+                 |}
+                 |ORDER BY ASC(?labelOrIri) ASC(?resource)
+                 |LIMIT ${Literal.int(limit)}
+                 |OFFSET ${Literal.int(offset)}"""
+      else if (!wantResources(itemType))
+        // Value-only filter: the resource must carry a restricted value of the requested kind. The
+        // skeleton gets a group of its own so the item-type constraint cannot merge into its BGP.
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT DISTINCT ?resource ?labelOrIri
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  {
+                 |    {
+                 |      ?resource a ?resClass ;
+                 |        knora-base:attachedToProject $project ;
+                 |        knora-base:isDeleted false .
+                 |      ${classes.resClassPatterns(dedupeRows = true)}
+                 |      {
+                 |        ?resource ?prop ?value .
+                 |        ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                 |      }
+                 |      ?value knora-base:attachedToUser ?creator ;
+                 |        knora-base:hasPermissions ?permissions ;
+                 |        knora-base:isDeleted false .
+                 |      FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |    }
+                 |    ${itemTypeConstraint(itemType).whenSome(identity)}
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |  OPTIONAL { ?resource rdfs:label ?label . }
+                 |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+                 |}
+                 |ORDER BY ASC(?labelOrIri) ASC(?resource)
+                 |LIMIT ${Literal.int(limit)}
+                 |OFFSET ${Literal.int(offset)}"""
+      else
+        // Both are in scope: a resource qualifies via its own restriction OR via a restricted value.
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT DISTINCT ?resource ?labelOrIri
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |  UNION
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    {
+                 |      ?resource ?prop ?value .
+                 |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                 |    }
+                 |    ?value knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |  OPTIONAL { ?resource rdfs:label ?label . }
+                 |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+                 |}
+                 |ORDER BY ASC(?labelOrIri) ASC(?resource)
+                 |LIMIT ${Literal.int(limit)}
+                 |OFFSET ${Literal.int(offset)}"""
+    Select(sparqlText.render, SparqlTimeout.ViewRestrictions)
   }
 
-  /** `SELECT (COUNT(DISTINCT ?resource) AS ?cnt)` matching [[resourcePageQuery]] — the exact page total. */
+  /**
+   * `SELECT (COUNT(DISTINCT ?resource) AS ?cnt)` matching [[resourcePageQuery]] — the exact page total, in
+   * the same unit that query windows in.
+   *
+   * The three branch shapes are repeated from [[resourcePageQuery]] verbatim, minus the label `OPTIONAL`,
+   * the `BIND` and the window; `ViewRestrictionsQuerySpec` pins that the two restrict identically, so the
+   * total cannot come to describe a different row set than the pages do.
+   */
   private[repo] def resourceCountForDrillDownQuery(
     projectIri: ProjectIri,
     itemType: ItemType,
     group: String,
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val resource = variable("resource")
-    val cnt      = variable("cnt")
-
-    Queries
-      .SELECT(Expressions.count(resource).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(drillDownPattern(projectIri, itemType, group, resource, None, classes))
-  }
-
-  /**
-   * The set of resources the drill-down covers: those restricted themselves (class mode) or carrying a
-   * restricted value under the filter. Shared by the page query and its `COUNT` so the two cannot diverge.
-   */
-  private def drillDownPattern(
-    projectIri: ProjectIri,
-    itemType: ItemType,
-    group: String,
-    resource: Variable,
-    orderKey: Option[Variable],
-    classes: ProjectClasses,
-  ): GraphPattern = {
-    val resClass               = variable("resClass")
-    val (prop, value)          = (variable("prop"), variable("value"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val (fileClass, comment)   = (variable("fileClass"), variable("comment"))
-    val label                  = variable("label")
-
-    val valueBranch = {
-      val core        = valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes)
-      val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
-        .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-      withGroupFilter(
-        constrained.filter(onlyRestricted(permissions)),
-        resClass,
-        Some(group),
-      )
-    }
-
-    val branch =
-      if (!wantValues(itemType)) {
-        // Resource-only filter: the resource itself must be restricted.
-        withGroupFilter(
-          GraphPatterns
-            .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
-            .filter(onlyRestricted(permissions)),
-          resClass,
-          Some(group),
-        )
-      } else if (!wantResources(itemType)) valueBranch
-      else {
-        // Both are in scope: a resource qualifies via its own restriction OR via a restricted value.
-        val resourceBranch = withGroupFilter(
-          GraphPatterns
-            .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
-            .filter(onlyRestricted(permissions)),
-          resClass,
-          Some(group),
-        )
-        GraphPatterns.union(resourceBranch, valueBranch)
-      }
-
-    orderKey.fold(GraphPatterns.and(branch)) { key =>
-      // Order by label when present, else the IRI, so unlabelled resources still sort deterministically.
-      GraphPatterns
-        .and(branch, resource.has(RDFS.LABEL, label).optional())
-        .and(Expressions.bind(Expressions.coalesce(label, Expressions.str(resource)), key))
-    }
+  ): Select = {
+    val project    = Iri.unsafeFrom(projectIri.value)
+    val groupClass = Iri.unsafeFrom(group)
+    val open       = Literal.string(grantsViewToAnonymousRegex)
+    val sparqlText =
+      if (!wantValues(itemType))
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  ?resource a ?resClass ;
+                 |    knora-base:attachedToProject $project ;
+                 |    knora-base:attachedToUser ?creator ;
+                 |    knora-base:hasPermissions ?permissions ;
+                 |    knora-base:isDeleted false .
+                 |  ${classes.resClassPatterns(dedupeRows = true)}
+                 |  FILTER (!REGEX(?permissions, $open))
+                 |  FILTER (?resClass = $groupClass)
+                 |}"""
+      else if (!wantResources(itemType))
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    {
+                 |      ?resource ?prop ?value .
+                 |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                 |    }
+                 |    ?value knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |  }
+                 |  ${itemTypeConstraint(itemType).whenSome(identity)}
+                 |  FILTER (!REGEX(?permissions, $open))
+                 |  FILTER (?resClass = $groupClass)
+                 |}"""
+      else
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |
+                 |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+                 |WHERE {
+                 |  ${classes.valuesClause}
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |  UNION
+                 |  {
+                 |    ?resource a ?resClass ;
+                 |      knora-base:attachedToProject $project ;
+                 |      knora-base:isDeleted false .
+                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    {
+                 |      ?resource ?prop ?value .
+                 |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
+                 |    }
+                 |    ?value knora-base:attachedToUser ?creator ;
+                 |      knora-base:hasPermissions ?permissions ;
+                 |      knora-base:isDeleted false .
+                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |    FILTER (!REGEX(?permissions, $open))
+                 |    FILTER (?resClass = $groupClass)
+                 |  }
+                 |}"""
+    Select(sparqlText.render, SparqlTimeout.ViewRestrictions)
   }
 
   /**
@@ -932,53 +937,75 @@ object ViewRestrictionsRepo extends QueryBuilderHelper {
     group: Option[String],
     resourceIris: Seq[String],
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val label                  = variable("label")
-
-    val pattern = GraphPatterns
-      .and(resourceCore(projectIri, resource, resClass, creator, permissions, classes))
-      .and(resource.has(RDFS.LABEL, label).optional())
-      .filter(onlyRestricted(permissions))
-      .filter(resourceIn(resource, resourceIris))
-
-    Queries
-      .SELECT(resource, resClass, label, creator, permissions)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(withGroupFilter(pattern, resClass, group))
+  ): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |SELECT DISTINCT ?resource ?resClass ?label ?creator ?permissions
+               |WHERE {
+               |  ${classes.valuesClause}
+               |  ?resource a ?resClass ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:attachedToUser ?creator ;
+               |    knora-base:hasPermissions ?permissions ;
+               |    knora-base:isDeleted false .
+               |  ${classes.resClassPatterns(dedupeRows = true)}
+               |  OPTIONAL { ?resource rdfs:label ?label . }
+               |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+               |  FILTER (?resource IN (${Fragment
+          .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
+               |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
+               |}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
    * The restriction-bearing value rows for an explicit set of resource IRIs (one drill-down page).
    * `?fileClass` is bound when the value is a `knora-base:FileValue`, `?comment` when it carries a
-   * `knora-base:valueHasComment`.
+   * `knora-base:valueHasComment` — both reported rather than filtered on, since this query returns every
+   * kind of value and the caller decides which item rows a value yields.
    */
   private[repo] def valueQuery(
     projectIri: ProjectIri,
     group: Option[String],
     resourceIris: Seq[String],
     classes: ProjectClasses,
-  ): SelectQuery = {
-    val (resource, resClass)   = (variable("resource"), variable("resClass"))
-    val (prop, value)          = (variable("prop"), variable("value"))
-    val (creator, permissions) = (variable("creator"), variable("permissions"))
-    val (fileClass, comment)   = (variable("fileClass"), variable("comment"))
-    val label                  = variable("label")
-
-    val pattern = GraphPatterns
-      .and(valueCore(projectIri, resource, resClass, prop, value, creator, permissions, classes))
-      .and(resource.has(RDFS.LABEL, label).optional())
-      .and(optionalFileClass(value, fileClass))
-      .and(value.has(KnoraBase.valueHasComment, comment).optional())
-      .filter(onlyRestricted(permissions))
-      .filter(resourceIn(resource, resourceIris))
-
-    Queries
-      .SELECT(resource, resClass, label, prop, value, fileClass, comment, creator, permissions)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(withGroupFilter(pattern, resClass, group))
+  ): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |SELECT DISTINCT ?resource ?resClass ?label ?prop ?value ?fileClass ?comment ?creator ?permissions
+               |WHERE {
+               |  ${classes.valuesClause}
+               |  ?resource a ?resClass ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:isDeleted false .
+               |  ${classes.resClassPatterns(dedupeRows = true)}
+               |  {
+               |    ?resource ?prop ?value .
+               |    ?prop rdfs:subPropertyOf* knora-base:hasValue .
+               |  }
+               |  ?value knora-base:attachedToUser ?creator ;
+               |    knora-base:hasPermissions ?permissions ;
+               |    knora-base:isDeleted false .
+               |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+               |  OPTIONAL { ?resource rdfs:label ?label . }
+               |  OPTIONAL {
+               |    ?value a ?fileClass .
+               |    ?fileClass rdfs:subClassOf* knora-base:FileValue .
+               |  }
+               |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+               |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+               |  FILTER (?resource IN (${Fragment
+          .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
+               |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
+               |}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 }
