@@ -9,6 +9,7 @@ INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023
     knora-base:isDeleted false ;
     knora-base:valueHasString "Bold text with standoff" ;
     knora-base:valueHasUUID "0000000000000000000000" .
+<http://rdfh.ch/0001/thing/values/value> knora-base:hasTextValueType knora-base:FormattedText .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasMaxStandoffStartIndex 1 .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasStandoff <http://rdfh.ch/0001/thing/values/value/standoff/0> .

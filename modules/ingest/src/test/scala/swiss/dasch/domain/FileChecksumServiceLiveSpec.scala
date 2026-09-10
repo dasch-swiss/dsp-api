@@ -51,6 +51,7 @@ class FileChecksumServiceLiveSpec extends ZIOSpecDefault {
     },
   ).provide(
     AssetInfoServiceLive.layer,
+    MimeTypeGuesser.layer,
     FileChecksumServiceLive.layer,
     StorageServiceLive.layer,
     SpecConfigurations.storageConfigLayer,
