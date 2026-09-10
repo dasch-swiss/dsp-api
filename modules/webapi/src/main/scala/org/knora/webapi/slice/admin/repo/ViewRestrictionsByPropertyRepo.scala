@@ -5,17 +5,9 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.Variable
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
@@ -23,9 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.PropertyRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.RestrictedPropertyValueRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -61,7 +51,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 final case class ViewRestrictionsByPropertyRepo(
   private val triplestore: TriplestoreService,
   private val ontologyRepo: OntologyRepo,
-) extends QueryBuilderHelper {
+) {
 
   /**
    * The project's value properties, with labels, from the ontology cache.
@@ -114,12 +104,7 @@ final case class ViewRestrictionsByPropertyRepo(
     itemType: ValueItemType,
   ): Task[Seq[ViewRestrictionsRepo.PermissionCountRow]] =
     triplestore
-      .query(
-        Select(
-          ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType),
-          SparqlTimeout.ViewRestrictions,
-        ),
-      )
+      .query(ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType))
       .map(_.flatMap(permissionCountRow))
 
   /**
@@ -139,11 +124,8 @@ final case class ViewRestrictionsByPropertyRepo(
     for {
       pageIris <- triplestore
                     .query(
-                      Select(
-                        ViewRestrictionsByPropertyRepo
-                          .drillDownResourcePageQuery(projectIri, propertyIri, itemType, offset, limit),
-                        SparqlTimeout.ViewRestrictions,
-                      ),
+                      ViewRestrictionsByPropertyRepo
+                        .drillDownResourcePageQuery(projectIri, propertyIri, itemType, offset, limit),
                     )
                     .map(_.flatMap(_.get("resource")))
       // An empty window means an empty page: sending `?resource IN ()` would be a pointless round trip.
@@ -151,11 +133,8 @@ final case class ViewRestrictionsByPropertyRepo(
               else
                 triplestore
                   .query(
-                    Select(
-                      ViewRestrictionsByPropertyRepo
-                        .drillDownRowsQuery(projectIri, propertyIri, itemType, pageIris),
-                      SparqlTimeout.ViewRestrictions,
-                    ),
+                    ViewRestrictionsByPropertyRepo
+                      .drillDownRowsQuery(projectIri, propertyIri, itemType, pageIris),
                   )
                   .map(_.flatMap(restrictedRow))
     } yield rows
@@ -167,12 +146,7 @@ final case class ViewRestrictionsByPropertyRepo(
     itemType: ValueItemType,
   ): Task[Int] =
     triplestore
-      .query(
-        Select(
-          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType),
-          SparqlTimeout.ViewRestrictions,
-        ),
-      )
+      .query(ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType))
       .map(_.flatMap(_.get("cnt").flatMap(_.toIntOption)).headOption.getOrElse(0))
 
   /**
@@ -213,7 +187,7 @@ final case class ViewRestrictionsByPropertyRepo(
   }
 }
 
-object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
+object ViewRestrictionsByPropertyRepo {
 
   val layer = ZLayer.derive[ViewRestrictionsByPropertyRepo]
 
@@ -256,6 +230,10 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
   /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   private[repo] val KnoraBaseOntologyIri: String = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 
+  private val prefixes =
+    sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"""
+
   /**
    * `SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?permissions` for ONE property.
    *
@@ -271,19 +249,26 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
-  ): SelectQuery = {
-    val (resource, value)    = (variable("resource"), variable("value"))
-    val (permissions, cnt)   = (variable("permissions"), variable("cnt"))
-    val (fileClass, comment) = (variable("fileClass"), variable("comment"))
-    val core                 = valueCore(projectIri, resource, value, permissions, propertyIri)
-    val constrained          = itemTypeConstraint(value, fileClass, comment, itemType)
-      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-
-    Queries
-      .SELECT(permissions, Expressions.count(value).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(constrained)
-      .groupBy(permissions)
+  ): Select = {
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val property = Iri.unsafeFrom(propertyIri)
+    val skeleton =
+      sparql"""|?resource knora-base:attachedToProject $project ;
+               |  knora-base:isDeleted false ;
+               |  $property ?value .
+               |?value knora-base:hasPermissions ?permissions ;
+               |  knora-base:isDeleted false .
+               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
+    Select(
+      sparql"""|$prefixes
+               |
+               |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
+               |WHERE {
+               |  ${narrowedTo(itemType, skeleton)}
+               |}
+               |GROUP BY ?permissions""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
@@ -303,28 +288,36 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
     itemType: ValueItemType,
     offset: Int,
     limit: Int,
-  ): SelectQuery = {
-    val (resource, value)           = (variable("resource"), variable("value"))
-    val permissions                 = variable("permissions")
-    val (fileClass, comment, label) = (variable("fileClass"), variable("comment"), variable("label"))
-    val labelOrIri                  = variable("labelOrIri")
-
-    val core        = valueCore(projectIri, resource, value, permissions, propertyIri)
-    val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
-      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-    val windowed = GraphPatterns
-      .and(constrained.filter(onlyRestricted(permissions)), resource.has(RDFS.LABEL, label).optional())
-      // Order by label when present, else the IRI, so unlabelled resources still page deterministically.
-      .and(Expressions.bind(Expressions.coalesce(label, Expressions.str(resource)), labelOrIri))
-
-    Queries
-      .SELECT(resource, labelOrIri)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(windowed)
-      .orderBy(labelOrIri.asc(), resource.asc())
-      .offset(offset)
-      .limit(limit)
+  ): Select = {
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val property = Iri.unsafeFrom(propertyIri)
+    val skeleton =
+      sparql"""|?resource knora-base:attachedToProject $project ;
+               |  knora-base:isDeleted false ;
+               |  $property ?value .
+               |?value knora-base:hasPermissions ?permissions ;
+               |  knora-base:isDeleted false .
+               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
+    Select(
+      // The restriction filter stays inside the inner group, i.e. before the label OPTIONAL is joined in.
+      // Ordering by the label when present and the IRI otherwise keeps unlabelled resources paging
+      // deterministically.
+      sparql"""|$prefixes
+               |
+               |SELECT DISTINCT ?resource ?labelOrIri
+               |WHERE {
+               |  {
+               |    ${narrowedTo(itemType, skeleton)}
+               |    $onlyRestricted
+               |  }
+               |  OPTIONAL { ?resource rdfs:label ?label . }
+               |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
+               |}
+               |ORDER BY ASC(?labelOrIri) ASC(?resource)
+               |LIMIT ${Literal.int(limit)}
+               |OFFSET ${Literal.int(offset)}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
@@ -333,36 +326,43 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
    * Unbounded by design: the IRI list from [[drillDownResourcePageQuery]] is already the window. Fetching
    * by resource rather than by row is also what keeps a resource whole: its values cannot straddle a page
    * boundary and be returned twice, once partially on each side.
+   *
+   * `resourceIris` are the IRIs the page query just returned, so they are well-formed by construction; the
+   * caller guarantees the list is non-empty, since `?resource IN ()` is not valid SPARQL.
    */
   private[repo] def drillDownRowsQuery(
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
     resourceIris: Seq[String],
-  ): SelectQuery = {
-    val (resource, resClass, value) = (variable("resource"), variable("resClass"), variable("value"))
-    val (creator, permissions)      = (variable("creator"), variable("permissions"))
-    val (fileClass, comment, label) = (variable("fileClass"), variable("comment"), variable("label"))
-
-    val core = valueCore(projectIri, resource, value, permissions, propertyIri)
-      .and(resource.isA(resClass))
-      .and(value.has(KnoraBase.attachedToUser, creator))
-      .and(resource.has(RDFS.LABEL, label).optional())
-      .and(optionalFileClass(value, fileClass))
-      .and(value.has(KnoraBase.valueHasComment, comment).optional())
-    val constrained = itemTypeConstraint(value, fileClass, comment, itemType)
-      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-
-    Queries
-      .SELECT(resource, resClass, value, creator, permissions, fileClass, comment, label)
-      .distinct()
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(
-        constrained
-          .filter(onlyRestricted(permissions))
-          .filter(Expressions.in(resource, resourceIris.map(Rdf.iri)*)),
-      )
-      .orderBy(label.asc(), resource.asc(), value.asc())
+  ): Select = {
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val property = Iri.unsafeFrom(propertyIri)
+    val pageIris = Fragment.join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))
+    val skeleton =
+      sparql"""|?resource knora-base:attachedToProject $project ;
+               |  knora-base:isDeleted false ;
+               |  $property ?value .
+               |?value knora-base:hasPermissions ?permissions ;
+               |  knora-base:isDeleted false .
+               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+               |?resource a ?resClass .
+               |?value knora-base:attachedToUser ?creator .
+               |OPTIONAL { ?resource rdfs:label ?label . }
+               |$optionalFileClass
+               |OPTIONAL { ?value knora-base:valueHasComment ?comment . }"""
+    Select(
+      sparql"""|$prefixes
+               |
+               |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
+               |WHERE {
+               |  ${narrowedTo(itemType, skeleton)}
+               |  $onlyRestricted
+               |  FILTER (?resource IN ($pageIris))
+               |}
+               |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
   /**
@@ -373,69 +373,90 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
-  ): SelectQuery = {
-    val (resource, value)    = (variable("resource"), variable("value"))
-    val (permissions, cnt)   = (variable("permissions"), variable("cnt"))
-    val (fileClass, comment) = (variable("fileClass"), variable("comment"))
-    val core                 = valueCore(projectIri, resource, value, permissions, propertyIri)
-    val constrained          = itemTypeConstraint(value, fileClass, comment, itemType)
-      .fold(GraphPatterns.and(core))(c => GraphPatterns.and(core, c))
-
-    Queries
-      .SELECT(Expressions.count(resource).distinct().as(cnt))
-      .prefix(prefix(KnoraBase.NS), prefix(RDFS.NS))
-      .where(constrained.filter(onlyRestricted(permissions)))
+  ): Select = {
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val property = Iri.unsafeFrom(propertyIri)
+    val skeleton =
+      sparql"""|?resource knora-base:attachedToProject $project ;
+               |  knora-base:isDeleted false ;
+               |  $property ?value .
+               |?value knora-base:hasPermissions ?permissions ;
+               |  knora-base:isDeleted false .
+               |FILTER NOT EXISTS { ?value a knora-base:LinkValue . }"""
+    Select(
+      sparql"""|$prefixes
+               |
+               |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+               |WHERE {
+               |  ${narrowedTo(itemType, skeleton)}
+               |  $onlyRestricted
+               |}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
   }
 
-  /**
-   * The shared WHERE skeleton: a project's current, non-deleted values of ONE property.
+  /*
+   * The four templates above repeat the same WHERE skeleton — a project's current, non-deleted values of
+   * ONE property — rather than sharing it, so that each query can be read as one whole piece of SPARQL.
    *
    * No `?resClass` and no `ProjectClasses` — see the class doc for why, and for the measurement.
-   * `attachedToProject` on the resource is the whole project scope this needs.
+   * `attachedToProject` on the resource is the whole project scope this needs. The property IRI is bound in
+   * the pattern, not filtered: 1,053ms against 3,060ms on LHTT.
+   *
+   * Each template holds its skeleton as a local `skeleton` fragment and hands it to `narrowedTo`, which is
+   * the one place that decides whether the skeleton is wrapped in a group of its own. It is wrapped exactly
+   * when an item-type constraint follows it — the constraint then cannot be merged into the skeleton's
+   * basic graph pattern, nor reordered against its triples — and left bare when there is no constraint, so
+   * no template adds a group that has nothing to separate.
    */
-  private def valueCore(
-    projectIri: ProjectIri,
-    resource: Variable,
-    value: Variable,
-    permissions: Variable,
-    propertyIri: String,
-  ): GraphPattern =
-    resource
-      .has(KnoraBase.attachedToProject, Rdf.iri(projectIri.value))
-      .andHas(KnoraBase.isDeleted, Rdf.literalOf(false))
-      // Bound, not filtered: 1,053ms against 3,060ms on LHTT.
-      .andHas(Rdf.iri(propertyIri), value)
-      .and(
-        value
-          .has(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
-      )
-      .and(GraphPatterns.filterNotExists(value.isA(KnoraBase.linkValue)))
 
   /** OPTIONAL `?fileClass`, bound iff the value is (a subclass of) `knora-base:FileValue`. */
-  private def optionalFileClass(value: Variable, fileClass: Variable): GraphPattern =
-    value
-      .isA(fileClass)
-      .and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
-      .optional()
+  private val optionalFileClass =
+    sparql"""|OPTIONAL {
+             |  ?value a ?fileClass .
+             |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
+             |}"""
+
+  /**
+   * The WHERE skeleton, narrowed to one kind of value.
+   *
+   * `All` has no constraint, so the skeleton is returned exactly as the template wrote it. Every other item
+   * type puts the skeleton in a group of its own and appends the constraint beside it, which keeps the
+   * skeleton a basic graph pattern the constraint can neither be merged into nor reordered against.
+   */
+  private def narrowedTo(itemType: ValueItemType, skeleton: Fragment): Fragment =
+    itemTypeConstraint(itemType) match {
+      case None             => skeleton
+      case Some(constraint) =>
+        sparql"""|{
+                 |  $skeleton
+                 |}
+                 |$constraint"""
+    }
 
   /**
    * Narrows to one kind of value. Copied rather than shared with [[ViewRestrictionsRepo]]: reusing it would
    * couple the two repos through the exact seam this split exists to remove, and the fragment is small.
+   *
+   * `All` has no constraint at all; the group that isolates the skeleton exists only to separate it from a
+   * constraint, so `narrowedTo` omits both.
    */
-  private def itemTypeConstraint(
-    value: Variable,
-    fileClass: Variable,
-    comment: Variable,
-    itemType: ValueItemType,
-  ): Option[GraphPattern] = {
-    val isFile    = value.isA(fileClass).and(fileClass.has(zeroOrMore(RDFS.SUBCLASSOF), KnoraBase.FileValue))
-    val hasCommnt = value.has(KnoraBase.valueHasComment, comment)
+  private def itemTypeConstraint(itemType: ValueItemType): Option[Fragment] = {
+    val isFile =
+      sparql"""|?value a ?fileClass .
+               |?fileClass rdfs:subClassOf* knora-base:FileValue ."""
     itemType match {
-      case ValueItemType.File    => Some(isFile)
-      case ValueItemType.Value   => Some(GraphPatterns.filterNotExists(isFile))
-      case ValueItemType.Comment => Some(hasCommnt)
-      case ValueItemType.All     => None
+      case ValueItemType.File =>
+        Some(sparql"""|{
+                      |  $isFile
+                      |}""")
+      case ValueItemType.Value =>
+        Some(sparql"""|FILTER NOT EXISTS {
+                      |  $isFile
+                      |}""")
+      case ValueItemType.Comment =>
+        Some(sparql"?value knora-base:valueHasComment ?comment .")
+      case ValueItemType.All => None
     }
   }
 
@@ -453,6 +474,7 @@ object ViewRestrictionsByPropertyRepo extends QueryBuilderHelper {
    * same rows. The authoritative per-audience decision still happens in Scala via `PermissionUtilADM`;
    * this only removes provably-open rows, so it is conservative.
    */
-  private def onlyRestricted(permissions: Variable) =
-    Expressions.not(Expressions.regex(permissions, Rdf.literalOf(grantsViewToAnonymousRegex)))
+  private val onlyRestricted =
+    sparql"FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))"
+
 }
