@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.Chunk
 import zio.NonEmptyChunk
@@ -17,6 +17,7 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import org.knora.sparqlbuilder.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.AdminConstants
@@ -34,12 +35,19 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
+
+  // The golden-pinned strings below are the verbatim output of the RDF4J SparqlBuilder implementation
+  // these queries were migrated from; only the layout differs, so they are compared in parsed form.
+  private def canonical(sparql: String): String = {
+    val query = QueryFactory.create(sparql)
+    query.getPrefixMapping.clearNsPrefixMap()
+    query.toString
+  }
 
   private val someProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/1234"),
@@ -264,8 +272,10 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       // for every entity of the class first (DEV-6796, prod tile-loading regression).
       test("place the selective pattern before the OPTIONAL blocks") {
         for {
-          repo    <- ZIO.service[KnoraProjectRepoLive]
-          query    = repo.findByPatternQuery(_.has(Vocabulary.KnoraAdmin.projectShortcode, "1234"))
+          repo <- ZIO.service[KnoraProjectRepoLive]
+          query = repo.findByPatternQuery(
+                    sparql"""${Variable("s")} knora-admin:projectShortcode ${Literal.string("1234")} .""",
+                  )
           expected =
             """PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -301,7 +311,7 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
               |OPTIONAL { ?s knora-admin:hasDataCopyrightHolder ?n12 . }
               |OPTIONAL { ?s knora-admin:hasDefaultDataAuthorship ?n13 . } } }
               |""".stripMargin
-        } yield assertTrue(query.sparql == expected)
+        } yield assertTrue(canonical(query.sparql) == canonical(expected))
       },
     ),
     suite("findAllQuery")(
@@ -309,13 +319,13 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
       test("build a whole-subject CONSTRUCT scoped to the named graph") {
         for {
           repo    <- ZIO.service[KnoraProjectRepoLive]
-          query    = repo.findAllQuery(variable("s"))
+          query    = repo.findAllQuery
           expected =
             """CONSTRUCT { ?s ?p ?o . }
               |WHERE { GRAPH <http://www.knora.org/data/admin> { ?s a <http://www.knora.org/ontology/knora-admin#knoraProject> ;
               |    ?p ?o . } }
               |""".stripMargin
-        } yield assertTrue(query.sparql == expected)
+        } yield assertTrue(canonical(query.sparql) == canonical(expected))
       },
     ),
   ).provide(KnoraProjectRepoLive.layer, TriplestoreServiceInMemory.emptyLayer, CacheManager.layer, StringFormatter.test)
