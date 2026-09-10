@@ -153,7 +153,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         // Run A: bulk import as root on behalf of the project user, then dump the project data graph.
         importId <- triggerBulkImport
         _        <- ZIO.addFinalizer(deleteImportTask(importId).ignore)
-        status   <- pollImportUntilDone(importId).retry(Schedule.spaced(500.millis) && Schedule.recurs(120))
+        status   <- pollImportUntilDone(importId)
         _        <- ZIO
                .fail(
                  new RuntimeException(
@@ -187,25 +187,33 @@ class BulkImportParityE2ESpec extends E2EZSpec {
               "\n\n-- raw canonical N-Triples diff (over-reports on a non-isomorphic pair; read the two deltas above first) --\n" +
               canonicalDiff(normA, normB)
 
-        assertTrue(
-          // Proof the two-step creates ran: only they write lastModificationDate; the bulk path never does.
+        // Proof the two-step creates ran: only they write lastModificationDate; the bulk path never does.
+        val twoStepCreatesRan = assertTrue(
           hasLastModification(graphB, audioSegmentIri),
           hasLastModification(graphB, richtextIri),
           !hasLastModification(graphA, audioSegmentIri),
-          // Equal triple count on the normalized models (lastModificationDate + hasPermissions stripped).
-          normA.size == normB.size,
-          // Identical resource-IRI set.
-          resourcesA == resourcesB,
-          // Custom creation date survives on both sides (sentinelled inside the isomorphism compare).
+        )
+        // Equal triple count on the normalized models (lastModificationDate + hasPermissions stripped).
+        val tripleCountsMatch = assertTrue(normA.size == normB.size)
+        // Identical resource-IRI set.
+        val resourceSetsMatch = assertTrue(resourcesA == resourcesB)
+        // Custom creation date survives on both sides (sentinelled inside the isomorphism compare).
+        val creationDateSurvives = assertTrue(
           creationDateA.contains(migrationCreationDate),
           creationDateA == creationDateB,
-          // RDF isomorphism, permissions excluded.
-          iso,
-          // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
-          // has two text values linking one target, so its refcount is 2 on both paths.
-          refCountA.contains(2),
-          refCountB.contains(2),
-        ).label(
+        )
+        // RDF isomorphism, permissions excluded.
+        val graphsAreIsomorphic = assertTrue(iso)
+        // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
+        // has two text values linking one target, so its refcount is 2 on both paths.
+        val standoffRefCountsMatch = assertTrue(refCountA.contains(2), refCountB.contains(2))
+
+        (twoStepCreatesRan &&
+          tripleCountsMatch &&
+          resourceSetsMatch &&
+          creationDateSurvives &&
+          graphsAreIsomorphic &&
+          standoffRefCountsMatch).label(
           s"""|counts: A=${normA.size} B=${normB.size}
               |standoff-link refCount A=$refCountA B=$refCountB
               |resources only in A: ${(resourcesA -- resourcesB).toList.sorted.mkString(", ")}
@@ -233,17 +241,27 @@ class BulkImportParityE2ESpec extends E2EZSpec {
              .unless(resp.code == StatusCode.Accepted)
     } yield status.id
 
-  private def pollImportUntilDone(importId: DataTaskId): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
+  private def pollImportOnce(importId: DataTaskId): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
     TestApiClient
       .getJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/data-imports/${importId.value}", rootUser)
       .flatMap(r => ZIO.fromEither(r.body).mapError(new RuntimeException(_)))
-      .flatMap { status =>
+
+  // Polls until the task leaves InProgress, sleeping between attempts. A transport/deserialization
+  // failure from pollImportOnce propagates immediately instead of being retried, so a genuine error
+  // fails the test fast rather than being masked by up to a minute of pointless polling.
+  private def pollImportUntilDone(importId: DataTaskId): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] = {
+    def loop(remainingAttempts: Int): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
+      pollImportOnce(importId).flatMap { status =>
         status.status match {
-          case DataTaskStatus.Completed => ZIO.succeed(status)
-          case DataTaskStatus.Failed    => ZIO.succeed(status)
-          case _                        => ZIO.fail(new RuntimeException("import still in progress"))
+          case DataTaskStatus.Completed | DataTaskStatus.Failed   => ZIO.succeed(status)
+          case DataTaskStatus.InProgress if remainingAttempts > 0 =>
+            ZIO.sleep(500.millis) *> loop(remainingAttempts - 1)
+          case DataTaskStatus.InProgress =>
+            ZIO.fail(new RuntimeException(s"bulk import $importId did not finish within the polling budget"))
         }
       }
+    loop(remainingAttempts = 120)
+  }
 
   // 2xx = deleted, 404 = already gone (the reset path or a prior finalizer removed it). Any other
   // status — notably 409 while the import is still in progress — means the per-JVM import-task mutex may
@@ -420,13 +438,14 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private def hasLastModification(model: Model, resourceIri: String): Boolean =
     model.contains(model.createResource(resourceIri), model.createProperty(lastModProp))
 
+  // Shared by creationDate and standoffLinkRefCount, which both need only the first (and, given the
+  // ontology's maxCount 1, only) object of a single-valued property.
+  private def firstObjectOf(model: Model, subject: Resource, predicateUri: String): Option[RDFNode] =
+    model.listObjectsOfProperty(subject, model.createProperty(predicateUri)).asScala.toList.headOption
+
   private def creationDate(model: Model, resourceIri: String): Option[String] =
-    model
-      .listObjectsOfProperty(model.createResource(resourceIri), model.createProperty(kb + "creationDate"))
-      .asScala
-      .toList
-      .headOption
-      .map(node => node.asLiteral().getLexicalForm)
+    firstObjectOf(model, model.createResource(resourceIri), kb + "creationDate")
+      .map(_.asLiteral().getLexicalForm)
 
   // The standoff-link LinkValue reifies one (resource, target) pair. Find it by its rdf:subject/object,
   // then read valueHasRefCount — the number of the resource's text values that link the target.
@@ -439,7 +458,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .asScala
       .filter(lv => model.contains(lv, model.createProperty(rdf + "predicate"), hasStandoffLinkTo))
       .filter(lv => model.contains(lv, model.createProperty(rdf + "object"), target))
-      .flatMap(lv => model.listObjectsOfProperty(lv, model.createProperty(kb + "valueHasRefCount")).asScala)
+      .flatMap(lv => firstObjectOf(model, lv, kb + "valueHasRefCount"))
       .toList
       .headOption
       .map(_.asLiteral().getInt)
