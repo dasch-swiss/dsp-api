@@ -33,7 +33,6 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 trait ReadResourcesService {
@@ -146,20 +145,18 @@ final case class ReadResourcesServiceLive(
         resourcesWithValues <-
           triplestore
             .query(
-              Construct(
-                GetResourcePropertiesAndValuesQuery.build(
+              GetResourcePropertiesAndValuesQuery
+                .build(
                   resourceIris = resourceIriStrings,
                   preview = preview,
                   withDeleted = withDeleted,
                   maybePropertyIri = propertyIri,
                   maybeValueUuid = valueUuid,
                   maybeVersionDate = versionDate.map(_.value),
-                  queryAllNonStandoff = true,
                   queryStandoff = queryStandoff,
                   standoffTagFilter = standoffTagFilter,
-                ),
-                if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard,
-              ),
+                )
+                .copy(timeout = if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard),
             )
             .flatMap(_.asExtended)
             .flatMap(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
