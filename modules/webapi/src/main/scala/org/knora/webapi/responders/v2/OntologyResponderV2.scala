@@ -1036,7 +1036,7 @@ final class OntologyResponderV2(
 
       currentTimeAndQuery <- DeleteClassQuery.build(classIri, LastModificationDate.from(lastModificationDate))
       (currentTime, query) = currentTimeAndQuery
-      _                   <- save(Update(query))
+      _                   <- save(query)
       updatedOntology      = ontology.copy(
                           ontologyMetadata = ontology.ontologyMetadata.copy(
                             lastModificationDate = Some(currentTime.value),
@@ -1148,7 +1148,7 @@ final class OntologyResponderV2(
                                LastModificationDate.from(lastModificationDate),
                              )
       (currentTime, query) = currentTimeAndQuery
-      _                   <- save(Update(query))
+      _                   <- save(query)
 
       propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
       updatedOntology             =
