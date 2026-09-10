@@ -90,6 +90,11 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val migrationCreationIri  = "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ"
   private val migrationCreationDate = "2019-01-09T15:45:54.502951Z"
 
+  // richtext_standoff_refcount links `id_empty` from two text values, so its standoff-link LinkValue
+  // must carry valueHasRefCount = 2 on both paths (the counter aggregates across text values).
+  private val refCountResourceIri = "http://rdfh.ch/9999/f0khY71NRBqJ7noQj-YHpQ"
+  private val refCountTargetIri   = "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
+
   private val dataTtl = RdfDataObject(initGraphBase + "data.ttl", projectDataGraph)
 
   override def rdfDataObjects: List[RdfDataObject] = List(
@@ -120,6 +125,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     "private_resource",
     "private_property_resource",
     "richtext_all_standoff",
+    "richtext_standoff_refcount",
     "second_onto_class",
     "image_still",
     "image_still_svg",
@@ -171,6 +177,9 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         val creationDateA = creationDate(graphA, migrationCreationIri)
         val creationDateB = creationDate(graphB, migrationCreationIri)
 
+        val refCountA = standoffLinkRefCount(graphA, refCountResourceIri, refCountTargetIri)
+        val refCountB = standoffLinkRefCount(graphB, refCountResourceIri, refCountTargetIri)
+
         val diff =
           if (iso) ""
           else
@@ -192,8 +201,13 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           creationDateA == creationDateB,
           // RDF isomorphism, permissions excluded.
           iso,
+          // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
+          // has two text values linking one target, so its refcount is 2 on both paths.
+          refCountA.contains(2),
+          refCountB.contains(2),
         ).label(
           s"""|counts: A=${normA.size} B=${normB.size}
+              |standoff-link refCount A=$refCountA B=$refCountB
               |resources only in A: ${(resourcesA -- resourcesB).toList.sorted.mkString(", ")}
               |resources only in B: ${(resourcesB -- resourcesA).toList.sorted.mkString(", ")}
               |$diff""".stripMargin,
@@ -413,6 +427,23 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .toList
       .headOption
       .map(node => node.asLiteral().getLexicalForm)
+
+  // The standoff-link LinkValue reifies one (resource, target) pair. Find it by its rdf:subject/object,
+  // then read valueHasRefCount — the number of the resource's text values that link the target.
+  private def standoffLinkRefCount(model: Model, resourceIri: String, targetIri: String): Option[Int] = {
+    val rdf               = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    val hasStandoffLinkTo = model.createResource(kb + "hasStandoffLinkTo")
+    val target            = model.createResource(targetIri)
+    model
+      .listResourcesWithProperty(model.createProperty(rdf + "subject"), model.createResource(resourceIri))
+      .asScala
+      .filter(lv => model.contains(lv, model.createProperty(rdf + "predicate"), hasStandoffLinkTo))
+      .filter(lv => model.contains(lv, model.createProperty(rdf + "object"), target))
+      .flatMap(lv => model.listObjectsOfProperty(lv, model.createProperty(kb + "valueHasRefCount")).asScala)
+      .toList
+      .headOption
+      .map(_.asLiteral().getInt)
+  }
 
   private def canonicalNTriples(model: Model): String = {
     val out = new ByteArrayOutputStream()
