@@ -52,15 +52,12 @@ import org.knora.webapi.testservices.TestApiClient
  * (the two paths assign permissions differently), and `lastModificationDate` is stripped (only the
  * two-step create paths write it).
  *
- * Status: both imports run, are compared, and the test passes — but with two deliberate tolerances,
+ * Status: both imports run, are compared, and the test passes — but with one deliberate tolerance,
  * so it does not yet assert full parity:
- *   - `hasTextValueType` is stripped from the compare to tolerate DEV-7187, a live-service bug: the
- *     v2 add-value path (POST /v2/values) wrongly omits it, while the bulk import and the v2
- *     resource-create path write it. The parity test hits the add-value path via the two-step create
- *     of the self-referencing standoff resource. Stripping it makes the test assert the current
- *     (wrong) behaviour; remove the strip once DEV-7187 is fixed. See `hasTextValueTypeProp`.
  *   - `hasPermissions` is excluded pending full permission-string parity (honor payload + resolve
  *     class/property DOAPs). See the `hasPermissions` TODO in `addResourceMetadata`.
+ * `hasTextValueType` parity is checked: all three write paths (bulk import, v2 resource-create, and
+ * the v2 add-value path via POST /v2/values) write the marker, so it is not stripped from the compare.
  * (`valueHasOrder` parity is achieved in the fixtures — every value carries its order in the payload,
  * so neither path synthesizes one for imported values. `pageCount` matches too: the live SipiService
  * never reports numpages, so neither path persists it, and the fake mirrors that.)
@@ -345,13 +342,6 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     Set(kb + "valueHasUUID", kb + "standoffTagHasUUID", kb + "creationDate", kb + "valueCreationDate")
   private val lastModProp        = kb + "lastModificationDate"
   private val hasPermissionsProp = kb + "hasPermissions"
-  // KNOWN-BUG TOLERANCE (DEV-7187) — this makes the test assert the current, WRONG behaviour.
-  // hasTextValueType is stripped from the compare: the v2 add-value path (POST /v2/values) omits it,
-  // while the bulk import and the v2 resource-create path write it, so the compare would otherwise
-  // fail on the one text value this test adds via POST /v2/values. Stripping it lets the test pass
-  // while that bug stands, at the cost of no longer checking hasTextValueType parity at all. Remove
-  // this and the strip below once DEV-7187 is fixed, to restore full hasTextValueType checking.
-  private val hasTextValueTypeProp = kb + "hasTextValueType"
   private val standoffTagPattern =
     """^http://rdfh\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+/values/[A-Za-z0-9_-]+/standoff/\d+$""".r
 
@@ -379,8 +369,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     val sentinel = out.createLiteral("__normalized__")
     model.listStatements().asScala.foreach { st =>
       val p     = st.getPredicate.getURI
-      val strip = p == lastModProp || (p == hasPermissionsProp && !includePermissions) ||
-        p == hasTextValueTypeProp // DEV-7187 tolerance — asserts current wrong behaviour (see above)
+      val strip = p == lastModProp || (p == hasPermissionsProp && !includePermissions)
       if (!strip) {
         val subj: Resource =
           if (st.getSubject.isURIResource)
