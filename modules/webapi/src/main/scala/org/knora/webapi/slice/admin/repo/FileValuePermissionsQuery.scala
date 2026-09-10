@@ -5,71 +5,50 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * Builds a SELECT query to retrieve file value permission data by internal filename.
  *
- * Given a knora:base:internalFilename, retrieves only the three values needed for
+ * Given a knora-base:internalFilename, retrieves only the three values needed for
  * permission calculation: creator (attachedToUser), project (attachedToProject),
  * and permissions (hasPermissions).
  */
-object FileValuePermissionsQuery extends QueryBuilderHelper {
+object FileValuePermissionsQuery {
 
   /**
    * Build a SELECT query to retrieve file value permission data.
    *
+   * The `?fileValue ?objPred ?objObj` block is deliberately kept in its own group, in this position: it is
+   * unnecessary for correctness, but it makes Jena run the query faster by guiding the optimizer to resolve
+   * `?fileValue`'s properties before the expensive `previousValue*` closure (DEV-6803). Its own group also
+   * keeps it a separate basic graph pattern, so the surrounding triples are not reordered into it.
+   *
    * @param filename the internal filename to search for
-   * @return a SelectQuery that retrieves creator, project, and permissions
+   * @return a Select that retrieves creator, project, and permissions
    */
-  def build(filename: InternalFilename): SelectQuery = {
-    val fileValue        = variable("fileValue")
-    val currentFileValue = variable("currentFileValue")
-    val resource         = variable("resource")
-    val prop             = variable("prop")
-    val creator          = variable("creator")
-    val project          = variable("project")
-    val permissions      = variable("permissions")
-    val objPred          = variable("objPred")
-    val objObj           = variable("objObj")
-
-    // Use property path for previousValue* (zero or more)
-    val previousValuePath = zeroOrMore(KnoraBase.previousValue)
-
-    // Build the WHERE clause - only fetch the three values needed for permission calculation
-    val wherePattern = fileValue
-      .has(KnoraBase.internalFilename, toRdfLiteral(filename))
-      .and(
-        currentFileValue
-          .has(previousValuePath, fileValue)
-          .andHas(KnoraBase.hasPermissions, permissions)
-          .andHas(KnoraBase.attachedToUser, creator),
-      )
-      .and(
-        resource
-          .has(prop, currentFileValue)
-          .andHas(KnoraBase.attachedToProject, project),
-      )
-      // This pattern is unnecessary for correctness, but it makes Jena run the query faster
-      // by guiding the optimizer to resolve ?fileValue's properties before the expensive previousValue* closure.
-      .and(
-        fileValue
-          .has(objPred, objObj)
-          .filter(Expressions.notEquals(objPred, KnoraBase.previousValue)),
-      )
-      .and(currentFileValue.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
-      .and(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
-
-    Queries
-      .SELECT(creator, project, permissions)
-      .prefix(KnoraBase.NS)
-      .where(wherePattern)
+  def build(filename: InternalFilename): Select = {
+    val internalFilename = Literal.string(filename.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?creator ?project ?permissions
+               |WHERE {
+               |  ?fileValue knora-base:internalFilename $internalFilename .
+               |  ?currentFileValue knora-base:previousValue* ?fileValue ;
+               |    knora-base:hasPermissions ?permissions ;
+               |    knora-base:attachedToUser ?creator .
+               |  ?resource ?prop ?currentFileValue ;
+               |    knora-base:attachedToProject ?project .
+               |  {
+               |    ?fileValue ?objPred ?objObj .
+               |    FILTER (?objPred != knora-base:previousValue)
+               |  }
+               |  ?currentFileValue knora-base:isDeleted false .
+               |  ?resource knora-base:isDeleted false .
+               |}""".render,
+    )
   }
 }
