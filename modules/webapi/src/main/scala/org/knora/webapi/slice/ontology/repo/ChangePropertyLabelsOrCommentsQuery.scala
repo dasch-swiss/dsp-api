@@ -5,24 +5,16 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.api.v2.ontologies.LabelOrComment
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangePropertyLabelsOrCommentsQuery extends QueryBuilderHelper {
+object ChangePropertyLabelsOrCommentsQuery {
 
   def build(
     propertyIri: PropertyIri,
@@ -30,49 +22,44 @@ object ChangePropertyLabelsOrCommentsQuery extends QueryBuilderHelper {
     newValues: Seq[LanguageTaggedStringLiteralV2],
     maybeLinkValuePropertyIri: Option[PropertyIri],
     lastModificationDate: LastModificationDate,
-  ): UIO[Update] = {
-    val (ontology, ontologyNS) = ontologyAndNamespace(propertyIri)
-    val property               = toRdfIri(propertyIri)
-    val predicate              = toRdfIri(labelOrComment)
-    val oldValues              = variable("oldValues")
-    val oldLinkValueValues     = variable("oldLinkValueValues")
-    val maybeLinkValue         = maybeLinkValuePropertyIri.map(toRdfIri)
+  ): UIO[Update] =
+    Clock.instant.map { now =>
+      val ontology = Iri.unsafeFrom(propertyIri.ontologyIri.toInternalSchema.toIri)
+      val property = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
+      // A link property's link value property carries the same labels/comments,
+      // so its old values are replaced alongside the property's own.
+      val linkValueProp     = maybeLinkValuePropertyIri.map(iri => Iri.unsafeFrom(iri.toInternalSchema.toIri))
+      val labelOrCommentIri = Iri.unsafeFrom(labelOrComment.toString) // rdfs:label or rdfs:comment
+      val previousDate      = Literal.dateTime(lastModificationDate.value)
+      val currentDate       = Literal.dateTime(now)
+      val newLiterals       = newValues.map(v => Literal.langString(v.value, v.language.value))
 
-    val deletePattern = List(
-      ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-      property.has(predicate, oldValues),
-    ) ::: maybeLinkValue.map(_.has(predicate, oldLinkValueValues)).toList
-
-    for {
-      insertPatterns <- buildInsertPatterns(ontology, property, maybeLinkValue, predicate, newValues)
-      wherePatterns   =
-        List(
-          ontology.isA(OWL.ONTOLOGY).andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-          property.has(predicate, oldValues).optional(),
-        ) ::: maybeLinkValue.map(p => p.has(predicate, oldLinkValueValues).optional()).toList
-
-      query = Queries
-                .MODIFY()
-                .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
-                .from(ontology)
-                .delete(deletePattern*)
-                .into(ontology)
-                .insert(insertPatterns*)
-                .where(wherePatterns*)
-    } yield Update(query)
-  }
-
-  private def buildInsertPatterns(
-    ontology: Iri,
-    propertyIri: Iri,
-    maybeLinkValue: Option[Iri],
-    predicate: Iri,
-    newValues: Seq[StringLiteralV2],
-  ): UIO[Seq[TriplePattern]] = Clock.instant.map { now =>
-    val ontologyModPattern   = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
-    val newValuesPatterns    = newValues.map(toRdfLiteral).map(propertyIri.has(predicate, _)).toList
-    val newLinkValuePatterns =
-      maybeLinkValue.map(iri => newValues.map(toRdfLiteral).map(iri.has(predicate, _))).toList.flatten
-    ontologyModPattern +: newValuesPatterns ::: newLinkValuePatterns
-  }
+      Update(
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |
+                 |DELETE {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $previousDate .
+                 |    $property $labelOrCommentIri ?oldValues .
+                 |    ${linkValueProp.whenSome(p => sparql"$p $labelOrCommentIri ?oldLinkValueValues .")}
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $currentDate .
+                 |    ${newLiterals.map(l => sparql"$property $labelOrCommentIri $l .").joinLines}
+                 |    ${linkValueProp.whenSome(p => newLiterals.map(l => sparql"$p $labelOrCommentIri $l .").joinLines)}
+                 |  }
+                 |}
+                 |WHERE {
+                 |  $ontology a owl:Ontology ;
+                 |    knora-base:lastModificationDate $previousDate .
+                 |  OPTIONAL { $property $labelOrCommentIri ?oldValues . }
+                 |  ${linkValueProp.whenSome(p => sparql"OPTIONAL { $p $labelOrCommentIri ?oldLinkValueValues . }")}
+                 |}""".render,
+      )
+    }
 }

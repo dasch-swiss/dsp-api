@@ -5,71 +5,55 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.api.v2.ontologies.LabelOrComment
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object ChangeClassLabelsOrCommentsQuery extends QueryBuilderHelper {
+object ChangeClassLabelsOrCommentsQuery {
 
   def build(
     resourceClassIri: ResourceClassIri,
     labelOrComment: LabelOrComment,
     newValues: Seq[LanguageTaggedStringLiteralV2],
     lastModificationDate: LastModificationDate,
-  ): UIO[Update] = {
+  ): UIO[Update] =
+    Clock.instant.map { now =>
+      val ontology          = Iri.unsafeFrom(resourceClassIri.ontologyIri.toInternalSchema.toIri)
+      val classIri          = Iri.unsafeFrom(resourceClassIri.toInternalSchema.toIri)
+      val labelOrCommentIri = Iri.unsafeFrom(labelOrComment.toString) // rdfs:label or rdfs:comment
+      val previousDate      = Literal.dateTime(lastModificationDate.value)
+      val currentDate       = Literal.dateTime(now)
+      val newLiterals       = newValues.map(v => Literal.langString(v.value, v.language.value))
 
-    val (ontologyIri, ontologyNS) = ontologyAndNamespace(resourceClassIri)
-    val classIri                  = toRdfIri(resourceClassIri)
-    val predicate                 = toRdfIri(labelOrComment)
-    val oldValues                 = variable("oldValues")
-
-    val deletePattern = List(
-      ontologyIri.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-      classIri.has(predicate, oldValues),
-    )
-
-    for {
-      insertPatterns <- buildInsertPatterns(ontologyIri, classIri, predicate, newValues)
-      wherePatterns   = List(
-                        ontologyIri
-                          .isA(OWL.ONTOLOGY)
-                          .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
-                        classIri.has(variable("p"), variable("o")),
-                        classIri.has(predicate, oldValues).optional(),
-                      )
-
-      query = Queries
-                .MODIFY()
-                .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
-                .from(ontologyIri)
-                .delete(deletePattern*)
-                .into(ontologyIri)
-                .insert(insertPatterns*)
-                .where(wherePatterns*)
-    } yield Update(query)
-  }
-
-  private def buildInsertPatterns(
-    ontology: Iri,
-    classIri: Iri,
-    predicate: Iri,
-    newValues: Seq[LanguageTaggedStringLiteralV2],
-  ): UIO[Seq[TriplePattern]] = Clock.instant.map { now =>
-    val ontologyModPattern = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
-    val newValuesPatterns  = newValues.map(toRdfLiteral).map(classIri.has(predicate, _))
-    ontologyModPattern +: newValuesPatterns
-  }
+      Update(
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |
+                 |DELETE {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $previousDate .
+                 |    $classIri $labelOrCommentIri ?oldValues .
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $currentDate .
+                 |    ${newLiterals.map(l => sparql"$classIri $labelOrCommentIri $l .").joinLines}
+                 |  }
+                 |}
+                 |WHERE {
+                 |  $ontology a owl:Ontology ;
+                 |    knora-base:lastModificationDate $previousDate .
+                 |  $classIri ?p ?o .
+                 |  OPTIONAL { $classIri $labelOrCommentIri ?oldValues . }
+                 |}""".render,
+      )
+    }
 }
