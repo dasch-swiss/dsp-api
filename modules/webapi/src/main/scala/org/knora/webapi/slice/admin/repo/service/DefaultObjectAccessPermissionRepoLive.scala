@@ -5,11 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Chunk
 import zio.IO
 import zio.NonEmptyChunk
@@ -17,6 +12,7 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefix
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
@@ -36,7 +32,6 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.repo.rdf.Errors.ConversionError
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class DefaultObjectAccessPermissionRepoLive(
@@ -45,39 +40,45 @@ final case class DefaultObjectAccessPermissionRepoLive(
 ) extends AbstractEntityRepo[DefaultObjectAccessPermission, PermissionIri](triplestore, mapper)
     with DefaultObjectAccessPermissionRepo {
 
-  override protected val resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.DefaultObjectAccessPermission)
-  override protected val namedGraphIri: Iri       = Rdf.iri(permissionsDataNamedGraph.value)
+  override protected val resourceClass: Iri = Iri.unsafeFrom(KnoraAdmin.DefaultObjectAccessPermission)
+  override protected val namedGraphIri: Iri = Iri.unsafeFrom(permissionsDataNamedGraph.value)
 
   override protected def entityProperties: EntityProperties =
     EntityProperties(
-      NonEmptyChunk(Vocabulary.KnoraAdmin.forProject, Vocabulary.KnoraBase.hasPermissions),
-      Chunk(Vocabulary.KnoraAdmin.forGroup, Vocabulary.KnoraAdmin.forProperty, Vocabulary.KnoraAdmin.forResourceClass),
+      NonEmptyChunk(Iri.unsafeFrom(KnoraAdmin.ForProject), Iri.unsafeFrom(KnoraBase.HasPermissions)),
+      Chunk(
+        Iri.unsafeFrom(KnoraAdmin.ForGroup),
+        Iri.unsafeFrom(KnoraAdmin.ForProperty),
+        Iri.unsafeFrom(KnoraAdmin.ForResourceClass),
+      ),
     )
 
   override def findByProject(projectIri: ProjectIri): Task[Chunk[DefaultObjectAccessPermission]] =
-    findAllByPattern(_.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value)))
+    findAllByPattern(sparql"$s knora-admin:forProject ${Iri.unsafeFrom(projectIri.value)} .")
 
   def findByProjectAndForWhat(projectIri: ProjectIri, forWhat: ForWhat): Task[Option[DefaultObjectAccessPermission]] =
-    findOneByPattern(p =>
-      val pattern = p.has(Vocabulary.KnoraAdmin.forProject, Rdf.iri(projectIri.value))
-      forWhat match {
-        case Group(g)          => pattern.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
-        case ResourceClass(rc) =>
-          pattern
-            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-            .filterNotExists(p.has(Vocabulary.KnoraAdmin.forProperty, variable("prop")))
+    findOneByPattern(forWhatPattern(projectIri, forWhat))
 
-        case Property(prop) =>
-          pattern
-            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
-            .filterNotExists(p.has(Vocabulary.KnoraAdmin.forResourceClass, variable("rc")))
-
-        case ResourceClassAndProperty(rc, prop) =>
-          pattern
-            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(prop.value))
-      },
-    )
+  /** The lookup pattern for a project's permission of a given [[ForWhat]] shape. */
+  private[service] def forWhatPattern(projectIri: ProjectIri, forWhat: ForWhat): Fragment = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    forWhat match {
+      case Group(g) =>
+        sparql"$s knora-admin:forProject $project ; knora-admin:forGroup ${Iri.unsafeFrom(g.value)} ."
+      case ResourceClass(rc) =>
+        sparql"""|$s knora-admin:forProject $project ;
+                 |  knora-admin:forResourceClass ${Iri.unsafeFrom(rc.value)} .
+                 |FILTER NOT EXISTS { $s knora-admin:forProperty ${Variable("prop")} . }"""
+      case Property(prop) =>
+        sparql"""|$s knora-admin:forProject $project ;
+                 |  knora-admin:forProperty ${Iri.unsafeFrom(prop.value)} .
+                 |FILTER NOT EXISTS { $s knora-admin:forResourceClass ${Variable("rc")} . }"""
+      case ResourceClassAndProperty(rc, prop) =>
+        sparql"""|$s knora-admin:forProject $project ;
+                 |  knora-admin:forResourceClass ${Iri.unsafeFrom(rc.value)} ;
+                 |  knora-admin:forProperty ${Iri.unsafeFrom(prop.value)} ."""
+    }
+  }
 }
 
 object DefaultObjectAccessPermissionRepoLive {
@@ -132,22 +133,22 @@ object DefaultObjectAccessPermissionRepoLive {
         }
     }
 
-    override def toTriples(entity: DefaultObjectAccessPermission): TriplePattern = {
-      val id                 = Rdf.iri(entity.id.value)
-      val pat: TriplePattern = id
-        .isA(Vocabulary.KnoraAdmin.DefaultObjectAccessPermission)
-        .andHas(Vocabulary.KnoraAdmin.forProject, Rdf.iri(entity.forProject.value))
-        .andHas(Vocabulary.KnoraBase.hasPermissions, toStringLiteral(entity.permission))
-
-      entity.forWhat match {
-        case ForWhat.Group(g)                        => pat.andHas(Vocabulary.KnoraAdmin.forGroup, Rdf.iri(g.value))
-        case ForWhat.ResourceClass(rc)               => pat.andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-        case ForWhat.Property(p)                     => pat.andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
-        case ForWhat.ResourceClassAndProperty(rc, p) =>
-          pat
-            .andHas(Vocabulary.KnoraAdmin.forResourceClass, Rdf.iri(rc.value))
-            .andHas(Vocabulary.KnoraAdmin.forProperty, Rdf.iri(p.value))
-      }
+    override def toTriples(entity: DefaultObjectAccessPermission): Fragment = {
+      val id = Iri.unsafeFrom(entity.id.value)
+      sparql"""|$id a knora-admin:DefaultObjectAccessPermission ;
+               |  knora-admin:forProject ${Iri.unsafeFrom(entity.forProject.value)} ;
+               |  ${Iri.unsafeFrom(KnoraBase.HasPermissions)} ${Literal.string(toStringLiteral(entity.permission))} .
+               |${entity.forWhat match {
+          case ForWhat.Group(g) =>
+            sparql"$id knora-admin:forGroup ${Iri.unsafeFrom(g.value)} ."
+          case ForWhat.ResourceClass(rc) =>
+            sparql"$id knora-admin:forResourceClass ${Iri.unsafeFrom(rc.value)} ."
+          case ForWhat.Property(p) =>
+            sparql"$id knora-admin:forProperty ${Iri.unsafeFrom(p.value)} ."
+          case ForWhat.ResourceClassAndProperty(rc, p) =>
+            sparql"""|$id knora-admin:forResourceClass ${Iri.unsafeFrom(rc.value)} .
+                     |$id knora-admin:forProperty ${Iri.unsafeFrom(p.value)} ."""
+        }}"""
     }
   }
 

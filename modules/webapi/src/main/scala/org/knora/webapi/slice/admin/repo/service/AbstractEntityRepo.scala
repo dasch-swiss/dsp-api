@@ -5,18 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.`var` as variable
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix
-import org.eclipse.rdf4j.sparqlbuilder.core.Variable
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfSubject
 import zio.Chunk
 import zio.Exit
 import zio.IO
@@ -26,10 +14,10 @@ import zio.Task
 import zio.ZIO
 import zio.stream.ZStream
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.slice.common.repo.service.CrudRepository
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -42,7 +30,12 @@ trait EntityWithId[Id <: StringValue] {
 
 trait RdfEntityMapper[E] {
 
-  def toTriples(entity: E): TriplePattern
+  /**
+   * The triples describing the entity, as a complete predicate-object list terminated by a `.`,
+   * e.g. `<id> a <SomeClass> ; p1 "o1" ; p2 <o2> .`. The fragment is inserted into the `INSERT`
+   * clause of [[AbstractEntityRepo.saveQuery]], which declares the `knora-admin` prefix.
+   */
+  def toTriples(entity: E): Fragment
   def toEntity(resource: RdfResource): IO[RdfError, E]
 
 }
@@ -55,78 +48,135 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   triplestore: TriplestoreService,
   mapper: RdfEntityMapper[E],
 ) extends CrudRepository[E, Id] {
-  self =>
 
-  protected def resourceClass: ParsedIRI
+  protected def resourceClass: Iri
   protected def namedGraphIri: Iri
   protected def entityProperties: EntityProperties
 
-  override def findAll(): Task[Chunk[E]] = {
-    val sub = variable("s")
-    findAllResilient(findAllQuery(sub))
-  }
+  /** The subject a lookup pattern passed to [[findOneByPattern]] / [[findAllByPattern]] must use. */
+  protected val s: Variable = Variable("s")
 
-  override def findById(id: Id): Task[Option[E]] = {
-    val s             = Rdf.iri(id.value)
-    val query: String = entityQuery(tripleP(s), graphP(s)).getQueryString
-    findOneByQuery(Construct(query))
-  }
+  private val p = Variable("p")
+  private val o = Variable("o")
 
-  private def entityQuery(constructPattern: TriplePattern, where: GraphPattern) =
-    Queries
-      .CONSTRUCT(constructPattern)
-      .prefix(Vocabulary.KnoraAdmin.NS, Vocabulary.KnoraBase.NS)
-      .where(where.from(namedGraphIri))
+  /** The variable bound to the object of the property at `index` in [[EntityProperties.all]]. */
+  private def objectVar(index: Int): Variable = Variable(s"n$index")
 
-  private def tripleP(sub: RdfSubject): TriplePattern = {
-    val req: TriplePattern = requiredTriples(sub.isA(Rdf.iri(resourceClass.toString)))
-    self.entityProperties.opt.zipWithIndex.foldLeft(req) { case (p, (iri, index)) =>
-      p.andHas(iri, variable(s"n${index + self.entityProperties.req.size}"))
-    }
-  }
+  /** `p0 ?n0 ;\n  p1 ?n1 ; ...` — the given properties as a predicate-object list, indexed from 0. */
+  private def propertyList(properties: Chunk[Iri]): Fragment =
+    Fragment.join(
+      properties.zipWithIndex.map { case (iri, index) => sparql"$iri ${objectVar(index)}" },
+      Fragment.raw(" ;\n  "),
+    )
 
-  private def requiredTriples(pattern: TriplePattern): TriplePattern =
-    self.entityProperties.req.zipWithIndex.foldLeft(pattern) { case (p, (iri, index)) =>
-      p.andHas(iri, variable(s"n$index"))
-    }
+  /** One `OPTIONAL { <subject> p ?nX . }` per given property, starting at index `offset`. */
+  private def optionalBlocks(subject: SparqlValue, properties: Chunk[Iri], offset: Int): Fragment =
+    properties.zipWithIndex.map { case (iri, index) =>
+      sparql"OPTIONAL { $subject $iri ${objectVar(index + offset)} . }"
+    }.joinLines
 
-  private def graphP(sub: RdfSubject): GraphPattern = graphP(sub, leading = None)
+  override def findAll(): Task[Chunk[E]] = findAllResilient(findAllQuery)
 
-  private def graphP(sub: RdfSubject, leading: Option[GraphPattern]): GraphPattern = {
-    val req: GraphPattern  = requiredTriples(sub.isA(Rdf.iri(resourceClass.toString)))
-    val base: GraphPattern = leading.fold(req)(_.and(req))
-    self.entityProperties.opt.zipWithIndex.foldLeft(base) { case (p, (iri, index)) =>
-      p.and(sub.has(iri, variable(s"n${index + self.entityProperties.req.size}")).optional())
-    }
-  }
+  override def findById(id: Id): Task[Option[E]] = findOneByQuery(findByIdQuery(id))
 
-  protected def findOneByPattern(pattern: RdfSubject => GraphPattern): Task[Option[E]] =
+  protected def findOneByPattern(pattern: Fragment): Task[Option[E]] =
     findOneByQuery(findByPatternQuery(pattern))
 
-  protected def findAllByPattern(pattern: RdfSubject => GraphPattern): Task[Chunk[E]] =
+  protected def findAllByPattern(pattern: Fragment): Task[Chunk[E]] =
     findAllByQuery(findByPatternQuery(pattern))
 
   // Fetches every triple of every matching subject in one CONSTRUCT instead of enumerating each known
   // property (required triples + N OPTIONAL blocks): the per-property shape becomes a cross-product for
   // classes with many optional properties. Over-fetching unrelated predicates on the same subject is benign.
-  private[service] def findAllQuery(sub: Variable): Construct = {
-    val p       = variable("p")
-    val o       = variable("o")
-    val pattern = sub.isA(Rdf.iri(resourceClass.toString)).andHas(p, o)
-    val query   = Queries
-      .CONSTRUCT(sub.has(p, o))
-      .where(pattern.from(namedGraphIri))
-    Construct(query.getQueryString)
+  private[service] def findAllQuery: Construct =
+    Construct(
+      sparql"""|CONSTRUCT { $s $p $o . }
+               |WHERE {
+               |  GRAPH $namedGraphIri {
+               |    $s a $resourceClass ;
+               |      $p $o .
+               |  }
+               |}""".render,
+    )
+
+  private[service] def findByIdQuery(id: Id): Construct = {
+    val subject = Iri.unsafeFrom(id.value)
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |CONSTRUCT {
+               |  $subject a $resourceClass ;
+               |  ${propertyList(entityProperties.all)} .
+               |}
+               |WHERE {
+               |  GRAPH $namedGraphIri {
+               |    $subject a $resourceClass ;
+               |    ${propertyList(entityProperties.req.toChunk)} .
+               |    ${optionalBlocks(subject, entityProperties.opt, entityProperties.req.size)}
+               |  }
+               |}""".render,
+    )
   }
 
-  private[service] def findByPatternQuery(pattern: RdfSubject => GraphPattern): Construct = {
-    val s = variable("s")
-    // The caller's pattern is the most selective part of the query (e.g. a shortcode lookup) and must
-    // precede the OPTIONAL blocks within the same group: OPTIONALs are left-joins evaluated in document
-    // order, so with the pattern at the end the triplestore computes them for every entity of the class
-    // before restricting.
-    val query: String = entityQuery(tripleP(s), graphP(s, leading = Some(pattern(s)))).getQueryString
-    Construct(query)
+  private[service] def findByPatternQuery(pattern: Fragment): Construct =
+    Construct(
+      // The caller's pattern is the most selective part of the query (e.g. a shortcode lookup) and must
+      // precede the OPTIONAL blocks within the same group: OPTIONALs are left-joins evaluated in document
+      // order, so with the pattern at the end the triplestore computes them for every entity of the class
+      // before restricting.
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |CONSTRUCT {
+               |  $s a $resourceClass ;
+               |  ${propertyList(entityProperties.all)} .
+               |}
+               |WHERE {
+               |  GRAPH $namedGraphIri {
+               |    $pattern
+               |    $s a $resourceClass ;
+               |    ${propertyList(entityProperties.req.toChunk)} .
+               |    ${optionalBlocks(s, entityProperties.opt, entityProperties.req.size)}
+               |  }
+               |}""".render,
+    )
+
+  private[service] def saveQuery(entity: E): Update = {
+    val subject = Iri.unsafeFrom(entity.id.value)
+    Update(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |WITH $namedGraphIri
+               |DELETE {
+               |  $subject a $resourceClass ;
+               |  ${propertyList(entityProperties.all)} .
+               |}
+               |INSERT {
+               |  ${mapper.toTriples(entity)}
+               |}
+               |WHERE {
+               |  OPTIONAL {
+               |    $subject a $resourceClass .
+               |    ${optionalBlocks(subject, entityProperties.all, 0)}
+               |  }
+               |}""".render,
+    )
+  }
+
+  private[service] def eraseQuery(entity: E): Update = {
+    val subject = Iri.unsafeFrom(entity.id.value)
+    Update(
+      sparql"""|WITH $namedGraphIri
+               |DELETE {
+               |  $subject a $resourceClass ;
+               |    $p $o .
+               |}
+               |WHERE {
+               |  $subject a $resourceClass ;
+               |    $p $o .
+               |}""".render,
+    )
   }
 
   private def findOneByQuery(construct: Construct): Task[Option[E]] =
@@ -176,34 +226,12 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   private def runQuery(construct: Construct): Task[Iterator[RdfResource]] = for {
     model     <- triplestore.queryRdfModel(construct)
     resources <- model
-                   .getResourcesRdfType(resourceClass.toString)
+                   .getResourcesRdfType(resourceClass.value)
                    .orElseFail(TriplestoreResponseException("Error while querying the triplestore"))
   } yield resources
 
   def save(entity: E): Task[E] =
     triplestore.query(saveQuery(entity)).as(entity)
-
-  private def saveQuery(entity: E): Update = {
-    val iris          = self.entityProperties.all
-    val idIri         = Rdf.iri(entity.id.value)
-    val deletePattern =
-      iris.zipWithIndex.foldLeft(idIri.isA(Rdf.iri(resourceClass.toString))) { case (p, (iri, index)) =>
-        p.andHas(iri, variable(s"n$index"))
-      }
-    val wherePattern =
-      iris.zipWithIndex.foldLeft(idIri.isA(Rdf.iri(resourceClass.toString)).optional()) { case (p, (iri, index)) =>
-        p.and(idIri.has(iri, variable(s"n$index")).optional())
-      }
-    val query = Queries
-      .MODIFY()
-      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-      .`with`(namedGraphIri)
-      .insert(mapper.toTriples(entity))
-      .delete(deletePattern)
-      .where(wherePattern)
-
-    Update(query.getQueryString)
-  }
 
   override def deleteById(id: Id): Task[Unit] = findById(id).flatMap {
     case None    => ZIO.unit
@@ -211,18 +239,4 @@ abstract class AbstractEntityRepo[E <: EntityWithId[Id], Id <: StringValue](
   }
 
   override def delete(entity: E): Task[Unit] = triplestore.query(eraseQuery(entity))
-
-  private def eraseQuery(entity: E): Update = {
-    val deletePattern = Rdf
-      .iri(entity.id.value)
-      .isA(Rdf.iri(resourceClass.toString))
-      .andHas(variable("p"), variable("o"))
-    val query = Queries
-      .MODIFY()
-      .prefix(prefix(RDF.NS), prefix(Vocabulary.KnoraAdmin.NS), prefix(XSD.NS))
-      .`with`(namedGraphIri)
-      .delete(deletePattern)
-      .where(deletePattern)
-    Update(query.getQueryString)
-  }
 }
