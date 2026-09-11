@@ -69,9 +69,9 @@ final class ProjectDataImportService(
     } yield ()
   ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
 
-  // Eligibility and the resolved permission string are captured once from the `onBehalfOf` snapshot passed in.
-  // `doImport` does not re-fetch or re-validate the user, so this service needs no `UserService`. A user deleted
-  // mid-flight still fails the SHACL validation step before the write.
+  // The `onBehalfOf` user is captured once at trigger time; per-entity permissions are resolved later inside the
+  // transformer from this snapshot. `doImport` does not re-fetch or re-validate the user, so this service needs no
+  // `UserService`. A user deleted mid-flight still fails the SHACL validation step before the write.
   private def doImport(taskId: DataTaskId, project: KnoraProject, onBehalfOf: User): UIO[Unit] =
     ZIO.scoped {
       for {

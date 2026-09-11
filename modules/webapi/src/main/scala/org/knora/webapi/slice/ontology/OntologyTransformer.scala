@@ -203,40 +203,39 @@ final class OntologyTransformer(
       .toList
 
     for {
-      // Resolve the DOAP for each distinct resource class once, not per resource, to avoid an N+1 in the
-      // production import path (the resolver fans out to several repo lookups per call).
-      withClass  <- ZIO.attempt(resources.map(r => (r, requireType(model, r))))
-      classDoaps <- resolveResourceDoaps(ctx, withClass.map(_._2).distinct)
-      _          <- ZIO.foreachDiscard(withClass) { case (r, resourceClass) =>
-             // Read the payload permission before the strip: a payload hasPermissions is honored (reformatted
-             // to match the create path), otherwise the resolved class DOAP applies.
-             val payloadPermission = literalOf(r, hasPermissions)
-             // A payload creationDate is honored but re-emitted as xsd:dateTime: the create path stores it via
-             // an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp) does not survive.
-             val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
-             for {
-               permission <- resolveEntityPermissions(payloadPermission, classDoaps(resourceClass))
-               _          <- ZIO.attempt {
-                      // Strip any payload-supplied system metadata before synthesizing, mirroring
-                      // addValueMetadata, so a payload value does not coexist with the synthesized
-                      // one (the data graph enforces maxCount 1).
-                      r.removeAll(attachedToUser)
-                        .removeAll(attachedToProject)
-                        .removeAll(hasPermissions)
-                        .removeAll(creationDate)
-                        .removeAll(isDeleted)
-                      r.addProperty(attachedToUser, userResource)
-                      r.addProperty(attachedToProject, projectResource)
-                      r.addProperty(hasPermissions, permission)
-                      val creationDateValue = payloadCreationDate
-                        .filter(_.isLiteral)
-                        .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
-                        .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
-                        .getOrElse(creationDateLit)
-                      r.addProperty(creationDate, creationDateValue)
-                      r.addProperty(isDeleted, falseLit)
-                    }
-             } yield ()
+      // Pair each resource with its class and payload permission before the strip. Resolve each distinct class
+      // DOAP and each distinct payload literal once, not per resource, to avoid an N+1 in the production import
+      // path (both fan out to repo lookups per call).
+      withData     <- ZIO.attempt(resources.map(r => (r, requireType(model, r), literalOf(r, hasPermissions))))
+      classDoaps   <- resolveResourceDoaps(ctx, withData.map(_._2).distinct)
+      payloadPerms <- resolveValidatedPermissions(withData.flatMap(_._3).distinct)
+      _            <- ZIO.foreachDiscard(withData) { case (r, resourceClass, payloadPermission) =>
+             ZIO.attempt {
+               // A payload hasPermissions is honored (reformatted to match the create path), otherwise
+               // the resolved class DOAP applies.
+               val permission = payloadPermission.fold(classDoaps(resourceClass))(payloadPerms)
+               // A payload creationDate is honored but re-emitted as xsd:dateTime: the create path stores
+               // it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp) does
+               // not survive.
+               val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
+               // Strip any payload-supplied system metadata before synthesizing, so a payload value does
+               // not coexist with the synthesized one (the data graph enforces maxCount 1).
+               r.removeAll(attachedToUser)
+                 .removeAll(attachedToProject)
+                 .removeAll(hasPermissions)
+                 .removeAll(creationDate)
+                 .removeAll(isDeleted)
+               r.addProperty(attachedToUser, userResource)
+               r.addProperty(attachedToProject, projectResource)
+               r.addProperty(hasPermissions, permission)
+               val creationDateValue = payloadCreationDate
+                 .filter(_.isLiteral)
+                 .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
+                 .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
+                 .getOrElse(creationDateLit)
+               r.addProperty(creationDate, creationDateValue)
+               r.addProperty(isDeleted, falseLit)
+             }
            }
     } yield ()
   }
@@ -264,39 +263,41 @@ final class OntologyTransformer(
     val values = model.listSubjects().asScala.flatMap(s => asValueIri(s).map((s, _))).toList
 
     for {
-      // Pair each value with its (owning class, property) DOAP key, then resolve each distinct key once (N+1 guard).
-      withKey    <- ZIO.attempt(values.map { case (v, iri) => (v, iri, valueDoapKey(model, v)) })
-      valueDoaps <- resolveValueDoaps(ctx, withKey.map(_._3).distinct)
-      _          <- ZIO.foreachDiscard(withKey) { case (v, iri, key) =>
-             // A payload hasPermissions is honored (reformatted to match the create path); otherwise the
-             // resolved property DOAP applies. The standoff-link LinkValue branch never reaches here: those
-             // values are emitted later, with their own fixed SystemUser-owned permissions.
-             val payloadPermission = literalOf(v, hasPermissions)
-             for {
-               permission <- resolveEntityPermissions(payloadPermission, valueDoaps(key))
-               _          <- ZIO.attempt {
-                      v.removeAll(attachedToUser)
-                        .removeAll(hasPermissions)
-                        .removeAll(valueCreationDate)
-                        .removeAll(valueHasUUID)
-                        .removeAll(isDeleted)
-                      v.addProperty(attachedToUser, userResource)
-                      v.addProperty(hasPermissions, permission)
-                      v.addProperty(valueCreationDate, creationDateLit)
-                      v.addProperty(valueHasUUID, iri.valueId.value)
-                      v.addProperty(isDeleted, falseLit)
-                    }
-             } yield ()
+      // Pair each value with its (owning class, property) DOAP key and payload permission, then resolve each
+      // distinct key and each distinct payload literal once (N+1 guard).
+      withData <- ZIO.attempt(
+                    values.map { case (v, iri) => (v, iri, valueDoapKey(model, v), literalOf(v, hasPermissions)) },
+                  )
+      valueDoaps   <- resolveValueDoaps(ctx, withData.map(_._3).distinct)
+      payloadPerms <- resolveValidatedPermissions(withData.flatMap(_._4).distinct)
+      _            <- ZIO.foreachDiscard(withData) { case (v, iri, key, payloadPermission) =>
+             ZIO.attempt {
+               // A payload hasPermissions is honored (reformatted to match the create path); otherwise
+               // the resolved property DOAP applies. The standoff-link LinkValue branch never reaches
+               // here: those values are emitted later, with their own fixed SystemUser-owned permissions.
+               val permission = payloadPermission.fold(valueDoaps(key))(payloadPerms)
+               v.removeAll(attachedToUser)
+                 .removeAll(hasPermissions)
+                 .removeAll(valueCreationDate)
+                 .removeAll(valueHasUUID)
+                 .removeAll(isDeleted)
+               v.addProperty(attachedToUser, userResource)
+               v.addProperty(hasPermissions, permission)
+               v.addProperty(valueCreationDate, creationDateLit)
+               v.addProperty(valueHasUUID, iri.valueId.value)
+               v.addProperty(isDeleted, falseLit)
+             }
            }
     } yield ()
   }
 
-  /** Keeps a payload permission (reformatted through the resolver) when present, else the resolved default. */
-  private def resolveEntityPermissions(payloadPermission: Option[String], default: String): Task[String] =
-    payloadPermission match {
-      case Some(literal) => doapResolver.validate(literal)
-      case None          => ZIO.succeed(default)
-    }
+  /**
+   * Reformats each distinct payload permission literal once through the resolver, so a kept payload string matches
+   * the create path byte-for-byte without an N+1 in the production import path (`validate` fans out to a repo lookup
+   * per group). `literals` are already de-duplicated.
+   */
+  private def resolveValidatedPermissions(literals: List[String]): Task[Map[String, String]] =
+    ZIO.foreach(literals)(literal => doapResolver.validate(literal).map(literal -> _)).map(_.toMap)
 
   /** The lexical form of the single literal object of `p` on `r`, if present. */
   private def literalOf(r: Resource, p: Property): Option[String] =

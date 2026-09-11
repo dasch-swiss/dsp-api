@@ -121,6 +121,8 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       CreateResourceV2Handler.layer,
+      // Wired here (not in OntologyModule) for the same reason as OntologyTransformer below: it depends on the
+      // legacy PermissionsResponder + PermissionUtilADM, which sit outside OntologyModule.Dependencies.
       DoapResolverLive.layer,
       DspIngestClientLive.layer,
       ExportModule.layer,
