@@ -5,417 +5,402 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 import java.util.UUID
-import scala.util.chaining.scalaUtilChainingOps
 
 import dsp.valueobjects.UuidUtil
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Builds a CONSTRUCT query that gets the values of all properties of one or more resources.
  *
- * Uses rdf4j SparqlBuilder for triple/graph patterns and string interpolation for the
- * top-level CONSTRUCT assembly (since SparqlBuilder does not support VALUES blocks).
+ * There are two shapes: one that loads the current version of each value, and one that walks the
+ * version history back to the version that was current at a given point in time. Each is a
+ * complete template of its own.
  */
-object GetResourcePropertiesAndValuesQuery extends QueryBuilderHelper {
+object GetResourcePropertiesAndValuesQuery {
 
-  // Variables
-  private val resource                = variable("resource")
-  private val resourceType            = variable("resourceType")
-  private val resourceProject         = variable("resourceProject")
-  private val label                   = variable("label")
-  private val resourceCreator         = variable("resourceCreator")
-  private val resourcePermissions     = variable("resourcePermissions")
-  private val creationDate            = variable("creationDate")
-  private val lastModificationDate    = variable("lastModificationDate")
-  private val resourceAuthorship      = variable("resourceAuthorship")
-  private val isDeleted               = variable("isDeleted")
-  private val deletionDate            = variable("deletionDate")
-  private val deleteComment           = variable("deleteComment")
-  private val valueObject             = variable("valueObject")
-  private val resourceValueProperty   = variable("resourceValueProperty")
-  private val valueObjectProperty     = variable("valueObjectProperty")
-  private val valueObjectValue        = variable("valueObjectValue")
-  private val valueObjectType         = variable("valueObjectType")
-  private val currentValueUUID        = variable("currentValueUUID")
-  private val currentValuePermissions = variable("currentValuePermissions")
-  private val standoffNode            = variable("standoffNode")
-  private val standoffProperty        = variable("standoffProperty")
-  private val standoffValue           = variable("standoffValue")
-  private val targetOriginalXMLID     = variable("targetOriginalXMLID")
-  private val referredResource        = variable("referredResource")
-  private val resourceLinkProperty    = variable("resourceLinkProperty")
-  private val referredResourcePred    = variable("referredResourcePred")
-  private val referredResourceObj     = variable("referredResourceObj")
-  private val currentValue            = variable("currentValue")
-  private val valueObjectCreationDate = variable("valueObjectCreationDate")
-  private val startIndex              = variable("startIndex")
-  private val standoffTag             = variable("standoffTag")
-  private val targetStandoffTag       = variable("targetStandoffTag")
-
-  // Property paths
-
-  private val subClassOfPath    = zeroOrMore(RDFS.SUBCLASSOF)
-  private val subPropertyOfPath = zeroOrMore(RDFS.SUBPROPERTYOF)
-  private val previousValuePath = zeroOrMore(KnoraBase.previousValue)
-
+  /**
+   * @param resourceIris      the resources to load; must not be empty.
+   * @param preview           when true, only the resource metadata is loaded, no values.
+   * @param withDeleted       when true, deleted resources and values are included.
+   * @param queryStandoff     when true, the standoff markup of text values is loaded.
+   * @param maybePropertyIri  restricts the values to one property.
+   * @param maybeValueUuid    restricts the values to the one with this UUID.
+   * @param maybeVersionDate  loads the value versions that were current at this point in time.
+   * @param standoffTagFilter restricts the standoff markup to one standoff tag class.
+   */
   def build(
     resourceIris: Seq[IRI],
     preview: Boolean,
     withDeleted: Boolean,
-    queryAllNonStandoff: Boolean,
     queryStandoff: Boolean,
     maybePropertyIri: Option[SmartIri] = None,
     maybeValueUuid: Option[UUID] = None,
     maybeVersionDate: Option[Instant] = None,
-    maybeValueIri: Option[IRI] = None,
     standoffTagFilter: Option[SmartIri] = None,
-  ): String = {
-    val valuesClause = resourceIris.map(iri => s"<$iri>").mkString(" ")
-
-    val constructPatterns = buildConstructPatterns(withDeleted, queryStandoff, queryAllNonStandoff, standoffTagFilter)
-    val wherePatterns     = buildWherePatterns(
-      preview,
-      withDeleted,
-      queryAllNonStandoff,
-      queryStandoff,
-      maybePropertyIri,
-      maybeValueUuid,
-      maybeVersionDate,
-      maybeValueIri,
-      standoffTagFilter,
-    )
-
-    // Assemble with string interpolation because SparqlBuilder does not support VALUES blocks.
-    s"""PREFIX xsd: <${XSD.NAMESPACE}>
-       |PREFIX rdf: <${RDF.NAMESPACE}>
-       |PREFIX rdfs: <${RDFS.NAMESPACE}>
-       |PREFIX knora-base: <${KnoraBase.NS.getName}>
-       |
-       |CONSTRUCT {
-       |${constructPatterns.map(p => s"  ${p.getQueryString}").mkString("\n")}
-       |} WHERE {
-       |  VALUES ?resource { $valuesClause }
-       |${wherePatterns.map(p => s"  ${p.getQueryString}").mkString("\n")}
-       |}""".stripMargin
-  }
-
-  private def buildConstructPatterns(
-    withDeleted: Boolean,
-    queryStandoff: Boolean,
-    queryAllNonStandoff: Boolean,
-    standoffTagFilter: Option[SmartIri],
-  ): Seq[TriplePattern] = {
-    val resourceMetadata = Seq(
-      resource
-        .isA(KnoraBase.Resource)
-        .andHas(KnoraBase.isMainResource, Rdf.literalOf(true))
-        .andHas(KnoraBase.attachedToProject, resourceProject)
-        .andHas(RDFS.LABEL, label)
-        .andHas(RDF.TYPE, resourceType)
-        .andHas(KnoraBase.attachedToUser, resourceCreator)
-        .andHas(KnoraBase.hasPermissions, resourcePermissions)
-        .andHas(KnoraBase.creationDate, creationDate)
-        .andHas(KnoraBase.lastModificationDate, lastModificationDate)
-        .andHas(KnoraBase.hasResourceAuthorship, resourceAuthorship),
-    )
-
-    val deletedPatterns =
-      if (!withDeleted) Seq(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
-      else
-        Seq(
-          resource
-            .has(KnoraBase.isDeleted, isDeleted)
-            .andHas(KnoraBase.deleteDate, deletionDate)
-            .andHas(KnoraBase.deleteComment, deleteComment),
+  ): Construct =
+    maybeVersionDate match {
+      case None =>
+        currentValuesQuery(
+          resourceIris,
+          preview,
+          withDeleted,
+          queryStandoff,
+          maybePropertyIri,
+          maybeValueUuid,
+          standoffTagFilter,
         )
-
-    val valuePatterns = Seq(
-      resource.has(KnoraBase.hasValue, valueObject).andHas(resourceValueProperty, valueObject),
-      valueObject
-        .has(valueObjectProperty, valueObjectValue)
-        .andHas(KnoraBase.valueHasUUID, currentValueUUID)
-        .andHas(KnoraBase.hasPermissions, currentValuePermissions),
-    )
-
-    val standoffPatterns =
-      if (queryStandoff)
-        Seq(valueObject.has(KnoraBase.valueHasStandoff, standoffNode))
-          .pipe(_ :+ (standoffTagFilter match {
-            case Some(tagIri) => standoffNode.isA(Rdf.iri(tagIri.toIri)).andHas(standoffProperty, standoffValue)
-            case None         =>
-              standoffNode
-                .has(standoffProperty, standoffValue)
-                .andHas(KnoraBase.targetHasOriginalXMLID, targetOriginalXMLID)
-          }))
-      else Seq.empty
-
-    val linkPatterns =
-      if (queryAllNonStandoff)
-        Seq(
-          resource.has(KnoraBase.hasLinkTo, referredResource).andHas(resourceLinkProperty, referredResource),
-          referredResource.isA(KnoraBase.Resource).andHas(referredResourcePred, referredResourceObj),
+      case Some(versionDate) =>
+        versionedValuesQuery(
+          resourceIris,
+          preview,
+          withDeleted,
+          queryStandoff,
+          maybePropertyIri,
+          maybeValueUuid,
+          versionDate,
+          standoffTagFilter,
         )
-      else Seq.empty
+    }
 
-    resourceMetadata ++ deletedPatterns ++ valuePatterns ++ standoffPatterns ++ linkPatterns
-  }
-
-  private def buildWherePatterns(
+  /**
+   * Loads the current version of each value.
+   *
+   * The UNION nesting of the value body is load-bearing: with standoff, the value/standoff UNION is itself
+   * one branch of the link UNION, as the previous builder emitted it. Link values are always queried.
+   */
+  private def currentValuesQuery(
+    resourceIris: Seq[IRI],
     preview: Boolean,
     withDeleted: Boolean,
-    queryAllNonStandoff: Boolean,
     queryStandoff: Boolean,
     maybePropertyIri: Option[SmartIri],
     maybeValueUuid: Option[UUID],
-    maybeVersionDate: Option[Instant],
-    maybeValueIri: Option[IRI],
     standoffTagFilter: Option[SmartIri],
-  ): Seq[GraphPattern] = {
-    val resourceTypePattern: GraphPattern =
-      resource.has(RDF.TYPE, resourceType).and(resourceType.has(subClassOfPath, KnoraBase.Resource))
-
-    val resourceMetadataPattern: GraphPattern = resource
-      .has(KnoraBase.attachedToProject, resourceProject)
-      .andHas(KnoraBase.attachedToUser, resourceCreator)
-      .andHas(KnoraBase.hasPermissions, resourcePermissions)
-      .andHas(KnoraBase.creationDate, creationDate)
-      .andHas(RDFS.LABEL, label)
-
-    val deletedWherePattern: GraphPattern =
-      if (!withDeleted)
-        resource.has(KnoraBase.isDeleted, Rdf.literalOf(false))
-      else
-        resource
-          .has(KnoraBase.isDeleted, isDeleted)
-          .andHas(KnoraBase.deleteDate, deletionDate)
-          .optional()
-          .and(resource.has(KnoraBase.deleteComment, deleteComment).optional())
-
-    val versionDateFilter: Seq[GraphPattern] = maybeVersionDate.toSeq.map { vd =>
-      resource
-        .has(KnoraBase.creationDate, creationDate)
-        .filter(Expressions.lte(creationDate, Rdf.literalOfType(vd.toString, XSD.DATETIME)))
-    }
-
-    val lastModDateOptional: GraphPattern =
-      resource.has(KnoraBase.lastModificationDate, lastModificationDate).optional()
-
-    val resourceAuthorshipOptional: GraphPattern =
-      resource.has(KnoraBase.hasResourceAuthorship, resourceAuthorship).optional()
-
-    val valuesOptionalBlock: Seq[GraphPattern] =
-      if (!preview)
-        Seq(
-          buildValuesOptionalBlock(
-            withDeleted,
-            queryAllNonStandoff,
-            queryStandoff,
-            maybePropertyIri,
-            maybeValueUuid,
-            maybeVersionDate,
-            maybeValueIri,
-            standoffTagFilter,
-          ),
-        )
-      else Seq.empty
-
-    Seq(resourceTypePattern, resourceMetadataPattern, deletedWherePattern) ++
-      versionDateFilter ++
-      Seq(lastModDateOptional, resourceAuthorshipOptional) ++
-      valuesOptionalBlock
+  ): Construct = {
+    Construct(
+      sparql"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |CONSTRUCT {
+               |  ?resource a knora-base:Resource ;
+               |    knora-base:isMainResource true ;
+               |    knora-base:attachedToProject ?resourceProject ;
+               |    rdfs:label ?label ;
+               |    rdf:type ?resourceType ;
+               |    knora-base:attachedToUser ?resourceCreator ;
+               |    knora-base:hasPermissions ?resourcePermissions ;
+               |    knora-base:creationDate ?creationDate ;
+               |    knora-base:lastModificationDate ?lastModificationDate ;
+               |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+               |  ${
+          if (withDeleted)
+            sparql"""|?resource knora-base:isDeleted ?isDeleted ;
+                   |  knora-base:deleteDate ?deletionDate ;
+                   |  knora-base:deleteComment ?deleteComment ."""
+          else sparql"?resource knora-base:isDeleted false ."
+        }
+               |  ?resource knora-base:hasValue ?valueObject ;
+               |    ?resourceValueProperty ?valueObject .
+               |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+               |    knora-base:valueHasUUID ?currentValueUUID ;
+               |    knora-base:hasPermissions ?currentValuePermissions .
+               |  ${(queryStandoff, standoffTagFilter) match {
+          case (false, _)   => Fragment.empty
+          case (true, None) =>
+            sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |?standoffNode ?standoffProperty ?standoffValue ;
+                     |  knora-base:targetHasOriginalXMLID ?targetOriginalXMLID ."""
+          case (true, Some(tagIri)) =>
+            sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |?standoffNode a ${Iri.unsafeFrom(tagIri.toIri)} ;
+                     |  ?standoffProperty ?standoffValue ."""
+        }}
+               |  ?resource knora-base:hasLinkTo ?referredResource ;
+               |    ?resourceLinkProperty ?referredResource .
+               |  ?referredResource a knora-base:Resource ;
+               |    ?referredResourcePred ?referredResourceObj .
+               |} WHERE {
+               |  ${Fragments.values(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
+               |  {
+               |    ?resource rdf:type ?resourceType .
+               |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+               |  }
+               |  ?resource knora-base:attachedToProject ?resourceProject ;
+               |    knora-base:attachedToUser ?resourceCreator ;
+               |    knora-base:hasPermissions ?resourcePermissions ;
+               |    knora-base:creationDate ?creationDate ;
+               |    rdfs:label ?label .
+               |  ${
+          if (withDeleted)
+            sparql"""|OPTIONAL {
+                   |  ?resource knora-base:isDeleted ?isDeleted ;
+                   |    knora-base:deleteDate ?deletionDate .
+                   |  OPTIONAL { ?resource knora-base:deleteComment ?deleteComment . }
+                   |}"""
+          else sparql"?resource knora-base:isDeleted false ."
+        }
+               |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+               |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+               |  ${sparql"""|OPTIONAL {
+                   |  ?resource ?resourceValueProperty ?valueObject .
+                   |  ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+                   |  ${maybePropertyIri
+            .map(pi => Iri.unsafeFrom(pi.toIri))
+            .whenSome(propertyIri =>
+              sparql"{ ?resource ?resourceValueProperty ?valueObject . FILTER(?resourceValueProperty = $propertyIri) }",
+            )}
+                   |  ${maybeValueUuid
+            .map(uuid => Literal.string(UuidUtil.base64Encode(uuid)))
+            .whenSome(valueUuid => sparql"?valueObject knora-base:valueHasUUID $valueUuid .")}
+                   |  ?valueObject knora-base:hasPermissions ?currentValuePermissions .
+                   |  ${(queryStandoff, standoffTagFilter) match {
+            case (false, _) =>
+              sparql"""|{
+                     |  ?valueObject a ?valueObjectType ;
+                     |    ?valueObjectProperty ?valueObjectValue .
+                     |  FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+            case (true, None) =>
+              sparql"""|{
+                     |  {
+                     |    ?valueObject a ?valueObjectType ;
+                     |      ?valueObjectProperty ?valueObjectValue .
+                     |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |  } UNION {
+                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ?standoffNode ?standoffProperty ?standoffValue ;
+                     |      knora-base:standoffTagHasStartIndex ?startIndex .
+                     |    OPTIONAL {
+                     |      ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                     |      ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                     |    }
+                     |    FILTER(?startIndex >= 0)
+                     |  }
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+            case (true, Some(tagIri)) =>
+              sparql"""|{
+                     |  {
+                     |    ?valueObject a ?valueObjectType ;
+                     |      ?valueObjectProperty ?valueObjectValue .
+                     |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |  } UNION {
+                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ?standoffNode a ${Iri.unsafeFrom(tagIri.toIri)} .
+                     |    ?standoffNode ?standoffProperty ?standoffValue ;
+                     |      knora-base:standoffTagHasStartIndex ?startIndex .
+                     |    FILTER(?startIndex >= 0)
+                     |  }
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+          }}
+                   |}""".unless(preview)}
+               |}""".render,
+    )
   }
 
-  private def buildValuesOptionalBlock(
+  /**
+   * Loads the value versions that were current at `versionDate`.
+   *
+   * The second `FILTER NOT EXISTS` in the values OPTIONAL asserts that no version of the value was created
+   * later than the one selected but still at or before the version date.
+   *
+   * The UNION nesting of the value body is load-bearing: with standoff, the value/standoff UNION is itself
+   * one branch of the link UNION, as the previous builder emitted it. Link values are always queried.
+   */
+  private def versionedValuesQuery(
+    resourceIris: Seq[IRI],
+    preview: Boolean,
     withDeleted: Boolean,
-    queryAllNonStandoff: Boolean,
     queryStandoff: Boolean,
-    maybePropertyIri: Option[SmartIri],
-    maybeValueUuid: Option[UUID],
-    maybeVersionDate: Option[Instant],
-    maybeValueIri: Option[IRI],
-    standoffTagFilter: Option[SmartIri],
-  ): GraphPattern = {
-    val valueRetrievalPatterns: GraphPattern = maybeVersionDate match {
-      case Some(versionDate) =>
-        buildVersionDateValuePatterns(withDeleted, maybePropertyIri, maybeValueUuid, versionDate)
-      case None => buildCurrentValuePatterns(maybePropertyIri, maybeValueUuid)
-    }
-
-    val valueIriFilter: Seq[GraphPattern] = maybeValueIri.toSeq.map { vi =>
-      valueObject
-        .has(valueObjectProperty, valueObjectValue)
-        .filter(Expressions.equals(valueObject, Rdf.iri(vi)))
-    }
-
-    // Value object type + properties block
-    val valueObjectBlock: GraphPattern = valueObject
-      .isA(valueObjectType)
-      .andHas(valueObjectProperty, valueObjectValue)
-      .filter(
-        Expressions.and(
-          Expressions.notEquals(valueObjectProperty, KnoraBase.valueHasStandoff),
-          Expressions.notEquals(valueObjectProperty, KnoraBase.hasPermissions),
-        ),
-      )
-
-    val valueObjectBlockWithFilter: GraphPattern =
-      if (!queryAllNonStandoff)
-        valueObjectBlock.filter(Expressions.notEquals(valueObjectProperty, KnoraBase.valueHasString))
-      else
-        valueObjectBlock
-
-    // Standoff UNION
-    val standoffUnion: Seq[GraphPattern] =
-      if (queryStandoff) {
-        val standoffNodeContent =
-          standoffNode.has(standoffProperty, standoffValue).andHas(KnoraBase.standoffTagHasStartIndex, startIndex)
-        val standoffPattern = valueObject
-          .has(KnoraBase.valueHasStandoff, standoffNode)
-          .pipe(base =>
-            standoffTagFilter match {
-              case Some(tagIri) => base.and(standoffNode.isA(Rdf.iri(tagIri.toIri))).and(standoffNodeContent)
-              case None         =>
-                base
-                  .and(standoffNodeContent)
-                  .and(
-                    standoffTag
-                      .has(KnoraBase.standoffTagHasInternalReference, targetStandoffTag)
-                      .and(targetStandoffTag.has(KnoraBase.standoffTagHasOriginalXMLID, targetOriginalXMLID))
-                      .optional(),
-                  )
-            },
-          )
-          .filter(Expressions.gte(startIndex, Rdf.literalOf(0)))
-
-        Seq(GraphPatterns.union(valueObjectBlockWithFilter, standoffPattern))
-      } else Seq(valueObjectBlockWithFilter)
-
-    // Link UNION
-    val linkUnion: Seq[GraphPattern] =
-      if (queryAllNonStandoff) {
-        val linkPattern = valueObject
-          .isA(KnoraBase.linkValue)
-          .andHas(RDF.PREDICATE, resourceLinkProperty)
-          .andHas(RDF.OBJECT, referredResource)
-          .and(
-            referredResource
-              .has(referredResourcePred, referredResourceObj)
-              .andHas(KnoraBase.isDeleted, Rdf.literalOf(false)),
-          )
-
-        if (queryStandoff)
-          // standoffUnion already contains a UNION with valueObjectBlock, add linkPattern to it
-          Seq(GraphPatterns.union(standoffUnion.head, linkPattern))
-        else
-          Seq(GraphPatterns.union(valueObjectBlockWithFilter, linkPattern))
-      } else standoffUnion
-
-    val allInnerPatterns = valueRetrievalPatterns +: valueIriFilter ++: linkUnion
-    allInnerPatterns.reduce((a, b) => a.and(b)).optional()
-  }
-
-  private def buildVersionDateValuePatterns(
-    withDeleted: Boolean,
     maybePropertyIri: Option[SmartIri],
     maybeValueUuid: Option[UUID],
     versionDate: Instant,
-  ): GraphPattern = {
-    val versionDateLiteral = Rdf.literalOfType(versionDate.toString, XSD.DATETIME)
+    standoffTagFilter: Option[SmartIri],
+  ): Construct = {
+    val versionDateLiteral = Literal.dateTime(versionDate)
 
-    val basePatterns: GraphPattern = resource
-      .has(resourceValueProperty, currentValue)
-      .and(resourceValueProperty.has(subPropertyOfPath, KnoraBase.hasValue))
-
-    val propertyFilter: Seq[GraphPattern] = maybePropertyIri.toSeq.map { pi =>
-      resource
-        .has(resourceValueProperty, currentValue)
-        .filter(Expressions.equals(resourceValueProperty, Rdf.iri(pi.toIri)))
-    }
-
-    val deleteFilter: Seq[GraphPattern] =
-      if (!withDeleted) {
-        val currentValueDeleteDate = variable("currentValueDeleteDate")
-        Seq(
-          GraphPatterns.filterNotExists(
-            currentValue
-              .has(KnoraBase.deleteDate, currentValueDeleteDate)
-              .filter(Expressions.lte(currentValueDeleteDate, versionDateLiteral)),
-          ),
-        )
-      } else Seq.empty
-
-    val uuidPattern: GraphPattern = currentValue.has(KnoraBase.valueHasUUID, currentValueUUID)
-
-    val uuidFilter: Seq[GraphPattern] = maybeValueUuid.toSeq.map { uuid =>
-      currentValue
-        .has(KnoraBase.valueHasUUID, currentValueUUID)
-        .filter(Expressions.equals(currentValueUUID, Rdf.literalOf(UuidUtil.base64Encode(uuid))))
-    }
-
-    val otherValueObject             = variable("otherValueObject")
-    val otherValueObjectCreationDate = variable("otherValueObjectCreationDate")
-
-    val historyTraversal: GraphPattern = currentValue
-      .has(previousValuePath, valueObject)
-      .and(valueObject.has(KnoraBase.valueCreationDate, valueObjectCreationDate))
-      .filter(Expressions.lte(valueObjectCreationDate, versionDateLiteral))
-
-    val moreRecentFilter: GraphPattern = GraphPatterns.filterNotExists(
-      currentValue
-        .has(previousValuePath, otherValueObject)
-        .and(otherValueObject.has(KnoraBase.valueCreationDate, otherValueObjectCreationDate))
-        .filter(
-          Expressions.and(
-            Expressions.lte(otherValueObjectCreationDate, versionDateLiteral),
-            Expressions.gt(otherValueObjectCreationDate, valueObjectCreationDate),
-          ),
-        ),
+    Construct(
+      sparql"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |CONSTRUCT {
+               |  ?resource a knora-base:Resource ;
+               |    knora-base:isMainResource true ;
+               |    knora-base:attachedToProject ?resourceProject ;
+               |    rdfs:label ?label ;
+               |    rdf:type ?resourceType ;
+               |    knora-base:attachedToUser ?resourceCreator ;
+               |    knora-base:hasPermissions ?resourcePermissions ;
+               |    knora-base:creationDate ?creationDate ;
+               |    knora-base:lastModificationDate ?lastModificationDate ;
+               |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+               |  ${
+          if (withDeleted)
+            sparql"""|?resource knora-base:isDeleted ?isDeleted ;
+                   |  knora-base:deleteDate ?deletionDate ;
+                   |  knora-base:deleteComment ?deleteComment ."""
+          else sparql"?resource knora-base:isDeleted false ."
+        }
+               |  ?resource knora-base:hasValue ?valueObject ;
+               |    ?resourceValueProperty ?valueObject .
+               |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+               |    knora-base:valueHasUUID ?currentValueUUID ;
+               |    knora-base:hasPermissions ?currentValuePermissions .
+               |  ${(queryStandoff, standoffTagFilter) match {
+          case (false, _)   => Fragment.empty
+          case (true, None) =>
+            sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |?standoffNode ?standoffProperty ?standoffValue ;
+                     |  knora-base:targetHasOriginalXMLID ?targetOriginalXMLID ."""
+          case (true, Some(tagIri)) =>
+            sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |?standoffNode a ${Iri.unsafeFrom(tagIri.toIri)} ;
+                     |  ?standoffProperty ?standoffValue ."""
+        }}
+               |  ?resource knora-base:hasLinkTo ?referredResource ;
+               |    ?resourceLinkProperty ?referredResource .
+               |  ?referredResource a knora-base:Resource ;
+               |    ?referredResourcePred ?referredResourceObj .
+               |} WHERE {
+               |  ${Fragments.values(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
+               |  {
+               |    ?resource rdf:type ?resourceType .
+               |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+               |  }
+               |  ?resource knora-base:attachedToProject ?resourceProject ;
+               |    knora-base:attachedToUser ?resourceCreator ;
+               |    knora-base:hasPermissions ?resourcePermissions ;
+               |    knora-base:creationDate ?creationDate ;
+               |    rdfs:label ?label .
+               |  ${
+          if (withDeleted)
+            sparql"""|OPTIONAL {
+                   |  ?resource knora-base:isDeleted ?isDeleted ;
+                   |    knora-base:deleteDate ?deletionDate .
+                   |  OPTIONAL { ?resource knora-base:deleteComment ?deleteComment . }
+                   |}"""
+          else sparql"?resource knora-base:isDeleted false ."
+        }
+               |  {
+               |    ?resource knora-base:creationDate ?creationDate .
+               |    FILTER(?creationDate <= $versionDateLiteral)
+               |  }
+               |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+               |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+               |  ${sparql"""|OPTIONAL {
+                   |  ?resource ?resourceValueProperty ?currentValue .
+                   |  ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+                   |  ${maybePropertyIri
+            .map(pi => Iri.unsafeFrom(pi.toIri))
+            .whenSome(propertyIri =>
+              sparql"{ ?resource ?resourceValueProperty ?currentValue . FILTER(?resourceValueProperty = $propertyIri) }",
+            )}
+                   |  ${sparql"""|FILTER NOT EXISTS {
+                                 |  ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+                                 |  FILTER(?currentValueDeleteDate <= $versionDateLiteral)
+                                 |}""".unless(withDeleted)}
+                   |  ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+                   |  ${maybeValueUuid
+            .map(uuid => Literal.string(UuidUtil.base64Encode(uuid)))
+            .whenSome(valueUuid =>
+              sparql"{ ?currentValue knora-base:valueHasUUID ?currentValueUUID . FILTER(?currentValueUUID = $valueUuid) }",
+            )}
+                   |  {
+                   |    ?currentValue knora-base:previousValue* ?valueObject .
+                   |    ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
+                   |    FILTER(?valueObjectCreationDate <= $versionDateLiteral)
+                   |  }
+                   |  FILTER NOT EXISTS {
+                   |    ?currentValue knora-base:previousValue* ?otherValueObject .
+                   |    ?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
+                   |    FILTER(?otherValueObjectCreationDate <= $versionDateLiteral && ?otherValueObjectCreationDate > ?valueObjectCreationDate)
+                   |  }
+                   |  ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+                   |  ${(queryStandoff, standoffTagFilter) match {
+            case (false, _) =>
+              sparql"""|{
+                     |  ?valueObject a ?valueObjectType ;
+                     |    ?valueObjectProperty ?valueObjectValue .
+                     |  FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+            case (true, None) =>
+              sparql"""|{
+                     |  {
+                     |    ?valueObject a ?valueObjectType ;
+                     |      ?valueObjectProperty ?valueObjectValue .
+                     |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |  } UNION {
+                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ?standoffNode ?standoffProperty ?standoffValue ;
+                     |      knora-base:standoffTagHasStartIndex ?startIndex .
+                     |    OPTIONAL {
+                     |      ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                     |      ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                     |    }
+                     |    FILTER(?startIndex >= 0)
+                     |  }
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+            case (true, Some(tagIri)) =>
+              sparql"""|{
+                     |  {
+                     |    ?valueObject a ?valueObjectType ;
+                     |      ?valueObjectProperty ?valueObjectValue .
+                     |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+                     |  } UNION {
+                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ?standoffNode a ${Iri.unsafeFrom(tagIri.toIri)} .
+                     |    ?standoffNode ?standoffProperty ?standoffValue ;
+                     |      knora-base:standoffTagHasStartIndex ?startIndex .
+                     |    FILTER(?startIndex >= 0)
+                     |  }
+                     |} UNION {
+                     |  ?valueObject a knora-base:LinkValue ;
+                     |    rdf:predicate ?resourceLinkProperty ;
+                     |    rdf:object ?referredResource .
+                     |  ?referredResource ?referredResourcePred ?referredResourceObj ;
+                     |    knora-base:isDeleted false .
+                     |}"""
+          }}
+                   |}""".unless(preview)}
+               |}""".render,
     )
-
-    val permissionsPattern: GraphPattern = currentValue.has(KnoraBase.hasPermissions, currentValuePermissions)
-
-    val allPatterns: Seq[GraphPattern] =
-      Seq(basePatterns) ++ propertyFilter ++ deleteFilter ++ Seq(uuidPattern) ++ uuidFilter ++
-        Seq(historyTraversal, moreRecentFilter, permissionsPattern)
-
-    allPatterns.reduce((a, b) => a.and(b))
-  }
-
-  private def buildCurrentValuePatterns(
-    maybePropertyIri: Option[SmartIri],
-    maybeValueUuid: Option[UUID],
-  ): GraphPattern = {
-    val basePatterns: GraphPattern = resource
-      .has(resourceValueProperty, valueObject)
-      .and(resourceValueProperty.has(subPropertyOfPath, KnoraBase.hasValue))
-
-    val propertyFilter: Seq[GraphPattern] = maybePropertyIri.toSeq.map { pi =>
-      resource
-        .has(resourceValueProperty, valueObject)
-        .filter(Expressions.equals(resourceValueProperty, Rdf.iri(pi.toIri)))
-    }
-
-    val uuidPattern: Seq[GraphPattern] = maybeValueUuid.toSeq.map { uuid =>
-      valueObject.has(KnoraBase.valueHasUUID, Rdf.literalOf(UuidUtil.base64Encode(uuid)))
-    }
-
-    val permissionsPattern: GraphPattern = valueObject.has(KnoraBase.hasPermissions, currentValuePermissions)
-
-    val allPatterns: Seq[GraphPattern] = Seq(basePatterns) ++ propertyFilter ++ uuidPattern ++ Seq(permissionsPattern)
-    allPatterns.reduce((a, b) => a.and(b))
   }
 }
