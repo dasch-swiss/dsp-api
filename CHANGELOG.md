@@ -1,5 +1,46 @@
 # Changelog
 
+## [39.0.0](https://github.com/dasch-swiss/dsp-api/compare/v38.1.0...v39.0.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove the project active/inactive concept (DEV-7039) ([#4288](https://github.com/dasch-swiss/dsp-api/issues/4288))
+
+### Maintenances
+
+* **ci:** remove dead magic-nix-cache-action step ([#4326](https://github.com/dasch-swiss/dsp-api/issues/4326)) ([75414c1](https://github.com/dasch-swiss/dsp-api/commit/75414c1e71de6a959168f82c24dc07b725ecd94a))
+* dsp-api dependency maintenance — Jena/Fuseki 6.2.0, RDF4J 6.0.1, OTel 2.31.1 (DEV-6934) ([#4293](https://github.com/dasch-swiss/dsp-api/issues/4293)) ([4e9cd6f](https://github.com/dasch-swiss/dsp-api/commit/4e9cd6fb67da91e48eb7f109e096c1dc5b240902))
+* migrate list-node deletion and existence-check queries to interpolated SPARQL DSL (DEV-7207) ([#4299](https://github.com/dasch-swiss/dsp-api/issues/4299)) ([f2d42b9](https://github.com/dasch-swiss/dsp-api/commit/f2d42b94850b69a66df2ca3360028b0fae3dd6ec))
+* migrate list-node read queries to interpolated SPARQL DSL (DEV-7205) ([#4296](https://github.com/dasch-swiss/dsp-api/issues/4296)) ([9de6ea2](https://github.com/dasch-swiss/dsp-api/commit/9de6ea250415c91305172a3436b8b9710d6f5777))
+* migrate list-node write queries to interpolated SPARQL DSL (DEV-7206) ([#4298](https://github.com/dasch-swiss/dsp-api/issues/4298)) ([1f2a1eb](https://github.com/dasch-swiss/dsp-api/commit/1f2a1eb4ea3843eefb410e196d50fe90492daffb))
+* migrate ontology comment queries to interpolated SPARQL DSL (DEV-7153) ([#4290](https://github.com/dasch-swiss/dsp-api/issues/4290)) ([873a7b9](https://github.com/dasch-swiss/dsp-api/commit/873a7b9f6cad75eb9ed2bda1b13bfa35c1c64301))
+* migrate ontology entity deletion and property-usage count queries to interpolated SPARQL DSL (DEV-7209) ([#4300](https://github.com/dasch-swiss/dsp-api/issues/4300)) ([fa5ac67](https://github.com/dasch-swiss/dsp-api/commit/fa5ac67fdfd60fcf7e2ff1d72e114e3e315fabe5))
+* migrate ontology lifecycle and metadata queries to interpolated SPARQL DSL (DEV-7203) ([#4295](https://github.com/dasch-swiss/dsp-api/issues/4295)) ([48117e0](https://github.com/dasch-swiss/dsp-api/commit/48117e05d76e0409cdd9a9da2924b646998ef834))
+* remove the fix-markdownlint skill and widen the markdownlint gate (DEV-7119) ([#4283](https://github.com/dasch-swiss/dsp-api/issues/4283)) ([7fd6958](https://github.com/dasch-swiss/dsp-api/commit/7fd695805aaf15f4328334503a3fc8c1325a35f8))
+
+
+### Documentation
+
+* point the SPARQL conventions section at the sparql"..." interpolator ([#4287](https://github.com/dasch-swiss/dsp-api/issues/4287)) ([503c5f8](https://github.com/dasch-swiss/dsp-api/commit/503c5f84d713dba1d567294def803133440b0cd0))
+
+
+### Enhancements
+
+* **dsp-api:** MigrateSizes command for backfilling missing mime types (DEV-7124) ([#4292](https://github.com/dasch-swiss/dsp-api/issues/4292)) ([a0661a5](https://github.com/dasch-swiss/dsp-api/commit/a0661a5d38403724ff1fb60c9bbcb55755a4b311))
+* remove the project active/inactive concept (DEV-7039) ([#4288](https://github.com/dasch-swiss/dsp-api/issues/4288)) ([35a36e3](https://github.com/dasch-swiss/dsp-api/commit/35a36e335ac7763fbaa28935aabe6a5fcb6e16d4))
+
+
+### Bug Fixes
+
+* **dsp-api:** local stack bring-up starts what it names (DEV-7199) ([#4311](https://github.com/dasch-swiss/dsp-api/issues/4311)) ([cd8a664](https://github.com/dasch-swiss/dsp-api/commit/cd8a664410f5da775a77476c2c28768fdaa4fd6b))
+* **import:** align bulk-import output with v2-create (parity fixes A–E) ([#4294](https://github.com/dasch-swiss/dsp-api/issues/4294)) ([2567510](https://github.com/dasch-swiss/dsp-api/commit/2567510ce3b1eee90d3816e6ff75a7386f8471d7))
+
+
+### Tests
+
+* **import:** bulk-import vs single-create parity E2E test (DEV-7149) ([#4289](https://github.com/dasch-swiss/dsp-api/issues/4289)) ([dd6be00](https://github.com/dasch-swiss/dsp-api/commit/dd6be00c048321b38c22c03570674ef5c1387b8b))
+
 ## [38.1.0](https://github.com/dasch-swiss/dsp-api/compare/v38.0.0...v38.1.0) (2026-09-07)
 
 
