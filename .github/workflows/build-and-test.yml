@@ -384,3 +384,11 @@ jobs:
           nix develop --command just docker-build-fuseki-image ${{ steps.rbe.outputs.flags }}
       - name: Spin up the API container and wait for all healthchecks (incl. db and sipi) to pass
         run: docker compose up --wait api
+      - name: Dump container status and logs on failure
+        if: failure()
+        # `up --wait` only reports that the API container exited; it prints nothing about
+        # why. Surface the status table and the logs so a startup crash is diagnosable
+        # from the run alone instead of needing a local repro.
+        run: |
+          docker compose ps
+          docker compose logs --no-color --timestamps api db sipi
