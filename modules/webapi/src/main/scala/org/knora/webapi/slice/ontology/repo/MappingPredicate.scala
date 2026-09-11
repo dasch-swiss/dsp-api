@@ -5,9 +5,10 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.IRI
-import org.eclipse.rdf4j.model.vocabulary.RDFS
+import org.knora.sparqlbuilder.Iri
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 
-enum MappingPredicate(val iri: IRI):
-  case SubClassOf    extends MappingPredicate(RDFS.SUBCLASSOF)
-  case SubPropertyOf extends MappingPredicate(RDFS.SUBPROPERTYOF)
+/** The predicate an ontology mapping is stored with: `rdfs:subClassOf` for classes, `rdfs:subPropertyOf` for properties. */
+enum MappingPredicate(val iri: Iri):
+  case SubClassOf    extends MappingPredicate(Iri.unsafeFrom(Rdfs.SubClassOf))
+  case SubPropertyOf extends MappingPredicate(Iri.unsafeFrom(Rdfs.SubPropertyOf))

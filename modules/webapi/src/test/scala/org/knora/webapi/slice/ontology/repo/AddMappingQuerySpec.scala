@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -17,6 +18,12 @@ import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class AddMappingQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val ontologyIri                       = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
@@ -25,6 +32,26 @@ class AddMappingQuerySpec extends ZIOSpecDefault {
   private val externalIri1                      = OntologyMappingExternalIri.unsafeFrom("http://schema.org/Thing")
   private val externalIri2                      = OntologyMappingExternalIri.unsafeFrom("http://purl.org/dc/terms/Agent")
   override def spec: Spec[TestEnvironment, Any] = suite("AddMappingQuerySpec")(
+    test("should produce the same UPDATE as the legacy builder") {
+      val knownInstant = java.time.Instant.parse("2026-01-01T00:00:00Z")
+      for {
+        _      <- TestClock.setTime(knownInstant)
+        update <-
+          AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1, externalIri2))
+      } yield assertTrue(
+        canonical(update.sparql) == canonical(
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+            |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }
+            |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2026-01-01T00:00:00Z"^^xsd:dateTime .
+            |anything:Thing rdfs:subClassOf <http://schema.org/Thing> .
+            |anything:Thing rdfs:subClassOf <http://purl.org/dc/terms/Agent> . } }
+            |WHERE { OPTIONAL { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate ?oldDate . } }""".stripMargin,
+        ),
+      )
+    },
     // -- SUBCLASSOF (class mappings) -------------------------------------------
     suite("rdfs:subClassOf predicate")(
       test("query contains rdfs:subClassOf in the INSERT clause") {
@@ -33,8 +60,8 @@ class AddMappingQuerySpec extends ZIOSpecDefault {
           _      <- TestClock.setTime(knownInstant)
           update <- AddMappingQuery.build(ontologyIri, classIri, MappingPredicate.SubClassOf, List(externalIri1))
         } yield assertTrue(
-          update.sparql.contains("rdfs:subClassOf"),
-          !update.sparql.contains("rdfs:subPropertyOf"),
+          update.sparql.contains("rdf-schema#subClassOf>"),
+          !update.sparql.contains("rdf-schema#subPropertyOf>"),
           update.sparql.contains(knownInstant.toString),
           update.sparql.contains("knora-base:lastModificationDate"),
           // lastModificationDate appears in both DELETE and INSERT
@@ -57,8 +84,8 @@ class AddMappingQuerySpec extends ZIOSpecDefault {
         for {
           update <- AddMappingQuery.build(ontologyIri, propertyIri, MappingPredicate.SubPropertyOf, List(externalIri1))
         } yield assertTrue(
-          update.sparql.contains("rdfs:subPropertyOf"),
-          !update.sparql.contains("rdfs:subClassOf"),
+          update.sparql.contains("rdf-schema#subPropertyOf>"),
+          !update.sparql.contains("rdf-schema#subClassOf>"),
         )
       },
       test("query contains all external IRIs when multiple property mappings are given") {
