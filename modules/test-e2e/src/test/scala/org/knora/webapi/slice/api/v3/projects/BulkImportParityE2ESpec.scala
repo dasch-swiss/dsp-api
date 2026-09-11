@@ -51,11 +51,9 @@ import org.knora.webapi.testservices.TestApiClient
  * identical resource-IRI set, and RDF isomorphism after normalizing minted value/standoff IRIs,
  * UUIDs, and creation timestamps.
  *
- * One deliberate tolerance remains: `hasPermissions` is excluded from the compare, because the two
- * paths assign permissions differently. Full parity waits on the bulk import honoring a payload
- * `hasPermissions` and resolving class/property DOAPs — see the `hasPermissions` TODO in
- * `OntologyTransformer.addResourceMetadata`. `lastModificationDate` is stripped too, since only the
- * two-step create paths write it.
+ * `hasPermissions` is included in the compare: the bulk import honors a payload `hasPermissions` and
+ * resolves class/property DOAPs per entity, matching the create path. `lastModificationDate` is
+ * stripped, since only the two-step create paths write it.
  *
  * Nothing else is stripped: `hasTextValueType` is written by all three write paths, `valueHasOrder`
  * is carried explicitly by every fixture value (so neither path synthesizes one), and `pageCount` is
@@ -145,7 +143,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val plainResources = tier0 ++ tier1 ++ tier2
 
   override val e2eSpec: Spec[env, Any] = suite("Bulk import vs single-resource create parity")(
-    test("both paths produce isomorphic graphs (permissions excluded)") {
+    test("both paths produce isomorphic graphs") {
       for {
         tester <- ZIO
                     .serviceWithZIO[UserService](_.findUserByIri(UserIri.unsafeFrom(testerUserIri)))
@@ -167,8 +165,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         _      <- runSingleCreates(tester)
         graphB <- dumpProjectGraph
       } yield {
-        val normA = normalize(graphA, includePermissions = false)
-        val normB = normalize(graphB, includePermissions = false)
+        val normA = normalize(graphA)
+        val normB = normalize(graphB)
         val iso   = normA.isIsomorphicWith(normB)
 
         val resourcesA = resourceIris(graphA)
@@ -193,7 +191,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           hasLastModification(graphB, richtextIri),
           !hasLastModification(graphA, audioSegmentIri),
         )
-        // Equal triple count on the normalized models (lastModificationDate + hasPermissions stripped).
+        // Equal triple count on the normalized models (lastModificationDate stripped, hasPermissions compared).
         val tripleCountsMatch = assertTrue(normA.size == normB.size)
         // Identical resource-IRI set.
         val resourceSetsMatch = assertTrue(resourcesA == resourcesB)
@@ -202,7 +200,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           creationDateA.contains(migrationCreationDate),
           creationDateA == creationDateB,
         )
-        // RDF isomorphism, permissions excluded.
+        // RDF isomorphism, hasPermissions included.
         val graphsAreIsomorphic = assertTrue(iso)
         // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
         // has two text values linking one target, so its refcount is 2 on both paths.
@@ -382,7 +380,6 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val sentinelPredicates =
     Set(kb + "valueHasUUID", kb + "standoffTagHasUUID", kb + "creationDate", kb + "valueCreationDate")
   private val lastModProp        = kb + "lastModificationDate"
-  private val hasPermissionsProp = kb + "hasPermissions"
   private val standoffTagPattern =
     """^http://rdfh\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+/values/[A-Za-z0-9_-]+/standoff/\d+$""".r
 
@@ -391,12 +388,12 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   /**
    * Returns a copy of the model with minted value/standoff IRIs replaced by blank nodes, UUIDs and
-   * creation timestamps replaced by a sentinel, lastModificationDate stripped, and (unless
-   * `includePermissions`) hasPermissions stripped. Every occurrence of a given minted IRI maps to
-   * the same blank node, so shared-identity edges (LinkValue subject/object, standoff parents,
-   * previousValue, the segment cross-link) survive.
+   * creation timestamps replaced by a sentinel, and lastModificationDate stripped. hasPermissions is
+   * kept and compared. Every occurrence of a given minted IRI maps to the same blank node, so
+   * shared-identity edges (LinkValue subject/object, standoff parents, previousValue, the segment
+   * cross-link) survive.
    */
-  private def normalize(model: Model, includePermissions: Boolean): Model = {
+  private def normalize(model: Model): Model = {
     val minted: Set[String] =
       model
         .listStatements()
@@ -410,7 +407,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     val sentinel = out.createLiteral("__normalized__")
     model.listStatements().asScala.foreach { st =>
       val p     = st.getPredicate.getURI
-      val strip = p == lastModProp || (p == hasPermissionsProp && !includePermissions)
+      val strip = p == lastModProp
       if (!strip) {
         val subj: Resource =
           if (st.getSubject.isURIResource)
