@@ -5,114 +5,67 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Builds a CONSTRUCT query to get a mapping for XML to standoff conversion from the triplestore.
  */
-object GetMappingQuery extends QueryBuilderHelper {
+object GetMappingQuery {
 
-  def build(mappingIri: IRI): ConstructQuery = {
-    val mapping                  = Rdf.iri(mappingIri)
-    val label                    = variable("label")
-    val mappingType              = variable("mappingType")
-    val defaultXSLTransformation = variable("defaultXSLTransformation")
-    val mappingElement           = variable("mappingElement")
-    val mappingElementType       = variable("mappingElementType")
-    val tagName                  = variable("tagName")
-    val tagNamespace             = variable("tagNamespace")
-    val tagClass                 = variable("tagClass")
-    val standoffClass            = variable("standoffClass")
-    val separatorRequired        = variable("separatorRequired")
-    val attribute                = variable("attribute")
-    val attributeType            = variable("attributeType")
-    val attributeName            = variable("attributeName")
-    val attributeNamespace       = variable("attributeNamespace")
-    val standoffProperty         = variable("standoffProperty")
-    val datatypeClass            = variable("datatypeClass")
-    val datatypeType             = variable("datatypeType")
-    val datatypeAttributeName    = variable("datatypeAttributeName")
-    val datatypeStandoffClass    = variable("datatypeStandoffClass")
-
-    val rdfsLabel = Rdf.iri(RDFS.LABEL.stringValue())
-    val rdfType   = Rdf.iri(RDF.TYPE.stringValue())
-
-    // CONSTRUCT triple patterns
-    val constructPatterns = Seq(
-      mapping.has(rdfsLabel, label),
-      mapping.has(rdfType, mappingType),
-      mapping.has(KnoraBase.mappingHasDefaultXSLTransformation, defaultXSLTransformation),
-      mappingElement.has(rdfType, mappingElementType),
-      mappingElement.has(KnoraBase.mappingHasXMLTagname, tagName),
-      mappingElement.has(KnoraBase.mappingHasXMLNamespace, tagNamespace),
-      mappingElement.has(KnoraBase.mappingHasXMLClass, tagClass),
-      mappingElement.has(KnoraBase.mappingHasStandoffClass, standoffClass),
-      mappingElement.has(KnoraBase.mappingElementRequiresSeparator, separatorRequired),
-      mappingElement.has(KnoraBase.mappingHasXMLAttribute, attribute),
-      attribute.has(rdfType, attributeType),
-      attribute.has(KnoraBase.mappingHasXMLAttributename, attributeName),
-      attribute.has(KnoraBase.mappingHasXMLNamespace, attributeNamespace),
-      attribute.has(KnoraBase.mappingHasStandoffProperty, standoffProperty),
-      mappingElement.has(KnoraBase.mappingHasStandoffDataTypeClass, datatypeClass),
-      datatypeClass.has(rdfType, datatypeType),
-      datatypeClass.has(KnoraBase.mappingHasXMLAttributename, datatypeAttributeName),
-      datatypeClass.has(KnoraBase.mappingHasStandoffClass, datatypeStandoffClass),
+  def build(mappingIri: IRI): Construct = {
+    val mapping = Iri.unsafeFrom(mappingIri)
+    Construct(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |CONSTRUCT {
+               |  $mapping rdfs:label ?label .
+               |  $mapping rdf:type ?mappingType .
+               |  $mapping knora-base:mappingHasDefaultXSLTransformation ?defaultXSLTransformation .
+               |  ?mappingElement rdf:type ?mappingElementType .
+               |  ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+               |  ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+               |  ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+               |  ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
+               |  ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
+               |  ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
+               |  ?attribute rdf:type ?attributeType .
+               |  ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+               |  ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+               |  ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
+               |  ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
+               |  ?datatypeClass rdf:type ?datatypeType .
+               |  ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+               |  ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
+               |}
+               |WHERE {
+               |  $mapping rdfs:label ?label ;
+               |    rdf:type ?mappingType .
+               |  OPTIONAL { $mapping knora-base:mappingHasDefaultXSLTransformation ?defaultXSLTransformation . }
+               |  $mapping knora-base:hasMappingElement ?mappingElement .
+               |  ?mappingElement rdf:type ?mappingElementType ;
+               |    knora-base:mappingHasXMLTagname ?tagName ;
+               |    knora-base:mappingHasXMLNamespace ?tagNamespace ;
+               |    knora-base:mappingHasXMLClass ?tagClass ;
+               |    knora-base:mappingHasStandoffClass ?standoffClass ;
+               |    knora-base:mappingElementRequiresSeparator ?separatorRequired .
+               |  OPTIONAL {
+               |    ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
+               |    ?attribute rdf:type ?attributeType ;
+               |      knora-base:mappingHasXMLAttributename ?attributeName ;
+               |      knora-base:mappingHasXMLNamespace ?attributeNamespace ;
+               |      knora-base:mappingHasStandoffProperty ?standoffProperty .
+               |  }
+               |  OPTIONAL {
+               |    ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
+               |    ?datatypeClass rdf:type ?datatypeType ;
+               |      knora-base:mappingHasXMLAttributename ?datatypeAttributeName ;
+               |      knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
+               |  }
+               |}""".render,
     )
-
-    // WHERE patterns
-    val wherePatterns = mapping
-      .has(rdfsLabel, label)
-      .andHas(rdfType, mappingType)
-      .and(
-        mapping.has(KnoraBase.mappingHasDefaultXSLTransformation, defaultXSLTransformation).optional(),
-      )
-      .and(
-        mapping.has(KnoraBase.hasMappingElement, mappingElement),
-      )
-      .and(
-        mappingElement
-          .has(rdfType, mappingElementType)
-          .andHas(KnoraBase.mappingHasXMLTagname, tagName)
-          .andHas(KnoraBase.mappingHasXMLNamespace, tagNamespace)
-          .andHas(KnoraBase.mappingHasXMLClass, tagClass)
-          .andHas(KnoraBase.mappingHasStandoffClass, standoffClass)
-          .andHas(KnoraBase.mappingElementRequiresSeparator, separatorRequired),
-      )
-      .and(
-        mappingElement
-          .has(KnoraBase.mappingHasXMLAttribute, attribute)
-          .and(
-            attribute
-              .has(rdfType, attributeType)
-              .andHas(KnoraBase.mappingHasXMLAttributename, attributeName)
-              .andHas(KnoraBase.mappingHasXMLNamespace, attributeNamespace)
-              .andHas(KnoraBase.mappingHasStandoffProperty, standoffProperty),
-          )
-          .optional(),
-      )
-      .and(
-        mappingElement
-          .has(KnoraBase.mappingHasStandoffDataTypeClass, datatypeClass)
-          .and(
-            datatypeClass
-              .has(rdfType, datatypeType)
-              .andHas(KnoraBase.mappingHasXMLAttributename, datatypeAttributeName)
-              .andHas(KnoraBase.mappingHasStandoffClass, datatypeStandoffClass),
-          )
-          .optional(),
-      )
-
-    Queries
-      .CONSTRUCT(constructPatterns*)
-      .prefix(KnoraBase.NS, RDF.NS, RDFS.NS)
-      .where(wherePatterns)
   }
 }

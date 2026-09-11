@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -16,6 +17,12 @@ import org.knora.webapi.slice.resources.repo.model.MappingXMLAttribute
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreateNewMappingQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   private val dataNamedGraph = "http://www.knora.org/data/0001/anything"
   private val mappingIri     = "http://rdfh.ch/projects/0001/mappings/testMapping"
@@ -64,15 +71,17 @@ class CreateNewMappingQuerySpec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Nothing] = suite("CreateNewMappingQuery")(
     test("simple element without XSL transformation") {
-      val actual = CreateNewMappingQuery.build(
-        dataNamedGraph = dataNamedGraph,
-        mappingIri = mappingIri,
-        label = label,
-        defaultXSLTransformation = None,
-        mappingElements = Seq(simpleElement),
-      )
+      val actual = CreateNewMappingQuery
+        .build(
+          dataNamedGraph = dataNamedGraph,
+          mappingIri = mappingIri,
+          label = label,
+          defaultXSLTransformation = None,
+          mappingElements = Seq(simpleElement),
+        )
+        .sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -86,18 +95,21 @@ class CreateNewMappingQuerySpec extends ZIOSpecDefault {
             |    knora-base:mappingHasStandoffClass <http://www.knora.org/ontology/standoff#StandoffParagraphTag> ;
             |    knora-base:mappingElementRequiresSeparator true . } }
             |WHERE { FILTER NOT EXISTS { <http://rdfh.ch/projects/0001/mappings/testMapping> ?p ?o . } }""".stripMargin,
+        ),
       )
     },
     test("element with attributes, data type class, and XSL transformation") {
-      val actual = CreateNewMappingQuery.build(
-        dataNamedGraph = dataNamedGraph,
-        mappingIri = mappingIri,
-        label = label,
-        defaultXSLTransformation = Some("http://rdfh.ch/projects/0001/xsl/testTransformation"),
-        mappingElements = Seq(simpleElement, elementWithAttributes),
-      )
+      val actual = CreateNewMappingQuery
+        .build(
+          dataNamedGraph = dataNamedGraph,
+          mappingIri = mappingIri,
+          label = label,
+          defaultXSLTransformation = Some("http://rdfh.ch/projects/0001/xsl/testTransformation"),
+          mappingElements = Seq(simpleElement, elementWithAttributes),
+        )
+        .sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -128,6 +140,7 @@ class CreateNewMappingQuerySpec extends ZIOSpecDefault {
             |    knora-base:mappingHasXMLAttributename "href" ;
             |    knora-base:mappingHasStandoffClass knora-base:StandoffUriTag . } }
             |WHERE { FILTER NOT EXISTS { <http://rdfh.ch/projects/0001/mappings/testMapping> ?p ?o . } }""".stripMargin,
+        ),
       )
     },
   )
