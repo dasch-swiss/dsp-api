@@ -67,6 +67,7 @@ scala_library(
         "//modules/ingest:ingest_classes",
         "//modules/jwt",
         "//modules/shacl-validator",
+        "//modules/sparql-builder",
         "@maven//:com_apicatalog_titanium_json_ld",
         "@maven//:com_github_tototoshi_scala_csv_3",
         "@maven//:org_gwtproject_gwt_servlet",  # com.google.gwt:gwt-servlet relocates to org.gwtproject
@@ -113,6 +114,7 @@ scala_library(
         "@maven//:org_glassfish_jakarta_json",
         "@maven//:org_scala_graph_graph_core_3",
         "@maven//:org_scala_lang_modules_scala_xml_3",
+        "@maven//:org_slf4j_jcl_over_slf4j",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_security_spring_security_core",
         "@maven//:org_topbraid_shacl",

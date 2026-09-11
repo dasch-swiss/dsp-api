@@ -48,21 +48,21 @@
     "dev.zio:zio-test_3": 1207795713,
     "dev.zio:zio_3": 2079383510,
     "eu.timepit:refined_3": 793952909,
-    "io.opentelemetry.semconv:opentelemetry-semconv": 697736916,
-    "io.opentelemetry:opentelemetry-exporter-logging-otlp": 1095618568,
-    "io.opentelemetry:opentelemetry-exporter-otlp": -424597030,
-    "io.opentelemetry:opentelemetry-sdk": -39312129,
-    "io.opentelemetry:opentelemetry-sdk-testing": -1029186558,
+    "io.opentelemetry.semconv:opentelemetry-semconv": -1099214443,
+    "io.opentelemetry:opentelemetry-exporter-logging-otlp": 1796683146,
+    "io.opentelemetry:opentelemetry-exporter-otlp": 276467548,
+    "io.opentelemetry:opentelemetry-sdk": 661752449,
+    "io.opentelemetry:opentelemetry-sdk-testing": -328121980,
     "junit:junit": -744267592,
     "net.datafaker:datafaker": 697936770,
     "net.sf.saxon:Saxon-HE": 2018956298,
     "org.apache.commons:commons-lang3": -278168457,
-    "org.apache.jena:jena-core": 633016333,
-    "org.apache.jena:jena-text": -844953445,
+    "org.apache.jena:jena-core": -1163935026,
+    "org.apache.jena:jena-text": 1653062492,
     "org.bouncycastle:bcprov-jdk15to18": 1499080404,
-    "org.eclipse.rdf4j:rdf4j-client": 389304043,
-    "org.eclipse.rdf4j:rdf4j-shacl": 1077405849,
-    "org.eclipse.rdf4j:rdf4j-sparqlbuilder": -755264682,
+    "org.eclipse.rdf4j:rdf4j-client": -1295725016,
+    "org.eclipse.rdf4j:rdf4j-shacl": -607623210,
+    "org.eclipse.rdf4j:rdf4j-sparqlbuilder": 1854673555,
     "org.ehcache:ehcache": -2082176898,
     "org.flywaydb:flyway-core": -2045269608,
     "org.glassfish:jakarta.json": 1056313227,
@@ -71,6 +71,7 @@
     "org.scala-lang:scala-library": 1230160761,
     "org.scala-lang:scala3-library_3": 1771369610,
     "org.scala-lang:tasty-core_3": 1934156016,
+    "org.slf4j:jcl-over-slf4j": 1978020546,
     "org.slf4j:slf4j-api": -2005163028,
     "org.slf4j:slf4j-simple": 1999565066,
     "org.springframework.security:spring-security-core": -1154977891,
@@ -92,23 +93,23 @@
     "com.apicatalog:titanium-rdf-n-quads:jar:sources": -860817340,
     "com.ethlo.time:itu": -908980983,
     "com.ethlo.time:itu:jar:sources": 649236868,
-    "com.fasterxml.jackson.core:jackson-annotations": 1145483352,
-    "com.fasterxml.jackson.core:jackson-annotations:jar:sources": -1434301790,
-    "com.fasterxml.jackson.core:jackson-core": -1238101265,
-    "com.fasterxml.jackson.core:jackson-core:jar:sources": -377498338,
-    "com.fasterxml.jackson.core:jackson-databind": 1172331881,
-    "com.fasterxml.jackson.core:jackson-databind:jar:sources": -1914502950,
-    "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": -1868874112,
+    "com.fasterxml.jackson.core:jackson-annotations": -1012223496,
+    "com.fasterxml.jackson.core:jackson-annotations:jar:sources": -164405597,
+    "com.fasterxml.jackson.core:jackson-core": -1244959148,
+    "com.fasterxml.jackson.core:jackson-core:jar:sources": -1299553159,
+    "com.fasterxml.jackson.core:jackson-databind": 935939622,
+    "com.fasterxml.jackson.core:jackson-databind:jar:sources": 572042403,
+    "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": -1143218165,
     "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:sources": 1325780484,
-    "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": -499665676,
+    "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": 1876932344,
     "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:sources": -212458373,
     "com.github.andrewoma.dexx:collection": 417166690,
     "com.github.andrewoma.dexx:collection:jar:sources": 1070451876,
-    "com.github.ben-manes.caffeine:caffeine": 254783836,
-    "com.github.ben-manes.caffeine:caffeine:jar:sources": -594702079,
+    "com.github.ben-manes.caffeine:caffeine": -1739797235,
+    "com.github.ben-manes.caffeine:caffeine:jar:sources": -57104877,
     "com.github.curious-odd-man:rgxgen": -434367601,
     "com.github.curious-odd-man:rgxgen:jar:sources": 792448481,
-    "com.github.docker-java:docker-java-api": 1073735645,
+    "com.github.docker-java:docker-java-api": 525622606,
     "com.github.docker-java:docker-java-api:jar:sources": -964631834,
     "com.github.docker-java:docker-java-transport": -1526601578,
     "com.github.docker-java:docker-java-transport-zerodep": -168720568,
@@ -118,8 +119,8 @@
     "com.github.jknack:handlebars-helpers": 1841382432,
     "com.github.jknack:handlebars-helpers:jar:sources": 930922725,
     "com.github.jknack:handlebars:jar:sources": 1234049305,
-    "com.github.jsonld-java:jsonld-java": -1157349735,
-    "com.github.jsonld-java:jsonld-java:jar:sources": 267400367,
+    "com.github.jsonld-java:jsonld-java": 1678145501,
+    "com.github.jsonld-java:jsonld-java:jar:sources": 1120822508,
     "com.github.tototoshi:scala-csv_3": -1463172423,
     "com.github.tototoshi:scala-csv_3:jar:sources": 99062729,
     "com.google.code.findbugs:jsr305": 870839855,
@@ -135,8 +136,8 @@
     "com.google.guava:listenablefuture": 1079558157,
     "com.google.j2objc:j2objc-annotations": 248818742,
     "com.google.j2objc:j2objc-annotations:jar:sources": -378364028,
-    "com.google.protobuf:protobuf-java": 1198356280,
-    "com.google.protobuf:protobuf-java:jar:sources": 2013970572,
+    "com.google.protobuf:protobuf-java": 911577887,
+    "com.google.protobuf:protobuf-java:jar:sources": 773608461,
     "com.googlecode.libphonenumber:libphonenumber": -1682836104,
     "com.googlecode.libphonenumber:libphonenumber:jar:sources": -612353298,
     "com.ibm.icu:icu4j": -1667183492,
@@ -145,12 +146,12 @@
     "com.jayway.jsonpath:json-path:jar:sources": -1185551957,
     "com.lihaoyi:unroll-annotation_3": 42736306,
     "com.lihaoyi:unroll-annotation_3:jar:sources": -1102142611,
-    "com.lihaoyi:unroll-plugin_3": 1408339440,
+    "com.lihaoyi:unroll-plugin_3": -432682312,
     "com.lihaoyi:unroll-plugin_3:jar:sources": -1267756075,
-    "com.networknt:json-schema-validator": -1471995349,
+    "com.networknt:json-schema-validator": 1275368024,
     "com.networknt:json-schema-validator:jar:sources": 668026887,
-    "com.opencsv:opencsv": -444879549,
-    "com.opencsv:opencsv:jar:sources": -1556307505,
+    "com.opencsv:opencsv": -1477024427,
+    "com.opencsv:opencsv:jar:sources": 1148444188,
     "com.softwaremill.magnolia1_3:magnolia_3": -961307842,
     "com.softwaremill.magnolia1_3:magnolia_3:jar:sources": 1803286344,
     "com.softwaremill.quicklens:quicklens_3": 1918781905,
@@ -171,7 +172,7 @@
     "com.softwaremill.sttp.client4:core_3:jar:sources": -2072623281,
     "com.softwaremill.sttp.client4:json-common_3": 644729493,
     "com.softwaremill.sttp.client4:json-common_3:jar:sources": 420495851,
-    "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": -533920886,
+    "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": 1238118817,
     "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3:jar:sources": 1301939477,
     "com.softwaremill.sttp.client4:zio-json_3": 1146366857,
     "com.softwaremill.sttp.client4:zio-json_3:jar:sources": -580463715,
@@ -195,7 +196,7 @@
     "com.softwaremill.sttp.tapir:tapir-json-zio_3:jar:sources": 2096928986,
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": -537265267,
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3:jar:sources": 1954534506,
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": -1507760070,
+    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": 212190745,
     "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:jar:sources": 859713593,
     "com.softwaremill.sttp.tapir:tapir-refined_3": 1056004499,
     "com.softwaremill.sttp.tapir:tapir-refined_3:jar:sources": -2032283509,
@@ -205,16 +206,16 @@
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:jar:sources": 574898639,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3": 589616964,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui_3:jar:sources": -1441421400,
-    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": 1357636513,
+    "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": -1044025726,
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3:jar:sources": -666502806,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": -1231404933,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:jar:sources": 989691084,
     "com.softwaremill.sttp.tapir:tapir-zio_3": -264093383,
     "com.softwaremill.sttp.tapir:tapir-zio_3:jar:sources": 1403356967,
-    "com.squareup.okhttp3:okhttp-jvm": 859102873,
-    "com.squareup.okhttp3:okhttp-jvm:jar:sources": -433851252,
-    "com.squareup.okio:okio-jvm": -2010015946,
-    "com.squareup.okio:okio-jvm:jar:sources": -992116235,
+    "com.squareup.okhttp3:okhttp-jvm": -599416580,
+    "com.squareup.okhttp3:okhttp-jvm:jar:sources": 1193647833,
+    "com.squareup.okio:okio-jvm": 211501777,
+    "com.squareup.okio:okio-jvm:jar:sources": 1535507792,
     "com.sun.activation:jakarta.activation": 692559776,
     "com.sun.activation:jakarta.activation:jar:sources": -1737828991,
     "com.sun.istack:istack-commons-runtime": 1751873978,
@@ -225,8 +226,8 @@
     "com.zaxxer:HikariCP:jar:sources": 1316483434,
     "commons-beanutils:commons-beanutils": 852036681,
     "commons-beanutils:commons-beanutils:jar:sources": 1596942423,
-    "commons-cli:commons-cli": -1049205324,
-    "commons-cli:commons-cli:jar:sources": -215239787,
+    "commons-cli:commons-cli": -32742453,
+    "commons-cli:commons-cli:jar:sources": -2017835649,
     "commons-codec:commons-codec": -1266557082,
     "commons-codec:commons-codec:jar:sources": 1982466183,
     "commons-collections:commons-collections": 7509648,
@@ -263,7 +264,7 @@
     "dev.zio:zio-config_3:jar:sources": 1348924478,
     "dev.zio:zio-constraintless_3": -992019704,
     "dev.zio:zio-constraintless_3:jar:sources": -1765365602,
-    "dev.zio:zio-http_3": 878478906,
+    "dev.zio:zio-http_3": 1048852354,
     "dev.zio:zio-http_3:jar:sources": 497099896,
     "dev.zio:zio-internal-macros_3": -1586160431,
     "dev.zio:zio-internal-macros_3:jar:sources": 1422710146,
@@ -285,7 +286,7 @@
     "dev.zio:zio-mock_3:jar:sources": -526943379,
     "dev.zio:zio-nio_3": 1955173943,
     "dev.zio:zio-nio_3:jar:sources": -1261065214,
-    "dev.zio:zio-opentelemetry_3": 625107207,
+    "dev.zio:zio-opentelemetry_3": 1036932251,
     "dev.zio:zio-opentelemetry_3:jar:sources": -840492931,
     "dev.zio:zio-parser_3": 1764797589,
     "dev.zio:zio-parser_3:jar:sources": -1892608480,
@@ -317,9 +318,9 @@
     "dev.zio:zio-test_3:jar:sources": 895591478,
     "dev.zio:zio_3": -1077749875,
     "dev.zio:zio_3:jar:sources": 1513395708,
-    "eu.neverblink.jelly:jelly-core": -1517588263,
+    "eu.neverblink.jelly:jelly-core": -1445513065,
     "eu.neverblink.jelly:jelly-core:jar:sources": 1505168369,
-    "eu.neverblink.jelly:jelly-jena": -1103741368,
+    "eu.neverblink.jelly:jelly-jena": -2045205721,
     "eu.neverblink.jelly:jelly-jena:jar:sources": -440860059,
     "eu.timepit:refined_3": -2008737203,
     "eu.timepit:refined_3:jar:sources": -399125617,
@@ -377,36 +378,36 @@
     "io.netty:netty-transport-native-unix-common": -957071798,
     "io.netty:netty-transport-native-unix-common:jar:sources": 152225256,
     "io.netty:netty-transport:jar:sources": -1972999917,
-    "io.opentelemetry.semconv:opentelemetry-semconv": 1200901343,
-    "io.opentelemetry.semconv:opentelemetry-semconv:jar:sources": 663691616,
-    "io.opentelemetry:opentelemetry-api": 1843520948,
-    "io.opentelemetry:opentelemetry-api:jar:sources": -1748204680,
-    "io.opentelemetry:opentelemetry-common": -1101501837,
-    "io.opentelemetry:opentelemetry-common:jar:sources": -1582949201,
-    "io.opentelemetry:opentelemetry-context": 805666064,
-    "io.opentelemetry:opentelemetry-context:jar:sources": 208094940,
-    "io.opentelemetry:opentelemetry-exporter-common": 1358026716,
-    "io.opentelemetry:opentelemetry-exporter-common:jar:sources": -1572231744,
-    "io.opentelemetry:opentelemetry-exporter-logging-otlp": 966344626,
-    "io.opentelemetry:opentelemetry-exporter-logging-otlp:jar:sources": -1675974876,
-    "io.opentelemetry:opentelemetry-exporter-otlp": -853013068,
-    "io.opentelemetry:opentelemetry-exporter-otlp-common": -282137938,
-    "io.opentelemetry:opentelemetry-exporter-otlp-common:jar:sources": 1061899676,
-    "io.opentelemetry:opentelemetry-exporter-otlp:jar:sources": 2039731722,
-    "io.opentelemetry:opentelemetry-exporter-sender-okhttp": -909874257,
-    "io.opentelemetry:opentelemetry-exporter-sender-okhttp:jar:sources": 1553552139,
-    "io.opentelemetry:opentelemetry-sdk": -873370882,
-    "io.opentelemetry:opentelemetry-sdk-common": -598292732,
-    "io.opentelemetry:opentelemetry-sdk-common:jar:sources": 1040138977,
-    "io.opentelemetry:opentelemetry-sdk-logs": -544366228,
-    "io.opentelemetry:opentelemetry-sdk-logs:jar:sources": -900238885,
-    "io.opentelemetry:opentelemetry-sdk-metrics": 1224827518,
-    "io.opentelemetry:opentelemetry-sdk-metrics:jar:sources": 1245024009,
-    "io.opentelemetry:opentelemetry-sdk-testing": 1214188652,
-    "io.opentelemetry:opentelemetry-sdk-testing:jar:sources": 832753224,
-    "io.opentelemetry:opentelemetry-sdk-trace": 1584872372,
-    "io.opentelemetry:opentelemetry-sdk-trace:jar:sources": 1094826870,
-    "io.opentelemetry:opentelemetry-sdk:jar:sources": 1740343346,
+    "io.opentelemetry.semconv:opentelemetry-semconv": -1437520936,
+    "io.opentelemetry.semconv:opentelemetry-semconv:jar:sources": -1839387641,
+    "io.opentelemetry:opentelemetry-api": 1715664984,
+    "io.opentelemetry:opentelemetry-api:jar:sources": 1087138194,
+    "io.opentelemetry:opentelemetry-common": 130342319,
+    "io.opentelemetry:opentelemetry-common:jar:sources": 1154645674,
+    "io.opentelemetry:opentelemetry-context": 1458168072,
+    "io.opentelemetry:opentelemetry-context:jar:sources": 2001179891,
+    "io.opentelemetry:opentelemetry-exporter-common": 1841442992,
+    "io.opentelemetry:opentelemetry-exporter-common:jar:sources": -702304230,
+    "io.opentelemetry:opentelemetry-exporter-logging-otlp": 385347608,
+    "io.opentelemetry:opentelemetry-exporter-logging-otlp:jar:sources": 1323513745,
+    "io.opentelemetry:opentelemetry-exporter-otlp": 1701876919,
+    "io.opentelemetry:opentelemetry-exporter-otlp-common": -827075249,
+    "io.opentelemetry:opentelemetry-exporter-otlp-common:jar:sources": -1316790801,
+    "io.opentelemetry:opentelemetry-exporter-otlp:jar:sources": 2067455282,
+    "io.opentelemetry:opentelemetry-exporter-sender-okhttp": 574367147,
+    "io.opentelemetry:opentelemetry-exporter-sender-okhttp:jar:sources": 301289136,
+    "io.opentelemetry:opentelemetry-sdk": -463180422,
+    "io.opentelemetry:opentelemetry-sdk-common": -2108059172,
+    "io.opentelemetry:opentelemetry-sdk-common:jar:sources": -135965754,
+    "io.opentelemetry:opentelemetry-sdk-logs": 1503759499,
+    "io.opentelemetry:opentelemetry-sdk-logs:jar:sources": -2036611021,
+    "io.opentelemetry:opentelemetry-sdk-metrics": -133028347,
+    "io.opentelemetry:opentelemetry-sdk-metrics:jar:sources": -1740574124,
+    "io.opentelemetry:opentelemetry-sdk-testing": -1108807104,
+    "io.opentelemetry:opentelemetry-sdk-testing:jar:sources": 519944834,
+    "io.opentelemetry:opentelemetry-sdk-trace": 1875083461,
+    "io.opentelemetry:opentelemetry-sdk-trace:jar:sources": -1759863381,
+    "io.opentelemetry:opentelemetry-sdk:jar:sources": -1992707356,
     "jakarta.json:jakarta.json-api": 908704280,
     "jakarta.json:jakarta.json-api:jar:sources": -1634357469,
     "jakarta.xml.bind:jakarta.xml.bind-api": 522960898,
@@ -441,54 +442,56 @@
     "org.apache.commons:commons-lang3:jar:sources": -982252396,
     "org.apache.commons:commons-math3": -1383243934,
     "org.apache.commons:commons-math3:jar:sources": -2132756896,
-    "org.apache.commons:commons-text": -1418210066,
-    "org.apache.commons:commons-text:jar:sources": -596520490,
-    "org.apache.httpcomponents.client5:httpclient5": -1814870448,
-    "org.apache.httpcomponents.client5:httpclient5:jar:sources": 919700471,
-    "org.apache.httpcomponents.core5:httpcore5": 1180859703,
-    "org.apache.httpcomponents.core5:httpcore5-h2": -1690067709,
-    "org.apache.httpcomponents.core5:httpcore5-h2:jar:sources": -1194800975,
-    "org.apache.httpcomponents.core5:httpcore5:jar:sources": -258723166,
+    "org.apache.commons:commons-text": 869132518,
+    "org.apache.commons:commons-text:jar:sources": 400790036,
+    "org.apache.datasketches:datasketches-java": 677350316,
+    "org.apache.datasketches:datasketches-java:jar:sources": -1886696911,
+    "org.apache.httpcomponents.client5:httpclient5": -567393073,
+    "org.apache.httpcomponents.client5:httpclient5:jar:sources": 771689088,
+    "org.apache.httpcomponents.core5:httpcore5": 332900645,
+    "org.apache.httpcomponents.core5:httpcore5-h2": -52989829,
+    "org.apache.httpcomponents.core5:httpcore5-h2:jar:sources": -988235276,
+    "org.apache.httpcomponents.core5:httpcore5:jar:sources": 760286222,
     "org.apache.httpcomponents:httpclient": -630303486,
     "org.apache.httpcomponents:httpclient-cache": -2008317688,
     "org.apache.httpcomponents:httpclient-cache:jar:sources": -2080014866,
     "org.apache.httpcomponents:httpclient:jar:sources": -779528763,
     "org.apache.httpcomponents:httpcore": 67453319,
     "org.apache.httpcomponents:httpcore:jar:sources": 2134002822,
-    "org.apache.jena:jena-arq": 1089233143,
-    "org.apache.jena:jena-arq:jar:sources": 429451487,
-    "org.apache.jena:jena-base": -363376198,
-    "org.apache.jena:jena-base:jar:sources": -1413057785,
-    "org.apache.jena:jena-cmds": -1088744888,
-    "org.apache.jena:jena-cmds:jar:sources": 44754717,
-    "org.apache.jena:jena-core": -1379927941,
-    "org.apache.jena:jena-core:jar:sources": -1907069772,
-    "org.apache.jena:jena-dboe-base": 648858979,
-    "org.apache.jena:jena-dboe-base:jar:sources": 70927043,
-    "org.apache.jena:jena-dboe-index": -1976790553,
-    "org.apache.jena:jena-dboe-index:jar:sources": -365920055,
-    "org.apache.jena:jena-dboe-storage": -278172467,
-    "org.apache.jena:jena-dboe-storage:jar:sources": -1550926469,
-    "org.apache.jena:jena-dboe-trans-data": -1446647680,
-    "org.apache.jena:jena-dboe-trans-data:jar:sources": 577312802,
-    "org.apache.jena:jena-dboe-transaction": 294863595,
-    "org.apache.jena:jena-dboe-transaction:jar:sources": -291237470,
-    "org.apache.jena:jena-iri3986": -2003186786,
-    "org.apache.jena:jena-iri3986:jar:sources": 767562045,
-    "org.apache.jena:jena-langtag": -970180726,
-    "org.apache.jena:jena-langtag:jar:sources": 1081127545,
-    "org.apache.jena:jena-rdfpatch": -816607901,
-    "org.apache.jena:jena-rdfpatch:jar:sources": -800822881,
-    "org.apache.jena:jena-shacl": 1369373344,
-    "org.apache.jena:jena-shacl:jar:sources": 331577716,
-    "org.apache.jena:jena-shex": 1043127546,
-    "org.apache.jena:jena-shex:jar:sources": 750935071,
-    "org.apache.jena:jena-tdb1": -464733916,
-    "org.apache.jena:jena-tdb1:jar:sources": 512400289,
-    "org.apache.jena:jena-tdb2": 2035545168,
-    "org.apache.jena:jena-tdb2:jar:sources": -1726923645,
-    "org.apache.jena:jena-text": 143189938,
-    "org.apache.jena:jena-text:jar:sources": -1909740219,
+    "org.apache.jena:jena-arq": 1290768947,
+    "org.apache.jena:jena-arq:jar:sources": -1251142382,
+    "org.apache.jena:jena-base": 1902499006,
+    "org.apache.jena:jena-base:jar:sources": 751570737,
+    "org.apache.jena:jena-cmds": -1652929511,
+    "org.apache.jena:jena-cmds:jar:sources": -1778860030,
+    "org.apache.jena:jena-core": 1595957699,
+    "org.apache.jena:jena-core:jar:sources": -905523005,
+    "org.apache.jena:jena-dboe-base": 22028132,
+    "org.apache.jena:jena-dboe-base:jar:sources": 1027899319,
+    "org.apache.jena:jena-dboe-index": -1000574282,
+    "org.apache.jena:jena-dboe-index:jar:sources": -987863113,
+    "org.apache.jena:jena-dboe-storage": -1169858123,
+    "org.apache.jena:jena-dboe-storage:jar:sources": -459757568,
+    "org.apache.jena:jena-dboe-trans-data": 2060249514,
+    "org.apache.jena:jena-dboe-trans-data:jar:sources": -637642007,
+    "org.apache.jena:jena-dboe-transaction": -1783367503,
+    "org.apache.jena:jena-dboe-transaction:jar:sources": -1510629321,
+    "org.apache.jena:jena-iri3986": -576098119,
+    "org.apache.jena:jena-iri3986:jar:sources": -353291809,
+    "org.apache.jena:jena-langtag": -1490712533,
+    "org.apache.jena:jena-langtag:jar:sources": 1812448984,
+    "org.apache.jena:jena-rdfpatch": -2075153748,
+    "org.apache.jena:jena-rdfpatch:jar:sources": -357896811,
+    "org.apache.jena:jena-shacl": -255672801,
+    "org.apache.jena:jena-shacl:jar:sources": -1547654159,
+    "org.apache.jena:jena-shex": -1043251163,
+    "org.apache.jena:jena-shex:jar:sources": 808045162,
+    "org.apache.jena:jena-tdb1": -849989345,
+    "org.apache.jena:jena-tdb1:jar:sources": 82011924,
+    "org.apache.jena:jena-tdb2": -322427439,
+    "org.apache.jena:jena-tdb2:jar:sources": -533888260,
+    "org.apache.jena:jena-text": 859546109,
+    "org.apache.jena:jena-text:jar:sources": 1129578297,
     "org.apache.lucene:lucene-analysis-common": 1642364254,
     "org.apache.lucene:lucene-analysis-common:jar:sources": 1950222684,
     "org.apache.lucene:lucene-backward-codecs": 1756547680,
@@ -507,8 +510,8 @@
     "org.apache.lucene:lucene-queryparser:jar:sources": -424927242,
     "org.apache.lucene:lucene-sandbox": -2003395502,
     "org.apache.lucene:lucene-sandbox:jar:sources": -1295788593,
-    "org.apache.thrift:libthrift": 1444732171,
-    "org.apache.thrift:libthrift:jar:sources": 1163565392,
+    "org.apache.thrift:libthrift": 1951516276,
+    "org.apache.thrift:libthrift:jar:sources": 168996178,
     "org.bouncycastle:bcpkix-jdk18on": -294727450,
     "org.bouncycastle:bcpkix-jdk18on:jar:sources": 1412420619,
     "org.bouncycastle:bcprov-jdk15to18": -796422275,
@@ -557,114 +560,120 @@
     "org.eclipse.jetty:jetty-webapp:jar:sources": 39344845,
     "org.eclipse.jetty:jetty-xml": 398291446,
     "org.eclipse.jetty:jetty-xml:jar:sources": -89863859,
-    "org.eclipse.rdf4j:rdf4j-client:pom": -973545521,
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api": -293468105,
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api:jar:sources": -678616169,
-    "org.eclipse.rdf4j:rdf4j-common-annotation": 719562005,
-    "org.eclipse.rdf4j:rdf4j-common-annotation:jar:sources": 2053549054,
-    "org.eclipse.rdf4j:rdf4j-common-exception": -1522913177,
-    "org.eclipse.rdf4j:rdf4j-common-exception:jar:sources": -626599146,
-    "org.eclipse.rdf4j:rdf4j-common-io": -1485104905,
-    "org.eclipse.rdf4j:rdf4j-common-io:jar:sources": 1170432328,
-    "org.eclipse.rdf4j:rdf4j-common-iterator": 1959057984,
-    "org.eclipse.rdf4j:rdf4j-common-iterator:jar:sources": 1943428955,
-    "org.eclipse.rdf4j:rdf4j-common-order": 1949831661,
-    "org.eclipse.rdf4j:rdf4j-common-order:jar:sources": 532689703,
-    "org.eclipse.rdf4j:rdf4j-common-text": 1534540936,
-    "org.eclipse.rdf4j:rdf4j-common-text:jar:sources": -661271114,
-    "org.eclipse.rdf4j:rdf4j-common-transaction": -975481492,
-    "org.eclipse.rdf4j:rdf4j-common-transaction:jar:sources": 1317441336,
-    "org.eclipse.rdf4j:rdf4j-common-xml": 1809602561,
-    "org.eclipse.rdf4j:rdf4j-common-xml:jar:sources": 637224572,
-    "org.eclipse.rdf4j:rdf4j-http-client": 1476333644,
-    "org.eclipse.rdf4j:rdf4j-http-client:jar:sources": -1255129785,
-    "org.eclipse.rdf4j:rdf4j-http-protocol": -979207806,
-    "org.eclipse.rdf4j:rdf4j-http-protocol:jar:sources": -340170364,
-    "org.eclipse.rdf4j:rdf4j-model": -997374172,
-    "org.eclipse.rdf4j:rdf4j-model-api": 1769454848,
-    "org.eclipse.rdf4j:rdf4j-model-api:jar:sources": 60680477,
-    "org.eclipse.rdf4j:rdf4j-model-vocabulary": -20673801,
-    "org.eclipse.rdf4j:rdf4j-model-vocabulary:jar:sources": -917597750,
-    "org.eclipse.rdf4j:rdf4j-model:jar:sources": 653677472,
-    "org.eclipse.rdf4j:rdf4j-query": 344368259,
-    "org.eclipse.rdf4j:rdf4j-query:jar:sources": -2122577013,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": 953317093,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation:jar:sources": -167036821,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-model": 1049799538,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-model:jar:sources": 725637105,
-    "org.eclipse.rdf4j:rdf4j-queryparser-api": -554911484,
-    "org.eclipse.rdf4j:rdf4j-queryparser-api:jar:sources": -36421222,
-    "org.eclipse.rdf4j:rdf4j-queryparser-sparql": -1101044530,
-    "org.eclipse.rdf4j:rdf4j-queryparser-sparql:jar:sources": 1103047347,
-    "org.eclipse.rdf4j:rdf4j-queryrender": -335870041,
-    "org.eclipse.rdf4j:rdf4j-queryrender:jar:sources": 57826658,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api": 2123596687,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api:jar:sources": 414339929,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": -1375773358,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary:jar:sources": -1127823895,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": 1634231332,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources": 645009038,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": 1289417654,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources": -1462336532,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": 481186886,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources": 1708714587,
-    "org.eclipse.rdf4j:rdf4j-repository-api": -530472609,
-    "org.eclipse.rdf4j:rdf4j-repository-api:jar:sources": -1036654762,
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": -283332668,
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware:jar:sources": 552244760,
-    "org.eclipse.rdf4j:rdf4j-repository-event": -714602386,
-    "org.eclipse.rdf4j:rdf4j-repository-event:jar:sources": -537654448,
-    "org.eclipse.rdf4j:rdf4j-repository-http": 182431007,
-    "org.eclipse.rdf4j:rdf4j-repository-http:jar:sources": -786922520,
-    "org.eclipse.rdf4j:rdf4j-repository-manager": 1006454365,
-    "org.eclipse.rdf4j:rdf4j-repository-manager:jar:sources": 476954882,
-    "org.eclipse.rdf4j:rdf4j-repository-sail": -1293101111,
-    "org.eclipse.rdf4j:rdf4j-repository-sail:jar:sources": -208189777,
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": 68339473,
-    "org.eclipse.rdf4j:rdf4j-repository-sparql:jar:sources": 1567820947,
-    "org.eclipse.rdf4j:rdf4j-rio-api": -2120163401,
-    "org.eclipse.rdf4j:rdf4j-rio-api:jar:sources": -963302127,
-    "org.eclipse.rdf4j:rdf4j-rio-binary": -1313295547,
-    "org.eclipse.rdf4j:rdf4j-rio-binary:jar:sources": -1692583719,
-    "org.eclipse.rdf4j:rdf4j-rio-datatypes": -1046230252,
-    "org.eclipse.rdf4j:rdf4j-rio-datatypes:jar:sources": -1228392203,
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": 1259934338,
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld:jar:sources": -585699246,
-    "org.eclipse.rdf4j:rdf4j-rio-languages": 437058357,
-    "org.eclipse.rdf4j:rdf4j-rio-languages:jar:sources": 1307328497,
-    "org.eclipse.rdf4j:rdf4j-rio-n3": 188107744,
-    "org.eclipse.rdf4j:rdf4j-rio-n3:jar:sources": -822968497,
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": 1902255090,
-    "org.eclipse.rdf4j:rdf4j-rio-nquads:jar:sources": -683782030,
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": 340425663,
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples:jar:sources": 2051419926,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": -1222813113,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson:jar:sources": 38498322,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": 1762781906,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml:jar:sources": 928463625,
-    "org.eclipse.rdf4j:rdf4j-rio-trig": 1109141103,
-    "org.eclipse.rdf4j:rdf4j-rio-trig:jar:sources": 606646402,
-    "org.eclipse.rdf4j:rdf4j-rio-trix": 537924090,
-    "org.eclipse.rdf4j:rdf4j-rio-trix:jar:sources": 942942953,
-    "org.eclipse.rdf4j:rdf4j-rio-turtle": -439311325,
-    "org.eclipse.rdf4j:rdf4j-rio-turtle:jar:sources": 481462544,
-    "org.eclipse.rdf4j:rdf4j-sail-api": -1145568693,
-    "org.eclipse.rdf4j:rdf4j-sail-api:jar:sources": 416729580,
-    "org.eclipse.rdf4j:rdf4j-sail-base": -1487021723,
-    "org.eclipse.rdf4j:rdf4j-sail-base:jar:sources": -392344867,
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": -1178093124,
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer:jar:sources": -1992597209,
-    "org.eclipse.rdf4j:rdf4j-sail-memory": -2080691718,
-    "org.eclipse.rdf4j:rdf4j-sail-memory:jar:sources": 235846860,
-    "org.eclipse.rdf4j:rdf4j-sail-model": -1670605408,
-    "org.eclipse.rdf4j:rdf4j-sail-model:jar:sources": -1417019271,
-    "org.eclipse.rdf4j:rdf4j-shacl": -544428034,
-    "org.eclipse.rdf4j:rdf4j-shacl:jar:sources": -332352624,
-    "org.eclipse.rdf4j:rdf4j-sparqlbuilder": 323777316,
-    "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources": 1083084526,
+    "org.eclipse.rdf4j:rdf4j-client:pom": -860990527,
+    "org.eclipse.rdf4j:rdf4j-collection-factory-api": -630329933,
+    "org.eclipse.rdf4j:rdf4j-collection-factory-api:jar:sources": 466716394,
+    "org.eclipse.rdf4j:rdf4j-common-annotation": -1811242603,
+    "org.eclipse.rdf4j:rdf4j-common-annotation:jar:sources": -489875452,
+    "org.eclipse.rdf4j:rdf4j-common-exception": 1436599895,
+    "org.eclipse.rdf4j:rdf4j-common-exception:jar:sources": -331834882,
+    "org.eclipse.rdf4j:rdf4j-common-io": 613166931,
+    "org.eclipse.rdf4j:rdf4j-common-io:jar:sources": -1446170167,
+    "org.eclipse.rdf4j:rdf4j-common-iterator": 1770801466,
+    "org.eclipse.rdf4j:rdf4j-common-iterator:jar:sources": 2018718458,
+    "org.eclipse.rdf4j:rdf4j-common-order": -1931985132,
+    "org.eclipse.rdf4j:rdf4j-common-order:jar:sources": 907761824,
+    "org.eclipse.rdf4j:rdf4j-common-text": 2076694462,
+    "org.eclipse.rdf4j:rdf4j-common-text:jar:sources": 2062097167,
+    "org.eclipse.rdf4j:rdf4j-common-transaction": 334344936,
+    "org.eclipse.rdf4j:rdf4j-common-transaction:jar:sources": -457160617,
+    "org.eclipse.rdf4j:rdf4j-common-xml": -1214540242,
+    "org.eclipse.rdf4j:rdf4j-common-xml:jar:sources": -699925107,
+    "org.eclipse.rdf4j:rdf4j-http-client": 1915844106,
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5": 1563975750,
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources": -521120107,
+    "org.eclipse.rdf4j:rdf4j-http-client-api": 1962003008,
+    "org.eclipse.rdf4j:rdf4j-http-client-api:jar:sources": 419503318,
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk": 326109254,
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources": 1574853768,
+    "org.eclipse.rdf4j:rdf4j-http-client:jar:sources": -338191604,
+    "org.eclipse.rdf4j:rdf4j-http-protocol": 543388705,
+    "org.eclipse.rdf4j:rdf4j-http-protocol:jar:sources": -904545246,
+    "org.eclipse.rdf4j:rdf4j-model": 154459970,
+    "org.eclipse.rdf4j:rdf4j-model-api": -583177577,
+    "org.eclipse.rdf4j:rdf4j-model-api:jar:sources": -592944005,
+    "org.eclipse.rdf4j:rdf4j-model-vocabulary": 650851289,
+    "org.eclipse.rdf4j:rdf4j-model-vocabulary:jar:sources": -372187587,
+    "org.eclipse.rdf4j:rdf4j-model:jar:sources": -1373930819,
+    "org.eclipse.rdf4j:rdf4j-query": -875231357,
+    "org.eclipse.rdf4j:rdf4j-query:jar:sources": -1910719977,
+    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": 484749796,
+    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation:jar:sources": -1117251776,
+    "org.eclipse.rdf4j:rdf4j-queryalgebra-model": 1841351855,
+    "org.eclipse.rdf4j:rdf4j-queryalgebra-model:jar:sources": -1481525054,
+    "org.eclipse.rdf4j:rdf4j-queryparser-api": -1636791123,
+    "org.eclipse.rdf4j:rdf4j-queryparser-api:jar:sources": -1961895632,
+    "org.eclipse.rdf4j:rdf4j-queryparser-sparql": -1453467444,
+    "org.eclipse.rdf4j:rdf4j-queryparser-sparql:jar:sources": -1690940032,
+    "org.eclipse.rdf4j:rdf4j-queryrender": -1935054277,
+    "org.eclipse.rdf4j:rdf4j-queryrender:jar:sources": -1446941351,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-api": 1511249474,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-api:jar:sources": 640228909,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": 1882202075,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-binary:jar:sources": -2033167480,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": -1554775782,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources": -1644920422,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": 1735505986,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources": 1965843090,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-text": 781020456,
+    "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources": 333782214,
+    "org.eclipse.rdf4j:rdf4j-repository-api": -314972347,
+    "org.eclipse.rdf4j:rdf4j-repository-api:jar:sources": -1514259849,
+    "org.eclipse.rdf4j:rdf4j-repository-contextaware": -2074258325,
+    "org.eclipse.rdf4j:rdf4j-repository-contextaware:jar:sources": -1829241910,
+    "org.eclipse.rdf4j:rdf4j-repository-event": -953793399,
+    "org.eclipse.rdf4j:rdf4j-repository-event:jar:sources": -1439049185,
+    "org.eclipse.rdf4j:rdf4j-repository-http": 259643728,
+    "org.eclipse.rdf4j:rdf4j-repository-http:jar:sources": 1614049271,
+    "org.eclipse.rdf4j:rdf4j-repository-manager": 1259135551,
+    "org.eclipse.rdf4j:rdf4j-repository-manager:jar:sources": 392161810,
+    "org.eclipse.rdf4j:rdf4j-repository-sail": 1221896545,
+    "org.eclipse.rdf4j:rdf4j-repository-sail:jar:sources": 736149980,
+    "org.eclipse.rdf4j:rdf4j-repository-sparql": 1663088434,
+    "org.eclipse.rdf4j:rdf4j-repository-sparql:jar:sources": 1548376695,
+    "org.eclipse.rdf4j:rdf4j-rio-api": 129764391,
+    "org.eclipse.rdf4j:rdf4j-rio-api:jar:sources": 672905725,
+    "org.eclipse.rdf4j:rdf4j-rio-binary": -988382209,
+    "org.eclipse.rdf4j:rdf4j-rio-binary:jar:sources": 1878245440,
+    "org.eclipse.rdf4j:rdf4j-rio-datatypes": 1822113830,
+    "org.eclipse.rdf4j:rdf4j-rio-datatypes:jar:sources": 407915585,
+    "org.eclipse.rdf4j:rdf4j-rio-jsonld": 862617160,
+    "org.eclipse.rdf4j:rdf4j-rio-jsonld:jar:sources": 1784165147,
+    "org.eclipse.rdf4j:rdf4j-rio-languages": 1599965020,
+    "org.eclipse.rdf4j:rdf4j-rio-languages:jar:sources": 154080221,
+    "org.eclipse.rdf4j:rdf4j-rio-n3": -2114021120,
+    "org.eclipse.rdf4j:rdf4j-rio-n3:jar:sources": -1716960086,
+    "org.eclipse.rdf4j:rdf4j-rio-nquads": 2097632089,
+    "org.eclipse.rdf4j:rdf4j-rio-nquads:jar:sources": -2140825491,
+    "org.eclipse.rdf4j:rdf4j-rio-ntriples": -709618156,
+    "org.eclipse.rdf4j:rdf4j-rio-ntriples:jar:sources": 2083142276,
+    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": 1675486440,
+    "org.eclipse.rdf4j:rdf4j-rio-rdfjson:jar:sources": 1034585336,
+    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": 1083741628,
+    "org.eclipse.rdf4j:rdf4j-rio-rdfxml:jar:sources": 630320538,
+    "org.eclipse.rdf4j:rdf4j-rio-trig": 1364780340,
+    "org.eclipse.rdf4j:rdf4j-rio-trig:jar:sources": 1418214102,
+    "org.eclipse.rdf4j:rdf4j-rio-trix": -237289699,
+    "org.eclipse.rdf4j:rdf4j-rio-trix:jar:sources": 963417449,
+    "org.eclipse.rdf4j:rdf4j-rio-turtle": 1692802397,
+    "org.eclipse.rdf4j:rdf4j-rio-turtle:jar:sources": -81468401,
+    "org.eclipse.rdf4j:rdf4j-sail-api": 1304180260,
+    "org.eclipse.rdf4j:rdf4j-sail-api:jar:sources": -1520699221,
+    "org.eclipse.rdf4j:rdf4j-sail-base": -190865037,
+    "org.eclipse.rdf4j:rdf4j-sail-base:jar:sources": -185815078,
+    "org.eclipse.rdf4j:rdf4j-sail-inferencer": -1122923846,
+    "org.eclipse.rdf4j:rdf4j-sail-inferencer:jar:sources": 1296450057,
+    "org.eclipse.rdf4j:rdf4j-sail-memory": 1005028949,
+    "org.eclipse.rdf4j:rdf4j-sail-memory:jar:sources": -1860715311,
+    "org.eclipse.rdf4j:rdf4j-sail-model": 230917132,
+    "org.eclipse.rdf4j:rdf4j-sail-model:jar:sources": -1680642002,
+    "org.eclipse.rdf4j:rdf4j-shacl": 1649348744,
+    "org.eclipse.rdf4j:rdf4j-shacl:jar:sources": -280190236,
+    "org.eclipse.rdf4j:rdf4j-sparqlbuilder": -280093438,
+    "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources": 737011528,
     "org.ehcache:ehcache": -447136515,
     "org.ehcache:ehcache:jar:sources": 917936710,
-    "org.flywaydb:flyway-core": -1760543343,
+    "org.flywaydb:flyway-core": -1373507591,
     "org.flywaydb:flyway-core:jar:sources": 1267017770,
     "org.glassfish.jaxb:jaxb-core": 188053491,
     "org.glassfish.jaxb:jaxb-core:jar:sources": 740649838,
@@ -681,10 +690,10 @@
     "org.hamcrest:hamcrest-core": 1709140352,
     "org.hamcrest:hamcrest-core:jar:sources": -1634517230,
     "org.hamcrest:hamcrest:jar:sources": 1990729882,
-    "org.jetbrains.kotlin:kotlin-stdlib": -889996631,
-    "org.jetbrains.kotlin:kotlin-stdlib:jar:sources": -77419816,
-    "org.jetbrains:annotations": -845966580,
-    "org.jetbrains:annotations:jar:sources": 582621361,
+    "org.jetbrains.kotlin:kotlin-stdlib": 542836483,
+    "org.jetbrains.kotlin:kotlin-stdlib:jar:sources": 1119042874,
+    "org.jetbrains:annotations": 1790698553,
+    "org.jetbrains:annotations:jar:sources": -1529940378,
     "org.jline:jline-reader": 1348288365,
     "org.jline:jline-reader:jar:sources": 1523451013,
     "org.jline:jline-terminal": 590723992,
@@ -697,10 +706,10 @@
     "org.portable-scala:portable-scala-reflect_2.13:jar:sources": 1074691409,
     "org.reactivestreams:reactive-streams": 1281941191,
     "org.reactivestreams:reactive-streams:jar:sources": -1454226778,
-    "org.rnorth.duct-tape:duct-tape": -1059401544,
+    "org.rnorth.duct-tape:duct-tape": -1790097261,
     "org.rnorth.duct-tape:duct-tape:jar:sources": -1798015648,
-    "org.roaringbitmap:RoaringBitmap": 1640516570,
-    "org.roaringbitmap:RoaringBitmap:jar:sources": -1639062104,
+    "org.roaringbitmap:RoaringBitmap": -193479411,
+    "org.roaringbitmap:RoaringBitmap:jar:sources": 956527586,
     "org.scala-graph:graph-core_3": -2098830282,
     "org.scala-graph:graph-core_3:jar:sources": 847535680,
     "org.scala-lang.modules:scala-asm": -679780990,
@@ -709,11 +718,11 @@
     "org.scala-lang.modules:scala-collection-compat_3:jar:sources": 214419088,
     "org.scala-lang.modules:scala-xml_3": 195602550,
     "org.scala-lang.modules:scala-xml_3:jar:sources": -1176012239,
-    "org.scala-lang:scala3-compiler_3": -1718406073,
+    "org.scala-lang:scala3-compiler_3": 691797605,
     "org.scala-lang:scala3-compiler_3:jar:sources": -1029692100,
     "org.scala-lang:scala3-interfaces": 573462442,
     "org.scala-lang:scala3-interfaces:jar:sources": 109369527,
-    "org.scala-sbt:compiler-interface": 943503627,
+    "org.scala-sbt:compiler-interface": -680869281,
     "org.scala-sbt:compiler-interface:jar:sources": 1557741819,
     "org.scala-sbt:test-interface": -896079610,
     "org.scala-sbt:test-interface:jar:sources": -427347570,
@@ -721,8 +730,8 @@
     "org.scala-sbt:util-interface:jar:sources": 533924268,
     "org.scalacheck:scalacheck_3": 1013984743,
     "org.scalacheck:scalacheck_3:jar:sources": -1474185735,
-    "org.slf4j:jcl-over-slf4j": 498129285,
-    "org.slf4j:jcl-over-slf4j:jar:sources": -953923141,
+    "org.slf4j:jcl-over-slf4j": 1113513525,
+    "org.slf4j:jcl-over-slf4j:jar:sources": 494484499,
     "org.slf4j:slf4j-api": 500377983,
     "org.slf4j:slf4j-api:jar:sources": 1751644771,
     "org.slf4j:slf4j-simple": -1055624668,
@@ -739,9 +748,9 @@
     "org.springframework:spring-core:jar:sources": 333163033,
     "org.springframework:spring-expression": -744972682,
     "org.springframework:spring-expression:jar:sources": 735232192,
-    "org.testcontainers:testcontainers": -331363360,
+    "org.testcontainers:testcontainers": -961128094,
     "org.testcontainers:testcontainers:jar:sources": 375219890,
-    "org.topbraid:shacl": -279784144,
+    "org.topbraid:shacl": -1453383225,
     "org.topbraid:shacl:jar:sources": -998749544,
     "org.typelevel:cats-core_3": 91902594,
     "org.typelevel:cats-core_3:jar:sources": 856599929,
@@ -754,7 +763,7 @@
     "org.typelevel:jawn-parser_3": -2072470113,
     "org.typelevel:jawn-parser_3:jar:sources": 461393166,
     "org.webjars:swagger-ui": -690338883,
-    "org.wiremock:wiremock": -650138733,
+    "org.wiremock:wiremock": -1011530120,
     "org.wiremock:wiremock:jar:sources": 1230375324,
     "org.xerial:sqlite-jdbc": -1929436403,
     "org.xerial:sqlite-jdbc:jar:sources": 1201298594,
@@ -769,10 +778,10 @@
     "org.xmlunit:xmlunit-placeholders:jar:sources": 787968157,
     "org.yaml:snakeyaml": 1068613154,
     "org.yaml:snakeyaml:jar:sources": -665563845,
-    "tools.jackson.core:jackson-core": 704806230,
-    "tools.jackson.core:jackson-core:jar:sources": -611060232,
-    "tools.jackson.core:jackson-databind": -1784115690,
-    "tools.jackson.core:jackson-databind:jar:sources": 1368198688
+    "tools.jackson.core:jackson-core": 1798856334,
+    "tools.jackson.core:jackson-core:jar:sources": -1463079516,
+    "tools.jackson.core:jackson-databind": 1512428712,
+    "tools.jackson.core:jackson-databind:jar:sources": -507991739
   },
   "artifacts": {
     "com.apicatalog:titanium-jcs": {
@@ -812,24 +821,24 @@
     },
     "com.fasterxml.jackson.core:jackson-annotations": {
       "shasums": {
-        "jar": "53ca085f4a150f703f49e1aabd935bd03b43e1ea3d55d135438292af22cef56b",
-        "sources": "71fe6323d91b16d5d1007fd1e1533fa06bb369abde74f68a42a68c0f8f061a8b"
+        "jar": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0",
+        "sources": "f5375c756ee3c585808f9937eb087d074743fd3f05f6aeff9b183cf19230c9f7"
       },
-      "version": "2.21"
+      "version": "2.22"
     },
     "com.fasterxml.jackson.core:jackson-core": {
       "shasums": {
-        "jar": "baf8b739e9d9b93bcdb33f25046bfdb8dbd74c97de2a8698539fbe0c7eeac0bb",
-        "sources": "642d2164c9a170c4ce8a793ea0ac618bad5aa7c614088453c8eb77fbf9f4b2f1"
+        "jar": "d2e8dd4df1e0f61b786ea06792f5bf4235d8278f158f3be6e997e955931c0c98",
+        "sources": "ff129505a87d094e2cfaa0a99636fd830b71eb8156f13b239bd0b520ca34868a"
       },
-      "version": "2.21.3"
+      "version": "2.22.0"
     },
     "com.fasterxml.jackson.core:jackson-databind": {
       "shasums": {
-        "jar": "0057817ee40bc71544072dc2a3ba575ef91dce53a2d87489bde91c05f3a22621",
-        "sources": "d72cadee641b2a7e3c38b9f97918e3e0bd5fd3b58fba49b5ef5da824f9939371"
+        "jar": "34bbeb4526fff4f8565b12106bf85a6afcbae858966d489b54214ac46b2e26e8",
+        "sources": "a2512473d90c5ee7845970f7956f97820a34367af3d2b4d3b68644c15715fd87"
       },
-      "version": "2.21.0"
+      "version": "2.20.1"
     },
     "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
       "shasums": {
@@ -854,10 +863,10 @@
     },
     "com.github.ben-manes.caffeine:caffeine": {
       "shasums": {
-        "jar": "ca70c90a5d1ce1511880ce9c93d4ad22108f61111d3daf91eb52762b571bd179",
-        "sources": "60434a548af57d0dbe13b1aa4aaf08816e5bf1d3442264c669246f8929f4b757"
+        "jar": "9d9d2cfd681fd9272ded3d27c9930db12f89f732345975aa113ebc223bbf1224",
+        "sources": "5079e1b327d79e2fc8ae3f5927587e59c968603e63785fb33479acd8b732211d"
       },
-      "version": "3.2.3"
+      "version": "3.2.4"
     },
     "com.github.curious-odd-man:rgxgen": {
       "shasums": {
@@ -903,10 +912,10 @@
     },
     "com.github.jsonld-java:jsonld-java": {
       "shasums": {
-        "jar": "d8101c31cb4d6d07e87f03855c32ed67dbf29174b1a1a3a38cff8246290d3dcf",
-        "sources": "92f055f40661ead9a3b2f83a30e6f03f6adc81bf371e7b2c6e8f5ee03a6328c3"
+        "jar": "ac158c23504fa76dc1a5f43436df2cb34b4b435b79b38c9b941d1c75e2efbe90",
+        "sources": "1ff932326681039bc57ae91495a0f89ea28c92235ec48f5ff74e3c6ab511f899"
       },
-      "version": "0.13.4"
+      "version": "0.13.6"
     },
     "com.github.tototoshi:scala-csv_3": {
       "shasums": {
@@ -965,10 +974,10 @@
     },
     "com.google.protobuf:protobuf-java": {
       "shasums": {
-        "jar": "ae0459030b54a6f3058ad349aa01fc2edcbb2d4a84b73699675bbd125df2e96d",
-        "sources": "240db630888d78b6d67c0977416c8a48dd4bce42fb48424d054b128b72420b20"
+        "jar": "a4345ba2aa009912ff6f90467fea2d104605256b72c50840d75f13256638a472",
+        "sources": "83b680c10572c930de7631cd3376ead12fc11387d3515d8cfb15bd5a381dea1a"
       },
-      "version": "4.34.1"
+      "version": "4.35.1"
     },
     "com.googlecode.libphonenumber:libphonenumber": {
       "shasums": {
@@ -1014,10 +1023,10 @@
     },
     "com.opencsv:opencsv": {
       "shasums": {
-        "jar": "8f5333372340630e04e657cb06f8e513d7955903fd480c77181d73069a1e8c40",
-        "sources": "c29e34bb74adb9097b8e7b43d3ceb796275342f4942c8565b69387e47b9f30b7"
+        "jar": "f1c55d80a92c8ecfe3f15fb71785d5b156f3674cb5b9ad55dcfd378ffeed2960",
+        "sources": "590bac981c873443361a8e063b46aa5ae9a7975f5709e464f3a3a9eb341934bc"
       },
-      "version": "5.3"
+      "version": "5.12.0"
     },
     "com.softwaremill.magnolia1_3:magnolia_3": {
       "shasums": {
@@ -1231,17 +1240,17 @@
     },
     "com.squareup.okhttp3:okhttp-jvm": {
       "shasums": {
-        "jar": "c771f48075b763f6c322055e21129a94b7de4c1faf3f8f58ace320b0c9517a30",
-        "sources": "c44c549707d30d56084d0bc1bc00f36c7c326e30664b40c20c1ff8ab657afa5b"
+        "jar": "b15e605ca0a4b12c62ea7f657dad413c236c947e875854767349cdbe20df473c",
+        "sources": "52d1992759a1d0da8135b3a6819b881f44d949d2e07cfd3fb3007f804cf1909a"
       },
-      "version": "5.3.2"
+      "version": "5.4.0"
     },
     "com.squareup.okio:okio-jvm": {
       "shasums": {
-        "jar": "2196b993cd34dbbd919e7e01f57a4781b58bee80f86106163e287c20343a96a7",
-        "sources": "834d0ba65168b5314f447bd2403d134423c42ad1927fdcd24473b20c4fd5a7d8"
+        "jar": "3b13dcc3e1573047c2d507fc4f7fcb0bb0cbcd9d395da21d20e09406e2cd6a73",
+        "sources": "5603dfecfe4c71b36d6a591616be345fdd9d41a0a63553a3bd883d5ab6ee09a6"
       },
-      "version": "3.16.4"
+      "version": "3.17.0"
     },
     "com.sun.activation:jakarta.activation": {
       "shasums": {
@@ -1280,10 +1289,10 @@
     },
     "commons-cli:commons-cli": {
       "shasums": {
-        "jar": "d3d530d0f28fd0fbbffe2b0b338f70e8cb96f1605579e2e3abd4db29cac24e69",
-        "sources": "d551046d6abf01a6cd27cacb607b320daa90ade1b7a6e96ea98d142b18d9170e"
+        "jar": "8f7f8605d68e15bf32db61ec94eac6fdafc51b1bdbe1e0e0802b57d23f387792",
+        "sources": "c65b544468eafd3e1036671fb22fd9ba4c3f67c03f76298e8aaeb6943755a70b"
       },
-      "version": "1.9.0"
+      "version": "1.11.0"
     },
     "commons-codec:commons-codec": {
       "shasums": {
@@ -1802,108 +1811,108 @@
     },
     "io.opentelemetry.semconv:opentelemetry-semconv": {
       "shasums": {
-        "jar": "eb56685bfb9d26b1c95a171b38015747fc3085dd7f63aca26dfd87352ccbbe40",
-        "sources": "28c27108d49a317afb8cb7d1b65d2c7e3c7d4d854b2f34d8759287caf4c64f1e"
+        "jar": "40e0776423dcad5c9c81e744ddeb8b1b9dca932fe597234dddb7fd045823febd",
+        "sources": "e130ace9afe85ba64d2a86cb8bc01c8ca77ea69b5be7de1c0599a1ede02ba504"
       },
-      "version": "1.42.0"
+      "version": "1.43.0"
     },
     "io.opentelemetry:opentelemetry-api": {
       "shasums": {
-        "jar": "07377d6f3fb2ccfb8b8b713290bf48759f9218d4e72467f3ccee55895926ee4b",
-        "sources": "14a7621d5b8aea073caa0c817d46cdf9591a7cc96aa448e610d8c92b1cddfc06"
+        "jar": "ffaad9334ac41c02b6820b19da589d13dca72d7c6663cc9621c3ca64901f7995",
+        "sources": "ab3fde0188d038217444deeebc0d428f6585d88ac0a8b8182415c8accbca095b"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-common": {
       "shasums": {
-        "jar": "6e0ab4fa86b2581848328cc25c00188d6b0826f039055aec85352ebcf64b05df",
-        "sources": "27bc5cdc8fbed2ea8e055cf490e815d25b313c1eeb4dbd8f291d90a9bd12f56e"
+        "jar": "be2a8c3e458a3b3b8de0670c9f6649624b4b6f10f3bde64d3d340a029e86454e",
+        "sources": "b9497c6b28102942f54e8b72a18bb7f61384228dcf3fbbb8830e87db372e347a"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-context": {
       "shasums": {
-        "jar": "f96d13d1db4bf090eeb36d0c4e211e048a1ef48a59d833569b33aae4b4760a77",
-        "sources": "e87d9d3b189e2b5d5a267eb07b9252ed36f41bebe358f808e584db753ae4a951"
+        "jar": "7d763d701412dc10d5c70de8217a25d08bce1b7fe8fe3e3c6818568e14c1aabf",
+        "sources": "90b97138837244d04dc647f80690f1d9ed64be28c3bcb395e8a95e33b56d644b"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-exporter-common": {
       "shasums": {
-        "jar": "f288746055a9118d24a662cd7526cd5eb495ff37e5e4e54798a751b4bbe56e20",
-        "sources": "6c386707a0a486579b7068b636eb152eb634dbcb6b1ca34f4239362bd947e545"
+        "jar": "c17005d82bf8efa300328b15099fa4100eff20038a1db6c50e604f592f7641e7",
+        "sources": "8123c30fe47980f740e180363a679ca8dca75948ab392bb6259df5e8373ea37a"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-exporter-logging-otlp": {
       "shasums": {
-        "jar": "954111e0a519d1f16de662cd727e49524a6271fbe41c7205dc19eba5f46da3ad",
-        "sources": "df3cb01b3c81970fa88729a3ea1b6b5874c703379e1bbedfa45411132ce30f07"
+        "jar": "0f36b2e644afc5bc8788544fc6b3d275f937894da789c3b17fabb5a494eb4dc7",
+        "sources": "9720f8fddfd3cac3b0fe4a061657e734a5b7c7e0c11136447faa891a6120c208"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-exporter-otlp": {
       "shasums": {
-        "jar": "4877e560f0ca03675cfb99ed5457c0d1875e953381e029f198280aca8a1d0f47",
-        "sources": "b07ff43bd198a20225dfe2cd4aec9d856146c76612fcd50787fd4e560c0cb220"
+        "jar": "ef6cd5fe9de01caa2bc062a21322d2e4bf07c7dbb968c21fef4373325fbc452d",
+        "sources": "f30c5a28db1ca300e2f4be11f5871802d363aae0c908c7c49d253fc28c2164e9"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-exporter-otlp-common": {
       "shasums": {
-        "jar": "987fb841ea9c4b13699fc5c1afc842c5e83b38e18222821cdf9e6449c4cd5483",
-        "sources": "468ed0d30c230bea24013baed057aa66d6b89000280d0aa3cf1ba9045695e42e"
+        "jar": "821ea048731b21797de338cebfe4e8c439414cf8a2b13110c2d5c69238be431d",
+        "sources": "a8de4abeaeeca1c947d4f8a2bc1795d11d4fd1f098266d84a8935b0d2ff80c79"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-exporter-sender-okhttp": {
       "shasums": {
-        "jar": "5821c0fda70dd188c11a855ed2d76d410ec4fd91d7315299e11e1318e3cb1d58",
-        "sources": "2f8f056c59711f9293364367a47db927b094951a81402d4f3910409633e488c9"
+        "jar": "e38c58c8e98fee260508c5658d77dfc871ab8816c8acc91eb94d3e9cad1933f0",
+        "sources": "bbdfbf8cbe97eda8ecbf8e7d93bcce969d7d5fe8edbf9d7aaf8ce240ff842811"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk": {
       "shasums": {
-        "jar": "37acf2700ced98f59ac719e0551726d62eb085d659eb9f7c8e61f228c230902e",
-        "sources": "388678d3cc22fe8893c06a4badd2c56c7470e10b39740867ff9e29d3209e07ea"
+        "jar": "870f39762211792e902a981ca98d811839987b0586f84d7bb26660a751810553",
+        "sources": "b4f3559fe35cf716bca273cb6901ccda6fa74deec8c26d1dcc6292c9f78a286e"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk-common": {
       "shasums": {
-        "jar": "75ecc937b6ad84efd838f445ee7f810f123c54d8c57ecbbec9196f009fe18cd6",
-        "sources": "597cd9682e732ba9958124ed4de51dba2bdc23635b7f7fa41868ec272655f4d5"
+        "jar": "b7756881df140002c4cf523931ac6cb77a98f2d4386a7a59f4d3c64dac9f051a",
+        "sources": "fb831c5c5878c2c051b25a99d949773f3d322346a74a4d2c81e1582b70acf6f3"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk-logs": {
       "shasums": {
-        "jar": "85c4f207f2a437321af7864e45f92637b7ca5e9c9611103e2ff322bc9e6c4bd7",
-        "sources": "6c98e6f02b9a1477d209872df88bca1793d601d38c94aa4f869f007d07d05c36"
+        "jar": "7a22fb31101842705a57256ffbd7ee60f5ade75a51944a3b43169c2eb7158358",
+        "sources": "ac2772b829cc4fde7892d0c479ffc990ccbbd913dd283013af29e0b4243675e5"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk-metrics": {
       "shasums": {
-        "jar": "2140ff82be356e0d77a206f5f7f4868d22d49efd4976d00dee2fc52f1d8c670e",
-        "sources": "e88f928ad9c608bff0f12330fd8a7350d70ad8957be31222a9007fcac874cfa9"
+        "jar": "6ee721f1bb0a2cffc9bb1c002df58d6d4d0d9916e5f9968c3088fbb3aa7d82a8",
+        "sources": "acce63fdf83bcc9f359b112728e522ae9e999bef19f85f1ae69142f14621c9dd"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk-testing": {
       "shasums": {
-        "jar": "1c4205f159639532eae734e63a76e50d79cda6879b48b553d2dee0d3eafa532a",
-        "sources": "915f04a16aa2c384ce1bd5b53a80fba4c93891282180893c1f7faf87248ff44c"
+        "jar": "d661ea152ec9eef40996d3e27c5b9da3f7021afee2f826edaad2d0131f571bbb",
+        "sources": "5e2814ed83a6de643ad72149313365e030ffb3c2691d525ae41c151968b20a10"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "io.opentelemetry:opentelemetry-sdk-trace": {
       "shasums": {
-        "jar": "b3ad84c289d421d8ae0062d782043385b84e0394b859f6329dc02dae2485e7c3",
-        "sources": "6108d8d5ea757faef05c1bee53fecb67119fd18454d9b9968b77bb7a8a3a774e"
+        "jar": "fe479a975bbe1a5989c37866ea065204230ab835025c7da992cf906536504055",
+        "sources": "ed7b5cce68d626f7a45b49cd041890f3bd6f8dddfa23d97ff5ceeaa9423b3498"
       },
-      "version": "1.63.0"
+      "version": "1.65.0"
     },
     "jakarta.json:jakarta.json-api": {
       "shasums": {
@@ -2026,31 +2035,38 @@
     },
     "org.apache.commons:commons-text": {
       "shasums": {
-        "jar": "770cd903fa7b604d1f7ef7ba17f84108667294b2b478be8ed1af3bffb4ae0018",
-        "sources": "e767596163da9b22e8fc83ff954e41e19e96744df7625b06f8daac3c4d60f79d"
+        "jar": "58d2da30f058512a1e7f914e39241deca4dff5c27a085b4ed2faa9e7208067f6",
+        "sources": "6fa2f1db12dc4147094be928a5b54d567cea287df54e4c76b7dfb6096c05439d"
       },
-      "version": "1.10.0"
+      "version": "1.15.0"
+    },
+    "org.apache.datasketches:datasketches-java": {
+      "shasums": {
+        "jar": "da5ad11655341a90e6464bca40e5995e24441d446d6706ffe0d152251e2dff2d",
+        "sources": "cac9a8148f7ccbbf1a8903bf456f064834467afd2e98987466c2a2895aeed04a"
+      },
+      "version": "9.0.0"
     },
     "org.apache.httpcomponents.client5:httpclient5": {
       "shasums": {
-        "jar": "2e1e5d0ccf60d078bac6e3b029076afa8433a6a6d93eefdb46bce50720b58b7d",
-        "sources": "94380d816a8a8b15c1f1dcb0434e4d2709e8d5fad1420d73d9fdc27c1945ba3a"
+        "jar": "80712ff129210d7c73d9fcc1195cbee5c3c34744965c7a05ea107b3648922f18",
+        "sources": "00a6d775d0823c308b3fd4a25f5b7a181256e5b7e83d3844a3e63fad7b02832b"
       },
-      "version": "5.5.1"
+      "version": "5.6.3"
     },
     "org.apache.httpcomponents.core5:httpcore5": {
       "shasums": {
-        "jar": "8fb4528d3e970aca440523a1bd698a389fa710ecfea4c5c6096698b86d1669ce",
-        "sources": "08dbcd68ee403e432554010e38c2eae2b6c97ce3ed5e0af8e11679870c8f141c"
+        "jar": "18bfbbabb478dfb67f31aeaf428c387f3c3df654582e1309f708ee1f3086830a",
+        "sources": "1039d1c7d5f09d48fdd684b8268abfd7206648e9939930cccfe88b6b0d36c741"
       },
-      "version": "5.3.6"
+      "version": "5.4.3"
     },
     "org.apache.httpcomponents.core5:httpcore5-h2": {
       "shasums": {
-        "jar": "479a8aa5e6f99030a2a446a68d1f62320698932746f811fc656a1ea06b94184d",
-        "sources": "23816441863ed7e6cade34a1573ac2c203d399a1cb1e542e22d225e6b1f05d44"
+        "jar": "c7db7026b8e2dea39132b04a6069f6671e2858309b20a146ec5c7dd6ed73a0b6",
+        "sources": "ca7bc36ef8d56f17fb5455596d9dd38b80f8eb8931f8e4e167868356458625fa"
       },
-      "version": "5.3.6"
+      "version": "5.4.3"
     },
     "org.apache.httpcomponents:httpclient": {
       "shasums": {
@@ -2075,122 +2091,122 @@
     },
     "org.apache.jena:jena-arq": {
       "shasums": {
-        "jar": "bc0fac2551db4b8616c861aab5b3bb5c7a3897e4516e8990bbab234a5a8f904c",
-        "sources": "65e524a3933531cef92cf531be1a7df0cf81ebb5b97f86638ea996e806b71c26"
+        "jar": "154ec73b3a5a2b1e1a664d563b39d1674855c79553dd0da1a030de8128ee118e",
+        "sources": "62960a39dcb767bbec36264631f89c29e3713eefc3f37db84fae1bfea8673293"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-base": {
       "shasums": {
-        "jar": "e5bf4dfd42ccd5e0ab731d4f6e405ad7273866fbb73fb2665be6045f52e94d15",
-        "sources": "94055e2f1d6a5c06052e78083d29581f96fb922fc89f1a289381ca2cd9dc73db"
+        "jar": "2c5c9ed7f5c4ad1c976abbf5b002710f5b8f31bd4270fca2699b5d891af1273c",
+        "sources": "60ae77b934ed88db578330817fd95e0b594c6906f915e3df6a3c1ff831d47666"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-cmds": {
       "shasums": {
-        "jar": "32ec620a29ecedcc2e57f7142aac36b9c6c8d0a62e22341083a23fddab3bf1e7",
-        "sources": "63eb897dec09e0ab54dd651234e3b9438874254a2756eb789c34b2230abc1729"
+        "jar": "7fdeeec2f996c31220c9c15e3cedd2ebe9b034aaebce8b360d2492414fb926d9",
+        "sources": "f3d84bbc1528b82541fdd3db750664a8cbf5e24f778fde6ddb136c68c57edaaf"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-core": {
       "shasums": {
-        "jar": "53378ad0a542d4ea467b79ecc1224ab7d2d28b2336772d351251778e692312b4",
-        "sources": "ef74a19221a7f2943972e48a087b2272f657884b21205e0c85bb47c0f1efd86a"
+        "jar": "697bd31b75b4c95bbfa3f73103fc54aea7452de69da099c50124f202f447b1aa",
+        "sources": "6b599538f1af461d6ca7b6c093671212e4e715e8a93b05d4958bd38e37afb16a"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-base": {
       "shasums": {
-        "jar": "43346e73901683577cf1accb609a2bf1bfa17d6f7545439ef8601ddb698ca06b",
-        "sources": "e9792eb5851de5f3c585b8bfd4a01a6f920b3a5e6fa8550a20631d936e5c5296"
+        "jar": "b3e84ffdb48e2d5ecab33e4d2a500b4207508d780d730d8b6d1255514a9b5a2e",
+        "sources": "079b70d5356b9e78cfbf3f44d6e7518d6711d4544dc0b3ee46f7b948d0bccac5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-index": {
       "shasums": {
-        "jar": "d8bcc5fb7e157e918033c463e1d4e758c8ba98f9b2804d2453d40981034ab646",
-        "sources": "93c9fc8733eb26539866efc012d9e2e0781e621d43fecaa030bd26e531dc1fda"
+        "jar": "9501cae1f734d2987a90f3a361714561bc247aeeb6b76b518c348413f52918b6",
+        "sources": "8e39d5915399b21f8a044e067998171c007d8a4edb9d6c67b1258ae4c4cda076"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-storage": {
       "shasums": {
-        "jar": "fa85d7728509e19196fc4d0d1e51f501b78fa07f2e8badedc43f3415bac1f1ff",
-        "sources": "d139eaf66e3b3cea0edbdef243794fb8ec3bbc40973aa9a66690617b5c67a51e"
+        "jar": "b75b933ba03ed4cf51df4bb058c77645e1d7c198ff655b19a69827d6283d4871",
+        "sources": "c377409b76c69d0331eda47bf4da68ae77942fcce2e4ab53db7d70c228d5c704"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-trans-data": {
       "shasums": {
-        "jar": "424c2cc6320c74109f24bee4c9bc3111ec9949e601e909e20957d0b146960e83",
-        "sources": "1e157a924d9726374a6754d42ab2e4b5bb3f0c8cef9220de6bdd8e4e6a69e4b2"
+        "jar": "5a622649fca43b6ae987180df1ceeb4d73634393b55a1e7df28a975c1a8e668a",
+        "sources": "7e1cf4e189be9f0640ee85164feee26eef4be5e53942abec5f5a94dd2680aef5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-dboe-transaction": {
       "shasums": {
-        "jar": "ecc36d0f024a777a5c3c9339d5883a61c0eb85a6daa90f6dfa67439c4e6d5a62",
-        "sources": "8273948672f31d1f9c4e3e187a5dc904ac21327ab98a8141cf41a094230e406d"
+        "jar": "538973f6707f03ba9b255e43e0d761bf769a330f51fb8e11da3626418b38d033",
+        "sources": "184c11c78e55dffd344136547e6c93c2b2fe60581a15c43e282913bf8327e921"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-iri3986": {
       "shasums": {
-        "jar": "8aa4be44c8715807608b2594feb2f03ddb59070998a8e5c2fe298b9cbeca6903",
-        "sources": "872bbf863cb06803829c194f4563d033195a1c4e0f8cd0edea2070ad5a2617bb"
+        "jar": "8f9b2ec3f0de18bc40f416f62f99e9e818b187674490f82999e3168beec4da7e",
+        "sources": "c293412da866b33e6b2073bc2ef2ddf8ef30ad04042134233d27c8e98f4055f5"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-langtag": {
       "shasums": {
-        "jar": "165f4167c7857cacf3358010c9b70670f8b16d314b3123dbf84132c9f6b5cb90",
-        "sources": "5fdc8bd07ef263bf94f296117dfee1b7cf7cf17e43c5aec135ac79542ff896ac"
+        "jar": "54d3066af347853d48fddb5aac9f26ce79d71263b21271abf78464e6f01932e3",
+        "sources": "9cbe34ad5723690947d14b9a74cb956345481cd69566d0f527b82f696159a835"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-rdfpatch": {
       "shasums": {
-        "jar": "aab6afa5972736401614e899b3ac00c20a2019c9a8b23912a2de04da782acf9f",
-        "sources": "f3c8703207775439052f784435ca83960b87b88c405bf89838efc6e610de9338"
+        "jar": "30ede77b085e4735d962fcaceb84a09bc72234e8d2b710da4c73bd3bf434d2c1",
+        "sources": "305fd833cbea543aa8a95a66be3b43ea301960f76d9c8b71747e42723318ca72"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-shacl": {
       "shasums": {
-        "jar": "d03e61141624b45ea601c4bf10dc65f9b17c9637cbf534425e88edecb74c2f9b",
-        "sources": "c8f764fe142c2f88af0ac01344c21996264464778979c51f53d2dbf1a4494405"
+        "jar": "4ca38c60f3c4f0473368d51e01977ac8d1d257ba8c0eb493dcfac855b620d904",
+        "sources": "7a5eaf0dffeeb1ead968aa47bf8ffaad8423f915df563c6eb06d864ae100cdf2"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-shex": {
       "shasums": {
-        "jar": "3e5f95afc7cd8b559dca076b5c126bdeea81a2f96d22b84cc650d85e1eb52a13",
-        "sources": "4f13a15e89760a22aa8628c317a1a9e37b311ad7bfd22a1efbee9580eb434b85"
+        "jar": "e2c849b156871eb178db65e5d9018aa6c61e1bc59c1797b39990d00c28b4cb6c",
+        "sources": "3716e228a9b011feb0328567c712c2c0e8e63d62a608355481a2ebebc252e4d0"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-tdb1": {
       "shasums": {
-        "jar": "3dff2308f65af44c5c5b2e1211defe84c9879cfd2e5da35d3c0e05804dff8a24",
-        "sources": "ccfc9bf357623fdb830b5ea62992ee0010d6a60299e44ed9a99ce38c3d4f6413"
+        "jar": "009229d986bfd08ab446c205ea6453c885afa9af9d1b01d694c1b8637b3b266e",
+        "sources": "3e075c3b1b0eef1ca2453b28a74222b553ffe191ad8220093964656e33264c70"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-tdb2": {
       "shasums": {
-        "jar": "61624aeea711b91e5a9841612423309c2bea5fae82038c450ef2f54d5f3cd263",
-        "sources": "906754b463cd1d09fe5618b6855a6dc9dc5fca8b13cb224c4728746ee14cd1ab"
+        "jar": "cb526a91e1b39ca0851a7a8e980c94c262815b3a0377e6f239414519219882d7",
+        "sources": "8f08ef50a83fdbad7eacc91c9da43baf343bc8de46d78587675e8f91d4086387"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.jena:jena-text": {
       "shasums": {
-        "jar": "8057bdd26dc2af20e84943a056832bc6c213bda5d0f8967461406f73747c2f13",
-        "sources": "983f97c696d1e87d11332b5d3236a3f8a0bcfb6effdfce677fe7c3a1e169dac7"
+        "jar": "b681f2c3b9dc0e11b6bd6a01bc59267ef64416678467f1a1c6e0af6cbd21a395",
+        "sources": "27487e067aa70b7ff5ac87d877c78b3d0d91a7750134ffd2c8f73cb955ac78b7"
       },
-      "version": "6.1.0"
+      "version": "6.2.0"
     },
     "org.apache.lucene:lucene-analysis-common": {
       "shasums": {
@@ -2257,10 +2273,10 @@
     },
     "org.apache.thrift:libthrift": {
       "shasums": {
-        "jar": "dfd26d55b0c88e065ec795cdf8a823128021eebd310e4895cbb4289b56445383",
-        "sources": "8496afccf06b06b57c3809983675e7aacf089b908eba1bcec52af65efd073478"
+        "jar": "b72e321ff144e3e5211964764bd45794b96fdf250085f153c44416b35df89a07",
+        "sources": "1dbed1da410790ca98bded6e38cc07cd2154bf742814c927ff7e1d8f93ae3207"
       },
-      "version": "0.22.0"
+      "version": "0.24.0"
     },
     "org.bouncycastle:bcpkix-jdk18on": {
       "shasums": {
@@ -2432,373 +2448,394 @@
     },
     "org.eclipse.rdf4j:rdf4j-client:pom": {
       "shasums": {
-        "jar": "ec49fb7ebac5b070b74f9f73fd1114a2806ebf90cda0df1c62603b07b378b303"
+        "jar": "096ad38775745898a5adaec310b27e6c113f40d109cfd48ec175c74782d70e06"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-collection-factory-api": {
       "shasums": {
-        "jar": "8229522d818c668171628d9711870edbfa4f9775504c6df6cb755dfc8e730ac3",
-        "sources": "55a7bd9dfa5b24cc276d6e38e6bc9fa53f0b82922feabcbde4c339ca5833b392"
+        "jar": "aa1c553458ea3c6906bbfb3c57e732cea61ea8da4a6a04a53028102bb31ad1fa",
+        "sources": "99b7d62d031202ef60fe931d3e9c328a5b2a526f292d0ddb1ec60b110c018e99"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-annotation": {
       "shasums": {
-        "jar": "403f789636d9b05cfe4c30394718876bfa9cbde8482f1c7bf8bf2d04b18ede45",
-        "sources": "a1d438a6be9b17c279c85f63e60c9ccc36f08e7a2295f54420951fe4741831e1"
+        "jar": "dfe2e8d9e37667395ef768744c27ea29490d4ab5ed2cba76361d37602a0740d8",
+        "sources": "7f266b1e89bd3013e52bc0a9044ca3d93dc0d7ec362a0a4a7b646d5719667852"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-exception": {
       "shasums": {
-        "jar": "22fb6c55346f20c12a12658aaf5d54fb6ee5b01d3762774754af80d8f0bf16c8",
-        "sources": "ac2e54045d2b9d39ab009cf1ffbc6f003a3844147fbfe4993657a0f4c499408c"
+        "jar": "3e0886393d6fa3a05cd2e7d74ccaeabca263b37544fd4e5601a0bae102ff01cc",
+        "sources": "9c2f84681be7893aaca44a5414d557ccc18c72890aca0e1fd627f8c34134ce33"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-io": {
       "shasums": {
-        "jar": "b0ffbdcedf6bc6f7f0b1b8f233caa47b771c6978141c76ec4e1856bc255f93ca",
-        "sources": "625027f6d242c45bfa4ba65d04b566fd02c89c3f2ca9d2a5e385e8f624f88981"
+        "jar": "91f50ddd0d3b57dc3c0ecc466b6cee01bd3f4ca1536d14e57372366885223f17",
+        "sources": "e8a47068d5bb06f83595ac3dc6cb0396d2f388e27e58645b4b669e72f2ac1862"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-iterator": {
       "shasums": {
-        "jar": "73497c7240996b90591724e62588caddb76fd4b1d367cf9ae6ec54a8a31e2cb4",
-        "sources": "6cf0ff1bd37d6adaa1d6487f6a8a7ebf272cbc173815eff6af43c8a0c0dd086a"
+        "jar": "97528fc4928e907a899e3ba76c509e3a66aa8a2a26b9bf7f4e689cdb9d2f2d64",
+        "sources": "0e7a2f0670d0e0a8eb3dd1df8a7ecee63742b42d0c70a75756a6c29678ae5b58"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-order": {
       "shasums": {
-        "jar": "5c2bbf9a5f7f0b22dd9a56b7e2bb78ff48362289482c9fe591e32c6909cf24ad",
-        "sources": "0db5d982eded6e8979e6cd734146aaee2b1d1da87b30f93ffeaafd42c413395e"
+        "jar": "1520349c49235cd47a535208aae293a1d51cc4c2b5248e2538f3bcc3a158b9a9",
+        "sources": "379576537fb8f912616f43c3a7662f6d7967b553ae448b1ea355ccd91b79a238"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-text": {
       "shasums": {
-        "jar": "4537d708f8756e31d7742089ccb90aa0c216ff06e11e8601c393f4b63f89d5f1",
-        "sources": "0617b112100e4f7ca20ee96136a31e86e5ba6f634a1e21c4c91ff27e4d31373f"
+        "jar": "26c362302723fcb311a0ba74664d1a97bdff2968f426f0ee56cd5b5137d3f870",
+        "sources": "0837edf17e4d01bc63e412025b9d31a4c7161277cd15453077af28fec5891fee"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-transaction": {
       "shasums": {
-        "jar": "2c0ad0d0d927c07b0a324f300e89b6815f2d3226b5b2d7731cde4e0579c6a0d9",
-        "sources": "a9d052dae230b66dea1313947b7c99a0455f280bcd1476dc8a0509db84eaea47"
+        "jar": "c3b2fa82cbbc246ea335aaee3da8754f840a61d6077acb536c11e862932b2b56",
+        "sources": "a55b3a029133e067c3bca5685921001897112aa7ee509309b15fc2adb241efdb"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-common-xml": {
       "shasums": {
-        "jar": "655c325e1b42b1b844d70434490f79c1d5700a68f06c79bc6e5a9a45fd49f0ae",
-        "sources": "4d88a3bfb365fd38d4eee1231d0ab1e4fa28faa61c895c703ddc4a2255c7167e"
+        "jar": "18d639eec18b04a2fb4e6f8230a9bffb2ea8021706dc1832c6a63f2cdcf29f2c",
+        "sources": "94d8695fb84904db5c0ea02ce42ffc5431e7a3afe475e9f5699df076163fd843"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-http-client": {
       "shasums": {
-        "jar": "b5623707168dc50a248db5e0e265b63f8ad43096bcadebd4063cbc62997aebe8",
-        "sources": "9575a75ed4a7ee63b49b8f33cd2e2c14a12cba1cd64929f78c28637598389e89"
+        "jar": "e58689d1a59e68a5e74b86dd4d883a83e86a32455ae7810b64a01842c3f8ca9d",
+        "sources": "1e13e1481d67943c4c4d458b4cb18e906898b6333ba9338ee44f5ef75ab00048"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5": {
+      "shasums": {
+        "jar": "c84aa0254efdf2f93fb724db0febb98398b71daa16112bc052a703408e96c030",
+        "sources": "5fdf31712e4276a8d0d7e179e257bed0958df7b9f7fb388002b4a2d3a7ac15fb"
+      },
+      "version": "6.0.1"
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-api": {
+      "shasums": {
+        "jar": "a912bbce91c512a2160a2dd8ea484311d2e6aa505c90be1fc118b6304dea459b",
+        "sources": "7c50e842209da3a36a6e9fe8b3b3738af484e0565ba4a87c185540dde81570e7"
+      },
+      "version": "6.0.1"
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk": {
+      "shasums": {
+        "jar": "2d8a0ecb7d6d3e55e86a926a34bbd0cb3a041b4f47eda74ee7ed8d2a6e3f0064",
+        "sources": "420f46ad74977b312cbea80621c5a0a1d9fb026f3c2248f4495c07f38337db7f"
+      },
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-http-protocol": {
       "shasums": {
-        "jar": "a341fde93d40859634060c9f46ccb08cb444c6f24b3328d53ab898c595ce4c46",
-        "sources": "d8c4acec40469bf473147d0a5cc89a613e86b9b4f15b965d7b325a0d23711dda"
+        "jar": "9d820ec0debc079fbf5b09cb4337d90cddc9c7c8ca361a5d69b4c56b026e90e1",
+        "sources": "951d1be584b9017bcfc81e04804076f5c8391ed918748d2d022d7add7a984aa6"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-model": {
       "shasums": {
-        "jar": "ff6239215bf152dacad7f27b86f6352886da53e9056482b537191f1145897e9b",
-        "sources": "7dc6aaf8d1481208fede0f5e4ea99aa66ab8a058a949d27ae54e81bdb817c985"
+        "jar": "de986c5e7ec73059b5d4412c98cee9104d18e087240e9d0e30c5b3473846c93e",
+        "sources": "7d411efb62ead1fa431afa9cda25da8dc89134ee896e7fca5bd6a08a35f9abfb"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-model-api": {
       "shasums": {
-        "jar": "c50753ca337bf3051068615edef565e0eb132ec4c775a24e6202c6cedb21c285",
-        "sources": "2f127e2ada859ed1492db531836e5a4be0f26f6d67649fd5702be4ea30d6ff57"
+        "jar": "e2581268ba49f0d2b4f04a646ef8c791e849e30ca7f9ec4f919b09346005c258",
+        "sources": "97f4bbb33432e20596a56d5dd455c718ee75dedef042e6ca09f75e732f0ef25d"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-model-vocabulary": {
       "shasums": {
-        "jar": "85f70b50fcdab4453b7062fe6f7193a25abc102c79b1f2eb16a0d68faa2b4297",
-        "sources": "adcb215a86f50d1d9018ceb4465d11b31ea039c4aa2b39c7f6f45c1ccade3e8e"
+        "jar": "2a5d3eb4157be052af65c1eb297ccfb0c96d36ec204770004c36899e07bc496f",
+        "sources": "0b318736e02b4e9782a8039234598dc1f741da2ae877fc723bbf384b9bd2df65"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-query": {
       "shasums": {
-        "jar": "5cf7475d2276dccaa8d0e8b12c577f6aa9f74d842ed506386ee5bab21f8f9cb9",
-        "sources": "bb5de969ed4904abe44e1bf98555d5c7a824ad5d5b9b66ac0b934fd8ba9d2048"
+        "jar": "266e29c3262ec2a13b061d597c1ea86822809079a8dc445fe5a548b707e404d5",
+        "sources": "de09b9b7b96bf121d2dbee2933d2d553a8bfbab0538d8a7f23540ad2cf7e0d37"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": {
       "shasums": {
-        "jar": "387f1477e3e558b9cc306e37b38abd03a25b97292f2aa70e57f3328c1af7ef6e",
-        "sources": "49bc2d8cf9f9611a6f96e8c4e1bb64e5570dce265d312aaf6cf07c85e9b4fea6"
+        "jar": "b04c41b28cd5f6b2bb5c1fff1375af8da3b406d157fb03c028ca10dd2c5efd67",
+        "sources": "8a6611e75a14dc22208cb050a8cfba8a148d66fa6a5fbda7254807b48a0bfa41"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model": {
       "shasums": {
-        "jar": "fd674cbee712cada6c20c4c9f0da272160e1ab107c80d9d3c6917f63da6c07b0",
-        "sources": "4cf9d86b1ee42650334391039dedf2b3cd316f2157cc96691ca3bf55f74f7234"
+        "jar": "d5556db876169bb78c93569635c36610b32ff14486e2315ace85198eb4f21ccc",
+        "sources": "7e52ce557dd6987175c421a0c434f296a3064d512abe6f0533719acae517697f"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryparser-api": {
       "shasums": {
-        "jar": "1ae2fbfba75236746f90c15a6aa7b8a5f7778c91d09745d715014f68c3ada4c1",
-        "sources": "1b1cebaa10bc3cebfaf29eddab8747cf9b37641e89ccd9ae35d4b383e3f4ba6c"
+        "jar": "1c4dd7b5cd9a54f0889c28dea24064e9d6a82ef3f1be4381cba0f9dc85c6266f",
+        "sources": "0126f269dd3e7835d8f608a8919def20f19ad522b87670837d57d37165a82dad"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryparser-sparql": {
       "shasums": {
-        "jar": "534c17cf549b3e13820332bc9c2ab41a114d6c32337d868c7fef3e1dc9707210",
-        "sources": "841f6c6390d2498b1b25ba492f773a26eedb142fb04cb6cbb57b2ec36d512355"
+        "jar": "64a304928124426bf1b21a91718cb0dfaa0962572da93eecc5a91a559612cdda",
+        "sources": "17e115e09f07874bebe4ab08717bb8380f1ac432714ed498cdd01926304f7215"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryrender": {
       "shasums": {
-        "jar": "2a8514e196eca96ee1fd282c7a60500ef6847dd27a37408d1be0ae053c1cc732",
-        "sources": "c1e9e70ce774e67bef76a0324ac78a00320e4d0ec2d9a4bb945f3b1f9e1e1a0c"
+        "jar": "9129c39ce2b2474f530d4c053f8255ef5f3e156d5e04c864f967edd4f466ff2d",
+        "sources": "1e63ced32f8a2499d1e6fb235d429ee43b69e4ba68c1cddbd319f165d0c996b6"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-api": {
       "shasums": {
-        "jar": "9ecb000e456515493b53c4bb14c3458f0ba3ee44a62cdeed33ba7e934825ca99",
-        "sources": "fae7e75332e7148f107d8f897b51be9728fb4fbb79343417512bfd995dd6a29a"
+        "jar": "133a585ebe1594b961fa84e9fd6f6f369a7b0b7b0ffc7b94ddddadfb9070ca10",
+        "sources": "8322b536d7b9dd8077ba779bd06714df7217b0ed3338b1515cc7a8d4de82cb7d"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-binary": {
       "shasums": {
-        "jar": "3cffa7ad4e5fea7e251f399be712b619dddac195886307408efe7bad3b49d832",
-        "sources": "d42bd2e7293fa13f16d0b0d48329b2f1db93d612c4b358274b5dbf48c1bc0d4b"
+        "jar": "9596b3a5f537f4fa8474827bf7421e7f623b7a7417db7ee780b5b1d354d67117",
+        "sources": "34aab2330b0c841d079aec834ace21ccefc7687b59405c3dc820faeafc47bd5c"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": {
       "shasums": {
-        "jar": "48e82038df9b3d0f3365eff453fdcd8bc9c218104921c2ff2ad661dbc5f62721",
-        "sources": "3a77866a2de23da4abad538c38659cba4543f289c202e6284ab63816e4686390"
+        "jar": "0f47dd82281b63435cd2ffed4ad2597d064495b613b386145e026cc2198511da",
+        "sources": "fa3f57f93b6f332ff57b03e68c7782de332b7c7b0ee6f1fdf17b1a71308fad71"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": {
       "shasums": {
-        "jar": "705731294e59dc12fb03b09a01ca1fb9a6c90dcbec8b215ae4c94b2a2d71c58e",
-        "sources": "91c7b1fd1058cd61f48737434927b5fe594c7ead93e9cb0fe5e4a9529bb4a818"
+        "jar": "f299e2992f33b071a7c9cf891bc20b230e74e91b31fdc60e2a71b42caffd303e",
+        "sources": "5c26303cc7b66b58e9d4594323b73be0f79582ea722ee3b04c8b9d413aeb95fd"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-text": {
       "shasums": {
-        "jar": "89c1bd946e4f78dd027f6524cd6ba320f05b2f90ed5de6ff73a69d30271e6e98",
-        "sources": "d25c1b486eeef7752232b9365bb45120b4e8df051b55018529091b2b2408c068"
+        "jar": "6cc75c4171de965211a4e4213deb0bef6db2d81b5576860baf6e0d3f605e9505",
+        "sources": "7b05a813240ee688172f428c0214567895c77a001549278c1965be1d49d380fc"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-api": {
       "shasums": {
-        "jar": "3a1298ecb6e19f9066024b1b7be94119357bcebe4fa4cffb2109b9813f33935d",
-        "sources": "5011e2e7806f1db8c3ec3ca345ef95cf262c276d882c20a60b259fc71e11642c"
+        "jar": "5f4207dc483c82ef85dda96d2ff653ea925405d9ba24113801892a4414b4ed7e",
+        "sources": "de8b33a7fbeecceff1f447d4ad9d191d8aee20cd139a4e397646c38c7583a346"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-contextaware": {
       "shasums": {
-        "jar": "8e0397024811aa144658f696f74401ee7129ec1e7f5cd23fb4a97321649127c1",
-        "sources": "60ad9cf2866e1a5fe3e48a0e76ee2a79f0323e85118a9d151c386758b6d6f480"
+        "jar": "f80851887340b0ff860337c55c62b50b3afa339b573d962a301c960525506128",
+        "sources": "efbb279d04eceb059a96639e2c71e330ac1cdaeceacdd2d74e4fb6d91b32e9ce"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-event": {
       "shasums": {
-        "jar": "0d34f51d9b1bf2d01b8d19eb694de15a871c975cf2e43f5fdc06ccd43262e402",
-        "sources": "74b5046b9b3e44eb8c0d62db685f63f43edec7da2696d2d435ec64cfe49fd484"
+        "jar": "d737ea077d9509ab02b932737bad38cd47ad016541733a7c0b108c13360a202a",
+        "sources": "5804a795c4ea268a3236e1af78379f7bc960656351729ea97e0030387141f59f"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-http": {
       "shasums": {
-        "jar": "a768f0b35a87b9bf797fd4e8e9aa5bb6064db90dfe64f277e7970e3c38da8491",
-        "sources": "bdd4233ca51255a689f67308527f30d2b54a2859059a8409062ce339893c7009"
+        "jar": "b19c8f886b22c9dbb28910feb494f2c0f24967292827f2c7b4a7cd2f7de2cefa",
+        "sources": "99c4ed642128a71bd725851b3f677fa062dc03d3c7f3be9d6c2f6b9b9a3228b8"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-manager": {
       "shasums": {
-        "jar": "5e90008af264001801c3f9143097b16fb28a9f83f2a81a0bf4de198163af1512",
-        "sources": "e89decddbdbc973ddaa6a2babb5075f2d2fdcadd3090d51c88beaf6422c0d9b1"
+        "jar": "745eecc30ad2f1a736c577f5e1ca318c016e004e8a03a1c0f37f8e66a85d48fc",
+        "sources": "8c915004eee0ed58a016e49d2d22d5115c72a3c27c63fb3d25ce7f56f6e6fc8e"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-sail": {
       "shasums": {
-        "jar": "348129362b7163644a754d9c0c7e9a3a3fba6b4dde5db86b968150268d3a80c1",
-        "sources": "1cef7c15a3f15c9fb81289baffc8b2447f0afc9cd86806307f6fac23ca42a98e"
+        "jar": "06f9cf2c9453b14595f2ffa5ede754d852588efb51bdaa9755f448536e34c78f",
+        "sources": "d8e98e9c6d910a4ecd784fa1c7869423021c42d71409c45f76faa65115057919"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-repository-sparql": {
       "shasums": {
-        "jar": "7e7276a601dd97d72abc5ddb7ee03838e713601840a2c7a9cbcbdefab750d71a",
-        "sources": "87ccf838d20c37a885f9da3aa7d8c021b5874fc6ef86cbc816d61c37c74d5016"
+        "jar": "7ab47a151d84f6a6927902be8c74202ffe557767ac2431b24c0155e9cf542d38",
+        "sources": "1c0a7cafce566a31161b426b714e051536ce6c0f422e497071aea3b5edb0ca9e"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-api": {
       "shasums": {
-        "jar": "0a80eb1d3dc75f2b44e9c5f7e2d789cba6675db2bed8c5cffed07b57387fab76",
-        "sources": "9e15a8b3312291590e9945878aed1e48ee608399a8fc1efbe742d1b2703989a0"
+        "jar": "ca81bc9a24da4c8e85ee5028f1f0e733d36b24aa1a5eb4af4566bc81037b7001",
+        "sources": "5c71c08ffe993379e37cf6fc2d01cff73cf7c84b7a201f3a0a9e8c3759c65518"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-binary": {
       "shasums": {
-        "jar": "eacf1d866ced79b44d93a13529b390f60d854c4a07f6cf40d6501887287f8af9",
-        "sources": "fdeaa58821647cdc4dffcd6fc6a60d3cd087ee163a3282b642d2c2edeb3d3908"
+        "jar": "912e08b317811886d1bc39f76616e5bd93c27b0aea783fcdf090f3a3b8d3f22b",
+        "sources": "ad4624afd4c54bdbe5299693b3a8fc3728556b17dc9917a5630cec7b299144a5"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-datatypes": {
       "shasums": {
-        "jar": "84998ab998fa3b7be9c28f26b4904aa8fbffb01fff17828743f9be2e71fffae3",
-        "sources": "ab942d2bfaa46bde18500ccfda4d293f071b8a36495c7b13d81a72df5af65617"
+        "jar": "5c792049f706121e33ae8f2f948c44724803900eddeb6b8c03800b6ba7dad927",
+        "sources": "aa8669dd79a310656d16302ff50bce84e1973106e65365ee1754ef6ca116bbd9"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-jsonld": {
       "shasums": {
-        "jar": "a89fd2c73bbf436cf7ffc391840d7cdfcfdc47504c68f2dd99c9863488954bb9",
-        "sources": "5fb427c8260844c71a19faf7563e8a22be0530a15c0cfb0e5843a3a24e5dcf5f"
+        "jar": "71f5da368efee62928c8eec5dad1fbe69902e062306a0eb15fe2460b99f2a2d4",
+        "sources": "e9adcc3c7214d4ba7751d83f30bda7fe37a95b6d713134e4e469ab4149d5e1d1"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-languages": {
       "shasums": {
-        "jar": "9da062abae7a243c1467f4111b1faaf542f925f23b94146cf8b20716a66aa3bd",
-        "sources": "418885e356bd77fc80b73cc4537165b8c045349c9e168982f1da63b278f8c1ca"
+        "jar": "3c64b956fe15a73ab1176cf3359021ec19785550af02038bd096e4a8120be47e",
+        "sources": "7b986677d899ffaffc339186f74fe53edd98823c6a06f2d94a42b8472d918f81"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-n3": {
       "shasums": {
-        "jar": "a4f4766d371b0f7ebd7a1212bdeb74ecf7ca6a035d1b13cef607e5f85cdd155e",
-        "sources": "7dca1eea11a2c15f263adac1db1b9880f0df4e486cadb675b61744d4b64386f4"
+        "jar": "696e446f2e6ebeacf38681c860e61318b43ff6b6b3513b07eb9ff20b9ee79541",
+        "sources": "2ac27fc9065d4132421b36263e15f3f356c8b1a024e1ebd528a8fe0540c30397"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-nquads": {
       "shasums": {
-        "jar": "5e30241baf23a50041d4d80e910c2f1592542333765f43a5b1e14cea2d21a082",
-        "sources": "7ad126191a720c4aff5fb229070950679a559edcba9eb724ef84ad1ed0f191ad"
+        "jar": "6f8579de7a1cca5a8e91f1e3b3bda111ff2141d365189d54e05e2952ed36c527",
+        "sources": "ff471d3c8026ada565ba65d43c323a49bd3cf4e983b5dca796b437f29fcd105e"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-ntriples": {
       "shasums": {
-        "jar": "3dbb2eb0a97c185b782f312af358d2d4bf01c9084e44f287c636d0c2a7dfcb79",
-        "sources": "867f2f2438a72ead1600732d1cb8b7b76a98234f8ff5cfe4dc9294e81df357d8"
+        "jar": "0f39d41794fc7c6f300a5344cb0319ca85be5148165fd1daa354c5598d06b4c9",
+        "sources": "626de04d5879cd8ed52770b7f77947a107050bec498d7d6404547c5baee3603c"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-rdfjson": {
       "shasums": {
-        "jar": "3bb1f02d517c556b5fa3511875879d2cfe4aab4f6e024853db4b23c184c84f9a",
-        "sources": "5a310b3f71fcb1a4962534420320543c5ada549fb5dcf5b5c367a402d4777938"
+        "jar": "a8f805c14eb08f95ec1ae497d0da0d729529038ebca2a01c435a07be2e0d49c5",
+        "sources": "21e00ef440cc1c3e6a4f32e10ff1bf0d67f904ffae6815416f7ef1523da5201a"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-rdfxml": {
       "shasums": {
-        "jar": "09ba748dbc437cb4c826430fc17a701fed2edaa842ce432cc96f06fb1e3708b1",
-        "sources": "1a5988f937e2a51196bd7fe628bc96c5c03cbc4b1f3b725388871adcac1fbf23"
+        "jar": "49e0ac2ba29da8f0e7235cd284f45cb117870cd6af1f80cc896d831c47f10e2e",
+        "sources": "36b7d698c33087ffe19841a24bae07ba270a86beee159925113929dc763e93d1"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-trig": {
       "shasums": {
-        "jar": "dff8bd04e6c0eba23236c97cb0c508e6a2e602c96c90d27cc081eddd33f0c2be",
-        "sources": "9983e599180f665fa33f3fc3c9232a72e6e4a6c51757ed8a8f4e7a2ed862fcf1"
+        "jar": "58e52657c6cb41677e0393c970614ab584ffd428ccc3adfc0d9f461595fbc9cc",
+        "sources": "b6bc545b92a96ca6a2449d5ad7dfa2b2eb80dfe98eb6066dc918fea3f9334d01"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-trix": {
       "shasums": {
-        "jar": "35a5a767944774b8652f3ec8a902e382547eb8162572e793e85b005d14cd778a",
-        "sources": "e88f7a7579a733a0b499d4adde12f0fe2a31041e822f6c7fcbf1309216cc2596"
+        "jar": "6ca5b4b7b444d61a1d852e9c5d043d1c76df75fc92a1bc517d2b3677b6e753fe",
+        "sources": "b2173a1ce7af3a932bf039fe2e4b1b26ecf8289dd9b89cc5afe5407369cc70ea"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-rio-turtle": {
       "shasums": {
-        "jar": "171cb724661a7a56536381743591c2287bb2d96fe55d30d817bdd50c87eb8ca3",
-        "sources": "579539714f27eaf29ed9dc0747ed0b5b70a7c5392418376b9766ef912e2a5651"
+        "jar": "73ebf06c8a6305c0b0c947412aaac70c2efe3203e423d65c2be2e8a18514da67",
+        "sources": "ecb195945b249f98fb1c7de4d250fcaa64bce4c14b802b32afbaacbab9bbcffd"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sail-api": {
       "shasums": {
-        "jar": "b26393052f8c80775a18d7f2fd3e8e754ca08692b40fa44b8f810a538e6deec1",
-        "sources": "bc151f0ef40af7e228a07467a07b271752037c502d4189f4430c825b3bb2990f"
+        "jar": "bb1c316519d9136d2cc2af8a50b128a642877faddda250209fe79f23f53dbb3c",
+        "sources": "4bffaef96e76c1fa1c4cf7281cd6e1b2bbdaaba0a11db04e813798f8eebce8b6"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sail-base": {
       "shasums": {
-        "jar": "4b62d0956ad8940405b72cfeba03371dd4e152681e74a642b725e3982179659c",
-        "sources": "ce6819f18914ee31bed8b2fa07ee9f0ec761a64b8414be115d9ed1af9c6a965f"
+        "jar": "8a8500100b10185395c8032b1ef47484ae633043404b160210c916811d2667f3",
+        "sources": "77cb67879478fcd93692628b008aff4e7f70603ec047cd9a1f5e22ddb5436b7f"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sail-inferencer": {
       "shasums": {
-        "jar": "a10076c6550b4f6600c8ff828ce7b4f483a929180b1830300355adfe98ec1730",
-        "sources": "e80b01a1c4993fc5c7e9bc629310fd94c7ced7657313936986f8f8ad9c335893"
+        "jar": "933e15b27ac12bc5e8cd37a0db5de6ca0ce715372e80c6e4067f665a0ddca607",
+        "sources": "30838c1445f41784fedc1ee510cf236685371156736dcbccb0c1c1b3eae9f8d7"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sail-memory": {
       "shasums": {
-        "jar": "b02a69cbf4cbd3848930e52e1a96e1b058acc582c98686efff1c4406201d8e4f",
-        "sources": "94cc89a0f381d12052697609f0b1bf138978f82017cb955cb00cf728e15223a2"
+        "jar": "20ef007c280a659e207c53f7fa977bb2b2663fb6e914b9a6f1628dfa7f2c285f",
+        "sources": "c647086771aa2666595416ea2b8474193d72c8623186b6384c388d4389ccab71"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sail-model": {
       "shasums": {
-        "jar": "39b8e93ee800fe0b2f9f8ae1ae758ea56a517d1791fa5f1133112f0125e640ed",
-        "sources": "42226f6a9bdfa9a7ce9e730733e6d071af6b5b3dc5b2a22be775e01141e28281"
+        "jar": "f2dd560f1cc218b449eda5f9bc3282326f371335b0a8a92faedb9425a21bfeeb",
+        "sources": "84410a7a9354a00b94e774db94e29be9f57c13184dcccc170dd546076fc412b9"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-shacl": {
       "shasums": {
-        "jar": "8d0f01fa570a04d07483715ded1b63c6f4a28bd373e5c6be23f2d4c6c777b5c4",
-        "sources": "c2c416df2a8c44cfb04fa512d6c8bb2c2c929397bcdec06265d39a76e7f8b00f"
+        "jar": "76093baa98a76bc96719d457eb3e6adb6899ee110e3cf931849986e7ea4e6661",
+        "sources": "e4065a5aa61ed6691c3fa87c3e78018cb2fb38f3e9e08abfdef9f41e9169ea8a"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": {
       "shasums": {
-        "jar": "2aa7d71301b1a44b41984550d7aa21bc1bfa4a71d7b4e3b43d4589cb6a89306c",
-        "sources": "7b96d322cdf64eb8172bbc9085c75b1b8e33336b6a1ec04b1ab1f0602973bca4"
+        "jar": "6cc529b483a7aa969aacbee3078fed248347c827fbee5fec1b22fdce4cdf2f3f",
+        "sources": "64b626047b5e60e8d72843a86e565e01b271c76ebbb64cf9ee9dcb6dc0b2d363"
       },
-      "version": "5.3.2"
+      "version": "6.0.1"
     },
     "org.ehcache:ehcache": {
       "shasums": {
@@ -2866,17 +2903,17 @@
     },
     "org.jetbrains.kotlin:kotlin-stdlib": {
       "shasums": {
-        "jar": "6558a3d233da56a20934b32159f9db5f86ed5816ef098f78a2c223dc6abb79dd",
-        "sources": "664f515359444a92267a13266101431a630f99d6b8d04407a92b1a0e558d33ee"
+        "jar": "263bdc679e1f62012db7b091796279b6d71cf36f4797a98ff1ace05835f201c8",
+        "sources": "c05e6ead31a9bc17a6fbd5029c4824307992a012546aafb3800f27d1c7ee42be"
       },
-      "version": "2.2.21"
+      "version": "2.1.21"
     },
     "org.jetbrains:annotations": {
       "shasums": {
-        "jar": "195fb0da046d55bb042e91543484cf1da68b02bb7afbfe031f229e45ac84b3f2",
-        "sources": "b2c0d02e0a32c56d359e99634e7d769f9b1a8cd6e25061995abad1c1baf86f56"
+        "jar": "2037be378980d3ba9333e97955f3b2cde392aa124d04ca73ce2eee6657199297",
+        "sources": "a3bea3ada0af186437f8f3a089e6b0f52ac5aa068c1cb829058fb8a5069f6b0f"
       },
-      "version": "17.0.0"
+      "version": "26.0.2"
     },
     "org.jline:jline-reader": {
       "shasums": {
@@ -2929,10 +2966,10 @@
     },
     "org.roaringbitmap:RoaringBitmap": {
       "shasums": {
-        "jar": "78ae7a6261b5b03f53b8db991047d06959cfadbd0b08af54bd95dda40af9acba",
-        "sources": "dee9e58cd8110debc9504f667d9276673b6f45a5298eebb02cdb9d5d0acb15fc"
+        "jar": "5ea0add939911c977289fc2dd542bd73faf39c521da79ef41e18b6cf2223e4fd",
+        "sources": "5b1761f03e04c6ad95293c1a7ac686f21ef94a155d3b154ac72652aea291c330"
       },
-      "version": "1.6.14"
+      "version": "1.6.15"
     },
     "org.scala-graph:graph-core_3": {
       "shasums": {
@@ -3006,10 +3043,10 @@
     },
     "org.slf4j:jcl-over-slf4j": {
       "shasums": {
-        "jar": "ab57ca8fd223772c17365d121f59e94ecbf0ae59d08c03a3cb5b81071c019195",
-        "sources": "aa7a3dc5ff8fd8ca2e8b305d54442a99a722af90777227eb3ce4226c2ba47037"
+        "jar": "ec5c36d57d2dbe100f84878f944575cb7871da32c7a115b8d7e0721277045d67",
+        "sources": "d0a96716020e44f95f1d94c4d2deeda009056847a125453010d4258db6b53776"
       },
-      "version": "1.7.36"
+      "version": "2.0.18"
     },
     "org.slf4j:slf4j-api": {
       "shasums": {
@@ -3174,17 +3211,17 @@
     },
     "tools.jackson.core:jackson-core": {
       "shasums": {
-        "jar": "3bda1cd6eff0a8d47bdfcaeae7c2bd5311d6c8ed494ef5f3e51029bb44aa9bdf",
-        "sources": "5aa481c1c120505fc1d204510ec201a40c2bb0bb6bdea24560e0b5fb66484e60"
+        "jar": "2688aaa60b207403287e16a71fb5644bf2f9cfc464cc601ae95c6c86a5af1f94",
+        "sources": "06db11dfde5279230a7fb63a91659ead5d4f37879a5368c8493590324356619d"
       },
-      "version": "3.1.4"
+      "version": "3.2.1"
     },
     "tools.jackson.core:jackson-databind": {
       "shasums": {
-        "jar": "14034bfdf392b6ebec1b4bb6c1de29d604f0aa97251259a19d5f19af8719bb20",
-        "sources": "109baa39968ff6fdcc4389dd4249f04d2edcab7387421ea17bfb51bf18e24189"
+        "jar": "8d005c5626b1839e2eea6bd33a437287e7a24d54e1bb3746b8f861193262b519",
+        "sources": "e6455e24b0621c5f9def55101fdb1e0599fbadce11389f9b51e478d5a664d4e5"
       },
-      "version": "3.1.4"
+      "version": "3.2.1"
     }
   },
   "dependencies": {
@@ -3724,7 +3761,6 @@
       "io.opentelemetry:opentelemetry-api"
     ],
     "io.opentelemetry:opentelemetry-exporter-logging-otlp": [
-      "com.fasterxml.jackson.core:jackson-core",
       "io.opentelemetry:opentelemetry-exporter-otlp-common",
       "io.opentelemetry:opentelemetry-sdk-logs",
       "io.opentelemetry:opentelemetry-sdk-metrics",
@@ -4103,9 +4139,10 @@
       "org.slf4j:slf4j-api"
     ],
     "org.eclipse.rdf4j:rdf4j-http-client": [
-      "commons-codec:commons-codec",
-      "org.apache.httpcomponents:httpclient",
       "org.eclipse.rdf4j:rdf4j-common-transaction",
+      "org.eclipse.rdf4j:rdf4j-http-client-apache5",
+      "org.eclipse.rdf4j:rdf4j-http-client-api",
+      "org.eclipse.rdf4j:rdf4j-http-client-jdk",
       "org.eclipse.rdf4j:rdf4j-http-protocol",
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-query",
@@ -4114,7 +4151,18 @@
       "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml",
       "org.eclipse.rdf4j:rdf4j-rio-api",
       "org.eclipse.rdf4j:rdf4j-sail-api",
-      "org.slf4j:jcl-over-slf4j",
+      "org.slf4j:slf4j-api"
+    ],
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5": [
+      "org.apache.httpcomponents.client5:httpclient5",
+      "org.eclipse.rdf4j:rdf4j-http-client-api",
+      "org.slf4j:slf4j-api"
+    ],
+    "org.eclipse.rdf4j:rdf4j-http-client-api": [
+      "org.slf4j:slf4j-api"
+    ],
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk": [
+      "org.eclipse.rdf4j:rdf4j-http-client-api",
       "org.slf4j:slf4j-api"
     ],
     "org.eclipse.rdf4j:rdf4j-http-protocol": [
@@ -4140,15 +4188,16 @@
     ],
     "org.eclipse.rdf4j:rdf4j-query": [
       "com.fasterxml.jackson.core:jackson-annotations",
-      "com.fasterxml.jackson.core:jackson-core",
-      "com.fasterxml.jackson.core:jackson-databind",
       "org.apache.commons:commons-text",
       "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api"
+      "org.eclipse.rdf4j:rdf4j-rio-api",
+      "tools.jackson.core:jackson-core",
+      "tools.jackson.core:jackson-databind"
     ],
     "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": [
       "com.google.guava:guava",
       "org.apache.commons:commons-math3",
+      "org.apache.datasketches:datasketches-java",
       "org.eclipse.rdf4j:rdf4j-collection-factory-api",
       "org.eclipse.rdf4j:rdf4j-common-iterator",
       "org.eclipse.rdf4j:rdf4j-http-client",
@@ -4171,7 +4220,8 @@
       "org.eclipse.rdf4j:rdf4j-query",
       "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
       "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-rio-trig"
+      "org.eclipse.rdf4j:rdf4j-rio-trig",
+      "org.jetbrains:annotations"
     ],
     "org.eclipse.rdf4j:rdf4j-queryrender": [
       "com.google.code.gson:gson",
@@ -4192,10 +4242,10 @@
       "org.eclipse.rdf4j:rdf4j-queryresultio-api"
     ],
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": [
-      "com.fasterxml.jackson.core:jackson-core",
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api"
+      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
+      "tools.jackson.core:jackson-core"
     ],
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": [
       "org.eclipse.rdf4j:rdf4j-common-xml",
@@ -4271,13 +4321,13 @@
     ],
     "org.eclipse.rdf4j:rdf4j-rio-api": [
       "com.fasterxml.jackson.core:jackson-annotations",
-      "com.fasterxml.jackson.core:jackson-core",
-      "com.fasterxml.jackson.core:jackson-databind",
       "com.github.jsonld-java:jsonld-java",
       "commons-codec:commons-codec",
       "no.hasmac:hasmac-json-ld",
       "org.eclipse.rdf4j:rdf4j-common-xml",
-      "org.eclipse.rdf4j:rdf4j-model"
+      "org.eclipse.rdf4j:rdf4j-model",
+      "tools.jackson.core:jackson-core",
+      "tools.jackson.core:jackson-databind"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-binary": [
       "org.eclipse.rdf4j:rdf4j-model",
@@ -4331,12 +4381,12 @@
       "org.eclipse.rdf4j:rdf4j-rio-languages"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-rdfjson": [
-      "com.fasterxml.jackson.core:jackson-core",
       "commons-io:commons-io",
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-rio-api",
       "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages"
+      "org.eclipse.rdf4j:rdf4j-rio-languages",
+      "tools.jackson.core:jackson-core"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-rdfxml": [
       "commons-io:commons-io",
@@ -4380,6 +4430,7 @@
       "org.eclipse.rdf4j:rdf4j-query",
       "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
       "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
+      "org.eclipse.rdf4j:rdf4j-queryrender",
       "org.eclipse.rdf4j:rdf4j-sail-api",
       "org.slf4j:slf4j-api"
     ],
@@ -4618,9 +4669,9 @@
       "com.fasterxml.jackson.core.exc",
       "com.fasterxml.jackson.core.filter",
       "com.fasterxml.jackson.core.format",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_21_3",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_21_3.bte",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_21_3.chr",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0.bte",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0.chr",
       "com.fasterxml.jackson.core.io",
       "com.fasterxml.jackson.core.io.schubfach",
       "com.fasterxml.jackson.core.json",
@@ -5118,7 +5169,6 @@
       "okhttp3.internal",
       "okhttp3.internal.authenticator",
       "okhttp3.internal.cache",
-      "okhttp3.internal.cache2",
       "okhttp3.internal.concurrent",
       "okhttp3.internal.connection",
       "okhttp3.internal.graal",
@@ -5170,7 +5220,8 @@
       "org.apache.commons.beanutils.locale.converters"
     ],
     "commons-cli:commons-cli": [
-      "org.apache.commons.cli"
+      "org.apache.commons.cli",
+      "org.apache.commons.cli.help"
     ],
     "commons-codec:commons-codec": [
       "org.apache.commons.codec",
@@ -6152,6 +6203,34 @@
       "org.apache.commons.text.similarity",
       "org.apache.commons.text.translate"
     ],
+    "org.apache.datasketches:datasketches-java": [
+      "org.apache.datasketches",
+      "org.apache.datasketches.common",
+      "org.apache.datasketches.common.positional",
+      "org.apache.datasketches.count",
+      "org.apache.datasketches.cpc",
+      "org.apache.datasketches.fdt",
+      "org.apache.datasketches.filters",
+      "org.apache.datasketches.filters.bloomfilter",
+      "org.apache.datasketches.frequencies",
+      "org.apache.datasketches.hash",
+      "org.apache.datasketches.hll",
+      "org.apache.datasketches.hllmap",
+      "org.apache.datasketches.kll",
+      "org.apache.datasketches.partitions",
+      "org.apache.datasketches.quantiles",
+      "org.apache.datasketches.quantilescommon",
+      "org.apache.datasketches.req",
+      "org.apache.datasketches.sampling",
+      "org.apache.datasketches.tdigest",
+      "org.apache.datasketches.theta",
+      "org.apache.datasketches.thetacommon",
+      "org.apache.datasketches.tuple",
+      "org.apache.datasketches.tuple.adouble",
+      "org.apache.datasketches.tuple.aninteger",
+      "org.apache.datasketches.tuple.arrayofdoubles",
+      "org.apache.datasketches.tuple.strings"
+    ],
     "org.apache.httpcomponents.client5:httpclient5": [
       "org.apache.hc.client5.http",
       "org.apache.hc.client5.http.async",
@@ -6162,6 +6241,7 @@
       "org.apache.hc.client5.http.config",
       "org.apache.hc.client5.http.cookie",
       "org.apache.hc.client5.http.entity",
+      "org.apache.hc.client5.http.entity.compress",
       "org.apache.hc.client5.http.entity.mime",
       "org.apache.hc.client5.http.impl",
       "org.apache.hc.client5.http.impl.async",
@@ -6191,6 +6271,7 @@
       "org.apache.hc.core5.http.impl",
       "org.apache.hc.core5.http.impl.bootstrap",
       "org.apache.hc.core5.http.impl.io",
+      "org.apache.hc.core5.http.impl.io.support",
       "org.apache.hc.core5.http.impl.nio",
       "org.apache.hc.core5.http.impl.routing",
       "org.apache.hc.core5.http.io",
@@ -6228,6 +6309,7 @@
       "org.apache.hc.core5.http2.nio.command",
       "org.apache.hc.core5.http2.nio.pool",
       "org.apache.hc.core5.http2.nio.support",
+      "org.apache.hc.core5.http2.priority",
       "org.apache.hc.core5.http2.protocol",
       "org.apache.hc.core5.http2.ssl"
     ],
@@ -6475,9 +6557,10 @@
       "org.apache.jena.mem.spliterator",
       "org.apache.jena.mem.store",
       "org.apache.jena.mem.store.fast",
+      "org.apache.jena.mem.store.indexed",
       "org.apache.jena.mem.store.legacy",
       "org.apache.jena.mem.store.roaring",
-      "org.apache.jena.mem.store.roaring.strategies",
+      "org.apache.jena.mem.store.strategies",
       "org.apache.jena.memvalue",
       "org.apache.jena.ontology",
       "org.apache.jena.ontology.impl",
@@ -7540,6 +7623,15 @@
       "org.eclipse.rdf4j.http.client.shacl",
       "org.eclipse.rdf4j.http.client.util"
     ],
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5": [
+      "org.eclipse.rdf4j.http.client.apache5"
+    ],
+    "org.eclipse.rdf4j:rdf4j-http-client-api": [
+      "org.eclipse.rdf4j.http.client.spi"
+    ],
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk": [
+      "org.eclipse.rdf4j.http.client.jdk"
+    ],
     "org.eclipse.rdf4j:rdf4j-http-protocol": [
       "org.eclipse.rdf4j.http.protocol",
       "org.eclipse.rdf4j.http.protocol.error",
@@ -7583,6 +7675,7 @@
       "org.eclipse.rdf4j.query.algebra.evaluation.impl.evaluationsteps.values",
       "org.eclipse.rdf4j.query.algebra.evaluation.iterator",
       "org.eclipse.rdf4j.query.algebra.evaluation.optimizer",
+      "org.eclipse.rdf4j.query.algebra.evaluation.sketch",
       "org.eclipse.rdf4j.query.algebra.evaluation.util"
     ],
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model": [
@@ -7699,15 +7792,13 @@
       "org.eclipse.rdf4j.rio.rdfxml.util"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-trig": [
-      "org.eclipse.rdf4j.rio.trig",
-      "org.eclipse.rdf4j.rio.trigstar"
+      "org.eclipse.rdf4j.rio.trig"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-trix": [
       "org.eclipse.rdf4j.rio.trix"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-turtle": [
-      "org.eclipse.rdf4j.rio.turtle",
-      "org.eclipse.rdf4j.rio.turtlestar"
+      "org.eclipse.rdf4j.rio.turtle"
     ],
     "org.eclipse.rdf4j:rdf4j-sail-api": [
       "org.eclipse.rdf4j.common.concurrent.locks",
@@ -9727,6 +9818,8 @@
       "org.apache.commons:commons-math3:jar:sources",
       "org.apache.commons:commons-text",
       "org.apache.commons:commons-text:jar:sources",
+      "org.apache.datasketches:datasketches-java",
+      "org.apache.datasketches:datasketches-java:jar:sources",
       "org.apache.httpcomponents.client5:httpclient5",
       "org.apache.httpcomponents.client5:httpclient5:jar:sources",
       "org.apache.httpcomponents.core5:httpcore5",
@@ -9861,6 +9954,12 @@
       "org.eclipse.rdf4j:rdf4j-common-xml",
       "org.eclipse.rdf4j:rdf4j-common-xml:jar:sources",
       "org.eclipse.rdf4j:rdf4j-http-client",
+      "org.eclipse.rdf4j:rdf4j-http-client-apache5",
+      "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources",
+      "org.eclipse.rdf4j:rdf4j-http-client-api",
+      "org.eclipse.rdf4j:rdf4j-http-client-api:jar:sources",
+      "org.eclipse.rdf4j:rdf4j-http-client-jdk",
+      "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources",
       "org.eclipse.rdf4j:rdf4j-http-client:jar:sources",
       "org.eclipse.rdf4j:rdf4j-http-protocol",
       "org.eclipse.rdf4j:rdf4j-http-protocol:jar:sources",
@@ -10709,6 +10808,26 @@
         "org.eclipse.rdf4j.common.transaction.IsolationLevelFactory"
       ]
     },
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5": {
+      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
+        "org.eclipse.rdf4j.http.client.apache5.ApacheHC5RDF4JHttpClientFactory"
+      ]
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources": {
+      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
+        "org.eclipse.rdf4j.http.client.apache5.ApacheHC5RDF4JHttpClientFactory"
+      ]
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk": {
+      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
+        "org.eclipse.rdf4j.http.client.jdk.JdkRDF4JHttpClientFactory"
+      ]
+    },
+    "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources": {
+      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
+        "org.eclipse.rdf4j.http.client.jdk.JdkRDF4JHttpClientFactory"
+      ]
+    },
     "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": {
       "org.eclipse.rdf4j.query.algebra.evaluation.function.Function": [
         "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Day",
@@ -10885,12 +11004,10 @@
         "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONWriterFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLStarResultsJSONParserFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLStarResultsJSONWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources": {
@@ -10901,12 +11018,10 @@
         "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONWriterFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLStarResultsJSONParserFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLStarResultsJSONWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": {
@@ -10917,12 +11032,10 @@
         "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLWriterFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLStarResultsXMLParserFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLStarResultsXMLWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources": {
@@ -10933,12 +11046,10 @@
         "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLWriterFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLStarResultsXMLParserFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLStarResultsXMLWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-text": {
@@ -10950,13 +11061,11 @@
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
         "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLStarResultsTSVParserFactory"
+        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
         "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLStarResultsTSVWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources": {
@@ -10968,13 +11077,11 @@
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
         "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLStarResultsTSVParserFactory"
+        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory"
       ],
       "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
         "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLStarResultsTSVWriterFactory"
+        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-repository-contextaware": {
@@ -11177,22 +11284,18 @@
     },
     "org.eclipse.rdf4j:rdf4j-rio-trig": {
       "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.trig.TriGParserFactory",
-        "org.eclipse.rdf4j.rio.trigstar.TriGStarParserFactory"
+        "org.eclipse.rdf4j.rio.trig.TriGParserFactory"
       ],
       "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.trig.TriGWriterFactory",
-        "org.eclipse.rdf4j.rio.trigstar.TriGStarWriterFactory"
+        "org.eclipse.rdf4j.rio.trig.TriGWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-rio-trig:jar:sources": {
       "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.trig.TriGParserFactory",
-        "org.eclipse.rdf4j.rio.trigstar.TriGStarParserFactory"
+        "org.eclipse.rdf4j.rio.trig.TriGParserFactory"
       ],
       "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.trig.TriGWriterFactory",
-        "org.eclipse.rdf4j.rio.trigstar.TriGStarWriterFactory"
+        "org.eclipse.rdf4j.rio.trig.TriGWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-rio-trix": {
@@ -11213,22 +11316,18 @@
     },
     "org.eclipse.rdf4j:rdf4j-rio-turtle": {
       "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.turtle.TurtleParserFactory",
-        "org.eclipse.rdf4j.rio.turtlestar.TurtleStarParserFactory"
+        "org.eclipse.rdf4j.rio.turtle.TurtleParserFactory"
       ],
       "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory",
-        "org.eclipse.rdf4j.rio.turtlestar.TurtleStarWriterFactory"
+        "org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-rio-turtle:jar:sources": {
       "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.turtle.TurtleParserFactory",
-        "org.eclipse.rdf4j.rio.turtlestar.TurtleStarParserFactory"
+        "org.eclipse.rdf4j.rio.turtle.TurtleParserFactory"
       ],
       "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory",
-        "org.eclipse.rdf4j.rio.turtlestar.TurtleStarWriterFactory"
+        "org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-sail-inferencer": {

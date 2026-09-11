@@ -8,7 +8,6 @@
 | projects        | `/admin/projects/shortcode/{shortcode}`                        | `GET`      | [get a single project](#get-project-by-id)                                  |
 | projects        | `/admin/projects/iri/{iri}`                                    | `GET`      | [get a single project](#get-project-by-id)                                  |
 | projects        | `/admin/projects/iri/{iri}`                                    | `PUT`      | [update a project](#update-project-information)                             |
-| projects        | `/admin/projects/iri/{iri}`                                    | `DELETE`   | [delete a project](#delete-a-project)                                       |
 | projects        | `/admin/projects/iri/{iri}/AllData`                            | `GET`      | [get all data of a project](#get-all-data-of-a-project)                     |
 | project members | `/admin/projects/shortname/{shortname}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                       |
 | project members | `/admin/projects/shortcode/{shortcode}/members`                | `GET`      | [get all project members](#get-project-members-by-id)                       |
@@ -64,8 +63,7 @@ Example response:
       ],
       "selfjoin": false,
       "shortcode": "00FF",
-      "shortname": "images",
-      "status": true
+      "shortname": "images"
     },
     {
       // ...
@@ -90,7 +88,6 @@ and `_`, cannot start with number nor allowed special characters, should be in t
 [xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName) and URL safe)
 - `description` (collection of descriptions as strings with language tag)
 - `keywords` (collection of keywords)
-- `status` (true, if project is active. false, if project is inactive)
 - `selfjoin`
 
 Optional payload:
@@ -121,7 +118,6 @@ curl --request POST \
         "test project"
     ],
     "logo": "/fu/bar/baz.jpg",
-    "status": true,
     "selfjoin": false
 }'
 ```
@@ -146,8 +142,7 @@ Example response:
         "ontologies": [],
         "selfjoin": false,
         "shortcode": "3333",
-        "shortname": "newproject",
-        "status": true
+        "shortname": "newproject"
     }
 }
 ```
@@ -240,8 +235,7 @@ Example response:
     ],
     "selfjoin": false,
     "shortcode": "0001",
-    "shortname": "anything",
-    "status": true
+    "shortname": "anything"
   }
 }
 ```
@@ -270,7 +264,6 @@ Payload: The following properties can be changed:
 - `description`
 - `keywords`
 - `logo`
-- `status`
 - `selfjoin`
 
 Example request:
@@ -310,8 +303,7 @@ Example response:
     ],
     "selfjoin": false,
     "shortcode": "0001",
-    "shortname": "anything",
-    "status": true
+    "shortname": "anything"
   }
 }
 ```
@@ -321,58 +313,6 @@ Errors:
 - `400 Bad Request`
     - if the provided IRI is not valid.
     - if the provided payload is not valid.
-- `404 Not Found` if no project with the provided IRI is found.
-
-
-### Delete a Project
-
-Permissions: SystemAdmin / ProjectAdmin
-
-Request definition: `DELETE /admin/projects/iri/{iri}`
-
-Description: Mark a project as deleted (by setting the `status` flag to `false`).
-
-```bash
-curl --request DELETE \
-  --url http://localhost:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001 \
-  --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
-  --header 'Content-Type: application/json'
-```
-
-Example response:
-
-```jsonc
-{
-  "project": {
-    "description": [
-      {
-        "value": "Anything Project"
-      }
-    ],
-    "id": "http://rdfh.ch/projects/0001",
-    "keywords": [
-      "arbitrary test data",
-      "things"
-    ],
-    "logo": null,
-    "longname": "other longname",
-    "ontologies": [
-      "http://api.knora.org/ontology/0001/something/v2",
-      "http://api.knora.org/ontology/0001/freetest/v2",
-      "http://api.knora.org/ontology/0001/minimal/v2",
-      "http://api.knora.org/ontology/0001/anything/v2"
-    ],
-    "selfjoin": false,
-    "shortcode": "0001",
-    "shortname": "anything",
-    "status": false
-  }
-}
-```
-
-Errors:
-
-- `400 Bad Request` if the provided IRI is not valid.
 - `404 Not Found` if no project with the provided IRI is found.
 
 
@@ -531,8 +471,7 @@ Example response:
                     ],
                     "selfjoin": false,
                     "shortcode": "0001",
-                    "shortname": "anything",
-                    "status": true
+                    "shortname": "anything"
                 }
             ],
             "sessionId": null,
@@ -639,8 +578,7 @@ Example response:
                     ],
                     "selfjoin": false,
                     "shortcode": "0001",
-                    "shortname": "anything",
-                    "status": true
+                    "shortname": "anything"
                 }
             ],
             "sessionId": null,

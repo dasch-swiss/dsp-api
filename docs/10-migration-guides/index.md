@@ -33,6 +33,19 @@ whereas previously `knora-base:isSequenceOf` could be added to any `knora-base:R
 This means that you will have to change the type of the resources that you have been using
 to be of type `knora-base:AudioSegment` or `knora-base:VideoSegment`.
 
+### v54 to v55: Removal of the project Active/Inactive concept
+
+The project `status` field and the soft-delete endpoint `DELETE /admin/projects/iri/{iri}` are removed.
+The endpoint only flipped `status` to `false`, which deleted nothing.
+
+The `status` field no longer appears in the project create and update requests,
+nor in the `Project`, `ProjectsGetResponse`, and `ProjectGetResponse` responses.
+Remove `status` from any request payload that still sends it.
+
+A startup migration deletes the orphaned `knora-admin:status` triples from existing projects.
+User and group status are not affected.
+To erase a project, use the separate erase endpoint.
+
 ## Deprecation Warnings
 
 <!---

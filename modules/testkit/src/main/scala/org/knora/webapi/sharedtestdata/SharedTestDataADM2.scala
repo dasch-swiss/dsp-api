@@ -191,7 +191,6 @@ object SharedTestDataADM2 {
     keywords = Some("collection, images"),
     logo = None,
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
-    status = true,
     selfjoin = false,
   )
 
@@ -300,7 +299,6 @@ object SharedTestDataADM2 {
     ),
     logo = Some("incunabula_logo.png"),
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
-    status = true,
     selfjoin = false,
   )
 
@@ -401,7 +399,6 @@ object SharedTestDataADM2 {
     keywords = None,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
-    status = true,
     selfjoin = false,
   )
 
@@ -423,7 +420,6 @@ object SharedTestDataADM2 {
     keywords = None,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
-    status = true,
     selfjoin = false,
   )
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -461,7 +457,6 @@ object SharedTestDataADM2 {
     keywords = None,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
-    status = false,
     selfjoin = false,
   )
 
@@ -483,7 +478,6 @@ object SharedTestDataADM2 {
     keywords = None,
     logo = None,
     ontologies = Seq("http://www.knora.org/ontology/0806/webern"),
-    status = false,
     selfjoin = false,
   )
 }

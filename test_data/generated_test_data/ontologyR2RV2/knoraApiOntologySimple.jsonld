@@ -704,7 +704,7 @@
             "@id": "knora-api:MovingImageRepresentation"
         },
         {
-            "rdfs:label": "Region",
+            "rdfs:label": "Image Annotation",
             "rdfs:subClassOf": [
                 {
                     "@id": "knora-api:Resource"
@@ -780,7 +780,7 @@
                     "owl:cardinality": 1
                 }
             ],
-            "rdfs:comment": "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
+            "rdfs:comment": "An annotation of a region of an image resource",
             "@type": "owl:Class",
             "knora-api:resourceIcon": "region.gif",
             "@id": "knora-api:Region"
@@ -1414,7 +1414,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
-            "rdfs:comment": "Specifies the color of a region.",
+            "rdfs:comment": "Specifies the color of an annotation.",
             "@type": "owl:DatatypeProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Region"

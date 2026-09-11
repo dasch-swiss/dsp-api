@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.NonEmptyChunk
 import zio.test.*
@@ -19,6 +20,12 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeleteListNodeCommentsQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   private val testProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
     Shortname.unsafeFrom("anything"),
@@ -27,7 +34,6 @@ class DeleteListNodeCommentsQuerySpec extends ZIOSpecDefault {
     NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Test project"))),
     List.empty,
     None,
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set.empty,
@@ -38,22 +44,24 @@ class DeleteListNodeCommentsQuerySpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment, Any] = suite("DeleteListNodeCommentsQuerySpec")(
     test("should produce correct query for deleting list node comments") {
-      val actual = DeleteListNodeCommentsQuery.build(testNodeIri, testProject).getQueryString
+      val actual = DeleteListNodeCommentsQuery.build(testNodeIri, testProject).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/test-node> rdfs:comment ?comments . } }
             |WHERE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/test-node> rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different node IRI") {
       val differentNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/another-node")
-      val actual           = DeleteListNodeCommentsQuery.build(differentNodeIri, testProject).getQueryString
+      val actual           = DeleteListNodeCommentsQuery.build(differentNodeIri, testProject).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/another-node> rdfs:comment ?comments . } }
             |WHERE { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/lists/0001/another-node> rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different project") {
@@ -65,19 +73,19 @@ class DeleteListNodeCommentsQuerySpec extends ZIOSpecDefault {
         NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Incunabula project"))),
         List.empty,
         None,
-        Status.Active,
         SelfJoin.CannotJoin,
         RestrictedView.default,
         Set.empty,
         Set.empty,
       )
       val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-list-node")
-      val actual  = DeleteListNodeCommentsQuery.build(nodeIri, otherProject).getQueryString
+      val actual  = DeleteListNodeCommentsQuery.build(nodeIri, otherProject).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |DELETE { GRAPH <http://www.knora.org/data/0803/incunabula> { <http://rdfh.ch/lists/0803/book-list-node> rdfs:comment ?comments . } }
             |WHERE { GRAPH <http://www.knora.org/data/0803/incunabula> { <http://rdfh.ch/lists/0803/book-list-node> rdfs:comment ?comments . } }""".stripMargin,
+        ),
       )
     },
   )

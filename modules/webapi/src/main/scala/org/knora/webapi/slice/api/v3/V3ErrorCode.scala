@@ -13,6 +13,8 @@ enum V3ErrorCode(val template: String):
   case project_not_found  extends V3ErrorCode("The project '{id}' was not found.")
   case export_not_found   extends V3ErrorCode("The export '{id}' in project '{projectIri}' was not found.")
   case import_not_found   extends V3ErrorCode("The import '{id}' in project '{projectIri}' was not found.")
+  case on_behalf_of_user_not_found
+      extends V3ErrorCode("The on-behalf-of user '{id}' in project '{projectIri}' was not found.")
   // Used by Export endpoints where the class is looked up without ontology context.
   case resourceClass_not_found extends V3ErrorCode("The resource class '{id}' was not found.")
   case resource_not_found      extends V3ErrorCode("The resource with IRI '{id}' was not found.")
@@ -29,17 +31,21 @@ enum V3ErrorCode(val template: String):
   case import_exists      extends V3ErrorCode("Import '{id}' exists for project '{projectIri}'.")
   case import_in_progress extends V3ErrorCode("Import '{id}' in progress for project '{projectIri}'.")
   case data_graph_exists  extends V3ErrorCode("The data graph for project '{projectIri}' already exists.")
+  case project_ontologies_missing
+      extends V3ErrorCode("The project '{projectIri}' has no ontologies in the triplestore.")
   // V3ErrorCode.BadRequest errors
   case invalid_ontology_mapping_iri extends V3ErrorCode("Invalid OntologyMappingIri: '{iri}'.")
+  case on_behalf_of_user_ineligible
+      extends V3ErrorCode("The on-behalf-of user '{id}' in project '{projectIri}' is not eligible: {reason}.")
 
 object V3ErrorCode:
 
   type NotFounds = export_not_found.type | ontology_not_found.type | project_not_found.type | resource_not_found.type |
     resourceClass_not_found.type | import_not_found.type | feature_missing.type | class_not_found.type |
-    property_not_found.type
+    property_not_found.type | on_behalf_of_user_not_found.type
 
   type Conflicts = export_exists.type | export_failed.type | export_in_progress.type | import_exists.type |
-    import_in_progress.type | data_graph_exists.type
+    import_in_progress.type | data_graph_exists.type | project_ontologies_missing.type
 
   given Schema[V3ErrorCode] = Schema.derivedEnumeration[V3ErrorCode].defaultStringBased
 

@@ -14,6 +14,7 @@ import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
 import org.knora.webapi.slice.api.v3.export_.ExportService
@@ -49,7 +50,8 @@ object ApiV3Module {
     ProjectMigrationImportService &
     ResourcesRepo &
     StringFormatter &
-    TriplestoreService
+    TriplestoreService &
+    UserService
     // format: on
 
   type Provided = ApiV3ServerEndpoints

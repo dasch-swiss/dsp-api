@@ -254,8 +254,9 @@ final class PermissionsResponder(
    * Resolves the default object access permissions literal for a project data-graph import, where a single user
    * creates every resource and value and no per-entity (resource class / property) DOAPs are applied. Group-based
    * precedence only: ProjectAdmin → custom groups → ProjectMember → KnownUser → fallback (`CR knora-admin:Creator`).
-   * Since the importer is always a system admin, the project's ProjectAdmin-group DOAP has first precedence and
-   * applies uniformly to all resources and values.
+   * `targetUser` is the on-behalf-of project user (not the triggering admin), so precedence follows that user's own
+   * group memberships: a project member resolves the ProjectMember-group DOAP. The resolved string applies uniformly
+   * to all resources and values.
    */
   def newDataImportDefaultObjectAccessPermissions(projectIri: ProjectIri, targetUser: User): Task[String] =
     calculatePermissionWithPrecedence(

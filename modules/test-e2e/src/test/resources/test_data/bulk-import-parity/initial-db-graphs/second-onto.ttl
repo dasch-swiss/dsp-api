@@ -1,0 +1,50 @@
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://www.knora.org/ontology/9999/second-onto>
+        rdf:type  <http://www.w3.org/2002/07/owl#Ontology>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Second Ontology";
+        <http://www.knora.org/ontology/knora-base#attachedToProject>
+                <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#isShared>
+                false;
+        <http://www.knora.org/ontology/knora-base#lastModificationDate>
+                "2026-09-04T11:22:37.268575459Z"^^xsd:dateTime .
+
+<http://www.knora.org/ontology/9999/second-onto#SecondOntoClass>
+        rdf:type  <http://www.w3.org/2002/07/owl#Class>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Resource"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                <http://www.knora.org/ontology/knora-base#Resource>;
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#maxCardinality>
+                          "1"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/second-onto#testBoolean>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "1"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testSimpleText>
+                ] .
+
+<http://www.knora.org/ontology/9999/second-onto#testBoolean>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Boolean of the second onto"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#BooleanValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Checkbox> .

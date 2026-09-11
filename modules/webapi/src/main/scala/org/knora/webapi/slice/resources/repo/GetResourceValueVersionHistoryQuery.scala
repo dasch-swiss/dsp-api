@@ -5,88 +5,44 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
 import java.time.Instant
 
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
-object GetResourceValueVersionHistoryQuery extends QueryBuilderHelper {
+object GetResourceValueVersionHistoryQuery {
 
   def build(
     resourceIri: ResourceIri,
     withDeletedResource: Boolean = false,
     maybeStartDate: Option[Instant] = None,
     maybeEndDate: Option[Instant] = None,
-  ): SelectQuery = {
-    val versionDate  = variable("versionDate")
-    val author       = variable("author")
-    val property     = variable("property")
-    val currentValue = variable("currentValue")
-    val valueObject  = variable("valueObject")
+  ): String = {
+    val resource = Iri.unsafeFrom(resourceIri.value)
 
-    val resource = Rdf.iri(resourceIri.value)
-
-    // <resourceIri> ?property ?currentValue .
-    val resourcePattern = resource.has(property, currentValue)
-
-    // ?property rdfs:subPropertyOf* knora-base:hasValue .
-    val propertyPath = property.has(zeroOrMore(RDFS.SUBPROPERTYOF), KnoraBase.hasValue)
-
-    // ?currentValue knora-base:previousValue* ?valueObject .
-    val previousValuePath = currentValue.has(zeroOrMore(KnoraBase.previousValue), valueObject)
-
-    // UNION branch 1: value creation
-    val creationBranch = valueObject
-      .has(KnoraBase.valueCreationDate, versionDate)
-      .and(valueObject.has(KnoraBase.attachedToUser, author))
-
-    // UNION branch 2: value deletion
-    val deletionBranch = valueObject
-      .has(KnoraBase.deleteDate, versionDate)
-      .and(valueObject.has(KnoraBase.deletedBy, author))
-
-    // UNION branch 3: resource deletion (only when withDeletedResource)
-    val resourceDeleteBranch = resource
-      .has(KnoraBase.deleteDate, versionDate)
-      .and(resource.has(KnoraBase.attachedToUser, author))
-
-    val unionPattern =
-      if (withDeletedResource) GraphPatterns.union(creationBranch, deletionBranch, resourceDeleteBranch)
-      else GraphPatterns.union(creationBranch, deletionBranch)
-
-    // Build WHERE clause
-    var whereClause =
-      if (withDeletedResource) resourcePattern.and(propertyPath).and(previousValuePath).and(unionPattern)
-      else
-        resourcePattern
-          .and(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
-          .and(propertyPath)
-          .and(previousValuePath)
-          .and(unionPattern)
-
-    // Optional date filters
-    maybeStartDate.foreach { startDate =>
-      whereClause = whereClause.filter(Expressions.gte(versionDate, toRdfLiteral(startDate)))
-    }
-
-    maybeEndDate.foreach { endDate =>
-      whereClause = whereClause.filter(Expressions.lt(versionDate, toRdfLiteral(endDate)))
-    }
-
-    Queries
-      .SELECT(versionDate, author)
-      .distinct()
-      .prefix(XSD.NS, RDFS.NS, KnoraBase.NS)
-      .where(whereClause)
-      .orderBy(versionDate.desc())
+    sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              |
+              |SELECT DISTINCT ?versionDate ?author
+              |WHERE {
+              |  $resource ?property ?currentValue .
+              |  ${sparql"$resource knora-base:isDeleted false .".unless(withDeletedResource)}
+              |  ?property rdfs:subPropertyOf* knora-base:hasValue .
+              |  ?currentValue knora-base:previousValue* ?valueObject .
+              |  {
+              |    ?valueObject knora-base:valueCreationDate ?versionDate .
+              |    ?valueObject knora-base:attachedToUser ?author .
+              |  } UNION {
+              |    ?valueObject knora-base:deleteDate ?versionDate .
+              |    ?valueObject knora-base:deletedBy ?author .
+              |  }
+              |  ${sparql"""|UNION {
+                             |  $resource knora-base:deleteDate ?versionDate .
+                             |  $resource knora-base:attachedToUser ?author .
+                             |}""".when(withDeletedResource)}
+              |  ${maybeStartDate.whenSome(date => sparql"FILTER(?versionDate >= ${Literal.dateTime(date)})")}
+              |  ${maybeEndDate.whenSome(date => sparql"FILTER(?versionDate < ${Literal.dateTime(date)})")}
+              |}
+              |ORDER BY DESC(?versionDate)""".render
   }
 }

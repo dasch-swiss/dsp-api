@@ -1,0 +1,20 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# A lists-only project data graph for the incunabula project (shortcode 0803). Every subject is typed
+# `a knora-base:ListNode`, exactly as CreateListNodeQuery writes list nodes. The create-only precondition
+# excludes list-node subjects, so this graph counts as "no data other than list nodes" and an import is allowed.
+
+<http://rdfh.ch/lists/0803/testlist>
+    a                            knora-base:ListNode ;
+    knora-base:isRootNode        true ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:hasSubListNode    <http://rdfh.ch/lists/0803/testlist01> ;
+    rdfs:label                   "Incunabula test list"@en .
+
+<http://rdfh.ch/lists/0803/testlist01>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "node 01" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0803/testlist> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Node 01"@en .

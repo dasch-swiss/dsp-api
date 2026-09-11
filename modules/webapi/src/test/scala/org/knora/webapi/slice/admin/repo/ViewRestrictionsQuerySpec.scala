@@ -89,6 +89,26 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(q.contains("rdfs:subClassOf+"))
       },
     ),
+    suite("project class discovery")(
+      test("the closure walk sits outside a sub-select, so it runs per class and not per resource row") {
+        val q = ViewRestrictionsRepo.projectClassesQuery(projectIri).getQueryString
+        assertTrue(
+          // The project scan is deduplicated to the classes in use *before* the path sees them. Without the
+          // sub-select the store materializes one row per (resource, asserted type) for the whole project
+          // and probes the closure once per row -- Fuseki-cancelled at the 20s tier on a large project.
+          q.contains("SELECT DISTINCT ?resClass") && q.indexOf("SELECT DISTINCT ?resClass") != q.lastIndexOf(
+            "SELECT DISTINCT ?resClass",
+          ),
+          // The guard itself stays: attachedToProject is also carried by list nodes and by the project's
+          // own ontologies, so dropping it would let ListNode and owl:Ontology into the class list.
+          q.contains("rdfs:subClassOf*") && q.contains("knora-base:Resource"),
+          // and the closure walk is outside the sub-select, i.e. after its closing brace
+          q.indexOf("rdfs:subClassOf*") > q.lastIndexOf("a ?resClass"),
+          q.contains(s"knora-base:attachedToProject <${projectIri.value}>"),
+          !q.contains("GRAPH"),
+        )
+      },
+    ),
     suite("every query is scoped by attachedToProject")(
       test("no view-restrictions query uses GRAPH scoping") {
         // Deliberate, and measured: a project's resources span one data graph per ontology, while

@@ -44,7 +44,6 @@ object KnoraProjectRepo {
       NonEmptyChunk(KnoraProject.Description.unsafeFrom(description, Some("en"))),
       List.empty[Keyword],
       None,
-      KnoraProject.Status.Active,
       KnoraProject.SelfJoin.CannotJoin,
       RestrictedView.default,
       Set.empty,

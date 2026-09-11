@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -15,18 +16,23 @@ class GetAllResourcesInProjectPrequerySpec extends ZIOSpecDefault {
   override val spec: Spec[Any, Nothing] = suite("GetAllResourcesInProjectPrequery")(
     test("build should produce the expected SPARQL query") {
       val projectIri = "http://rdfh.ch/projects/0001"
-      val actual     = GetAllResourcesInProjectPrequery.build(projectIri).getQueryString.strip()
+      val actual     = GetAllResourcesInProjectPrequery.build(projectIri)
       val expected   =
         """|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |
            |SELECT DISTINCT ?resource
-           |WHERE { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
-           |?resourceType rdfs:subClassOf* knora-base:Resource .
-           |?resource rdf:type ?resourceType .
-           |?resource knora-base:creationDate ?creationDate . }
-           |ORDER BY DESC( ?creationDate )""".stripMargin
-      assertTrue(actual == expected)
+           |WHERE {
+           |  ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+           |  ?resourceType rdfs:subClassOf* knora-base:Resource .
+           |  ?resource rdf:type ?resourceType .
+           |  ?resource knora-base:creationDate ?creationDate .
+           |}
+           |ORDER BY DESC(?creationDate)""".stripMargin
+      val parsed = QueryFactory.create(actual)
+
+      assertTrue(actual == expected, parsed.isSelectType)
     },
   )
 }

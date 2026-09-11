@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -21,6 +22,12 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class DeleteClassQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
+
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val testOntologyIri: OntologyIri =
@@ -35,9 +42,9 @@ class DeleteClassQuerySpec extends ZIOSpecDefault {
       DeleteClassQuery
         .build(testClassIri, testLastModificationDate)
         .map { case (_, query) =>
-          val queryString = query.getQueryString
+          val queryString = query.sparql
           assertTrue(
-            queryString ==
+            canonical(queryString) == canonical(
               """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -56,6 +63,7 @@ class DeleteClassQuerySpec extends ZIOSpecDefault {
                 |    ?restrictionPred ?restrictionObj .
                 |FILTER ( isBLANK( ?restriction ) ) }
                 |FILTER NOT EXISTS { ?s ?p anything:TestClass . } }""".stripMargin,
+            ),
           )
         }
     },

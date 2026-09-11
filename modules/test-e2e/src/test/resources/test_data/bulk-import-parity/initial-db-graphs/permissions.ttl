@@ -1,0 +1,46 @@
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://rdfh.ch/permissions/9999/8HGi0aZgTPSLsoPt8B3LgA>
+        rdf:type                knora-admin:AdministrativePermission;
+        knora-admin:forGroup    knora-admin:ProjectAdmin;
+        knora-admin:forProject  <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "ProjectAdminAllPermission|ProjectResourceCreateAllPermission" .
+
+<http://rdfh.ch/permissions/9999/2_2ASosiTwunf_QqwHwQhA>
+        rdf:type                knora-admin:AdministrativePermission;
+        knora-admin:forGroup    knora-admin:ProjectMember;
+        knora-admin:forProject  <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "ProjectResourceCreateAllPermission" .
+
+<http://rdfh.ch/permissions/9999/vt4coLVBQjuKFUjGSyj4AQ>
+        rdf:type                knora-admin:DefaultObjectAccessPermission;
+        knora-admin:forGroup    knora-admin:ProjectMember;
+        knora-admin:forProject  <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin|V knora-admin:KnownUser,knora-admin:UnknownUser" .
+
+<http://rdfh.ch/permissions/9999/7uCDKaMKTFWeaghaah9deA>
+        rdf:type                 knora-admin:DefaultObjectAccessPermission;
+        knora-admin:forProject   <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        knora-admin:forProperty  <http://www.knora.org/ontology/9999/onto#testPrivateProp>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin" .
+
+<http://rdfh.ch/permissions/9999/ttD2pz9eRmmSB4Z4_AKtzA>
+        rdf:type                      knora-admin:DefaultObjectAccessPermission;
+        knora-admin:forProject        <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        knora-admin:forResourceClass  <http://www.knora.org/ontology/9999/onto#PrivateResource>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin" .
+
+<http://rdfh.ch/permissions/9999/IqqGj_t0TI-JnQ7OBqNNqQ>
+        rdf:type                      knora-admin:DefaultObjectAccessPermission;
+        knora-admin:forProject        <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        knora-admin:forProperty       <http://www.knora.org/ontology/knora-base#hasStillImageFileValue>;
+        knora-admin:forResourceClass  <http://www.knora.org/ontology/9999/onto#RestrictedImageRepresentation>;
+        <http://www.knora.org/ontology/knora-base#hasPermissions>
+                "D knora-admin:ProjectMember|CR knora-admin:ProjectAdmin|RV knora-admin:KnownUser,knora-admin:UnknownUser" .

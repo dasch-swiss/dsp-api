@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -14,45 +15,54 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class GetParentNodeQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
   private val testNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/test-node")
 
   override def spec: Spec[TestEnvironment, Any] = suite("GetParentNodeQuerySpec")(
     test("should produce correct CONSTRUCT query for parent node") {
-      val actual = GetParentNodeQuery.build(testNodeIri).getQueryString
+      val actual = GetParentNodeQuery.build(testNodeIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |CONSTRUCT { ?s ?p ?o . }
             |WHERE { ?s a knora-base:ListNode ;
             |    knora-base:hasSubListNode <http://rdfh.ch/lists/0001/test-node> ;
             |    ?p ?o . }
             |""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different node IRI") {
       val differentNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/child-node")
-      val actual           = GetParentNodeQuery.build(differentNodeIri).getQueryString
+      val actual           = GetParentNodeQuery.build(differentNodeIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |CONSTRUCT { ?s ?p ?o . }
             |WHERE { ?s a knora-base:ListNode ;
             |    knora-base:hasSubListNode <http://rdfh.ch/lists/0001/child-node> ;
             |    ?p ?o . }
             |""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for node with different project") {
       val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0803/book-category")
-      val actual  = GetParentNodeQuery.build(nodeIri).getQueryString
+      val actual  = GetParentNodeQuery.build(nodeIri).sparql
       assertTrue(
-        actual ==
+        canonical(actual) == canonical(
           """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             |CONSTRUCT { ?s ?p ?o . }
             |WHERE { ?s a knora-base:ListNode ;
             |    knora-base:hasSubListNode <http://rdfh.ch/lists/0803/book-category> ;
             |    ?p ?o . }
             |""".stripMargin,
+        ),
       )
     },
   )

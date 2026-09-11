@@ -20,7 +20,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:Region"
             },
-            "rdfs:comment": "Specifies the color of a region."
+            "rdfs:comment": "Specifies the color of an annotation."
         }
     ],
     "knora-api:attachedToProject": {

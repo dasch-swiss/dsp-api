@@ -9,6 +9,7 @@ import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 /// Errors that can occur when managing the state of a data task.
 final case class StatesExistError(t: CurrentDataTask)
@@ -32,12 +33,17 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
    * If a task already exists in any state, return an error.
    *
    * @param projectIri the [[ProjectIri]] for which the task is being created
-   * @param user the [[User]] who is creating the task
+   * @param user the [[User]] who is creating the task (recorded as `createdBy`)
+   * @param onBehalfOf the project user imported data is attributed to; `None` for exports and migration imports
    * @return An IO that fails with [[StatesExistError]] if a task already exists.
    *         An IO that succeeds with [[CurrentDataTask]] when created successfully.
    */
-  def makeNew(projectIri: ProjectIri, user: User): IO[StatesExistError, CurrentDataTask] = for {
-    newState <- CurrentDataTask.makeNew(projectIri, user.userIri)
+  def makeNew(
+    projectIri: ProjectIri,
+    user: User,
+    onBehalfOf: Option[UserIri] = None,
+  ): IO[StatesExistError, CurrentDataTask] = for {
+    newState <- CurrentDataTask.makeNew(projectIri, user.userIri, onBehalfOf)
     result   <- self.ref.modify {
                 case Some(exp) => (ZIO.fail(StatesExistError(exp)), Some(exp))
                 case None      => (ZIO.succeed(newState), Some(newState))

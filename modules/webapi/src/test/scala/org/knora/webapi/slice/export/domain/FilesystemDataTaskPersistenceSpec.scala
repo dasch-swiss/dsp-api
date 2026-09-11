@@ -14,6 +14,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
@@ -179,6 +180,42 @@ class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
             _      <- Files.writeBytes(dir / "task.json", Chunk.fromArray("not valid json".getBytes("UTF-8")))
             result <- persistence.restore()
           } yield assertTrue(result.isEmpty)
+        }
+      },
+    ),
+    suite("onBehalfOf field")(
+      test("decodes a task.json written before the field (no onBehalfOf key) as None") {
+        for {
+          id        <- DataTaskId.makeNew
+          now       <- Clock.instant
+          legacyJson =
+            s"""{"id":"${id.value}","projectIri":"${projectIri.value}","status":"in_progress","createdBy":"${user.userIri.value}","createdAt":"${now.toString}"}"""
+          parsed <-
+            ZIO
+              .fromEither(zio.json.DecoderOps(legacyJson).fromJson[PersistedDataTask])
+              .mapError(new RuntimeException(_))
+        } yield assertTrue(
+          parsed.onBehalfOf.isEmpty,
+          parsed.id == id,
+          parsed.status == DataTaskStatus.InProgress,
+        )
+      },
+      test("persists and restores the onBehalfOf subject") {
+        withTempDir { tmpDir =>
+          val persistence = makePersistence(tmpDir)
+          val subject     = UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaMemberUser")
+          for {
+            id  <- DataTaskId.makeNew
+            now <- Clock.instant
+            task =
+              CurrentDataTask.restore(id, projectIri, DataTaskStatus.Completed, user.userIri, now, None, Some(subject))
+            _        <- persistence.onChanged(task)
+            restored <- persistence.restore()
+          } yield assertTrue(
+            restored.isDefined,
+            restored.get.onBehalfOf.contains(subject),
+            restored.get.createdBy == user.userIri,
+          )
         }
       },
     ),

@@ -63,6 +63,7 @@ object MigrateSizes extends ZIOAppDefault {
         Configuration.layer,
         Db.dataSourceLive,
         FileChecksumServiceLive.layer,
+        MimeTypeGuesser.layer,
         ProjectRepositoryLive.layer,
         ProjectService.layer,
         StorageServiceLive.layer,

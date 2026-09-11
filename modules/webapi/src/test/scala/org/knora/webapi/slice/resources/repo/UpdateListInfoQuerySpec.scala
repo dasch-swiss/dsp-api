@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.NonEmptyChunk
@@ -26,6 +27,8 @@ import org.knora.webapi.slice.common.domain.LanguageCode.FR
 @RunWith(classOf[DspZTestJUnitRunner])
 class UpdateListInfoQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = UpdateFactory.create(query).toString
+
   private val testProject = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
     Shortname.unsafeFrom("anything"),
@@ -34,7 +37,6 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
     NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Test project"))),
     List.empty,
     None,
-    Status.Active,
     SelfJoin.CannotJoin,
     RestrictedView.default,
     Set.empty,
@@ -61,7 +63,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -71,6 +73,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/test-list> rdfs:label "Étiquette mise à jour"@fr . }
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:label ?currentLabels . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update only name") {
@@ -85,7 +88,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -94,6 +97,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |INSERT { <http://rdfh.ch/lists/0001/test-list> knora-base:listNodeName "updatedListName" . }
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> knora-base:listNodeName ?currentName . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update only comments") {
@@ -112,7 +116,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -121,6 +125,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |INSERT { <http://rdfh.ch/lists/0001/test-list> rdfs:comment "Updated comment"@en . }
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:comment ?currentComments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update all fields") {
@@ -147,7 +152,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -164,6 +169,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:label ?currentLabels . }
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> knora-base:listNodeName ?currentName . }
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:comment ?currentComments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update labels and name") {
@@ -183,7 +189,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -195,6 +201,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:label ?currentLabels . }
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> knora-base:listNodeName ?currentName . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update name and comments") {
@@ -214,7 +221,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -226,6 +233,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> knora-base:listNodeName ?currentName . }
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:comment ?currentComments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query to update labels and comments") {
@@ -249,7 +257,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -261,6 +269,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:label ?currentLabels . }
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:comment ?currentComments . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query with multilingual labels") {
@@ -281,7 +290,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -292,6 +301,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |<http://rdfh.ch/lists/0001/test-list> rdfs:label "Label français"@fr . }
             |WHERE { <http://rdfh.ch/lists/0001/test-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/0001/test-list> rdfs:label ?currentLabels . } }""".stripMargin,
+        ),
       )
     },
     test("should produce correct query for different project") {
@@ -303,7 +313,6 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
         NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Images project"))),
         List.empty,
         None,
-        Status.Active,
         SelfJoin.CannotJoin,
         RestrictedView.default,
         Set.empty,
@@ -321,7 +330,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
       )
 
       assertTrue(
-        query.getQueryString ==
+        canonical(query) == canonical(
           """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -330,6 +339,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
             |INSERT { <http://rdfh.ch/lists/00FF/image-list> knora-base:listNodeName "imageCategories" . }
             |WHERE { <http://rdfh.ch/lists/00FF/image-list> a knora-base:ListNode .
             |OPTIONAL { <http://rdfh.ch/lists/00FF/image-list> knora-base:listNodeName ?currentName . } }""".stripMargin,
+        ),
       )
     },
   )
