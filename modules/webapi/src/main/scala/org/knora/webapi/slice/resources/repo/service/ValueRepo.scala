@@ -6,11 +6,6 @@
 package org.knora.webapi.slice.resources.repo.service
 
 import org.apache.jena.rdf.model.Resource
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
 import zio.*
 
 import java.time.Instant
@@ -19,26 +14,20 @@ import scala.language.implicitConversions
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.jena.JenaConversions.given_Conversion_String_Property
 import org.knora.webapi.slice.common.jena.ResourceOps.*
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.CheckDuplicateOrderQuery
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.value.queries.InsertValueQueryBuilder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 sealed trait ValueModel {
   def iri: ValueIri
@@ -58,8 +47,7 @@ final case class DeletedValue(
   lastModificationDate: Option[Instant],
 ) extends ValueModel
 
-final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter)
-    extends QueryBuilderHelper {
+final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: StringFormatter) {
 
   def findActiveById(iri: ValueIri): Task[Option[ActiveValue]] =
     findById(iri).map(_.collect { case v: ActiveValue => v })
@@ -70,26 +58,8 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   def findByIds(iris: Seq[ValueIri]) = ZIO.foreach(iris)(findById)
 
   def findById(iri: ValueIri): Task[Option[ValueModel]] =
-    val id                                                      = Rdf.iri(iri.value)
-    val (clazz, isDeleted, previousValue, lastModificationDate) =
-      (variable("valueClass"), variable("isDeleted"), variable("previousValue"), variable("lastModificationDate"))
-
-    val graphP = id
-      .isA(clazz)
-      .andHas(KB.lastModificationDate, lastModificationDate)
-      .andHas(KB.isDeleted, isDeleted)
-      .andHas(KB.previousValue, previousValue)
-
-    val whereP = id
-      .isA(clazz)
-      .and(clazz.has(RDFS.SUBCLASSOF, KB.Value))
-      .and(id.has(KB.previousValue, previousValue).optional())
-      .and(id.has(KB.isDeleted, isDeleted).optional())
-      .and(id.has(KB.lastModificationDate, lastModificationDate).optional())
-
-    val query = Queries.CONSTRUCT(graphP).where(whereP)
     triplestore
-      .queryRdfModel(Construct(query))
+      .queryRdfModel(ValueQueries.findById(iri))
       .flatMap(_.getResource(iri.value).map(_.map(_.res)))
       .flatMap(mapResult)
 
@@ -120,60 +90,27 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     loop(valueIri, Seq.empty)
   }
 
-  def findPreviousValue(valueIri: ValueIri): Task[Option[ValueIri]] = {
-    val previous = variable("previous")
-    val where    = iri(valueIri.value).has(KB.previousValue, previous)
-    val query    = Queries.SELECT(previous).where(where)
+  def findPreviousValue(valueIri: ValueIri): Task[Option[ValueIri]] =
     for {
-      result        <- triplestore.query(Select(query)).map(_.getFirstRow)
+      result        <- triplestore.query(ValueQueries.findPreviousValue(valueIri)).map(_.getFirstRow)
       previousIriStr = result.flatMap(_.rowMap.get("previous"))
       previousIri   <- ZIO
                        .foreach(previousIriStr)(s =>
                          ZIO.fromEither(ValueIri.from(s)).mapError(InconsistentRepositoryDataException.apply),
                        )
     } yield previousIri
-  }
 
-  def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
-    val value         = iri(valueIri.value)
-    val (p, o)        = (variable("p"), variable("o"))
-    val (s, oo)       = (variable("s"), variable("oo"))
-    val delete        = value.has(p, o)
-    val deleteReverse = s.has(oo, value)
-
-    val (soLink, soP, soO) = (variable("standoffLink"), variable("standoffProp"), variable("standoffObj"))
-    val standoffLinked     = value.has(KB.valueHasStandoff, soLink)
-    val standoffValues     = soLink.has(soP, soO)
-
-    val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val queryStandoff    = Queries
-      .DELETE(standoffValues)
-      .`with`(projectDataGraph)
-      .where(delete, deleteReverse, standoffLinked, standoffValues)
-    val query = Queries
-      .DELETE(delete, deleteReverse)
-      .`with`(projectDataGraph)
-      .where(delete, deleteReverse)
-
-    triplestore.query(Update(queryStandoff)) *> triplestore.query(Update(query))
-  }
+  def eraseValue(project: KnoraProject)(valueIri: ValueIri): Task[Unit] =
+    ZIO
+      .foreachDiscard(ValueQueries.eraseValue(ProjectService.projectDataNamedGraphV2(project), valueIri))(
+        triplestore.query,
+      )
 
   /* Deletes the subject/predicate/object triple pointed to by a LinkValue. */
-  def eraseValueDirectLink(project: KnoraProject)(valueIri: ValueIri): Task[Unit] = {
-    val value            = iri(valueIri.value)
-    val (s, p, o)        = spo
-    val delete           = s.has(p, o)
-    val projectDataGraph = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val query            = Queries
-      .DELETE(delete)
-      .`with`(projectDataGraph)
-      .where(
-        value.has(iri(OntologyConstants.Rdf.Subject), s),
-        value.has(iri(OntologyConstants.Rdf.Predicate), p),
-        value.has(iri(OntologyConstants.Rdf.Object), o),
-      )
-    triplestore.query(Update(query))
-  }
+  def eraseValueDirectLink(project: KnoraProject)(valueIri: ValueIri): Task[Unit] =
+    triplestore
+      .query(ValueQueries.eraseValueDirectLink(ProjectService.projectDataNamedGraphV2(project), valueIri))
+      .unit
 
   def updateValuePermissions(
     projectDataGraph: InternalIri,
@@ -181,70 +118,22 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     valueIri: ValueIri,
     newPermissions: String,
     currentTime: Instant,
-  ): Task[Unit] = {
-    val resource = iri(resourceIri.value)
-    val value    = iri(valueIri.value)
-
-    val (resourceLastModDate, currentValuePerms) =
-      (variable("resourceLastModificationDate"), variable("currentValuePermissions"))
-
-    val query = Queries
-      .MODIFY()
-      .`with`(Rdf.iri(projectDataGraph.value))
-      .delete(
-        resource.has(KB.lastModificationDate, resourceLastModDate),
-        value.has(KB.hasPermissions, currentValuePerms),
+  ): Task[Unit] =
+    triplestore
+      .query(
+        ValueQueries.updateValuePermissions(projectDataGraph, resourceIri, valueIri, newPermissions, currentTime),
       )
-      .insert(
-        resource.has(KB.lastModificationDate, Rdf.literalOfType(currentTime.toString, XSD.DATETIME)),
-        value.has(KB.hasPermissions, Rdf.literalOf(newPermissions)),
-      )
-      .where(
-        value
-          .has(KB.hasPermissions, currentValuePerms)
-          .and(resource.has(KB.lastModificationDate, resourceLastModDate).optional()),
-      )
+      .unit
 
-    triplestore.query(Update(query))
-  }
-
-  // Uses string interpolation instead of rdf4j builder because the builder's fluent API
-  // does not support VALUES clauses with tuple bindings (?item ?newOrder) elegantly.
   def reorderValues(
     projectDataGraph: InternalIri,
     resourceIri: InternalIri,
     orderedValueIris: List[ValueIri],
     currentTime: Instant,
-  ): Task[Unit] = {
-    val valuesClause = orderedValueIris.zipWithIndex.map { case (valueIri, idx) =>
-      s"    (<${valueIri.value}> $idx)"
-    }
-      .mkString("\n")
-
-    val valueHasOrder        = KnoraBase.ValueHasOrder
-    val lastModificationDate = KnoraBase.LastModificationDate
-
-    val query = s"""
-                   |WITH <${projectDataGraph.value}>
-                   |DELETE {
-                   |  ?item <$valueHasOrder> ?oldOrder .
-                   |  <${resourceIri.value}> <$lastModificationDate> ?resourceLastModDate .
-                   |}
-                   |INSERT {
-                   |  ?item <$valueHasOrder> ?newOrder .
-                   |  <${resourceIri.value}> <$lastModificationDate> "${currentTime.toString}"^^<${XSD.DATETIME}> .
-                   |}
-                   |WHERE {
-                   |  VALUES (?item ?newOrder) {
-                   |$valuesClause
-                   |  }
-                   |  OPTIONAL { ?item <$valueHasOrder> ?oldOrder }
-                   |  OPTIONAL { <${resourceIri.value}> <$lastModificationDate> ?resourceLastModDate }
-                   |}
-                   |""".stripMargin
-
-    triplestore.query(Update(query))
-  }
+  ): Task[Unit] =
+    triplestore
+      .query(ValueQueries.reorderValues(projectDataGraph, resourceIri, orderedValueIris, currentTime))
+      .unit
 
   def createValue(
     dataNamedGraph: InternalIri,
