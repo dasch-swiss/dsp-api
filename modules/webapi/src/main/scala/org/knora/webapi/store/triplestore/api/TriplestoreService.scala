@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.InsertDataQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import sttp.model.StatusCode
 import zio.*
 import zio.stream.ZStream
@@ -17,6 +16,8 @@ import zio.stream.ZStream
 import java.nio.file.Path
 import java.util.Arrays
 
+import org.knora.sparqlbuilder.Iri
+import org.knora.sparqlbuilder.sparql
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -38,14 +39,8 @@ import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 
 trait TriplestoreService extends QueryBuilderHelper {
 
-  def isIriInObjectPosition(iri: Iri): Task[Boolean] = query(
-    Ask(s"""
-           |ASK
-           |WHERE
-           |{
-           | ${variable("s").has(variable("p"), iri).getQueryString}
-           |}""".stripMargin),
-  )
+  def isIriInObjectPosition(iri: Iri): Task[Boolean] =
+    query(Ask(sparql"ASK WHERE { ?s ?p $iri . }".render))
 
   /**
    * Performs a SPARQL ASK query.
