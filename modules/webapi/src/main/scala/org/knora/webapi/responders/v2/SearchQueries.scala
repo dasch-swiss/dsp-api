@@ -5,21 +5,29 @@
 
 package org.knora.webapi.responders.v2
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FusekiLucenceQuery
 
-object SearchQueries extends QueryBuilderHelper {
+object SearchQueries {
 
-  private val luceneHitLimit = OntologyConstants.Fuseki.luceneHitLimit
+  private val luceneHitLimit = Literal.int(OntologyConstants.Fuseki.luceneHitLimit)
+
+  /*
+   * Both label queries below emit the same optional project and resource-class restrictions.
+   *
+   * The class restriction walks `rdfs:subClassOf*`. It must not be narrowed to `subClassOf?`: the subclass closure is not
+   * materialised in the triplestore and there is no query-time inference, so zero-or-one matched only the target class and
+   * its direct subclasses. Any class two or more hops below the target was invisible, which made a class-restricted label
+   * search return nothing at all whenever the instantiated classes sat deeper than one level (DEV-6833).
+   *
+   * `?resource a ?resourceClass` is emitted inside the class-restriction hole rather than in the query bodies so the type
+   * join is only paid when a class restriction is actually requested.
+   */
 
   /**
    * Counts the resources whose `rdfs:label` matches the Lucene query.
@@ -38,48 +46,25 @@ object SearchQueries extends QueryBuilderHelper {
     luceneQuery: FusekiLucenceQuery,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[ResourceClassIri],
-  ): Select =
+  ): Select = {
+    // `Literal.string` escapes for SPARQL itself, so the raw Lucene query goes in — not `getQueryString`,
+    // which is already SPARQL-escaped and would be escaped twice.
+    val query = Literal.string(luceneQuery.value)
     Select(
-      s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |SELECT (count(distinct ?resource) as ?count)
-          |WHERE {
-          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}" $luceneHitLimit) ;
-          |        knora-base:creationDate ?resourceCreationDate .
-          |    ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}
-          |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
-          |}
-          |""".stripMargin,
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |SELECT (count(distinct ?resource) as ?count)
+               |WHERE {
+               |    ?resource <http://jena.apache.org/text#query> (rdfs:label $query $luceneHitLimit) ;
+               |        knora-base:creationDate ?resourceCreationDate .
+               |    ${List(
+          limitToProject.map(p => sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(p.value)} ."),
+          limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
+                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
+        ).flatten.joinLines}
+               |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+               |}""".render,
     )
-
-  /**
-   * Emits the optional project and resource-class restrictions shared by both label queries.
-   *
-   * The class restriction walks `rdfs:subClassOf*`. It must not be narrowed to `subClassOf?`: the subclass closure is not
-   * materialised in the triplestore and there is no query-time inference, so zero-or-one matched only the target class and
-   * its direct subclasses. Any class two or more hops below the target was invisible, which made a class-restricted label
-   * search return nothing at all whenever the instantiated classes sat deeper than one level (DEV-6833).
-   *
-   * `?resource a ?resourceClass` is emitted here rather than in the query bodies so the type join is only paid when a
-   * class restriction is actually requested.
-   */
-  private def filterByProjectAndResourceClass(
-    limitToProject: Option[ProjectIri],
-    limitToResourceClass: Option[ResourceClassIri],
-  ): String = {
-    val projectPattern = limitToProject
-      .map(toRdfIri)
-      .map(prj => variable("resource").has(KnoraBase.attachedToProject, prj).getQueryString)
-
-    val resourceClassPatterns = limitToResourceClass.map(toRdfIri).map { cls =>
-      val subClassOfStar = PropertyPathBuilder.of(RDFS.SUBCLASSOF).zeroOrMore().build()
-      List(
-        variable("resource").isA(variable("resourceClass")).getQueryString,
-        variable("resourceClass").has(subClassOfStar, cls).getQueryString,
-      ).mkString("\n")
-    }
-
-    List(projectPattern, resourceClassPatterns).flatten.mkString("\n")
   }
 
   /**
@@ -100,56 +85,63 @@ object SearchQueries extends QueryBuilderHelper {
     limitToResourceClass: Option[ResourceClassIri],
     limit: Int,
     offset: Int,
-  ): Construct =
+  ): Construct = {
+    // `Literal.string` escapes for SPARQL itself, so the raw Lucene query goes in — not `getQueryString`,
+    // which is already SPARQL-escaped and would be escaped twice.
+    val query = Literal.string(luceneQuery.value)
     Construct(
-      s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |CONSTRUCT {
-          |    ?resource rdfs:label ?label ;
-          |        a knora-base:Resource ;
-          |        knora-base:isMainResource true ;
-          |        knora-base:isDeleted false ;
-          |        a ?resourceType ;
-          |        knora-base:attachedToUser ?resourceCreator ;
-          |        knora-base:hasPermissions ?resourcePermissions ;
-          |        knora-base:attachedToProject ?resourceProject  ;
-          |        knora-base:creationDate ?creationDate ;
-          |        knora-base:lastModificationDate ?lastModificationDate ;
-          |        knora-base:hasValue ?valueObject ;
-          |        ?resourceValueProperty ?valueObject .
-          |    ?valueObject ?valueObjectProperty ?valueObjectValue .
-          |} WHERE {
-          |    {
-          |        SELECT DISTINCT ?resource ?label
-          |        WHERE {
-          |            ?resource <http://jena.apache.org/text#query> (rdfs:label "${luceneQuery.getQueryString}" $luceneHitLimit) ;
-          |                rdfs:label ?label .
-          |            ${filterByProjectAndResourceClass(limitToProject, limitToResourceClass)}
-          |            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
-          |        }
-          |        ORDER BY ?resource
-          |        LIMIT $limit
-          |        OFFSET $offset
-          |    }
-          |
-          |    ?resource a ?resourceType ;
-          |        knora-base:attachedToUser ?resourceCreator ;
-          |        knora-base:hasPermissions ?resourcePermissions ;
-          |        knora-base:attachedToProject ?resourceProject ;
-          |        knora-base:creationDate ?creationDate ;
-          |        rdfs:label ?label .
-          |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
-          |    OPTIONAL {
-          |        ?resource ?resourceValueProperty ?valueObject .
-          |        ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
-          |        ?valueObject a ?valueObjectType ;
-          |            ?valueObjectProperty ?valueObjectValue .
-          |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
-          |        FILTER(?valueObjectType != knora-base:LinkValue)
-          |        FILTER NOT EXISTS { ?valueObject knora-base:isDeleted true . }
-          |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
-          |    }
-          |}
-          |""".stripMargin,
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |CONSTRUCT {
+               |    ?resource rdfs:label ?label ;
+               |        a knora-base:Resource ;
+               |        knora-base:isMainResource true ;
+               |        knora-base:isDeleted false ;
+               |        a ?resourceType ;
+               |        knora-base:attachedToUser ?resourceCreator ;
+               |        knora-base:hasPermissions ?resourcePermissions ;
+               |        knora-base:attachedToProject ?resourceProject  ;
+               |        knora-base:creationDate ?creationDate ;
+               |        knora-base:lastModificationDate ?lastModificationDate ;
+               |        knora-base:hasValue ?valueObject ;
+               |        ?resourceValueProperty ?valueObject .
+               |    ?valueObject ?valueObjectProperty ?valueObjectValue .
+               |} WHERE {
+               |    {
+               |        SELECT DISTINCT ?resource ?label
+               |        WHERE {
+               |            ?resource <http://jena.apache.org/text#query> (rdfs:label $query $luceneHitLimit) ;
+               |                rdfs:label ?label .
+               |            ${List(
+          limitToProject.map(p => sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(p.value)} ."),
+          limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
+                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
+        ).flatten.joinLines}
+               |            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+               |        }
+               |        ORDER BY ?resource
+               |        LIMIT ${Literal.int(limit)}
+               |        OFFSET ${Literal.int(offset)}
+               |    }
+               |
+               |    ?resource a ?resourceType ;
+               |        knora-base:attachedToUser ?resourceCreator ;
+               |        knora-base:hasPermissions ?resourcePermissions ;
+               |        knora-base:attachedToProject ?resourceProject ;
+               |        knora-base:creationDate ?creationDate ;
+               |        rdfs:label ?label .
+               |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+               |    OPTIONAL {
+               |        ?resource ?resourceValueProperty ?valueObject .
+               |        ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+               |        ?valueObject a ?valueObjectType ;
+               |            ?valueObjectProperty ?valueObjectValue .
+               |        ?valueObjectType rdfs:subClassOf* knora-base:Value .
+               |        FILTER(?valueObjectType != knora-base:LinkValue)
+               |        FILTER NOT EXISTS { ?valueObject knora-base:isDeleted true . }
+               |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
+               |    }
+               |}""".render,
     )
+  }
 }
