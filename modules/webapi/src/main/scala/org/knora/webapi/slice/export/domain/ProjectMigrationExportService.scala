@@ -32,7 +32,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 // This error is used to indicate that an export exists
 final case class ExportExistsError(t: CurrentDataTask)
@@ -135,8 +134,8 @@ final class ProjectMigrationExportService(
            )
 
       // Step 2: Build and execute the CONSTRUCT query (with referenced users if any)
-      queryStr = AdminDataQuery.buildWithReferencedUsers(project.id, referencedIris)
-      rdfStr  <- triplestore.queryRdf(Construct(queryStr))
+      query   = AdminDataQuery.buildWithReferencedUsers(project.id, referencedIris)
+      rdfStr <- triplestore.queryRdf(query)
 
       // Step 3: Parse result into Jena model, scope memberships, write as NQuads
       parsed <- ZIO.attempt {

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -14,11 +15,16 @@ import org.knora.webapi.TestDataFactory
 @RunWith(classOf[DspZTestJUnitRunner])
 class ProjectDataGraphExistsQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val q = QueryFactory.create(query)
+    q.getPrefixMapping.clearNsPrefixMap()
+    q.toString
+  }
+
+  // Exact-string regression guard for the create-only precondition. The ASK excludes list-node subjects
+  // (`FILTER NOT EXISTS { ?s a knora-base:ListNode }`) inside the project data graph, so a lists-only graph
+  // answers false. The `?s ?p ?o` base triple stays present so the FILTER NOT EXISTS is never the only pattern.
   override def spec: Spec[TestEnvironment, Any] = suite("ProjectDataGraphExistsQuerySpec")(
-    // Exact-string regression guard for the create-only precondition. The ASK excludes list-node subjects
-    // (`FILTER NOT EXISTS { ?s a knora-base:ListNode }`) inside the project data graph, so a lists-only graph
-    // answers false. The `?s ?p ?o` base triple stays present: rdf4j 5.2.2 drops a FILTER NOT EXISTS that is the
-    // only WHERE pattern (issue #5561, fixed 5.3.0).
     test("build excludes list-node subjects, scoped to the project data graph") {
       val expected =
         """
@@ -28,7 +34,9 @@ class ProjectDataGraphExistsQuerySpec extends ZIOSpecDefault {
           |FILTER NOT EXISTS { ?s a <http://www.knora.org/ontology/knora-base#ListNode> . } }
           |}
           |""".stripMargin
-      assertTrue(ProjectDataGraphExistsQuery.build(TestDataFactory.someProject).sparql == expected)
+      assertTrue(
+        canonical(ProjectDataGraphExistsQuery.build(TestDataFactory.someProject).sparql) == canonical(expected),
+      )
     },
   )
 }
