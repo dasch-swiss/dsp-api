@@ -12,7 +12,6 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import org.knora.webapi.messages.util.rdf.NQuads
-import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -31,7 +30,6 @@ final class ProjectDataImportService(
   state: DataTaskState,
   storage: ProjectDataImportStorageService,
   projectService: KnoraProjectService,
-  permissionsResponder: PermissionsResponder,
   transformer: OntologyTransformer,
   validator: ProjectMigrationImportValidator,
   triplestore: TriplestoreService,
@@ -80,10 +78,7 @@ final class ProjectDataImportService(
         _          <- ZIO.logInfo(s"$taskId: Starting data import for project '${project.id}'")
         jsonLdPath <- storage.dataImportJsonLdPath(taskId)
 
-        permissions <- permissionsResponder.newDataImportDefaultObjectAccessPermissions(project.id, onBehalfOf)
-        _           <- ZIO.logInfo(s"$taskId: Using permissions '$permissions' for project '${project.id}'")
-
-        ctx          = ConversionContext(onBehalfOf.userIri, project, permissions)
+        ctx          = ConversionContext(onBehalfOf, project)
         transformed <- transformer
                          .toKnoraBase(jsonLdPath.toFile.toPath, ctx)
                          .mapError(e => new RuntimeException(s"Transformation failed: ${e.message}"))
@@ -160,8 +155,7 @@ final class ProjectDataImportService(
 
 object ProjectDataImportService {
   val layer: URLayer[
-    KnoraProjectService & PermissionsResponder & OntologyTransformer & ProjectMigrationImportValidator &
-      TriplestoreService,
+    KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
     ProjectDataImportService,
   ] = (ProjectDataImportStorageService.layer >+> FilesystemDataTaskPersistence.dataImportLayer) >>>
     ZLayer.derive[ProjectDataImportService]

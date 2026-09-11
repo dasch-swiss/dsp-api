@@ -38,6 +38,7 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.slice.ontology.DoapResolverLive
 import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyTransformer
@@ -120,6 +121,7 @@ object LayersLive { self =>
       CommonModule.layer,
       ConstructResponseUtilV2.layer,
       CreateResourceV2Handler.layer,
+      DoapResolverLive.layer,
       DspIngestClientLive.layer,
       ExportModule.layer,
       ExportApiModule.layer,
