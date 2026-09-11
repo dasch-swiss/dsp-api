@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -16,6 +17,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 @RunWith(classOf[DspZTestJUnitRunner])
 class AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
   private val testListName    = ListName.unsafeFrom("testList")
   private val testProjectIri  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val testListName2   = ListName.unsafeFrom("my-special-list")
@@ -26,22 +33,24 @@ class AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
       val actual: Ask = AskListNameInProjectExistsQuery.build(testListName, testProjectIri)
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """ASK { ?rootNode <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> ;
             |    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> ;
             |    <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?node .
             |?node <http://www.knora.org/ontology/knora-base#listNodeName> "testList" . } """.stripMargin,
+        ),
       )
     },
     test("should produce correct ASK query with list name containing hyphens") {
       val actual: Ask = AskListNameInProjectExistsQuery.build(testListName2, testProjectIri2)
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """ASK { ?rootNode <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> ;
             |    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0042> ;
             |    <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?node .
             |?node <http://www.knora.org/ontology/knora-base#listNodeName> "my-special-list" . } """.stripMargin,
+        ),
       )
     },
     test("should produce correct ASK query with list name containing special characters") {
@@ -49,11 +58,12 @@ class AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
       val actual: Ask     = AskListNameInProjectExistsQuery.build(specialListName, testProjectIri)
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """ASK { ?rootNode <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> ;
             |    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> ;
             |    <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?node .
             |?node <http://www.knora.org/ontology/knora-base#listNodeName> "list_with_underscores_123" . } """.stripMargin,
+        ),
       )
     },
     test("should produce correct ASK query with different project shortcode") {
@@ -62,11 +72,12 @@ class AskListNameInProjectExistsQuerySpec extends ZIOSpecDefault {
       val actual: Ask = AskListNameInProjectExistsQuery.build(listName, projectIri)
 
       assertTrue(
-        actual.sparql ==
+        canonical(actual.sparql) == canonical(
           """ASK { ?rootNode <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> ;
             |    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/00FF> ;
             |    <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?node .
             |?node <http://www.knora.org/ontology/knora-base#listNodeName> "images" . } """.stripMargin,
+        ),
       )
     },
   )

@@ -1036,7 +1036,7 @@ final class OntologyResponderV2(
 
       currentTimeAndQuery <- DeleteClassQuery.build(classIri, LastModificationDate.from(lastModificationDate))
       (currentTime, query) = currentTimeAndQuery
-      _                   <- save(Update(query))
+      _                   <- save(query)
       updatedOntology      = ontology.copy(
                           ontologyMetadata = ontology.ontologyMetadata.copy(
                             lastModificationDate = Some(currentTime.value),
@@ -1148,7 +1148,7 @@ final class OntologyResponderV2(
                                LastModificationDate.from(lastModificationDate),
                              )
       (currentTime, query) = currentTimeAndQuery
-      _                   <- save(Update(query))
+      _                   <- save(query)
 
       propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
       updatedOntology             =
@@ -1194,7 +1194,7 @@ final class OntologyResponderV2(
                  s"Ontology ${ontologyIri.toComplexSchema} cannot be deleted, because of subjects that refer to it: $sortedSubjects"
                ZIO.fail(BadRequestException(msg))
              }
-        _ <- save(Update(DeleteOntologyQuery.build(ontologyIri)))
+        _ <- save(DeleteOntologyQuery.build(ontologyIri))
       } yield SuccessResponseV2(s"Ontology ${ontologyIri.toComplexSchema} has been deleted")
     IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(deleteTask)
   }
