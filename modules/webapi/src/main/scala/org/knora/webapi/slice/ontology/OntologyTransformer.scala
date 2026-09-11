@@ -55,7 +55,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
@@ -73,16 +73,15 @@ final case class TransformerError(message: String)
 /**
  * Supplies the metadata that cannot be derived from the input JSON-LD or from `Clock`.
  *
- * @param attachedToUser    the user every imported resource and value is attached to.
+ * @param attachedToUser    the user every imported resource and value is attached to, and whose default object-access
+ *                          permissions are resolved when an entity carries no payload permission.
  * @param attachedToProject the project every imported resource belongs to; overrides any value in the input.
  *                          Also determines the data named graph every output quad is assigned to — derived from
  *                          the project, never from payload content (`@graph` declarations in the input are ignored).
- * @param permissions       the formatted `knora-base:hasPermissions` string used for every resource and value.
  */
 final case class ConversionContext(
-  attachedToUser: UserIri,
+  attachedToUser: User,
   attachedToProject: KnoraProject,
-  permissions: String,
 )
 
 final class OntologyTransformer(
@@ -90,6 +89,7 @@ final class OntologyTransformer(
   standoffMappingService: StandoffMappingService,
   idSource: IdSource,
   sipiService: SipiService,
+  doapResolver: DoapResolver,
 ) { self =>
 
   /**
@@ -132,8 +132,8 @@ final class OntologyTransformer(
     (for {
       now   <- Clock.instant
       model <- RdfDataMgr.loadModel(nq, Lang.NTRIPLES)
-      _     <- ZIO.attempt(addResourceMetadata(model, ctx, now))
-      _     <- ZIO.attempt(addValueMetadata(model, ctx, now))
+      _     <- addResourceMetadata(model, ctx, now)
+      _     <- addValueMetadata(model, ctx, now)
       // addTextValueType must precede convertRichtextValues: the latter drops textValueAsXml, the FormattedText vs
       // UnformattedText signal. Do not reorder these two.
       _ <- ZIO.attempt(addTextValueType(model))
@@ -184,14 +184,14 @@ final class OntologyTransformer(
    * `isMainResource` is intentionally not emitted: `knora-base.ttl` documents it as a SPARQL-CONSTRUCT artifact that is
    * never persisted. `lastModificationDate` is omitted on first import.
    */
-  private def addResourceMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
+  private def addResourceMetadata(model: Model, ctx: ConversionContext, now: Instant): Task[Unit] = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
     val attachedToProject = model.createProperty(KnoraBase.AttachedToProject)
     val hasPermissions    = model.createProperty(KnoraBase.HasPermissions)
     val creationDate      = model.createProperty(KnoraBase.CreationDate)
     val isDeleted         = model.createProperty(KnoraBase.IsDeleted)
 
-    val userResource    = model.createResource(ctx.attachedToUser.value)
+    val userResource    = model.createResource(ctx.attachedToUser.userIri.value)
     val projectResource = model.createResource(ctx.attachedToProject.id.value)
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
@@ -201,32 +201,43 @@ final class OntologyTransformer(
       .asScala
       .filter(s => s.isURIResource && ResourceIri.from(s.getURI).isRight)
       .toList
-    resources.foreach { r =>
-      // Strip any payload-supplied system metadata before synthesizing, mirroring addValueMetadata,
-      // so a payload value does not coexist with the synthesized one (the data graph enforces
-      // maxCount 1). A payload creationDate is honored but re-emitted as xsd:dateTime: the create
-      // path stores it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp)
-      // does not survive.
-      val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
-      r.removeAll(attachedToUser)
-        .removeAll(attachedToProject)
-        .removeAll(hasPermissions)
-        .removeAll(creationDate)
-        .removeAll(isDeleted)
-      r.addProperty(attachedToUser, userResource)
-      r.addProperty(attachedToProject, projectResource)
-      // TODO(DEV-7149, next PR): honor a payload-supplied hasPermissions and resolve class/property
-      //   DOAPs so the string matches the create path. Until then the group-level default is applied
-      //   and hasPermissions stays excluded from the parity compare.
-      r.addProperty(hasPermissions, ctx.permissions)
-      val creationDateValue = payloadCreationDate
-        .filter(_.isLiteral)
-        .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
-        .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
-        .getOrElse(creationDateLit)
-      r.addProperty(creationDate, creationDateValue)
-      r.addProperty(isDeleted, falseLit)
-    }
+
+    for {
+      // Pair each resource with its class and payload permission before the strip. Resolve each distinct class
+      // DOAP and each distinct payload literal once, not per resource, to avoid an N+1 in the production import
+      // path (both fan out to repo lookups per call).
+      withData     <- ZIO.attempt(resources.map(r => (r, requireType(model, r), literalOf(r, hasPermissions))))
+      classDoaps   <- resolveResourceDoaps(ctx, withData.map(_._2).distinct)
+      payloadPerms <- resolveValidatedPermissions(withData.flatMap(_._3).distinct)
+      _            <- ZIO.foreachDiscard(withData) { case (r, resourceClass, payloadPermission) =>
+             ZIO.attempt {
+               // A payload hasPermissions is honored (reformatted to match the create path), otherwise
+               // the resolved class DOAP applies.
+               val permission = payloadPermission.fold(classDoaps(resourceClass))(payloadPerms)
+               // A payload creationDate is honored but re-emitted as xsd:dateTime: the create path stores
+               // it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp) does
+               // not survive.
+               val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
+               // Strip any payload-supplied system metadata before synthesizing, so a payload value does
+               // not coexist with the synthesized one (the data graph enforces maxCount 1).
+               r.removeAll(attachedToUser)
+                 .removeAll(attachedToProject)
+                 .removeAll(hasPermissions)
+                 .removeAll(creationDate)
+                 .removeAll(isDeleted)
+               r.addProperty(attachedToUser, userResource)
+               r.addProperty(attachedToProject, projectResource)
+               r.addProperty(hasPermissions, permission)
+               val creationDateValue = payloadCreationDate
+                 .filter(_.isLiteral)
+                 .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
+                 .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
+                 .getOrElse(creationDateLit)
+               r.addProperty(creationDate, creationDateValue)
+               r.addProperty(isDeleted, falseLit)
+             }
+           }
+    } yield ()
   }
 
   /**
@@ -238,30 +249,87 @@ final class OntologyTransformer(
    * payload. The pipeline synthesizes an order only for values it creates itself (e.g. standoff-link LinkValues),
    * never for values that come from outside.
    */
-  private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Unit = {
+  private def addValueMetadata(model: Model, ctx: ConversionContext, now: Instant): Task[Unit] = {
     val attachedToUser    = model.createProperty(KnoraBase.AttachedToUser)
     val hasPermissions    = model.createProperty(KnoraBase.HasPermissions)
     val isDeleted         = model.createProperty(KnoraBase.IsDeleted)
     val valueCreationDate = model.createProperty(KnoraBase.ValueCreationDate)
     val valueHasUUID      = model.createProperty(KnoraBase.ValueHasUUID)
 
-    val userResource    = model.createResource(ctx.attachedToUser.value)
+    val userResource    = model.createResource(ctx.attachedToUser.userIri.value)
     val creationDateLit = model.createTypedLiteral(now.toString, XSDDatatype.XSDdateTime)
     val falseLit        = model.createTypedLiteral("false", XSDDatatype.XSDboolean)
 
-    model.listSubjects().asScala.flatMap(s => asValueIri(s).map((s, _))).foreach { case (v, iri) =>
-      v.removeAll(attachedToUser)
-        .removeAll(hasPermissions)
-        .removeAll(valueCreationDate)
-        .removeAll(valueHasUUID)
-        .removeAll(isDeleted)
-      v.addProperty(attachedToUser, userResource)
-      v.addProperty(hasPermissions, ctx.permissions)
-      v.addProperty(valueCreationDate, creationDateLit)
-      v.addProperty(valueHasUUID, iri.valueId.value)
-      v.addProperty(isDeleted, falseLit)
-    }
+    val values = model.listSubjects().asScala.flatMap(s => asValueIri(s).map((s, _))).toList
+
+    for {
+      // Pair each value with its (owning class, property) DOAP key and payload permission, then resolve each
+      // distinct key and each distinct payload literal once (N+1 guard).
+      withData <- ZIO.attempt(
+                    values.map { case (v, iri) => (v, iri, valueDoapKey(model, v), literalOf(v, hasPermissions)) },
+                  )
+      valueDoaps   <- resolveValueDoaps(ctx, withData.map(_._3).distinct)
+      payloadPerms <- resolveValidatedPermissions(withData.flatMap(_._4).distinct)
+      _            <- ZIO.foreachDiscard(withData) { case (v, iri, key, payloadPermission) =>
+             ZIO.attempt {
+               // A payload hasPermissions is honored (reformatted to match the create path); otherwise
+               // the resolved property DOAP applies. The standoff-link LinkValue branch never reaches
+               // here: those values are emitted later, with their own fixed SystemUser-owned permissions.
+               val permission = payloadPermission.fold(valueDoaps(key))(payloadPerms)
+               v.removeAll(attachedToUser)
+                 .removeAll(hasPermissions)
+                 .removeAll(valueCreationDate)
+                 .removeAll(valueHasUUID)
+                 .removeAll(isDeleted)
+               v.addProperty(attachedToUser, userResource)
+               v.addProperty(hasPermissions, permission)
+               v.addProperty(valueCreationDate, creationDateLit)
+               v.addProperty(valueHasUUID, iri.valueId.value)
+               v.addProperty(isDeleted, falseLit)
+             }
+           }
+    } yield ()
   }
+
+  /**
+   * Reformats each distinct payload permission literal once through the resolver, so a kept payload string matches
+   * the create path byte-for-byte without an N+1 in the production import path (`validate` fans out to a repo lookup
+   * per group). `literals` are already de-duplicated.
+   */
+  private def resolveValidatedPermissions(literals: List[String]): Task[Map[String, String]] =
+    ZIO.foreach(literals)(literal => doapResolver.validate(literal).map(literal -> _)).map(_.toMap)
+
+  /** The lexical form of the single literal object of `p` on `r`, if present. */
+  private def literalOf(r: Resource, p: Property): Option[String] =
+    Option(r.getProperty(p)).map(_.getObject).filter(_.isLiteral).map(_.asLiteral.getLexicalForm)
+
+  /** The internal `rdf:type` IRI of a resource, or a descriptive throw — every imported resource carries one. */
+  private def requireType(model: Model, r: Resource): String =
+    typeIriOf(model, r).getOrElse(throw new IllegalArgumentException(s"Resource $r has no rdf:type"))
+
+  /** The `(owning resource class IRI, property IRI)` DOAP key of a value, from its single incoming edge. */
+  private def valueDoapKey(model: Model, v: Resource): (String, String) = {
+    val edge  = singleIncomingEdge(model, v, "Value")
+    val owner = edge.getSubject
+    (requireType(model, owner), edge.getPredicate.getURI)
+  }
+
+  /** Resolves the resource DOAP for each distinct class once. */
+  private def resolveResourceDoaps(ctx: ConversionContext, classes: List[String]): Task[Map[String, String]] =
+    ZIO
+      .foreach(classes)(c => doapResolver.resourceDoap(ctx.attachedToProject, ctx.attachedToUser, c).map(c -> _))
+      .map(_.toMap)
+
+  /** Resolves the value DOAP for each distinct `(class, property)` key once. */
+  private def resolveValueDoaps(
+    ctx: ConversionContext,
+    keys: List[(String, String)],
+  ): Task[Map[(String, String), String]] =
+    ZIO
+      .foreach(keys) { case key @ (resourceClass, property) =>
+        doapResolver.valueDoap(ctx.attachedToProject, ctx.attachedToUser, resourceClass, property).map(key -> _)
+      }
+      .map(_.toMap)
 
   /**
    * Sets `knora-base:hasTextValueType` on every `TextValue`: `FormattedText` when it carries the rich-text
@@ -1096,6 +1164,9 @@ final class OntologyTransformer(
 }
 
 object OntologyTransformer {
-  val layer: ZLayer[StringFormatter & StandoffMappingService & IdSource & SipiService, Nothing, OntologyTransformer] =
-    ZLayer.derive[OntologyTransformer]
+  val layer: ZLayer[
+    StringFormatter & StandoffMappingService & IdSource & SipiService & DoapResolver,
+    Nothing,
+    OntologyTransformer,
+  ] = ZLayer.derive[OntologyTransformer]
 }

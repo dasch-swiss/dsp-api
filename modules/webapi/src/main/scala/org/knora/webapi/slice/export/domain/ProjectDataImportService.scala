@@ -12,7 +12,6 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import org.knora.webapi.messages.util.rdf.NQuads
-import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -31,7 +30,6 @@ final class ProjectDataImportService(
   state: DataTaskState,
   storage: ProjectDataImportStorageService,
   projectService: KnoraProjectService,
-  permissionsResponder: PermissionsResponder,
   transformer: OntologyTransformer,
   validator: ProjectMigrationImportValidator,
   triplestore: TriplestoreService,
@@ -71,19 +69,16 @@ final class ProjectDataImportService(
     } yield ()
   ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
 
-  // Eligibility and the resolved permission string are captured once from the `onBehalfOf` snapshot passed in.
-  // `doImport` does not re-fetch or re-validate the user, so this service needs no `UserService`. A user deleted
-  // mid-flight still fails the SHACL validation step before the write.
+  // The `onBehalfOf` user is captured once at trigger time; per-entity permissions are resolved later inside the
+  // transformer from this snapshot. `doImport` does not re-fetch or re-validate the user, so this service needs no
+  // `UserService`. A user deleted mid-flight still fails the SHACL validation step before the write.
   private def doImport(taskId: DataTaskId, project: KnoraProject, onBehalfOf: User): UIO[Unit] =
     ZIO.scoped {
       for {
         _          <- ZIO.logInfo(s"$taskId: Starting data import for project '${project.id}'")
         jsonLdPath <- storage.dataImportJsonLdPath(taskId)
 
-        permissions <- permissionsResponder.newDataImportDefaultObjectAccessPermissions(project.id, onBehalfOf)
-        _           <- ZIO.logInfo(s"$taskId: Using permissions '$permissions' for project '${project.id}'")
-
-        ctx          = ConversionContext(onBehalfOf.userIri, project, permissions)
+        ctx          = ConversionContext(onBehalfOf, project)
         transformed <- transformer
                          .toKnoraBase(jsonLdPath.toFile.toPath, ctx)
                          .mapError(e => new RuntimeException(s"Transformation failed: ${e.message}"))
@@ -160,8 +155,7 @@ final class ProjectDataImportService(
 
 object ProjectDataImportService {
   val layer: URLayer[
-    KnoraProjectService & PermissionsResponder & OntologyTransformer & ProjectMigrationImportValidator &
-      TriplestoreService,
+    KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
     ProjectDataImportService,
   ] = (ProjectDataImportStorageService.layer >+> FilesystemDataTaskPersistence.dataImportLayer) >>>
     ZLayer.derive[ProjectDataImportService]

@@ -8,7 +8,6 @@ package org.knora.webapi.slice.`export`.domain
 import zio.URLayer
 import zio.ZLayer
 
-import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -26,7 +25,6 @@ object ExportModule {
     KnoraUserService &
     OntologyCache &
     OntologyTransformer &
-    PermissionsResponder &
     TriplestoreService
     // format: on
 
