@@ -29,52 +29,52 @@ Step to update standard mapping:
 1. Update `mappingForStandardHTML.xml`
 2. . create the `update-standard-mapping.json`
 
-```json
-{
-  "knora-api:mappingHasName": "update-standard-mapping",
-  "knora-api:attachedToProject": {
-    "@id": "http://rdfh.ch/projects/0001"
-  },
-  "rdfs:label": "update-standard-mapping",
-  "@context": {
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-  }
-}
-```
+    ```json
+    {
+      "knora-api:mappingHasName": "update-standard-mapping",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+      },
+      "rdfs:label": "update-standard-mapping",
+      "@context": {
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+      }
+    }
+    ```
 
 3. call the endpoint to generate the new mapping in the `anything` project:
 
-```shell
-$ curl -u root@example.com:test -X POST -F json=@update-standard-mapping.json -F xml=@mappingForStandardHTML.xml  http://localhost:3333/v2/mapping
-```
+    ```shell
+    curl -u root@example.com:test -X POST -F json=@update-standard-mapping.json -F xml=@mappingForStandardHTML.xml  http://localhost:3333/v2/mapping
+    ```
 
 4. generate the ttl:
 
-```sparql
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-Construct {
-    ?mapping ?p ?o .
-    ?mapping knora-base:hasMappingElement ?mEle .
-    ?mEle ?pp ?oo .
-    ?oo ?ppp ?ooo .
-}
-FROM <http://www.knora.org/data/0001/anything>
-WHERE {
-    BIND(<http://rdfh.ch/projects/0001/mappings/update-standard-mapping> as ?mapping)
-    ?mapping ?p ?o .
-
-    OPTIONAL {
+    ```sparql
+    PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+    Construct {
+        ?mapping ?p ?o .
         ?mapping knora-base:hasMappingElement ?mEle .
-    	OPTIONAL {
-        	?mEle ?pp ?oo .
-    		OPTIONAL {
-        		?oo ?ppp ?ooo .
+        ?mEle ?pp ?oo .
+        ?oo ?ppp ?ooo .
+    }
+    FROM <http://www.knora.org/data/0001/anything>
+    WHERE {
+        BIND(<http://rdfh.ch/projects/0001/mappings/update-standard-mapping> as ?mapping)
+        ?mapping ?p ?o .
+
+        OPTIONAL {
+            ?mapping knora-base:hasMappingElement ?mEle .
+            OPTIONAL {
+                ?mEle ?pp ?oo .
+                OPTIONAL {
+                    ?oo ?ppp ?ooo .
+                }
             }
         }
     }
-}
-```
+    ```
 
 5. Find differences to update by hand (to avoid massive IRI update) the `modules/webapi/src/main/resources/knora-ontologies/standoff-data.ttl`, pay attention to namespaces (e.g. replace all `http://rdfh.ch/projects/0001/mappings/update-standard-mapping` by `http://rdfh.ch/standoff/mappings/StandardMapping`)!
 6. Prepare an upgrade script of an existing Knora base
