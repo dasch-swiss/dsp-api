@@ -88,6 +88,13 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val migrationCreationIri  = "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ"
   private val migrationCreationDate = "2019-01-09T15:45:54.502951Z"
 
+  // Two fixtures whose payload hasPermissions differs starkly from the ProjectMember DOAP default: the default
+  // grants view to KnownUser+UnknownUser, these payloads grant to no anonymous group, so the stored string must
+  // lack "UnknownUser" and match across both write paths.
+  private val explicitResourcePermIri = "http://rdfh.ch/9999/XLUEHedrQPm1nscJDU1SiQ"
+  private val explicitValuePermIri    = "http://rdfh.ch/9999/ag8JD-5YTrCCl8UPHb1Kdw"
+  private val testBooleanInternal     = "http://www.knora.org/ontology/9999/onto#testBoolean"
+
   // richtext_standoff_refcount links `id_empty` from two text values, so its standoff-link LinkValue
   // must carry valueHasRefCount = 2 on both paths (the counter aggregates across text values).
   private val refCountResourceIri = "http://rdfh.ch/9999/f0khY71NRBqJ7noQj-YHpQ"
@@ -135,6 +142,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     "text_repr",
     "bitstream_permissions",
     "restricted_image",
+    "explicit_resource_permission",
+    "explicit_value_permission",
     "target_empty_1",
     "target_empty_2",
   )
@@ -178,6 +187,11 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         val refCountA = standoffLinkRefCount(graphA, refCountResourceIri, refCountTargetIri)
         val refCountB = standoffLinkRefCount(graphB, refCountResourceIri, refCountTargetIri)
 
+        val resourcePermA = permissionsOf(graphA, explicitResourcePermIri)
+        val resourcePermB = permissionsOf(graphB, explicitResourcePermIri)
+        val valuePermA    = valuePermissionsOf(graphA, explicitValuePermIri, testBooleanInternal)
+        val valuePermB    = valuePermissionsOf(graphB, explicitValuePermIri, testBooleanInternal)
+
         val diff =
           if (iso) ""
           else
@@ -200,6 +214,15 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           creationDateA.contains(migrationCreationDate),
           creationDateA == creationDateB,
         )
+        // The payload hasPermissions wins over the resolved DOAP on both paths: the stored string lacks the
+        // default's "UnknownUser" grant and matches across both writes, on the resource of
+        // explicit_resource_permission and the value of explicit_value_permission.
+        val payloadPermissionsWin = assertTrue(
+          resourcePermA.exists(p => !p.contains("UnknownUser")),
+          resourcePermA == resourcePermB,
+          valuePermA.exists(p => !p.contains("UnknownUser")),
+          valuePermA == valuePermB,
+        )
         // RDF isomorphism, hasPermissions included.
         val graphsAreIsomorphic = assertTrue(iso)
         // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
@@ -210,6 +233,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           tripleCountsMatch &&
           resourceSetsMatch &&
           creationDateSurvives &&
+          payloadPermissionsWin &&
           graphsAreIsomorphic &&
           standoffRefCountsMatch).label(
           s"""|counts: A=${normA.size} B=${normB.size}
@@ -442,6 +466,18 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   private def creationDate(model: Model, resourceIri: String): Option[String] =
     firstObjectOf(model, model.createResource(resourceIri), kb + "creationDate")
+      .map(_.asLiteral().getLexicalForm)
+
+  private def permissionsOf(model: Model, subjectIri: String): Option[String] =
+    firstObjectOf(model, model.createResource(subjectIri), kb + "hasPermissions").map(_.asLiteral().getLexicalForm)
+
+  // The value node is the single object of (resource, property); read its hasPermissions. The single-create path
+  // mints a fresh value IRI, so the value is reached through its owning resource, not by a fixed IRI.
+  private def valuePermissionsOf(model: Model, resourceIri: String, propertyUri: String): Option[String] =
+    firstObjectOf(model, model.createResource(resourceIri), propertyUri).collect {
+      case n if n.isResource => n.asResource
+    }
+      .flatMap(v => firstObjectOf(model, v, kb + "hasPermissions"))
       .map(_.asLiteral().getLexicalForm)
 
   // The standoff-link LinkValue reifies one (resource, target) pair. Find it by its rdf:subject/object,

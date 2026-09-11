@@ -1942,6 +1942,65 @@
     ]
   },
   {
+    "@id": "http://rdfh.ch/9999/XLUEHedrQPm1nscJDU1SiQ",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/in-built/v2#TestNormalResource"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CR knora-admin:ProjectAdmin|V knora-admin:ProjectMember"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Explicit resource permission"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ag8JD-5YTrCCl8UPHb1Kdw",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testBoolean": [
+      {
+        "@id": "http://rdfh.ch/9999/ag8JD-5YTrCCl8UPHb1Kdw/values/HJ4KmIKrRwW4XQfLpy0LrA"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Explicit value permission"
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/ag8JD-5YTrCCl8UPHb1Kdw/values/HJ4KmIKrRwW4XQfLpy0LrA",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#BooleanValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#boolean",
+        "@value": true
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "CR knora-admin:ProjectAdmin|RV knora-admin:ProjectMember"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
     "@id": "http://rdfh.ch/9999/rra3lveWTIi2z1n9jYVzlQ",
     "@type": [
       "http://0.0.0.0:3333/ontology/9999/onto/v2#TestStillImageRepresentation"
