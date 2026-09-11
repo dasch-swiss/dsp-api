@@ -551,7 +551,7 @@ final class ValuesResponderV2(
                         valueHasOrder = valueHasOrder,
                       )
 
-      _ <- triplestoreService.query(Update(sparqlUpdate))
+      _ <- triplestoreService.query(sparqlUpdate)
     } yield UnverifiedValueV2(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       newValueUUID = newValueUUID,
