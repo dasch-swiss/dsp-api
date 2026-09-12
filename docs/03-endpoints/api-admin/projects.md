@@ -22,6 +22,8 @@
 | view settings   | `/admin/projects/iri/{iri}/RestrictedViewSettings`             | `GET`      | [get restricted view settings for a project](#get-restricted-view-settings) |
 | view settings   | `/admin/projects/iri/{iri}/RestrictedViewSettings`             | `POST`     | [set restricted view settings for a project](#set-restricted-view-settings) |
 | view settings   | `/admin/projects/shortcode/{shortcode}/RestrictedViewSettings` | `POST`     | [set restricted view settings for a project](#set-restricted-view-settings) |
+| view settings   | `/admin/projects/iri/{iri}/RestrictedViewSettings`             | `DELETE`   | [clear restricted view settings](#clear-restricted-view-settings)           |
+| view settings   | `/admin/projects/shortcode/{shortcode}/RestrictedViewSettings` | `DELETE`   | [clear restricted view settings](#clear-restricted-view-settings)           |
 
 ## Project Operations
 
@@ -724,7 +726,10 @@ Request definition:
 - `GET /admin/projects/shortname/{shortname}/RestrictedViewSettings`
 - `GET /admin/projects/iri/{iri}/RestrictedViewSettings`
 
-Description: returns the project's restricted view settings
+Description: returns the project's effective restricted view settings.
+
+A project need not store a setting of its own. When it does not, the response carries the platform default
+`!128,128` and `isDefault` is `true`.
 
 Example request:
 
@@ -750,7 +755,8 @@ Example response:
     "settings": {
         "size": "!512,512",
         "watermark": false
-    }
+    },
+    "isDefault": false
 }
 ```
 
@@ -764,7 +770,8 @@ For that, we support two of the [IIIF size](https://iiif.io/api/image/3.0/#42-si
 - `!d,d` The returned image is scaled so that the width and height of the returned image are not greater than d, 
   while maintaining the aspect ratio.
 - `pct:n` The width and height of the returned image is scaled to n percent 
-  of the width and height of the original image. 1<= n <= 100.
+  of the width and height of the original image. 1<= n <= 99. `pct:100` is rejected: it is a restriction
+  that restricts nothing.
 
 
 If the watermark is set to `true`, the returned image will be watermarked, otherwise the default size `!128,128` is set.
@@ -806,7 +813,7 @@ curl --request POST 'http://0.0.0.0:5555/admin/projects/iri/http%3A%2F%2Frdfh.ch
 Response:
 
 ```json
-{ "size": "!512,512" }
+{ "settings": { "size": "!512,512", "watermark": false }, "isDefault": false }
 ```
 
 Request:
@@ -820,12 +827,37 @@ curl --request POST 'http://0.0.0.0:5555/admin/projects/shortcode/0001/Restricte
 Response:
 
 ```json
-{ "watermark": true }
+{ "settings": { "watermark": true }, "isDefault": false }
 ```
 
 Operates on the following mutually exclusive properties:
 
 - `knora-admin:projectRestrictedViewSize`: the IIIF size value
 - `knora-admin:projectRestrictedViewWatermark`: whether images of a project should be protected with a watermark.
+
+### Clear Restricted View Settings
+
+Removes the project's own restricted view setting, so the project inherits the platform default `!128,128`
+again. The effective restriction is unchanged for a project that stored exactly the default.
+
+Permissions: ProjectAdmin/SystemAdmin
+
+Request definition:
+
+- `DELETE /admin/projects/iri/{iri}/RestrictedViewSettings`
+- `DELETE /admin/projects/shortcode/{shortcode}/RestrictedViewSettings`
+
+Example request:
+
+```bash
+curl --request DELETE 'http://0.0.0.0:5555/admin/projects/shortcode/0001/RestrictedViewSettings' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+Response:
+
+```json
+{ "settings": { "size": "!128,128", "watermark": false }, "isDefault": true }
+```
 
 Note: Restricted view settings only take effect, if a user has "Restricted View" permission on an image.

@@ -25,12 +25,12 @@ local function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
 
---- This function gets the permissions defined on a file by requesting it from
+--- This function gets the access decision for a file by requesting it from
 --- the DSP-API.
 --- @param shortcode string The shortcode of the file's project.
 --- @param file_name string The name of the file.
 --- @param jwt_raw string|nil The (optional) raw JWT token.
---- @return table|nil The permissions on the file or nil if an error occurred.
+--- @return table|nil The access decision for the file or nil if an error occurred.
 local function get_permission_on_file(shortcode, file_name, jwt_raw)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
@@ -70,9 +70,47 @@ function _auth_header(jwt_raw)
     end
 end
 
+--- The path Sipi uses to watermark a clamped image. DSP-API says *whether* to watermark; the file itself is a
+--- Sipi deployment detail and never travels on the wire.
+local WATERMARK_PATH = "/sipi/scripts/watermark.tif"
+
+--- Translates the DSP-API `derivative` decision into the permission Sipi speaks. No permission arithmetic and
+--- no knowledge of the media kind happens here - DSP-API has already decided both.
+--- @param caller string The name of the calling hook, for log messages.
+--- @param access table The access decision returned by DSP-API.
+--- @return string|table A Sipi permission; 'deny' for a decision this hook does not recognise.
+local function _sipi_permission(caller, access)
+    local derivative = access.derivative
+
+    if derivative == "full" then
+        return 'allow'
+    elseif derivative == "stream" then
+        return 'stream'
+    elseif derivative == "denied" then
+        log(caller .. " - derivative 'denied', access denied", server.loglevel.LOG_WARNING)
+        return 'deny'
+    elseif derivative == "clamped" then
+        local settings_for_sipi = { type = "restrict" }
+        if access.watermark then
+            settings_for_sipi['watermark'] = WATERMARK_PATH
+        else
+            settings_for_sipi['size'] = access.size
+        end
+        log(caller .. " - clamped: " .. tableToString(settings_for_sipi), server.loglevel.LOG_DEBUG)
+        return settings_for_sipi
+    else
+        -- A literal this hook does not know must deny rather than fall through to something permissive, and it
+        -- must be loud: a silent catch-all would make a vocabulary change look like mysterious denials. Sipi
+        -- exposes no metrics binding to Lua, so this log line is what a counter would otherwise record.
+        log(caller .. " - unrecognised derivative decision '" .. tostring(derivative) .. "', access denied",
+                server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+end
+
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
--- DSP-API is called to ask for the user's permissions on the file.
+-- DSP-API is called to ask for the access decision on the file.
 --
 -- Parameters:
 --    prefix: This is the prefix that is given in the IIIF URL
@@ -82,6 +120,7 @@ end
 -- Returns:
 --    permission:
 --       'allow': the view is allowed with the given IIIF parameters
+--       'stream': the view is allowed, but the file may not be handed over
 --       'restrict:watermark=<path-to-watermark>': Add a watermark
 --       'restrict:size=<iiif-size-string>': reduce size/resolution
 --       'deny': no access!
@@ -109,46 +148,16 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     local jwt_raw = auth_get_jwt_raw()
-    local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
-    if permission_info == nil then
+    local access = get_permission_on_file(prefix, identifier, jwt_raw)
+    if access == nil then
         return _file_not_found_response()
     end
 
-    local permission_code = permission_info.permissionCode
-    log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
-
-    if permission_code == 0 then
-        -- no view permission on file
-        log("pre_flight - permission code 0 (no view), access denied", server.loglevel.LOG_WARNING)
-        return 'deny'
-    elseif permission_code == 1 then
-        -- restricted view permission on file
-        -- watermark and/or size (set per project, managed by DSP-API)
-        local settings_from_api = permission_info.restrictedViewSettings
-
-        local settings_for_sipi = {}
-        settings_for_sipi['type'] = "restrict"
-
-        if settings_from_api ~= nil then
-            log("pre_flight - restricted view settings - from api: " .. tableToString(settings_from_api), server.loglevel.LOG_DEBUG)
-            if settings_from_api.size ~= nil then
-                settings_for_sipi['size'] = settings_from_api.size
-            elseif settings_from_api.watermark then
-                settings_for_sipi['watermark'] = "/sipi/scripts/watermark.tif"
-            else
-                settings_for_sipi['size'] = config.thumb_size
-            end
-        end
-
-        log("pre_flight - restricted view settings - for sipi: " .. tableToString(settings_for_sipi), server.loglevel.LOG_DEBUG)
-        return settings_for_sipi, filepath
-    elseif permission_code >= 2 then
-        -- full view permissions on file
-        return 'allow', filepath
-    else
-        -- invalid permission code
+    local permission = _sipi_permission("pre_flight", access)
+    if permission == 'deny' then
         return 'deny'
     end
+    return permission, filepath
 end
 
 --- Checks if the user is a system or project admin.
@@ -171,7 +180,7 @@ end
 
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
--- DSP-API is called to ask for the user's permissions on the file.
+-- DSP-API is called to ask for the access decision on the file.
 --
 -- Parameters:
 --    identifier: The identifier for the image
@@ -180,6 +189,8 @@ end
 -- Returns:
 --    permission:
 --       'allow': the view is allowed with the given IIIF parameters
+--       'stream': the view is allowed, but the file may not be handed over
+--       'restrict:...': a clamp Sipi refuses on this route
 --       'deny': no access!
 --    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
@@ -220,35 +231,18 @@ function file_pre_flight(identifier, cookie)
     local filepath_preview = find_file(file_name_preview, shortcode)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
     local jwt_raw = auth_get_jwt_raw()
-    local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
-    if permission_info == nil then
+    local access = get_permission_on_file(shortcode, file_name, jwt_raw)
+    if access == nil then
         return _file_not_found_response()
     end
-    local permission_code = permission_info.permissionCode
-    log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
-    if permission_code == 0 then
-        -- no view permission on file
-        log("file_pre_flight - permission code 0 (no view), access denied", server.loglevel.LOG_WARNING)
+    local permission = _sipi_permission("file_pre_flight", access)
+    if permission == 'deny' then
         return 'deny'
-    elseif permission_code == 1 then
-        -- restricted view permission on file means full access !! Because, at the moment, this doesn't have a meaning for files other than images.
-        log("file_pre_flight - permission code 1 (restricted view), access granted", server.loglevel.LOG_DEBUG)
-        if #segments == 5 then
-            return 'allow', filepath_preview
-        else
-            return 'allow', filepath
-        end
-    elseif permission_code >= 2 then
-        -- full view permissions on file
-        log("file_pre_flight - access granted", server.loglevel.LOG_DEBUG)
-        if #segments == 5 then
-            return 'allow', filepath_preview
-        else
-            return 'allow', filepath
-        end
+    end
+    if #segments == 5 then
+        return permission, filepath_preview
     else
-        -- invalid permission code
-        return 'deny'
+        return permission, filepath
     end
 end

@@ -34,7 +34,7 @@ object DspIngestTestContainer {
       .withEnv("JWT_ISSUER", "0.0.0.0:3333")
       .withEnv("STORAGE_ASSET_DIR", assetDir)
       .withEnv("STORAGE_TEMP_DIR", tempDir)
-      .withEnv("JWT_SECRET", "UP 4888, nice 4-8-4 steam engine")
+      .withEnv("JWT_SECRET", "dev-only-insecure-jwt-secret-change-me")
       .withEnv("SIPI_USE_LOCAL_DEV", "false")
       .withEnv("JWT_DISABLE_AUTH", "true")
       .withEnv("DB_JDBC_URL", "jdbc:sqlite:/tmp/ingest.sqlite")
