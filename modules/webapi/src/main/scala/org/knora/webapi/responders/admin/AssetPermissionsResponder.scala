@@ -11,6 +11,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.FileValuePermissionsQuery
@@ -64,7 +65,9 @@ final class AssetPermissionsResponder(
           .map(project =>
             PermissionCodeAndProjectRestrictedViewSettings(
               permissionCode,
-              restrictedViewSettings = Some(ProjectRestrictedViewSettingsADM.from(project.restrictedView)),
+              restrictedViewSettings = Some(
+                ProjectRestrictedViewSettingsADM.from(project.restrictedView.getOrElse(RestrictedView.default)),
+              ),
             ),
           )
       case _ =>

@@ -50,7 +50,7 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
     List(Keyword.unsafeFrom("project1")),
     Some(Logo.unsafeFrom("logo.png")),
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    Some(RestrictedView.default),
     Set("foo", "bar").map(CopyrightHolder.unsafeFrom),
     Set(LicenseIri.CC_BY_4_0, LicenseIri.CC_BY_NC_4_0),
     Some(LicenseIri.CC_BY_4_0),
@@ -258,6 +258,61 @@ class KnoraProjectRepoLiveSpec extends ZIOSpecDefault {
         },
       ),
     ),
+    suite("restrictedView")(
+      test("resolve to None when neither predicate is stored, and write neither predicate back") {
+        val noSettingTrig = someProjectTrig.replace(
+          """knora-admin:projectRestrictedViewSize "!128,128" ;""",
+          "",
+        )
+        for {
+          _       <- TriplestoreServiceInMemory.setDataSetFromTriG(noSettingTrig)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+          _       <- ZIO.serviceWith[CacheManager](_.clearAll())
+          _       <- KnoraProjectRepo(_.save(project))
+          _       <- ZIO.serviceWith[CacheManager](_.clearAll())
+          reread  <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project.restrictedView.isEmpty, reread.restrictedView.isEmpty)
+      },
+      test("resolve a stored size to Some(Size)") {
+        for {
+          _       <- TriplestoreServiceInMemory.setDataSetFromTriG(someProjectTrig)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project.restrictedView.contains(RestrictedView.Size.unsafeFrom("!128,128")))
+      },
+      // `admin-data.ttl` holds projects carrying both predicates; the size wins, and that precedence is
+      // asserted here rather than left to fall out of the mapper's `orElse`.
+      test("prefer the size when a project stores both a size and a watermark") {
+        val bothTrig = someProjectTrig.replace(
+          """knora-admin:projectRestrictedViewSize "!128,128" ;""",
+          """knora-admin:projectRestrictedViewSize "!512,512" ;
+            |    knora-admin:projectRestrictedViewWatermark true ;""".stripMargin,
+        )
+        for {
+          _       <- TriplestoreServiceInMemory.setDataSetFromTriG(bothTrig)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project.restrictedView.contains(RestrictedView.Size.unsafeFrom("!512,512")))
+      },
+      test("resolve a lone watermark false to None") {
+        val watermarkFalseTrig = someProjectTrig.replace(
+          """knora-admin:projectRestrictedViewSize "!128,128" ;""",
+          "knora-admin:projectRestrictedViewWatermark false ;",
+        )
+        for {
+          _       <- TriplestoreServiceInMemory.setDataSetFromTriG(watermarkFalseTrig)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project.restrictedView.isEmpty)
+      },
+      test("resolve a lone watermark true to Some(Watermark)") {
+        val watermarkTrueTrig = someProjectTrig.replace(
+          """knora-admin:projectRestrictedViewSize "!128,128" ;""",
+          "knora-admin:projectRestrictedViewWatermark true ;",
+        )
+        for {
+          _       <- TriplestoreServiceInMemory.setDataSetFromTriG(watermarkTrueTrig)
+          project <- KnoraProjectRepo(_.findById(someProject.id)).someOrFail(Exception("Project not found"))
+        } yield assertTrue(project.restrictedView.contains(RestrictedView.Watermark.On))
+      },
+    ) @@ TestAspect.sequential @@ TestAspect.before(ZIO.serviceWith[CacheManager](_.clearAll())),
     suite("findByPatternQuery")(
       // Pins the generated SPARQL. The selective pattern must precede the OPTIONAL blocks: OPTIONALs are
       // left-joins evaluated in document order, so a trailing pattern makes the triplestore compute them
