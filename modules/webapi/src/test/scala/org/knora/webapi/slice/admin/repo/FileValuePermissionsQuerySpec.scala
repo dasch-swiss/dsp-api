@@ -22,7 +22,7 @@ class FileValuePermissionsQuerySpec extends ZIOSpecDefault {
       val actual: SelectQuery = FileValuePermissionsQuery.build(testFilename)
       val expected            =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |SELECT ?creator ?project ?permissions
+          |SELECT DISTINCT ?creator ?project ?permissions ?fileValueClass
           |WHERE { ?fileValue knora-base:internalFilename "0001/test-image.jp2" .
           |?currentFileValue knora-base:previousValue* ?fileValue ;
           |    knora-base:hasPermissions ?permissions ;
@@ -32,7 +32,8 @@ class FileValuePermissionsQuerySpec extends ZIOSpecDefault {
           |{ ?fileValue ?objPred ?objObj .
           |FILTER ( ?objPred != knora-base:previousValue ) }
           |?currentFileValue knora-base:isDeleted false .
-          |?resource knora-base:isDeleted false . }
+          |?resource knora-base:isDeleted false .
+          |?currentFileValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?fileValueClass . }
           |""".stripMargin
       assertTrue(actual.getQueryString == expected)
     },
@@ -41,7 +42,7 @@ class FileValuePermissionsQuerySpec extends ZIOSpecDefault {
       val actual: SelectQuery               = FileValuePermissionsQuery.build(specialFilename)
       val expected: String                  =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |SELECT ?creator ?project ?permissions
+          |SELECT DISTINCT ?creator ?project ?permissions ?fileValueClass
           |WHERE { ?fileValue knora-base:internalFilename "0001/file-with-special_chars.jp2" .
           |?currentFileValue knora-base:previousValue* ?fileValue ;
           |    knora-base:hasPermissions ?permissions ;
@@ -51,7 +52,8 @@ class FileValuePermissionsQuerySpec extends ZIOSpecDefault {
           |{ ?fileValue ?objPred ?objObj .
           |FILTER ( ?objPred != knora-base:previousValue ) }
           |?currentFileValue knora-base:isDeleted false .
-          |?resource knora-base:isDeleted false . }
+          |?resource knora-base:isDeleted false .
+          |?currentFileValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?fileValueClass . }
           |""".stripMargin
       assertTrue(actual.getQueryString == expected)
     },

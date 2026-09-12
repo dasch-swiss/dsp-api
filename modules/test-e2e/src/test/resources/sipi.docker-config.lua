@@ -147,7 +147,7 @@ sipi = {
     --
     -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
     --
-    jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
+    jwt_secret = 'dev-only-insecure-jwt-secret-change-me',
     --            12345678901234567890123456789012
 
     --

@@ -16,12 +16,12 @@ import scala.annotation.unused
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.admin.domain.model.AssetAccess
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.UserService
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 
 /**
  * A short-lived, in-memory cache in front of [[AssetPermissionsResponder]] for the IIIF tile-serving path (DEV-6806).
@@ -39,20 +39,20 @@ final case class AssetPermissionsCache(
   private val cache: Cache[
     AssetPermissionsCache.CacheKey,
     Throwable,
-    PermissionCodeAndProjectRestrictedViewSettings,
+    AssetAccess,
   ],
 ) {
 
   /**
-   * Same shape as [[AssetPermissionsResponder.getPermissionCodeAndProjectRestrictedViewSettings]], so the
+   * Same shape as [[AssetPermissionsResponder.getAssetAccess]], so the
    * `serverLogic(...)` binding in `FilesServerEndpoints` is unchanged. The `shortcode` parameter is accepted only to
    * match the endpoint's path shape — it is non-authoritative for the permission decision and is deliberately kept
    * out of the cache key (see [[CacheKey]]).
    */
-  def getPermissionCodeAndProjectRestrictedViewSettings(user: User)(
+  def getAssetAccess(user: User)(
     @unused shortcode: Shortcode,
     filename: InternalFilename,
-  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
+  ): Task[AssetAccess] =
     // `User.id` is a `String` (only `KnoraUser.id` is a typed `UserIri`); convert per the IRI-handling convention —
     // never `unsafeFrom`. `UserIri.from` whitelists the built-in `AnonymousUser` IRI, so both authenticated and
     // anonymous requests produce a key; the value comes from an already-validated `User`, so the failure branch is
@@ -65,6 +65,11 @@ final case class AssetPermissionsCache(
 
 object AssetPermissionsCache {
 
+  /**
+   * `filename` is an internal filename, a globally-unique asset id, so the key identifies exactly one asset -
+   * which is what keeps a decision derived from one asset's media kind from being served for another. The
+   * non-authoritative `shortcode` path segment is deliberately absent.
+   */
   final case class CacheKey(userIri: UserIri, filename: InternalFilename)
 
   /**
@@ -74,8 +79,8 @@ object AssetPermissionsCache {
    * re-resolved on the next matching request (REQ-1.6).
    */
   def makeCache(capacity: Int, ttl: Duration)(
-    resolve: CacheKey => Task[PermissionCodeAndProjectRestrictedViewSettings],
-  ): UIO[Cache[CacheKey, Throwable, PermissionCodeAndProjectRestrictedViewSettings]] =
+    resolve: CacheKey => Task[AssetAccess],
+  ): UIO[Cache[CacheKey, Throwable, AssetAccess]] =
     Cache.makeWith(capacity, Lookup(resolve)) {
       case Exit.Success(_) => ttl
       case Exit.Failure(_) => Duration.Zero // REQ-1.6: never retain failures
@@ -91,11 +96,11 @@ object AssetPermissionsCache {
    */
   private def resolve(users: UserService, responder: AssetPermissionsResponder)(
     key: CacheKey,
-  ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
+  ): Task[AssetAccess] =
     users
       .findUserByIri(key.userIri)
       .someOrFail(NotFoundException(s"No user found for ${key.userIri.value}"))
-      .flatMap(responder.getPermissionCodeAndProjectRestrictedViewSettings(_)(key.filename))
+      .flatMap(responder.getAssetAccess(_)(key.filename))
 
   val layer: URLayer[AppConfig & UserService & AssetPermissionsResponder, AssetPermissionsCache] =
     ZLayer.scoped {
@@ -117,7 +122,7 @@ object AssetPermissionsCache {
    * enclosing layer's scope.
    */
   private def registerMetrics(
-    cache: Cache[CacheKey, Throwable, PermissionCodeAndProjectRestrictedViewSettings],
+    cache: Cache[CacheKey, Throwable, AssetAccess],
   ): ZIO[Scope, Nothing, Unit] = {
     val hits   = PollingMetric(Metric.gauge("file_permission_cache_hits"), cache.cacheStats.map(_.hits.toDouble))
     val misses = PollingMetric(Metric.gauge("file_permission_cache_misses"), cache.cacheStats.map(_.misses.toDouble))
