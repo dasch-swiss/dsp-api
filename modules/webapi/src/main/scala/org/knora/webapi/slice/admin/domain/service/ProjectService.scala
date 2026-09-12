@@ -10,7 +10,6 @@ import zio.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
@@ -62,29 +61,6 @@ final case class ProjectService(
         knoraProject.defaultDataAuthorship,
       ),
     )
-
-  private def toKnoraProject(project: Project, restrictedView: RestrictedView): KnoraProject =
-    KnoraProject(
-      id = project.id,
-      shortname = project.shortname,
-      shortcode = project.shortcode,
-      longname = project.longname,
-      description = NonEmptyChunk
-        .fromIterable(project.description.head, project.description.tail)
-        .map(Description.unsafeFrom),
-      keywords = project.keywords.map(Keyword.unsafeFrom).toList,
-      logo = project.logo,
-      selfjoin = project.selfjoin,
-      restrictedView,
-      project.allowedCopyrightHolders,
-      project.enabledLicenses,
-      project.dataLicense,
-      project.dataCopyrightHolder,
-      project.defaultDataAuthorship,
-    )
-
-  def setProjectRestrictedView(project: Project, settings: RestrictedView): Task[RestrictedView] =
-    knoraProjectService.setProjectRestrictedView(toKnoraProject(project, settings), settings)
 
   def createProject(createReq: ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest): Task[Project] =
     knoraProjectService.createProject(createReq).flatMap(toProject)

@@ -62,18 +62,4 @@ object ProjectsEndpointsRequestsAndResponses {
   object SetRestrictedViewRequest {
     implicit val codec: JsonCodec[SetRestrictedViewRequest] = DeriveJsonCodec.gen[SetRestrictedViewRequest]
   }
-
-  final case class RestrictedViewResponse(
-    size: Option[RestrictedView.Size],
-    watermark: Option[RestrictedView.Watermark],
-  )
-  object RestrictedViewResponse {
-    implicit val codec: JsonCodec[RestrictedViewResponse] = DeriveJsonCodec.gen[RestrictedViewResponse]
-
-    def from(restrictedView: RestrictedView): RestrictedViewResponse =
-      restrictedView match {
-        case size: RestrictedView.Size           => RestrictedViewResponse(Some(size), None)
-        case watermark: RestrictedView.Watermark => RestrictedViewResponse(None, Some(watermark))
-      }
-  }
 }

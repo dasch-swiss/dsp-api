@@ -41,6 +41,10 @@ final class ProjectsServerEndpoints(
       .serverLogic(restService.updateProjectRestrictedViewSettingsById),
     projectsEndpoints.Secured.postAdminProjectsByProjectShortcodeRestrictedViewSettings
       .serverLogic(restService.updateProjectRestrictedViewSettingsByShortcode),
+    projectsEndpoints.Secured.deleteAdminProjectsByProjectIriRestrictedViewSettings
+      .serverLogic(restService.clearProjectRestrictedViewSettingsById),
+    projectsEndpoints.Secured.deleteAdminProjectsByProjectShortcodeRestrictedViewSettings
+      .serverLogic(restService.clearProjectRestrictedViewSettingsByShortcode),
     projectsEndpoints.Secured.getAdminProjectsByProjectIriMembers.serverLogic(restService.getProjectMembersById),
     projectsEndpoints.Secured.getAdminProjectsByProjectShortcodeMembers
       .serverLogic(restService.getProjectMembersByShortcode),

@@ -52,8 +52,12 @@ final case class KnoraProjectService(
         case RestrictedView.Watermark(false) => RestrictedView.default
         case s                               => s
       }
-      projectRepo.save(project.copy(restrictedView = newSettings)).as(newSettings)
+      projectRepo.save(project.copy(restrictedView = Some(newSettings))).as(newSettings)
     }
+
+  /** Removes the project-level restricted view setting, so the project follows the platform default again. */
+  def clearProjectRestrictedView(project: KnoraProject): Task[Unit] =
+    withProjectFromDb(project.id)(p => projectRepo.save(p.copy(restrictedView = None)).unit)
 
   def createProject(req: ProjectCreateRequest): Task[KnoraProject] = for {
     _            <- ensureShortcodeIsUnique(req.shortcode)
@@ -78,7 +82,7 @@ final case class KnoraProjectService(
                 req.keywords,
                 req.logo,
                 req.selfjoin,
-                RestrictedView.default,
+                None,
                 copyrightHolders,
                 licenses.toSet,
               )

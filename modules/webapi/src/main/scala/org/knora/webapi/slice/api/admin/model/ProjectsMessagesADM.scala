@@ -126,16 +126,22 @@ object ProjectKeywordsGetResponse {
 /**
  * Represents a response to a request for the project's restricted view settings.
  *
- * @param settings the restricted view settings.
+ * @param settings  the effective restricted view settings.
+ * @param isDefault true if the project stores no setting of its own and inherits the platform default.
  */
-case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
-    extends AdminKnoraResponseADM
+case class ProjectRestrictedViewSettingsGetResponseADM(
+  settings: ProjectRestrictedViewSettingsADM,
+  isDefault: Boolean,
+) extends AdminKnoraResponseADM
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
 
-  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsGetResponseADM =
-    ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
+  def from(restrictedView: Option[RestrictedView]): ProjectRestrictedViewSettingsGetResponseADM =
+    ProjectRestrictedViewSettingsGetResponseADM(
+      ProjectRestrictedViewSettingsADM.from(restrictedView.getOrElse(RestrictedView.default)),
+      isDefault = restrictedView.isEmpty,
+    )
 }
 
 /**

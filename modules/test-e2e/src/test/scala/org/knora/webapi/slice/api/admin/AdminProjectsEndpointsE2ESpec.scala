@@ -410,19 +410,19 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
     ),
     suite("used to set RestrictedViewSize by project IRI")(
       test("return requested value to be set with 200 Response Status") {
-        val newSize = Some(RestrictedView.Size.unsafeFrom("pct:1"))
+        val newSize = RestrictedView.Size.unsafeFrom("pct:1")
         TestApiClient
-          .postJson[RestrictedViewResponse, SetRestrictedViewRequest](
+          .postJson[ProjectRestrictedViewSettingsGetResponseADM, SetRestrictedViewRequest](
             uri"/admin/projects/iri/$imagesProjectIri/RestrictedViewSettings",
-            SetRestrictedViewRequest(newSize, None),
+            SetRestrictedViewRequest(Some(newSize), None),
             rootUser,
           )
           .flatMap(_.assert200)
-          .map(response => assertTrue(response == RestrictedViewResponse(newSize, None)))
+          .map(response => assertTrue(response == ProjectRestrictedViewSettingsGetResponseADM.from(Some(newSize))))
       },
       test("return `Forbidden` for the user who is not a system nor project admin") {
         TestApiClient
-          .postJson[RestrictedViewResponse, SetRestrictedViewRequest](
+          .postJson[ProjectRestrictedViewSettingsGetResponseADM, SetRestrictedViewRequest](
             uri"/admin/projects/iri/$imagesProjectIri/RestrictedViewSettings",
             SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("pct:1")), None),
             imagesUser02,
@@ -434,18 +434,20 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
       test("when setting watermark to false return default size with 200 Response Status") {
         val updateRequest = SetRestrictedViewRequest(None, Some(RestrictedView.Watermark.Off))
         TestApiClient
-          .postJson[RestrictedViewResponse, SetRestrictedViewRequest](
+          .postJson[ProjectRestrictedViewSettingsGetResponseADM, SetRestrictedViewRequest](
             uri"/admin/projects/shortcode/${imagesProject.shortcode}/RestrictedViewSettings",
             updateRequest,
             rootUser,
           )
           .flatMap(_.assert200)
-          .map(response => assertTrue(response == RestrictedViewResponse(Some(RestrictedView.Size.default), None)))
+          .map(response =>
+            assertTrue(response == ProjectRestrictedViewSettingsGetResponseADM.from(Some(RestrictedView.Size.default))),
+          )
       },
       test("return `Forbidden` for the user who is not a system nor project admin") {
         val updateRequest = SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("pct:1")), None)
         TestApiClient
-          .postJson[RestrictedViewResponse, SetRestrictedViewRequest](
+          .postJson[ProjectRestrictedViewSettingsGetResponseADM, SetRestrictedViewRequest](
             uri"/admin/projects/shortcode/${imagesProject.shortcode}/RestrictedViewSettings",
             updateRequest,
             imagesUser02,
@@ -453,5 +455,50 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
     ),
+    suite("used to clear the RestrictedViewSettings")(
+      test("report isDefault through a clear / set / clear round-trip") {
+        val settingsUri = uri"/admin/projects/iri/$imagesProjectIri/RestrictedViewSettings"
+        val newSize     = RestrictedView.Size.unsafeFrom("pct:42")
+        for {
+          cleared <- TestApiClient
+                       .deleteJson[ProjectRestrictedViewSettingsGetResponseADM](settingsUri, rootUser)
+                       .flatMap(_.assert200)
+          afterClear <- TestApiClient
+                          .getJson[ProjectRestrictedViewSettingsGetResponseADM](settingsUri)
+                          .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .postJson[ProjectRestrictedViewSettingsGetResponseADM, SetRestrictedViewRequest](
+                   settingsUri,
+                   SetRestrictedViewRequest(Some(newSize), None),
+                   rootUser,
+                 )
+                 .flatMap(_.assert200)
+          afterSet <- TestApiClient
+                        .getJson[ProjectRestrictedViewSettingsGetResponseADM](settingsUri)
+                        .flatMap(_.assert200)
+          _ <- TestApiClient
+                 .deleteJson[ProjectRestrictedViewSettingsGetResponseADM](settingsUri, rootUser)
+                 .flatMap(_.assert200)
+          afterReclear <- TestApiClient
+                            .getJson[ProjectRestrictedViewSettingsGetResponseADM](settingsUri)
+                            .flatMap(_.assert200)
+        } yield assertTrue(
+          cleared == ProjectRestrictedViewSettingsGetResponseADM.from(None),
+          afterClear.isDefault,
+          afterClear.settings == ProjectRestrictedViewSettingsADM.from(RestrictedView.default),
+          !afterSet.isDefault,
+          afterSet.settings == ProjectRestrictedViewSettingsADM.from(newSize),
+          afterReclear.isDefault,
+        )
+      },
+      test("return `Forbidden` for the user who is not a system nor project admin") {
+        TestApiClient
+          .deleteJson[ProjectRestrictedViewSettingsGetResponseADM](
+            uri"/admin/projects/shortcode/${imagesProject.shortcode}/RestrictedViewSettings",
+            imagesUser02,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+    ) @@ TestAspect.sequential,
   )
 }
