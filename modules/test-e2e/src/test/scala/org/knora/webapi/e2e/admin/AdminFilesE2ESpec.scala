@@ -15,8 +15,7 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.api.admin.AssetAccessResponse
 import org.knora.webapi.testservices.ResponseOps.*
 import org.knora.webapi.testservices.TestAdminApiClient
 
@@ -26,28 +25,25 @@ class AdminFilesE2ESpec extends E2EZSpec {
   override val rdfDataObjects: List[RdfDataObject] = List(anythingRdfData)
 
   override val e2eSpec = suite("The Files Route ('admin/files') using token credentials")(
-    test("return CR (8) permission code") {
+    test("grant the original and the full derivative to a user with CR") {
       for {
         response <- TestAdminApiClient
                       .getAdminFilesPermissions(anythingShortcode, "B1D0OkEgfFp-Cew2Seur7Wi.jp2", anythingAdminUser)
                       .flatMap(_.assert200)
-      } yield assertTrue(response == PermissionCodeAndProjectRestrictedViewSettings(8, None))
+      } yield assertTrue(response == AssetAccessResponse(derivative = "full", original = "grant"))
     },
-    test("return RV (1) permission code") {
+    test("clamp the derivative and withhold the original for a user with RV") {
       for {
         response <- TestAdminApiClient
                       .getAdminFilesPermissions(anythingShortcode, "B1D0OkEgfFp-Cew2Seur7Wi.jp2", normalUser)
                       .flatMap(_.assert200)
       } yield assertTrue(
-        response == PermissionCodeAndProjectRestrictedViewSettings(
-          1,
-          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
-        ),
+        response == AssetAccessResponse(derivative = "clamped", original = "withhold", size = Some("!128,128")),
       )
     },
-    test("return the same RV (1) decision when the shortcode does not match the file's project (DEV-6867)") {
-      // The {shortcode} path segment is non-authoritative: the file is identified by its filename alone. A
-      // permission-code-1 request that previously returned 404 for a mismatched (or nonexistent) project shortcode
+    test("return the same RV decision when the shortcode does not match the file's project (DEV-6867)") {
+      // The {shortcode} path segment is non-authoritative: the file is identified by its filename alone. An
+      // RV request that previously returned 404 for a mismatched (or nonexistent) project shortcode
       // must now return 200 with the identical restricted-view decision. This pins the behaviour at the HTTP/routing
       // layer so a future reintroduction of shortcode validation there would fail CI.
       for {
@@ -55,10 +51,7 @@ class AdminFilesE2ESpec extends E2EZSpec {
                       .getAdminFilesPermissions(Shortcode.unsafeFrom("9999"), "B1D0OkEgfFp-Cew2Seur7Wi.jp2", normalUser)
                       .flatMap(_.assert200)
       } yield assertTrue(
-        response == PermissionCodeAndProjectRestrictedViewSettings(
-          1,
-          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
-        ),
+        response == AssetAccessResponse(derivative = "clamped", original = "withhold", size = Some("!128,128")),
       )
     },
     test("return 404 Not Found if a file value is in a deleted resource") {
@@ -67,16 +60,13 @@ class AdminFilesE2ESpec extends E2EZSpec {
           TestAdminApiClient.getAdminFilesPermissions(anythingShortcode, "9hxmmrWh0a7-CnRCq0650ro.jpx", normalUser)
       } yield assertTrue(response.code == StatusCode.NotFound)
     },
-    test("return permissions for a previous version of a file value") {
+    test("return the decision for a previous version of a file value") {
       for {
         response <- TestAdminApiClient
                       .getAdminFilesPermissions(anythingShortcode, "QxFMm5wlRlatStw9ft3iZA.jp2", normalUser)
                       .flatMap(_.assert200)
       } yield assertTrue(
-        response == PermissionCodeAndProjectRestrictedViewSettings(
-          1,
-          Some(ProjectRestrictedViewSettingsADM(Some("!128,128"), watermark = false)),
-        ),
+        response == AssetAccessResponse(derivative = "clamped", original = "withhold", size = Some("!128,128")),
       )
     },
   )

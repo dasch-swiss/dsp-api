@@ -37,7 +37,7 @@ case class KnoraProject(
   keywords: List[Keyword],
   logo: Option[Logo],
   selfjoin: SelfJoin,
-  restrictedView: RestrictedView,
+  restrictedView: Option[RestrictedView],
   allowedCopyrightHolders: Set[CopyrightHolder],
   enabledLicenses: Set[LicenseIri],
   dataLicense: Option[LicenseIri] = None,

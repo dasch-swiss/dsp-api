@@ -6,6 +6,7 @@
 package org.knora.webapi.it.v2
 
 import org.junit.runner.RunWith
+import sttp.model.StatusCode
 import sttp.model.Uri.*
 import zio.*
 import zio.test.*
@@ -721,9 +722,13 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
 
-        // Request the permanently stored file from Sipi.
-        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
+        // An archive is served to a caller with view permission, and refused to one who only has
+        // restricted view: an archive is never transcoded, so there is no restricted rendering to fall
+        // back on and serving it would hand over the original by the other route.
+        _         <- TestSipiApiClient.getFile(savedDocument.url, anythingAdminUser).flatMap(_.assert200)
+        anonymous <- TestSipiApiClient.getFile(savedDocument.url)
       } yield assertTrue(
+        anonymous.code == StatusCode.Unauthorized,
         uploadedFile.originalFilename == minimalZipOriginalFilename,
         resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
         savedDocument.internalFilename == uploadedFile.internalFilename,
@@ -763,9 +768,13 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedDocument = savedValueToSavedDocument(savedValue)
 
-        // Request the permanently stored file from Sipi.
-        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
+        // An archive is served to a caller with view permission, and refused to one who only has
+        // restricted view: an archive is never transcoded, so there is no restricted rendering to fall
+        // back on and serving it would hand over the original by the other route.
+        _         <- TestSipiApiClient.getFile(savedDocument.url, anythingAdminUser).flatMap(_.assert200)
+        anonymous <- TestSipiApiClient.getFile(savedDocument.url)
       } yield assertTrue(
+        anonymous.code == StatusCode.Unauthorized,
         uploadedFile.originalFilename == testZipOriginalFilename,
         savedDocument.internalFilename == uploadedFile.internalFilename,
         savedDocument.url.nonEmpty,
@@ -804,9 +813,13 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
 
-        // Request the permanently stored file from Sipi.
-        _ <- TestSipiApiClient.getFile(savedDocument.url).flatMap(_.assert200)
+        // An archive is served to a caller with view permission, and refused to one who only has
+        // restricted view: an archive is never transcoded, so there is no restricted rendering to fall
+        // back on and serving it would hand over the original by the other route.
+        _         <- TestSipiApiClient.getFile(savedDocument.url, anythingAdminUser).flatMap(_.assert200)
+        anonymous <- TestSipiApiClient.getFile(savedDocument.url)
       } yield assertTrue(
+        anonymous.code == StatusCode.Unauthorized,
         uploadedFile.originalFilename == test7zOriginalFilename,
         resourceType.toString == OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation,
         savedDocument.internalFilename == uploadedFile.internalFilename,

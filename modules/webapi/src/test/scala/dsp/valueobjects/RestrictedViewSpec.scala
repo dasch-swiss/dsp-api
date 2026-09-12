@@ -17,13 +17,20 @@ class RestrictedViewSpec extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment & Scope, Nothing] = suite("RestrictedViewSize")(
     suite("pct:n | percentage form")(
-      test("percentage must be between 1<=n<=100") {
+      test("percentage must be between 1<=n<=99") {
         val gen = Gen.int(-1000, +1000)
         check(gen) { n =>
           val param = s"pct:$n"
-          if (1 <= n && n <= 100) assertTrue(RestrictedView.Size.from(param).map(_.value) == Right(param))
+          if (1 <= n && n <= 99) assertTrue(RestrictedView.Size.from(param).map(_.value) == Right(param))
           else assertTrue(RestrictedView.Size.from(param) == Left(s"Invalid RestrictedViewSize: pct:$n"))
         }
+      },
+      test("pct:100 is rejected, pct:99 and !128,128 are accepted") {
+        assertTrue(
+          RestrictedView.Size.from("pct:100") == Left("Invalid RestrictedViewSize: pct:100"),
+          RestrictedView.Size.from("pct:99").map(_.value) == Right("pct:99"),
+          RestrictedView.Size.from("!128,128").map(_.value) == Right("!128,128"),
+        )
       },
     ),
     suite("!n,n | dimensions form")(

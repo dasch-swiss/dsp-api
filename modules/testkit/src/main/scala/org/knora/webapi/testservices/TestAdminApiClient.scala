@@ -35,8 +35,8 @@ import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
+import org.knora.webapi.slice.api.admin.AssetAccessResponse
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectOperationResponseADM
 import org.knora.webapi.slice.api.admin.model.ProjectsGetResponse
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
@@ -55,9 +55,9 @@ case class TestAdminApiClient(private val apiClient: TestApiClient) {
     shortcode: Shortcode,
     filename: String,
     user: User,
-  ): Task[Response[Either[String, PermissionCodeAndProjectRestrictedViewSettings]]] =
+  ): Task[Response[Either[String, AssetAccessResponse]]] =
     apiClient
-      .getJson[PermissionCodeAndProjectRestrictedViewSettings](uri"/admin/files/${shortcode.value}/$filename", user)
+      .getJson[AssetAccessResponse](uri"/admin/files/${shortcode.value}/$filename", user)
 
   def getAdministrativePermissions(
     projectIri: ProjectIri,
@@ -295,7 +295,7 @@ object TestAdminApiClient {
     shortcode: Shortcode,
     filename: String,
     user: User,
-  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, PermissionCodeAndProjectRestrictedViewSettings]]] =
+  ): ZIO[TestAdminApiClient, Throwable, Response[Either[String, AssetAccessResponse]]] =
     ZIO.serviceWithZIO[TestAdminApiClient](_.getAdminFilesPermissions(shortcode, filename, user))
 
   def getAdministrativePermissions(

@@ -119,10 +119,10 @@ final case class ProjectsEndpointsHandler(
             ref            <- ZIO.succeed(AssetRef(assetId, shortcode))
             assetInfo      <- assetInfoService.findByAssetRef(ref).some.mapError(assetRefNotFoundOrServerError(_, ref))
             filenameEncoded = URLEncoder.encode(assetInfo.originalFilename.value, StandardCharsets.UTF_8.toString)
-            permissionCode <- fetchAssetPermissions
-                                .getPermissionCode(userSession.map(_.jwtRaw), assetInfo)
-                                .orElseFail(InternalServerError("error fetching permissions"))
-            _ <- ZIO.fail(Forbidden("permission denied")).unless(permissionCode >= 2)
+            granted        <- fetchAssetPermissions
+                         .isOriginalGranted(userSession.map(_.jwtRaw), assetInfo)
+                         .orElseFail(InternalServerError("error fetching permissions"))
+            _ <- ZIO.fail(Forbidden("permission denied")).unless(granted)
           } yield (
             s"attachment; filename*=UTF-8''${filenameEncoded}", // Content-Disposition
             assetInfo.metadata.originalMimeType.map(m => m.stringValue).getOrElse("application/octet-stream"),

@@ -30,10 +30,16 @@ case class TestSipiApiClient(
       basicRequest.get(uri"/$shortcode/$filename/full/max/0/default.jpg").auth.bearer(jwt).send(backend)
     }
 
-  def getFile(uri: String): Task[Response[Either[String, Array[Byte]]]] = {
-    val adjustedUri = uri.replace("http://0.0.0.0:1024", sipiConfig.internalBaseUrl)
-    basicRequest.get(Uri.unsafeParse(adjustedUri)).response(asByteArray).send(backend)
-  }
+  def getFile(uri: String): Task[Response[Either[String, Array[Byte]]]] =
+    basicRequest.get(internalUri(uri)).response(asByteArray).send(backend)
+
+  def getFile(uri: String, user: User): Task[Response[Either[String, Array[Byte]]]] =
+    jwtFor(user).flatMap { jwt =>
+      basicRequest.get(internalUri(uri)).auth.bearer(jwt).response(asByteArray).send(backend)
+    }
+
+  private def internalUri(uri: String): Uri =
+    Uri.unsafeParse(uri.replace("http://0.0.0.0:1024", sipiConfig.internalBaseUrl))
 }
 
 object TestSipiApiClient {
@@ -47,6 +53,9 @@ object TestSipiApiClient {
 
   def getFile(uri: String): ZIO[TestSipiApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
     ZIO.serviceWithZIO[TestSipiApiClient](_.getFile(uri))
+
+  def getFile(uri: String, user: User): ZIO[TestSipiApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
+    ZIO.serviceWithZIO[TestSipiApiClient](_.getFile(uri, user))
 
   val layer = ZLayer.derive[TestSipiApiClient]
 }

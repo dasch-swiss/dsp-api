@@ -20,7 +20,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -39,7 +38,7 @@ class ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault with GoldenTest {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )

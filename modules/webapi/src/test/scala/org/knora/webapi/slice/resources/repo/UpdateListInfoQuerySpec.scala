@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.model.ListProperties.Comments
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Labels
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.domain.LanguageCode.DE
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.slice.common.domain.LanguageCode.FR
@@ -38,7 +37,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )
@@ -314,7 +313,7 @@ class UpdateListInfoQuerySpec extends ZIOSpecDefault {
         List.empty,
         None,
         SelfJoin.CannotJoin,
-        RestrictedView.default,
+        None,
         Set.empty,
         Set.empty,
       )

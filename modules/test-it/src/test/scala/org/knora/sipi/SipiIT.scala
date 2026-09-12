@@ -29,7 +29,7 @@ import org.knora.sipi.MockDspApiServer.verify.*
 import org.knora.sipi.SipiIT.dspApiPort
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
+import org.knora.webapi.slice.api.admin.AssetAccessResponse
 import org.knora.webapi.slice.infrastructure.Scope as AuthScope
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -75,7 +75,7 @@ class SipiIT extends ZIOSpecDefault {
   } yield JwtCodec.encode(
     """{"typ":"JWT","alg":"HS256"}""",
     claim.toJson,
-    "UP 4888, nice 4-8-4 steam engine".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+    "dev-only-insecure-jwt-secret-change-me".getBytes(java.nio.charset.StandardCharsets.UTF_8),
   )
 
   private val authSuite =
@@ -87,7 +87,7 @@ class SipiIT extends ZIOSpecDefault {
           "and responds with Ok",
       ) {
         for {
-          _                          <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          _                          <- MockDspApiServer.resetAndAllow(prefix, imageTestfile)
           jwt                        <- createJwt(AuthScope.admin)
           response                   <- requestGet(Path.root / prefix / imageTestfile / "file", Header.Authorization.Bearer(jwt))
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
@@ -99,7 +99,7 @@ class SipiIT extends ZIOSpecDefault {
           "then Sipi should resolve the permission only from the token and respond with Ok",
       ) {
         for {
-          _        <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          _        <- MockDspApiServer.resetAndAllow(prefix, imageTestfile)
           jwt      <- createJwt(AuthScope.write(Shortcode.unsafeFrom(prefix)))
           response <- requestGet(
                         Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jpg",
@@ -115,7 +115,7 @@ class SipiIT extends ZIOSpecDefault {
       suite("Given the user is unauthorized")(
         suite("And given a .info file exists in Sipi")(
           test(
-            "And given dsp-api returns 2='full view permissions on file', " +
+            "And given dsp-api answers derivative=full, " +
               "when getting the file, " +
               "then Sipi responds with Ok",
           ) {
@@ -132,13 +132,30 @@ class SipiIT extends ZIOSpecDefault {
                  |  "originalFilename":"250x250.jp2"
                  |}""".stripMargin.fromJson[Json]
             for {
-              _        <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, permissionCode = 2)
+              _        <- MockDspApiServer.resetAndAllow(prefix, imageTestfile)
               response <- requestGet(Path.root / prefix / imageTestfile / "knora.json")
               json     <- response.body.asString.map(_.fromJson[Json])
               expected <- SipiTestContainer.portAndHost.map { case (port, host) => expectedJson(port, host) }
             } yield assertTrue(
               response.status == Status.Ok,
               json == expected,
+            )
+          },
+          test(
+            "And given dsp-api answers derivative=denied, " +
+              "when getting knora.json, " +
+              "then Sipi responds with Not Found",
+          ) {
+            // This is the response dsp-app's `catchError` relies on to render its representation-error card,
+            // which is why an RV archive needs no dsp-app change.
+            val dspApiResponse       = AssetAccessResponse(derivative = "denied", original = "withhold")
+            val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+            for {
+              server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+              response <- requestGet(Path.root / prefix / imageTestfile / "knora.json")
+            } yield assertTrue(
+              response.status == Status.NotFound,
+              verifySingleGetRequest(server, dspApiPermissionPath),
             )
           },
         ),
@@ -158,12 +175,12 @@ class SipiIT extends ZIOSpecDefault {
         ),
         suite("Given an image exists in Sipi")(
           test(
-            "And given dsp-api returns 2='full view permissions on file', " +
+            "And given dsp-api answers derivative=full, " +
               "when getting the file, " +
               "then Sipi responds with Ok",
           ) {
             val dspApiResponse =
-              PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 2, restrictedViewSettings = None)
+              AssetAccessResponse(derivative = "full", original = "grant")
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -174,12 +191,12 @@ class SipiIT extends ZIOSpecDefault {
             )
           },
           test(
-            "And given dsp-api returns 0='no view permission on file', " +
+            "And given dsp-api answers derivative=denied, " +
               "when getting the file, " +
               "then Sipi responds with Unauthorized",
           ) {
             val dspApiResponse =
-              PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 0, restrictedViewSettings = None)
+              AssetAccessResponse(derivative = "denied", original = "withhold")
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -191,7 +208,7 @@ class SipiIT extends ZIOSpecDefault {
           },
           test(
             "And given dsp-api does not know this file and returns Not Found, " +
-              "when getting the file, returns 2='full view permissions on file'" +
+              "when getting the file, " +
               "then Sipi responds with Not Found",
           ) {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
@@ -223,12 +240,12 @@ class SipiIT extends ZIOSpecDefault {
       ),
       suite("Given an image exists in Sipi")(
         test(
-          "And given dsp-api returns 2='full view permissions on file', " +
+          "And given dsp-api answers derivative=full, " +
             "when getting the file, " +
             "Sipi responds with Ok",
         ) {
           val dspApiResponse =
-            PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 2, restrictedViewSettings = None)
+            AssetAccessResponse(derivative = "full", original = "grant")
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -239,12 +256,60 @@ class SipiIT extends ZIOSpecDefault {
           )
         },
         test(
-          "And given dsp-api returns 0='full view permissions on file', " +
+          "And given dsp-api answers derivative=denied, " +
             "when getting the file, " +
             "Sipi responds with Unauthorized",
         ) {
           val dspApiResponse =
-            PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 0, restrictedViewSettings = None)
+            AssetAccessResponse(derivative = "denied", original = "withhold")
+          val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
+          } yield assertTrue(
+            response.status == Status.Unauthorized,
+            verifySingleGetRequest(server, dspApiPermissionPath),
+          )
+        },
+        test(
+          "And given dsp-api answers derivative=clamped with a size, " +
+            "when getting the file, " +
+            "Sipi responds with Ok",
+        ) {
+          val dspApiResponse =
+            AssetAccessResponse(derivative = "clamped", original = "withhold", size = Some("!128,128"))
+          val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
+          } yield assertTrue(
+            response.status == Status.Ok,
+            verifySingleGetRequest(server, dspApiPermissionPath),
+          )
+        },
+        test(
+          "And given dsp-api answers derivative=clamped with a watermark, " +
+            "when getting the file, " +
+            "Sipi responds with Ok",
+        ) {
+          val dspApiResponse =
+            AssetAccessResponse(derivative = "clamped", original = "withhold", watermark = Some(true))
+          val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
+          } yield assertTrue(
+            response.status == Status.Ok,
+            verifySingleGetRequest(server, dspApiPermissionPath),
+          )
+        },
+        test(
+          "And given dsp-api answers an unrecognised derivative, " +
+            "when getting the file, " +
+            "Sipi responds with Unauthorized",
+        ) {
+          // A vocabulary the hook does not know must deny, not fall through to something permissive.
+          val dspApiResponse       = AssetAccessResponse(derivative = "something-new", original = "withhold")
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
@@ -271,6 +336,36 @@ class SipiIT extends ZIOSpecDefault {
       ),
     )
 
+  // `stream` is understood by Sipi only from the release that adds the permission type. The pinned
+  // `oci.pull` digests in MODULE.bazel still point at an image whose `permission_from_str` maps the
+  // unknown literal to Deny, so these two cases answer 401/Unauthorized until those digests are bumped.
+  // Drop the `ignore` in the same change that bumps them.
+  private val streamSuite =
+    suite("A stream decision")(
+      test("is served on the IIIF route exactly as allow") {
+        val dspApiResponse       = AssetAccessResponse(derivative = "stream", original = "withhold")
+        val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+        for {
+          server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+          response <- requestGet(Path.root / prefix / imageTestfile / "full" / "max" / "0" / "default.jp2")
+        } yield assertTrue(
+          response.status == Status.Ok,
+          verifySingleGetRequest(server, dspApiPermissionPath),
+        )
+      },
+      test("is served on the /file route exactly as allow") {
+        val dspApiResponse       = AssetAccessResponse(derivative = "stream", original = "withhold")
+        val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
+        for {
+          server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+          response <- requestGet(Path.root / prefix / imageTestfile / "file")
+        } yield assertTrue(
+          response.status == Status.Ok,
+          verifySingleGetRequest(server, dspApiPermissionPath),
+        )
+      },
+    ) @@ TestAspect.ignore
+
   private val sipiTestContainerLayer = SipiTestContainer.layerWithCustomEnv(
     Map(
       "KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT" -> s"$dspApiPort",
@@ -284,6 +379,7 @@ class SipiIT extends ZIOSpecDefault {
       knoraJsonEndpointSuite,
       fileEndpointSuite,
       iiifEndpoint,
+      streamSuite,
       test("health check works") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
@@ -332,16 +428,12 @@ object MockDspApiServer {
   def resetAndStubGetResponse(
     url: String,
     status: Int,
-    body: PermissionCodeAndProjectRestrictedViewSettings,
+    body: AssetAccessResponse,
   ): URIO[WireMockServer, WireMockServer] =
     resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetJsonResponse(server, url, status, Some(body))))
 
-  def resetAndAllowWithPermissionCode(
-    prefix: String,
-    identifier: String,
-    permissionCode: Int,
-  ): URIO[WireMockServer, WireMockServer] = {
-    val dspApiResponse       = PermissionCodeAndProjectRestrictedViewSettings(permissionCode, restrictedViewSettings = None)
+  def resetAndAllow(prefix: String, identifier: String): URIO[WireMockServer, WireMockServer] = {
+    val dspApiResponse       = AssetAccessResponse(derivative = "full", original = "grant")
     val dspApiPermissionPath = s"/admin/files/$prefix/$identifier"
     MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
   }
@@ -369,10 +461,10 @@ object MockDspApiServer {
     server: WireMockServer,
     url: String,
     status: Int,
-    body: Option[PermissionCodeAndProjectRestrictedViewSettings] = None,
+    body: Option[AssetAccessResponse] = None,
   ): Unit = {
     val json =
-      body.map(it => PermissionCodeAndProjectRestrictedViewSettings.codec.encoder.encodeJson(it).toString).orNull
+      body.map(it => summon[zio.json.JsonCodec[AssetAccessResponse]].encoder.encodeJson(it).toString).orNull
     val jsonResponse = aResponse().withStatus(status).withBody(json).withHeader("Content-Type", "application/json")
     val stubBuilder  = get(urlEqualTo(url)).willReturn(jsonResponse)
     server.stubFor(stubBuilder)

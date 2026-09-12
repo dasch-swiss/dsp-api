@@ -60,7 +60,7 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
   val fakeSttp = {
     val stub = BackendStub(new RIOMonadAsyncError[Any])
       .whenRequestMatches(_.uri.path.mkString("/").contains("admin/files/0001"))
-      .thenRespond(ResponseStub.adjust("""{"permissionCode": 1}"""))
+      .thenRespond(ResponseStub.adjust("""{"derivative": "stream", "original": "withhold"}"""))
     ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
   }
 
@@ -235,7 +235,9 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
 
   private val assetOriginalSuiteFakeSttp =
     suite("/projects/<shortcode>/asset/<assetId>/original")(
-      testWithScope("fail by no permissions") {
+      // A streamed derivative is the case most likely to be misread as downloadable: the asset plays, but the
+      // Original stays withheld. The two channels never merge, and this gate reads only `original`.
+      testWithScope("refuse the original when dsp-api withholds it") {
         for {
           contents   <- ZIO.succeed("123".toList.map(_.toByte))
           contentType = Some(""""originalMimeType": "text/plain"""")
@@ -468,7 +470,7 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     BulkIngestService.layer,
     CommandExecutorLive.layer,
     CsvService.layer,
-    FetchAssetPermissionsMock.layer(2),
+    FetchAssetPermissionsMock.layer(true),
     FileChecksumServiceLive.layer,
     ImportServiceLive.layer,
     IngestService.layer,

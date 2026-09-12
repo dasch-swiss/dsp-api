@@ -11,9 +11,11 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.responders.admin.AssetPermissionsCache.CacheKey
+import org.knora.webapi.slice.admin.domain.model.AssetAccess
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
+import org.knora.webapi.slice.admin.domain.model.MediaKind
+import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.UserIri
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 
 /**
  * Pure-JVM unit spec for the cache wiring in [[AssetPermissionsCache.makeCache]] — no triplestore. A counting/failing
@@ -31,11 +33,11 @@ class AssetPermissionsCacheSpec extends ZIOSpecDefault {
   ): CacheKey =
     CacheKey(UserIri.unsafeFrom(user), InternalFilename.unsafeFrom(filename))
 
-  private def decision(code: Int): PermissionCodeAndProjectRestrictedViewSettings =
-    PermissionCodeAndProjectRestrictedViewSettings(code, restrictedViewSettings = None)
+  private def decision(perm: Option[Permission.ObjectAccess]): AssetAccess =
+    AssetAccess.from(perm, MediaKind.RasterStillImage, None)
 
-  private val allow = decision(6)
-  private val deny  = decision(0)
+  private val allow = decision(Some(Permission.ObjectAccess.Modify))
+  private val deny  = decision(None)
 
   def spec: Spec[Any, Any] = suite("AssetPermissionsCache.makeCache")(
     test("resolves on a miss and serves from cache on a hit (REQ-1.1/1.2/3.1)") {
@@ -128,13 +130,18 @@ class AssetPermissionsCacheSpec extends ZIOSpecDefault {
       val userB = "http://rdfh.ch/users/bbbb"
       for {
         cache <- AssetPermissionsCache.makeCache(100, ttl) { key =>
-                   ZIO.succeed(decision(if (key.userIri.value == userA) 6 else 2))
+                   ZIO.succeed(
+                     decision(
+                       if (key.userIri.value == userA) Some(Permission.ObjectAccess.Modify)
+                       else Some(Permission.ObjectAccess.RestrictedView),
+                     ),
+                   )
                  }
         decisionA <- cache.get(keyFor(user = userA))
         decisionB <- cache.get(keyFor(user = userB))
-      } yield assertTrue(decisionA.permissionCode == 6, decisionB.permissionCode == 2)
+      } yield assertTrue(decisionA == allow, decisionB != allow)
     },
-    test("caches and serves a deny decision (permissionCode = 0) as a success value (REQ-1.3, deny)") {
+    test("caches and serves a deny decision as a success value (REQ-1.3, deny)") {
       for {
         calls <- Ref.make(0)
         cache <- AssetPermissionsCache.makeCache(100, ttl)(_ => calls.update(_ + 1).as(deny))

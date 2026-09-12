@@ -1,0 +1,144 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# Fixtures for AssetPermissionsResponderSpec: one asset per derivative decision that a still image cannot
+# produce, plus the two shapes whose file value class resolves to no media kind. Self-contained on purpose —
+# the shared project datasets carry item-count assertions, so a new resource in one of them breaks unrelated
+# specs.
+
+### An archive under restricted view: denied, because an archive has no in-place consumption.
+
+<http://rdfh.ch/0803/asset-access-archive>
+    rdf:type                     knora-base:ArchiveRepresentation ;
+    rdfs:label                   "Restricted archive" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/root> ;
+    knora-base:creationDate      "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:hasArchiveFileValue
+                                 <http://rdfh.ch/0803/asset-access-archive/values/file> ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0803/asset-access-archive/values/file>
+    rdf:type                      knora-base:ArchiveFileValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root> ;
+    knora-base:hasPermissions     "M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+    knora-base:internalFilename   "asset-access-restricted.7z" ;
+    knora-base:internalMimeType   "application/x-7z-compressed" ;
+    knora-base:isDeleted          false ;
+    knora-base:originalFilename   "restricted.7z" ;
+    knora-base:originalMimeType   "application/x-7z-compressed" ;
+    knora-base:valueCreationDate  "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder      0 ;
+    knora-base:valueHasString     "asset-access-restricted.7z" ;
+    knora-base:valueHasUUID       "assetAccessArchiveValue" .
+
+### Audio under restricted view: streamed. This is the population the change exists for.
+
+<http://rdfh.ch/0803/asset-access-audio>
+    rdf:type                     knora-base:AudioRepresentation ;
+    rdfs:label                   "Restricted audio" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/root> ;
+    knora-base:creationDate      "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:hasAudioFileValue <http://rdfh.ch/0803/asset-access-audio/values/file> ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0803/asset-access-audio/values/file>
+    rdf:type                      knora-base:AudioFileValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root> ;
+    knora-base:hasPermissions     "M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+    knora-base:internalFilename   "asset-access-restricted.mp3" ;
+    knora-base:internalMimeType   "audio/mpeg" ;
+    knora-base:isDeleted          false ;
+    knora-base:originalFilename   "restricted.mp3" ;
+    knora-base:originalMimeType   "audio/mpeg" ;
+    knora-base:valueCreationDate  "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder      0 ;
+    knora-base:valueHasString     "asset-access-restricted.mp3" ;
+    knora-base:valueHasUUID       "assetAccessAudioValue" .
+
+### A document with view permission: the original is granted and the derivative is full.
+
+<http://rdfh.ch/0803/asset-access-document>
+    rdf:type                     knora-base:DocumentRepresentation ;
+    rdfs:label                   "Viewable document" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/root> ;
+    knora-base:creationDate      "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:hasDocumentFileValue
+                                 <http://rdfh.ch/0803/asset-access-document/values/file> ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0803/asset-access-document/values/file>
+    rdf:type                      knora-base:DocumentFileValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root> ;
+    knora-base:hasPermissions     "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:internalFilename   "asset-access-viewable.pdf" ;
+    knora-base:internalMimeType   "application/pdf" ;
+    knora-base:isDeleted          false ;
+    knora-base:originalFilename   "viewable.pdf" ;
+    knora-base:originalMimeType   "application/pdf" ;
+    knora-base:valueCreationDate  "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder      0 ;
+    knora-base:valueHasString     "asset-access-viewable.pdf" ;
+    knora-base:valueHasUUID       "assetAccessDocumentValue" .
+
+### A file value typed with a class that has no media kind, as ontology drift would leave it. Its permissions
+### grant a full view, so the only thing that can withhold the asset is the unresolved class.
+
+<http://rdfh.ch/0803/asset-access-unmapped>
+    rdf:type                     knora-base:Representation ;
+    rdfs:label                   "Asset of an unknown kind" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/root> ;
+    knora-base:creationDate      "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:hasFileValue      <http://rdfh.ch/0803/asset-access-unmapped/values/file> ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0803/asset-access-unmapped/values/file>
+    rdf:type                      knora-base:HolographicFileValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root> ;
+    knora-base:hasPermissions     "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:internalFilename   "asset-access-unmapped.holo" ;
+    knora-base:internalMimeType   "application/octet-stream" ;
+    knora-base:isDeleted          false ;
+    knora-base:originalFilename   "unmapped.holo" ;
+    knora-base:originalMimeType   "application/octet-stream" ;
+    knora-base:valueCreationDate  "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder      0 ;
+    knora-base:valueHasString     "asset-access-unmapped.holo" ;
+    knora-base:valueHasUUID       "assetAccessUnmappedValue" .
+
+### A file value carrying two concrete classes, as corruption would leave it. They map to different media
+### kinds, so neither is a fact about this asset.
+
+<http://rdfh.ch/0803/asset-access-ambiguous>
+    rdf:type                     knora-base:StillImageRepresentation ;
+    rdfs:label                   "Asset of two kinds at once" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/root> ;
+    knora-base:creationDate      "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:hasStillImageFileValue
+                                 <http://rdfh.ch/0803/asset-access-ambiguous/values/file> ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0803/asset-access-ambiguous/values/file>
+    rdf:type                      knora-base:StillImageFileValue , knora-base:AudioFileValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/root> ;
+    knora-base:hasPermissions     "M knora-admin:ProjectMember|V knora-admin:UnknownUser" ;
+    knora-base:internalFilename   "asset-access-ambiguous.jp2" ;
+    knora-base:internalMimeType   "image/jp2" ;
+    knora-base:isDeleted          false ;
+    knora-base:originalFilename   "ambiguous.tif" ;
+    knora-base:originalMimeType   "image/tiff" ;
+    knora-base:valueCreationDate  "2026-09-12T10:00:00Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder      0 ;
+    knora-base:valueHasString     "asset-access-ambiguous.jp2" ;
+    knora-base:valueHasUUID       "assetAccessAmbiguousValue" .
