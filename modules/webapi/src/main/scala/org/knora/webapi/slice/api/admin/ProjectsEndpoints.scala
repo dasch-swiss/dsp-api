@@ -92,7 +92,7 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
             "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
             "greater than d, while maintaining the aspect ratio.\n" +
             "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
-            "of the original image. 1<= n <= 100.\n\n" +
+            "of the original image. 1<= n <= 99.\n\n" +
             "If the watermark is set to `true`, the returned image will be watermarked, " +
             "otherwise the default size " + RestrictedView.Size.default.value + " is set.\n\n" +
             "It is only possible to set either the size or the watermark, not both at the same time.",
