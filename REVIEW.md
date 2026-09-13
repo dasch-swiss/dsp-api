@@ -6,7 +6,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ### Build & history
 
-- [ ] `just check` passes (scalafmt formatting + license headers, via Bazel)
+- [ ] `just check` passes (scalafmt formatting + license headers via Bazel, markdownlint via the Nix dev shell)
 - [ ] `bazel test` (or `just test-unit` / `test-it` / `test-e2e`) passes; integration / E2E tests cover changed behaviour
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) — see `CONVENTIONS.md` for the prefix → changelog mapping enforced by `release-please`
 - [ ] "Knora" not used in free-form human-readable text (commit messages, PR titles, docs prose, comments) — exempt: legacy packages, class names, and identifiers naming the `knora-base` / `knora-admin` ontologies
