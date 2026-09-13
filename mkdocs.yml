@@ -118,6 +118,11 @@ nav:
       - Changelog: 09-release-notes/index.md
   - Migration Guides and Deprecations: 10-migration-guides/index.md
 
+# Bounded-context vocabulary for agents and developers; read in the repo, not published on the site
+# (the files link to the root CONTEXT.md index, which is outside the docs directory).
+exclude_docs: |
+  contexts/
+
 plugins:
   - search
   - git-revision-date-localized

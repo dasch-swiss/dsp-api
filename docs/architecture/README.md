@@ -2,7 +2,8 @@
 
 ## Architecture decision records
 
-ADRs live in [`docs/adr/`](../adr/) as `NNNN-slug.md`, numbered sequentially and append-only. No tooling
+ADRs live in `docs/adr/` (start with [ADR-0001](../adr/0001-record-architecture-decisions.md)) as
+`NNNN-slug.md`, numbered sequentially and append-only. No tooling
 is required: copy the shape of the latest file, take the next number, and add the file to the
 `Decisions (ADR)` section of `mkdocs.yml`. Active ADRs keep their concrete references current; deprecated or
 superseded ADRs stay frozen apart from a `superseded by ADR-NNNN` status line. The `/dune:grill` skill can

@@ -2,9 +2,10 @@
 
 Date: 2026-09-13
 
-Relates to: [`CONTEXT.md`](../../CONTEXT.md) (context map and guardrails),
-[`MODULARIZATION-PLAN.md`](../../MODULARIZATION-PLAN.md) (extraction sequence),
-[`ARCH-MAP.md`](../../ARCH-MAP.md) (component topology). Adopts the contract of
+Relates to: [`CONTEXT.md`](https://github.com/dasch-swiss/dsp-api/blob/main/CONTEXT.md) (context map and
+guardrails), [`MODULARIZATION-PLAN.md`](https://github.com/dasch-swiss/dsp-api/blob/main/MODULARIZATION-PLAN.md)
+(extraction sequence), [`ARCH-MAP.md`](https://github.com/dasch-swiss/dsp-api/blob/main/ARCH-MAP.md)
+(component topology). These live at the repository root, outside the documentation site. Adopts the contract of
 dasch-ops-platform ADR-0013 ("Cross-capability access, the Modulith contract") for dsp-api, with the
 deviations listed below.
 
