@@ -1768,7 +1768,8 @@ belong to a component.
     - `docs/contexts/**`
 - The instruction layer agents read before working: `CLAUDE.md` for repo-wide orientation, `CONVENTIONS.md`
     for the work phase, `REVIEW.md` for the review phase, `CONTEXT.md` and the per-bounded-context
-    `docs/contexts/*/CONTEXT.md` files for vocabulary, `docs/adr/` for decisions, and this file for topology.
+    `docs/contexts/*/CONTEXT.md` files for vocabulary, `docs/adr/` for decisions including ADR-0011 for
+    cross-context access, and this file for topology.
 - Single-writer discipline: `ARCH-MAP.md` is written only by `/dune:map`, and the `CONTEXT.md` files only by
     `/dune:terminology` and `/dune:grill`. Hand edits to either are preserved by those skills but are not
     the supported path - enforcement: docs-only.
@@ -1848,6 +1849,11 @@ The target rule is `CONTEXT.md` guardrail 1: domain implementations do not impor
 composition, or concrete RDF implementations. Enforcement today: docs-only, because all of webapi is one
 `//modules/webapi:webapi` target with `//visibility:public`.
 
+The single permitted context-to-context dependency is a provider depending on a consumer's `ports` package,
+per [ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 5. A context's `domain`,
+`repo` and `api` are visible only to that context and to the composition root, so the arrow above stays
+one-way apart from that one narrow inward edge.
+
 Observed violations, the wrong-direction edges marked `(inverted)` in the entries above:
 
 - webapi-admin, webapi-ontology, webapi-resources, webapi-export, webapi-common and webapi-sipi-client all
@@ -1877,6 +1883,10 @@ New work is registered in a shared inventory, not discovered from a reserved pat
 - `mkdocs.yml`'s `nav` for documentation pages.
 - `scalafmt_targets` in the justfile plus `_LICENSE_SRCS` and `_LINT_SRCS` for a new Bazel module's tooling
     coverage.
+- Cross-context ports are declared in `slice/<consumer>/ports`, adapters `<Port>Live` live in
+    `slice/<provider>/repo`, and both are wired in `core/LayersLive.scala` - enforcement: review
+    ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)), target: structure via Bazel
+    visibility.
 
 Enforcement: `structure` where the compiler forces registration, since a ZLayer that is not provided fails at
 compile time in `LayersLive`; otherwise `review`. The two exceptions to the inventory rule are sipi, where any
@@ -1910,8 +1920,9 @@ failure.
 | Adding a variant to `BaseEndpoints.errorOutputs` | It is attached to every endpoint, so one line serializes an exception `message` verbatim on every route including unauthenticated ones | `errorOutVariantsPrepend` on the producing endpoint, enumerating every outcome, precedent `V3BaseEndpoint` | review |
 | `unsafeFrom` or `.die` on a client IRI in a RestService or responder | A malformed client IRI becomes a 500 and a defect rather than a 400, and the pattern is copied by the next handler | `ZIO.fromEither(X.from(...))` mapped to `BadRequestException`, or to the typed `V3ErrorInfo` variant in v3 | review |
 | A domain slice importing `slice.api.*` DTOs or codecs | The domain becomes unbuildable without HTTP delivery, and the dependency arrow inverts; already true for six components | DTOs stay in webapi-api, domain types in the slice, translated at the RestService boundary | docs-only, target structure |
-| Importing another slice's `repo/*Query` class | Query internals become a de facto public surface, so the owning slice cannot change its persistence without breaking callers | That slice's service or repo trait, published through its `*Module.Provided` | docs-only |
-| Raw SPARQL against the admin or permission graphs from another context | Two contexts encode the same graph shape, and an admin schema change silently breaks the other | webapi-admin services; existing sites migrate incrementally under the `CONTEXT.md` ratchet | docs-only, ratchet |
+| Importing another slice's `repo/*Query` class | Query internals become a de facto public surface, so the owning slice cannot change its persistence without breaking callers | Declare a port in your slice's `ports` package; the owning slice implements `<Port>Live` next to its data; wire in `LayersLive` ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) | docs-only |
+| Raw SPARQL against the admin or permission graphs from another context | Two contexts encode the same graph shape, and an admin schema change silently breaks the other | Declare a port in your slice's `ports` package; the owning slice implements `<Port>Live` next to its data; wire in `LayersLive` ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) | docs-only, ratchet |
+| Reading or writing another context's named graph | Two owners for one graph means no single answer to who changed it, and extraction becomes impossible | A port implemented by the graph's owner; whole-graph movement by Project Migration is the only exception | review ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) |
 | A new trait plus `*Live` for a plain domain service | Doubles the surface with no test seam to justify it, and the split gets copied as the house style | `final class` with `ZLayer.derive` in the companion; trait plus `*Live` only for repos and explicit test seams | review |
 | Hand-editing a generated fixture such as `knoraApiOntologyWithValueObjects.jsonld` | The generator and the fixture diverge silently, and the next regeneration reverts the edit | Regenerate via `OntologyFormatsE2ESpec` and commit the result | review |
 | Asserting insertion order of repeated RDF literals in a test | Repeated datatype triples are unordered, so the test pins an accident of the store and fails on an unrelated change | Compare sorted lists or sets; if order matters in production it is `ORDER BY` in the query | review |

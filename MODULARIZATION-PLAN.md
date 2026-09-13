@@ -46,7 +46,9 @@ must be reduced before extracting the first domain module.
 - Domain meaning determines ownership; current packages and RDF graphs do not.
 - A domain starts as one deep module, not separate model/handler/repository targets.
 - HTTP and RDF implementations become adapters only where a real seam exists.
-- Context-specific identifiers normally belong to small contracts owned by their context.
+- Identifier value types are shared-kernel concepts; cross-context access is by consumer-defined
+  ports and provider-owned adapters
+  ([ADR-0011](./docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 - Compatibility labels and shims remain while consumers move incrementally.
 - Every change must reduce a measured cycle, establish a useful interface, or extract a real
   target.
@@ -99,8 +101,9 @@ Work:
 - Move root primitives to explicit owners and split universal errors from context-owned errors.
 - Untangle `LanguageCode`, `LangString`, and similar values.
 - Separate schema-invariant Data IRIs from schema-variant Definition IRIs.
-- Keep context-specific Data IRIs with small contracts owned by Projects, Identity & Access,
-  Resources & Values, and other owners; do not create a universal identifier dumping ground.
+- Move identifier value types (`ProjectIri`, `UserIri`, `ResourceIri`, and the rest) to the shared
+  kernel; do not create provider-published identifier contracts
+  ([ADR-0011](./docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 - Move schema conversion and ontology-aware IRI behaviour into Data Model.
 - Decompose `StringFormatter`; retain `SmartIri` temporarily as a compatibility shim.
 - Split `OntologyConstants` by ownership instead of extracting it intact.
@@ -121,7 +124,8 @@ small enough to validate the full method.
 
 Work:
 
-- Introduce a small Projects contract for legitimate references and lookups.
+- Implement the ports other contexts declare for project data (Project Migration's project
+  snapshot, Resources' project settings lookup) as adapters in the Projects module.
 - Move project commands/results out of HTTP request/response types.
 - Put project RDF representation and queries in a Projects-owned adapter.
 - Move memberships to Identity & Access.
@@ -138,14 +142,15 @@ Gate: Projects builds and tests without depending on the aggregate webapi produc
 
 ## Phase 3 — Establish the parallel upstream domains
 
-Once the Projects contract is stable, three workstreams can proceed largely in parallel.
+Once the Projects module and its adapters are stable, three workstreams can proceed largely in
+parallel.
 
 ### Identity & Access
 
 - Extract Users, Groups, memberships, permission administration, and permission profiles.
 - Separate pure permission policy from administration and local enforcement.
 - Separate Authentication/JWT from object-access authorization.
-- Depend on Projects through its public contract.
+- Reach Projects through a port declared here and implemented by Projects.
 
 ### Data Model
 
@@ -153,8 +158,8 @@ Once the Projects contract is stable, three workstreams can proceed largely in p
 - Move Lists into Data Model.
 - Own Definition IRIs and schema conversion.
 - Own standoff definitions and mappings.
-- Publish the projection required by Search.
-- Define the `InstanceUsage` interface required for model-evolution checks.
+- Implement the Data Model projection port that Search declares.
+- Declare the `InstanceUsage` port in Data Model's `ports` package for model-evolution checks.
 
 ### Assets
 
@@ -176,7 +181,7 @@ Work:
 - Put standoff markup and text conversion here.
 - Retain File Values while consuming the Assets interface.
 - Put Resource RDF meaning and queries in a Resources-owned adapter.
-- Implement Data Model's `InstanceUsage` interface.
+- Implement Data Model's `InstanceUsage` port as an adapter here.
 - Localise object-access enforcement using the effective Permission profile and Permission policy.
 - Move tests/fixtures and create independent Bazel targets.
 
@@ -194,15 +199,18 @@ Search, Project Migration, and Operations may proceed in parallel once core inte
 ### Search
 
 - Keep one Search module while the retrieval redesign remains in flux.
-- Consume the published Data Model projection and Resources read interfaces.
-- Retain low-level RDF access only where query translation intrinsically requires it.
+- Consume the Data Model projection port and the `ResourceSearch` port.
+- Declare the `ResourceSearch` port; the query translation and result assembly move to
+  Resources & Values as its adapter
+  ([ADR-0011](./docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 - Rehome Gravsearch and search-specific legacy utilities.
 
 ### Project Migration
 
 - Consolidate VRE import/export, bundles, validation, and Data Task lifecycle.
-- Replace reads of administration data with Projects and Identity & Access interfaces.
-- Retain low-level RDF access only for intentional bulk graph movement.
+- Replace reads of administration data with export-declared ports implemented by Projects and
+  Identity & Access; keep low-level RDF access only for whole-graph movement
+  ([ADR-0011](./docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 10).
 - Remove delivery codecs from the domain implementation.
 - Describe exports as VRE handoff, not archival custody.
 
@@ -245,6 +253,9 @@ Bazel enforcement:
 
 - Replace recursive production globs with intentional target ownership.
 - Make visibility private by default and allowlist published interfaces.
+- Make each context's `ports` target public; `domain`, `repo`, and `api` targets visible only
+  within the context and to the composition root
+  ([ADR-0011](./docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 5).
 - Pilot `rules_scala` `plus-one` dependency mode on extracted targets.
 - Introduce strict-dependency warnings, fix declarations, then promote to errors where practical.
 - Add Bazel-query checks for forbidden dependency paths.
@@ -266,12 +277,12 @@ Completion:
 | Documentation, tooling, measurements | Immediately | Each other |
 | Foundation tracks | Ownership accepted | Other non-overlapping foundation tracks |
 | Projects | Required foundation interfaces exist | Remaining unrelated foundation cleanup |
-| Identity & Access | Projects contract stable | Data Model and Assets |
-| Data Model | Projects contract stable | Identity & Access and Assets |
-| Assets | Projects contract stable | Identity & Access and Data Model |
+| Identity & Access | Projects module and its adapters stable | Data Model and Assets |
+| Data Model | Projects module and its adapters stable | Identity & Access and Assets |
+| Assets | Projects module and its adapters stable | Identity & Access and Data Model |
 | Resources & Values | Upstream interfaces usable | Tests and HTTP-adapter work |
-| Search | Data Model projection and Resources read interface usable | Project Migration and Operations |
-| Project Migration | Upstream contracts usable | Search and Operations |
+| Search | Data Model projection and `ResourceSearch` adapters usable | Project Migration and Operations |
+| Project Migration | Upstream adapters usable | Search and Operations |
 | Test migration | Corresponding extraction starts | Production migration |
 | Strict dependency enforcement | Real targets exist | Late adapter/test cleanup |
 | Aggregate retirement | All consumers migrated | Final verification |
@@ -283,7 +294,8 @@ Completion:
 3. Split global error ownership.
 4. Introduce the Data IRI / Definition IRI distinction and begin shrinking `SmartIri`.
 5. Split RDF vocabulary ownership behind compatibility facades.
-6. Introduce the Projects contract.
+6. Declare the first ports (`InstanceUsage`, Project Migration's admin-data ports) and wire their
+   adapters in `LayersLive`.
 7. Complete the Projects vertical extraction and demonstrate independent caching and testing.
 
 ## Completion criteria
@@ -293,6 +305,8 @@ Completion:
 - Projects is independent of Identity & Access.
 - Domain implementations contain no HTTP-delivery imports.
 - Context-specific RDF meaning has locality in an owner-controlled adapter.
+- Every cross-context read or write goes through a consumer-defined port; no context reads another
+  context's named graphs except Project Migration's whole-graph movement.
 - `messages`, `responders`, `store`, and `common` no longer define ownership.
 - Only application composition chooses concrete adapters.
 - Unit tests are scheduled by domain.

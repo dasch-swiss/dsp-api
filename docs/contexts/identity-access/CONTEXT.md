@@ -14,7 +14,10 @@ do inside a Project, has one owner.
 - Authentication, JWT handling, and request scopes are a separate technical module, not part of this
   context.
 - Fine-grained object-access enforcement stays with the context that owns the protected object.
-- A User IRI belongs to Identity & Access rather than to a global identifiers target.
+- `UserIri` is a shared-kernel value type. User, Group, and permission details cross a context
+  boundary only through a port the consuming context declares, and Identity & Access implements
+  those adapters, for example the ports Project Migration needs for export
+  ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md)).
 
 ## Language
 
@@ -56,8 +59,8 @@ _Avoid_: Administrative permission
   identity and **Permission profile**.
 - **Resources & Values** evaluates its **Object-access permissions** against a **Permission profile**
   using the shared **Permission policy**.
-- **Project Migration** and **Operations** read Users, Groups, and permissions through published
-  interfaces.
+- **Project Migration** and **Operations** read Users, Groups, and permissions through ports they
+  declare and **Identity & Access** implements.
 
 ## Example dialogue
 

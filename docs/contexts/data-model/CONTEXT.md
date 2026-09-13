@@ -25,7 +25,9 @@ evolution rules, separate from the instance data that conforms to it.
   belongs to Resources & Values.
 - Schema-variant Definition IRIs and their conversion belong here, not in a global identifier
   module.
-- Data Model defines the consumer-owned `InstanceUsage` interface; Resources & Values implements it.
+- Data Model declares the `InstanceUsage` port in its own `ports` package; Resources & Values
+  implements it as an adapter next to its data
+  ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md)).
 
 ## Language
 
@@ -66,10 +68,9 @@ _Avoid_: Standoff markup
   **Data Model**.
 - **Data Model** owns conversion of a **Definition IRI** between **Schemas**; a **Data IRI** does not
   convert.
-- **Data Model** asks **InstanceUsage** whether a **Class** or **Property** is used by any
-  **Resource**; **Resources & Values** implements that interface through its own RDF adapter.
-- **Search** consumes **Data Model** meaning and should eventually consume a published
-  **Data Model projection**.
+- **Data Model** asks the **InstanceUsage** port whether a **Class** or **Property** is used by any
+  **Resource**; **Resources & Values** implements that port as an adapter next to its data.
+- **Data Model** implements the **Data Model projection** port that **Search** declares.
 
 ## Example dialogue
 
@@ -82,7 +83,7 @@ _Avoid_: Standoff markup
 > **Dev:** "Does Data Model query the Resource triples itself?"
 >
 > **Domain expert:** "Not for new work. **Resources & Values** implements the `InstanceUsage`
-> interface through its own RDF adapter, so the Resource representation keeps locality."
+> port as an adapter next to its data, so the Resource representation keeps locality."
 >
 > **Dev:** "And schema conversion belongs only to the **Definition IRI**?"
 >

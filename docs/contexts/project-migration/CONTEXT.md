@@ -11,8 +11,12 @@ the dependency graph.
 
 ## Ownership notes
 
-- Bulk named-graph movement may use the RDF platform directly.
-- Reads of Projects, Users, Groups, or permissions must use their published interfaces.
+- Bulk named-graph movement may use the RDF platform directly. It is the single platform exception
+  to graph sovereignty, because it moves graphs as opaque units without interpreting their triples
+  ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md) decision 10).
+- Reads of Projects, Identity & Access, and permission data go through ports that Project Migration
+  declares in its own `ports` package, implemented by those contexts as adapters next to their data
+  ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md), worked example 3).
 - Project Migration hands data out of or into the VRE. It is not the Archive and does not own
   archival custody or long-term preservation.
 
@@ -32,7 +36,8 @@ A tracked long-running operation with a lifecycle and status.
 _Avoid_: Untracked background job
 
 **Bulk graph movement**:
-An intentional whole-graph transfer using the RDF platform.
+An intentional whole-graph transfer using the RDF platform, and the single platform exception to
+graph sovereignty.
 _Avoid_: General permission for cross-context SPARQL
 
 ## Relationships
@@ -43,16 +48,16 @@ _Avoid_: General permission for cross-context SPARQL
 - A **Data Task** tracks the lifecycle and status of one migration operation.
 - **Project Migration** depends on **Projects**, **Identity & Access**, **Data Model**,
   **Resources & Values**, **Assets**, and the **RDF platform**.
-- **Project Migration** is an **Intrinsic RDF-platform user** for **Bulk graph movement** only; all
-  other cross-context reads go through published interfaces.
+- **Project Migration** uses the **RDF platform** for **Bulk graph movement** only; every other
+  cross-context read goes through a port it declares and the owning context implements.
 
 ## Example dialogue
 
 > **Dev:** "Export needs the Project's Groups. Can I read those triples directly while I am already
 > moving the named graph?"
 >
-> **Domain expert:** "No. **Bulk graph movement** is the only intrinsic RDF use here. Groups come
-> from the **Identity & Access** published interface."
+> **Domain expert:** "No. **Bulk graph movement** is the only direct RDF use here. Groups come from
+> a port export declares, which **Identity & Access** implements."
 >
 > **Dev:** "Is the **Migration bundle** the archival package then?"
 >

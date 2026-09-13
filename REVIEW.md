@@ -21,6 +21,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] Secured RestService bodies follow **auth check → delegate to service → `format.toExternal(...)`** — RestServices hold only auth / presentation logic; business logic lives in plain `*Service`s; `toExternal` is not skipped
 - [ ] `AuthorizationRestService.ensure*` results are re-used (don't reload the project / group after the auth call returned it)
 - [ ] Request / response DTOs live next to the `*Endpoints` (sibling object or `*RequestsAndResponses.scala`), not in a separate `model/` package
+- [ ] No new cross-context read or write bypasses a port: a slice does not import another slice's `repo/*Query` classes or run SPARQL against another context's named graph; new needs are a trait in the consumer's `ports` package plus a `<Port>Live` adapter in the provider (`docs/adr/0011-cross-context-access-ports-and-adapters.md`; whole-graph movement by Project Migration is the only exception)
 
 ### IRI handling
 
