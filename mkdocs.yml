@@ -72,6 +72,7 @@ nav:
       - 0008 Replace Akka with Pekko: adr/0008-replace-akka-with-pekko.md
       - 0009 API `v3` for client-optimized endpoints: adr/0009-api-v3.md
       - 0010 API `v3` basics: adr/0010-api-v3-basics.md
+      - 0011 Cross-context access through consumer-defined ports: adr/0011-cross-context-access-ports-and-adapters.md
   - DSP Internals:
       - Design:
           - DSP-API Design Principles:

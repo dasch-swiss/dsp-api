@@ -20,9 +20,15 @@ aggregate root and the consistency scope for everything a researcher edits.
 - The current responder split is a technical decomposition, not a domain seam.
 - File Values remain here because they are Values. They reference Assets but do not transfer Resource
   ownership to the Assets context.
-- A Resource IRI belongs to Resources & Values rather than to a global identifiers target.
-- Resources & Values implements the Data Model-owned `InstanceUsage` interface through its own RDF
-  adapter.
+- `ResourceIri` is a shared-kernel value type; Resource details cross a context boundary only
+  through a port that the consuming context declares.
+- Resources & Values is the sole reader and writer of the project data graphs
+  ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md) decision 1).
+- It implements the `InstanceUsage` port that Data Model declares, as an adapter next to its own
+  data.
+- It implements the `ResourceSearch` port that Search declares. The SPARQL generation and result
+  assembly for Gravsearch and full-text search live behind that adapter, because they encode how a
+  Resource and its Values are stored as triples.
 
 ## Language
 
@@ -46,6 +52,11 @@ _Avoid_: Standoff definition
 Fine-grained access carried by a Resource or Value and evaluated against a Permission profile.
 _Avoid_: Scope, administrative permission
 
+**Prequery / main query**:
+The two-phase internal query process behind the **ResourceSearch port** that first identifies paged
+Resource IRIs and then retrieves complete Resources.
+_Avoid_: Two public searches
+
 ## Relationships
 
 - A **Resource** is an instance of a **Class** and contains **Values**; each **Value** belongs to
@@ -56,8 +67,10 @@ _Avoid_: Scope, administrative permission
   defined by **Data Model**.
 - An **Object-access permission** on a **Resource** or **Value** is evaluated against a
   **Permission profile** from **Identity & Access** using the shared **Permission policy**.
-- **Resources & Values** implements **InstanceUsage** for **Data Model**, so the compile-time edge
-  runs from Resources & Values to Data Model and the graph stays acyclic.
+- **Resources & Values** implements the **InstanceUsage** port for **Data Model**, so the
+  compile-time edge runs from Resources & Values to Data Model and the graph stays acyclic.
+- **Resources & Values** implements the **ResourceSearch port** for **Search**, so the compile-time
+  edge runs from Resources & Values to Search.
 - **Search** returns **Resources**.
 
 ## Example dialogue

@@ -6,8 +6,9 @@ Working index of the bounded contexts and technical modules in dsp-api. Domain m
 ownership and, downstream, Bazel target ownership. Current package names and RDF graph placement do
 not determine the model.
 
-Status: **draft, with the principal ownership decisions settled.** Search, Operations, and the
-smallest useful public contracts remain deliberately provisional.
+Status: **draft, with the principal ownership decisions settled.** Search and Operations remain
+deliberately provisional; how contexts reach each other is settled in
+[ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md).
 
 > Code paths are relative to `modules/webapi/src/main/scala/org/knora/webapi/` unless otherwise
 > prefixed.
@@ -61,7 +62,7 @@ These are technical ownership, not additional VRE domains:
 | **Application composition** | Configuration, concrete adapter selection, ZIO assembly, startup, and routes |
 
 The table is not an instruction to create one target per row. A domain normally begins as one deep
-production module. Additional targets are justified only by real adapters, published contracts, or
+production module. Additional targets are justified only by real adapters, a `ports` package, or
 cross-domain test support.
 
 ## Context map
@@ -72,11 +73,13 @@ cross-domain test support.
 - **Resources & Values to Projects + Identity & Access + Data Model + Assets**: Resources are
   project-owned, conform to a Data Model, are protected by permission profiles/policy, and may
   reference Assets.
-- **Search to Data Model + Resources & Values + RDF platform**: queries use model meaning and return
-  Resources; query translation legitimately uses generic RDF execution.
+- **Search to Data Model + Resources & Values, through ports**: Search declares a `ResourceSearch`
+  port that Resources & Values implements, and consumes the Data Model projection port. Search no
+  longer depends on the RDF platform.
 - **Project Migration to Projects + Identity & Access + Data Model + Resources & Values + Assets +
-  RDF platform**: migration coordinates the VRE contexts and may move whole named graphs.
-- **Operations to published interfaces of the contexts it coordinates**.
+  RDF platform**: migration coordinates the VRE contexts through ports; its RDF platform edge covers
+  whole-graph movement only.
+- **Operations to ports implemented by the contexts it coordinates** (ADR-0011).
 - **Authentication to Identity & Access**: authenticated requests carry an effective identity and
   permission profile.
 - **HTTP delivery to domain interfaces**: delivery translates but does not define domain meaning.
@@ -88,13 +91,18 @@ cross-domain test support.
 Protecting model evolution requires Data Model to ask whether a Class or Property is used by any
 Resource. Today this is raw cross-context SPARQL.
 
-The target is a consumer-owned `InstanceUsage` interface defined by Data Model and implemented by a
-Resources & Values adapter. Application composition wires the adapter. The compile-time edge
-remains Resources & Values to Data Model, so the graph stays acyclic.
+The target is an `InstanceUsage` port that Data Model declares in `slice/ontology/ports` and that
+Resources & Values implements as `InstanceUsageLive` in `slice/resources/repo`. `LayersLive` wires
+the adapter. The compile-time edge remains Resources & Values to Data Model, so the graph stays
+acyclic. This is worked example 1 of
+[ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md).
 
-**Ratchet:** existing cross-context SPARQL may be migrated incrementally, but new cross-context
-reads use published interfaces. Search query translation and Project Migration bulk graph movement
-are explicit intrinsic RDF-platform uses, not a general exemption.
+**Ratchet:** existing cross-context SPARQL may stay until the owning context is extracted. New
+cross-context reads and writes go through a port declared by the consuming context
+([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 9). Search is no
+longer an intrinsic RDF-platform user: its query translation moves behind a port implemented by
+Resources & Values. Project Migration's whole-graph movement is the single platform exception
+(decision 10).
 
 ### Target dependency structure
 
@@ -134,7 +142,6 @@ graph TD
     RV --> PP
     SEARCH --> DM
     SEARCH --> RV
-    SEARCH --> RDF
     MIGRATION --> PROJECTS
     MIGRATION --> IAM
     MIGRATION --> DM
@@ -169,13 +176,15 @@ Two IRI families must be explicit:
 - **Definition IRI**: schema-variant Data Model identifiers such as Class, Property, and Data Model
   IRIs. Data Model owns their conversion.
 
-This distinction does **not** place every Data IRI in one global identifiers target. A Project IRI
-is normally a small published contract owned by Projects; a User IRI belongs to Identity & Access;
-a Resource IRI belongs to Resources & Values. Context-owned contracts keep semantic dependencies
-visible in Bazel. Only genuinely universal identifiers belong in Foundation primitives.
+Identifier value types such as `ProjectIri`, `UserIri`, and `ResourceIri` mean the same thing
+everywhere, so they are shared concepts and live in the shared kernel, the Foundation primitives
+module. That says nothing about the data behind the identifier. The context owning the referenced
+entity stays the sole reader and writer of its data, and details about that entity reach another
+context only through a port the consuming context declares
+([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md) decisions 6 and 7).
 
 `SmartIri` remains a temporary compatibility implementation while callers move to the explicit
-families and context-owned contracts.
+families and the shared-kernel identifier types.
 
 ## Authorization
 
@@ -215,15 +224,23 @@ is intentionally small:
 
 1. Domain implementations do not import HTTP delivery, application composition, or concrete RDF
    implementations.
-2. Context-specific identifiers normally live in small contracts owned by their context.
+2. Identifier value types are shared-kernel concepts; entity details cross a context boundary only
+   through a consumer-defined port
+   ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 3. Context-specific RDF meaning stays in an adapter owned by that context.
 4. `messages`, `responders`, `store`, and `common` are migration locations, not target modules.
-5. New cross-context reads use published interfaces.
+5. New cross-context reads and writes go through a port declared in the consumer's `ports` package
+   and implemented by the provider next to its data; a context may depend on another context's
+   `ports` package and on nothing else of it
+   ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 6. Visibility is private by default.
 7. Tests cross the same public interface as production callers unless deliberate test support is
    published.
 8. The aggregate `webapi` targets remain compatibility entrypoints, not dependencies of new
    internal targets.
+9. Each context is the sole reader and writer of its named graphs; Project Migration's whole-graph
+   movement is the only platform exception
+   ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)).
 
 ## Shared
 
@@ -291,23 +308,34 @@ _Avoid_: Object-access authorization
 A coarse JWT grant used to gate an endpoint.
 _Avoid_: Object-access permission
 
+**Port**:
+A trait declared by a consuming context in its own `ports` package, describing exactly what that
+context needs from another context.
+_Avoid_: Published interface, contract crate, API
+
+**Adapter**:
+The provider-owned implementation of another context's Port, named `<Port>Live` and living next to
+the provider's data.
+_Avoid_: Shim, bridge
+
 **InstanceUsage**:
-The Data Model-owned interface for asking whether a Class or Property is used by Resources.
+The Data Model-owned Port for asking whether a Class or Property is used by Resources, implemented
+by a Resources & Values Adapter.
 _Avoid_: Raw cross-context SPARQL
 
 **Ratchet**:
-The rule that existing cross-context SPARQL may remain temporarily while new cross-context reads use
-published interfaces.
+The rule that existing cross-context SPARQL may stay until the owning context is extracted, while
+new cross-context reads and writes go through a Port.
 _Avoid_: Big-bang rewrite
 
-**Intrinsic RDF-platform user**:
-Search query translation or Project Migration bulk movement, where low-level RDF execution is part of
-the implementation.
-_Avoid_: Any context that can reach the triplestore
+**Whole-graph movement**:
+Project Migration copying, uploading, or dropping a whole named graph through the RDF platform
+without interpreting its triples; the single platform exception.
+_Avoid_: Intrinsic RDF-platform user, any context that can reach the triplestore
 
-Data IRIs are not automatically globally owned. A Project IRI normally belongs to a small Projects
-contract, a User IRI to Identity & Access, and a Resource IRI to Resources & Values. The Data IRI /
-Definition IRI distinction describes behaviour; context ownership describes dependency direction.
+Identifier value types are shared-kernel concepts, so a Project IRI, a User IRI, and a Resource IRI
+all live in Foundation primitives. The Data IRI / Definition IRI distinction describes behaviour;
+Port ownership describes dependency direction.
 
 ### Shared relationships
 
@@ -327,13 +355,15 @@ Settled:
 - Authorization is distributed.
 - RDF access is a technical platform with context-owned adapters, not a shared domain kernel.
 - Project Migration is VRE handoff, not archival custody.
+- Cross-context access is by consumer-defined ports and provider-owned adapters
+  ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)).
+- Identifiers are shared-kernel value types; no provider-published identifier contracts.
 
 Still open:
 
-- What stable Data Model projection should Search consume as faceted retrieval develops?
+- Which Data Model projection, and which `ResourceSearch` port methods, does Search need as faceted
+  retrieval develops?
 - Which maintenance workflows justify a dedicated Operations module?
-- Which context identifiers need a tiny published contract rather than a direct dependency on the
-  whole domain module?
 - Should Project Migration remain one deep module once interactive export and whole-project
   migration interfaces are visible?
 
@@ -341,3 +371,5 @@ Still open:
 
 The current implementation sequence is recorded in [`MODULARIZATION-PLAN.md`](./MODULARIZATION-PLAN.md).
 Component topology and dependencies are recorded separately in [`ARCH-MAP.md`](./ARCH-MAP.md).
+How contexts may depend on each other is decided in
+[ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md).

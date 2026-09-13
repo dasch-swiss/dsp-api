@@ -29,8 +29,9 @@ _Avoid_: Any admin endpoint
 
 ## Relationships
 
-- **Operations** depends on the published interfaces of the contexts it coordinates, currently
-  **Projects**, **Identity & Access**, **Data Model**, and **Resources & Values**.
+- **Operations** reaches the contexts it coordinates only through ports it declares and they
+  implement (ADR-0011), currently **Projects**, **Identity & Access**, **Data Model**, and
+  **Resources & Values**.
 - A **Maintenance workflow** that touches one context belongs to that context, not to **Operations**.
 - **Operations** defines no domain meaning of its own; it composes meaning owned elsewhere.
 
@@ -44,7 +45,7 @@ _Avoid_: Any admin endpoint
 > **Dev:** "And if it also had to rebuild **Permission profiles** and a **Data Model** cache?"
 >
 > **Domain expert:** "Then it is a real cross-context **Maintenance workflow**, and Operations
-> coordinates it through published interfaces."
+> coordinates it through ports the owning contexts implement."
 
 ## Flagged ambiguities
 
