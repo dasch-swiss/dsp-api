@@ -1,8 +1,12 @@
 # Modularization Plan — dsp-api
 
 High-level sequence for turning the Bazel-built web application into domain-oriented modules.
-Companion to [`CONTEXT-MAP.md`](./CONTEXT-MAP.md) and
-[`UBIQUITOUS_LANGUAGE.md`](./UBIQUITOUS_LANGUAGE.md).
+Companion to [`CONTEXT.md`](./CONTEXT.md), the context map and index, and to the per-context
+vocabulary files under [`docs/contexts/`](./docs/contexts/). Those files sit under `docs/contexts/`
+only because the bounded contexts do not yet have their own source directories (Projects and
+Identity & Access share `slice/admin`). Each extraction phase below moves the context's `CONTEXT.md`
+to the new module's root directory as part of the same pull request, and the root `CONTEXT.md`
+index is repointed.
 
 Status: **draft.** This document records the implementation direction; delivery issues and detailed
 designs should be created when each phase reaches the front of the work.
@@ -125,6 +129,8 @@ Work:
 - Move cross-context erasure to Operations or explicit orchestration.
 - Compose ontology-enriched HTTP responses above Projects and Data Model.
 - Move tests and fixtures with the module.
+- Move `docs/contexts/projects/CONTEXT.md` to the new module's root and repoint the root `CONTEXT.md`
+  index; the same step applies to every later context extraction.
 - Create production, RDF-adapter, HTTP-adapter, and test targets without breaking existing routes
   or labels.
 
@@ -290,6 +296,7 @@ Completion:
 - `messages`, `responders`, `store`, and `common` no longer define ownership.
 - Only application composition chooses concrete adapters.
 - Unit tests are scheduled by domain.
+- Every bounded context's `CONTEXT.md` lives at its module root; `docs/contexts/` is empty and removed.
 - Strict dependencies and visibility prevent regression.
 - Existing VRE behaviour and delivery artifacts remain compatible.
 - Measurements show useful compilation and cache isolation.
