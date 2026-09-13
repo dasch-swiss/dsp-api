@@ -179,4 +179,4 @@ See `.github/pull_request_template.md`. For the recommended section structure (M
 - `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
 - `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
 - `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
-- `docs/05-internals/design/adr/` — architectural decisions
+- `docs/adr/` — architectural decisions

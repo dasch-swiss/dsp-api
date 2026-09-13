@@ -37,7 +37,7 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 **Code Quality:**
 
 - `just fmt` - Format Scala (scalafmt via Bazel) and apply Apache-2.0 SPDX headers
-- `just check` - Check formatting + license headers (the CI gate; no writes)
+- `just check` - Check formatting + license headers + markdown (the CI gate; no writes)
 - Import organization is handled by scalafmt (`.scalafmt.conf`); unused imports are caught by the
   compiler (`-Wunused:all -Werror`). scalafix was removed with sbt.
 
@@ -78,6 +78,9 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
   with `MODULE.bazel` as the sole version source.
 
 ## Architecture
+
+Architecture map: see `ARCH-MAP.md` (components, globs, boundary rules); load on demand for blast-radius and
+boundary questions, never import it here. Domain vocabulary: `CONTEXT.md` (index) and `docs/contexts/*/CONTEXT.md`.
 
 ### Module Structure
 
@@ -196,7 +199,8 @@ traces) — read `docs/observability/` first. Key entry points:
 
 ### Markdown Formatting
 
-After editing any markdown files, run `just markdownlint`. It is the CI gate and covers every markdown file tracked by git.
+After editing any markdown files, run `just check`. Its markdownlint step is the CI gate and covers every markdown
+file tracked by git (the `markdownlint` binary comes from the Nix dev shell).
 
 ### IRI Handling
 
