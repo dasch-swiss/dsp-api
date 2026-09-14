@@ -24,6 +24,7 @@ import zio.stream.ZStream
 import java.io.IOException
 import java.nio.file.CopyOption
 import java.nio.file.DirectoryNotEmptyException
+import java.nio.file.StandardCopyOption.*
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.attribute.FileAttribute
 import java.text.ParseException
@@ -157,9 +158,16 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
           .mapError(e => new ParseException(s"Unable to parse $file, reason: $e", -1)),
       )
 
+  /** Writes to a sibling temp file and renames it over the target, so a reader never sees a partial file. */
   override def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit] = {
     val bytes = Chunk.fromIterable((content.toJsonPretty + "\n").getBytes)
-    Files.writeBytes(file, bytes, WRITE, CREATE, TRUNCATE_EXISTING)
+    val dir   = Option(file.parent.orNull).getOrElse(Path("."))
+    ZIO.scoped {
+      Files.createTempFileInScoped(dir, ".tmp", Some(s".${file.filename}")).flatMap { tmp =>
+        Files.writeBytes(tmp, bytes, WRITE, TRUNCATE_EXISTING) *>
+          Files.move(tmp, file, ATOMIC_MOVE, REPLACE_EXISTING)
+      }
+    }
   }
 
   override def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit] =
