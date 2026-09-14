@@ -1,0 +1,31 @@
+{
+  "@id": "http://rdfh.ch/9999/fRO4QiueS2Sr3gwsH9xyYA",
+  "@type": "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything",
+  "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasLinkToValue": {
+    "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri": {
+      "@id": "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
+  },
+  "http://0.0.0.0:3333/ontology/9999/onto/v2#testHasRegionPreview": {
+    "@type": "http://api.knora.org/ontology/knora-api/v2#RegionPreviewValue",
+    "http://api.knora.org/ontology/knora-api/v2#isRegionPreviewOf": {
+      "@id": "http://rdfh.ch/9999/6tQc7tEdRmK6MgaqMxm2fA"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
+  },
+  "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+    "@id": "http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g"
+  },
+  "http://www.w3.org/2000/01/rdf-schema#label": {
+    "@type": "http://www.w3.org/2001/XMLSchema#string",
+    "@value": "onto link properties"
+  }
+}

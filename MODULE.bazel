@@ -197,18 +197,18 @@ maven.install(
         "org.scala-lang.modules:scala-xml_3:2.4.0",
         "com.github.tototoshi:scala-csv_3:2.0.0",
         # -- RDF / Jena / rdf4j (Java) --
-        "org.apache.jena:jena-core:6.1.0",
-        "org.apache.jena:jena-text:6.1.0",
-        "org.eclipse.rdf4j:rdf4j-client:5.3.2",
-        "org.eclipse.rdf4j:rdf4j-shacl:5.3.2",
-        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:5.3.2",
+        "org.apache.jena:jena-core:6.2.0",
+        "org.apache.jena:jena-text:6.2.0",
+        "org.eclipse.rdf4j:rdf4j-client:6.0.1",
+        "org.eclipse.rdf4j:rdf4j-shacl:6.0.1",
+        "org.eclipse.rdf4j:rdf4j-sparqlbuilder:6.0.1",
         "org.topbraid:shacl:1.5.0",
         # -- OpenTelemetry (Java) --
-        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.63.0",
-        "io.opentelemetry:opentelemetry-exporter-otlp:1.63.0",
-        "io.opentelemetry:opentelemetry-sdk:1.63.0",
-        "io.opentelemetry:opentelemetry-sdk-testing:1.63.0",
-        "io.opentelemetry.semconv:opentelemetry-semconv:1.42.0",
+        "io.opentelemetry:opentelemetry-exporter-logging-otlp:1.65.0",
+        "io.opentelemetry:opentelemetry-exporter-otlp:1.65.0",
+        "io.opentelemetry:opentelemetry-sdk:1.65.0",
+        "io.opentelemetry:opentelemetry-sdk-testing:1.65.0",
+        "io.opentelemetry.semconv:opentelemetry-semconv:1.43.0",
         # -- misc Java libs --
         "org.bouncycastle:bcprov-jdk15to18:1.85",
         "org.ehcache:ehcache:3.12.0",
@@ -221,6 +221,10 @@ maven.install(
         "commons-io:commons-io:2.22.0",
         "org.slf4j:slf4j-api:2.0.18",
         "org.slf4j:slf4j-simple:2.0.18",
+        # Supplies org.apache.commons.logging for spring-security-core, which
+        # excludes commons-logging (see maven.artifact below). Was reaching us
+        # transitively via rdf4j-http-client until rdf4j 6 dropped it.
+        "org.slf4j:jcl-over-slf4j:2.0.18",
         # -- dsp-ingest db (Java) --
         "org.xerial:sqlite-jdbc:3.53.2.0",
         "org.flywaydb:flyway-core:12.10.0",
@@ -294,7 +298,7 @@ use_repo(maven, "maven", "unpinned_maven")
 # deployed engine version in Grafana. The sipi tag has no entry here — its
 # version is read from the pulled image's OCI label, so its digest is its sole
 # source.
-FUSEKI_DIST_VERSION = "6.1.0"
+FUSEKI_DIST_VERSION = "6.2.0"
 
 image_versions = use_extension("//tools/image_versions:extension.bzl", "image_versions")
 image_versions.fuseki(dist_version = FUSEKI_DIST_VERSION)
@@ -343,15 +347,15 @@ use_repo(
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
 #   crane manifest eclipse-temurin:25-jre-noble | jq -r \
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="arm64") | .digest'
-# Index digest: sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175
+# Index digest: sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
 oci.pull(
     name = "temurin_base_amd64",
-    digest = "sha256:7161e12dbcd2791d1fc8b9cf6f1c1519a84c4acea5706c6a0659bc254a4c55d7",
+    digest = "sha256:8c6736fa623090b057a5bbd36d42f90c9de4c7d2d4b6c285921a4f85ce65a445",
     image = "index.docker.io/library/eclipse-temurin",
 )
 oci.pull(
     name = "temurin_base_arm64",
-    digest = "sha256:06abf087c093e27c71ed507e87f950f055c185d2ddb1eaff8a120f4198be661e",
+    digest = "sha256:6c3e50fade4ae5257eed863323b1efe19162a913446cd3dd166747eac8f76298",
     image = "index.docker.io/library/eclipse-temurin",
 )
 use_repo(
@@ -373,8 +377,8 @@ http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_
 http_file(
     name = "otel_javaagent",
     downloaded_file_path = "opentelemetry-javaagent.jar",
-    sha256 = "cc4af5966ab72109cacc962ba3b9f99b3e88caf064c3144a451bcfe0f4950f19",
-    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.26.1/opentelemetry-javaagent.jar"],
+    sha256 = "bbf83c151b6400709e2f225bdd07a04f839d9d13b8b93464241333fd25d3e3ba",
+    urls = ["https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.31.1/opentelemetry-javaagent.jar"],
 )
 
 http_file(
@@ -451,7 +455,7 @@ http_archive(
         '    visibility = ["//visibility:public"],',
         ')',
     ]),
-    sha256 = "a4a845bb602515f66e3397e89b52180ca055f4b240ddb442a1a793a98ce4d280",
+    sha256 = "e3b8b033872cd2f24091603bec1e7eb21cc3e1def5b9572658c48143e86b977f",
     strip_prefix = "apache-jena-fuseki-" + FUSEKI_DIST_VERSION,
     urls = ["https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-" + FUSEKI_DIST_VERSION + ".tar.gz"],
 )

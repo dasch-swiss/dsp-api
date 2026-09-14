@@ -41,6 +41,73 @@ the builder until they are migrated. Verify a migration by diffing the rendered 
 against the old builder's `getQueryString` output. Only new *SparqlBuilder* usage is out;
 RDF4J model classes (`org.eclipse.rdf4j.model.*`, `Vocabulary`) remain fine.
 
+## Keep the query readable: one explicit template per query
+
+A reader should be able to read the whole query, top to bottom, inside a single
+`sparql"""|..."""` literal. Every piece of SPARQL text of a query lives in that one template:
+
+- **One template per query.** The only things prepared outside it are typed values: `Iri`,
+  `Variable`, `Literal`, an `Option[Iri]`, a `List[Literal]`. No local `val`/`def` that returns a
+  `Fragment`, no shared `prefixes` fragment, no helper that renders a sub-segment of the query.
+- **Write `PREFIX` declarations literally in every template.**
+- **Dynamic structure is a closure inside the hole.** An optional block is
+  `${maybeX.whenSome(x => sparql"...")}`, a repeated block is
+  `${literals.map(l => sparql"$subject $pred $l .").joinLines}`, a flag-dependent line is
+  `${sparql"...".when(flag)}`, and these nest:
+  `${linkProp.whenSome(lp => literals.map(l => sparql"$lp $pred $l .").joinLines)}`. The closure
+  may span several lines; scalafmt de-indents it out of the `|` margin block, and that is fine.
+  Do not restructure a hole to fit on one line.
+- **Do not duplicate a template to avoid a hole.** Two complete templates selected by `match` are
+  only justified when the query backbone differs (a different query form, or a different grouping
+  that a performance-pinned query depends on), not when a few optional lines differ.
+- **One statement where one statement will do.** If the previous builder emitted several `;`-joined
+  statements only because it could not express one `DELETE ... INSERT ... WHERE`, write one, and
+  prove the equivalence with a data-level test (run the old and the new update on the same Jena
+  dataset and compare). Keep several statements when they are genuinely different migrations.
+
+Bad — the query is spread over a shared prefix val, a pulled-out helper and a duplicated template:
+
+```scala
+private val prefixes = sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>"""
+
+def newValueTriples(subject: Iri): Fragment =
+  newValues.map(v => sparql"$subject rdfs:comment ${Literal.langString(v.value, v.language.value)} .").joinLines
+
+val query = maybeLinkProp match {
+  case Some(lp) => sparql"""|$prefixes
+                            |INSERT { GRAPH $ontology { ${newValueTriples(property)} ${newValueTriples(lp)} } }
+                            |WHERE { ... }"""
+  case None     => sparql"""|$prefixes
+                            |INSERT { GRAPH $ontology { ${newValueTriples(property)} } }
+                            |WHERE { ... }"""
+}
+```
+
+Good — the same query as one template; only values are prepared outside, the optional part is a
+closure in its hole:
+
+```scala
+val newLiterals = newValues.map(v => Literal.langString(v.value, v.language.value))
+
+val query = sparql"""|PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                    |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                    |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                    |
+                    |INSERT {
+                    |  GRAPH $ontology {
+                    |    ${newLiterals.map(l => sparql"$property rdfs:comment $l .").joinLines}
+                    |    ${maybeLinkProp.whenSome(lp => newLiterals.map(l => sparql"$lp rdfs:comment $l .").joinLines)}
+                    |  }
+                    |}
+                    |WHERE {
+                    |  $ontology a owl:Ontology ;
+                    |    knora-base:lastModificationDate $previousDate .
+                    |}"""
+```
+
+See `ChangePropertyGuiElementQuery` and `ChangePropertyLabelsOrCommentsQuery` for live examples.
+
 ---
 
 The rest of this document covers the **grandfathered** RDF4J SparqlBuilder style — needed

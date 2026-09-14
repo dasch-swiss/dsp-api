@@ -5,17 +5,30 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object DeleteListNodeCommentsQuery extends QueryBuilderHelper {
-  def build(nodeIri: ListIri, project: KnoraProject): ModifyQuery =
-    val graph   = graphIri(project)
-    val pattern = toRdfIri(nodeIri).has(RDFS.COMMENT, variable("comments"))
-    Queries.DELETE(pattern).prefix(RDFS.NS).from(graph).where(pattern.from(graph))
+object DeleteListNodeCommentsQuery {
+
+  def build(nodeIri: ListIri, project: KnoraProject): Update = {
+    val graph = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+    val node  = Iri.unsafeFrom(nodeIri.value)
+    Update(
+      sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               |
+               |DELETE {
+               |  GRAPH $graph {
+               |    $node rdfs:comment ?comments .
+               |  }
+               |}
+               |WHERE {
+               |  GRAPH $graph {
+               |    $node rdfs:comment ?comments .
+               |  }
+               |}""".render,
+    )
+  }
 }

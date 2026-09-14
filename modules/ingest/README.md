@@ -18,7 +18,7 @@ using [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) for la
 ## Writing documentation // Build and serve the docs locally
 
 Follow the installation instructions from the dsp-docs repository in order to build and serve the documentation locally.
-Once the necessary software is installed you can use `mkdocs serve` for a live preview on  http://127.0.0.1:8000/.
+Once the necessary software is installed you can use `mkdocs serve` for a live preview on <http://127.0.0.1:8000/>.
 
 ## Contributing
 

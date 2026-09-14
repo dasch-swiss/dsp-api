@@ -6,26 +6,19 @@
 package org.knora.webapi.slice.ontology.repo
 
 import eu.timepit.refined.types.string.NonEmptyString
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
 import zio.*
 
 import dsp.errors.SparqlGenerationException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Query builder for updating ontology metadata (label and/or comment).
  * When updating a label or comment, the old value is automatically replaced.
  */
-object UpdateOntologyMetadataQuery extends QueryBuilderHelper {
+object UpdateOntologyMetadataQuery {
 
   def build(
     ontologyIri: OntologyIri,
@@ -35,59 +28,40 @@ object UpdateOntologyMetadataQuery extends QueryBuilderHelper {
   ): UIO[Update] =
     ZIO
       .die(SparqlGenerationException("At least one of newLabel or newComment must be provided."))
-      .when(newLabel.isEmpty && newComment.isEmpty) *> {
+      .when(newLabel.isEmpty && newComment.isEmpty) *>
+      Clock.instant.map { now =>
+        val ontology     = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+        val previousDate = Literal.dateTime(lastModificationDate.value)
+        val currentDate  = Literal.dateTime(now)
+        val label        = newLabel.map(Literal.string)
+        val comment      = newComment.map(c => Literal.string(c.value))
 
-      val (ontology, ontologyNS) = ontologyAndNamespace(ontologyIri)
-      val oldLabel               = variable("oldLabel")
-      val oldComment             = variable("oldComment")
-
-      // Build DELETE patterns - delete old values only if we're replacing them
-      val deletePatterns: List[TriplePattern] = {
-        val labelDelete   = if (newLabel.nonEmpty) List(ontology.has(RDFS.LABEL, oldLabel)) else Nil
-        val commentDelete = if (newComment.nonEmpty) List(ontology.has(RDFS.COMMENT, oldComment)) else Nil
-        val lastModDelete = List(ontology.has(KB.lastModificationDate, toRdfLiteral(lastModificationDate)))
-        labelDelete ::: commentDelete ::: lastModDelete
-      }
-
-      // Build WHERE patterns - label and comment are optional to allow adding them if they don't exist
-      val wherePatterns = {
-        val basePattern = List(
-          ontology
-            .isA(OWL.ONTOLOGY)
-            .andHas(KB.lastModificationDate, toRdfLiteral(lastModificationDate)),
+        Update(
+          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                   |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                   |
+                   |DELETE {
+                   |  GRAPH $ontology {
+                   |    ${sparql"$ontology rdfs:label ?oldLabel .".when(label.isDefined)}
+                   |    ${sparql"$ontology rdfs:comment ?oldComment .".when(comment.isDefined)}
+                   |    $ontology knora-base:lastModificationDate $previousDate .
+                   |  }
+                   |}
+                   |INSERT {
+                   |  GRAPH $ontology {
+                   |    $ontology knora-base:lastModificationDate $currentDate .
+                   |    ${label.whenSome(l => sparql"$ontology rdfs:label $l .")}
+                   |    ${comment.whenSome(c => sparql"$ontology rdfs:comment $c .")}
+                   |  }
+                   |}
+                   |WHERE {
+                   |  $ontology a owl:Ontology ;
+                   |    knora-base:lastModificationDate $previousDate .
+                   |  ${sparql"OPTIONAL { $ontology rdfs:label ?oldLabel . }".when(label.isDefined)}
+                   |  ${sparql"OPTIONAL { $ontology rdfs:comment ?oldComment . }".when(comment.isDefined)}
+                   |}""".render,
         )
-
-        val labelPattern   = if (newLabel.nonEmpty) List(ontology.has(RDFS.LABEL, oldLabel).optional()) else Nil
-        val commentPattern = if (newComment.nonEmpty) List(ontology.has(RDFS.COMMENT, oldComment).optional()) else Nil
-
-        basePattern ::: labelPattern ::: commentPattern
       }
-
-      for {
-        insertPatterns <- buildInsertPatterns(ontology, newLabel, newComment)
-        query           = Queries
-                  .MODIFY()
-                  .prefix(KB.NS, RDFS.NS, XSD.NS, OWL.NS, ontologyNS)
-                  .from(ontology)
-                  .delete(deletePatterns*)
-                  .into(ontology)
-                  .insert(insertPatterns*)
-                  .where(wherePatterns*)
-      } yield Update(query)
-    }
-
-  private def buildInsertPatterns(
-    ontology: Iri,
-    newLabel: Option[String],
-    newComment: Option[NonEmptyString],
-  ): UIO[Seq[TriplePattern]] = Clock.instant.map { now =>
-    val ontologyModPattern = ontology.has(KB.lastModificationDate, toRdfLiteral(now))
-    val labelPattern       = newLabel.map(label => ontology.has(RDFS.LABEL, toRdfLiteral(label))).toList
-    val commentPattern     = newComment.map(comment => ontology.has(RDFS.COMMENT, toRdfLiteral(comment.value))).toList
-
-    ontologyModPattern :: (labelPattern ::: commentPattern)
-  }
-
-  private def toRdfLiteral(str: String): org.eclipse.rdf4j.sparqlbuilder.rdf.RdfLiteral.StringLiteral =
-    org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfType(str, XSD.STRING)
 }

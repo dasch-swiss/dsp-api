@@ -46,5 +46,9 @@ class CheckIriExistsQuerySpec extends ZIOSpecDefault {
 
       assertTrue(actual.sparql == """ASK { <http://example.org/ontology/test-class-with-hyphen> ?p ?o . }""")
     },
+    test("should reject a String IRI that could break out of the IRIREF") {
+      val result = scala.util.Try(CheckIriExistsQuery.build("http://example.org/a> ?x ?y . <http://example.org/b"))
+      assertTrue(result.isFailure)
+    },
   )
 }

@@ -6,7 +6,6 @@
 package org.knora.webapi.store.triplestore.impl
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.HttpHost
 import sttp.capabilities.Effect
 import sttp.capabilities.zio.ZioStreams
 import sttp.client4.*
@@ -59,8 +58,7 @@ case class TriplestoreServiceLive(
 
   private val targetHostUri = {
     val proto = if (triplestoreConfig.useHttps) "https" else "http"
-    val host  = new HttpHost(triplestoreConfig.host, triplestoreConfig.fuseki.port, proto)
-    uri"${(host).toURI}"
+    uri"$proto://${triplestoreConfig.host}:${triplestoreConfig.fuseki.port}"
   }
 
   // NOTE: possibly quickRequest might be used instead of basicRequest (no Either)

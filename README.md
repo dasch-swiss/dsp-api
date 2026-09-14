@@ -69,25 +69,26 @@ See [docs/Readme.md](docs/Readme.md).
 
 ### Run DSP-API
 
-Create a test repository, load some test data into the triplestore, and start DSP-API:
+Run both commands inside the [Nix dev shell](#nix), which provides `just` and `bazel`.
+
+Create a test repository and load some test data into the triplestore:
 
 ```shell
-just stack-init-test
+just init-db-test
 ```
 
-Open [http://localhost:4200/](http://localhost:4200) in a web browser.
+Build the images from your checkout and start the stack:
 
-On first installation, errors similar to the following can come up:
-
-```text
-error decoding 'Volumes[0]': invalid spec: :/fuseki:delegated: empty section between colons
+```shell
+just stack-up
 ```
 
-To solve this, you need to deactivate Docker Compose V2. This can be done in Docker Desktop either by unchecking the "Use Docker Compose V2" flag under "Preferences > General" or by running
+DSP-API listens on [http://localhost:3333](http://localhost:3333), and DSP-APP on
+[http://localhost:4200](http://localhost:4200).
 
-```text
-docker-compose disable-v2
-```
+If the bring-up fails with a `mounts denied` error, add the repository directory to
+Docker Desktop's file-sharing allowlist. See
+[Setting up Docker](docs/05-internals/development/building-and-running.md#setting-up-docker).
 
 Shut down DSP-API:
 

@@ -103,6 +103,7 @@ object LayersLive { self =>
 
   def remainingLayer(
     otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer,
+    sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer,
   ): URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
       AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
@@ -146,7 +147,7 @@ object LayersLive { self =>
       ResourcesResponderV2.layer,
       SearchResponderV2Module.layer,
       SecurityModule.layer,
-      SipiServiceLive.layer,
+      sipiServiceLayer,
       StandoffMappingServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,

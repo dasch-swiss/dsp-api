@@ -5,71 +5,59 @@
 
 package org.knora.webapi.slice.ontology.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
-object DeleteClassQuery extends QueryBuilderHelper {
+object DeleteClassQuery {
 
   def build(
     classIri: ResourceClassIri,
     lmd: LastModificationDate,
-  ): UIO[(LastModificationDate, ModifyQuery)] =
+  ): UIO[(LastModificationDate, Update)] =
     Clock.instant.map { now =>
-      val (ontology, ontologyNS) = ontologyAndNamespace(classIri)
-      val clazz                  = toRdfIri(classIri)
+      val ontology     = Iri.unsafeFrom(classIri.ontologyIri.toInternalSchema.toIri)
+      val clazz        = Iri.unsafeFrom(classIri.toInternalSchema.toIri)
+      val previousDate = Literal.dateTime(lmd.value)
+      val currentDate  = Literal.dateTime(now)
 
-      val classPred       = variable("classPred")
-      val classObj        = variable("classObj")
-      val restriction     = variable("restriction")
-      val restrictionPred = variable("restrictionPred")
-      val restrictionObj  = variable("restrictionObj")
-      val (s, p, _)       = spo
-
-      val deletePatterns = List(
-        ontology.has(KnoraBase.lastModificationDate, toRdfLiteral(lmd)),
-        clazz.has(classPred, classObj),
-        restriction.has(restrictionPred, restrictionObj),
+      val update = Update(
+        sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |
+                 |DELETE {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $previousDate .
+                 |    $clazz ?classPred ?classObj .
+                 |    ?restriction ?restrictionPred ?restrictionObj .
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $ontology {
+                 |    $ontology knora-base:lastModificationDate $currentDate .
+                 |  }
+                 |}
+                 |WHERE {
+                 |  $ontology a owl:Ontology ;
+                 |    knora-base:lastModificationDate $previousDate .
+                 |  $clazz a owl:Class .
+                 |  {
+                 |    $clazz ?classPred ?classObj .
+                 |  } UNION {
+                 |    $clazz rdfs:subClassOf ?restriction .
+                 |    ?restriction a owl:Restriction ;
+                 |      ?restrictionPred ?restrictionObj .
+                 |    FILTER ( isBlank(?restriction) )
+                 |  }
+                 |  FILTER NOT EXISTS { ?s ?p $clazz . }
+                 |}""".render,
       )
-
-      val wherePatterns = List(
-        ontology.isA(OWL.ONTOLOGY).andHas(KnoraBase.lastModificationDate, toRdfLiteral(lmd)),
-        clazz.isA(OWL.CLASS),
-        GraphPatterns.union(
-          clazz.has(classPred, classObj),
-          clazz
-            .has(RDFS.SUBCLASSOF, restriction)
-            .filter(Expressions.isBlank(restriction))
-            .and(
-              restriction
-                .isA(OWL.RESTRICTION)
-                .andHas(restrictionPred, restrictionObj),
-            ),
-        ),
-        GraphPatterns.filterNotExists(s.has(p, clazz)),
-      )
-
-      (
-        LastModificationDate.from(now),
-        Queries
-          .MODIFY()
-          .prefix(KnoraBase.NS, XSD.NS, RDF.NS, RDFS.NS, OWL.NS, ontologyNS)
-          .delete(deletePatterns*)
-          .from(ontology)
-          .insert(ontology.has(KnoraBase.lastModificationDate, toRdfLiteral(now)))
-          .into(ontology)
-          .where(wherePatterns*),
-      )
+      (LastModificationDate.from(now), update)
     }
 }

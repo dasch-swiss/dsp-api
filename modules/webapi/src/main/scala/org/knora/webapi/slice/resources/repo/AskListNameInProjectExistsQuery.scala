@@ -4,25 +4,26 @@
  */
 
 package org.knora.webapi.slice.resources.repo
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
-object AskListNameInProjectExistsQuery extends QueryBuilderHelper {
+object AskListNameInProjectExistsQuery {
 
   def build(name: ListName, projectIri: ProjectIri): Ask = {
-    val rootNodeVar = variable("rootNode")
-    val nodeVar     = variable("node")
-    val askPattern  = rootNodeVar
-      .has(RDF.TYPE, KnoraBase.ListNode)
-      .andHas(KnoraBase.attachedToProject, toRdfIri(projectIri))
-      .andHas(PropertyPathBuilder.of(KnoraBase.hasSubListNode).zeroOrMore().build(), nodeVar)
-      .and(nodeVar.has(KnoraBase.listNodeName, name.value))
-    Ask(s"ASK ${askPattern.getQueryString} ")
+    val project  = Iri.unsafeFrom(projectIri.value)
+    val listName = Literal.string(name.value)
+    Ask(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |ASK {
+               |  ?rootNode a knora-base:ListNode ;
+               |    knora-base:attachedToProject $project ;
+               |    knora-base:hasSubListNode* ?node .
+               |  ?node knora-base:listNodeName $listName .
+               |}""".render,
+    )
   }
 }

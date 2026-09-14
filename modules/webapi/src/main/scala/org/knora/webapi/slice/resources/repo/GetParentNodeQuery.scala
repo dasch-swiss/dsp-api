@@ -5,23 +5,22 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object GetParentNodeQuery extends QueryBuilderHelper {
-  def build(nodeIri: ListIri): ConstructQuery =
-    val node      = toRdfIri(nodeIri)
-    val (s, p, o) = spo
-    Queries
-      .CONSTRUCT(s.has(p, o))
-      .prefix(KnoraBase.NS)
-      .where(
-        s.isA(KnoraBase.ListNode)
-          .andHas(KnoraBase.hasSubListNode, node)
-          .andHas(p, o),
-      )
+object GetParentNodeQuery {
+  def build(nodeIri: ListIri): Construct = {
+    val node = Iri.unsafeFrom(nodeIri.value)
+    Construct(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |CONSTRUCT { ?s ?p ?o . }
+               |WHERE {
+               |  ?s a knora-base:ListNode ;
+               |     knora-base:hasSubListNode $node ;
+               |     ?p ?o .
+               |}""".render,
+    )
+  }
 }

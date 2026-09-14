@@ -4,15 +4,19 @@
  */
 
 package org.knora.webapi.slice.ontology.repo
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object GetOntologyGraphQuery extends QueryBuilderHelper {
-  def build(ontologyIri: OntologyIri): ConstructQuery =
-    val (s, p, o)    = spo
-    val graphPattern = s.has(p, o)
-    Queries.CONSTRUCT(graphPattern).where(graphPattern.from(toRdfIri(ontologyIri)))
+object GetOntologyGraphQuery {
+  def build(ontologyIri: OntologyIri): Construct = {
+    val ontologyGraph = Iri.unsafeFrom(ontologyIri.toInternalSchema.toIri)
+    Construct(
+      sparql"""|CONSTRUCT { ?s ?p ?o . }
+               |WHERE {
+               |  GRAPH $ontologyGraph { ?s ?p ?o . }
+               |}""".render,
+    )
+  }
 }

@@ -439,7 +439,7 @@ final case class OntologyCacheLive(triplestore: TriplestoreService, cacheDataRef
     for {
       // Get all ontology metadata.
       _                           <- ZIO.logDebug(s"Loading ontologies into cache")
-      allOntologyMetadataResponse <- triplestore.select(GetAllOntologiesMetadataQuery.build)
+      allOntologyMetadataResponse <- triplestore.query(GetAllOntologiesMetadataQuery.build)
       allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata =

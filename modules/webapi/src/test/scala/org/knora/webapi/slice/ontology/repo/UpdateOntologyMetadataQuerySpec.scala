@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ontology.repo
 
 import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -23,6 +24,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   private val testOntologyIri: OntologyIri =
     OntologyIri.unsafeFrom("http://www.knora.org/ontology/0001/anything".toSmartIri)
@@ -42,18 +49,20 @@ class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
           )
           .map { (actual: Update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
-                                 |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:label "Updated Ontology Label"^^xsd:string . } }
-                                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . } }""".stripMargin,
+              canonical(actual.sparql) == canonical(
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
+                  |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                  |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:label "Updated Ontology Label"^^xsd:string . } }
+                  |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                  |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . } }""".stripMargin,
+              ),
             )
           }
       },
@@ -67,18 +76,20 @@ class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
           )
           .map { (actual: Update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
-                                 |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:comment "Updated ontology comment"^^xsd:string . } }
-                                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              canonical(actual.sparql) == canonical(
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
+                  |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                  |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:comment "Updated ontology comment"^^xsd:string . } }
+                  |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                  |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              ),
             )
           }
       },
@@ -92,21 +103,23 @@ class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
           )
           .map { (actual: Update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
-                                 |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:label "New Label"^^xsd:string .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:comment "New comment"^^xsd:string . } }
-                                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . }
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              canonical(actual.sparql) == canonical(
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
+                  |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                  |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:label "New Label"^^xsd:string .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:comment "New comment"^^xsd:string . } }
+                  |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                  |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . }
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              ),
             )
           }
       },
@@ -131,18 +144,20 @@ class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
           )
           .map { (actual: Update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
-                                 |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:label "Label with \"quotes\" and \'apostrophes\'"^^xsd:string . } }
-                                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . } }""".stripMargin,
+              canonical(actual.sparql) == canonical(
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel .
+                  |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                  |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:label "Label with \"quotes\" and \'apostrophes\'"^^xsd:string . } }
+                  |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                  |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:label ?oldLabel . } }""".stripMargin,
+              ),
             )
           }
       },
@@ -156,18 +171,20 @@ class UpdateOntologyMetadataQuerySpec extends ZIOSpecDefault {
           )
           .map { (actual: Update) =>
             assertTrue(
-              actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                 |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                                 |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
-                                 |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                                 |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                                 |<http://www.knora.org/ontology/0001/anything> rdfs:comment "Comment with \"quotes\" and newlines\nand tabs\t"^^xsd:string . } }
-                                 |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                                 |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
-                                 |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              canonical(actual.sparql) == canonical(
+                """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                  |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment .
+                  |<http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                  |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                  |<http://www.knora.org/ontology/0001/anything> rdfs:comment "Comment with \"quotes\" and newlines\nand tabs\t"^^xsd:string . } }
+                  |WHERE { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                  |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
+                  |OPTIONAL { <http://www.knora.org/ontology/0001/anything> rdfs:comment ?oldComment . } }""".stripMargin,
+              ),
             )
           }
       },

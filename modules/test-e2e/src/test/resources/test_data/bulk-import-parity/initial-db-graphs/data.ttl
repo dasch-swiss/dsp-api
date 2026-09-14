@@ -1,0 +1,55 @@
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
+
+<http://rdfh.ch/lists/9999/pURVwyebScyA6bjm11lL1Q>
+        rdf:type  <http://www.knora.org/ontology/knora-base#ListNode>;
+        <http://www.w3.org/2000/01/rdf-schema#comment>
+                "This is the first list"@en;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "List 1"@en;
+        <http://www.knora.org/ontology/knora-base#attachedToProject>
+                <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g>;
+        <http://www.knora.org/ontology/knora-base#hasSubListNode>
+                <http://rdfh.ch/lists/9999/xR8DqTWtRB2f1GEwo9T94w>;
+        <http://www.knora.org/ontology/knora-base#isRootNode>
+                true;
+        <http://www.knora.org/ontology/knora-base#listNodeName>
+                "firstList" .
+
+<http://rdfh.ch/lists/9999/xR8DqTWtRB2f1GEwo9T94w>
+        rdf:type  <http://www.knora.org/ontology/knora-base#ListNode>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Node 1"@en;
+        <http://www.knora.org/ontology/knora-base#hasRootNode>
+                <http://rdfh.ch/lists/9999/pURVwyebScyA6bjm11lL1Q>;
+        <http://www.knora.org/ontology/knora-base#hasSubListNode>
+                <http://rdfh.ch/lists/9999/d1ebIeU2QxuOYZ7s7vILQA>;
+        <http://www.knora.org/ontology/knora-base#listNodeName>
+                "n1";
+        <http://www.knora.org/ontology/knora-base#listNodePosition>
+                0 .
+
+<http://rdfh.ch/lists/9999/d1ebIeU2QxuOYZ7s7vILQA>
+        rdf:type  <http://www.knora.org/ontology/knora-base#ListNode>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Node 1.1"@en;
+        <http://www.knora.org/ontology/knora-base#hasRootNode>
+                <http://rdfh.ch/lists/9999/pURVwyebScyA6bjm11lL1Q>;
+        <http://www.knora.org/ontology/knora-base#hasSubListNode>
+                <http://rdfh.ch/lists/9999/BjuTLY1aToyT1mc5yLYfjQ>;
+        <http://www.knora.org/ontology/knora-base#listNodeName>
+                "n1.1";
+        <http://www.knora.org/ontology/knora-base#listNodePosition>
+                0 .
+
+<http://rdfh.ch/lists/9999/BjuTLY1aToyT1mc5yLYfjQ>
+        rdf:type  <http://www.knora.org/ontology/knora-base#ListNode>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Node 1.1.1"@en;
+        <http://www.knora.org/ontology/knora-base#hasRootNode>
+                <http://rdfh.ch/lists/9999/pURVwyebScyA6bjm11lL1Q>;
+        <http://www.knora.org/ontology/knora-base#listNodeName>
+                "n1.1.1";
+        <http://www.knora.org/ontology/knora-base#listNodePosition>
+                0 .

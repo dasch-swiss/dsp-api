@@ -25,9 +25,12 @@ import org.knora.webapi.core.LayersLive
 import org.knora.webapi.core.TestContainerLayers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestClientsModule
 
@@ -43,10 +46,16 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
    */
   protected def otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer
 
+  /**
+   * The [[SipiService]] the application under test runs with. Defaults to the live service; specs that
+   * must not reach a real dsp-ingest override it with a double (e.g. the bulk-import parity spec).
+   */
+  protected def sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer
+
   override lazy val bootstrap: ULayer[E2EZSpec.Environment] =
     E2EZSpec.testLogger >>>
       TestContainerLayers.all >+>
-      LayersLive.remainingLayer(otelLayer) >+>
+      LayersLive.remainingLayer(otelLayer, sipiServiceLayer) >+>
       ApiModule.layer >+>
       TestClientsModule.layer
 
