@@ -289,9 +289,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
     // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
     // when the payload is parsed.
-    val textValueTypePattern = textValueTypeIri(textValue.textValueType).toList.map { typeIri =>
-      valueIri.has(KB.hasTextValueType, typeIri)
-    }
+    val textValueTypePattern = List(valueIri.has(KB.hasTextValueType, textValueTypeIri(textValue.textValueType)))
 
     if (textValue.standoff.nonEmpty) {
       val mappingPattern = textValue.mappingIri.map { mappingIri =>
@@ -311,13 +309,15 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
   }
 
   /** The knora-base:hasTextValueType IRI for a text value, mirroring ResourcesRepoLive.buildFormattedTextValuePatterns. */
-  private def textValueTypeIri(textValueType: TextValueType): Option[rdf.Iri] =
+  private def textValueTypeIri(textValueType: TextValueType): rdf.Iri =
     textValueType match {
-      case TextValueType.UnformattedText        => Some(KB.UnformattedText)
-      case TextValueType.FormattedText          => Some(KB.FormattedText)
-      case TextValueType.CustomFormattedText(_) => Some(KB.CustomFormattedText)
-      // Unreachable on this path: TextValueContentV2.getTextValue never parses a payload to UndefinedTextType.
-      case TextValueType.UndefinedTextType => None
+      case TextValueType.UnformattedText        => KB.UnformattedText
+      case TextValueType.FormattedText          => KB.FormattedText
+      case TextValueType.CustomFormattedText(_) => KB.CustomFormattedText
+      // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType. Fail loud if that invariant breaks,
+      // rather than silently omitting knora-base:hasTextValueType and diverging from the other two write paths.
+      case TextValueType.UndefinedTextType =>
+        throw new IllegalArgumentException(s"Cannot persist knora-base:hasTextValueType for $textValueType")
     }
 
   private def standoffAttributeToRdfValue(

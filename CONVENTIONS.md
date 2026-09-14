@@ -80,6 +80,7 @@ diffing rendered SPARQL against the old `getQueryString` output). See
 - Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/dsp-api-error-handling.md` § Reading persisted data leniently.
 - Changing `knora-base.ttl` / `knora-admin.ttl`: version-bump rules (incl. when *not* to bump, and `MigrateOnlyBuiltInGraphs` for reload-only changes) in `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies. Generated fixtures (e.g. `knoraApiOntologyWithValueObjects.jsonld`) are rewritten by `OntologyFormatsE2ESpec` — never hand-edited.
 - Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/dsp-api-sparql-queries.md`.
+- Three write paths persist `knora-base:hasTextValueType` and scalar datatypes: v2 create (`ResourcesRepoLive`), v2 add-value (`InsertValueQueryBuilder`), v3 bulk import (`OntologyTransformer`). A change to one updates the other two. See `docs/development/dsp-api-text-value-type-parity.md`.
 
 ### Observability
 
