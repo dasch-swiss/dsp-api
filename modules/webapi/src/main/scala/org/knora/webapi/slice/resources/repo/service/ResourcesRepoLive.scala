@@ -361,6 +361,8 @@ object ResourcesRepoLive {
       value match
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
+        // Second v2-create write site for knora-base:hasTextValueType, alongside buildFormattedTextValuePatterns.
+        // Keep in agreement with the other write paths. See docs/development/dsp-api-text-value-type-parity.md.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)

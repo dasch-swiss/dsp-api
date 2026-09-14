@@ -6,20 +6,26 @@ to one path must change the other two, or the paths diverge silently.
 
 ## The three sites
 
-1. **v2 resource create** — `ResourcesRepoLive.buildFormattedTextValuePatterns`
-   (`modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/ResourcesRepoLive.scala`).
-   Keys on `FormattedTextValueType`.
+1. **v2 resource create** — two sites in
+   `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/ResourcesRepoLive.scala`:
+   `buildFormattedTextValuePatterns` (keys on `FormattedTextValueType`; emits `FormattedText` /
+   `CustomFormattedText`) and the `UnformattedTextValueInfo` case in `buildTypeSpecificValuePattern`
+   (emits `UnformattedText`).
 2. **v2 add value** — `InsertValueQueryBuilder.textValueTypeIri`
    (`modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/value/queries/InsertValueQueryBuilder.scala`).
    Keys on `TextValueType`.
 3. **v3 bulk import** — `OntologyTransformer.addTextValueType`
    (`modules/webapi/src/main/scala/org/knora/webapi/slice/ontology/OntologyTransformer.scala`).
-   Keys on the presence of `textValueAsXml`.
+   Keys on the presence of `textValueAsXml`. Emits `UnformattedText` or `FormattedText` only.
 
 ## The contract
 
-The three sites map to the same target IRIs: `knora-base:UnformattedText`,
-`knora-base:FormattedText`, `knora-base:CustomFormattedText`.
+The v2 create and v2 add-value sites map to the same three target IRIs: `knora-base:UnformattedText`,
+`knora-base:FormattedText`, and `knora-base:CustomFormattedText`.
+
+The v3 bulk-import site maps only to `knora-base:UnformattedText` and `knora-base:FormattedText`. It
+cannot produce `knora-base:CustomFormattedText`: `OntologyTransformer.rejectCustomMapping` rejects a
+non-standard mapping before write (REQ-6.2). Extend `addTextValueType` if that restriction is lifted.
 
 - Add or change a text-value-type mapping. Then update all three sites.
 - Update the tests and goldens of all three sites at the same time.
