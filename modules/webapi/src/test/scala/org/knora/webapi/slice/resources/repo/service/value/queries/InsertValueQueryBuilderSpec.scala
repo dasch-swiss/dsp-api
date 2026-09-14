@@ -86,6 +86,17 @@ object InsertValueQueryBuilderTestSupport {
         comment = Option.when(withComment)("Test comment"),
       )
 
+    def createTextValueWithUndefinedType: TextValueContentV2 =
+      TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some("Test text value"),
+        textValueType = TextValueType.UndefinedTextType,
+        valueHasLanguage = None,
+        standoff = Vector.empty,
+        mappingIri = None,
+        comment = None,
+      )
+
     def createIntegerValue(withComment: Boolean = false): IntegerValueContentV2 =
       IntegerValueContentV2(
         ontologySchema = ApiV2Complex,
@@ -747,6 +758,18 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithCustomMapping())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withCustomMapping")
+        },
+        test("with undefined text type fails loud rather than dropping the hasTextValueType triple") {
+          for {
+            exit <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithUndefinedType)).exit
+          } yield assert(exit)(
+            fails(
+              isSubtype[IllegalArgumentException](
+                hasMessage(containsString("Cannot persist knora-base:hasTextValueType")),
+              ),
+            ),
+          )
         },
         test("with standoff link") {
           val linkUpdates = Seq(TestDataFactory.createSparqlTemplateLinkUpdate())

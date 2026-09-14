@@ -153,21 +153,25 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
       // making the ASK check + INSERT effectively atomic under single-instance deployment.
       // Multi-instance deployments do not share this lock; a race window exists there.
       _ <- ZIO.foreach(valueHasOrder)(order => checkDuplicateOrder(resourceIri, propertyIri, order))
-      _ <- triplestore.query(
-             InsertValueQueryBuilder.createValueQuery(
-               dataNamedGraph,
-               resourceIri,
-               propertyIri,
-               newValueIri,
-               Left(newValueUUID),
-               value,
-               linkUpdates,
-               valueCreator,
-               valuePermissions,
-               creationDate,
-               valueHasOrder,
-             ),
-           )
+      // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+      _ <- ZIO
+             .attempt(
+               InsertValueQueryBuilder.createValueQuery(
+                 dataNamedGraph,
+                 resourceIri,
+                 propertyIri,
+                 newValueIri,
+                 Left(newValueUUID),
+                 value,
+                 linkUpdates,
+                 valueCreator,
+                 valuePermissions,
+                 creationDate,
+                 valueHasOrder,
+               ),
+             )
+             .orDie
+             .flatMap(update => triplestore.query(update))
     } yield ()
 
   def checkDuplicateOrder(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Task[Unit] =
@@ -196,8 +200,9 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
   ): Task[Unit] =
-    triplestore
-      .query(
+    // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+    ZIO
+      .attempt(
         InsertValueQueryBuilder.createValueQuery(
           dataNamedGraph,
           resourceIri,
@@ -211,6 +216,8 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
           creationDate,
         ),
       )
+      .orDie
+      .flatMap(update => triplestore.query(update))
 }
 
 object ValueRepo {
