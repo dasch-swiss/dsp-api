@@ -237,6 +237,9 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
   ): List[TriplePattern] = {
     import org.knora.webapi.messages.v2.responder.valuemessages.*
 
+    // Scalar datatypes here (integer, decimal, uri, interval bounds, timestamp) are emitted with an explicit
+    // datatype. The v3 bulk-import path re-types the same literals to match this:
+    // OntologyTransformer.canonicalizeScalarLiterals. See docs/development/dsp-api-text-value-type-parity.md.
     value match {
       case textValue: TextValueContentV2 =>
         buildTextValuePatterns(valueIri, textValue)
