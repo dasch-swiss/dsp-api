@@ -1879,6 +1879,21 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         ),
       )
     },
+    test("a malformed DecimalValue literal fails the import with a descriptive error") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testDecimal",
+        s"${knoraApi}DecimalValue",
+        s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}string", "@value": "not-a-number" }""",
+      )
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(
+          exit.isFailure,
+          message.contains("Failed to restructure RDF"),
+          message.contains("cannot be canonicalized"),
+        )
+      }
+    },
   )
 
   private val dateValueRejections = suite("Stage 2 — DateValue rejection")(
