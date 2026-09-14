@@ -468,14 +468,15 @@ final class OntologyTransformer(
   /**
    * Re-type the scalar value literals that arrive from the payload with a non-canonical datatype so they satisfy their
    * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path's `InsertValueQueryBuilder.buildTypeSpecificPatterns`
-   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a
-   * UTC `xsd:dateTime`, each with a canonical lexical form. Jena's `createTypedLiteral` stores the lexical string
-   * verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed literal fails the import,
-   * matching [[convertDateValues]]. Other scalar datatypes already match the create path today and are left untouched.
-   * Runs before [[addValueHasString]] so the derived `valueHasString` reflects the canonical form.
+   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer`, `valueHasTimeStamp` a UTC
+   * `xsd:dateTime`, `valueHasDecimal` and both interval bounds (`valueHasIntervalStart` / `valueHasIntervalEnd`)
+   * `xsd:decimal`, and `valueHasUri` `xsd:anyURI` — each with a canonical lexical form. Jena's `createTypedLiteral`
+   * stores the lexical string verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed
+   * numeric or timestamp literal fails the import, matching [[convertDateValues]]. Runs before [[addValueHasString]] so
+   * the derived `valueHasString` reflects the canonical form.
    *
-   * Applies to the values this pass writes. Non-canonical `valueHasInteger` / `valueHasTimeStamp` literals
-   * from prior imports stay as they are; remediating them is a separate DEV-7149 data-migration follow-up.
+   * Applies to the values this pass writes. Non-canonical literals from prior imports stay as they are; remediating
+   * them is a separate data-migration follow-up.
    */
   private def canonicalizeScalarLiterals(model: Model): Unit = {
     retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
@@ -484,6 +485,16 @@ final class OntologyTransformer(
     retypeLiterals(model, KnoraBase.ValueHasTimeStamp)(lexical =>
       model.createTypedLiteral(Instant.parse(lexical.trim).toString, XSDDatatype.XSDdateTime),
     )
+    retypeLiterals(model, KnoraBase.ValueHasDecimal)(lexical =>
+      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasIntervalStart)(lexical =>
+      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasIntervalEnd)(lexical =>
+      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasUri)(lexical => model.createTypedLiteral(lexical, XSDDatatype.XSDanyURI))
   }
 
   /** Replaces every literal object of `property` with the literal that `retype` derives from its lexical form. */

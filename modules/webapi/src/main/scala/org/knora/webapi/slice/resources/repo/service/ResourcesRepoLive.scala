@@ -417,6 +417,9 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
+    // Emits knora-base:hasTextValueType for the v2 resource-create path. Two other write paths must stay in agreement:
+    // InsertValueQueryBuilder.textValueTypeIri (v2 add-value) and OntologyTransformer.addTextValueType (v3 bulk import).
+    // See docs/development/dsp-api-text-value-type-parity.md before changing the mapping.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val txtTypeIri = v.textValueType match
         case FormattedTextValueType.StandardMapping  => KB.FormattedText

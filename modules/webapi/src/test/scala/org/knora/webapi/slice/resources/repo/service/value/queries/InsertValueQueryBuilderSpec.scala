@@ -203,6 +203,29 @@ object InsertValueQueryBuilderTestSupport {
       )
     }
 
+    def createTextValueWithCustomMapping(withComment: Boolean = false): TextValueContentV2 = {
+      val standoffTags = Vector(
+        StandoffTagV2(
+          standoffTagClassIri = sf.toSmartIri(OntologyConstants.Standoff.StandoffBoldTag),
+          startPosition = 0,
+          endPosition = 4,
+          uuid = testValueUUID,
+          originalXMLID = None,
+          startIndex = 0,
+        ),
+      )
+
+      TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some("Custom-mapped text"),
+        textValueType = TextValueType.CustomFormattedText(InternalIri(OntologyConstants.KnoraBase.TEIMapping)),
+        valueHasLanguage = None,
+        standoff = standoffTags,
+        mappingIri = Some(StandoffMappingIri.TEIMapping),
+        comment = Option.when(withComment)("Test custom mapping comment"),
+      )
+    }
+
     def createTextValueWithStandoffLink(withComment: Boolean = false): TextValueContentV2 = {
       val standoffTags = Vector(
         StandoffTagV2(
@@ -718,6 +741,12 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithStandoff(withComment = true))
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffAndComment")
+        },
+        test("with custom mapping") {
+          for {
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithCustomMapping())
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withCustomMapping")
         },
         test("with standoff link") {
           val linkUpdates = Seq(TestDataFactory.createSparqlTemplateLinkUpdate())
