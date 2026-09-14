@@ -107,7 +107,7 @@ class StorageServiceLiveSpec extends ZIOSpecDefault {
           } yield assertTrue(actual == expected)
         }
       },
-      test("should overwrite existing file and load a json file") {
+      test("should overwrite existing file and load a json file ") {
         ZIO.scoped {
           val expected = SomeJsonContent("test-expected")
           for {

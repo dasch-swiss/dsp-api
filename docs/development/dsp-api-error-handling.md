@@ -17,7 +17,7 @@ A *recoverable failure* is one a caller could reasonably handle: a 4xx response,
 
 ### Exception hierarchy
 
-In the responders and v2 rest services, dsp-api uses a sealed hierarchy of `Exception` subtypes as the failure values. These are not thrown — they're carried in the ZIO error channel. Newer (v3) code instead uses service-specific error models that the v3 rest services map to responses (see [Style C](#style-c--v3-typed-errors-with-explicit-variants-mandatory-for-new-v3-code)); this hierarchy is **not** the convention for new v3 code.
+In the responders and v2 rest services, dsp-api uses a sealed hierarchy of `Exception` subtypes as the failure values. These are not thrown — they're carried in the ZIO error channel. Newer (v3) code instead uses service-specific error models that the v3 rest services map to responses (see [Style C](#style-c---v3-typed-errors-with-explicit-variants-\(mandatory-for-new-v3-code\))); this hierarchy is **not** the convention for new v3 code.
 
 ```scala
 sealed trait KnoraException extends Serializable
@@ -72,7 +72,7 @@ def toRestrictedView: IO[BadRequestException, RestrictedView] =
 
 The error type appears in the signature, so callers see exactly what they need to handle.
 
-### Style C — V3 typed errors with explicit variants (mandatory for new v3 code)
+### Style C - V3 typed errors with explicit variants (mandatory for new v3 code)
 
 V3 endpoints use `IO[V3ErrorInfo, A]` with error variants declared on the endpoint definition. The error type *is* the API contract: each variant maps to a status code and a `V3ErrorCode` enum value.
 
