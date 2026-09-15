@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.`export`.domain
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -15,77 +16,83 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class AdminDataQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val q = QueryFactory.create(query)
+    q.getPrefixMapping.clearNsPrefixMap()
+    q.toString
+  }
+
   private val testProjectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val testUser1      = UserIri.unsafeFrom("http://rdfh.ch/users/user001")
   private val testUser2      = UserIri.unsafeFrom("http://rdfh.ch/users/user002")
 
   override def spec: Spec[TestEnvironment, Any] = suite("AdminDataQuerySpec")(
     suite("build (project members)")(
-      test("should include all project members, including system admins") {
-        val query       = AdminDataQuery.build(testProjectIri)
-        val queryString = query.getQueryString
+      test("renders the project, project member and group branches scoped to the admin data graph") {
+        val expected =
+          """PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |CONSTRUCT { <http://rdfh.ch/projects/0001> ?projectPred ?projectObj .
+            |?user ?userPred ?userObj .
+            |?group ?groupPred ?groupObj . }
+            |WHERE { GRAPH <http://www.knora.org/data/admin> { { <http://rdfh.ch/projects/0001> a knora-admin:knoraProject ;
+            |    ?projectPred ?projectObj . } UNION { ?user a knora-admin:User ;
+            |    ?userPred ?userObj ;
+            |    knora-admin:isInProject <http://rdfh.ch/projects/0001> . } UNION { ?group a knora-admin:UserGroup ;
+            |    ?groupPred ?groupObj ;
+            |    knora-admin:belongsToProject <http://rdfh.ch/projects/0001> . } } }
+            |""".stripMargin
+        assertTrue(canonical(AdminDataQuery.build(testProjectIri).sparql) == canonical(expected))
+      },
+      test("has no system admin filter") {
+        val queryString = AdminDataQuery.build(testProjectIri).sparql
         assertTrue(
           !queryString.contains("FILTER NOT EXISTS"),
           !queryString.contains("isInSystemAdminGroup"),
         )
       },
-      test("should include the project member pattern") {
-        val query       = AdminDataQuery.build(testProjectIri)
-        val queryString = query.getQueryString
-        assertTrue(
-          queryString.contains("?user a knora-admin:User"),
-          queryString.contains("knora-admin:isInProject"),
-        )
-      },
-      test("should include project and group patterns") {
-        val query       = AdminDataQuery.build(testProjectIri)
-        val queryString = query.getQueryString
-        assertTrue(
-          queryString.contains("knora-admin:knoraProject"),
-          queryString.contains("knora-admin:UserGroup"),
-          queryString.contains("knora-admin:belongsToProject"),
-        )
-      },
     ),
     suite("buildWithReferencedUsers")(
       test("with empty set returns same as build") {
-        val base    = AdminDataQuery.build(testProjectIri).getQueryString
-        val withRef = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set.empty)
+        val base    = AdminDataQuery.build(testProjectIri).sparql
+        val withRef = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set.empty).sparql
         assertTrue(base == withRef)
       },
-      test("includes VALUES block for referenced user IRIs") {
-        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1, testUser2))
-        assertTrue(
-          queryStr.contains("VALUES ?user"),
-          queryStr.contains(testUser1.value),
-          queryStr.contains(testUser2.value),
-        )
+      test("adds a VALUES branch for the referenced user IRIs") {
+        val expected =
+          """PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+            |CONSTRUCT {
+            |  <http://rdfh.ch/projects/0001> ?projectPred ?projectObj .
+            |  ?user ?userPred ?userObj .
+            |  ?group ?groupPred ?groupObj .
+            |}
+            |WHERE {
+            |  GRAPH <http://www.knora.org/data/admin> {
+            |    {
+            |      <http://rdfh.ch/projects/0001> a knora-admin:knoraProject ;
+            |        ?projectPred ?projectObj .
+            |    } UNION {
+            |      ?user a knora-admin:User ;
+            |        ?userPred ?userObj ;
+            |        knora-admin:isInProject <http://rdfh.ch/projects/0001> .
+            |    } UNION {
+            |      ?user a knora-admin:User ;
+            |        ?userPred ?userObj .
+            |      VALUES ?user { <http://rdfh.ch/users/user001> <http://rdfh.ch/users/user002> }
+            |    } UNION {
+            |      ?group a knora-admin:UserGroup ;
+            |        ?groupPred ?groupObj ;
+            |        knora-admin:belongsToProject <http://rdfh.ch/projects/0001> .
+            |    }
+            |  }
+            |}""".stripMargin
+        val actual = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1, testUser2))
+        assertTrue(canonical(actual.sparql) == canonical(expected))
       },
-      test("has no SystemAdmin filter on any branch") {
-        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
+      test("has no system admin filter on any branch") {
+        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1)).sparql
         assertTrue(
           !queryStr.contains("FILTER NOT EXISTS"),
           !queryStr.contains("isInSystemAdminGroup"),
-        )
-      },
-      test("includes project member pattern alongside referenced users") {
-        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
-        assertTrue(
-          queryStr.contains("knora-admin:isInProject"),
-          queryStr.contains("VALUES ?user"),
-        )
-      },
-      test("includes group pattern") {
-        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
-        assertTrue(
-          queryStr.contains("knora-admin:UserGroup"),
-          queryStr.contains("knora-admin:belongsToProject"),
-        )
-      },
-      test("uses correct knoraProject type IRI") {
-        val queryStr = AdminDataQuery.buildWithReferencedUsers(testProjectIri, Set(testUser1))
-        assertTrue(
-          queryStr.contains("knora-admin:knoraProject"),
         )
       },
     ),

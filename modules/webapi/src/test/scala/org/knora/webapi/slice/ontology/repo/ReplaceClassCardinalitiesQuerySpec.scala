@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -19,6 +20,12 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ReplaceClassCardinalitiesQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -89,7 +96,7 @@ class ReplaceClassCardinalitiesQuerySpec extends ZIOSpecDefault {
           |_:node1 salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger . } }
           |""".stripMargin + whereClause
 
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
     test("should produce correct query with multiple cardinalities") {
       val cardinalities = Map(
@@ -122,7 +129,7 @@ class ReplaceClassCardinalitiesQuerySpec extends ZIOSpecDefault {
           |_:node2 owl:maxCardinality "1"^^xsd:nonNegativeInteger . } }
           |""".stripMargin + whereClause
 
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
     test("should produce correct query with empty cardinalities") {
       val actual = ReplaceClassCardinalitiesQuery.build(
@@ -139,7 +146,7 @@ class ReplaceClassCardinalitiesQuerySpec extends ZIOSpecDefault {
           |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-02T12:00:00Z"^^xsd:dateTime . } }
           |""".stripMargin + whereClause
 
-      assertTrue(actual.sparql == expected)
+      assertTrue(canonical(actual.sparql) == canonical(expected))
     },
   )
 }
