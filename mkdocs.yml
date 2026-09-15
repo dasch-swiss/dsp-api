@@ -40,6 +40,7 @@ nav:
           - Groups Endpoint: 03-endpoints/api-admin/groups.md
           - Lists Endpoint: 03-endpoints/api-admin/lists.md
           - Permissions Endpoint: 03-endpoints/api-admin/permissions.md
+          - Files Endpoint: 03-endpoints/api-admin/files.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
           - SPARQL Passthrough: 03-endpoints/api-admin/sparql-passthrough.md
       - API V3:

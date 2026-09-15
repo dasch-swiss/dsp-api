@@ -15,7 +15,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.common.repo.service.CrudRepository
 
 trait KnoraProjectRepo extends CrudRepository[KnoraProject, ProjectIri] {
@@ -45,7 +44,7 @@ object KnoraProjectRepo {
       List.empty[Keyword],
       None,
       KnoraProject.SelfJoin.CannotJoin,
-      RestrictedView.default,
+      None,
       Set.empty,
       Set.empty,
     )

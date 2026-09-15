@@ -9,16 +9,15 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.responders.admin.AssetPermissionsCache
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
 
 final class FilesServerEndpoints(
   filesEndpoints: FilesEndpoints,
   assetPermissionsCache: AssetPermissionsCache,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
-    filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(
-      assetPermissionsCache.getPermissionCodeAndProjectRestrictedViewSettings,
+    filesEndpoints.getAdminFilesShortcodeFileIri.serverLogic(user =>
+      (shortcode, filename) =>
+        assetPermissionsCache.getAssetAccess(user)(shortcode, filename).map(AssetAccessResponse.from),
     ),
   )
 }
