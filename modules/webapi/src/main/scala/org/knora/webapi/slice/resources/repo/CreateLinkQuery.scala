@@ -5,29 +5,20 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.OWL
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
 import zio.IO
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 
 import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
+import org.knora.sparqlbuilder.*
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Inserts a new link between resources.
@@ -38,7 +29,10 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
  * 3. Creates a new LinkValue describing the link
  * 4. Updates the link source's last modification date
  */
-object CreateLinkQuery extends QueryBuilderHelper {
+object CreateLinkQuery {
+
+  private def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
+    ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   /**
    * Builds a SPARQL UPDATE query to create a link between two resources.
@@ -49,6 +43,8 @@ object CreateLinkQuery extends QueryBuilderHelper {
    * @param newValueUUID   the UUID to be attached to the value
    * @param creationDate   an xsd:dateTimeStamp that will be attached to the link value
    * @param maybeComment   an optional comment on the link
+   * @param valueHasOrder  an explicit order for the new LinkValue; when absent, the next
+   *                       order is derived from the highest existing order for the property
    */
   def build(
     project: Project,
@@ -58,127 +54,91 @@ object CreateLinkQuery extends QueryBuilderHelper {
     creationDate: Instant,
     maybeComment: Option[String],
     valueHasOrder: Option[Int] = None,
-  ): IO[SparqlGenerationException, ModifyQuery] =
+  ): IO[SparqlGenerationException, Update] =
     for {
       _ <- failIf(!linkUpdate.insertDirectLink, "linkUpdate.insertDirectLink must be true in this SPARQL template")
       _ <- failIf(linkUpdate.directLinkExists, "linkUpdate.directLinkExists must be false in this SPARQL template")
       _ <- failIf(linkUpdate.linkValueExists, "linkUpdate.linkValueExists must be false in this SPARQL template")
     } yield {
-      val dataGraph         = graphIri(project)
-      val resource          = toRdfIri(resourceIri)
-      val linkProperty      = toRdfIri(linkUpdate.linkPropertyIri)
-      val linkValueProperty = toRdfIri(linkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp)
-      val linkTarget        = Rdf.iri(linkUpdate.linkTargetIri)
-      val newLinkValue      = Rdf.iri(linkUpdate.newLinkValueIri.value)
+      val dataGraph         = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+      val resource          = Iri.unsafeFrom(resourceIri.value)
+      val linkProperty      = Iri.unsafeFrom(linkUpdate.linkPropertyIri.toInternalSchema.toIri)
+      val linkValueProperty =
+        Iri.unsafeFrom(linkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp.toIri)
+      val linkTarget       = Iri.unsafeFrom(linkUpdate.linkTargetIri)
+      val newLinkValue     = Iri.unsafeFrom(linkUpdate.newLinkValueIri.value)
+      val newValueCreator  = Iri.unsafeFrom(linkUpdate.newLinkValueCreator)
+      val creationDateTime = Literal.dateTime(creationDate)
 
-      val resourceLastModificationDate = variable("resourceLastModificationDate")
-      val nextOrder                    = variable("nextOrder")
-      val resourceClass                = variable("resourceClass")
-
-      // DELETE patterns
-      val deletePatterns = Seq(
-        resource.has(KB.lastModificationDate, resourceLastModificationDate),
+      Update(
+        sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |
+                 |DELETE {
+                 |  GRAPH $dataGraph {
+                 |    # Delete the link source's last modification date so we can update it
+                 |    $resource knora-base:lastModificationDate ?resourceLastModificationDate .
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $dataGraph {
+                 |    # Update the link source's last modification date
+                 |    $resource knora-base:lastModificationDate $creationDateTime .
+                 |    # Insert a direct link between the source and target resources
+                 |    $resource $linkProperty $linkTarget .
+                 |    # Insert a LinkValue describing the link
+                 |    $newLinkValue a knora-base:LinkValue .
+                 |    $newLinkValue rdf:subject $resource .
+                 |    $newLinkValue rdf:predicate $linkProperty .
+                 |    $newLinkValue rdf:object $linkTarget .
+                 |    $newLinkValue knora-base:valueHasString ${Literal.string(linkUpdate.linkTargetIri)} .
+                 |    $newLinkValue knora-base:valueHasRefCount ${Literal.int(linkUpdate.newReferenceCount)} .
+                 |    $newLinkValue knora-base:valueHasOrder ?nextOrder .
+                 |    $newLinkValue knora-base:isDeleted false .
+                 |    $newLinkValue knora-base:valueHasUUID ${Literal.string(UuidUtil.base64Encode(newValueUUID))} .
+                 |    $newLinkValue knora-base:valueCreationDate $creationDateTime .
+                 |    $newLinkValue knora-base:attachedToUser $newValueCreator .
+                 |    $newLinkValue knora-base:hasPermissions ${Literal.string(linkUpdate.newLinkValuePermissions)} .
+                 |    # Attach the new LinkValue to its containing resource
+                 |    $resource $linkValueProperty $newLinkValue .
+                 |    ${maybeComment.whenSome(comment =>
+            sparql"$newLinkValue knora-base:valueHasComment ${Literal.string(comment)} .",
+          )}
+                 |  }
+                 |}
+                 |WHERE {
+                 |  # Check that the resource exists, is not deleted, and is a knora-base:Resource
+                 |  $resource a ?resourceClass ;
+                 |    knora-base:isDeleted false .
+                 |  ?resourceClass rdfs:subClassOf* knora-base:Resource .
+                 |  # Get the link source's last modification date, if it has one, so we can update it
+                 |  OPTIONAL { $resource knora-base:lastModificationDate ?resourceLastModificationDate . }
+                 |  ${sparql"""|# Make sure the link target is a knora-base:Resource
+                             |$linkTarget a ?linkTargetClass .
+                             |?linkTargetClass rdfs:subClassOf* knora-base:Resource .
+                             |# Do nothing if the target resource belongs to the wrong OWL class
+                             |$linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
+                             |?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+                             |# Do nothing if the target resource doesn't exist or is marked as deleted
+                             |$linkTarget knora-base:isDeleted false .
+                             |# Do nothing if the source resource's OWL class has no cardinality for the link property
+                             |?resourceClass rdfs:subClassOf* ?restriction .
+                             |?restriction a owl:Restriction .
+                             |?restriction owl:onProperty $linkProperty .""".when(linkUpdate.linkTargetExists)}
+                 |  ${valueHasOrder.fold(
+            sparql"""|{
+                   |  SELECT (MAX(?order) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
+                   |  WHERE {
+                   |    $resource $linkValueProperty ?otherLinkValue .
+                   |    ?otherLinkValue knora-base:valueHasOrder ?order ;
+                   |      knora-base:isDeleted false .
+                   |  }
+                   |}""",
+          )(order => sparql"BIND(${Literal.int(order)} AS ?nextOrder)")}
+                 |}""".render,
       )
-
-      // INSERT patterns
-      val baseInsertPatterns = Seq(
-        // Update the link source's last modification date
-        resource.has(KB.lastModificationDate, toRdfLiteral(creationDate)),
-        // Insert a direct link between the source and target resources
-        resource.has(linkProperty, linkTarget),
-        // Insert a LinkValue describing the link
-        newLinkValue.isA(KB.linkValue),
-        newLinkValue.has(RDF.SUBJECT, resource),
-        newLinkValue.has(RDF.PREDICATE, linkProperty),
-        newLinkValue.has(RDF.OBJECT, linkTarget),
-        newLinkValue.has(KB.valueHasString, Rdf.literalOfType(linkUpdate.linkTargetIri, XSD.STRING)),
-        newLinkValue.has(KB.valueHasRefCount, literalOf(linkUpdate.newReferenceCount)),
-        newLinkValue.has(KB.valueHasOrder, nextOrder),
-        newLinkValue.has(KB.isDeleted, literalOf(false)),
-        newLinkValue.has(KB.valueHasUUID, Rdf.literalOf(UuidUtil.base64Encode(newValueUUID))),
-        newLinkValue.has(KB.valueCreationDate, toRdfLiteral(creationDate)),
-        newLinkValue.has(KB.attachedToUser, Rdf.iri(linkUpdate.newLinkValueCreator)),
-        newLinkValue.has(KB.hasPermissions, Rdf.literalOfType(linkUpdate.newLinkValuePermissions, XSD.STRING)),
-        // Attach the new LinkValue to its containing resource
-        resource.has(linkValueProperty, newLinkValue),
-      )
-
-      val commentInsert =
-        maybeComment.map(comment => newLinkValue.has(KB.valueHasComment, Rdf.literalOf(comment))).toSeq
-
-      val insertPatterns = baseInsertPatterns ++ commentInsert
-
-      // WHERE patterns
-      val subClassOfPath = zeroOrMore(RDFS.SUBCLASSOF)
-
-      val baseWherePatterns: Seq[GraphPattern] = Seq(
-        // Check resource exists, is not deleted, and is a knora-base:Resource
-        resource.isA(resourceClass).andHas(KB.isDeleted, literalOf(false)),
-        resourceClass.has(subClassOfPath, KB.Resource),
-        // Get the link source's last modification date, if it has one
-        resource.has(KB.lastModificationDate, resourceLastModificationDate).optional(),
-      )
-
-      // If the link target already exists, validate it
-      val linkTargetValidationPatterns: Seq[GraphPattern] =
-        if (linkUpdate.linkTargetExists) {
-          val linkTargetClass     = variable("linkTargetClass")
-          val expectedTargetClass = variable("expectedTargetClass")
-          val restriction         = variable("restriction")
-          Seq(
-            // Make sure the link target is a knora-base:Resource
-            linkTarget.isA(linkTargetClass),
-            linkTargetClass.has(subClassOfPath, KB.Resource),
-            // Do nothing if the target resource belongs to the wrong OWL class
-            linkProperty.has(KB.objectClassConstraint, expectedTargetClass),
-            linkTargetClass.has(subClassOfPath, expectedTargetClass),
-            // Do nothing if the target resource doesn't exist or is marked as deleted
-            linkTarget.has(KB.isDeleted, literalOf(false)),
-            // Do nothing if the source resource's OWL class has no cardinality for the link property
-            resourceClass.has(subClassOfPath, restriction),
-            restriction.isA(OWL.RESTRICTION),
-            restriction.has(OWL.ONPROPERTY, linkProperty),
-          )
-        } else {
-          Seq.empty
-        }
-
-      // Determine next order: use explicit value when supplied, otherwise MAX(existing) + 1.
-      val orderPattern: GraphPattern =
-        valueHasOrder match {
-          case Some(explicitOrder) =>
-            bindExplicitOrder(explicitOrder, nextOrder)
-          case None =>
-            val order      = variable("order")
-            val maxOrder   = variable("maxOrder")
-            val otherValue = variable("otherLinkValue")
-            GraphPatterns
-              .select()
-              .select(
-                Expressions.max(order).as(maxOrder),
-                Expressions
-                  .iff(
-                    Expressions.bound(maxOrder),
-                    Expressions.add(maxOrder, literalOf(1)),
-                    literalOf(0),
-                  )
-                  .as(nextOrder),
-              )
-              .where(
-                resource.has(linkValueProperty, otherValue),
-                otherValue.has(KB.valueHasOrder, order).andHas(KB.isDeleted, literalOf(false)),
-              )
-        }
-
-      val wherePatterns = baseWherePatterns ++ linkTargetValidationPatterns :+ orderPattern
-
-      Queries
-        .MODIFY()
-        .prefix(RDF.NS, RDFS.NS, OWL.NS, XSD.NS, KB.NS)
-        .from(dataGraph)
-        .delete(deletePatterns*)
-        .into(dataGraph)
-        .insert(insertPatterns*)
-        .where(wherePatterns*)
     }
 }
