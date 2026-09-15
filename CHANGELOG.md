@@ -1,5 +1,17 @@
 # Changelog
 
+## [39.0.1](https://github.com/dasch-swiss/dsp-api/compare/v39.0.0...v39.0.1) (2026-09-15)
+
+
+### Maintenances
+
+* **ci:** keep the docs job's checkout unshallowed (DEV-7265) ([#4336](https://github.com/dasch-swiss/dsp-api/issues/4336)) ([ea7369e](https://github.com/dasch-swiss/dsp-api/commit/ea7369ea5cd89b9074e19e0c08459377c1a39f16))
+
+
+### Bug Fixes
+
+* **ingest:** write JSON sidecars atomically ([#4332](https://github.com/dasch-swiss/dsp-api/issues/4332)) ([c332051](https://github.com/dasch-swiss/dsp-api/commit/c3320514b87dd4838561131411e68d71f6f725e8))
+
 ## [39.0.0](https://github.com/dasch-swiss/dsp-api/compare/v38.1.0...v39.0.0) (2026-09-11)
 
 
