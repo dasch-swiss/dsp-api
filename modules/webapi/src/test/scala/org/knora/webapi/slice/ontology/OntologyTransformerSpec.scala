@@ -28,6 +28,7 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.InternalSchema
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
@@ -43,7 +44,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
-import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.PlaceholderIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -160,10 +160,15 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     Set.empty,
   )
 
+  // The in-memory DoapResolver double returns `defaultDoap` for every resource and value with no payload permission,
+  // and `validatedDoap` for a payload permission routed through `validate`. The two differ so a test can prove which
+  // branch ran. Real byte-for-byte formatting against the create path is covered by the e2e parity spec.
+  private val defaultDoap   = "CR knora-admin:Creator|V knora-admin:KnownUser"
+  private val validatedDoap = "CR knora-admin:ProjectAdmin|V knora-admin:ProjectMember"
+
   private val ctx = ConversionContext(
-    attachedToUser = UserIri.unsafeFrom("http://rdfh.ch/users/exampleUser"),
+    attachedToUser = TestDataFactory.User.rootUser,
     attachedToProject = project,
-    permissions = "CR knora-admin:Creator|V knora-admin:KnownUser",
   )
 
   private val dataNamedGraph = ProjectService.projectDataNamedGraphV2(project).value
@@ -482,17 +487,105 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     a                            onto:Example ;
                             |     rdfs:label                   "test" ;
                             |     onto:testBoolean             <$valueIri> ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
                             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
                             |     a                            knora-base:BooleanValue ;
                             |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
+                            |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
+                            |     knora-base:valueHasString    "true" ;
+                            |     knora-base:isDeleted         false .
+                            |""".stripMargin,
+      )
+    },
+    test("keeps a payload-supplied resource hasPermissions, reformatted through the resolver") {
+      runTransformStage2(
+        jsonLd = s"""
+                    |[{
+                    |    "@id": "$resourceIri",
+                    |    "@type": "${onto}Example",
+                    |    "rdfs:label": "test",
+                    |    "${knoraApi}hasPermissions": "CR knora-admin:Creator",
+                    |    "${onto}testBoolean": {
+                    |      "@id": "$valueIri",
+                    |      "@type": "${knoraApi}BooleanValue",
+                    |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true }
+                    |    },
+                    |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+                    |}]""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     a                            onto:Example ;
+                            |     rdfs:label                   "test" ;
+                            |     onto:testBoolean             <$valueIri> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+                            |     knora-base:hasPermissions    "$validatedDoap" ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri>
+                            |     a                            knora-base:BooleanValue ;
+                            |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
+                            |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
+                            |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
+                            |     knora-base:valueHasString    "true" ;
+                            |     knora-base:isDeleted         false .
+                            |""".stripMargin,
+      )
+    },
+    test("keeps a payload-supplied value hasPermissions, reformatted through the resolver") {
+      runTransformStage2(
+        jsonLd = s"""
+                    |[{
+                    |    "@id": "$resourceIri",
+                    |    "@type": "${onto}Example",
+                    |    "rdfs:label": "test",
+                    |    "${onto}testBoolean": {
+                    |      "@id": "$valueIri",
+                    |      "@type": "${knoraApi}BooleanValue",
+                    |      "${knoraApi}hasPermissions": "RV knora-admin:ProjectMember",
+                    |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true }
+                    |    },
+                    |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+                    |}]""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                            | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+                            | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+                            | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri>
+                            |     a                            onto:Example ;
+                            |     rdfs:label                   "test" ;
+                            |     onto:testBoolean             <$valueIri> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
+                            |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+                            |     knora-base:isDeleted         false .
+                            |
+                            | <$valueIri>
+                            |     a                            knora-base:BooleanValue ;
+                            |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$validatedDoap" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:valueHasString    "true" ;
@@ -526,17 +619,17 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     a                            onto:Example ;
                             |     rdfs:label                   "test" ;
                             |     onto:testInt                 <$valueIri>, <$valueIri2> ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
                             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
                             |     a                            knora-base:IntValue ;
                             |     knora-base:valueHasInteger   "1"^^xsd:integer ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:valueHasString    "1" ;
@@ -545,8 +638,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             | <$valueIri2>
                             |     a                            knora-base:IntValue ;
                             |     knora-base:valueHasInteger   "2"^^xsd:integer ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri2.valueId.value}" ;
                             |     knora-base:valueHasString    "2" ;
@@ -580,17 +673,17 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     a                            onto:Example ;
                             |     rdfs:label                   "test" ;
                             |     onto:testBoolean             <$valueIri> ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
                             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:creationDate      "2020-05-15T07:00:00Z"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
                             | <$valueIri>
                             |     a                            knora-base:BooleanValue ;
                             |     knora-base:valueHasBoolean   "true"^^xsd:boolean ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:valueHasString    "true" ;
@@ -618,17 +711,17 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
        |     a                            onto:Example ;
        |     rdfs:label                   "test" ;
        |     onto:$propLocalName          <$valueIri> ;
-       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
        |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:hasPermissions    "$defaultDoap" ;
        |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
        |     knora-base:isDeleted         false .
        |
        | <$valueIri>
        |     a                            knora-base:$valueClass ;
        |     $valueContent ;
-       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+       |     knora-base:hasPermissions    "$defaultDoap" ;
        |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
        |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
        |     knora-base:valueHasString    "$valueHasString" ;
@@ -759,9 +852,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                           |     a                            onto:Example ;
                           |     rdfs:label                   "test" ;
                           |     onto:testSubDate1            <$valueIri> ;
-                          |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                          |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
                           |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-                          |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                          |     knora-base:hasPermissions    "$defaultDoap" ;
                           |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                           |     knora-base:isDeleted         false .
                           |
@@ -773,8 +866,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                           |     knora-base:valueHasStartPrecision "$startPrecision" ;
                           |     knora-base:valueHasEndPrecision   "$endPrecision" ;
                           |     knora-base:valueHasString         "$dateString" ;
-                          |     knora-base:attachedToUser         <${ctx.attachedToUser}> ;
-                          |     knora-base:hasPermissions         "${ctx.permissions}" ;
+                          |     knora-base:attachedToUser         <${ctx.attachedToUser.userIri.value}> ;
+                          |     knora-base:hasPermissions         "$defaultDoap" ;
                           |     knora-base:valueCreationDate      "$knownInstant"^^xsd:dateTime ;
                           |     knora-base:valueHasUUID           "${valueIri.valueId}" ;
                           |     knora-base:isDeleted              false .
@@ -937,9 +1030,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     rdfs:label                   "test" ;
                             |     onto:testHasLinkToValue      <$valueIri> ;
                             |     onto:testHasLinkTo           <$target> ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
                             |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:isDeleted         false .
                             |
@@ -950,8 +1043,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |     rdf:object                   <$target> ;
                             |     knora-base:valueHasRefCount  1 ;
                             |     knora-base:valueHasString    "$target" ;
-                            |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-                            |     knora-base:hasPermissions    "${ctx.permissions}" ;
+                            |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+                            |     knora-base:hasPermissions    "$defaultDoap" ;
                             |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
                             |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
                             |     knora-base:isDeleted         false .
@@ -1089,9 +1182,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     a                            onto:Example ;
              |     rdfs:label                   "test" ;
              |     onto:testRichtext            <$valueIri> ;
-             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
              |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:hasPermissions    "$defaultDoap" ;
              |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
              |     knora-base:isDeleted         false .
              |
@@ -1102,8 +1195,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 0 ;
              |     knora-base:valueHasStandoff              <$valueIri/standoff/0> ;
-             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
-             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser.userIri.value}> ;
+             |     knora-base:hasPermissions                "$defaultDoap" ;
              |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
              |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
              |     knora-base:isDeleted                     false .
@@ -1153,9 +1246,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     a                            onto:Example ;
              |     rdfs:label                   "test" ;
              |     onto:testRichtext            <$valueIri> ;
-             |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
              |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-             |     knora-base:hasPermissions    "${ctx.permissions}" ;
+             |     knora-base:hasPermissions    "$defaultDoap" ;
              |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
              |     knora-base:isDeleted         false .
              |
@@ -1166,8 +1259,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 2 ;
              |     knora-base:valueHasStandoff              <$valueIri/standoff/0>, <$valueIri/standoff/1>, <$valueIri/standoff/2> ;
-             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
-             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser.userIri.value}> ;
+             |     knora-base:hasPermissions                "$defaultDoap" ;
              |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
              |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
              |     knora-base:isDeleted                     false .
@@ -1359,9 +1452,9 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     onto:testRichtext                 <$valueIri> ;
              |     knora-base:hasStandoffLinkTo      <$linkTarget> ;
              |     knora-base:hasStandoffLinkToValue <$resourceIri/values/1> ;
-             |     knora-base:attachedToUser         <${ctx.attachedToUser}> ;
+             |     knora-base:attachedToUser         <${ctx.attachedToUser.userIri.value}> ;
              |     knora-base:attachedToProject      <${ctx.attachedToProject.id.value}> ;
-             |     knora-base:hasPermissions         "${ctx.permissions}" ;
+             |     knora-base:hasPermissions         "$defaultDoap" ;
              |     knora-base:creationDate           "$knownInstant"^^xsd:dateTime ;
              |     knora-base:isDeleted              false .
              |
@@ -1372,8 +1465,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 1 ;
              |     knora-base:valueHasStandoff              <$valueIri/standoff/0>, <$valueIri/standoff/1> ;
-             |     knora-base:attachedToUser                <${ctx.attachedToUser}> ;
-             |     knora-base:hasPermissions                "${ctx.permissions}" ;
+             |     knora-base:attachedToUser                <${ctx.attachedToUser.userIri.value}> ;
+             |     knora-base:hasPermissions                "$defaultDoap" ;
              |     knora-base:valueCreationDate             "$knownInstant"^^xsd:dateTime ;
              |     knora-base:valueHasUUID                  "${valueIri.valueId}" ;
              |     knora-base:isDeleted                     false .
@@ -1570,16 +1663,16 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
        |     a                            onto:Example ;
        |     rdfs:label                   "test" ;
        |     onto:$propLocalName          <$valueIri> ;
-       |     knora-base:attachedToUser    <${ctx.attachedToUser}> ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
        |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
-       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     knora-base:hasPermissions    "$defaultDoap" ;
        |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
        |     knora-base:isDeleted         false .
        |
        | <$valueIri>
        |     a                            knora-base:$valueClass ;
-       |     ${contentTriple}knora-base:attachedToUser    <${ctx.attachedToUser}> ;
-       |     knora-base:hasPermissions    "${ctx.permissions}" ;
+       |     ${contentTriple}knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+       |     knora-base:hasPermissions    "$defaultDoap" ;
        |     knora-base:valueCreationDate "$knownInstant"^^xsd:dateTime ;
        |     knora-base:valueHasUUID      "${valueIri.valueId}" ;
        |     knora-base:isDeleted         false .
@@ -2047,6 +2140,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     fileValuesStage2,
   ).provide(
     OntologyTransformer.layer,
+    DoapResolverInMemory.layer(defaultDoap, defaultDoap, validatedDoap),
     StringFormatter.test,
     TestAppConfig.layer(),
     IdSourceInMemory.layer,

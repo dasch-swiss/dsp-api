@@ -46,22 +46,23 @@ imported resource and value is attributed to. It must be an active member or adm
 a system admin (see [Authentication and Authorization](#authentication-and-authorization)).
 
 The request body is the project's data graph as JSON-LD in the knora-api v2 external (complex) schema, with content
-type `application/ld+json`. The payload contains resources and their values only — no admin data, ontologies, or
-permission data.
+type `application/ld+json`. The payload contains resources and their values, optionally with an explicit
+`hasPermissions` per resource or value. It contains no admin data or ontologies.
 
-Resource and value metadata that is managed by the server is synthesised during the import and need not (and should
-not) be supplied in the payload:
+Server-managed resource and value metadata is synthesised during the import and need not be supplied in the payload
+(`hasPermissions` is the exception — see below):
 
 - `attachedToProject` is derived from the `{projectIri}` path parameter.
 - `attachedToUser` is the `onBehalfOfUser`, not the authenticated (triggering) admin.
-- `hasPermissions` is resolved once from the project's default object access permissions (DOAPs) as they apply to
-  the `onBehalfOfUser`, and applied uniformly to every resource and value. Precedence follows that user's own group
-  memberships — a project member resolves the ProjectMember-group DOAP. Per-resource-class and per-property DOAPs are
-  not resolved per entity.
+- `hasPermissions` is honored when a resource or value carries it in the payload, validated and reformatted to match
+  the single-resource create path. Otherwise it is resolved per entity from the project's default object access
+  permissions (DOAPs) as they apply to the `onBehalfOfUser` — including resource-class and property DOAPs, with group
+  precedence (a project member resolves the ProjectMember-group DOAP).
 - Creation dates are set to the time of the import.
 
-The `onBehalfOfUser` is resolved once at trigger time. Eligibility and the resolved permissions are a snapshot:
-mid-flight changes to that user (deactivation, role change, removal) are not reconsidered. The parameter is
+The `onBehalfOfUser` is resolved once at trigger time. Its eligibility, and the group memberships that determine the
+resolved DOAPs, are a snapshot: mid-flight changes to that user (deactivation, role change, removal) are not
+reconsidered. The parameter is
 per-request, so a retry after a delete may supply a different user. The import status response reports the
 on-behalf-of user (the `onBehalfOf` field) alongside `createdBy` (the triggering admin), so attribution is auditable
 without reading a resource.
