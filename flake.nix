@@ -54,6 +54,16 @@
               # `cs install`; Metals bootstraps bazel-bsp itself via its embedded
               # coursier. See docs/development/dsp-api-metals-mcp.md.
               metals
+
+              # MkDocs + `docs/requirements.txt` for `just docs-build`
+              (python3.withPackages (ps: [
+                ps.mkdocs
+                ps.mkdocs-material
+                ps.mkdocs-git-revision-date-localized-plugin
+                ps.mkdocs-include-markdown-plugin
+                ps.neoteroi-mkdocs
+                ps.mike
+              ]))
             ];
 
             shellHook = ''
