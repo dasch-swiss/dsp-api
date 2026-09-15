@@ -5,13 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service
 import cats.syntax.traverse.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 import zio.prelude.Validation
 
 import scala.annotation.unused
 
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.slice.admin.domain.model.Authorship
@@ -25,9 +25,7 @@ import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.model.FilterAndOrder
 import org.knora.webapi.slice.common.PlaceholderIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 case class LegalInfoService(
   private val licenses: LicenseRepo,
@@ -116,41 +114,20 @@ case class LegalInfoService(
     paging: PageAndSize,
     filterAndOrder: FilterAndOrder,
   ): UIO[PagedResponse[Authorship]] = {
-    val graph                 = Rdf.iri(ProjectService.projectDataNamedGraphV2(project).value)
-    val searchTermQueryString = filterAndOrder.filter.map(Rdf.literalOf).map(_.getQueryString)
-    val authorVar             = "author"
-    val graphPattern          =
-      s"""GRAPH ${graph.getQueryString} {
-         |  ?fileValue ${Vocabulary.KnoraBase.hasAuthorship.getQueryString} ?$authorVar .
-         |  ${searchTermQueryString.fold("")(term => s"FILTER(CONTAINS(LCASE(STR(?$authorVar)), ${term.toLowerCase}))")}
-         |}""".stripMargin
+    val graph = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
 
-    val order            = filterAndOrder.order.toQueryString
-    val authorshipsQuery =
-      s"""
-         |SELECT DISTINCT ?$authorVar WHERE {
-         |  $graphPattern
-         |} ORDER BY $order(?$authorVar) LIMIT ${paging.size} OFFSET ${paging.size * (paging.page - 1)}
-         |""".stripMargin
     val runAuthorshipsQuery = for {
-      result  <- triplestore.query(Select(authorshipsQuery)).map(_.results.bindings)
+      result  <- triplestore.query(AuthorshipQueries.authorships(graph, paging, filterAndOrder)).map(_.results.bindings)
       authors <-
         ZIO
-          .fromEither(result.flatMap(_.rowMap.get(authorVar)).traverse(Authorship.from))
+          .fromEither(result.flatMap(_.rowMap.get(AuthorshipQueries.authorVar.name)).traverse(Authorship.from))
           .mapError(e => InconsistentRepositoryDataException(e))
     } yield authors
 
-    val countVar   = "count"
-    val countQuery =
-      s"""
-         |SELECT (COUNT(DISTINCT ?$authorVar) AS ?$countVar) WHERE {
-         |  $graphPattern
-         |}
-         |""".stripMargin
     val runCountQuery = triplestore
-      .query(Select(countQuery))
+      .query(AuthorshipQueries.count(graph, filterAndOrder))
       .map(_.results.bindings)
-      .flatMap(result => ZIO.attempt(result.head.rowMap(countVar).toInt))
+      .flatMap(result => ZIO.attempt(result.head.rowMap(AuthorshipQueries.countVar.name).toInt))
 
     for {
       authorsFiber <- runAuthorshipsQuery.logError.orDie.fork
