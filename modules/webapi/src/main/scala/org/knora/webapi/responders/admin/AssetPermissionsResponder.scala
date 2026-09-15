@@ -17,7 +17,6 @@ import org.knora.webapi.slice.admin.repo.FileValuePermissionsQuery
 import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
 import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -32,7 +31,7 @@ final class AssetPermissionsResponder(
     filename: InternalFilename,
   ): Task[PermissionCodeAndProjectRestrictedViewSettings] =
     for {
-      result <- triplestoreService.query(Select(FileValuePermissionsQuery.build(filename)))
+      result <- triplestoreService.query(FileValuePermissionsQuery.build(filename))
       row    <- ZIO
                .fromOption(result.getFirstRow)
                .orElseFail(NotFoundException(s"No file value was found for filename $filename"))
