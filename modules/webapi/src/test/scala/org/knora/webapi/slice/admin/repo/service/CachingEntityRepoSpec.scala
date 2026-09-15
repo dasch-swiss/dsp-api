@@ -5,10 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import org.junit.runner.RunWith
 import zio.Chunk
 import zio.Exit
@@ -18,6 +14,7 @@ import zio.ZIO
 import zio.ZLayer
 import zio.test.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.common.Value.StringValue
@@ -161,11 +158,9 @@ class CachingEntityRepoSpec extends ZIOSpecDefault {
 final case class TestId(value: String)                extends StringValue
 final case class TestEntity(id: TestId, name: String) extends EntityWithId[TestId]
 final case class TestMapper()                         extends RdfEntityMapper[TestEntity] {
-  override def toTriples(entity: TestEntity): TriplePattern =
-    Rdf
-      .iri(entity.id.value)
-      .isA(Rdf.iri(TestRepo.resourceClass))
-      .andHas(TestRepo.propertyIri, entity.name)
+  override def toTriples(entity: TestEntity): Fragment =
+    sparql"""|${Iri.unsafeFrom(entity.id.value)} a ${Iri.unsafeFrom(TestRepo.resourceClass)} ;
+             |  ${TestRepo.propertyIri} ${Literal.string(entity.name)} ."""
 
   override def toEntity(resource: RdfResource): IO[Errors.RdfError, TestEntity] =
     for {
@@ -179,14 +174,14 @@ final case class TestRepo(
   triplestore: TriplestoreService,
   cache: EntityCache[TestId, TestEntity],
 ) extends CachingEntityRepo(triplestore, TestMapper(), cache) {
-  override protected def resourceClass: ParsedIRI           = ParsedIRI.create(TestRepo.resourceClass)
-  override protected def namedGraphIri: Iri                 = Rdf.iri(TestRepo.namedGraph)
+  override protected def resourceClass: Iri                 = Iri.unsafeFrom(TestRepo.resourceClass)
+  override protected def namedGraphIri: Iri                 = Iri.unsafeFrom(TestRepo.namedGraph)
   override protected def entityProperties: EntityProperties = EntityProperties(NonEmptyChunk(TestRepo.propertyIri))
 }
 
 object TestRepo {
   val property: String          = "https://example.com/prop/#name"
-  val propertyIri: Iri          = Rdf.iri(property)
+  val propertyIri: Iri          = Iri.unsafeFrom(property)
   val resourceClass: String     = "https://example.com/class/test-entity"
   val namedGraph: String        = "https://example.com/namedGraph"
   val interruptSentinel: String = "__INTERRUPT__"

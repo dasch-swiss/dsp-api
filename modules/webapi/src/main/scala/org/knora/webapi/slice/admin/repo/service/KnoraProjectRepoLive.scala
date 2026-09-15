@@ -5,15 +5,15 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import org.eclipse.rdf4j.common.net.ParsedIRI
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.*
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.*
+import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -22,10 +22,8 @@ import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.repo.rdf.RdfConversions.*
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Errors.RdfError
 import org.knora.webapi.slice.common.repo.rdf.RdfResource
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final case class KnoraProjectRepoLive(
@@ -35,27 +33,27 @@ final case class KnoraProjectRepoLive(
 ) extends CachingEntityRepo[KnoraProject, ProjectIri](triplestore, mapper, cache)
     with KnoraProjectRepo {
 
-  override protected def resourceClass: ParsedIRI = ParsedIRI.create(KnoraAdmin.KnoraProject)
-  override protected def namedGraphIri: Iri       = Vocabulary.NamedGraphs.dataAdmin
+  override protected def resourceClass: Iri = Iri.unsafeFrom(KnoraAdmin.KnoraProject)
+  override protected def namedGraphIri: Iri = Iri.unsafeFrom(adminDataNamedGraph.value)
 
   override protected def entityProperties: EntityProperties = EntityProperties(
     NonEmptyChunk(
-      Vocabulary.KnoraAdmin.hasSelfJoinEnabled,
-      Vocabulary.KnoraAdmin.projectDescription,
-      Vocabulary.KnoraAdmin.projectShortcode,
-      Vocabulary.KnoraAdmin.projectShortname,
+      Iri.unsafeFrom(HasSelfJoinEnabled),
+      Iri.unsafeFrom(ProjectDescription),
+      Iri.unsafeFrom(ProjectShortcode),
+      Iri.unsafeFrom(ProjectShortname),
     ),
     Chunk(
-      Vocabulary.KnoraAdmin.projectKeyword,
-      Vocabulary.KnoraAdmin.projectLogo,
-      Vocabulary.KnoraAdmin.projectLongname,
-      Vocabulary.KnoraAdmin.projectRestrictedViewSize,
-      Vocabulary.KnoraAdmin.projectRestrictedViewWatermark,
-      Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder,
-      Vocabulary.KnoraAdmin.hasEnabledLicense,
-      Vocabulary.KnoraAdmin.hasDataLicense,
-      Vocabulary.KnoraAdmin.hasDataCopyrightHolder,
-      Vocabulary.KnoraAdmin.hasDefaultDataAuthorship,
+      Iri.unsafeFrom(ProjectKeyword),
+      Iri.unsafeFrom(ProjectLogo),
+      Iri.unsafeFrom(ProjectLongname),
+      Iri.unsafeFrom(ProjectRestrictedViewSize),
+      Iri.unsafeFrom(ProjectRestrictedViewWatermark),
+      Iri.unsafeFrom(hasAllowedCopyrightHolder),
+      Iri.unsafeFrom(hasEnabledLicense),
+      Iri.unsafeFrom(hasDataLicense),
+      Iri.unsafeFrom(hasDataCopyrightHolder),
+      Iri.unsafeFrom(hasDefaultDataAuthorship),
     ),
   )
 
@@ -63,11 +61,11 @@ final case class KnoraProjectRepoLive(
     super.findById(id).map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.id == id)))
 
   override def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] =
-    findOneByPattern(_.has(Vocabulary.KnoraAdmin.projectShortcode, shortcode.value))
+    findOneByPattern(sparql"$s knora-admin:projectShortcode ${Literal.string(shortcode.value)} .")
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortcode == shortcode)))
 
   override def findByShortname(shortname: Shortname): Task[Option[KnoraProject]] =
-    findOneByPattern(_.has(Vocabulary.KnoraAdmin.projectShortname, shortname.value))
+    findOneByPattern(sparql"$s knora-admin:projectShortname ${Literal.string(shortname.value)} .")
       .map(_.orElse(KnoraProjectRepo.builtIn.findOneBy(_.shortname == shortname)))
 
   override def findAll(): Task[Chunk[KnoraProject]] = super.findAll().map(_ ++ KnoraProjectRepo.builtIn.all)
@@ -85,7 +83,12 @@ final case class KnoraProjectRepoLive(
       super.delete(project)
 }
 
-object KnoraProjectRepoLive extends QueryBuilderHelper {
+object KnoraProjectRepoLive {
+
+  private def toLiteral(literal: StringLiteralV2): Literal = literal match {
+    case LanguageTaggedStringLiteralV2(value, lang) => Literal.langString(value, lang.value)
+    case PlainStringLiteralV2(value)                => Literal.string(value)
+  }
 
   private val mapper = new RdfEntityMapper[KnoraProject] {
 
@@ -135,42 +138,43 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
       )
     }
 
-    def toTriples(project: KnoraProject): TriplePattern = {
-      val pattern = Rdf
-        .iri(project.id.value)
-        .has(RDF.TYPE, Vocabulary.KnoraAdmin.KnoraProject)
-        .andHas(Vocabulary.KnoraAdmin.projectShortname, project.shortname.value)
-        .andHas(Vocabulary.KnoraAdmin.projectShortcode, project.shortcode.value)
-        .andHas(Vocabulary.KnoraAdmin.hasSelfJoinEnabled, project.selfjoin.value)
-      project.longname.foreach(longname => pattern.andHas(Vocabulary.KnoraAdmin.projectLongname, longname.value))
-      project.description.foreach(description =>
-        pattern.andHas(Vocabulary.KnoraAdmin.projectDescription, toRdfLiteral(description.value)),
-      )
-      project.keywords.foreach(keyword => pattern.andHas(Vocabulary.KnoraAdmin.projectKeyword, keyword.value))
-      project.logo.foreach(logo => pattern.andHas(Vocabulary.KnoraAdmin.projectLogo, logo.value))
-
-      project.restrictedView match {
-        case RestrictedView.Size(size) =>
-          pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewSize, size)
-        case RestrictedView.Watermark(watermark) =>
-          pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewWatermark, watermark)
-      }
-      project.allowedCopyrightHolders.foreach(authorship =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasAllowedCopyrightHolder, authorship.value),
-      )
-      project.enabledLicenses.foreach(licenseIri =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasEnabledLicense, Rdf.iri(licenseIri.value)),
-      )
-      project.dataLicense.foreach(licenseIri =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasDataLicense, Rdf.iri(licenseIri.value)),
-      )
-      project.dataCopyrightHolder.foreach(holder =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasDataCopyrightHolder, holder.value),
-      )
-      project.defaultDataAuthorship.foreach(authorship =>
-        pattern.andHas(Vocabulary.KnoraAdmin.hasDefaultDataAuthorship, authorship.value),
-      )
-      pattern
+    def toTriples(project: KnoraProject): Fragment = {
+      val id = Iri.unsafeFrom(project.id.value)
+      sparql"""|$id a knora-admin:knoraProject ;
+               |  knora-admin:projectShortname ${Literal.string(project.shortname.value)} ;
+               |  knora-admin:projectShortcode ${Literal.string(project.shortcode.value)} ;
+               |  knora-admin:hasSelfJoinEnabled ${Literal.bool(project.selfjoin.value)} .
+               |${project.longname.whenSome(longname =>
+          sparql"$id knora-admin:projectLongname ${Literal.string(longname.value)} .",
+        )}
+               |${project.description.toChunk
+          .map(d => sparql"$id knora-admin:projectDescription ${toLiteral(d.value)} .")
+          .joinLines}
+               |${project.keywords
+          .map(keyword => sparql"$id knora-admin:projectKeyword ${Literal.string(keyword.value)} .")
+          .joinLines}
+               |${project.logo.whenSome(logo => sparql"$id knora-admin:projectLogo ${Literal.string(logo.value)} .")}
+               |${project.restrictedView match {
+          case RestrictedView.Size(size) =>
+            sparql"$id knora-admin:projectRestrictedViewSize ${Literal.string(size)} ."
+          case RestrictedView.Watermark(watermark) =>
+            sparql"$id knora-admin:projectRestrictedViewWatermark ${Literal.bool(watermark)} ."
+        }}
+               |${project.allowedCopyrightHolders
+          .map(holder => sparql"$id knora-admin:hasAllowedCopyrightHolder ${Literal.string(holder.value)} .")
+          .joinLines}
+               |${project.enabledLicenses
+          .map(license => sparql"$id knora-admin:hasEnabledLicense ${Iri.unsafeFrom(license.value)} .")
+          .joinLines}
+               |${project.dataLicense.whenSome(license =>
+          sparql"$id knora-admin:hasDataLicense ${Iri.unsafeFrom(license.value)} .",
+        )}
+               |${project.dataCopyrightHolder.whenSome(holder =>
+          sparql"$id knora-admin:hasDataCopyrightHolder ${Literal.string(holder.value)} .",
+        )}
+               |${project.defaultDataAuthorship
+          .map(authorship => sparql"$id knora-admin:hasDefaultDataAuthorship ${Literal.string(authorship.value)} .")
+          .joinLines}"""
     }
   }
 
