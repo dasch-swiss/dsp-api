@@ -287,8 +287,6 @@ jobs:
         uses: ./.github/actions/preparation
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - name: Checkout source
-        uses: actions/checkout@v5
       - uses: extractions/setup-just@v2
       - name: Install requirements (pip, npm, apt)
         run: |
