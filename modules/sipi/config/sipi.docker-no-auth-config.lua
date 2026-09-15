@@ -132,10 +132,10 @@ sipi = {
 
 
     --
-    -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
-    --
-    jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
-    --            12345678901234567890123456789012
+    -- The secret for generating JWTs (JSON Web Tokens). Dev only: must be >= 32
+    -- bytes and must not be Sipi's shipped default, or Sipi v9 refuses to start.
+    -- Prod supplies it via SIPI_JWTKEY.
+    jwt_secret = 'dev-only-insecure-jwt-secret-change-me',
 
     --
     -- Name of the logfile (a ".txt" is added...)
