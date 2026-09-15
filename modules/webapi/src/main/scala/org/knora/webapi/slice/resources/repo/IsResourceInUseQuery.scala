@@ -5,15 +5,9 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
-import org.knora.webapi.slice.common.QueryBuilderHelper
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * Incoming-reference check used by `GET /v2/resources/candelete`.
@@ -31,55 +25,47 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
  * the remaining ~1.6s; the type check was ~190ms (DEV-6885). See engine Fact 1
  * and Fact 3 corollaries.
  */
-object IsResourceInUseQuery extends QueryBuilderHelper {
+object IsResourceInUseQuery {
 
-  def build(resourceIri: ResourceIri, dataGraphIri: String): SelectQuery = {
-    val (other, p, valueProp, valueNode) =
-      (variable("other"), variable("p"), variable("valueProp"), variable("valueNode"))
-    val target    = Rdf.iri(resourceIri.value)
-    val dataGraph = Rdf.iri(dataGraphIri)
+  def build(resourceIri: ResourceIri, dataGraphIri: String): Select = {
+    val target    = Iri.unsafeFrom(resourceIri.value)
+    val dataGraph = Iri.unsafeFrom(dataGraphIri)
+    val shape     = Literal.string(ResourceIri.SparqlRegexPattern)
 
-    // Branch 1: a non-deleted resource refers to <target> in object position.
-    val directPinned  = GraphPatterns.select(other).where(other.has(p, target).from(dataGraph))
-    val directFilters = other.has(KB.isDeleted, false).from(dataGraph)
-    val directBranch  = GraphPatterns.and(directPinned, directFilters)
-
-    // Branch 2: a non-deleted resource refers to <target> through a non-deleted
-    // value node via isRegionPreviewOf.
-    val viaPinned = GraphPatterns
-      .select(other, valueNode)
-      .where(
-        GraphPatterns
-          .and(
-            valueNode.has(KB.isRegionPreviewOf, target),
-            other.has(valueProp, valueNode),
-          )
-          .from(dataGraph),
-      )
-    val viaFilters = GraphPatterns
-      .and(
-        other.has(KB.isDeleted, false),
-        valueNode.has(KB.isDeleted, false),
-      )
-      .from(dataGraph)
-    val viaBranch = GraphPatterns.and(viaPinned, viaFilters)
-
-    // LinkValue is not a Resource. Incoming rdf:object triples on the target's
-    // own outgoing LinkValues must not count as "in use".
-    val notLinkValue = GraphPatterns.filterNotExists(other.isA(KB.linkValue).from(dataGraph))
-    // Same keep-set the Scala parser requires: resource IRIs, not `…/values/…`.
-    val resourceIriShape =
-      Expressions.regex(Expressions.str(other), Rdf.literalOf(ResourceIri.SparqlRegexPattern))
-
-    Queries
-      .SELECT(other)
-      .distinct()
-      .prefix(KB.NS)
-      .where(
-        GraphPatterns
-          .union(directBranch, viaBranch)
-          .and(notLinkValue)
-          .filter(resourceIriShape),
-      )
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT DISTINCT ?other
+               |WHERE {
+               |  {
+               |    {
+               |      # Branch 1: a non-deleted resource refers to <target> in object position.
+               |      { SELECT ?other WHERE { GRAPH $dataGraph { ?other ?p $target . } } }
+               |      GRAPH $dataGraph { ?other knora-base:isDeleted false . }
+               |    } UNION {
+               |      # Branch 2: a non-deleted resource refers to <target> through a
+               |      # non-deleted value node via isRegionPreviewOf.
+               |      {
+               |        SELECT ?other ?valueNode
+               |        WHERE {
+               |          GRAPH $dataGraph {
+               |            ?valueNode knora-base:isRegionPreviewOf $target .
+               |            ?other ?valueProp ?valueNode .
+               |          }
+               |        }
+               |      }
+               |      GRAPH $dataGraph {
+               |        ?other knora-base:isDeleted false .
+               |        ?valueNode knora-base:isDeleted false .
+               |      }
+               |    }
+               |    # LinkValue is not a Resource. Incoming rdf:object triples on the target's
+               |    # own outgoing LinkValues must not count as "in use".
+               |    FILTER NOT EXISTS { GRAPH $dataGraph { ?other a knora-base:LinkValue . } }
+               |    # Same keep-set the Scala parser requires: resource IRIs, not `…/values/…`.
+               |    FILTER(REGEX(STR(?other), $shape))
+               |  }
+               |}""".render,
+    )
   }
 }

@@ -5,27 +5,21 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ModifyQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
 import zio.ZIO
 
 import java.time.Instant
 
 import dsp.errors.SparqlGenerationException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Marks a value as deleted. This query is used for all value types except links.
@@ -33,7 +27,10 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
  * If the value is a TextValue containing standoff markup with resource references,
  * the corresponding LinkValues are updated (decremented) as part of the same query.
  */
-object DeleteValueQuery extends QueryBuilderHelper {
+object DeleteValueQuery {
+
+  private def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
+    ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   /**
    * Builds a SPARQL UPDATE query to mark a value as deleted.
@@ -57,9 +54,9 @@ object DeleteValueQuery extends QueryBuilderHelper {
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     currentTime: Instant,
     requestingUser: UserIri,
-  ): IO[SparqlGenerationException, ModifyQuery] =
+  ): IO[SparqlGenerationException, Update] =
     ZIO
-      .foreach(linkUpdates.zipWithIndex) { case (lu, _) =>
+      .foreachDiscard(linkUpdates) { lu =>
         for {
           _ <- failIf(lu.insertDirectLink, "linkUpdate.insertDirectLink must be false in this SPARQL template")
           _ <- failIf(!lu.directLinkExists, "linkUpdate.directLinkExists must be true in this SPARQL template")
@@ -67,143 +64,107 @@ object DeleteValueQuery extends QueryBuilderHelper {
         } yield ()
       }
       .as {
-        val dataGraph                    = graphIri(project)
-        val resource                     = toRdfIri(resourceIri)
-        val property                     = toRdfIri(propertyIri)
-        val value                        = toRdfIri(valueIri)
-        val valueClass                   = variable("valueClass")
-        val resourceLastModificationDate = variable("resourceLastModificationDate")
-        val currentTimeLiteral           = Rdf.literalOfType(currentTime.toString, XSD.DATETIME)
+        val dataGraph   = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+        val resource    = Iri.unsafeFrom(resourceIri.value)
+        val property    = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
+        val value       = Iri.unsafeFrom(valueIri.value)
+        val user        = Iri.unsafeFrom(requestingUser.value)
+        val currentTs   = Literal.dateTime(currentTime)
+        val indexed     = linkUpdates.zipWithIndex
+        val linkValueOf = (i: Int) => Variable(s"linkValue$i")
+        val linkUuidOf  = (i: Int) => Variable(s"linkValueUUID$i")
 
-        // Indexed variables for each link update
-        val linkValueVars = linkUpdates.indices.map(i => variable(s"linkValue$i"))
-        val linkUUIDVars  = linkUpdates.indices.map(i => variable(s"linkValueUUID$i"))
-
-        // --- DELETE patterns ---
-        val deleteBase = Seq(
-          // Delete the resource's last modification date so we can update it
-          resource.has(KB.lastModificationDate, resourceLastModificationDate),
-          value.has(KB.isDeleted, Rdf.literalOf(false)),
+        Update(
+          sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |
+                   |DELETE {
+                   |  GRAPH $dataGraph {
+                   |    # Delete the resource's last modification date so we can update it
+                   |    $resource knora-base:lastModificationDate ?resourceLastModificationDate .
+                   |    $value knora-base:isDeleted false .
+                   |    ${
+            // Delete the direct link when the standoff reference is gone, and always detach the
+            // current LinkValue from the resource plus its UUID (the new version carries it over).
+            indexed.map { case (lu, i) =>
+              val linkProperty      = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri)
+              val linkValueProperty = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
+              val linkTarget        = Iri.unsafeFrom(lu.linkTargetIri)
+              sparql"""|${sparql"$resource $linkProperty $linkTarget .".when(lu.deleteDirectLink)}
+                     |$resource $linkValueProperty ${linkValueOf(i)} .
+                     |${linkValueOf(i)} knora-base:valueHasUUID ${linkUuidOf(i)} ."""
+            }.joinLines}
+                   |  }
+                   |}
+                   |INSERT {
+                   |  GRAPH $dataGraph {
+                   |    $value knora-base:isDeleted true ;
+                   |      knora-base:deletedBy $user ;
+                   |      knora-base:deleteDate $currentTs .
+                   |    ${maybeDeleteComment.whenSome(c =>
+              sparql"$value knora-base:deleteComment ${Literal.string(c)} .",
+            )}
+                   |    ${
+            // Add a new LinkValue version for each resource reference in standoff markup.
+            indexed.map { case (lu, i) =>
+              val linkProperty      = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri)
+              val linkValueProperty = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
+              val linkTarget        = Iri.unsafeFrom(lu.linkTargetIri)
+              val newLinkValue      = Iri.unsafeFrom(lu.newLinkValueIri.value)
+              val newValueCreator   = Iri.unsafeFrom(lu.newLinkValueCreator)
+              sparql"""|$newLinkValue a knora-base:LinkValue .
+                     |$newLinkValue rdf:subject $resource .
+                     |$newLinkValue rdf:predicate $linkProperty .
+                     |$newLinkValue rdf:object $linkTarget .
+                     |$newLinkValue knora-base:valueHasString ${Literal.string(lu.linkTargetIri)} .
+                     |$newLinkValue knora-base:valueHasRefCount ${Literal.int(lu.newReferenceCount)} .
+                     |${
+                  if (lu.newReferenceCount == 0)
+                    sparql"""|$newLinkValue knora-base:isDeleted true .
+                                 |$newLinkValue knora-base:deletedBy $newValueCreator .
+                                 |$newLinkValue knora-base:deleteDate $currentTs ."""
+                  else sparql"$newLinkValue knora-base:isDeleted false ."
+                }
+                     |$newLinkValue knora-base:valueCreationDate $currentTs .
+                     |$newLinkValue knora-base:attachedToUser $newValueCreator .
+                     |$newLinkValue knora-base:hasPermissions ${Literal.string(lu.newLinkValuePermissions)} .
+                     |$newLinkValue knora-base:previousValue ${linkValueOf(i)} .
+                     |$newLinkValue knora-base:valueHasUUID ${linkUuidOf(i)} .
+                     |# Attach the new LinkValue to its containing resource
+                     |$resource $linkValueProperty $newLinkValue ."""
+            }.joinLines}
+                   |    # Update the resource's last modification date
+                   |    $resource knora-base:lastModificationDate $currentTs .
+                   |  }
+                   |}
+                   |WHERE {
+                   |  $resource $property $value .
+                   |  $value a ?valueClass ;
+                   |    knora-base:isDeleted false .
+                   |  ?valueClass rdfs:subClassOf* knora-base:Value .
+                   |  ${
+            // Check the state of any LinkValues to be updated for resource references.
+            indexed.map { case (lu, i) =>
+              val linkProperty      = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri)
+              val linkValueProperty = Iri.unsafeFrom(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
+              val linkTarget        = Iri.unsafeFrom(lu.linkTargetIri)
+              sparql"""|# Make sure the relevant direct link exists between the two resources
+                     |$resource $linkProperty $linkTarget .
+                     |# Make sure a LinkValue exists describing the direct link with the correct reference count
+                     |$resource $linkValueProperty ${linkValueOf(i)} .
+                     |${linkValueOf(i)} a knora-base:LinkValue ;
+                     |  rdf:subject $resource ;
+                     |  rdf:predicate $linkProperty ;
+                     |  rdf:object $linkTarget ;
+                     |  knora-base:valueHasRefCount ${Literal.int(lu.currentReferenceCount)} ;
+                     |  knora-base:isDeleted false ;
+                     |  knora-base:valueHasUUID ${linkUuidOf(i)} ."""
+            }.joinLines}
+                   |  # Get the resource's last modification date, if it has one, so we can update it
+                   |  OPTIONAL { $resource knora-base:lastModificationDate ?resourceLastModificationDate . }
+                   |}""".render,
         )
-
-        val deleteLinkPatterns = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
-          val linkProperty      = toRdfIri(lu.linkPropertyIri)
-          val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
-
-          // Delete direct links for standoff resource references that no longer exist
-          val deleteDirectLink =
-            if (lu.deleteDirectLink) Seq(resource.has(linkProperty, linkTarget))
-            else Seq.empty
-
-          // Detach the current LinkValue from the resource and delete its UUID (the new version will store it)
-          val detachLinkValue = Seq(
-            resource.has(linkValueProperty, linkValueVars(i)),
-            linkValueVars(i).has(KB.valueHasUUID, linkUUIDVars(i)),
-          )
-
-          deleteDirectLink ++ detachLinkValue
-        }
-
-        val deletePatterns = deleteBase ++ deleteLinkPatterns
-
-        // --- INSERT patterns ---
-        val insertBase = Seq(
-          value
-            .has(KB.isDeleted, Rdf.literalOf(true))
-            .andHas(KB.deletedBy, toRdfIri(requestingUser))
-            .andHas(KB.deleteDate, currentTimeLiteral),
-        )
-
-        val insertComment =
-          maybeDeleteComment.map(c => value.has(KB.deleteComment, Rdf.literalOf(c))).toSeq
-
-        // Update LinkValues for resource references in standoff markup
-        val insertLinkPatterns = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
-          val linkProperty      = toRdfIri(lu.linkPropertyIri)
-          val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
-          val newLinkValue      = Rdf.iri(lu.newLinkValueIri.value)
-
-          val deletedOrNot =
-            if (lu.newReferenceCount == 0)
-              Seq(
-                newLinkValue.has(KB.isDeleted, Rdf.literalOf(true)),
-                newLinkValue.has(KB.deletedBy, Rdf.iri(lu.newLinkValueCreator)),
-                newLinkValue.has(KB.deleteDate, currentTimeLiteral),
-              )
-            else
-              Seq(newLinkValue.has(KB.isDeleted, Rdf.literalOf(false)))
-
-          // Add a new LinkValue version for the resource reference
-          Seq(
-            newLinkValue.isA(KB.linkValue),
-            newLinkValue.has(RDF.SUBJECT, resource),
-            newLinkValue.has(RDF.PREDICATE, linkProperty),
-            newLinkValue.has(RDF.OBJECT, linkTarget),
-            newLinkValue.has(KB.valueHasString, Rdf.literalOfType(lu.linkTargetIri, XSD.STRING)),
-            newLinkValue.has(KB.valueHasRefCount, Rdf.literalOf(lu.newReferenceCount)),
-          ) ++ deletedOrNot ++ Seq(
-            newLinkValue.has(KB.valueCreationDate, currentTimeLiteral),
-            newLinkValue.has(KB.attachedToUser, Rdf.iri(lu.newLinkValueCreator)),
-            newLinkValue.has(KB.hasPermissions, Rdf.literalOfType(lu.newLinkValuePermissions, XSD.STRING)),
-            newLinkValue.has(KB.previousValue, linkValueVars(i)),
-            newLinkValue.has(KB.valueHasUUID, linkUUIDVars(i)),
-            // Attach the new LinkValue to its containing resource
-            resource.has(linkValueProperty, newLinkValue),
-          )
-        }
-
-        // Update the resource's last modification date
-        val insertLastMod = Seq(resource.has(KB.lastModificationDate, currentTimeLiteral))
-
-        val insertPatterns = insertBase ++ insertComment ++ insertLinkPatterns ++ insertLastMod
-
-        // --- WHERE patterns ---
-        val whereBase: Seq[GraphPattern] = Seq(
-          resource.has(property, value),
-          value
-            .isA(valueClass)
-            .andHas(KB.isDeleted, Rdf.literalOf(false)),
-          valueClass.has(zeroOrMore(RDFS.SUBCLASSOF), KB.Value),
-        )
-
-        // Check the state of any LinkValues to be updated for resource references
-        val whereLinkPatterns: Seq[GraphPattern] = linkUpdates.zipWithIndex.flatMap { case (lu, i) =>
-          val linkProperty      = toRdfIri(lu.linkPropertyIri)
-          val linkValueProperty = Rdf.iri(lu.linkPropertyIri.toInternalSchema.toIri + "Value")
-          val linkTarget        = Rdf.iri(lu.linkTargetIri)
-
-          Seq(
-            // Make sure the relevant direct link exists between the two resources
-            resource.has(linkProperty, linkTarget),
-            // Make sure a LinkValue exists describing the direct link with the correct reference count
-            resource.has(linkValueProperty, linkValueVars(i)),
-            linkValueVars(i)
-              .isA(KB.linkValue)
-              .andHas(RDF.SUBJECT, resource)
-              .andHas(RDF.PREDICATE, linkProperty)
-              .andHas(RDF.OBJECT, linkTarget)
-              .andHas(KB.valueHasRefCount, Rdf.literalOf(lu.currentReferenceCount))
-              .andHas(KB.isDeleted, Rdf.literalOf(false))
-              .andHas(KB.valueHasUUID, linkUUIDVars(i)),
-          )
-        }
-
-        // Get the resource's last modification date, if it has one, so we can update it
-        val whereOptional: Seq[GraphPattern] = Seq(
-          resource.has(KB.lastModificationDate, resourceLastModificationDate).optional(),
-        )
-
-        val wherePatterns = whereBase ++ whereLinkPatterns ++ whereOptional
-
-        Queries
-          .MODIFY()
-          .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
-          .from(dataGraph)
-          .delete(deletePatterns*)
-          .into(dataGraph)
-          .insert(insertPatterns*)
-          .where(wherePatterns*)
       }
 }
