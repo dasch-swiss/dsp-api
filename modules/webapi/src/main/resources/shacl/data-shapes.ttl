@@ -202,6 +202,26 @@ knora-base:DecimalValueShape
     sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
   ] .
 
+knora-base:IntervalValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:IntervalValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasIntervalStart ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:decimal ;
+    sh:message "IntervalValue instance must have one knora-base:valueHasIntervalStart of type xsd:decimal"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasIntervalEnd ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:decimal ;
+    sh:message "IntervalValue instance must have one knora-base:valueHasIntervalEnd of type xsd:decimal"
+  ] .
+
 knora-base:IntValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntValue ;
@@ -249,6 +269,18 @@ knora-base:LinkValueShape
     sh:datatype xsd:integer ;
     sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
   ] .
+
+knora-base:TimeValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TimeValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasTimeStamp ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:dateTime ;
+      sh:message "TimeValue instance must have one knora-base:valueHasTimeStamp of type xsd:dateTime"
+    ] .
 
 knora-base:UriValueShape
   a sh:NodeShape ;
