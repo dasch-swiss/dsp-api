@@ -123,8 +123,8 @@ knora-base:DocumentRepresentationShape
     sh:path knora-base:hasDocumentFileValue ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:class knora-base:AudioFileValue ;
-    sh:message "DocumentRepresentation instance must have one knora-base:hasDocumentFileValue of type knora-base:hasDocumentFileValue"
+    sh:class knora-base:DocumentFileValue ;
+    sh:message "DocumentRepresentation instance must have one knora-base:hasDocumentFileValue of type knora-base:DocumentFileValue"
   ] .
 
 knora-base:MovingImageRepresentationShape
@@ -156,7 +156,7 @@ knora-base:TextRepresentationShape
     sh:path knora-base:hasTextFileValue ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:class knora-base:MovingImageFileValue ;
+    sh:class knora-base:TextFileValue ;
     sh:message "TextRepresentation instance must have one knora-base:hasTextFileValue of type knora-base:TextFileValue"
   ] .
 

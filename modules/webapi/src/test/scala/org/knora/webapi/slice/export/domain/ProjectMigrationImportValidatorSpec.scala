@@ -81,6 +81,30 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
           .either
     } yield result
 
+  // A valid FileValue node of the given type, with the FileValue and Value properties the shapes require.
+  private def fileValueNq(node: String, fileType: String): String =
+    s"""<$node> <$RdfType> <$fileType> <$DataGraph> .
+       |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+       |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+       |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+       |<$node> <${KnoraBase}valueHasString> "file"^^<$XsdString> <$DataGraph> .
+       |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+       |<$node> <${KnoraBase}internalFilename> "file.bin"^^<$XsdString> <$DataGraph> .
+       |<$node> <${KnoraBase}internalMimeType> "application/octet-stream"^^<$XsdString> <$DataGraph> .
+       |""".stripMargin
+
+  // A valid Representation resource that links to fileNode through fileProp.
+  private def representationNq(resource: String, resourceType: String, fileProp: String, fileNode: String): String =
+    s"""<$resource> <$RdfType> <$resourceType> <$DataGraph> .
+       |<$resource> <$RdfsLabel> "Representation" <$DataGraph> .
+       |<$resource> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+       |<$resource> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+       |<$resource> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+       |<$resource> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+       |<$resource> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+       |<$resource> <$fileProp> <$fileNode> <$DataGraph> .
+       |""".stripMargin
+
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportShaclValidatorSpec")(
     suite("OntologyShape")(
       test("valid ontology conforms") {
@@ -706,6 +730,62 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("DocumentRepresentationShape (data)") {
+      val Resource = "http://rdfh.ch/9999/doc001"
+      val FileNode = "http://rdfh.ch/9999/doc001/file001"
+
+      suite("file value type")(
+        test("accepts document representation with a knora-base:DocumentFileValue") {
+          val nq =
+            representationNq(
+              Resource,
+              s"${KnoraBase}DocumentRepresentation",
+              s"${KnoraBase}hasDocumentFileValue",
+              FileNode,
+            ) +
+              fileValueNq(FileNode, s"${KnoraBase}DocumentFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects document representation whose file value is a knora-base:AudioFileValue") {
+          val nq =
+            representationNq(
+              Resource,
+              s"${KnoraBase}DocumentRepresentation",
+              s"${KnoraBase}hasDocumentFileValue",
+              FileNode,
+            ) +
+              fileValueNq(FileNode, s"${KnoraBase}AudioFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("TextRepresentationShape (data)") {
+      val Resource = "http://rdfh.ch/9999/txt001"
+      val FileNode = "http://rdfh.ch/9999/txt001/file001"
+
+      suite("file value type")(
+        test("accepts text representation with a knora-base:TextFileValue") {
+          val nq =
+            representationNq(Resource, s"${KnoraBase}TextRepresentation", s"${KnoraBase}hasTextFileValue", FileNode) +
+              fileValueNq(FileNode, s"${KnoraBase}TextFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects text representation whose file value is a knora-base:MovingImageFileValue") {
+          val nq =
+            representationNq(Resource, s"${KnoraBase}TextRepresentation", s"${KnoraBase}hasTextFileValue", FileNode) +
+              fileValueNq(FileNode, s"${KnoraBase}MovingImageFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isLeft))
           }
         },
       )
