@@ -5,23 +5,20 @@
 
 package org.knora.webapi.slice.admin.domain.service.maintenance
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -30,7 +27,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 final case class ReplaceUserIriInProjectAction(
   triplestoreService: TriplestoreService,
   knoraProjectService: KnoraProjectService,
-) extends QueryBuilderHelper {
+) {
 
   def execute(shortcode: Shortcode, oldIri: UserIri, newIri: UserIri, requester: User): Task[Unit] =
     for {
@@ -65,42 +62,41 @@ final case class ReplaceUserIriInProjectAction(
         )
     } yield ()
 
-  private def existsInAdminGraph(iri: UserIri): Ask = {
-    val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
-    val iriRdf        = Rdf.iri(iri.value)
-    val p             = variable("p")
-    val o             = variable("o")
-    Ask(s"""ASK { ${GraphPatterns.tp(iriRdf, p, o).from(adminGraphIri).getQueryString} }""")
+  private def adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
+
+  private def projectGraph(project: KnoraProject): Iri =
+    Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+
+  private[maintenance] def existsInAdminGraph(iri: UserIri): Ask = {
+    val user = Iri.unsafeFrom(iri.value)
+    Ask(sparql"ASK { GRAPH $adminGraph { $user ?p ?o . } }".render)
   }
 
-  private def isMemberOfProject(iri: UserIri, project: KnoraProject): Ask = {
-    val adminGraphIri = Rdf.iri(AdminConstants.adminDataNamedGraph.value)
-    val iriRdf        = Rdf.iri(iri.value)
-    val projectIriRdf = Rdf.iri(project.id.value)
-    Ask(s"""ASK { ${GraphPatterns.tp(iriRdf, KA.isInProject, projectIriRdf).from(adminGraphIri).getQueryString} }""")
+  private[maintenance] def isMemberOfProject(iri: UserIri, project: KnoraProject): Ask = {
+    val user       = Iri.unsafeFrom(iri.value)
+    val projectIri = Iri.unsafeFrom(project.id.value)
+    Ask(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |ASK { GRAPH $adminGraph { $user knora-admin:isInProject $projectIri . } }""".render,
+    )
   }
 
-  private def hasRefsInProjectGraph(iri: UserIri, project: KnoraProject): Ask = {
-    val projectGraphIri = graphIri(project)
-    val iriRdf          = Rdf.iri(iri.value)
-    val s               = variable("s")
-    val p               = variable("p")
-    Ask(s"""ASK { ${GraphPatterns.tp(s, p, iriRdf).from(projectGraphIri).getQueryString} }""")
+  private[maintenance] def hasRefsInProjectGraph(iri: UserIri, project: KnoraProject): Ask = {
+    val user  = Iri.unsafeFrom(iri.value)
+    val graph = projectGraph(project)
+    Ask(sparql"ASK { GRAPH $graph { ?s ?p $user . } }".render)
   }
 
-  private def replaceInProjectGraph(oldIri: UserIri, newIri: UserIri, project: KnoraProject): Update = {
-    val projectGraphIri = graphIri(project)
-    val oldIriRdf       = Rdf.iri(oldIri.value)
-    val newIriRdf       = Rdf.iri(newIri.value)
-    val s               = variable("s")
-    val p               = variable("p")
+  private[maintenance] def replaceInProjectGraph(oldIri: UserIri, newIri: UserIri, project: KnoraProject): Update = {
+    val graph   = projectGraph(project)
+    val oldUser = Iri.unsafeFrom(oldIri.value)
+    val newUser = Iri.unsafeFrom(newIri.value)
     Update(
-      Queries
-        .MODIFY()
-        .`with`(projectGraphIri)
-        .delete(GraphPatterns.tp(s, p, oldIriRdf))
-        .insert(GraphPatterns.tp(s, p, newIriRdf))
-        .where(GraphPatterns.tp(s, p, oldIriRdf)),
+      sparql"""|WITH $graph
+               |DELETE { ?s ?p $oldUser . }
+               |INSERT { ?s ?p $newUser . }
+               |WHERE { ?s ?p $oldUser . }""".render,
       SparqlTimeout.Maintenance,
     )
   }
