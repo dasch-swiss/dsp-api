@@ -527,6 +527,38 @@ knora-base:DocumentFileValueShape
     sh:message "DocumentFileValue instance may have at most one knora-base:dimY of type xsd:integer"
   ] .
 
+knora-base:MovingImageFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:MovingImageFileValue ;
+  sh:closed true .
+
+
+knora-base:StillImageFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageFileValue ;
+  sh:closed true ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimX ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "StillImageFileValue instance may have at most one knora-base:dimX of type xsd:integer"
+    ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimY ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "StillImageFileValue instance may have at most one knora-base:dimY of type xsd:integer"
+  ] .
+
+knora-base:TextFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextFileValue ;
+  sh:closed true .
+
 # Validates that every knora-base:attachedToUser value (on resources and values)
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
 # unified model, the knora-admin:User nodes are present and SHACL with RDFS
