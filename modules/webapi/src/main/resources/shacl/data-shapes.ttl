@@ -87,6 +87,8 @@ knora-base:ResourceShape
     sh:datatype xsd:string ;
     sh:message "Resource instance must have knora-base:hasResourceAuthorship of type xsd:string" ;
   ] .
+  # TODO: add information from edited graphs
+  # TODO: check if it is possible to ensure that this is not used directly
 
 # TODO: in-built
 
@@ -226,6 +228,8 @@ knora-base:ValueShape
     sh:datatype xsd:string ;
     sh:message "Value instance must have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
+  # TODO: add information from edited graphs
+  # TODO: check if it is possible to ensure that this is not used directly
 
 # All values are subclass of Value, so ValueShape constraints also apply.
 
