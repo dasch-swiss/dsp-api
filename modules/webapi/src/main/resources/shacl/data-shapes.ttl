@@ -157,8 +157,41 @@ knora-base:ValueShape
     sh:message "Value instance must have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
 
-# Validates every instance of knora-base:LinkValue.
-# LinkValue is a subclass of Value, so ValueShape constraints also apply.
+# All values are subclass of Value, so ValueShape constraints also apply.
+
+knora-base:ColorValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ColorValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasColor ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "ColorValue instance must have one knora-base:valueHasColor of type xsd:string"
+  ] .
+
+
+knora-base:DateValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DateValue ;
+  sh:property [
+    # TODO
+    ] .
+
+knora-base:DecimalValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DecimalValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasDecimal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
+  ] .
+
+
 knora-base:LinkValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
