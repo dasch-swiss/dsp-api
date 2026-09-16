@@ -5,15 +5,9 @@
 
 package org.knora.webapi.slice.standoff.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * Builds a SELECT query that returns the metadata of a `knora-base:XSLTransformation`
@@ -24,7 +18,7 @@ import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
  * `ReadResourcesService` round-trip — the latter would form a layer cycle
  * through `ConstructResponseUtilV2`.
  */
-object GetXslTransformationMetadataQuery extends QueryBuilderHelper {
+object GetXslTransformationMetadataQuery {
 
   val resourceClass: String    = "resourceClass"
   val fileValueIri: String     = "fileValueIri"
@@ -32,33 +26,26 @@ object GetXslTransformationMetadataQuery extends QueryBuilderHelper {
   val internalMimeType: String = "internalMimeType"
   val projectIri: String       = "projectIri"
 
-  def build(xslIri: IRI): SelectQuery = {
-    val res                 = Rdf.iri(xslIri)
-    val resourceClassVar    = variable(resourceClass)
-    val fileValueIriVar     = variable(fileValueIri)
-    val internalFilenameVar = variable(internalFilename)
-    val internalMimeTypeVar = variable(internalMimeType)
-    val projectIriVar       = variable(projectIri)
-    val hasTextFileValue    = Rdf.iri(OntologyConstants.KnoraBase.HasTextFileValue)
-    val rdfType             = Rdf.iri(RDF.TYPE.stringValue)
+  def build(xslIri: IRI): Select = {
+    val res                 = Iri.unsafeFrom(xslIri)
+    val resourceClassVar    = Variable(resourceClass)
+    val fileValueIriVar     = Variable(fileValueIri)
+    val internalFilenameVar = Variable(internalFilename)
+    val internalMimeTypeVar = Variable(internalMimeType)
+    val projectIriVar       = Variable(projectIri)
 
-    Queries
-      .SELECT(
-        resourceClassVar,
-        fileValueIriVar,
-        internalFilenameVar,
-        internalMimeTypeVar,
-        projectIriVar,
-      )
-      .where(
-        res
-          .has(rdfType, resourceClassVar)
-          .andHas(KnoraBase.attachedToProject, projectIriVar)
-          .andHas(hasTextFileValue, fileValueIriVar),
-        fileValueIriVar
-          .has(KnoraBase.internalFilename, internalFilenameVar)
-          .andHas(KnoraBase.internalMimeType, internalMimeTypeVar),
-      )
-      .prefix(KnoraBase.NS, RDF.NS)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               |
+               |SELECT $resourceClassVar $fileValueIriVar $internalFilenameVar $internalMimeTypeVar $projectIriVar
+               |WHERE {
+               |  $res rdf:type $resourceClassVar ;
+               |    knora-base:attachedToProject $projectIriVar ;
+               |    knora-base:hasTextFileValue $fileValueIriVar .
+               |  $fileValueIriVar knora-base:internalFilename $internalFilenameVar ;
+               |    knora-base:internalMimeType $internalMimeTypeVar .
+               |}""".render,
+    )
   }
 }
