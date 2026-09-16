@@ -147,6 +147,17 @@ knora-base:StillImageRepresentationShape
     sh:message "StillImageRepresentation instance must have one knora-base:hasStillImageFileValue of type knora-base:StillImageAbstractFileValue"
   ] .
 
+knora-base:TextRepresentationShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextRepresentation ;
+  sh:property [
+    sh:path knora-base:hasTextFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:MovingImageFileValue ;
+    sh:message "TextRepresentation instance must have one knora-base:hasTextFileValue of type knora-base:TextFileValue"
+  ] .
+
 # Validates every instance of a knora-base:Value subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
 knora-base:ValueShape
