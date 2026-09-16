@@ -7,7 +7,7 @@ package org.knora.sparqlbuilder
 
 /**
  * Type of values that can be interpolated into `sparql"..."` fragments.
- * This includes all `SparqlValue` subtypes (Iri, Variable, Literal) and `Fragment` itself.
+ * This includes all `SparqlValue` subtypes (Iri, Variable, BlankNode, Literal) and `Fragment` itself.
  */
 type Interpolatable = SparqlValue | Fragment
 
@@ -25,7 +25,7 @@ type Interpolatable = SparqlValue | Fragment
  * }}}
  *
  * Interpolated values are type-checked and rendered safely. Only `Iri`, `Variable`,
- * `Literal`, and `Fragment` can be interpolated. Raw strings cannot be
+ * `BlankNode`, `Literal`, and `Fragment` can be interpolated. Raw strings cannot be
  * interpolated directly — use `Fragment.raw("...")` for vendor-specific extensions.
  * Multiline templates must use a `|` margin on every line. A fragment in a standalone
  * hole inherits the hole's indentation; an empty fragment removes that complete line.
