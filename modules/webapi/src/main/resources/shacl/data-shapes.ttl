@@ -236,7 +236,6 @@ knora-base:ValueShape
 knora-base:BooleanValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:BooleanValue ;
-  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasBoolean ;
@@ -249,7 +248,6 @@ knora-base:BooleanValueShape
 knora-base:ColorValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:ColorValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasColor ;
@@ -262,7 +260,6 @@ knora-base:ColorValueShape
 knora-base:DateValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DateValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasCalendar ;
@@ -313,7 +310,6 @@ knora-base:DateValueShape
 knora-base:DecimalValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DecimalValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasDecimal ;
@@ -323,10 +319,33 @@ knora-base:DecimalValueShape
     sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
   ] .
 
+knora-base:GeomValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:GeomValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasGeometry ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "GeomValue instance must have one knora-base:valueHasGeometry of type xsd:string"
+  ] .
+
+knora-base:GeonameValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:GeonameValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasGeonameCode ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "GeonameValue instance must have one knora-base:valueHasGeonameCode of type xsd:string"
+  ] .
+
 knora-base:IntervalValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntervalValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasIntervalStart ;
@@ -347,7 +366,6 @@ knora-base:IntervalValueShape
 knora-base:IntValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasInteger ;
@@ -360,7 +378,6 @@ knora-base:IntValueShape
 knora-base:LinkValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:subject ;
@@ -394,10 +411,53 @@ knora-base:LinkValueShape
     sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
   ] .
 
+knora-base:ListValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ListValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasListNode ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "ListValue instance must have one knora-base:valueHasListNode as an IRI"
+  ] .
+
+knora-base:TextValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasLanguage ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasLanguage of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasMapping ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasMapping as an IRI"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasMaxStandoffStartIndex ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasMaxStandoffStartIndex of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasTextValueType ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "TextValue instance may have at most one knora-base:hasTextValueType as an IRI"
+  ] .
+
 knora-base:TimeValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:TimeValue ;
-  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasTimeStamp ;
@@ -410,7 +470,6 @@ knora-base:TimeValueShape
 knora-base:UriValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:UriValue ;
-  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasUri ;
@@ -482,13 +541,11 @@ knora-base:FileValueShape
 
 knora-base:ArchiveFileValueShape
   a sh:NodeShape ;
-  sh:targetClass knora-base:ArchiveFileValue ;
-  sh:closed true .
+  sh:targetClass knora-base:ArchiveFileValue .
 
 knora-base:AudioFileValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:AudioFileValue ;
-  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:duration ;
@@ -501,7 +558,6 @@ knora-base:AudioFileValueShape
 knora-base:DocumentFileValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DocumentFileValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:pageCount ;
@@ -529,13 +585,11 @@ knora-base:DocumentFileValueShape
 
 knora-base:MovingImageFileValueShape
   a sh:NodeShape ;
-  sh:targetClass knora-base:MovingImageFileValue ;
-  sh:closed true .
+  sh:targetClass knora-base:MovingImageFileValue .
 
 knora-base:StillImageFileValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageFileValue ;
-  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:dimX ;
@@ -556,7 +610,6 @@ knora-base:StillImageFileValueShape
 knora-base:StillImageExternalFileValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageExternalFileValue ;
-  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:externalUrl ;
@@ -568,13 +621,11 @@ knora-base:StillImageExternalFileValueShape
 
 knora-base:StillImageVectorFileValueShape
   a sh:NodeShape ;
-  sh:targetClass knora-base:StillImageVectorFileValue ;
-  sh:closed true .
+  sh:targetClass knora-base:StillImageVectorFileValue .
 
 knora-base:TextFileValueShape
   a sh:NodeShape ;
-  sh:targetClass knora-base:TextFileValue ;
-  sh:closed true .
+  sh:targetClass knora-base:TextFileValue .
 
 # Validates that every knora-base:attachedToUser value (on resources and values)
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
