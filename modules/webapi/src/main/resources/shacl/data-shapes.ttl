@@ -532,7 +532,6 @@ knora-base:MovingImageFileValueShape
   sh:targetClass knora-base:MovingImageFileValue ;
   sh:closed true .
 
-
 knora-base:StillImageFileValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageFileValue ;
@@ -553,6 +552,24 @@ knora-base:StillImageFileValueShape
     sh:datatype xsd:integer ;
     sh:message "StillImageFileValue instance may have at most one knora-base:dimY of type xsd:integer"
   ] .
+
+knora-base:StillImageExternalFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageExternalFileValue ;
+  sh:closed true ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:externalUrl ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:anyURI ;
+      sh:message "StillImageExternalFileValue instance requires one knora-base:externalUrl of type xsd:anyURI"
+    ] .
+
+knora-base:StillImageVectorFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageVectorFileValue ;
+  sh:closed true .
 
 knora-base:TextFileValueShape
   a sh:NodeShape ;
