@@ -66,6 +66,12 @@ knora-base:ResourceShape
     sh:path knora-base:hasStandoffLinkTo ;
     sh:class knora-base:Resource ;
     sh:message "The target of knora-base:hasStandoffLinkTo must be a resource that is present in the data graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasStandoffLinkToValue ;
+    sh:class knora-base:LinkValue ;
+    sh:message "The target of knora-base:hasStandoffLinkTo must be a knora-base:LinkValue"
   ] .
 
 # Validates every instance of a knora-base:Value subclass.
