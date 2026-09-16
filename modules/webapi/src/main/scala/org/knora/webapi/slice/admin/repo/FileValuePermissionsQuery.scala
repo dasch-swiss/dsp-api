@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.repo
 
+import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery
@@ -15,19 +16,19 @@ import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase
 
 /**
- * Builds a SELECT query to retrieve file value permission data by internal filename.
+ * Builds a SELECT query to retrieve the data needed to decide access to a file value, by internal filename.
  *
- * Given a knora:base:internalFilename, retrieves only the three values needed for
- * permission calculation: creator (attachedToUser), project (attachedToProject),
- * and permissions (hasPermissions).
+ * Given a knora:base:internalFilename, retrieves only the four values needed: creator (attachedToUser),
+ * project (attachedToProject), permissions (hasPermissions), and the file value class, which is what the
+ * media kind is derived from.
  */
 object FileValuePermissionsQuery extends QueryBuilderHelper {
 
   /**
-   * Build a SELECT query to retrieve file value permission data.
+   * Build a SELECT query to retrieve file value access data.
    *
    * @param filename the internal filename to search for
-   * @return a SelectQuery that retrieves creator, project, and permissions
+   * @return a SelectQuery that retrieves creator, project, permissions, and fileValueClass
    */
   def build(filename: InternalFilename): SelectQuery = {
     val fileValue        = variable("fileValue")
@@ -37,6 +38,7 @@ object FileValuePermissionsQuery extends QueryBuilderHelper {
     val creator          = variable("creator")
     val project          = variable("project")
     val permissions      = variable("permissions")
+    val fileValueClass   = variable("fileValueClass")
     val objPred          = variable("objPred")
     val objObj           = variable("objObj")
 
@@ -66,9 +68,15 @@ object FileValuePermissionsQuery extends QueryBuilderHelper {
       )
       .and(currentFileValue.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
       .and(resource.has(KnoraBase.isDeleted, Rdf.literalOf(false)))
+      // The type of the *current* file value, not of ?fileValue. Unconstrained, so a class the ontology gained
+      // without a media kind arrives here to be rejected instead of making the file value look absent.
+      .and(currentFileValue.has(RDF.TYPE, fileValueClass))
 
+    // DISTINCT collapses the rows the ?objPred hint multiplies, so a second row means the data disagrees with
+    // itself - two concrete types on one file value, or two creators - and the caller rejects it.
     Queries
-      .SELECT(creator, project, permissions)
+      .SELECT(creator, project, permissions, fileValueClass)
+      .distinct()
       .prefix(KnoraBase.NS)
       .where(wherePattern)
   }

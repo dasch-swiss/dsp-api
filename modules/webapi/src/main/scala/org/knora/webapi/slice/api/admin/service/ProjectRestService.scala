@@ -29,7 +29,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -251,20 +250,35 @@ final class ProjectRestService(
   def updateProjectRestrictedViewSettingsByShortcode(user: User)(
     id: Shortcode,
     req: SetRestrictedViewRequest,
-  ): Task[RestrictedViewResponse] =
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(updateRestrictedViewSettings(_, req))
 
   def updateProjectRestrictedViewSettingsById(user: User)(
     id: ProjectIri,
     req: SetRestrictedViewRequest,
-  ): Task[RestrictedViewResponse] =
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(updateRestrictedViewSettings(_, req))
 
   private def updateRestrictedViewSettings(project: KnoraProject, req: SetRestrictedViewRequest) =
     for {
       restrictedView <- req.toRestrictedView
       newSettings    <- knoraProjectService.setProjectRestrictedView(project, restrictedView)
-    } yield RestrictedViewResponse.from(newSettings)
+      external       <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(Some(newSettings)))
+    } yield external
+
+  def clearProjectRestrictedViewSettingsByShortcode(user: User)(
+    id: Shortcode,
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(clearRestrictedViewSettings)
+
+  def clearProjectRestrictedViewSettingsById(user: User)(
+    id: ProjectIri,
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(clearRestrictedViewSettings)
+
+  private def clearRestrictedViewSettings(project: KnoraProject) =
+    knoraProjectService.clearProjectRestrictedView(project) *>
+      format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(None))
 }
 
 object ProjectRestService {

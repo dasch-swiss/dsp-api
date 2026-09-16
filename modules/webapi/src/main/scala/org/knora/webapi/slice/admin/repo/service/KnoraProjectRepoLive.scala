@@ -90,6 +90,9 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
   private val mapper = new RdfEntityMapper[KnoraProject] {
 
     def toEntity(resource: RdfResource): IO[RdfError, KnoraProject] = {
+      // `None` means "no project-level setting stored"; the platform default is applied when answering,
+      // never when reading. A project may carry both predicates (see `admin-data.ttl`) — the size wins.
+      // A stored `watermark false` is "nothing configured", not a watermark restriction.
       def getRestrictedView =
         for {
           size <-
@@ -97,7 +100,7 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
           watermark <- resource.getBooleanLiteral[RestrictedView.Watermark](ProjectRestrictedViewWatermark)(using
                          b => Right(RestrictedView.Watermark.from(b)),
                        )
-        } yield size.orElse(watermark).getOrElse(RestrictedView.default)
+        } yield size.orElse(watermark.filter(_.value))
 
       for {
         iri                     <- resource.getSubjectIri
@@ -149,7 +152,9 @@ object KnoraProjectRepoLive extends QueryBuilderHelper {
       project.keywords.foreach(keyword => pattern.andHas(Vocabulary.KnoraAdmin.projectKeyword, keyword.value))
       project.logo.foreach(logo => pattern.andHas(Vocabulary.KnoraAdmin.projectLogo, logo.value))
 
-      project.restrictedView match {
+      // `save` is a MODIFY that first deletes every `entityProperties` triple for the subject, so emitting
+      // nothing for `None` removes a previously stored setting; no separate delete query is needed.
+      project.restrictedView.foreach {
         case RestrictedView.Size(size) =>
           pattern.andHas(Vocabulary.KnoraAdmin.projectRestrictedViewSize, size)
         case RestrictedView.Watermark(watermark) =>

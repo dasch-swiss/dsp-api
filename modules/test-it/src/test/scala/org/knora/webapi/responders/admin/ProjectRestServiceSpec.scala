@@ -92,21 +92,21 @@ class ProjectRestServiceSpec extends E2EZSpec {
       test("return restricted view settings using project IRI") {
         projectRestService(_.getProjectRestrictedViewSettingsById(imagesProject.id)).map(actual =>
           assertTrue(
-            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(Some(RestrictedView.Size.unsafeFrom("!512,512"))),
           ),
         )
       },
       test("return restricted view settings using project SHORTNAME") {
         projectRestService(_.getProjectRestrictedViewSettingsByShortname(imagesProject.shortname)).map(actual =>
           assertTrue(
-            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(Some(RestrictedView.Size.unsafeFrom("!512,512"))),
           ),
         )
       },
       test("return restricted view settings using project SHORTCODE") {
         projectRestService(_.getProjectRestrictedViewSettingsByShortcode(imagesProject.shortcode)).map(actual =>
           assertTrue(
-            actual == ProjectRestrictedViewSettingsGetResponseADM.from(RestrictedView.Size.unsafeFrom("!512,512")),
+            actual == ProjectRestrictedViewSettingsGetResponseADM.from(Some(RestrictedView.Size.unsafeFrom("!512,512"))),
           ),
         )
       },

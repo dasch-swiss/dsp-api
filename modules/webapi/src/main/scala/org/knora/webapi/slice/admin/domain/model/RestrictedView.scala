@@ -30,8 +30,9 @@ object RestrictedView {
 
   object Size extends StringValueCompanion[Size] {
 
-    // matches strings "pct:n" with n between 1 and 100
-    private val percentagePattern: Regex = "pct:(?:100|[1-9][0-9]?)$".r
+    // matches strings "pct:n" with n between 1 and 99. `pct:100` is excluded on purpose: it is a
+    // restriction that restricts nothing, and Sipi refuses such a decision.
+    private val percentagePattern: Regex = "pct:[1-9][0-9]?$".r
 
     // matches strings "!x,x" where x is a positive integer and represents the dimensions of the restricted view
     private val dimensionsPattern: Regex = "!(\\d+),(\\1)$".r
