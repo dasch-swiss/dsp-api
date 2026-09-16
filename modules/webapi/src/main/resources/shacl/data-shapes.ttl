@@ -225,6 +225,12 @@ knora-base:DateValueShape
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "DateValue instance must have one knora-base:valueHasEndJDN of type xsd:integer"
+  ] ;
+  sh:property [
+   a sh:PropertyShape ;
+   sh:path knora-base:valueHasStartJDN ;
+   sh:lessThanOrEquals knora-base:valueHasEndJDN ;
+   sh:message "DateValue knora-base:valueHasStartJDN must be <= knora-base:valueHasEndJDN"
   ] .
 
 knora-base:DecimalValueShape
