@@ -99,7 +99,7 @@ knora-base:ArchiveRepresentationShape
     sh:path knora-base:hasArchiveFileValue ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:class knora-base:AudioFileValue ;
+    sh:class knora-base:ArchiveFileValue ;
     sh:message "ArchiveRepresentation instance must have one knora-base:hasArchiveFileValue of type knora-base:ArchiveFileValue"
   ] .
 
