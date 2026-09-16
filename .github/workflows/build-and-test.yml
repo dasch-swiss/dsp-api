@@ -293,8 +293,6 @@ jobs:
           just docs-install-requirements
           npm install --global typedoc
           sudo apt-get install graphviz
-      - name: markdownlint
-        run: just markdownlint
       - name: Build docs
         run: just docs-build
 
@@ -325,7 +323,7 @@ jobs:
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
-      - name: Check formatting (scalafmt) + license headers
+      - name: Check formatting (scalafmt) + license headers + markdownlint
         run: nix develop --command just check ${{ steps.rbe.outputs.flags }}
 
   docker-healthcheck:
