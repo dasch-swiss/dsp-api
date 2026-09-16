@@ -64,22 +64,6 @@ knora-base:ResourceShape
   ] ;
   sh:property [
     a sh:PropertyShape ;
-    sh:path knora-base:lastModificationDate ;
-    sh:minCount 0 ;
-    sh:maxCount 1 ;
-    sh:datatype xsd:dateTime ;
-    sh:message "Resource instance must have at most one knora-base:lastModificationDate of type xsd:dateTime" ;
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:deleteDate ;
-    sh:minCount 0 ;
-    sh:maxCount 1 ;
-    sh:datatype xsd:dateTime ;
-    sh:message "Resource instance must have at most one knora-base:deleteDate of type xsd:dateTime" ;
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
     sh:path knora-base:hasStandoffLinkTo ;
     sh:class knora-base:Resource ;
     sh:message "The target of knora-base:hasStandoffLinkTo must be a resource that is present in the data graph"
@@ -95,6 +79,13 @@ knora-base:ResourceShape
     sh:path knora-base:hasStandoffLinkTo ;
     dash:coExistsWith knora-base:hasStandoffLinkToValue ;
     sh:message "A knora-base:hasStandoffLinkTo always requires a knora-base:hasStandoffLinkToValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasResourceAuthorship ;
+    sh:minCount 0 ;
+    sh:datatype xsd:string ;
+    sh:message "Resource instance must have knora-base:hasResourceAuthorship of type xsd:string" ;
   ] .
 
 # Validates every instance of a knora-base:Value subclass.
@@ -109,22 +100,6 @@ knora-base:ValueShape
     sh:maxCount 1 ;
     sh:datatype xsd:dateTime ;
     sh:message "Value instance must have knora-base:valueCreationDate of type xsd:dateTime" ;
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:lastModificationDate ;
-    sh:minCount 0 ;
-    sh:maxCount 1 ;
-    sh:datatype xsd:dateTime ;
-    sh:message "Value instance must have at most one knora-base:lastModificationDate of type xsd:dateTime" ;
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:deleteDate ;
-    sh:minCount 0 ;
-    sh:maxCount 1 ;
-    sh:datatype xsd:dateTime ;
-    sh:message "Value instance must have at most one knora-base:deleteDate of type xsd:dateTime" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
