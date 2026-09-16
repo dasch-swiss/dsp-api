@@ -167,21 +167,24 @@ knora-base:LinkValueShape
     sh:path rdf:subject ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:subject" ;
+    sh:class knora-base:Resource ;
+    sh:message "LinkValue instance must have rdf:subject of type knora-base:Resource" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:predicate ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:predicate" ;
+    sh:nodeKind sh:IRI ;
+    sh:message "LinkValue instance must have rdf:predicate of type sh:IRI" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:object ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:object" ;
+    sh:class knora-base:Resource ;
+    sh:message "LinkValue instance must have rdf:object of type knora-base:Resource" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
