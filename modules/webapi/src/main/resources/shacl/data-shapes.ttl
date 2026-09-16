@@ -36,7 +36,7 @@ knora-base:ResourceShape
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:nodeKind sh:IRI ;
-    sh:message "Resource instance must have knora-base:attachedToUser IRI" ;
+    sh:message "Resource instance must have knora-base:attachedToUser of type IRI" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
