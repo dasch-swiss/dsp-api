@@ -139,6 +139,22 @@ knora-base:ValueShape
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "Value instance must have at most one knora-base:valueHasComment of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasString ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance must have one knora-base:valueHasString of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasUUID ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance must have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
 
 # Validates every instance of knora-base:LinkValue.
