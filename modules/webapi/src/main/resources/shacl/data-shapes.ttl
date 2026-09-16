@@ -34,7 +34,8 @@ knora-base:ResourceShape
     sh:path knora-base:attachedToUser ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "Resource instance must have knora-base:attachedToUser" ;
+    sh:nodeKind sh:IRI ;
+    sh:message "Resource instance must have knora-base:attachedToUser IRI" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -59,6 +60,12 @@ knora-base:ResourceShape
     sh:maxCount 1 ;
     sh:datatype xsd:dateTime ;
     sh:message "Resource instance must have knora-base:creationDate of type xsd:dateTime" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasStandoffLinkTo ;
+    sh:class knora-base:Resource ;
+    sh:message "The target of knora-base:hasStandoffLinkTo must be a resource that is present in the data graph"
   ] .
 
 # Validates every instance of a knora-base:Value subclass.
