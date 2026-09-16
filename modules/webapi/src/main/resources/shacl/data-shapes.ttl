@@ -186,7 +186,7 @@ knora-base:ValueShape
     sh:maxCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance must have at most one knora-base:hasPermissions of type xsd:string" ;
+    sh:message "Value instance may have at most one knora-base:hasPermissions of type xsd:string" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -210,7 +210,7 @@ knora-base:ValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance must have at most one knora-base:valueHasComment of type xsd:string" ;
+    sh:message "Value instance may have at most one knora-base:valueHasComment of type xsd:string" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -226,7 +226,7 @@ knora-base:ValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance must have at most one knora-base:valueHasUUID of type xsd:string" ;
+    sh:message "Value instance may have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
   # TODO: add information from edited graphs
   # TODO: check if it is possible to ensure that this is not used directly
@@ -447,7 +447,7 @@ knora-base:FileValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "FileValue instance must have at most one knora-base:originalMimeType of type xsd:string"
+    sh:message "FileValue instance may have at most one knora-base:originalMimeType of type xsd:string"
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -455,7 +455,7 @@ knora-base:FileValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "FileValue instance must have at most one knora-base:originalFilename of type xsd:string"
+    sh:message "FileValue instance may have at most one knora-base:originalFilename of type xsd:string"
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -463,7 +463,7 @@ knora-base:FileValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "FileValue instance must have at most one knora-base:hasCopyrightHolder of type xsd:string"
+    sh:message "FileValue instance may have at most one knora-base:hasCopyrightHolder of type xsd:string"
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -477,8 +477,13 @@ knora-base:FileValueShape
     sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:class knora-base:License ;
-    sh:message "FileValue instance must have at most one knora-base:hasLicense of type knora-base:License"
+    sh:message "FileValue instance may have at most one knora-base:hasLicense of type knora-base:License"
   ] .
+
+knora-base:ArchiveFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ArchiveFileValue ;
+  sh:closed true .
 
 knora-base:AudioFileValueShape
   a sh:NodeShape ;
@@ -490,8 +495,37 @@ knora-base:AudioFileValueShape
       sh:minCount 0 ;
       sh:maxCount 1 ;
       sh:datatype xsd:decimal ;
-      sh:message "AudioFileValue instance must have at most one knora-base:duration of type xsd:decimal"
+      sh:message "AudioFileValue instance may have at most one knora-base:duration of type xsd:decimal"
     ] .
+
+knora-base:DocumentFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DocumentFileValue ;
+  sh:closed true ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:pageCount ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:pageCount of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimX ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:dimX of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimY ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:dimY of type xsd:integer"
+  ] .
 
 # Validates that every knora-base:attachedToUser value (on resources and values)
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
