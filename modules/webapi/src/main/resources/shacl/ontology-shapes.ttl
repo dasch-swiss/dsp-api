@@ -10,6 +10,17 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
 
+# Prefix declarations for the sh:SPARQLTarget queries below.
+# The sh:select queries follow two rules so they pass W3C SHACL-SPARQL syntax
+# validation (for example the ITB "extended" validator):
+# - Declare query prefixes through sh:prefixes, not inline PREFIX lines.
+# - Project the focus node as ?this, not $this.
+knora-base:OntologyShapesPrefixes
+  sh:declare [ sh:prefix "owl"        ; sh:namespace "http://www.w3.org/2002/07/owl#"^^xsd:anyURI ] ;
+  sh:declare [ sh:prefix "rdfs"       ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ;
+  sh:declare [ sh:prefix "knora-base" ; sh:namespace "http://www.knora.org/ontology/knora-base#"^^xsd:anyURI ] .
+
+
 knora-base:OntologyLabelShapeLanguages
   a sh:PropertyShape ;
   sh:path rdfs:label ;
@@ -34,14 +45,14 @@ knora-base:OntologyShape
   a sh:NodeShape ;
   sh:target [
     a sh:SPARQLTarget ;
+    sh:prefixes knora-base:OntologyShapesPrefixes ;
     sh:select """
-      PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-      SELECT $this
+      SELECT ?this
       WHERE {
-        $this a owl:Ontology .
-        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
-        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/salsah-gui"))
-        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/standoff"))
+        ?this a owl:Ontology .
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/salsah-gui"))
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/standoff"))
       }
     """ ;
   ] ;
@@ -75,13 +86,12 @@ knora-base:ResourceClassShape
   a sh:NodeShape ;
   sh:target [
     a sh:SPARQLTarget ;
+    sh:prefixes knora-base:OntologyShapesPrefixes ;
     sh:select """
-      PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT $this
+      SELECT ?this
       WHERE {
-        $this rdfs:subClassOf+ knora-base:Resource .
-        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
+        ?this rdfs:subClassOf+ knora-base:Resource .
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
@@ -99,17 +109,16 @@ knora-base:PropertyShape
   a sh:NodeShape ;
   sh:target [
     a sh:SPARQLTarget ;
+    sh:prefixes knora-base:OntologyShapesPrefixes ;
     sh:select """
-      PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-      SELECT $this
+      SELECT ?this
       WHERE {
         {
-          $this rdfs:subPropertyOf+ knora-base:hasValue .
+          ?this rdfs:subPropertyOf+ knora-base:hasValue .
         } UNION {
-          $this rdfs:subPropertyOf+ knora-base:hasLinkTo .
+          ?this rdfs:subPropertyOf+ knora-base:hasLinkTo .
         }
-        FILTER(!STRSTARTS(STR($this), "http://www.knora.org/ontology/knora-"))
+        FILTER(!STRSTARTS(STR(?this), "http://www.knora.org/ontology/knora-"))
       }
     """ ;
   ] ;
