@@ -232,6 +232,7 @@ knora-base:ValueShape
 knora-base:BooleanValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:BooleanValue ;
+  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasBoolean ;
@@ -244,6 +245,7 @@ knora-base:BooleanValueShape
 knora-base:ColorValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:ColorValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasColor ;
@@ -256,6 +258,7 @@ knora-base:ColorValueShape
 knora-base:DateValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DateValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasCalendar ;
@@ -306,6 +309,7 @@ knora-base:DateValueShape
 knora-base:DecimalValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DecimalValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasDecimal ;
@@ -318,6 +322,7 @@ knora-base:DecimalValueShape
 knora-base:IntervalValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntervalValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasIntervalStart ;
@@ -338,6 +343,7 @@ knora-base:IntervalValueShape
 knora-base:IntValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasInteger ;
@@ -350,6 +356,7 @@ knora-base:IntValueShape
 knora-base:LinkValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
+  sh:closed true ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:subject ;
@@ -386,6 +393,7 @@ knora-base:LinkValueShape
 knora-base:TimeValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:TimeValue ;
+  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasTimeStamp ;
@@ -398,6 +406,7 @@ knora-base:TimeValueShape
 knora-base:UriValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:UriValue ;
+  sh:closed true ;
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:valueHasUri ;
@@ -467,6 +476,18 @@ knora-base:FileValueShape
     sh:message "FileValue instance must have at most one knora-base:hasLicense of type knora-base:License"
   ] .
 
+knora-base:AudioFileValueShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:AudioFileValue ;
+  sh:closed true ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:duration ;
+      sh:minCount 0 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:decimal ;
+      sh:message "AudioFileValue instance must have at most one knora-base:duration of type xsd:decimal"
+    ] .
 
 # Validates that every knora-base:attachedToUser value (on resources and values)
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
