@@ -443,6 +443,28 @@ knora-base:FileValueShape
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "FileValue instance must have at most one knora-base:originalFilename of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasCopyrightHolder ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance must have at most one knora-base:hasCopyrightHolder of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasCopyrightHolder ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance can have any number of knora-base:hasAuthorship of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasLicense ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:License ;
+    sh:message "FileValue instance must have at most one knora-base:hasLicense of type knora-base:License"
   ] .
 
 
