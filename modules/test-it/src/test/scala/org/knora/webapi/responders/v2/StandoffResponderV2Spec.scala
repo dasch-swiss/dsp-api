@@ -18,7 +18,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.CreateMappingRequestV2
 import org.knora.webapi.slice.resources.repo.GetMappingQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class StandoffResponderV2Spec extends E2EZSpec {
@@ -84,7 +83,7 @@ class StandoffResponderV2Spec extends E2EZSpec {
                     )
         expectedMappingIRI = f"${anythingProjectIri.value}/mappings/$mappingName"
         mappingFromDB     <- ZIO.serviceWithZIO[TriplestoreService](
-                           _.query(Construct(GetMappingQuery.build(response.mappingIri))),
+                           _.query(GetMappingQuery.build(response.mappingIri)),
                          )
       } yield assertTrue(
         mappingFromDB.statements.nonEmpty,

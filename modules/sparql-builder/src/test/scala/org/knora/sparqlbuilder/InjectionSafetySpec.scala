@@ -121,6 +121,37 @@ class InjectionSafetySpec extends ZIOSpecDefault {
         Variable.from("linkValue0").isRight,
       )
     },
+    test("BlankNode accepts ASCII-safe labels and rejects everything else") {
+      assertTrue(
+        BlankNode("node1").render == "_:node1",
+        BlankNode.from("_a.b-c").isRight,
+        BlankNode.from("0node").isRight,
+        BlankNode.from("").isLeft,
+        BlankNode.from("node.").isLeft,
+        BlankNode.from(".node").isLeft,
+        BlankNode.from("node 1").isLeft,
+        BlankNode.from("node> . ?s ?p ?o . _:x").isLeft,
+        BlankNode.from("no\"de").isLeft,
+        scala.util.Try(BlankNode("node 1")).isFailure,
+      )
+    },
+    test("BlankNode interpolates into a template") {
+      val node     = BlankNode("node1")
+      val onProp   = Iri.unsafeFrom("http://www.w3.org/2002/07/owl#onProperty")
+      val property = Iri.unsafeFrom("http://www.knora.org/ontology/0001/anything#hasText")
+
+      assertTrue(
+        sparql"$node $onProp $property .".render ==
+          "_:node1 <http://www.w3.org/2002/07/owl#onProperty> <http://www.knora.org/ontology/0001/anything#hasText> .",
+      )
+    },
+    test("nonNegativeInteger renders a typed literal and rejects negative values") {
+      assertTrue(
+        Literal.nonNegativeInteger(0).render == "\"0\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>",
+        Literal.nonNegativeInteger(1).render == "\"1\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>",
+        scala.util.Try(Literal.nonNegativeInteger(-1)).isFailure,
+      )
+    },
     test("language tags are validated") {
       assertTrue(
         scala.util.Try(Literal.langString("x", "en . ?s ?p ?o")).isFailure,

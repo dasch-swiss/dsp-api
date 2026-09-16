@@ -32,7 +32,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 // This error is used to indicate that an export exists
 final case class ExportExistsError(t: CurrentDataTask)
@@ -128,15 +127,15 @@ final class ProjectMigrationExportService(
 
       // Step 1: Find all user IRIs referenced by attachedToUser in the project's data graph
       dataGraph         = projectService.getDataGraphForProject(project)
-      referencedResult <- triplestore.select(ReferencedUserIrisQuery.build(dataGraph))
+      referencedResult <- triplestore.query(ReferencedUserIrisQuery.build(dataGraph))
       referencedIris    = referencedResult.getCol("user").flatMap(UserIri.from(_).toOption).toSet
       _                <- ZIO.when(referencedIris.nonEmpty)(
              ZIO.logInfo(s"$taskId: Found ${referencedIris.size} users referenced by attachedToUser in data graph"),
            )
 
       // Step 2: Build and execute the CONSTRUCT query (with referenced users if any)
-      queryStr = AdminDataQuery.buildWithReferencedUsers(project.id, referencedIris)
-      rdfStr  <- triplestore.queryRdf(Construct(queryStr))
+      query   = AdminDataQuery.buildWithReferencedUsers(project.id, referencedIris)
+      rdfStr <- triplestore.queryRdf(query)
 
       // Step 3: Parse result into Jena model, scope memberships, write as NQuads
       parsed <- ZIO.attempt {
@@ -185,7 +184,7 @@ final class ProjectMigrationExportService(
       _             <- ZIO.logInfo(s"$taskId: Collecting project permission data from graph '${permissionsDataNamedGraph.value}'")
       permissionFile = rdfPath / "permission.nq"
       query          = PermissionDataQuery.build(project.id)
-      _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.getQueryString}")
+      _             <- ZIO.logDebug(s"$taskId: Permission data query: \n\n${query.sparql}")
       _             <- Files.createFile(permissionFile) *>
              triplestore.queryToFile(query, permissionsDataNamedGraph, permissionFile, NQuads)
     } yield ()

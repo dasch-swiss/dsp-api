@@ -5,15 +5,11 @@
 
 package org.knora.webapi.slice.`export`.domain
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.ConstructQuery
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
-import org.knora.webapi.slice.common.QueryBuilderHelper
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-object AdminUsersQuery extends QueryBuilderHelper {
+object AdminUsersQuery {
 
   /**
    * CONSTRUCT projecting only the `?user a knora-admin:User` typing triples from the admin data graph. The SHACL
@@ -21,10 +17,15 @@ object AdminUsersQuery extends QueryBuilderHelper {
    * keeps the validation model's size independent of the instance's full admin data (user profiles, groups,
    * projects, permissions).
    */
-  def build: ConstructQuery = {
-    val user = variable("user")
-    Queries
-      .CONSTRUCT(user.isA(KA.User))
-      .where(user.isA(KA.User).from(Rdf.iri(adminDataNamedGraph.value)))
+  def build: Construct = {
+    val adminGraph = Iri.unsafeFrom(adminDataNamedGraph.value)
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |CONSTRUCT { ?user a knora-admin:User . }
+               |WHERE {
+               |  GRAPH $adminGraph { ?user a knora-admin:User . }
+               |}""".render,
+    )
   }
 }
