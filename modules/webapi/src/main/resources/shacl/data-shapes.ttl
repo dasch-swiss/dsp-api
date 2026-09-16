@@ -191,25 +191,25 @@ knora-base:DateValueShape
     sh:path knora-base:valueHasCalendar ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
-    sh:message "DateValue instance must have one knora-base:valueHasCalendar of type xsd:string"
-  ] ;
+    sh:datatype xsd:string ;
+    sh:in ( "GREGORIAN" "JULIAN" "ISLAMIC" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasCalendar in (GREGORIAN, JULIAN, ISLAMIC)"  ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasStartPrecision ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
-    sh:message "DateValue instance must have one knora-base:valueHasStartPrecision of type xsd:string"
-  ] ;
+    sh:datatype xsd:string ;
+    sh:in ( "DAY" "MONTH" "YEAR" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasStartPrecision in (DAY, MONTH, YEAR)"  ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasEndPrecision ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
-    sh:message "DateValue instance must have one knora-base:valueHasEndPrecision of type xsd:string"
-  ] ;
+    sh:datatype xsd:string ;
+    sh:in ( "DAY" "MONTH" "YEAR" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasEndPrecision in (DAY, MONTH, YEAR)"  ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasStartJDN ;
