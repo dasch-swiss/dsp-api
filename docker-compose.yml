@@ -132,10 +132,17 @@ services:
 
   api:
     image: daschswiss/knora-api:latest
+    # Health-gate the dependencies: the API does a single triplestore availability
+    # check at startup (core/Db.scala) with no retry and dies if it isn't ready, so
+    # it must not start before Fuseki (db) is healthy. Short-form depends_on only
+    # orders container *start*, which races Fuseki's cold start and exits the API 1.
     depends_on:
-      - alloy
-      - db
-      - sipi
+      db:
+        condition: service_healthy
+      sipi:
+        condition: service_healthy
+      alloy:
+        condition: service_started
     ports:
       - "3333:3333"
       - "5555:5555"
