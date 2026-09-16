@@ -187,8 +187,45 @@ knora-base:DateValueShape
   a sh:NodeShape ;
   sh:targetClass knora-base:DateValue ;
   sh:property [
-    # TODO
-    ] .
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasCalendar ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
+    sh:message "DateValue instance must have one knora-base:valueHasCalendar of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasStartPrecision ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
+    sh:message "DateValue instance must have one knora-base:valueHasStartPrecision of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasEndPrecision ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ; # TODO: investigate the allowed values and put sh:in ()
+    sh:message "DateValue instance must have one knora-base:valueHasEndPrecision of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasStartJDN ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DateValue instance must have one knora-base:valueHasStartJDN of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasEndJDN ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DateValue instance must have one knora-base:valueHasEndJDN of type xsd:integer"
+  ] .
 
 knora-base:DecimalValueShape
   a sh:NodeShape ;
