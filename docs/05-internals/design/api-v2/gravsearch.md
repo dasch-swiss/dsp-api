@@ -516,11 +516,24 @@ patterns like the class-enumeration `VALUES` block.
 
 ### Determinism for Snapshot Testing
 
-`OntologyInferencer` names the `VALUES` variables it introduces (e.g. `?resTypes`, `?subProp`) using
-`Random.nextInt` unless a `queryVariableSuffix` is supplied — harmless for correctness, but it means the same
-query produces different SPARQL text on every run. `SelectTransformer` now supplies a per-instance,
-per-statement counter as that suffix, so the same query always renders the same SPARQL — a prerequisite for
-`GravsearchToPrequeryTransformerE2ESpec`'s golden-snapshot tests on the matchFulltext expansion. The suffix must
-be unique per statement, not a shared constant: a constant would collapse unrelated `VALUES` variables (e.g. one
-from `?mainRes a Resource`, another from `?val a Value`) into the same variable, intersecting their blocks into
-silently empty results.
+`OntologyInferencer` names the `VALUES` variables it introduces (e.g. `?resTypes`, `?subProp`) with
+`SparqlTransformer.createInferenceVariable(statement, kind)`, a content-derived name of the form
+`<base>__<kind>__<hash>` — for example `?thing__resTypes__3fa2b91c`. `base` comes from the statement's subject
+(the variable name if the subject is a variable, or an IRI's local name if it is an IRI), sanitised down to
+`[A-Za-z0-9_]`; `kind` is a short discriminator such as `resTypes` or `subProp`; and `hash` is an 8-hex-digit
+`String.hashCode` of the statement's rendered SPARQL. The same query always renders the same SPARQL, which is
+what `GravsearchToPrequeryTransformerE2ESpec`'s golden-snapshot tests on the matchFulltext expansion depend on;
+it also means a later pass that reorders WHERE patterns cannot renumber these variables out from under the
+snapshots.
+
+Identical statements deliberately produce the same variable name. This is harmless: the constraint the
+statement contributes to the `VALUES` block is identical either way, so sharing the variable loses nothing.
+
+The existing lossy `escapeEntityForVariable` helper is not reused here. It collides two different IRIs onto the
+same escaped string (`.../ab#cd` and `.../abc#d` escape alike), and it can pass through characters that are
+illegal in a SPARQL `VARNAME` (an `XsdLiteral` object such as `"(DE-588)118531379"` can reach the inference code
+as a statement subject). Either failure mode would merge two unrelated `VALUES` blocks under one name.
+
+The suffix must stay unique per statement, not a shared constant: a constant would collapse unrelated `VALUES`
+variables (e.g. one from `?mainRes a Resource`, another from `?val a Value`) into the same variable,
+intersecting their blocks into silently empty results.
