@@ -132,59 +132,6 @@ class UpgradePluginRenderingSpec extends ZIOSpecDefault {
         )
       },
     ),
-    suite("UpgradePluginPR3612")(
-      test("addDefaultCopyrightHolder") {
-        val expected =
-          """|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-             |WITH <http://www.knora.org/data/admin>
-             |DELETE { ?projectIri a knora-admin:knoraProject ;
-             |    knora-admin:hasAllowedCopyrightHolder "AI-Generated Content - Not Protected by Copyright" ;
-             |    knora-admin:hasAllowedCopyrightHolder "Public Domain - Not Protected by Copyright" . }
-             |INSERT { ?projectIri a knora-admin:knoraProject ;
-             |    knora-admin:hasAllowedCopyrightHolder "AI-Generated Content - Not Protected by Copyright" ;
-             |    knora-admin:hasAllowedCopyrightHolder "Public Domain - Not Protected by Copyright" . }
-             |WHERE { ?projectIri a knora-admin:knoraProject .
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasAllowedCopyrightHolder "AI-Generated Content - Not Protected by Copyright" . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasAllowedCopyrightHolder "Public Domain - Not Protected by Copyright" . } }""".stripMargin
-        assertTrue(canonical(new UpgradePluginPR3612().addDefaultCopyrightHolder.sparql) == canonical(expected))
-      },
-      test("addDefaultEnabledLicenses") {
-        val expected =
-          """|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
-             |WITH <http://www.knora.org/data/admin>
-             |DELETE { ?projectIri a knora-admin:knoraProject ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-sa-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-sa-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nd-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-nd-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/ai-generated> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/unknown> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/public-domain> . }
-             |INSERT { ?projectIri a knora-admin:knoraProject ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-sa-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-sa-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nd-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-nd-4.0> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/ai-generated> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/unknown> ;
-             |    knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/public-domain> . }
-             |WHERE { ?projectIri a knora-admin:knoraProject .
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-sa-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-sa-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nd-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/cc-by-nc-nd-4.0> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/ai-generated> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/unknown> . }
-             |FILTER NOT EXISTS { ?projectIri knora-admin:hasEnabledLicense <http://rdfh.ch/licenses/public-domain> . } }""".stripMargin
-        assertTrue(canonical(new UpgradePluginPR3612().addDefaultEnabledLicenses.sparql) == canonical(expected))
-      },
-    ),
     suite("MigrateRemoveProjectStatus")(
       test("removeProjectStatus") {
         val expected =

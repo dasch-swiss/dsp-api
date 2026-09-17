@@ -23,40 +23,30 @@ class UpgradePluginPR3612 extends AbstractSparqlUpdatePlugin {
 
   private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
 
-  private val projectIri = Variable("projectIri")
+  private val projectIri      = Variable("projectIri")
+  private val defaultValue    = Variable("defaultValue")
+  private val existingDefault = Variable("existingDefault")
 
   /**
-   * `WITH <admin graph>` scopes the DELETE and INSERT templates as well as the WHERE evaluation.
-   * The DELETE/INSERT pair rewrites the whole pattern so that the defaults end up on the project
-   * exactly once; one `FILTER NOT EXISTS` per value makes the update fire only for projects that
-   * are still missing a default.
+   * Both VALUES clauses intentionally contain the complete default set. The outer clause expands
+   * the INSERT; the inner clause makes the update skip a project when any default already exists.
+   * This preserves the legacy all-or-nothing behaviour.
    */
   private[plugins] val addDefaultCopyrightHolder: Update = {
-    val defaults = CopyrightHolder.default.toSeq.map(holder => Literal.string(holder.value))
+    val defaults = CopyrightHolder.default.toSeq.sorted.map(holder => Literal.string(holder.value))
     Update(
       sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
                |WITH $adminGraph
-               |DELETE {
-               |  ${Fragment.join(
-          sparql"$projectIri a knora-admin:knoraProject" +: defaults.map(v =>
-            sparql"knora-admin:hasAllowedCopyrightHolder $v",
-          ),
-          Fragment.raw(" ;\n"),
-        ) ++ sparql" ."}
-               |}
                |INSERT {
-               |  ${Fragment.join(
-          sparql"$projectIri a knora-admin:knoraProject" +: defaults.map(v =>
-            sparql"knora-admin:hasAllowedCopyrightHolder $v",
-          ),
-          Fragment.raw(" ;\n"),
-        ) ++ sparql" ."}
+               |  $projectIri knora-admin:hasAllowedCopyrightHolder $defaultValue .
                |}
                |WHERE {
                |  $projectIri a knora-admin:knoraProject .
-               |  ${defaults
-          .map(v => Fragments.filterNotExists(sparql"$projectIri knora-admin:hasAllowedCopyrightHolder $v ."))
-          .joinLines}
+               |  ${Fragments.values(defaultValue, defaults)}
+               |  FILTER NOT EXISTS {
+               |    $projectIri knora-admin:hasAllowedCopyrightHolder $existingDefault .
+               |    ${Fragments.values(existingDefault, defaults)}
+               |  }
                |}""".render,
     )
   }
@@ -67,23 +57,16 @@ class UpgradePluginPR3612 extends AbstractSparqlUpdatePlugin {
     Update(
       sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
                |WITH $adminGraph
-               |DELETE {
-               |  ${Fragment.join(
-          sparql"$projectIri a knora-admin:knoraProject" +: defaults.map(v => sparql"knora-admin:hasEnabledLicense $v"),
-          Fragment.raw(" ;\n"),
-        ) ++ sparql" ."}
-               |}
                |INSERT {
-               |  ${Fragment.join(
-          sparql"$projectIri a knora-admin:knoraProject" +: defaults.map(v => sparql"knora-admin:hasEnabledLicense $v"),
-          Fragment.raw(" ;\n"),
-        ) ++ sparql" ."}
+               |  $projectIri knora-admin:hasEnabledLicense $defaultValue .
                |}
                |WHERE {
                |  $projectIri a knora-admin:knoraProject .
-               |  ${defaults
-          .map(v => Fragments.filterNotExists(sparql"$projectIri knora-admin:hasEnabledLicense $v ."))
-          .joinLines}
+               |  ${Fragments.values(defaultValue, defaults)}
+               |  FILTER NOT EXISTS {
+               |    $projectIri knora-admin:hasEnabledLicense $existingDefault .
+               |    ${Fragments.values(existingDefault, defaults)}
+               |  }
                |}""".render,
     )
   }
