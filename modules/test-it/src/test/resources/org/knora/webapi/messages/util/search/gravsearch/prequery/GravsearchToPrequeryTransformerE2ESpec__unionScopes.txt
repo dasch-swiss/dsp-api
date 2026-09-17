@@ -1,0 +1,33 @@
+SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?text), STR(?text), "")); SEPARATOR='') AS ?text__Concat)
+WHERE {
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
+?text <http://www.knora.org/ontology/knora-base#valueHasString> ?text__valueHasString .
+{
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
+?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
+FILTER((?int__valueHasInteger = "1"^^<http://www.w3.org/2001/XMLSchema#integer>))
+FILTER NOT EXISTS {
+ ?int <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+} UNION {
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
+?text <http://www.knora.org/ontology/knora-base#valueHasString> ?text__valueHasString .
+FILTER(regex(?text__valueHasString, "Abel", "i"))
+FILTER NOT EXISTS {
+ ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing ?text__valueHasString
+ORDER BY ASC(?text__valueHasString) ASC(?thing)
+LIMIT 25

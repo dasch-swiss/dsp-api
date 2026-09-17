@@ -2697,124 +2697,114 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
 
   override val e2eSpec = suite("The NonTriplestoreSpecificGravsearchToPrequeryGenerator object")(
     test("transform an input query with an optional property criterion without removing the rdf:type statement") {
-      transformQuery(queryWithOptional)
-        .map(actual => assertTrue(actual == TransformedQueryWithOptional))
+      transformQueryWithInference(queryWithOptional)
+        .map(actual => assertGolden(actual.toSparql, "optional"))
     },
     test("transform an input query with a date as a non optional sort criterion") {
-      transformQuery(inputQueryWithDateNonOptionalSortCriterion)
-        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDateNonOptionalSortCriterion)
+        .map(actual => assertGolden(actual.toSparql, "dateNonOptionalSortCriterion"))
     },
     test("transform an input query with a date as a non optional sort criterion (submitted in complex schema)") {
-      transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDateNonOptionalSortCriterionComplex)
+        .map(actual => assertGolden(actual.toSparql, "dateNonOptionalSortCriterion"))
     },
     test("transform an input query with a date as non optional sort criterion and a filter") {
-      transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter)
-        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterionAndFilter))
+      transformQueryWithInference(inputQueryWithDateNonOptionalSortCriterionAndFilter)
+        .map(actual => assertGolden(actual.toSparql, "dateNonOptionalSortCriterionAndFilter"))
     },
     test(
       "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)",
     ) {
-      transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDateNonOptionalSortCriterionAndFilter))
+      transformQueryWithInference(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertGolden(actual.toSparql, "dateNonOptionalSortCriterionAndFilter"))
     },
     test("transform an input query with a date as an optional sort criterion") {
-      transformQuery(inputQueryWithDateOptionalSortCriterion)
-        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDateOptionalSortCriterion)
+        .map(actual => assertGolden(actual.toSparql, "dateOptionalSortCriterion"))
     },
     test("transform an input query with a date as an optional sort criterion (submitted in complex schema)") {
-      transformQuery(inputQueryWithDateOptionalSortCriterionComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDateOptionalSortCriterionComplex)
+        .map(actual => assertGolden(actual.toSparql, "dateOptionalSortCriterion"))
     },
     test("transform an input query with a date as an optional sort criterion and a filter") {
-      transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter)
-        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterionAndFilter))
+      transformQueryWithInference(inputQueryWithDateOptionalSortCriterionAndFilter)
+        .map(actual => assertGolden(actual.toSparql, "dateOptionalSortCriterionAndFilter"))
     },
     test(
       "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)",
     ) {
-      transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDateOptionalSortCriterionAndFilter))
+      transformQueryWithInference(inputQueryWithDateOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertGolden(actual.toSparql, "dateOptionalSortCriterionAndFilter"))
     },
     test("transform an input query with a decimal as an optional sort criterion") {
-      transformQuery(inputQueryWithDecimalOptionalSortCriterion)
-        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterion)
+        .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterion"))
     },
     test("transform an input query with a decimal as an optional sort criterion (submitted in complex schema)") {
-      transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterion))
+      transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterionComplex)
+        .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterion"))
     },
     test("transform an input query with a decimal as an optional sort criterion and a filter") {
-      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter)
-        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilter))
+      transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterionAndFilter)
+        .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterionAndFilter"))
     },
     test(
       "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)",
     ) {
-      transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-        .map(actual => assertTrue(actual == transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex))
+      transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
+        .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterionAndFilterComplex"))
     },
     test("transform an input query using rdfs:label and a literal in the simple schema") {
-      transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndLiteral))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndLiteralInSimpleSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndLiteral"))
     },
     test("transform an input query using rdfs:label and a literal in the complex schema") {
-      transformQuery(InputQueryWithRdfsLabelAndLiteralInComplexSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndLiteral))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndLiteralInComplexSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndLiteral"))
     },
     test("transform an input query using rdfs:label and a variable in the simple schema") {
-      transformQuery(InputQueryWithRdfsLabelAndVariableInSimpleSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndVariable))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndVariableInSimpleSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndVariable"))
     },
     test("transform an input query using rdfs:label and a variable in the complex schema") {
-      transformQuery(InputQueryWithRdfsLabelAndVariableInComplexSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndVariable))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndVariableInComplexSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndVariable"))
     },
     test("transform an input query using rdfs:label and a regex in the simple schema") {
-      transformQuery(InputQueryWithRdfsLabelAndRegexInSimpleSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndRegex))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndRegexInSimpleSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndRegex"))
     },
     test("transform an input query using rdfs:label and a regex in the complex schema") {
-      transformQuery(InputQueryWithRdfsLabelAndRegexInComplexSchema)
-        .map(actual => assertTrue(actual == TransformedQueryWithRdfsLabelAndRegex))
+      transformQueryWithInference(InputQueryWithRdfsLabelAndRegexInComplexSchema)
+        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndRegex"))
     },
     test("transform an input query with UNION scopes in the simple schema") {
-      transformQuery(InputQueryWithUnionScopes)
-        .map(actual => assertTrue(actual == TransformedQueryWithUnionScopes))
+      transformQueryWithInference(InputQueryWithUnionScopes)
+        .map(actual => assertGolden(actual.toSparql, "unionScopes"))
     },
     test("transform an input query with knora-api:standoffTagHasStartAncestor") {
-      transformQuery(queryWithStandoffTagHasStartAncestor)
-        .map(actual => assertTrue(actual == transformedQueryWithStandoffTagHasStartAncestor))
+      transformQueryWithInference(queryWithStandoffTagHasStartAncestor)
+        .map(actual => assertGolden(actual.toSparql, "standoffTagHasStartAncestor"))
     },
     test("reorder query patterns in where clause") {
-      transformQuery(queryToReorder)
-        .map(actual =>
-          assertTrue(
-            actual.variables.toSet == transformedQueryToReorder.variables.toSet,
-            actual.copy(variables = Vector()) == transformedQueryToReorder.copy(variables = Vector()),
-          ),
-        )
+      transformQueryWithInference(queryToReorder)
+        .map(actual => assertGolden(actual.toSparql, "reorder"))
     },
     test("reorder query patterns in where clause with union") {
-      transformQuery(queryToReorderWithUnion)
-        .map(actual =>
-          assertTrue(
-            actual.variables.toSet == transformedQueryToReorderWithUnion.variables.toSet,
-            actual.copy(variables = Vector()) == transformedQueryToReorderWithUnion.copy(variables = Vector()),
-          ),
-        )
+      transformQueryWithInference(queryToReorderWithUnion)
+        .map(actual => assertGolden(actual.toSparql, "reorderWithUnion"))
     },
     test("reorder query patterns in where clause with optional") {
-      transformQuery(queryWithOptional)
-        .map(actual => assertTrue(actual == TransformedQueryWithOptional))
+      transformQueryWithInference(queryWithOptional)
+        .map(actual => assertGolden(actual.toSparql, "optional"))
     },
     test("reorder query patterns with minus scope") {
-      transformQuery(queryToReorderWithMinus)
-        .map(actual => assertTrue(actual == transformedQueryToReorderWithMinus))
+      transformQueryWithInference(queryToReorderWithMinus)
+        .map(actual => assertGolden(actual.toSparql, "reorderWithMinus"))
     },
     test("reorder a query with a cycle") {
-      transformQuery(queryToReorderWithCycle)
-        .map(actual => assertTrue(actual == transformedQueryToReorderWithCycle))
+      transformQueryWithInference(queryToReorderWithCycle)
+        .map(actual => assertGolden(actual.toSparql, "reorderWithCycle"))
     },
     test(
       "generate the fulltext-index-anchored matchFulltext expansion for a classless query, hoisted ahead of the class-VALUES block",
