@@ -17,6 +17,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 @RunWith(classOf[DspZTestJUnitRunner])
 class ConstructTransformerSpec extends ZIOSpecDefault {
@@ -26,7 +27,7 @@ class ConstructTransformerSpec extends ZIOSpecDefault {
   private def constructTransformerTransform(q: ConstructQuery, limit: Option[Set[SmartIri]] = None) =
     ZIO.serviceWithZIO[ConstructTransformer](_.transform(q, limit))
 
-  val spec: Spec[Any, Any] = suite("ConstructTransformerLive")(
+  private val basicSpec: Spec[Any, Any] = suite("ConstructTransformerLive")(
     test(
       "Given an optional pattern in the Where clause it should transform the inner but not split the pattern",
     ) {
@@ -70,4 +71,55 @@ class ConstructTransformerSpec extends ZIOSpecDefault {
     OntologyInferencer.layer,
     OntologyCacheFake.emptyCache,
   )
+
+  private val thingIri           = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri
+  private val blueThingIri       = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
+  private val thingWithSeqnumIri = "http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri
+
+  private val cacheDataWithSubclasses: OntologyCacheData =
+    OntologyCacheFake.emptyData.copy(
+      classToSubclassLookup = Map(thingIri -> Set(thingIri, blueThingIri, thingWithSeqnumIri)),
+    )
+
+  private val specWithSubclasses: Spec[Any, Any] =
+    suite("ConstructTransformerLive with subclasses in the ontology cache")(
+      test(
+        "it should render the inferred VALUES clause deterministically across repeated transformations of the same query",
+      ) {
+        val query = ConstructQuery(
+          constructClause = ConstructClause(
+            statements = Vector(
+              StatementPattern(
+                subj = QueryVariable("thing"),
+                pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                obj = XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
+              ),
+            ),
+          ),
+          whereClause = WhereClause(
+            patterns = Vector(
+              StatementPattern(
+                subj = QueryVariable("thing"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                obj = IriRef(thingIri),
+              ),
+            ),
+          ),
+        )
+        for {
+          firstTransformation  <- constructTransformerTransform(query)
+          secondTransformation <- constructTransformerTransform(query)
+          firstSparql           = firstTransformation.whereClause.toSparql
+          secondSparql          = secondTransformation.whereClause.toSparql
+        } yield assertTrue(firstSparql == secondSparql, firstSparql.contains("VALUES"))
+      },
+    ).provide(
+      ConstructTransformer.layer,
+      IriConverter.layer,
+      StringFormatter.test,
+      OntologyInferencer.layer,
+      OntologyCacheFake.withCache(cacheDataWithSubclasses),
+    )
+
+  val spec: Spec[Any, Any] = basicSpec + specWithSubclasses
 }
