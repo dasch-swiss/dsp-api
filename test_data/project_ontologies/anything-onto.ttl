@@ -252,6 +252,19 @@
 
 
 
+:hasGeolocation
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Geolocation"@de,
+                                      "Geolocation"@fr,
+                                      "Geolocation"@it,
+                                      "Geolocation"@en ;
+    knora-base:subjectClassConstraint :Thing ;
+    knora-base:objectClassConstraint  knora-base:GeolocationValue ;
+    salsah-gui:guiElement             salsah-gui:Geolocation .
+
+
+
 :hasThingPicture
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasRepresentation ;
@@ -484,7 +497,11 @@
                             [ rdf:type            owl:Restriction ;
                               owl:onProperty      :hasRegionPreview ;
                               owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger ] ;
+                              salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasGeolocation ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "15"^^xsd:nonNegativeInteger ] ;
     knora-base:resourceIcon "thing.png" ;
     rdfs:label              "Ding"@de,
                             "Chose"@fr,

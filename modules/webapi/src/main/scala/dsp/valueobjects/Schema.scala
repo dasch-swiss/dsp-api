@@ -26,6 +26,7 @@ object Schema {
     SalsahGui.Spinbox,
     SalsahGui.Searchbox,
     SalsahGui.Date,
+    SalsahGui.Geolocation,
     SalsahGui.Geometry,
     SalsahGui.Colorpicker,
     SalsahGui.List,

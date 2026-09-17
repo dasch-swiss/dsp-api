@@ -19,6 +19,7 @@ import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
+import org.knora.webapi.messages.Crs
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
@@ -101,9 +102,13 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
   private val colorValueIri                              = new MutableTestIri
   private val uriValueIri                                = new MutableTestIri
   private val geonameValueIri                            = new MutableTestIri
+  private val geolocationValueIri                        = new MutableTestIri
   private val linkValueIri                               = new MutableTestIri
   private val standoffLinkValueIri                       = new MutableTestIri
   private val stillImageFileValueIri                     = new MutableTestIri
+
+  private val geolocationPropertyIri =
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeolocation".toSmartIri
 
   private var linkValueUUID = randomUUID
 
@@ -1717,6 +1722,71 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
         savedValue <- asInstanceOf[GeonameValueContentV2](valueFromTriplestore.valueContent)
       } yield assertTrue(savedValue.valueHasGeonameCode == valueHasGeonameCode)
     },
+    test("create a geolocation value, preserving the submitted decimal precision") {
+      val resourceIri = aThingIri
+      val propertyIri = geolocationPropertyIri
+      val literal     = s"<${Crs.Crs84.iri}> POINT(8.550 47.3700)"
+
+      val createParams = CreateValueV2(
+        resourceIri = resourceIri,
+        resourceClassIri = Anything.thingClass.smartIri,
+        propertyIri = propertyIri,
+        valueContent = GeolocationValueContentV2(ontologySchema = ApiV2Complex, valueHasGeolocation = literal),
+      )
+      for {
+        maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+        createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
+        _                         = geolocationValueIri.set(createValueResponse.valueIri)
+        valueFromTriplestore     <- getValue(
+                                  resourceIri = resourceIri,
+                                  maybePreviousLastModDate = maybeResourceLastModDate,
+                                  propertyIriForGravsearch = propertyIri,
+                                  propertyIriInResult = propertyIri,
+                                  expectedValueIri = geolocationValueIri.asValueIri,
+                                  requestingUser = anythingUser1,
+                                )
+        savedValue <- asInstanceOf[GeolocationValueContentV2](valueFromTriplestore.valueContent)
+      } yield assertTrue(
+        savedValue.valueHasGeolocation == literal,
+        // the bare coordinates, so each one is a whole token under the index's tokenizer.
+        savedValue.valueHasString == "8.550 47.3700",
+      )
+    },
+    test("store and read back geometries the write path rejects, unchanged") {
+      val resourceIri = aThingIri
+      val propertyIri = geolocationPropertyIri
+      // Written directly, bypassing the request validator: if admitting lines, areas or elevation
+      // later needed a data migration, this test would fail.
+      val literals = List(
+        s"<${Crs.Crs84.iri}> LINESTRING(8.55 47.37, 8.56 47.38)",
+        s"<${Crs.Crs84.iri}> POLYGON((8.55 47.37, 8.56 47.38, 8.57 47.39, 8.55 47.37))",
+        s"<${Crs.Crs84.iri}> POINT Z (8.55 47.37 400)",
+      )
+
+      ZIO
+        .foreach(literals) { literal =>
+          val createParams = CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = Anything.thingClass.smartIri,
+            propertyIri = propertyIri,
+            valueContent = GeolocationValueContentV2(ontologySchema = ApiV2Complex, valueHasGeolocation = literal),
+          )
+          for {
+            maybeResourceLastModDate <- getResourceLastModificationDate(resourceIri, anythingUser1)
+            createValueResponse      <- valuesResponder(_.createValueV2(createParams, anythingUser1, randomUUID))
+            valueFromTriplestore     <- getValue(
+                                      resourceIri = resourceIri,
+                                      maybePreviousLastModDate = maybeResourceLastModDate,
+                                      propertyIriForGravsearch = propertyIri,
+                                      propertyIriInResult = propertyIri,
+                                      expectedValueIri = createValueResponse.valueIri,
+                                      requestingUser = anythingUser1,
+                                    )
+            savedValue <- asInstanceOf[GeolocationValueContentV2](valueFromTriplestore.valueContent)
+          } yield savedValue.valueHasGeolocation
+        }
+        .map(saved => assertTrue(saved == literals))
+    },
     test("create a link between two resources") {
       val resourceIri                    = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6")
       val linkPropertyIri                = KA.HasLinkTo.toSmartIri
@@ -2541,6 +2611,35 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
                                 )
         savedValue <- asInstanceOf[GeonameValueContentV2](valueFromTriplestore.valueContent)
       } yield assertTrue(savedValue.valueHasGeonameCode == valueHasGeonameCode)
+    },
+    test("update a geolocation value, including its coordinate reference system") {
+      val resourceIri = aThingIri
+      val propertyIri = geolocationPropertyIri
+      val literal     = s"<${Crs.Lv95.iri}> POINT(2600000 1200000)"
+
+      val updateParams = UpdateValueContentV2(
+        resourceIri = resourceIri,
+        resourceClassIri = Anything.thingClass.smartIri,
+        propertyIri = propertyIri,
+        valueIri = geolocationValueIri.asValueIri,
+        valueContent = GeolocationValueContentV2(ontologySchema = ApiV2Complex, valueHasGeolocation = literal),
+      )
+      for {
+        updateValueResponse  <- valuesResponder(_.updateValueV2(updateParams, anythingUser1, randomUUID))
+        _                     = geolocationValueIri.set(updateValueResponse.valueIri)
+        valueFromTriplestore <- getValue(
+                                  resourceIri = resourceIri,
+                                  maybePreviousLastModDate = None,
+                                  propertyIriForGravsearch = propertyIri,
+                                  propertyIriInResult = propertyIri,
+                                  expectedValueIri = geolocationValueIri.asValueIri,
+                                  requestingUser = anythingUser1,
+                                )
+        savedValue <- asInstanceOf[GeolocationValueContentV2](valueFromTriplestore.valueContent)
+      } yield assertTrue(
+        savedValue.valueHasGeolocation == literal,
+        savedValue.valueHasString == "2600000 1200000",
+      )
     },
     test("update a link between two resources") {
       val resourceIri                    = ResourceIri.unsafeFrom("http://rdfh.ch/0803/cb1a74e3e2f6")

@@ -2819,6 +2819,150 @@
         },
         {
             "knora-api:isValueClass": true,
+            "rdfs:label": "geolocation value",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Value"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:geolocationValueAsGeolocation"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:geolocationValueHasCoordinates"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:geolocationValueHasCrs"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:geolocationValueHasShape"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueAsString"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueCreationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "Represents a geographic location as coordinates in a known coordinate reference system",
+            "@type": "owl:Class",
+            "@id": "knora-api:GeolocationValue"
+        },
+        {
+            "knora-api:isValueClass": true,
             "rdfs:label": "geometry value",
             "rdfs:subClassOf": [
                 {
@@ -8812,6 +8956,66 @@
                 "@id": "knora-api:FileValue"
             },
             "rdfs:comment": "The name of the file that a file value represents."
+        },
+        {
+            "rdfs:label": "Geolocation value as geolocation",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:geolocationValueAsGeolocation",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeolocationValue"
+            },
+            "rdfs:comment": "Represents the literal geolocation of a GeolocationValue as an OGC GeoSPARQL wktLiteral: a coordinate reference system definition IRI in angle brackets, whitespace, then a WKT geometry."
+        },
+        {
+            "rdfs:label": "geolocation value has coordinates",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:geolocationValueHasCoordinates",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeolocationValue"
+            },
+            "rdfs:comment": "The geolocation's bare coordinates, without the CRS prefix or geometry wrapper (computed on read)."
+        },
+        {
+            "rdfs:label": "geolocation value has CRS",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:geolocationValueHasCrs",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeolocationValue"
+            },
+            "rdfs:comment": "The definition IRI of the geolocation's coordinate reference system (computed on read)."
+        },
+        {
+            "rdfs:label": "geolocation value has shape",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:geolocationValueHasShape",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeolocationValue"
+            },
+            "rdfs:comment": "The geolocation's geometry shape, e.g. 'Point' (computed on read), so that a client need not parse the literal to determine it."
         },
         {
             "rdfs:label": "Geometry value as JSON",

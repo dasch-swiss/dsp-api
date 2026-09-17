@@ -180,6 +180,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "anything:hasGeolocation"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     },
                     "owl:minCardinality": 0

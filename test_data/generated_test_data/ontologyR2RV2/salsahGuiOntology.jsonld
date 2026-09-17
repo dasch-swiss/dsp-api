@@ -47,6 +47,17 @@
             ]
         },
         {
+            "@id": "salsah-gui:Geolocation",
+            "rdf:type": [
+                {
+                    "@id": "salsah-gui:Guielement"
+                },
+                {
+                    "@id": "owl:NamedIndividual"
+                }
+            ]
+        },
+        {
             "@id": "salsah-gui:Geometry",
             "rdf:type": [
                 {

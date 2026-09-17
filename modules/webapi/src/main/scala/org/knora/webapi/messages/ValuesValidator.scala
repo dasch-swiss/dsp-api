@@ -25,6 +25,12 @@ object ValuesValidator {
   def validateGeometryString(s: String): Option[String] = s.fromJson[Json].map(_ => s).toOption
 
   /**
+   * Validates a geolocation literal. Returns a message naming the problem rather than an empty
+   * [[Option]], because the author needs an unsupported CRS told apart from an out-of-range ordinate.
+   */
+  def validateGeolocation(s: String): Either[String, Geolocation] = Geolocation.parse(s)
+
+  /**
    * Checks that a hexadecimal color code string is valid.
    *
    * @param s a string containing a hexadecimal color code.
