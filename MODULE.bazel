@@ -310,23 +310,23 @@ use_repo(image_versions, "dsp_image_versions")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
-# Upstream Sipi image (daschswiss/sipi:v8.0.0), pinned per-arch by manifest
+# Upstream Sipi image (daschswiss/sipi:v9.1.0), pinned per-arch by manifest
 # digest. Pulling each platform's single image manifest directly avoids
-# index/variant matching — the arm64 entry of the v8.0.0 index carries a `v8`
+# index/variant matching — the arm64 entry of the v9.1.0 index carries a `v8`
 # variant, which a bare `linux/arm64` platform request does not match. These two
 # digests are the SOLE source of the sipi version: the /version endpoint reads
 # the tag from the image's own `org.opencontainers.image.version` OCI label
 # (//tools/buildinfo:oci_config_label), so there is no duplicated tag string to
 # keep in sync. To bump, see "Bumping the SIPI version" in CLAUDE.md.
-# Index digest: sha256:8cb1098a3fdf2383c5bb3f382f46a1fe58dad4cfed0a56c7aa8c5e06f5ac5e85
+# Index digest: sha256:d62611ed01e5413772e90439591f039624dfd12b8a4d12bfc636ce274effc5f1
 oci.pull(
     name = "sipi_base_amd64",
-    digest = "sha256:6fb699b38b21e992719c03d3308e97a1fd4a755758fcb17e966a9c3293539ffd",
+    digest = "sha256:a8d61bb000c656c28d8371045b6203c5d8be96d1f925d431281a82d7a330b4ab",
     image = "index.docker.io/daschswiss/sipi",
 )
 oci.pull(
     name = "sipi_base_arm64",
-    digest = "sha256:069a1955331576d27df0b9efd11711b807228a52449c9532e46a0c9c2df0d5b5",
+    digest = "sha256:19feb776a202cfbc9e646ae883740b5eb8c4cb252405f0fc85e2fa0f4f5ed801",
     image = "index.docker.io/daschswiss/sipi",
 )
 use_repo(

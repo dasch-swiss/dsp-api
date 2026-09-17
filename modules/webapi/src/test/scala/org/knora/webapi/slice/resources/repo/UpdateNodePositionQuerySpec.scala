@@ -16,7 +16,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class UpdateNodePositionQuerySpec extends ZIOSpecDefault {
@@ -36,7 +35,7 @@ class UpdateNodePositionQuerySpec extends ZIOSpecDefault {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )

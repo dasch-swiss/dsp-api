@@ -126,31 +126,22 @@ object ProjectKeywordsGetResponse {
 /**
  * Represents a response to a request for the project's restricted view settings.
  *
- * @param settings the restricted view settings.
+ * @param settings  the effective restricted view settings.
+ * @param isDefault true if the project stores no setting of its own and inherits the platform default.
  */
-case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM)
-    extends AdminKnoraResponseADM
+case class ProjectRestrictedViewSettingsGetResponseADM(
+  settings: ProjectRestrictedViewSettingsADM,
+  isDefault: Boolean,
+) extends AdminKnoraResponseADM
 object ProjectRestrictedViewSettingsGetResponseADM {
   implicit val codec: JsonCodec[ProjectRestrictedViewSettingsGetResponseADM] =
     DeriveJsonCodec.gen[ProjectRestrictedViewSettingsGetResponseADM]
 
-  def from(restrictedView: RestrictedView): ProjectRestrictedViewSettingsGetResponseADM =
-    ProjectRestrictedViewSettingsGetResponseADM(ProjectRestrictedViewSettingsADM.from(restrictedView))
-}
-
-/**
- * Represents the JSON response to a request for a information about a `FileValue`.
- *
- * @param permissionCode         a code representing the user's maximum permission on the file.
- * @param restrictedViewSettings the project's restricted view settings.
- */
-case class PermissionCodeAndProjectRestrictedViewSettings(
-  permissionCode: Int,
-  restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
-) extends AdminKnoraResponseADM
-object PermissionCodeAndProjectRestrictedViewSettings {
-  implicit val codec: JsonCodec[PermissionCodeAndProjectRestrictedViewSettings] =
-    DeriveJsonCodec.gen[PermissionCodeAndProjectRestrictedViewSettings]
+  def from(restrictedView: Option[RestrictedView]): ProjectRestrictedViewSettingsGetResponseADM =
+    ProjectRestrictedViewSettingsGetResponseADM(
+      ProjectRestrictedViewSettingsADM.from(restrictedView.getOrElse(RestrictedView.default)),
+      isDefault = restrictedView.isEmpty,
+    )
 }
 
 /**

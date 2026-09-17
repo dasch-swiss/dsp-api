@@ -74,7 +74,7 @@ test-ingest *FLAGS='': require-bazel
 test-ingest-integration *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-ingest-integration:test {{FLAGS}}
 
-# Check Scala formatting (scalafmt via Bazel) + license headers (CI gate, no writes)
+# Check Scala formatting (scalafmt via Bazel) + license headers + markdown (CI gate, no writes)
 check *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
@@ -83,6 +83,10 @@ check *FLAGS='': require-bazel
     # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
     for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
     bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
+    # markdownlint (from the Nix dev shell, flake.nix) over every tracked markdown file; the
+    # release-please CHANGELOGs are generated and excluded.
+    markdownlint --config .markdownlint.yml --disable MD013 MD040 \
+      --ignore CHANGELOG.md --ignore modules/ingest/CHANGELOG.md -- $(git ls-files '*.md')
 
 # Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
 header-fix: require-bazel
@@ -270,18 +274,6 @@ docs-build: docs-build-dependent docs-ingest-build
 
 docs-ingest-build:
     (cd modules/ingest; mkdocs build --clean)
-
-# lints every markdown file tracked by git; the release-please CHANGELOGs are generated and excluded
-markdownlint:
-    docker run \
-    --rm \
-    -v $PWD:/workdir \
-    ghcr.io/igorshubovych/markdownlint-cli:latest \
-    --config .markdownlint.yml \
-    --disable MD013 MD040 \
-    --ignore CHANGELOG.md \
-    --ignore modules/ingest/CHANGELOG.md \
-    -- $(git ls-files '*.md')
 
 ## Architecture docs
 

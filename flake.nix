@@ -44,6 +44,10 @@
 
               just
               cacert
+              # `markdownlint` — the `just markdownlint` CI gate. Pinned by the
+              # flake lock instead of a floating `:latest` container image, and
+              # needs no Docker on the host.
+              markdownlint-cli
               # `crane` — resolve base-image digests and inspect multi-arch
               # manifests (the same tool sipi uses for publishing).
               go-containerregistry

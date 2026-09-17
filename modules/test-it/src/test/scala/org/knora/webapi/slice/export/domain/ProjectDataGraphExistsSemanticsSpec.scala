@@ -14,7 +14,6 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -37,7 +36,7 @@ class ProjectDataGraphExistsSemanticsSpec extends E2EZSpec {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )
