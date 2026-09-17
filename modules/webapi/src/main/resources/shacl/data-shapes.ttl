@@ -153,6 +153,31 @@ knora-base:LinkObj-Shape
     sh:message "Instance of LinkObj may have any number of knora-base:hasComment of type knora-base:TextValue"
   ] .
 
+knora-base:Annotation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Annotation ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:minCount 1 ;
+    sh:class knora-base:TextValue ;
+    sh:message "Annotation instance must have at least one knora-base:hasComment of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAnnotationOf ;
+    sh:minCount 1 ;
+    sh:class knora-base:Resource ;
+    sh:message "Annotation instance must have at least one knora-base:isAnnotationOf to a Resource that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAnnotationOfValue ;
+    sh:minCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Annotation instance must have at least one knora-base:isAnnotationOfValue of type knora-base:LinkValue"
+  ] .
+
 
 # Shapes for Segment
 
@@ -254,6 +279,17 @@ knora-base:ArchiveRepresentation-Shape
     sh:maxCount 1 ;
     sh:class knora-base:ArchiveFileValue ;
     sh:message "ArchiveRepresentation instance must have one knora-base:hasArchiveFileValue of type knora-base:ArchiveFileValue"
+  ] .
+
+knora-base:DDDRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DDDRepresentation ;
+  sh:property [
+    sh:path knora-base:hasDDDFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:DDDFileValue ;
+    sh:message "DDDRepresentation instance must have one knora-base:hasDDDFileValue of type knora-base:DDDFileValue"
   ] .
 
 knora-base:AudioRepresentation-Shape
@@ -618,6 +654,18 @@ knora-base:UriValue-Shape
       sh:message "UriValue instance must have one knora-base:valueHasUri of type xsd:anyURI"
     ] .
 
+knora-base:RegionPreviewValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:RegionPreviewValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionPreviewOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:Region ;
+    sh:message "RegionPreviewValue instance must have one knora-base:isRegionPreviewOf of type knora-base:Region"
+  ] .
+
 # FileValues
 
 knora-base:FileValue-Shape
@@ -677,6 +725,10 @@ knora-base:FileValue-Shape
 knora-base:ArchiveFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:ArchiveFileValue .
+
+knora-base:DDDFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DDDFileValue .
 
 knora-base:AudioFileValue-Shape
   a sh:NodeShape ;

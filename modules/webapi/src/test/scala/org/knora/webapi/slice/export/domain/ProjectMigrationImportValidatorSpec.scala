@@ -793,6 +793,68 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         },
       )
     },
+    suite("DDDRepresentationShape (data)") {
+      val Resource = "http://rdfh.ch/9999/ddd001"
+      val FileNode = "http://rdfh.ch/9999/ddd001/file001"
+
+      suite("file value type")(
+        test("accepts 3D representation with a knora-base:DDDFileValue") {
+          val nq =
+            representationNq(Resource, s"${KnoraBase}DDDRepresentation", s"${KnoraBase}hasDDDFileValue", FileNode) +
+              fileValueNq(FileNode, s"${KnoraBase}DDDFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects 3D representation whose file value is a knora-base:AudioFileValue") {
+          val nq =
+            representationNq(Resource, s"${KnoraBase}DDDRepresentation", s"${KnoraBase}hasDDDFileValue", FileNode) +
+              fileValueNq(FileNode, s"${KnoraBase}AudioFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
+    suite("AnnotationShape (data)") {
+      val Annotation = "http://rdfh.ch/9999/annotation001"
+
+      // Base Resource properties present; the Annotation-specific link properties are absent.
+      val bareAnnotationNq =
+        s"""<$Annotation> <$RdfType> <${KnoraBase}Annotation> <$DataGraph> .
+           |<$Annotation> <$RdfsLabel> "Annotation 1" <$DataGraph> .
+           |<$Annotation> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Annotation> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Annotation> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$Annotation> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Annotation> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      test("rejects annotation missing hasComment, isAnnotationOf and isAnnotationOfValue") {
+        ZIO.scoped {
+          validate(validOntologyNq, bareAnnotationNq).map(result => assertTrue(result.isLeft))
+        }
+      }
+    },
+    suite("RegionPreviewValueShape (data)") {
+      val Value = "http://rdfh.ch/9999/region001/values/preview001"
+
+      // Base Value properties present; the RegionPreviewValue-specific isRegionPreviewOf is absent.
+      val valueMissingRegionNq =
+        s"""<$Value> <$RdfType> <${KnoraBase}RegionPreviewValue> <$DataGraph> .
+           |<$Value> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$Value> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Value> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Value> <${KnoraBase}valueHasString> "region preview"^^<$XsdString> <$DataGraph> .
+           |<$Value> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin
+
+      test("rejects region preview value missing knora-base:isRegionPreviewOf") {
+        ZIO.scoped {
+          validate(validOntologyNq, valueMissingRegionNq).map(result => assertTrue(result.isLeft))
+        }
+      }
+    },
     suite("AttachedToUserExistsShape (data)") {
       val ontologyWithClass = validOntologyNq +
         s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
