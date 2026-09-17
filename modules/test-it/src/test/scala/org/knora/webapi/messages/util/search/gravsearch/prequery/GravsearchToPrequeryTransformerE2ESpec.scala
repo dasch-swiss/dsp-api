@@ -652,6 +652,24 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |}
         """.stripMargin
 
+  val queryClassValuesLabelFilterOrderBy: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |
+      |CONSTRUCT {
+      |  ?src knora-api:isMainResource true .
+      |  ?src beol:title ?title .
+      |} WHERE {
+      |  ?src a beol:writtenSource .
+      |  ?src rdfs:label ?label .
+      |  ?src beol:title ?title .
+      |  ?title knora-api:valueAsString ?titleStr .
+      |  FILTER(?titleStr = "Basel"^^xsd:string)
+      |} ORDER BY ASC(?label)
+        """.stripMargin
+
   val queryFilterBeforeStatementsInUnion: String =
     """
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
@@ -843,6 +861,31 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
         .map(actual =>
           assertGolden(actual.toSparql, "linkTargetAnchor") &&
             assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "linkTargetAnchorShape"),
+        )
+    },
+    test("transform a query filtering on a class value's label and ordering by it") {
+      transformQueryWithInference(queryClassValuesLabelFilterOrderBy)
+        .map(actual =>
+          assertGolden(actual.toSparql, "classValuesLabelFilterOrderBy") &&
+            assertGolden(
+              GravsearchInferencePipelineTestSupport.shapeSummary(actual),
+              "classValuesLabelFilterOrderByShape",
+            ),
+        )
+    },
+    test(
+      "transform a query filtering on a class value's label and ordering by it, limiting results to a project",
+    ) {
+      transformQueryWithInference(
+        queryClassValuesLabelFilterOrderBy,
+        limitResultsToProject = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF")),
+      )
+        .map(actual =>
+          assertGolden(actual.toSparql, "classValuesLabelFilterOrderByProjectLimited") &&
+            assertGolden(
+              GravsearchInferencePipelineTestSupport.shapeSummary(actual),
+              "classValuesLabelFilterOrderByProjectLimitedShape",
+            ),
         )
     },
     test("transform a query whose FILTER precedes, in a nested group, the statements binding its variable") {
