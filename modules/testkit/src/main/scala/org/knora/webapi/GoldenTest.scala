@@ -17,6 +17,19 @@ import scala.util.chaining.scalaUtilChainingOps
  * validate its content while enabling automatic updates to the standard with
  * rewrite = true through "assertGolden(..., rewrite = true)" or "rewriteAll = true" in the trait.
  *
+ * To regenerate golden files without editing spec source, run the rewrite via the GOLDEN_REWRITE
+ * environment variable, e.g.:
+ *   bazel test <target> --test_filter='.*<Spec>.*' --test_env=GOLDEN_REWRITE=1
+ * This run fails by design (see assertNever below). Follow it with a clean rerun without the env
+ * variable, which must pass.
+ *
+ * Placeholder rule for NEW golden cases: Bazel runfiles entries are symlinks to the source files, so
+ * a rewrite of an already-existing golden file lands in the source tree. A rewrite of a file that does
+ * not exist yet instead creates a plain file in the runfiles tree, which is discarded after the test
+ * run. Therefore, before running the rewrite for a new golden case, create an empty placeholder file
+ * at the expected path under src/test/resources/... first. After the rewrite run, use git status to
+ * confirm the source files actually changed.
+ *
  * Use git diff or the test output to inspect the differences and either update the standard or update the code.
  *
  * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
@@ -37,7 +50,7 @@ trait GoldenTest {
       new String(Files.readAllBytes(path), "UTF-8")
     }
 
-    if (rewrite || rewriteAll) {
+    if (rewrite || rewriteAll || sys.env.get("GOLDEN_REWRITE").exists(_.nonEmpty)) {
       // NOTE: this should prevent infinite loops, if the output is stable
       if (expected != Some(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
 
