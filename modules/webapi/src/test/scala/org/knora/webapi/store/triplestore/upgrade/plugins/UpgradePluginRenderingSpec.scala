@@ -143,5 +143,27 @@ class UpgradePluginRenderingSpec extends ZIOSpecDefault {
         assertTrue(canonical(new MigrateRemoveProjectStatus().removeProjectStatus.sparql) == canonical(expected))
       },
     ),
+    suite("UpgradePluginPR4329")(
+      test("removeNoOpRestrictedViewSize") {
+        val expected =
+          """|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH <http://www.knora.org/data/admin>
+             |DELETE { ?project knora-admin:projectRestrictedViewSize "pct:100" . }
+             |WHERE { GRAPH <http://www.knora.org/data/admin> { ?project a knora-admin:knoraProject ;
+             |    knora-admin:projectRestrictedViewSize "pct:100" . } }""".stripMargin
+        assertTrue(canonical(new UpgradePluginPR4329().removeNoOpRestrictedViewSize.sparql) == canonical(expected))
+      },
+      test("removeBackfilledDefaultRestrictedViewSize") {
+        val expected =
+          """|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |WITH <http://www.knora.org/data/admin>
+             |DELETE { ?project knora-admin:projectRestrictedViewSize "!128,128" . }
+             |WHERE { GRAPH <http://www.knora.org/data/admin> { ?project a knora-admin:knoraProject ;
+             |    knora-admin:projectRestrictedViewSize "!128,128" . } }""".stripMargin
+        assertTrue(
+          canonical(new UpgradePluginPR4329().removeBackfilledDefaultRestrictedViewSize.sparql) == canonical(expected),
+        )
+      },
+    ),
   )
 }
