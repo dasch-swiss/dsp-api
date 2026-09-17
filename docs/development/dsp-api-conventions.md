@@ -279,6 +279,18 @@ afterwards use `git status` to confirm the source files actually changed.
 Golden comparison is exact text, so the generated output must be deterministic — normalise UUIDs,
 timestamps and other non-deterministic values before snapshotting.
 
+**Shared golden suffixes.** Some tests deliberately point two inputs at the same golden file to assert they
+must render identically — e.g. in `GravsearchToPrequeryTransformerE2ESpec`, the simple- and complex-schema
+variants of a query share a suffix. Under a `GOLDEN_REWRITE` run every such test writes that file and the last
+writer wins, so a genuine divergence between the two inputs only surfaces as one of the pair failing on the
+next clean rerun. Treat that failure as a real bug to investigate — not a stale golden to re-rewrite — and do
+not split the shared suffix just to make it pass.
+
+**`<suffix>Shape` companion goldens.** Some prequery golden cases also assert a second golden rendered by
+`GravsearchInferencePipelineTestSupport.shapeSummary`, which prints one line per top-level WHERE pattern. Add a
+`<suffix>Shape` companion golden when the test's purpose is to pin the top-level pattern *order*, not merely the
+rendered SPARQL text.
+
 ## Naming Conventions
 
 | Element | Convention | Example |

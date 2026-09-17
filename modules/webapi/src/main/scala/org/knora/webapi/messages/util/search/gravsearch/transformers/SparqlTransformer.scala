@@ -92,19 +92,10 @@ object SparqlTransformer {
    * Creates a deterministic, content-derived variable name for a `VALUES` block introduced during
    * ontology inference, replacing the `scala.util.Random` fallback previously used for this purpose.
    *
-   * [[escapeEntityForVariable]] is not reused here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
-   * escape to the same string, which would merge two unrelated `VALUES` blocks and intersect their
-   * class sets into an empty result), and it passes an [[XsdLiteral]]'s raw text (e.g.
-   * `"(DE-588)118531379"`) through unchanged, offering no `VARNAME` guarantee for any entity position.
-   * `createInferenceVariable` instead sanitises its `base` unconditionally on every branch, including
-   * the fallback branch.
-   *
-   * The result is always a valid SPARQL `VARNAME`: the grammar permits a leading digit or an empty
-   * base, and the `__kind__hash` suffix is appended unconditionally regardless of what `base`
-   * sanitises to.
-   *
-   * Identical statements deliberately produce the same variable name. This is harmless: the
-   * constraint contributed by that statement is identical, so sharing the variable loses nothing.
+   * Do not substitute [[escapeEntityForVariable]] here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
+   * escape alike), and a collision would merge two unrelated `VALUES` blocks and empty the result set.
+   * See `docs/05-internals/design/api-v2/gravsearch.md` § "Determinism for Snapshot Testing" for the
+   * full rationale.
    *
    * @param statement the statement pattern that requires an inference variable.
    * @param kind       a short discriminator (e.g. `"resTypes"`, `"subProp"`) distinguishing the

@@ -539,3 +539,12 @@ name.
 The suffix must stay unique per statement, not a shared constant: a constant would collapse unrelated `VALUES`
 variables (e.g. one from `?mainRes a Resource`, another from `?val a Value`) into the same variable,
 intersecting their blocks into silently empty results.
+
+There is a second, independent source of nondeterminism that this work also fixed: `TopologicalSortUtil`'s
+`findPermutations` walks scala-graph's per-layer node buffers, which iterate in `System.identityHashCode`
+order — an order that varies from one JVM run to the next. `GravsearchQueryOptimisation.findBestTopologicalOrder`
+only disambiguates the *last* layer via its permutations, so any dependency graph with two or more non-origin
+nodes in an earlier layer would render its WHERE patterns in a different order on every run.
+`TopologicalSortUtil` now sorts each layer's nodes by their string form (`sortBy(_.outer.toString)`) before
+building permutations, pinning the order. The resulting layer order is deterministic but arbitrary with
+respect to selectivity — this is a determinism guarantee for snapshot testing, not a query-performance choice.
