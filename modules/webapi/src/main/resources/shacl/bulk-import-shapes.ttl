@@ -23,6 +23,30 @@ knora-base:Resource-Shape
     sh:path knora-base:isDeleted ;
     sh:hasValue "false"^^xsd:boolean ;
     sh:message "Resource instance may not be marked as knora-base:isDeleted true" ;
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:lastModificationDate ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:lastModificationDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deleteDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deletedBy in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deleteComment in the bulk-import"
   ] .
 
 knora-base:Value-Shape
@@ -37,4 +61,34 @@ knora-base:Value-Shape
     sh:path knora-base:isDeleted ;
     sh:hasValue "false"^^xsd:boolean ;
     sh:message "Value instance may not be marked as knora-base:isDeleted true" ;
-]  .
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:lastModificationDate ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:lastModificationDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deleteDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deletedBy in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deleteComment in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:previousValue ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:previousValue in the bulk-import"
+  ] . 
