@@ -17,6 +17,12 @@ knora-base:Resource-Shape
     sh:path knora-base:attachedToUser ;
     sh:hasValue <urn:placeholder:userIri> ;
     sh:message "Resource instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isDeleted ;
+    sh:hasValue "false"^^xsd:boolean ;
+    sh:message "Resource instance may not be marked as knora-base:isDeleted true" ;
   ] .
 
 knora-base:Value-Shape
@@ -25,4 +31,10 @@ knora-base:Value-Shape
     sh:path knora-base:attachedToUser ;
     sh:hasValue <urn:placeholder:userIri> ;
     sh:message "Value instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
-  ] .
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isDeleted ;
+    sh:hasValue "false"^^xsd:boolean ;
+    sh:message "Value instance may not be marked as knora-base:isDeleted true" ;
+]  .
