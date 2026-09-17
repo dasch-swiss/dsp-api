@@ -170,10 +170,6 @@ object ProjectExportServiceLive {
 /** The CONSTRUCT queries backing the admin and permission parts of a project export. */
 private[service] object ProjectExportQueries {
 
-  /**
-   * The admin metadata of a project: the project itself, the users which are members of it,
-   * and the groups which belong to it.
-   */
   def adminData(projectId: ProjectIri): Construct = {
     val projectIri = Iri.unsafeFrom(projectId.value)
     Construct(

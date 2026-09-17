@@ -14,8 +14,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
- * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
- * query to get the actual results for the page.
+ * the search criteria.
  *
  * @param constructClause      the CONSTRUCT clause from the input query.
  * @param typeInspectionResult the result of type inspection of the input query.

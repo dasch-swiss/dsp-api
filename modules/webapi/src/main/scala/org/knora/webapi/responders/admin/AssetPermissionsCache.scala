@@ -30,10 +30,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
  * the decision keyed by `(UserIri, InternalFilename)` sheds the repeated `FileValuePermissionsQuery` round-trip and
  * permission computation within that burst, and zio-cache's single-flight behaviour collapses the simultaneous
  * first-tile salvo into one resolution.
- *
- * The responder stays a pure resolver: this is a wrapping service, so the cache is self-contained and independently
- * testable. Only successful decisions are retained (failures re-resolve on the next request), expiry is lazy after a
- * configured TTL, and capacity is bounded — see [[AssetPermissionsCache.makeCache]].
  */
 final case class AssetPermissionsCache(
   private val cache: Cache[
@@ -67,8 +63,7 @@ object AssetPermissionsCache {
 
   /**
    * `filename` is an internal filename, a globally-unique asset id, so the key identifies exactly one asset -
-   * which is what keeps a decision derived from one asset's media kind from being served for another. The
-   * non-authoritative `shortcode` path segment is deliberately absent.
+   * which is what keeps a decision derived from one asset's media kind from being served for another.
    */
   final case class CacheKey(userIri: UserIri, filename: InternalFilename)
 
@@ -76,7 +71,7 @@ object AssetPermissionsCache {
    * Testable core of the cache. Unit tests pass a counting/failing `resolve`; production passes the real one (see
    * [[layer]]). Built with `Cache.makeWith` so that only successes are retained for the configured `ttl`, while a
    * failure (a transient triplestore error or a definitive `NotFoundException`) is given `Duration.Zero` and thus
-   * re-resolved on the next matching request (REQ-1.6).
+   * re-resolved on the next matching request.
    */
   def makeCache(capacity: Int, ttl: Duration)(
     resolve: CacheKey => Task[AssetAccess],
@@ -92,7 +87,6 @@ object AssetPermissionsCache {
    * special-casing is needed), then delegate to the unchanged responder. The `zio.cache.Lookup` sees only the key, so
    * this cannot reuse the request's already-hydrated `User`; that introduces a benign TOCTOU divergence from the
    * uncached path (a user deleted between requests surfaces here as a `NotFoundException` rather than the token `User`).
-   * It depends only on `users`/`responder`, not on the built `Cache`, so it lives here rather than on the instance.
    */
   private def resolve(users: UserService, responder: AssetPermissionsResponder)(
     key: CacheKey,
@@ -116,7 +110,7 @@ object AssetPermissionsCache {
     }
 
   /**
-   * Registers `hits`/`misses`/`size` from `cache.cacheStats` as unlabeled polling gauges (REQ-3.1/3.2). `hits`/`misses`
+   * Registers `hits`/`misses`/`size` from `cache.cacheStats` as unlabeled polling gauges. `hits`/`misses`
    * are cumulative totals surfaced as gauges-of-absolute-value (a Prometheus counter would double-count), so dashboards
    * use `deriv`/`idelta`, not `rate()`, and the names carry no `_total` suffix. The poller runs for the lifetime of the
    * enclosing layer's scope.

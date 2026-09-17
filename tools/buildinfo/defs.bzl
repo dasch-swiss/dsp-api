@@ -1,4 +1,4 @@
-"""Generate a BuildInfo.scala object, replacing sbt-buildinfo.
+"""Generate a BuildInfo.scala object.
 
 `string_fields` are baked in verbatim. `stamp_fields` map a Scala val name to a
 workspace-status key (see tools/workspace_status.sh); their values are read from

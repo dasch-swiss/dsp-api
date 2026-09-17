@@ -21,8 +21,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 
 /**
  * Request body for `POST /v2/resources/batch`: the resource IRIs to fetch. Plain JSON
- * (not JSON-LD) so the IRI list is carried in the body rather than the URL path. Name
- * mirrors the path/handler word order (resources → batch).
+ * (not JSON-LD) so the IRI list is carried in the body rather than the URL path.
  */
 final case class ResourcesBatchRequest(resourceIris: List[String])
 object ResourcesBatchRequest {

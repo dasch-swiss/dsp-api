@@ -12,7 +12,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 
 /**
  * The reason a supplied on-behalf-of user is rejected for a project data import. The `reason` string is a cross-repo
- * contract intended to be read by dsp-tools (plan 07) as `details["reason"]`; keep the values stable.
+ * contract read by dsp-tools as `details["reason"]`; keep the values stable.
  */
 enum OnBehalfOfIneligibility(val reason: String) {
   case MalformedIdentifier extends OnBehalfOfIneligibility("malformed_identifier")
@@ -25,9 +25,8 @@ enum OnBehalfOfIneligibility(val reason: String) {
 object OnBehalfOfUserEligibility {
 
   /**
-   * Checks whether `user` may act as the on-behalf-of user for a data import into `projectIri`. Returns the first
-   * failing reason, or `None` if the user is eligible. The check order matches the request contract: not a system
-   * admin, a member or admin of the project, active, and able to create resources project-wide.
+   * Returns the first failing reason, or `None` if the user is eligible. The check order is part of the
+   * request contract, so reordering it changes which reason a caller sees.
    */
   def check(user: User, projectIri: ProjectIri): Option[OnBehalfOfIneligibility] =
     if (user.isSystemAdmin) Some(OnBehalfOfIneligibility.IsSystemAdmin)
@@ -39,7 +38,7 @@ object OnBehalfOfUserEligibility {
 
   /**
    * Project-wide create right. A user with only class-restricted create rights is rejected: the import spans arbitrary
-   * classes unknown at trigger time, so the class-restricted grant cannot be checked up front (D6).
+   * classes unknown at trigger time, so the class-restricted grant cannot be checked up front.
    */
   private def canCreate(user: User, projectIri: ProjectIri): Boolean =
     user.permissions.administrativePermissionsPerProject

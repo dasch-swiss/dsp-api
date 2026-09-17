@@ -43,8 +43,7 @@ final class StandoffRestService(
     } yield response
 
   /**
-   * Canonicalizes standard-mapping rich-text XML by round-tripping it through standoff markup and back,
-   * yielding the exact XML dsp-api would return when reading the value. The conversion is idempotent, so
+   * Yields the exact XML dsp-api would return when reading the value. The conversion is idempotent, so
    * the result is comparable to the `textValueAsXml` of a stored value for change detection.
    */
   def canonicalize(user: User)(xml: String): Task[String] =

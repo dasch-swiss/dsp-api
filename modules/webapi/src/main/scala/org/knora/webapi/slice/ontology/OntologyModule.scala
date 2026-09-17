@@ -27,10 +27,9 @@ object OntologyModule { self =>
 
   type Dependencies = IriConverter & IriService & StringFormatter & TriplestoreService
 
-  // This module exposes StandoffEntityInfoService: a lean, OntologyCache-only standoff lookup extracted from
-  // OntologyResponderV2. Standoff callers (StandoffMappingService, StandoffTagUtilV2) depend on it instead of the full
-  // responder, which keeps the layer graph acyclic. StandoffMappingService and OntologyTransformer belong to other
-  // slices and stay wired in core/LayersLive.
+  // This module exposes StandoffEntityInfoService, a lean OntologyCache-only standoff lookup that standoff
+  // callers (StandoffMappingService, StandoffTagUtilV2) depend on instead of the full responder.
+  // StandoffMappingService and OntologyTransformer belong to other slices and stay wired in core/LayersLive.
   type Provided =
     // format: off
     CardinalityService &

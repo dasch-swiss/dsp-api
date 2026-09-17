@@ -400,8 +400,6 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
 }
 
 /**
- * Represents the SPARQL `COALESCE` function.
- *
  * @param args the candidate expressions, evaluated in order; COALESCE returns the first bound one.
  */
 case class CoalesceFunction(args: Seq[Entity]) extends Expression {

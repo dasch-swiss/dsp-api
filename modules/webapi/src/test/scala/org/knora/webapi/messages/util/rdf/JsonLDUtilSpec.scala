@@ -22,7 +22,7 @@ class JsonLDUtilSpec extends ZIOSpecDefault {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   // Read a test_data fixture from the classpath (packaged for Bazel via //test_data:fixtures),
-  // falling back to the repo-relative filesystem path used under sbt.
+  // falling back to the repo-relative filesystem path.
   private def readFixture(relPath: String): String =
     try FileUtil.readTextResource(relPath)
     catch { case _: Throwable => FileUtil.readTextFile(Paths.get("../..", relPath)) }

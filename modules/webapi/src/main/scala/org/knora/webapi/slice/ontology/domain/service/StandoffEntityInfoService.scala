@@ -17,17 +17,12 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInf
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
- * Reads standoff class and property definitions from the ontology cache.
- *
- * Extracted from `OntologyResponderV2` so that standoff callers depend only on the ontology cache, not on the whole
- * responder. This keeps the layer graph acyclic and lets the module bundle the cache without pulling in the responder.
+ * Standoff callers depend on this rather than on `OntologyResponderV2`, so they need only the ontology
+ * cache and the layer graph stays acyclic.
  */
 trait StandoffEntityInfoService {
 
   /**
-   * Given a set of standoff class IRIs and a set of property IRIs, returns a [[StandoffEntityInfoGetResponseV2]] that
-   * describes both the class and the property entities.
-   *
    * @param standoffClassIris    the IRIs of the standoff class entities to query.
    * @param standoffPropertyIris the IRIs of the property entities to query.
    */

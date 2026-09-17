@@ -47,8 +47,6 @@ object GetGraphDataQuery {
   }
 
   /**
-   * Builds a query that traverses outbound or inbound links from/to a start node.
-   *
    * @param startNodeIri             the IRI of the start node
    * @param outbound                 true to get outbound links, false to get inbound links
    * @param maybeExcludeLinkProperty if provided, a link property to exclude from results

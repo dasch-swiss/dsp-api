@@ -100,9 +100,8 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
 
 object E2EZSpec {
 
-  // zio-test's sbt runner installs every spec's `bootstrap` into a shared runtime, so a per-spec
-  // `consoleLogger(...)` layer adds a fresh logger instance for each E2EZSpec subclass in the run,
-  // duplicating every log line once per spec class. `FiberRef.currentLoggers` is a Set, so
+  // A per-spec `consoleLogger(...)` layer adds a fresh logger instance for each E2EZSpec subclass
+  // in a run, duplicating every log line once per spec class. `FiberRef.currentLoggers` is a Set, so
   // installing this single shared logger instance instead is idempotent.
   private val sharedConsoleLogger: ZLogger[String, Any] = {
     val config = {

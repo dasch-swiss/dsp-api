@@ -28,11 +28,9 @@ object ReplaceClassCardinalitiesQuery {
     val previousDate = Literal.dateTime(lastModificationDate)
     val currentDate  = Literal.dateTime(currentTime)
 
-    // Two statements: the first drops the class's existing blank-node cardinality restrictions, the second
-    // inserts the new cardinalities and moves the ontology's last modification date on. They cannot be merged
-    // into one statement: the restriction OPTIONAL yields one solution per existing restriction triple, and
-    // the INSERT template's blank nodes are freshly allocated per solution, so a merged statement would
-    // insert one copy of the new restrictions per matched row.
+    // The two statements cannot be merged: the restriction OPTIONAL yields one solution per existing
+    // restriction triple, and the INSERT template's blank nodes are freshly allocated per solution, so a
+    // merged statement would insert one copy of the new restrictions per matched row.
     Update(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

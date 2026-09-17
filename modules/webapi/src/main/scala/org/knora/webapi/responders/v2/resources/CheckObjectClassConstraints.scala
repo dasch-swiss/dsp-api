@@ -136,8 +136,7 @@ object CheckObjectClassConstraints {
 
       objectConstraintInfos <- ontologyRepo.findDirectSubclassesBy(objectConstraint.toInternalIri)
       // `findDirectSubclassesBy` already includes the class itself (a class is a subclass of itself in
-      // the ontology cache), so prepending `objectConstraint` would list it twice. Dedup to keep the
-      // list of acceptable classes free of duplicates.
+      // the ontology cache), so prepending `objectConstraint` would list it twice.
     } yield (objectConstraint +: objectConstraintInfos.map(_.entityInfoContent.classIri)).distinct
   }
 

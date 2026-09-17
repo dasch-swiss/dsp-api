@@ -19,7 +19,7 @@ import scala.util.chaining.scalaUtilChainingOps
  *
  * Use git diff or the test output to inspect the differences and either update the standard or update the code.
  *
- * Beware: a test run with the "~" prefix in sbt and "rewrite = true" will loop, if the output keeps changing.
+ * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
  */
 trait GoldenTest {
   val rewriteAll: Boolean = false
@@ -33,8 +33,8 @@ trait GoldenTest {
   ): TestResult = {
     val (name, store, resource) = GoldenTest.goldenPath(suffix)
     val path                    = Paths.get(store)
-    // Read the golden file from the classpath first (works under both sbt and Bazel, where the
-    // source tree is not available at runtime), falling back to the filesystem path used by rewrite.
+    // Read the golden file from the classpath first (the source tree is not available at runtime
+    // under Bazel), falling back to the filesystem path used by rewrite.
     val expected: Option[String] =
       Option(getClass.getClassLoader.getResourceAsStream(resource)).map { is =>
         try new String(is.readAllBytes(), "UTF-8")

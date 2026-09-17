@@ -6,10 +6,8 @@
 package org.knora.sparqlbuilder
 
 /**
- * A SPARQL text fragment that composes safely. Values are escaped at interpolation time
- * (since SPARQL has no parameterized query protocol). Fragments compose via `++` (monoid).
- *
- * Inspired by Doobie's `Fragment` type.
+ * A SPARQL text fragment that composes safely: values are escaped at interpolation time, since
+ * SPARQL has no parameterized query protocol.
  */
 final case class Fragment private (parts: Vector[Fragment.Part]) { self =>
 

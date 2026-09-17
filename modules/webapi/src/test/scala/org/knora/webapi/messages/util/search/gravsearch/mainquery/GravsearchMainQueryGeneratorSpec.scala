@@ -18,9 +18,6 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.QueryVariable
 import org.knora.webapi.slice.common.ResourceIri
 
-/**
- * Tests [[GravsearchMainQueryGenerator]].
- */
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchMainQueryGeneratorSpec extends ZIOSpecDefault {
 
@@ -38,8 +35,8 @@ class GravsearchMainQueryGeneratorSpec extends ZIOSpecDefault {
         "skip rows whose main-resource variable is bound to a non-resource IRI (e.g. a LinkValue) rather than throwing (DEV-6604)",
       ) {
         // For variable-predicate incoming-link searches the prequery can bind the main-resource variable to a
-        // LinkValue node (`.../values/...`). Before the fix this crashed the whole request with an
-        // IllegalArgumentException from `ResourceIri.unsafeFrom`; now the spurious row is dropped.
+        // LinkValue node (`.../values/...`); the spurious row must be dropped rather than reaching
+        // `ResourceIri.unsafeFrom`.
         val resourceIri = "http://rdfh.ch/0828/eawbn9g4QVKouqfB8n0WiA"
         val valueIri    = "http://rdfh.ch/0828/qMBgsLpPTMSHv9FYfG1Zcg/values/9KeFJfrLTjmPhB3158J65Q"
 

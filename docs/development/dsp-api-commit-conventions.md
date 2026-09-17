@@ -19,20 +19,19 @@ Group commits by user-visible impact, not by implementation journey.
    noise
 3. Ask: "would a developer deploying dsp-api care about this change?"
    If yes → `feat:` or `fix:`. If no → an internal type
-4. Debugging journeys (trial-and-error, reverts, iterative fixes)
-   belong in the PR description, not the commit history
+4. A debugging journey (trial-and-error, reverts, iterative fixes) belongs in a learning under `dasch-specs/learnings`, not in the commit history and not in the PR description: this repo squash-merges, so the PR body becomes the commit message
 
 For the prefix → changelog mapping and scope convention, see
 `CONVENTIONS.md` § Commit Conventions.
 
 ### Where context lives
 
-| Layer           | Audience                      | Content                           |
-|-----------------|-------------------------------|-----------------------------------|
-| Commit messages | Release notes readers         | User-visible changes only         |
-| PR description  | Reviewers + future developers | Full context including challenges |
-| Learnings docs  | Future Claude + engineers     | Structured, searchable knowledge  |
-| Code comments   | Code readers                  | "Why not the obvious approach"    |
+| Layer           | Audience                      | Content                                                          |
+|-----------------|-------------------------------|------------------------------------------------------------------|
+| Commit messages | Release notes readers         | User-visible changes only                                        |
+| PR description  | Reviewers + future developers | The code and the diff                                            |
+| Learnings docs  | Future engineers + Claude     | What was tried and why it failed, structured and searchable      |
+| Code comments   | Code readers                  | Invariants a reader must not break (`CONVENTIONS.md` § Comments) |
 
 ## PR Description Format
 
@@ -51,15 +50,6 @@ Why this work was needed. What problem it solves for users.
 ### [Topic]
 - change details
 
-## Challenges and Decisions
-What was tried, what failed, and key architecture decisions.
-Structure as sub-sections when multiple challenges exist:
-
-### [Challenge title]
-**Problem:** description of the issue encountered
-**Tried:** approaches that didn't work and why
-**Solution:** what worked and why it's the right approach
-
 ## Gotchas
 Things future developers should know. Each gotcha should be
 actionable — not just "this is hard" but "do X instead of Y".
@@ -70,11 +60,9 @@ actionable — not just "this is hard" but "do X instead of Y".
 
 ### Why this format matters
 
-The "Challenges and Decisions" section captures the debugging journey
-that would otherwise be lost when commits are squashed. The
-`/eng:workflows:compound` skill reads PR descriptions to generate
-structured learnings — well-structured challenges become high-quality
-learnings automatically.
+The body describes the code and the diff, so a reviewer reads the change rather than the branch's history. dsp-api squash-merges, so whatever the body carries becomes the commit message for good.
+
+The journey that produced the change goes to a learning instead. `/eng:workflows:compound` writes learnings for any dasch-swiss repo to `dasch-specs/learnings/`, where the `learnings-researcher` agent reads them during planning; it works from the session and treats a PR body as optional context, so keeping the journey out of the PR costs it nothing.
 
 ### What goes where
 
@@ -84,7 +72,7 @@ learnings automatically.
 | Bug fix                            | Commit message (`fix:`)               |
 | Build/CI/refactor details          | Commit message (hidden type)          |
 | Why the work was needed            | PR Motivation section                 |
-| What was tried and failed          | PR Challenges section                 |
-| Architecture decisions + rationale | PR Challenges section                 |
+| What was tried and failed          | Learning (dasch-specs/learnings)      |
+| Architecture decisions + rationale | ADR (`docs/05-internals/design/adr/`) |
 | Things to watch out for            | PR Gotchas section                    |
 | Structured, searchable knowledge   | Learnings doc (dasch-specs/learnings) |

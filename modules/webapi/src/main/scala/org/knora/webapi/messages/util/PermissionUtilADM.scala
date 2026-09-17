@@ -34,9 +34,9 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 object PermissionUtilADM {
 
   /**
-   * The permission grants on every `knora-base:LinkValue` describing a standoff link: change rights for the system
-   * user, view for unknown users. Single source of truth for both the resource-create path and the import transformer;
-   * format with `formatPermissionADMs(_, PermissionType.OAP)`.
+   * Single source of truth for the standoff-link `knora-base:LinkValue` grants, used by both the
+   * resource-create path and the import transformer; format with
+   * `formatPermissionADMs(_, PermissionType.OAP)`.
    */
   val standoffLinkValuePermissions: Set[PermissionADM] = Set(
     PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraUserRepo.builtIn.SystemUser.id.value),

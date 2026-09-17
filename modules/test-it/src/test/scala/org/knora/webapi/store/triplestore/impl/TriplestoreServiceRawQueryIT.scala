@@ -95,8 +95,8 @@ class TriplestoreServiceRawQueryIT extends E2EZSpec {
         }
       },
       test("a query over the store's timeout is cancelled at the store, and its timeout response is relayed") {
-        // The store cancels at its own engine because the timeout travels as its per-request parameter; what arrives is
-        // therefore the store's answer, not an abandoned client-side wait. One second, so the case is quick.
+        // The store cancels at its own engine because the timeout travels as its per-request parameter; what
+        // arrives is therefore the store's answer, not an abandoned client-side wait.
         tunedStore(_.copy(timeout = Duration.fromSeconds(1)))
           .flatMap(store => store.rawQuery(RawSparqlRequest(expensiveQuery, None, Map.empty)))
           .map { response =>

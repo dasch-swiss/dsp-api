@@ -251,7 +251,7 @@ class ListsV2E2Spec extends E2EZSpec {
         )
       },
       test("omits rdfs:comment when no comments are present anywhere in the list (REQ-2.4)") {
-        // otherTreeList has no rdfs:comment on any node, so allLanguages mode must omit the key entirely (D2 omission).
+        // otherTreeList has no rdfs:comment on any node, so allLanguages mode must omit the key entirely.
         for {
           bodyStr <- TestApiClient
                        .getJsonLd(uri"/v2/lists/${otherTreeListIri.value}?allLanguages=true")

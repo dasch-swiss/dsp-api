@@ -35,8 +35,6 @@ object CreateLinkQuery {
     ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   /**
-   * Builds a SPARQL UPDATE query to create a link between two resources.
-   *
    * @param project        the project that owns the data graph
    * @param resourceIri    the resource that is the source of the link
    * @param linkUpdate     a [[SparqlTemplateLinkUpdate]] specifying the link to create

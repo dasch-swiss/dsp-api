@@ -17,11 +17,8 @@ oci_config_label(
 )
 
 # Generates the webapi buildinfo source (package org.knora.webapi.http.version).
-# Sources: version/buildCommit/buildTime from git (workspace status); fuseki is
-# the Jena engine (dist) version from MODULE.bazel via @dsp_image_versions; sipi
-# from the pinned base image's OCI label (:sipi_version). ManagementEndpoints
-# splits fuseki/scala/sipi on ':' to report the /version fields — a value without
-# a ':' (like the bare Jena version) is reported as-is.
+# ManagementEndpoints splits fuseki/scala/sipi on ':' to report the /version fields — a value
+# without a ':' (like the bare Jena version) is reported as-is.
 buildinfo(
     name = "buildinfo_gen",
     out = "BuildInfo.scala",
@@ -43,7 +40,6 @@ buildinfo(
 # rewrites BuildInfo.scala on every push) recompiles only this one file. Its
 # interface jar exposes just getter signatures — the stamped string values are
 # method bodies, stripped from the ijar — so :webapi cache-hits across pushes.
-# Were :buildinfo_gen inlined into :webapi's srcs, the whole module would recompile.
 scala_library(
     name = "buildinfo",
     srcs = [":buildinfo_gen"],
@@ -51,8 +47,7 @@ scala_library(
 )
 
 # The scalac options, dependency_mode=transitive and strict_deps_mode=off come from
-# //bazel/toolchains:dsp_scala_toolchain, so deps below list only webapi's direct
-# third-party deps (the set in project/Dependencies.scala `webapiDependencies`).
+# //bazel/toolchains:dsp_scala_toolchain, so deps below list only webapi's direct third-party deps.
 scala_library(
     name = "webapi",
     srcs = glob(["src/main/scala/**/*.scala"]),
@@ -190,7 +185,6 @@ pkg_tar(
     srcs = [":webapi_lib_files"],
 )
 
-# healthcheck.sh, fuseki-*.sh, wait-for-*.sh (build.sbt's Universal/mappings).
 pkg_tar(
     name = "scripts_layer",
     srcs = glob(["scripts/**"]),
@@ -198,8 +192,8 @@ pkg_tar(
     strip_prefix = "scripts",
 )
 
-# OTel java agent + Grafana Pyroscope extension (were `ADD <url>` in build.sbt;
-# rules_oci has no ADD-from-URL, so these are prefetched in MODULE.bazel).
+# OTel java agent + Grafana Pyroscope extension; rules_oci has no ADD-from-URL, so these are
+# prefetched in MODULE.bazel.
 pkg_tar(
     name = "otel_layer",
     srcs = [
@@ -263,10 +257,9 @@ oci_image(
         ":otel_layer",
         ":curl_jq_layer_amd64",
     ],
-    # WORKDIR: ResetTriplestoreContent resolves test-data files relative to the
-    # CWD (../test_data -> the /opt/test_data bind-mount). sbt-native-packager
-    # set this; rules_oci does not, so without it the container runs from / and
-    # the reset endpoint 500s. See TriplestoreServiceLive.insertObjectIntoTriplestore.
+    # WORKDIR: ResetTriplestoreContent resolves test-data files relative to the CWD (../test_data ->
+    # the /opt/test_data bind-mount); rules_oci sets none, so without it the container runs from /
+    # and the reset endpoint 500s. See TriplestoreServiceLive.insertObjectIntoTriplestore.
     workdir = "/opt/docker",
 )
 
@@ -291,7 +284,6 @@ oci_image(
     workdir = "/opt/docker",
 )
 
-# Multi-arch index for publishing.
 oci_image_index(
     name = "index",
     images = [
@@ -309,16 +301,14 @@ alias(
     }),
 )
 
-# `bazel run //modules/webapi:load` — load the host-arch image into the local
-# Docker daemon as :latest (what docker-compose references).
+# `bazel run //modules/webapi:load` — :latest is what docker-compose references.
 oci_load(
     name = "load",
     image = ":image",
     repo_tags = ["daschswiss/knora-api:latest"],
 )
 
-# `bazel run //modules/webapi:push -- -t latest -t <version>` — push the
-# multi-arch index.
+# `bazel run //modules/webapi:push -- -t latest -t <version>` pushes the multi-arch index.
 oci_push(
     name = "push",
     image = ":index",
