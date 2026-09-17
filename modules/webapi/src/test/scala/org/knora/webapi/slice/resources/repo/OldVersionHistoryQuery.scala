@@ -63,7 +63,6 @@ object OldVersionHistoryQuery extends QueryBuilderHelper {
       if (withDeletedResource) GraphPatterns.union(creationBranch, deletionBranch, resourceDeleteBranch)
       else GraphPatterns.union(creationBranch, deletionBranch)
 
-    // Build WHERE clause
     var whereClause =
       if (withDeletedResource) resourcePattern.and(propertyPath).and(previousValuePath).and(unionPattern)
       else
@@ -73,7 +72,6 @@ object OldVersionHistoryQuery extends QueryBuilderHelper {
           .and(previousValuePath)
           .and(unionPattern)
 
-    // Optional date filters
     maybeStartDate.foreach { startDate =>
       whereClause = whereClause.filter(Expressions.gte(versionDate, toRdfLiteral(startDate)))
     }

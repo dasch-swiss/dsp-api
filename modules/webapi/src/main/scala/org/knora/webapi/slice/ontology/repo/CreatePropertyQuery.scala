@@ -30,7 +30,8 @@ object CreatePropertyQuery {
 
     val linkValueProperty = linkValuePropertyDef.map(d => Iri.unsafeFrom(d.propertyIri.toInternalSchema.toIri))
 
-    // The legacy builder emitted the predicate triples before the rdfs:subPropertyOf triples.
+    // The predicate triples precede the rdfs:subPropertyOf triples to match the golden output; reordering
+    // them breaks the spec.
     Update(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

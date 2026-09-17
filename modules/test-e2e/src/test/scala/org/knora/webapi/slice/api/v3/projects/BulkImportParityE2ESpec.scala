@@ -205,28 +205,24 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           hasLastModification(graphB, richtextIri),
           !hasLastModification(graphA, audioSegmentIri),
         )
-        // Equal triple count on the normalized models (lastModificationDate stripped, hasPermissions compared).
         val tripleCountsMatch = assertTrue(normA.size == normB.size)
-        // Identical resource-IRI set.
         val resourceSetsMatch = assertTrue(resourcesA == resourcesB)
-        // Custom creation date survives on both sides (sentinelled inside the isomorphism compare).
+        // Asserted separately because creation dates are sentinelled inside the isomorphism compare.
         val creationDateSurvives = assertTrue(
           creationDateA.contains(migrationCreationDate),
           creationDateA == creationDateB,
         )
         // The payload hasPermissions wins over the resolved DOAP on both paths: the stored string lacks the
-        // default's "UnknownUser" grant and matches across both writes, on the resource of
-        // explicit_resource_permission and the value of explicit_value_permission.
+        // default's "UnknownUser" grant and matches across both writes.
         val payloadPermissionsWin = assertTrue(
           resourcePermA.exists(p => !p.contains("UnknownUser")),
           resourcePermA == resourcePermB,
           valuePermA.exists(p => !p.contains("UnknownUser")),
           valuePermA == valuePermB,
         )
-        // RDF isomorphism, hasPermissions included.
         val graphsAreIsomorphic = assertTrue(iso)
-        // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
-        // has two text values linking one target, so its refcount is 2 on both paths.
+        // The standoff-link LinkValue counter aggregates across text values, so one target linked from two
+        // text values has a refcount of 2.
         val standoffRefCountsMatch = assertTrue(refCountA.contains(2), refCountB.contains(2))
 
         (twoStepCreatesRan &&
@@ -268,9 +264,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .getJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/data-imports/${importId.value}", rootUser)
       .flatMap(r => ZIO.fromEither(r.body).mapError(new RuntimeException(_)))
 
-  // Polls until the task leaves InProgress, sleeping between attempts. A transport/deserialization
-  // failure from pollImportOnce propagates immediately instead of being retried, so a genuine error
-  // fails the test fast rather than being masked by up to a minute of pointless polling.
+  // A transport or deserialization failure from pollImportOnce propagates immediately instead of being
+  // retried, so a genuine error fails the test fast rather than being masked by a minute of polling.
   private def pollImportUntilDone(importId: DataTaskId): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] = {
     def loop(remainingAttempts: Int): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
       pollImportOnce(importId).flatMap { status =>
@@ -322,7 +317,6 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     } yield ()
 
   // The standoff link targets the resource's own IRI, which must exist before the value is inserted.
-  // Create the resource with zero values, then add the richtext value.
   private def richtextTwoStep(user: User): ZIO[TestApiClient, Throwable, Unit] =
     for {
       body  <- readFixture("single-resources/richtext_recursive_standoff_link.json")
@@ -332,9 +326,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       _     <- create(valuesUri, value, user)
     } yield ()
 
-  // audio_segment and video_segment reference each other via relatesToValue. Create audio_segment
-  // without the back-link, then video_segment (its relatesToValue -> audio_segment resolves), then
-  // add audio_segment's relatesToValue -> video_segment.
+  // audio_segment and video_segment reference each other via relatesToValue, so neither can be created
+  // with its back-link already in place.
   private def segmentCycle(user: User): ZIO[TestApiClient, Throwable, Unit] =
     for {
       audio      <- readFixture("single-resources/audio_segment.json")
@@ -471,8 +464,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private def permissionsOf(model: Model, subjectIri: String): Option[String] =
     firstObjectOf(model, model.createResource(subjectIri), kb + "hasPermissions").map(_.asLiteral().getLexicalForm)
 
-  // The value node is the single object of (resource, property); read its hasPermissions. The single-create path
-  // mints a fresh value IRI, so the value is reached through its owning resource, not by a fixed IRI.
+  // The single-create path mints a fresh value IRI, so the value is reached through its owning resource
+  // rather than by a fixed IRI.
   private def valuePermissionsOf(model: Model, resourceIri: String, propertyUri: String): Option[String] =
     firstObjectOf(model, model.createResource(resourceIri), propertyUri).collect {
       case n if n.isResource => n.asResource
@@ -480,8 +473,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .flatMap(v => firstObjectOf(model, v, kb + "hasPermissions"))
       .map(_.asLiteral().getLexicalForm)
 
-  // The standoff-link LinkValue reifies one (resource, target) pair. Find it by its rdf:subject/object,
-  // then read valueHasRefCount — the number of the resource's text values that link the target.
+  // The standoff-link LinkValue reifies one (resource, target) pair, and its valueHasRefCount is the
+  // number of the resource's text values that link the target.
   private def standoffLinkRefCount(model: Model, resourceIri: String, targetIri: String): Option[Int] = {
     val rdf               = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     val hasStandoffLinkTo = model.createResource(kb + "hasStandoffLinkTo")

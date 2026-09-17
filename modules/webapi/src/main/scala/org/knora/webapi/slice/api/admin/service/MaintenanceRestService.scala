@@ -74,10 +74,9 @@ final case class MaintenanceRestService(
       _ <- ZIO.when(req.oldIri == req.newIri)(
              ZIO.fail(BadRequestException("oldIri and newIri must be different.")),
            )
-      // No isBuiltInUser guard a built-in oldIri is intentionally accepted -
-      // re-attributing references stamped under SystemUser/AnonymousUser to a real project
-      // member is a valid use case for this endpoint. A built-in newIri is rejected
-      // downstream by the membership check (built-in users are never project members).
+      // No isBuiltInUser guard is applied here: a built-in oldIri is intentionally accepted, since
+      // re-attributing references stamped under SystemUser/AnonymousUser to a real project member is a
+      // valid use case. A built-in newIri is rejected downstream by the membership check.
       _ <- maintenanceService.replaceUserIriInProject(shortcode, req.oldIri, req.newIri, user)
     } yield ()
 }

@@ -58,7 +58,7 @@ class ProjectDataImportOntologyMissingE2ESpec extends E2EZSpec {
         projectIri = project.id
         // Add an eligible non-sysadmin member. A freshly created project already grants its ProjectMember group
         // project-wide create rights (default administrative permission), so membership alone makes the user eligible.
-        // Without this the on-behalf-of user fails the eligibility check (G1 order) before reaching the ontology check.
+        // Without this the on-behalf-of user fails the eligibility check before reaching the ontology check.
         _        <- TestAdminApiClient.addUserToProject(normalUser.userIri, projectIri, rootUser).flatMap(_.assert200)
         response <- TestApiClient.postBinary[Json](
                       uri"/v3/projects/${projectIri.value}/data-imports?onBehalfOfUser=${normalUser.username}",

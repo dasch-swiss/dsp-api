@@ -3924,7 +3924,7 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
              |}""".stripMargin
 
         for {
-          // Create resource with "Echo" at default order 0
+          // "Echo" takes the default order 0
           createResponse <- TestApiClient
                               .postJsonLdDocument(uri"/v2/resources", createResourceJson, anythingUser1)
                               .flatMap(_.assert200)
@@ -4089,7 +4089,6 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
       test("PUT /v2/values with knora-api:valueHasOrder in body is silently ignored: returns 200") {
         val resourceIri: IRI = AThing.iri
         for {
-          // Create a value first so we have a value IRI to update
           createJson <-
             ZIO.succeed(
               s"""{

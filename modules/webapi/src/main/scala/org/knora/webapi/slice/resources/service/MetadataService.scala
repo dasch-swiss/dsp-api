@@ -67,7 +67,7 @@ private[service] object ResourcesMetadataQuery {
                |    }
                |  }
                |}""".render,
-      // A whole-project scan, so it runs on the long timeout tier, as it did before.
+      // A whole-project scan, so it runs on the long timeout tier.
       SparqlTimeout.Gravsearch,
     )
   }

@@ -160,8 +160,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
   )
 
   // The in-memory DoapResolver double returns `defaultDoap` for every resource and value with no payload permission,
-  // and `validatedDoap` for a payload permission routed through `validate`. The two differ so a test can prove which
-  // branch ran. Real byte-for-byte formatting against the create path is covered by the e2e parity spec.
+  // and `validatedDoap` for a payload permission routed through `validate`. Real byte-for-byte formatting against
+  // the create path is covered by the e2e parity spec.
   private val defaultDoap   = "CR knora-admin:Creator|V knora-admin:KnownUser"
   private val validatedDoap = "CR knora-admin:ProjectAdmin|V knora-admin:ProjectMember"
 
@@ -1070,7 +1070,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
-  // ---- Standoff mapping stub (D1): a hermetic standard mapping covering the tags the standoff fixtures use ----
+  // ---- Standoff mapping stub: a hermetic standard mapping covering the tags the standoff fixtures use ----
 
   private val standoffPrefix         = "http://www.knora.org/ontology/standoff#"
   private val standoffRootTag        = standoffPrefix + "StandoffRootTag"

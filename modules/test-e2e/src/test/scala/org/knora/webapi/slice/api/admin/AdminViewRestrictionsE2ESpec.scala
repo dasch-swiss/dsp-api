@@ -64,8 +64,7 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
           // Cumulative invariant: access widens across the audiences, so counts can only shrink.
           result.classes.forall(c => c.counts.anonymous.total >= c.counts.authenticated.total),
           result.classes.forall(c => c.counts.authenticated.total >= c.counts.projectMember.total),
-          // THE INVARIANT the unit split exists to protect: these counts are whole resources, so they can
-          // never exceed the class's resource population. The old mixed count could report "3 of 1".
+          // These counts are whole resources, so they can never exceed the class's resource population.
           result.classes.forall(c => c.counts.anonymous.total <= c.totalResources),
           result.classes.forall(c => c.counts.authenticated.total <= c.totalResources),
           result.classes.forall(c => c.counts.projectMember.total <= c.totalResources),
@@ -159,10 +158,8 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
       test("returns a paged list of affected resources for a class step 1 reports") {
         for {
           classes <- TestApiClient.getJson[ViewRestrictionsClasses](classesUri, rootUser).flatMap(_.assert200)
-          // A class with something actually restricted, not simply the first one. /classes reports EVERY
-          // class ordered by label, so the first is usually one with nothing restricted and its drill-down
-          // is legitimately empty. The old /summary happened to order most-restricted-first, which made
-          // `headOption` work by accident; that ordering moved to the frontend when orderKey was deleted.
+          // A class with something actually restricted, not simply the first one: /classes reports every
+          // class ordered by label, so the first usually has nothing restricted and an empty drill-down.
           group <- ZIO
                      .fromOption(restrictedClass(classes))
                      .orElseFail(new AssertionError("no class in the fixture has a resource-level restriction"))
@@ -207,7 +204,7 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
           .getJson[PagedResponse[RestrictedResource]](itemsUri, anythingUser2)
           .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
-      // AC5 / W3: a malformed `resourceClass` value is a client error (400), not a 500 or an unhandled SPARQL error.
+      // A malformed `resourceClass` value is a client error (400), not a 500 or an unhandled SPARQL error.
       test("returns 400 for a malformed resourceClass IRI (admin)") {
         val itemsUri =
           uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=not%20an%20iri&itemType=All"

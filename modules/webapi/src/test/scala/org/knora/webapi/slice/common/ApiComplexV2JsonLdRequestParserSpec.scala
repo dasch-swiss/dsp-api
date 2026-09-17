@@ -936,8 +936,7 @@ class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
       )
     },
     test("should parse RegionPreviewValueContentV2 with a comment") {
-      // Guards the from-builder: before the reshape a 3-positional call bound `comment` to the removed
-      // iiifUrl slot, so a comment silently vanished. This asserts the comment round-trips.
+      // Guards the from-builder: a comment must round-trip rather than silently vanish.
       for {
         actual <- service(
                     _.createValueV2FromJsonLd(
@@ -2180,8 +2179,7 @@ class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
                       uuid,
                     ),
                   )
-        // Authorship is a plain multi-valued datatype property (no rdf:List, no ORDER BY on read),
-        // so order does not round-trip through the triplestore. Compare as an unordered set.
+        // Order does not round-trip through the triplestore, so compare as an unordered set.
       } yield assertTrue(
         result.resourceIri.value == "http://rdfh.ch/0001/a-thing",
         result.resourceAuthorship.toSet ==

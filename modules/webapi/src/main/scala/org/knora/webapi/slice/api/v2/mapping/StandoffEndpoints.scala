@@ -31,7 +31,7 @@ final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Create a standoff mapping for XML to standoff conversion. Requires authentication.")
 
-  // The `application/xml` response media type of the canonicalize endpoint.
+  // The response media type of the canonicalize endpoint.
   private case object XmlCodecFormat extends CodecFormat {
     override val mediaType: MediaType = MediaType("application", "xml")
   }

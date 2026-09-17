@@ -63,9 +63,9 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
       |""".stripMargin
 
   // The shapes fixture is a classpath resource. `RdfData.TurtleFile` needs a real
-  // filesystem Path, so copy the resource to a temp file (read via a stream, which
-  // works whether the resource is a loose file under sbt or inside a jar under
-  // Bazel/RBE). Scoped + shared, so it is created once per run and deleted after.
+  // filesystem Path, so copy the resource to a temp file, read via a stream so it works
+  // whether the resource is a loose file or inside a jar. Scoped + shared, so it is
+  // created once per run and deleted after.
   private val shapesFileLayer: ZLayer[Any, Throwable, ShapesFile] =
     ZLayer.scoped {
       ZIO.acquireRelease(

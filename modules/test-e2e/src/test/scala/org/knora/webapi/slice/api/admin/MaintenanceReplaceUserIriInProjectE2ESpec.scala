@@ -100,10 +100,9 @@ class MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
     } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
     test("does not reject a built-in user IRI as oldIri (re-attributing SystemUser refs is valid)") {
-      // No isBuiltInUser guard is applied at the RestService level for
-      // this endpoint. A built-in oldIri is intentionally accepted - re-attributing references
-      // stamped under SystemUser/AnonymousUser to a real project member is a valid use case.
-      // The call proceeds to domain validation, so the response is not 400 BadRequest.
+      // No isBuiltInUser guard is applied at the RestService level for this endpoint. A built-in oldIri is
+      // intentionally accepted: re-attributing references stamped under SystemUser/AnonymousUser to a real
+      // project member is a valid use case.
       TestApiClient
         .postJson[Json, Json](
           endpointFor(anythingShortcode),

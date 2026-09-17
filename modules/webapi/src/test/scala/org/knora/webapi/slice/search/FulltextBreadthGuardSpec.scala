@@ -76,7 +76,6 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         result       <- fib.join
       } yield assertTrue(result == "ok")
     },
-    // A query failure unrelated to the cap (a timeout, say) is surfaced once the probe admits the term.
     test("propagates a query failure for an admitted term") {
       for {
         guard <- guardWith(_ => ZIO.succeed(cap.toLong))
@@ -84,7 +83,7 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
       } yield assert(exit)(failsWithA[QueryBoom])
     },
     // Measured breadth is cached single-flight: a repeated term for the same key reuses the cached verdict and
-    // does not re-probe. The probe function is invoked exactly once across two calls.
+    // does not re-probe.
     test("caches the probed breadth so a repeated term does not re-probe") {
       for {
         probes <- Ref.make(0)

@@ -49,7 +49,7 @@ class SearchEndpointsSpec extends ZIOSpecDefault {
   private val searchByLabel       = endpoints.getSearchByLabel.endpoint.show
   private val gravsearch          = endpoints.getGravsearch.endpoint.show
 
-  // HONEST-TIMEOUT (DEV-6864): the two fulltext routes translate a triplestore timeout into a 503, attached via
+  // The two fulltext routes translate a triplestore timeout into a 503, attached via
   // errorOutVariantsPrepend on those endpoints only. These tests are the regression net for that being scoped to
   // the fulltext routes and for the prepend not dropping the shared client-error variants.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchEndpoints HONEST-TIMEOUT contract (DEV-6864)")(

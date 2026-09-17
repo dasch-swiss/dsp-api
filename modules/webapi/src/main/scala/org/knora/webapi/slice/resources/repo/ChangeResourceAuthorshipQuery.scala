@@ -28,7 +28,6 @@ object ChangeResourceAuthorshipQuery {
     authorship: Seq[Authorship],
   ): IO[BadRequestException, (LastModificationDate, Update)] = {
 
-    // Determine the new modification date: use the submitted value if provided and valid, otherwise use the current time.
     val newModificationDateEffect: IO[BadRequestException, LastModificationDate] =
       maybeNewModificationDate.fold(Clock.instant.map(LastModificationDate.from)) { submittedNewDate =>
         maybeLastModificationDate match {
@@ -47,11 +46,6 @@ object ChangeResourceAuthorshipQuery {
       val newDate       = Literal.dateTime(newModificationDate.value)
       val currentDate   = maybeLastModificationDate.map(lmd => Literal.dateTime(lmd.value))
 
-      // The DELETE block drops the previous last modification date (if any) and all existing authorship
-      // triples; the INSERT block writes one triple per new authorship value (none when empty => authorship is
-      // cleared); the WHERE clause requires the resource to exist with the expected class and
-      // lastModificationDate.
-      //
       // WITH <graph> scopes the named graph to the WHERE clause too, not just DELETE/INSERT;
       // an ungraphed WHERE matches the default graph, which is empty (so the update no-ops) on a
       // store without a union default graph, e.g. the in-memory test store. Safe only because the

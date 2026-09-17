@@ -364,7 +364,7 @@ case class ReadResourceV2(
         )
       }
 
-      // The per-resource (data-side) authorship, emitted only when set.
+      // The per-resource (data-side) authorship, as opposed to the ontology-side one.
       val resourceAuthorshipAsJsonLD: Option[(IRI, JsonLDValue)] =
         if (resourceAuthorship.nonEmpty) {
           Some(

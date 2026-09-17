@@ -66,7 +66,6 @@ class InjectionSafetySpec extends ZIOSpecDefault {
       // We can't test compile errors at runtime, but we demonstrate the type constraint:
       val rawString: String = "DELETE WHERE { ?s ?p ?o }"
       // sparql"$rawString" // This would NOT compile — String is not SparqlValue | Fragment
-      // Instead, you must use Fragment.raw explicitly:
       val escaped = Fragment.raw(rawString)
       assertTrue(escaped.render == rawString)
     },
@@ -98,7 +97,6 @@ class InjectionSafetySpec extends ZIOSpecDefault {
       val payload = "http://example.org/test> . ?s ?p ?o . <http://evil.org"
       assertTrue(
         Iri.from(payload).isLeft,
-        // unsafeFrom throws instead of constructing an invalid value
         scala.util.Try(Iri.unsafeFrom(payload)).isFailure,
       )
     },
@@ -186,9 +184,8 @@ class InjectionSafetySpec extends ZIOSpecDefault {
       val malicious = Literal.string("""") . ?s <http://jena.apache.org/text#query> ("hack""")
       val rendered  = malicious.render
       assertTrue(
-        // All quotes are escaped. The malicious payload stays inside the string literal.
-        // The opening and closing quote characters delimit the string; interior quotes
-        // (and the single quotes, per the ECHAR production) are escaped.
+        // The malicious payload stays inside the string literal: only the delimiting quotes are
+        // unescaped, interior quotes and single quotes per the ECHAR production are escaped.
         rendered == """"\") . ?s <http://jena.apache.org/text#query> (\"hack"""",
       )
     },
@@ -204,9 +201,6 @@ class InjectionSafetySpec extends ZIOSpecDefault {
       assertTrue(raw.render == "FILTER(REGEX(?label, 'test', 'i'))")
     },
     test("Fragment.raw usage is grep-able") {
-      // All uses of Fragment.raw in the codebase can be found with:
-      //   grep -rn "Fragment.raw" modules/
-      // This makes it easy to audit the injection-risk surface.
       assertTrue(true)
     },
   )
