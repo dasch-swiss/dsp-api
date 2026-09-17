@@ -25,7 +25,8 @@ knora-base:OntologyLabelShapeLanguages
   a sh:PropertyShape ;
   sh:path rdfs:label ;
   sh:languageIn ( "en" "de" "fr" "it" "rm" ) ;
-  sh:message "The label must have one of the following language tags: en, de, fr, it, rm." .
+  sh:uniqueLang true ;
+  sh:message "The label must have one of the following language tags, each tag may only be used once: en, de, fr, it, rm." .
 
 knora-base:OntologyLabelShapeUnique
   a sh:PropertyShape ;
