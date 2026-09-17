@@ -945,6 +945,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `SearchFulltextQuerySpec`, `GetResourceWithSpecifiedPropertiesGravsearchQuerySpec`,
         `GetIncomingImageLinksGravsearchQuerySpec`); a change to emitted SPARQL shows up as a golden diff -
         enforcement: review (`REVIEW.md` section SPARQL).
+    - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
+        `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
+        prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
+        inference variable naming shows up as a golden diff - enforcement: review (`REVIEW.md` section
+        SPARQL).
     - New queries use the `sparql"..."` interpolator; `SearchQueries.scala` and `SearchFulltextQuery.scala`
         are grandfathered RDF4J `SparqlBuilder` sites - enforcement: review.
     - Wiring: shared inventory. A new search service is added to `SearchResponderV2Module.layer` and, if
