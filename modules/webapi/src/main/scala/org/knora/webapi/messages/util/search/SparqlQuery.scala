@@ -424,7 +424,9 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
  * @param values   the IRIs that will be assigned to the variable.
  */
 case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends QueryPattern {
-  override def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"
+  // Sorted to keep the rendered query byte-stable for the golden snapshots, independent of Set iteration order.
+  override def toSparql: String =
+    s"VALUES ${variable.toSparql} { ${values.toSeq.map(_.toSparql).sorted.mkString(" ")} }\n"
 }
 
 /**
