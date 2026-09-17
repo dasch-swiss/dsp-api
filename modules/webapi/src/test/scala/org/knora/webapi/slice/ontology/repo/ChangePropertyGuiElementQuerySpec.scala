@@ -138,8 +138,7 @@ class ChangePropertyGuiElementQuerySpec extends ZIOSpecDefault {
         |""".stripMargin
 
   /**
-   * An ontology graph holding the precondition triples, optionally the old gui settings of the
-   * property and its link value property, and unrelated triples that must survive the update.
+   * An ontology graph holding the precondition triples plus unrelated triples that must survive the update.
    */
   private def trigFixture(
     modificationDate: String = "2023-08-01T10:30:00Z",

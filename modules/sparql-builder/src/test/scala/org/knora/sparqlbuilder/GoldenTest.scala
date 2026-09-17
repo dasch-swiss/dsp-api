@@ -19,7 +19,7 @@ import scala.util.chaining.scalaUtilChainingOps
  *
  * Use git diff or the test output to inspect the differences and either update the standard or update the code.
  *
- * Beware: a test run with the "~" prefix in sbt and "rewrite = true" will loop, if the output keeps changing.
+ * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
  */
 trait GoldenTest {
   val rewriteAll: Boolean = false

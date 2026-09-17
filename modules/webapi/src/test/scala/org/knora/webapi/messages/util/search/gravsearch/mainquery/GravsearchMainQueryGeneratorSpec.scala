@@ -18,9 +18,6 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.QueryVariable
 import org.knora.webapi.slice.common.ResourceIri
 
-/**
- * Tests [[GravsearchMainQueryGenerator]].
- */
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchMainQueryGeneratorSpec extends ZIOSpecDefault {
 

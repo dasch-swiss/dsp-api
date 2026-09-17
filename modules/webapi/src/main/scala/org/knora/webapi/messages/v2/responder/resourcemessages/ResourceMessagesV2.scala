@@ -669,7 +669,7 @@ case class UpdateResourceMetadataResponseV2(
 }
 
 /**
- * Represents a request to update a resource's per-resource (data-side) authorship.
+ * Per-resource (data-side) authorship, as opposed to the ontology-side one.
  *
  * @param resourceIri               the IRI of the resource.
  * @param resourceClassIri          the IRI of the resource class.
@@ -688,8 +688,6 @@ case class UpdateResourceAuthorshipRequestV2(
 )
 
 /**
- * Represents a response after updating a resource's per-resource (data-side) authorship.
- *
  * @param resourceIri          the IRI of the resource.
  * @param resourceClassIri     the IRI of the resource class.
  * @param lastModificationDate the resource's last modification date.

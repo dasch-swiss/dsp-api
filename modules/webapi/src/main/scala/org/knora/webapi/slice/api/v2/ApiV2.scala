@@ -148,10 +148,9 @@ object ApiV2 {
       )
 
     /**
-     * Shared `allLanguages` query parameter input used by the v2 ontology and lists
-     * endpoints. When `true`, `rdfs:label` and `rdfs:comment` are returned as JSON-LD
-     * arrays of language-tagged objects (sorted alphabetically by BCP-47 tag). Default
-     * `false` preserves the legacy single-string shape in the user's preferred language.
+     * Shared by the v2 ontology and lists endpoints. When `true`, `rdfs:label` and `rdfs:comment`
+     * are returned as JSON-LD arrays of language-tagged objects, sorted alphabetically by BCP-47
+     * tag; the `false` default preserves the single-string shape in the user's preferred language.
      */
     val allLanguages: EndpointInput.Query[Boolean] =
       query[Boolean]("allLanguages")

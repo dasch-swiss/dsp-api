@@ -40,10 +40,8 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
     uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/values?resourceClass=$resourceClass&itemType=$itemType"
 
   /**
-   * The first class reporting a resource-level restriction for any audience.
-   *
-   * The drill-down lists restrictions, so a test that opens a class with none gets an empty page and
-   * fails for a reason that has nothing to do with the drill-down.
+   * The drill-down lists restrictions, so a class with none gives an empty page and the test would
+   * fail for a reason that has nothing to do with the drill-down.
    */
   private def restrictedClass(classes: ViewRestrictionsClasses): Option[String] =
     classes.classes

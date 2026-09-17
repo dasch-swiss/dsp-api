@@ -124,8 +124,6 @@ object ProjectKeywordsGetResponse {
 }
 
 /**
- * Represents a response to a request for the project's restricted view settings.
- *
  * @param settings  the effective restricted view settings.
  * @param isDefault true if the project stores no setting of its own and inherits the platform default.
  */

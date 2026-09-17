@@ -15,17 +15,10 @@ import org.knora.testrunner.DspZTestJUnitRunner
  *
  * Defines "injection-safe by construction" concretely:
  *
- * 1. **What types can be interpolated**: Iri, Variable, Literal, Fragment
- * 2. **How are raw strings handled**: Only via `Fragment.raw("...")` — the explicit escape hatch
- * 3. **Validated construction**: `Iri` rejects every character that could terminate the
- *    `<...>` wrapper, `Variable` names are restricted to `VARNAME` characters, and language
- *    tags must match the `LANGTAG` production. `unsafeFrom` throws instead of returning an
- *    `Either` — there is no unvalidated path.
- * 4. **How is Lucene injection prevented**: Lucene queries must be passed as `Literal.string()`
- *    which escapes special characters. A dedicated `LuceneQuery` type could be added later.
- * 5. **What compile-time checks exist**: The `sparql"..."` interpolator only accepts
- *    `SparqlValue | Fragment` — raw `String` is a compile error. Literal values are escaped
- *    at construction time.
+ * 1. Raw strings reach SPARQL only via `Fragment.raw("...")`, the explicit escape hatch.
+ * 2. Lucene queries must be passed as `Literal.string()`, which escapes special characters.
+ * 3. The `sparql"..."` interpolator accepts only `SparqlValue | Fragment`, so a raw `String`
+ *    is a compile error.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class InjectionSafetySpec extends ZIOSpecDefault {

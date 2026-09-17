@@ -6,11 +6,6 @@
 package org.knora.sparqlbuilder
 
 /**
- * Typed values that can be safely interpolated into SPARQL fragments.
- *
- * This sealed hierarchy ensures that only safe types can be interpolated via `sparql"..."`.
- * Raw strings cannot be interpolated — use `Fragment.raw("...")` for that (explicit escape hatch).
- *
  * All constructors validate: an `Iri` can only hold characters legal inside a SPARQL
  * `IRIREF`, a `Variable` name is restricted to `VARNAME` characters, and language tags
  * must match the SPARQL `LANGTAG` production. There is no unvalidated path — `unsafeFrom`
@@ -29,8 +24,7 @@ final case class Iri private (value: String) extends SparqlValue {
 object Iri {
 
   /**
-   * Characters that terminate or escape a SPARQL `IRIREF` and therefore must never occur
-   * inside one: `< > " { } | ^ ` \` plus space and control characters (U+0000–U+0020).
+   * Characters that terminate or escape a SPARQL `IRIREF` and therefore must never occur inside one.
    */
   private def invalidChar(c: Char): Boolean =
     c <= ' ' || "<>\"{}|^`\\".contains(c)
@@ -62,9 +56,8 @@ object Variable {
   private val ValidName = "[A-Za-z0-9_]+".r
 
   /**
-   * Create a variable. Names are restricted to `[A-Za-z0-9_]+` (an ASCII subset of the
-   * SPARQL `VARNAME` production); anything else throws [[IllegalArgumentException]].
-   * Variable names are developer-written constants, so failing fast here is appropriate.
+   * Names are restricted to an ASCII subset of the SPARQL `VARNAME` production; anything else throws
+   * [[IllegalArgumentException]], since variable names are developer-written constants.
    */
   def apply(name: String): Variable =
     from(name).fold(msg => throw new IllegalArgumentException(msg), identity)
@@ -82,14 +75,13 @@ final case class BlankNode private (label: String) extends SparqlValue {
 object BlankNode {
 
   /**
-   * SPARQL `BLANK_NODE_LABEL` production restricted to an ASCII-safe subset: the label starts
-   * with `[A-Za-z0-9_]`, continues with `[A-Za-z0-9_.-]`, and must not end with a `.`.
+   * The SPARQL `BLANK_NODE_LABEL` production, restricted to an ASCII-safe subset.
    */
   private val ValidLabel = "[A-Za-z0-9_]([A-Za-z0-9_.-]*[A-Za-z0-9_-])?".r
 
   /**
-   * Create a blank node. Labels are developer-written constants (`node1`, `node2`, ...),
-   * so `apply` fails fast, mirroring [[Variable.apply]].
+   * Labels are developer-written constants, so `apply` fails fast rather than returning the `Either`
+   * that [[from]] gives, mirroring [[Variable.apply]].
    */
   def apply(label: String): BlankNode = unsafeFrom(label)
 
@@ -103,11 +95,9 @@ object BlankNode {
 }
 
 /**
- * A SPARQL literal value — rendered with proper escaping.
- *
- * A `Literal` holds only its final rendered form and can only be obtained through the
- * factory methods on the companion, each of which escapes or validates its input. There
- * is no way to construct a `Literal` that renders unescaped content.
+ * A `Literal` holds only its final rendered form and can only be obtained through the factory
+ * methods on the companion, each of which escapes or validates its input, so there is no way to
+ * construct one that renders unescaped content.
  */
 final class Literal private (val render: String) extends SparqlValue {
   override def equals(other: Any): Boolean = other match {

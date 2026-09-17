@@ -180,8 +180,8 @@ final case class KnoraProjectService(
     }
 
   /**
-   * Sets the resource-side (data) legal info of a project: the data license, the copyright holder and the
-   * default authorship. Each value replaces the current one; passing `None`/`List.empty` clears it.
+   * Sets the resource-side (data) legal info of a project. Each value replaces the current one;
+   * passing `None`/`List.empty` clears it.
    */
   def setResourceSideLegalInfo(
     projectIri: ProjectIri,

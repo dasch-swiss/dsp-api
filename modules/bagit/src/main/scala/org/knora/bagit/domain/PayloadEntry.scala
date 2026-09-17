@@ -14,9 +14,9 @@ enum Compression {
 
   /**
    * No effective compression: written as DEFLATE level 0 (`Deflater.NO_COMPRESSION`), NOT the ZIP `STORED`
-   * method — the entry method stays `DEFLATED`. Chosen over true STORED to keep the single-pass streaming
-   * writer: STORED requires the CRC-32 and size up front, which would force a second read pass over every
-   * file. The observable effect is compressed size ~= uncompressed size, not a `STORED` method flag.
+   * method — the entry method stays `DEFLATED`, so the observable effect is compressed size ~= uncompressed
+   * size rather than a `STORED` method flag. True STORED would need the CRC-32 and size up front, forcing a
+   * second read pass over every file.
    */
   case Store
 }

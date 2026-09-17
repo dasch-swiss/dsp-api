@@ -11,8 +11,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
- * The single custom JUnit 4 runner both sbt (via `junit-interface`) and Bazel
- * (`scala_junit_test`) use to run dsp-api's ZIO Test specs. A spec is a class (JUnit
+ * The custom JUnit 4 runner Bazel (`scala_junit_test`) uses to run dsp-api's ZIO Test specs. A spec is a class (JUnit
  * cannot run Scala `object`s) annotated with `@RunWith(classOf[DspZTestJUnitRunner])`.
  *
  * The implementation lives in [[zio.test.junit.DspZTestRunnerBase]] because it needs

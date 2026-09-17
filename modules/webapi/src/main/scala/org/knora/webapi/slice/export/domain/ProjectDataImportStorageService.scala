@@ -14,8 +14,7 @@ import java.nio.file.Path as JPath
 import org.knora.webapi.config.AppConfig
 
 /**
- * Filesystem storage for project data-graph imports. Mirrors the migration import layout: a dedicated directory
- * under the configured `tmpDatadir` with one subdirectory per task holding the uploaded JSON-LD and the task state.
+ * Filesystem storage for project data-graph imports, mirroring the migration import layout.
  */
 final class ProjectDataImportStorageService() { self =>
 
@@ -29,8 +28,6 @@ final class ProjectDataImportStorageService() { self =>
   def dataImportJsonLdPath(taskId: DataTaskId): UIO[Path] = dataImportDir(taskId).map(_ / "data.jsonld")
 
   /**
-   * Creates a temporary directory for the import task, and ensures that it is deleted when the scope is closed.
-   *
    * @param taskId the ID of the import task
    * @return the path to the temporary directory
    */

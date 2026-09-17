@@ -46,10 +46,8 @@ import org.knora.webapi.testservices.TestApiClient
 
 /**
  * Guards against drift between the v3 bulk data-import and the v2 single-resource create: both write
- * paths must produce the same graph for one project. The test imports the shared fixture set through
- * both paths into the same project data graph and compares the two graphs: equal triple count,
- * identical resource-IRI set, and RDF isomorphism after normalizing minted value/standoff IRIs,
- * UUIDs, and creation timestamps.
+ * paths must produce the same graph for one project, compared as triple count, resource-IRI set and
+ * RDF isomorphism after normalisation.
  *
  * `hasPermissions` is included in the compare: the bulk import honors a payload `hasPermissions` and
  * resolves class/property DOAPs per entity, matching the create path. `lastModificationDate` is
@@ -404,11 +402,9 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     ValueIri.from(uri).isRight || standoffTagPattern.matches(uri)
 
   /**
-   * Returns a copy of the model with minted value/standoff IRIs replaced by blank nodes, UUIDs and
-   * creation timestamps replaced by a sentinel, and lastModificationDate stripped. hasPermissions is
-   * kept and compared. Every occurrence of a given minted IRI maps to the same blank node, so
-   * shared-identity edges (LinkValue subject/object, standoff parents, previousValue, the segment
-   * cross-link) survive.
+   * Returns a copy of the model with minted identifiers and timestamps neutralised. Every occurrence
+   * of a given minted IRI maps to the same blank node, so shared-identity edges (LinkValue
+   * subject/object, standoff parents, previousValue, the segment cross-link) survive.
    */
   private def normalize(model: Model): Model = {
     val minted: Set[String] =

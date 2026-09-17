@@ -9,8 +9,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Term-shape rules for the fulltext search routes (`/v2/search`, `/v2/search/count`). Both rules operate on the
- * same phrase-aware split ([[LuceneQueryString.termsAndPhrases]]) so the input validation (LITERAL-LENGTH) and the
- * breadth probe cannot disagree about what a term is (DEV-6864).
+ * same phrase-aware split ([[LuceneQueryString.termsAndPhrases]]) so the input validation and the breadth probe
+ * cannot disagree about what a term is (DEV-6864).
  */
 object FulltextSearchTerms {
 
@@ -39,7 +39,7 @@ object FulltextSearchTerms {
    * Whether the breadth probe should race this query. Only queries that can be broad are worth the extra Fuseki
    * round-trip: a wildcard term (matches many distinct index terms) or more than one term (Lucene ORs them). A
    * single plain term is the cheap common case and is left unprobed — its residual exposure (a high-frequency
-   * single term above the cap gets a slow timeout rather than a fast refusal) is accepted (DEV-6864, Spike A).
+   * single term above the cap gets a slow timeout rather than a fast refusal) is accepted (DEV-6864).
    */
   def shouldProbe(query: LuceneQueryString): Boolean = {
     val terms = query.termsAndPhrases

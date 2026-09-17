@@ -14,8 +14,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 object AdminDataQuery {
 
   /**
-   * Builds the admin data CONSTRUCT query for the given project.
-   *
    * Project members who are also system admins are included in the export. The
    * `isInSystemAdminGroup` flag is rewritten to false later by AdminModelScoping.clearSystemAdminFlag
    * so the exported package does not carry the source instance's system-admin membership.
@@ -23,14 +21,8 @@ object AdminDataQuery {
   def build(project: ProjectIri): Construct = buildWithReferencedUsers(project, Set.empty)
 
   /**
-   * Builds the admin data CONSTRUCT query including an additional UNION branch for
-   * users referenced by attachedToUser in the project's data graph. With an empty set
-   * of referenced users the branch is omitted and the query is identical to [[build]].
-   *
-   * Note: The referenced user IRIs are inlined in a VALUES clause. For projects with
-   * a very large number of distinct referenced users, this could produce a long query
-   * string. Fuseki handles this in practice, but if projects with thousands of distinct
-   * referenced users appear, consider batching or a subquery approach.
+   * Adds a UNION branch for users referenced by attachedToUser in the project's data graph. With an
+   * empty set of referenced users the branch is omitted and the query is identical to [[build]].
    */
   def buildWithReferencedUsers(project: ProjectIri, referencedUserIris: Set[UserIri]): Construct = {
     val adminGraph = Iri.unsafeFrom(adminDataNamedGraph.value)

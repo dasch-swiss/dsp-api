@@ -30,7 +30,7 @@ class BagReaderSpec extends ZIOSpecDefault {
    * Used to assert stack-safety: an iterative/tail-recursive traversal completes here,
    * whereas a naively recursive one raises StackOverflowError (surfaced as a test
    * failure). This makes the assertion independent of the OS path-length limit, so it
-   * holds under sbt, the Bazel sandbox, and RBE alike.
+   * holds in the Bazel sandbox and on RBE alike.
    */
   private def onSmallStack[A](stackBytes: Long)(thunk: => A): Task[A] =
     ZIO.async[Any, Throwable, A] { register =>

@@ -36,7 +36,6 @@ object OntologyLiteralFragments {
 
   /**
    * The OWL restriction triples for the given cardinalities, in the order given.
-   * Each cardinality gets its own blank node, labelled `node1`, `node2`, ... .
    */
   def cardinalityTriples(classIri: Iri, cardinalities: Iterable[(SmartIri, KnoraCardinalityInfo)]): Fragment =
     cardinalities.zipWithIndex.map { case ((propertyIri, cardinalityInfo), index) =>
