@@ -92,3 +92,15 @@ knora-base:Value-Shape
     sh:minCount 1 ;
     sh:message "Value may not carry a knora-base:previousValue in the bulk-import"
   ] .
+
+knora-base:TextValue-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasTextValueType ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ( knora-base:UnformattedText
+            knora-base:FormattedText
+            knora-base:CustomFormattedText ) ;
+    sh:message "TextValue instance must have one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText knora-base:CustomFormattedText"
+  ] .

@@ -593,13 +593,6 @@ knora-base:TextValue-Shape
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "TextValue instance may have at most one knora-base:valueHasMaxStandoffStartIndex of type xsd:integer"
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:hasTextValueType ; # TODO: find out if there is sh:in
-    sh:maxCount 1 ;
-    sh:nodeKind sh:IRI ;
-    sh:message "TextValue instance may have at most one knora-base:hasTextValueType as an IRI"
   ] .
 
 knora-base:TimeValue-Shape

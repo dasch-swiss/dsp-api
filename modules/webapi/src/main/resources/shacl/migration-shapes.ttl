@@ -75,3 +75,15 @@ knora-base:Value-Shape
     sh:class knora-base:Value ;
     sh:message "Value instance may have at most one knora-base:previousValue of type knora-base:Value"
   ] .
+
+knora-base:TextValue-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasTextValueType ;
+    sh:maxCount 1 ;
+    sh:in ( knora-base:UnformattedText
+            knora-base:FormattedText
+            knora-base:CustomFormattedText
+            knora-base:UndefinedTextType ) ;
+    sh:message "TextValue instance may have at most one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText knora-base:CustomFormattedText knora-base:UndefinedTextType"
+  ] .
