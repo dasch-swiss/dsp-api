@@ -932,6 +932,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
          |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
          |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
          |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+         |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}UnformattedText> <$DataGraph> .
          |""".stripMargin
 
     suite("BulkImportShapes (data)")(

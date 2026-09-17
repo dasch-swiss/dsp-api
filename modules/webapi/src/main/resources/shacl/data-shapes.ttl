@@ -231,8 +231,8 @@ knora-base:VideoSegment-Shape
       sh:path knora-base:isVideoSegmentOf ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
-      sh:class knora-base:AudioRepresentation ;
-      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:AudioRepresentation that exists in this graph"
+      sh:class knora-base:MovingImageRepresentation ;
+      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:MovingImageRepresentation that exists in this graph"
     ] ;
   sh:property [
       a sh:PropertyShape ;
@@ -240,7 +240,7 @@ knora-base:VideoSegment-Shape
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class knora-base:LinkValue ;
-      sh:message "Instance of VideoSegment requires ne knora-base:isVideoSegmentOfValue of type knora-base:LinkValue"
+      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOfValue of type knora-base:LinkValue"
     ] .
 
 # Shapes for sub-classes of knora-base:Representation
@@ -350,10 +350,9 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasOrder ;
-    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
-    sh:message "Value instance must have one knora-base:valueHasOrder of type xsd:integer" ;
+    sh:message "Value instance may have at most one knora-base:valueHasOrder of type xsd:integer" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -462,7 +461,7 @@ knora-base:DecimalValue-Shape
     sh:path knora-base:valueHasDecimal ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:datatype xsd:string ;
+    sh:datatype xsd:decimal ;
     sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
   ] .
 
@@ -671,8 +670,8 @@ knora-base:FileValue-Shape
     a sh:PropertyShape ;
     sh:path knora-base:hasLicense ;
     sh:maxCount 1 ;
-    sh:class knora-base:License ;
-    sh:message "FileValue instance may have at most one knora-base:hasLicense of type knora-base:License"
+    sh:nodeKind sh:IRI ;
+    sh:message "FileValue instance may have at most one knora-base:hasLicense as an IRI"
   ] .
 
 knora-base:ArchiveFileValue-Shape
@@ -745,8 +744,8 @@ knora-base:StillImageExternalFileValue-Shape
       sh:path knora-base:externalUrl ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
-      sh:datatype xsd:anyURI ;
-      sh:message "StillImageExternalFileValue instance requires one knora-base:externalUrl of type xsd:anyURI"
+      sh:datatype xsd:string ;
+      sh:message "StillImageExternalFileValue instance requires one knora-base:externalUrl of type xsd:string"
     ] .
 
 knora-base:StillImageVectorFileValue-Shape

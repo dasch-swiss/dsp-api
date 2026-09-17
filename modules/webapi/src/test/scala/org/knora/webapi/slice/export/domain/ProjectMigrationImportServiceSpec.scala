@@ -1148,7 +1148,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(
             result.status == DataTaskStatus.Failed,
             dataNqWithSystemUser.contains(s"${KnoraAdminPrefix}SystemUser"),
-            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltInShape")),
+            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
           )
         }
       },
@@ -1176,7 +1176,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(
             result.status == DataTaskStatus.Failed,
             dataNqWithAnon.contains(s"${KnoraAdminPrefix}AnonymousUser"),
-            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltInShape")),
+            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
           )
         }
       },
