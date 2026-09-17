@@ -73,7 +73,7 @@
     "org.slf4j:jcl-over-slf4j": 1978020546,
     "org.slf4j:slf4j-api": -2005163028,
     "org.slf4j:slf4j-simple": 1999565066,
-    "org.springframework.security:spring-security-core": -1154977891,
+    "org.springframework.security:spring-security-crypto": -2137713478,
     "org.testcontainers:testcontainers": -1851951707,
     "org.topbraid:shacl": 1349683740,
     "org.wiremock:wiremock": -1393305765,
@@ -335,10 +335,6 @@
     "io.circe:circe-yaml-common_3:jar:sources": -659205144,
     "io.circe:circe-yaml_3": -1549438355,
     "io.circe:circe-yaml_3:jar:sources": 461922146,
-    "io.micrometer:micrometer-commons": -1110350250,
-    "io.micrometer:micrometer-commons:jar:sources": 1592192911,
-    "io.micrometer:micrometer-observation": 324848904,
-    "io.micrometer:micrometer-observation:jar:sources": 17887218,
     "io.netty:netty-buffer": -939411011,
     "io.netty:netty-buffer:jar:sources": -2007877354,
     "io.netty:netty-codec-base": 193970827,
@@ -649,18 +645,8 @@
     "org.slf4j:slf4j-api:jar:sources": 1751644771,
     "org.slf4j:slf4j-simple": -1055624668,
     "org.slf4j:slf4j-simple:jar:sources": 751828941,
-    "org.springframework.security:spring-security-core": -943323781,
-    "org.springframework.security:spring-security-core:jar:sources": -2076980296,
     "org.springframework.security:spring-security-crypto": -524152118,
     "org.springframework.security:spring-security-crypto:jar:sources": -383931259,
-    "org.springframework:spring-beans": 547725140,
-    "org.springframework:spring-beans:jar:sources": -883717113,
-    "org.springframework:spring-context": 2145330262,
-    "org.springframework:spring-context:jar:sources": 1821170241,
-    "org.springframework:spring-core": 166332372,
-    "org.springframework:spring-core:jar:sources": 333163033,
-    "org.springframework:spring-expression": -744972682,
-    "org.springframework:spring-expression:jar:sources": 735232192,
     "org.testcontainers:testcontainers": -961128094,
     "org.testcontainers:testcontainers:jar:sources": 375219890,
     "org.topbraid:shacl": -1453383225,
@@ -1584,20 +1570,6 @@
         "sources": "18111533cae998c318081f4562af9de2fb1329968091491b27aabe2fa6296bde"
       },
       "version": "0.16.1"
-    },
-    "io.micrometer:micrometer-commons": {
-      "shasums": {
-        "jar": "45aff76226830db257f4bc39a5bcff83d633e572fee9dc4e45cfa12af9a0a49a",
-        "sources": "0e4a336c7bca50bfa6cbea274ea681e42d86bfdac1038af3041301c8454f76ff"
-      },
-      "version": "1.16.6"
-    },
-    "io.micrometer:micrometer-observation": {
-      "shasums": {
-        "jar": "4c0826d5e7c8522a8e111470b4e77f77b0a10f520eb5502ddd143fdbcedb2340",
-        "sources": "ff5525482df358e7502d4c8680fb654ec700e3b01341149d870bd6cfd8ce04c0"
-      },
-      "version": "1.16.6"
     },
     "io.netty:netty-buffer": {
       "shasums": {
@@ -2674,47 +2646,12 @@
       },
       "version": "2.0.18"
     },
-    "org.springframework.security:spring-security-core": {
-      "shasums": {
-        "jar": "f9e1aebb39e051f6f92be029a6fca31e2977a06d417aa51504bfb298bc2a7c69",
-        "sources": "73d208a0dd021cad8cbbb85a71c8efc66df0161f49e91cd9d877a55def6bc9d0"
-      },
-      "version": "7.0.6"
-    },
     "org.springframework.security:spring-security-crypto": {
       "shasums": {
         "jar": "baf9f76bc5b15d090a82841fd5713fa11b75f91fc86de27029d972ce85d3d2e2",
         "sources": "bb183230f96711625bdc1d0fc45398917062c2b6b605f94f8dbf0de6a7a1f862"
       },
       "version": "7.0.6"
-    },
-    "org.springframework:spring-beans": {
-      "shasums": {
-        "jar": "6ec2e361a8872a71d8b1ff66f1bcb8cfa29fcc437931998919da7cecfb59b45b",
-        "sources": "d75bdcfe142b1576f72356748292cad5c21872a52be2c7f2920a9795bb3c52a5"
-      },
-      "version": "7.0.8"
-    },
-    "org.springframework:spring-context": {
-      "shasums": {
-        "jar": "1eb7d552414ebac00e30ab3e809138d810785f6d2c4271db77cdf0181f308f19",
-        "sources": "a28b30679b51bcf8aac7f06cb564a379cc2d6c4891b2e2dfc738ddd750c6278e"
-      },
-      "version": "7.0.8"
-    },
-    "org.springframework:spring-core": {
-      "shasums": {
-        "jar": "726ba2a5130833644bdf267a55ff26e1f52e8dcc9aa1ffa06904ca9c14619f25",
-        "sources": "3cbdaed9f2b1eea10d8ac27148ac5e6407d2861fa2d373253a09a1220a232919"
-      },
-      "version": "7.0.8"
-    },
-    "org.springframework:spring-expression": {
-      "shasums": {
-        "jar": "3c97c38ab59c77ee886e08ccf8096f6bb58a1245f68dfed7a40e93f41c435f9a",
-        "sources": "35517249c504d1d4550186808665587c8bb5be953cb6cbbb3856804194e790e9"
-      },
-      "version": "7.0.8"
     },
     "org.testcontainers:testcontainers": {
       "shasums": {
@@ -3232,13 +3169,6 @@
     "io.circe:circe-yaml_3": [
       "io.circe:circe-yaml-common_3",
       "org.yaml:snakeyaml"
-    ],
-    "io.micrometer:micrometer-commons": [
-      "org.jspecify:jspecify"
-    ],
-    "io.micrometer:micrometer-observation": [
-      "io.micrometer:micrometer-commons",
-      "org.jspecify:jspecify"
     ],
     "io.netty:netty-buffer": [
       "io.netty:netty-common"
@@ -3810,29 +3740,6 @@
     ],
     "org.slf4j:slf4j-simple": [
       "org.slf4j:slf4j-api"
-    ],
-    "org.springframework.security:spring-security-core": [
-      "io.micrometer:micrometer-observation",
-      "org.springframework.security:spring-security-crypto",
-      "org.springframework:spring-beans",
-      "org.springframework:spring-context",
-      "org.springframework:spring-core",
-      "org.springframework:spring-expression"
-    ],
-    "org.springframework:spring-beans": [
-      "org.springframework:spring-core"
-    ],
-    "org.springframework:spring-context": [
-      "io.micrometer:micrometer-observation",
-      "org.springframework:spring-beans",
-      "org.springframework:spring-core",
-      "org.springframework:spring-expression"
-    ],
-    "org.springframework:spring-core": [
-      "org.jspecify:jspecify"
-    ],
-    "org.springframework:spring-expression": [
-      "org.springframework:spring-core"
     ],
     "org.testcontainers:testcontainers": [
       "com.github.docker-java:docker-java-api",
@@ -4832,23 +4739,6 @@
       "io.circe.yaml.parser",
       "io.circe.yaml.printer",
       "io.circe.yaml.syntax"
-    ],
-    "io.micrometer:micrometer-commons": [
-      "io.micrometer.common",
-      "io.micrometer.common.annotation",
-      "io.micrometer.common.docs",
-      "io.micrometer.common.lang",
-      "io.micrometer.common.lang.internal",
-      "io.micrometer.common.util",
-      "io.micrometer.common.util.internal.logging"
-    ],
-    "io.micrometer:micrometer-observation": [
-      "io.micrometer.observation",
-      "io.micrometer.observation.annotation",
-      "io.micrometer.observation.aop",
-      "io.micrometer.observation.contextpropagation",
-      "io.micrometer.observation.docs",
-      "io.micrometer.observation.transport"
     ],
     "io.netty:netty-buffer": [
       "io.netty.buffer",
@@ -7466,48 +7356,6 @@
     "org.slf4j:slf4j-simple": [
       "org.slf4j.simple"
     ],
-    "org.springframework.security:spring-security-core": [
-      "org.springframework.security.access",
-      "org.springframework.security.access.annotation",
-      "org.springframework.security.access.expression",
-      "org.springframework.security.access.expression.method",
-      "org.springframework.security.access.hierarchicalroles",
-      "org.springframework.security.access.prepost",
-      "org.springframework.security.aot.hint",
-      "org.springframework.security.authentication",
-      "org.springframework.security.authentication.dao",
-      "org.springframework.security.authentication.event",
-      "org.springframework.security.authentication.jaas",
-      "org.springframework.security.authentication.jaas.event",
-      "org.springframework.security.authentication.jaas.memory",
-      "org.springframework.security.authentication.ott",
-      "org.springframework.security.authentication.ott.reactive",
-      "org.springframework.security.authentication.password",
-      "org.springframework.security.authorization",
-      "org.springframework.security.authorization.event",
-      "org.springframework.security.authorization.method",
-      "org.springframework.security.concurrent",
-      "org.springframework.security.context",
-      "org.springframework.security.converter",
-      "org.springframework.security.core",
-      "org.springframework.security.core.annotation",
-      "org.springframework.security.core.authority",
-      "org.springframework.security.core.authority.mapping",
-      "org.springframework.security.core.context",
-      "org.springframework.security.core.parameters",
-      "org.springframework.security.core.session",
-      "org.springframework.security.core.token",
-      "org.springframework.security.core.userdetails",
-      "org.springframework.security.core.userdetails.cache",
-      "org.springframework.security.core.userdetails.jdbc",
-      "org.springframework.security.core.userdetails.memory",
-      "org.springframework.security.jackson",
-      "org.springframework.security.jackson2",
-      "org.springframework.security.provisioning",
-      "org.springframework.security.scheduling",
-      "org.springframework.security.task",
-      "org.springframework.security.util"
-    ],
     "org.springframework.security:spring-security-crypto": [
       "org.springframework.security.crypto.argon2",
       "org.springframework.security.crypto.bcrypt",
@@ -7519,152 +7367,6 @@
       "org.springframework.security.crypto.password4j",
       "org.springframework.security.crypto.scrypt",
       "org.springframework.security.crypto.util"
-    ],
-    "org.springframework:spring-beans": [
-      "org.springframework.beans",
-      "org.springframework.beans.factory",
-      "org.springframework.beans.factory.annotation",
-      "org.springframework.beans.factory.aot",
-      "org.springframework.beans.factory.config",
-      "org.springframework.beans.factory.groovy",
-      "org.springframework.beans.factory.parsing",
-      "org.springframework.beans.factory.serviceloader",
-      "org.springframework.beans.factory.support",
-      "org.springframework.beans.factory.wiring",
-      "org.springframework.beans.factory.xml",
-      "org.springframework.beans.propertyeditors",
-      "org.springframework.beans.support"
-    ],
-    "org.springframework:spring-context": [
-      "org.springframework.cache",
-      "org.springframework.cache.annotation",
-      "org.springframework.cache.concurrent",
-      "org.springframework.cache.config",
-      "org.springframework.cache.interceptor",
-      "org.springframework.cache.support",
-      "org.springframework.context",
-      "org.springframework.context.annotation",
-      "org.springframework.context.aot",
-      "org.springframework.context.config",
-      "org.springframework.context.event",
-      "org.springframework.context.expression",
-      "org.springframework.context.i18n",
-      "org.springframework.context.index",
-      "org.springframework.context.support",
-      "org.springframework.context.weaving",
-      "org.springframework.ejb.config",
-      "org.springframework.format",
-      "org.springframework.format.annotation",
-      "org.springframework.format.datetime",
-      "org.springframework.format.datetime.standard",
-      "org.springframework.format.number",
-      "org.springframework.format.number.money",
-      "org.springframework.format.support",
-      "org.springframework.instrument.classloading",
-      "org.springframework.instrument.classloading.glassfish",
-      "org.springframework.instrument.classloading.jboss",
-      "org.springframework.instrument.classloading.tomcat",
-      "org.springframework.jmx",
-      "org.springframework.jmx.access",
-      "org.springframework.jmx.export",
-      "org.springframework.jmx.export.annotation",
-      "org.springframework.jmx.export.assembler",
-      "org.springframework.jmx.export.metadata",
-      "org.springframework.jmx.export.naming",
-      "org.springframework.jmx.export.notification",
-      "org.springframework.jmx.support",
-      "org.springframework.jndi",
-      "org.springframework.jndi.support",
-      "org.springframework.resilience",
-      "org.springframework.resilience.annotation",
-      "org.springframework.resilience.retry",
-      "org.springframework.scheduling",
-      "org.springframework.scheduling.annotation",
-      "org.springframework.scheduling.concurrent",
-      "org.springframework.scheduling.config",
-      "org.springframework.scheduling.support",
-      "org.springframework.scripting",
-      "org.springframework.scripting.bsh",
-      "org.springframework.scripting.config",
-      "org.springframework.scripting.groovy",
-      "org.springframework.scripting.support",
-      "org.springframework.stereotype",
-      "org.springframework.ui",
-      "org.springframework.validation",
-      "org.springframework.validation.annotation",
-      "org.springframework.validation.beanvalidation",
-      "org.springframework.validation.method",
-      "org.springframework.validation.support"
-    ],
-    "org.springframework:spring-core": [
-      "org.springframework.aot",
-      "org.springframework.aot.generate",
-      "org.springframework.aot.hint",
-      "org.springframework.aot.hint.annotation",
-      "org.springframework.aot.hint.predicate",
-      "org.springframework.aot.hint.support",
-      "org.springframework.aot.nativex",
-      "org.springframework.aot.nativex.feature",
-      "org.springframework.asm",
-      "org.springframework.cglib",
-      "org.springframework.cglib.beans",
-      "org.springframework.cglib.core",
-      "org.springframework.cglib.core.internal",
-      "org.springframework.cglib.proxy",
-      "org.springframework.cglib.reflect",
-      "org.springframework.cglib.transform",
-      "org.springframework.cglib.transform.impl",
-      "org.springframework.cglib.util",
-      "org.springframework.core",
-      "org.springframework.core.annotation",
-      "org.springframework.core.codec",
-      "org.springframework.core.convert",
-      "org.springframework.core.convert.converter",
-      "org.springframework.core.convert.support",
-      "org.springframework.core.env",
-      "org.springframework.core.io",
-      "org.springframework.core.io.buffer",
-      "org.springframework.core.io.support",
-      "org.springframework.core.log",
-      "org.springframework.core.metrics",
-      "org.springframework.core.metrics.jfr",
-      "org.springframework.core.retry",
-      "org.springframework.core.retry.support",
-      "org.springframework.core.serializer",
-      "org.springframework.core.serializer.support",
-      "org.springframework.core.style",
-      "org.springframework.core.task",
-      "org.springframework.core.task.support",
-      "org.springframework.core.type",
-      "org.springframework.core.type.classreading",
-      "org.springframework.core.type.filter",
-      "org.springframework.javapoet",
-      "org.springframework.lang",
-      "org.springframework.objenesis",
-      "org.springframework.objenesis.instantiator",
-      "org.springframework.objenesis.instantiator.android",
-      "org.springframework.objenesis.instantiator.annotations",
-      "org.springframework.objenesis.instantiator.basic",
-      "org.springframework.objenesis.instantiator.gcj",
-      "org.springframework.objenesis.instantiator.perc",
-      "org.springframework.objenesis.instantiator.sun",
-      "org.springframework.objenesis.instantiator.util",
-      "org.springframework.objenesis.strategy",
-      "org.springframework.util",
-      "org.springframework.util.backoff",
-      "org.springframework.util.comparator",
-      "org.springframework.util.concurrent",
-      "org.springframework.util.function",
-      "org.springframework.util.unit",
-      "org.springframework.util.xml"
-    ],
-    "org.springframework:spring-expression": [
-      "org.springframework.expression",
-      "org.springframework.expression.common",
-      "org.springframework.expression.spel",
-      "org.springframework.expression.spel.ast",
-      "org.springframework.expression.spel.standard",
-      "org.springframework.expression.spel.support"
     ],
     "org.testcontainers:testcontainers": [
       "org.testcontainers",
@@ -8628,10 +8330,6 @@
       "io.circe:circe-yaml-common_3:jar:sources",
       "io.circe:circe-yaml_3",
       "io.circe:circe-yaml_3:jar:sources",
-      "io.micrometer:micrometer-commons",
-      "io.micrometer:micrometer-commons:jar:sources",
-      "io.micrometer:micrometer-observation",
-      "io.micrometer:micrometer-observation:jar:sources",
       "io.netty:netty-buffer",
       "io.netty:netty-buffer:jar:sources",
       "io.netty:netty-codec-base",
@@ -8942,18 +8640,8 @@
       "org.slf4j:slf4j-api:jar:sources",
       "org.slf4j:slf4j-simple",
       "org.slf4j:slf4j-simple:jar:sources",
-      "org.springframework.security:spring-security-core",
-      "org.springframework.security:spring-security-core:jar:sources",
       "org.springframework.security:spring-security-crypto",
       "org.springframework.security:spring-security-crypto:jar:sources",
-      "org.springframework:spring-beans",
-      "org.springframework:spring-beans:jar:sources",
-      "org.springframework:spring-context",
-      "org.springframework:spring-context:jar:sources",
-      "org.springframework:spring-core",
-      "org.springframework:spring-core:jar:sources",
-      "org.springframework:spring-expression",
-      "org.springframework:spring-expression:jar:sources",
       "org.testcontainers:testcontainers",
       "org.testcontainers:testcontainers:jar:sources",
       "org.topbraid:shacl",
@@ -9057,16 +8745,6 @@
       "org.apache.jena.sys.JenaSubsystemLifecycle": [
         "eu.neverblink.jelly.convert.jena.fuseki.JellyFusekiLifecycle",
         "eu.neverblink.jelly.convert.jena.riot.JellySubsystemLifecycle"
-      ]
-    },
-    "io.micrometer:micrometer-observation": {
-      "io.micrometer.context.ThreadLocalAccessor": [
-        "io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor"
-      ]
-    },
-    "io.micrometer:micrometer-observation:jar:sources": {
-      "io.micrometer.context.ThreadLocalAccessor": [
-        "io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor"
       ]
     },
     "io.netty:netty-common": {
@@ -9887,28 +9565,6 @@
     "org.slf4j:slf4j-simple:jar:sources": {
       "org.slf4j.spi.SLF4JServiceProvider": [
         "org.slf4j.simple.SimpleServiceProvider"
-      ]
-    },
-    "org.springframework.security:spring-security-core": {
-      "io.micrometer.context.ThreadLocalAccessor": [
-        "org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor",
-        "org.springframework.security.core.context.SecurityContextHolderThreadLocalAccessor"
-      ]
-    },
-    "org.springframework.security:spring-security-core:jar:sources": {
-      "io.micrometer.context.ThreadLocalAccessor": [
-        "org.springframework.security.core.context.ReactiveSecurityContextHolderThreadLocalAccessor",
-        "org.springframework.security.core.context.SecurityContextHolderThreadLocalAccessor"
-      ]
-    },
-    "org.springframework:spring-core": {
-      "reactor.blockhound.integration.BlockHoundIntegration": [
-        "org.springframework.core.ReactiveAdapterRegistry$SpringCoreBlockHoundIntegration"
-      ]
-    },
-    "org.springframework:spring-core:jar:sources": {
-      "reactor.blockhound.integration.BlockHoundIntegration": [
-        "org.springframework.core.ReactiveAdapterRegistry$SpringCoreBlockHoundIntegration"
       ]
     },
     "org.testcontainers:testcontainers": {
