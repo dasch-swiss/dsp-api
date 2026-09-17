@@ -21,6 +21,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTrans
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * Shared by [[GravsearchToPrequeryTransformerE2ESpec]] and [[GravsearchToCountPrequeryTransformerE2ESpec]]:
@@ -43,6 +44,7 @@ object GravsearchInferencePipelineTestSupport {
       AppConfig,
     ) => AbstractPrequeryGenerator,
     dropOrderBy: Boolean = false,
+    limitResultsToProject: Option[ProjectIri] = None,
   )(implicit
     sf: StringFormatter,
   ): ZIO[
@@ -83,7 +85,7 @@ object GravsearchInferencePipelineTestSupport {
                                inputQuery = prequery,
                                transformer = selectTransformer,
                                limitInferenceToOntologies = ontologiesForInference,
-                               limitResultsToProject = None,
+                               limitResultsToProject = limitResultsToProject,
                              ),
                            )
   } yield transformedPrequery

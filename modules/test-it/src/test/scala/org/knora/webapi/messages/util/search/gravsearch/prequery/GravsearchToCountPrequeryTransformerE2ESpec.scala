@@ -22,6 +22,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
@@ -54,7 +55,10 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
   } yield prequery
 
   /** See [[GravsearchInferencePipelineTestSupport]] for why the golden snapshot needs the full pipeline. */
-  private def transformQueryWithInference(query: String): ZIO[
+  private def transformQueryWithInference(
+    query: String,
+    limitResultsToProject: Option[ProjectIri] = None,
+  ): ZIO[
     AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
     Throwable,
     SelectQuery,
@@ -69,6 +73,7 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
           appConfig.v2.fulltextSearch.searchValueMinLength,
         ),
       dropOrderBy = true,
+      limitResultsToProject = limitResultsToProject,
     )
 
   val queryClasslessMatchFulltext: String =
