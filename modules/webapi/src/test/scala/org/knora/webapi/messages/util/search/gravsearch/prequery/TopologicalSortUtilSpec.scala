@@ -62,6 +62,30 @@ class TopologicalSortUtilSpec extends ZIOSpecDefault {
 
       assertTrue(allOrders == expectedOrders)
     },
+    test(
+      "return a deterministic order when the middle layer has two nodes that are not origins of an edge " +
+        "into a later layer (single-digit node values, so lexicographic and numeric order coincide)",
+    ) {
+      val graph: GraphT =
+        Graph.from(
+          List(
+            DiHyperEdge[Int](1)(2),
+            DiHyperEdge[Int](1)(3),
+            DiHyperEdge[Int](1)(4),
+            DiHyperEdge[Int](2)(5),
+          ),
+        )
+
+      val allOrders: Set[Vector[Int]] = nodesToValues(
+        TopologicalSortUtil.findAllTopologicalOrderPermutations(graph),
+      )
+
+      val expectedOrders = Set(
+        Vector(1, 3, 4, 2, 5),
+      )
+
+      assertTrue(allOrders == expectedOrders)
+    },
     test("return an empty set of orders for an empty graph") {
       val graph: GraphT = Graph.empty
 
