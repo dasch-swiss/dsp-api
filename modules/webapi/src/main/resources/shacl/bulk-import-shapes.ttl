@@ -15,7 +15,7 @@
 knora-base:Resource-Shape
   sh:property [
     a sh:PropertyShape ;
-    sh:path knora-base:attachedToProject ;
+    sh:path knora-base:attachedToUser ;
     sh:hasValue <urn:placeholder:userIri> ;
-    sh:message "Resource instance must have knora-base:attachedToProject equal to <urn:placeholder:userIri>"
+    sh:message "Resource instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
   ] .
