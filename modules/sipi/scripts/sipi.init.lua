@@ -25,8 +25,6 @@ local function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
 
---- This function gets the access decision for a file by requesting it from
---- the DSP-API.
 --- @param shortcode string The shortcode of the file's project.
 --- @param file_name string The name of the file.
 --- @param jwt_raw string|nil The (optional) raw JWT token.
@@ -37,7 +35,6 @@ local function get_permission_on_file(shortcode, file_name, jwt_raw)
     local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
     log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
-    -- request the permissions on the image from DSP-API
     local success, result = server.http("GET", api_url, _auth_header(jwt_raw), 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
@@ -109,22 +106,9 @@ local function _sipi_permission(caller, access)
 end
 
 -------------------------------------------------------------------------------
--- This function is being called from Sipi before the file is served.
--- DSP-API is called to ask for the access decision on the file.
---
--- Parameters:
---    prefix: This is the prefix that is given in the IIIF URL
---    identifier: The identifier for the image
---    cookie: The cookie that may be present, ignored for now
---
--- Returns:
---    permission:
---       'allow': the view is allowed with the given IIIF parameters
---       'stream': the view is allowed, but the file may not be handed over
---       'restrict:watermark=<path-to-watermark>': Add a watermark
---       'restrict:size=<iiif-size-string>': reduce size/resolution
---       'deny': no access!
---    filepath: path on the server where the master file is located
+-- Called by Sipi before the file is served: asks DSP-API for the access decision on it. `prefix`
+-- and `identifier` come from the IIIF URL, `cookie` is ignored. Returns the permission that
+-- _sipi_permission produces, plus the path of the master file on the server.
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
     log("pre_flight - called with prefix:" .. prefix .. ", identifier: " .. identifier, server.loglevel.LOG_DEBUG)
@@ -179,31 +163,18 @@ function _file_not_found_response()
 end
 
 -------------------------------------------------------------------------------
--- This function is being called from Sipi before the file is served.
--- DSP-API is called to ask for the access decision on the file.
---
--- Parameters:
---    identifier: The identifier for the image
---    cookie: The cookie that may be present // ignored for now
---
--- Returns:
---    permission:
---       'allow': the view is allowed with the given IIIF parameters
---       'stream': the view is allowed, but the file may not be handed over
---       'restrict:...': a clamp Sipi refuses on this route
---       'deny': no access!
---    filepath: path on the server where the master file is located
+-- Called by Sipi before the file is served: asks DSP-API for the access decision on it. `cookie`
+-- is ignored. Returns the permission that _sipi_permission produces, plus the path of the master
+-- file on the server; a `restrict` clamp is refused by Sipi on this route.
 -------------------------------------------------------------------------------
 function file_pre_flight(identifier, cookie)
     log("file_pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
     local segments = get_segments_from_identifier(identifier)
 
-    -- get the shortcode
     local shortcode = segments[3]
     log("file_pre_flight - shortcode: " .. shortcode, server.loglevel.LOG_DEBUG)
 
-    -- get the file name
     local file_name = ''
     local file_name_preview = ''
     if #segments == 4 then

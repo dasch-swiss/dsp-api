@@ -1,9 +1,8 @@
 load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 
-# Apache-2.0 + SPDX file-header enforcement (replaces sbt-header). Each module
-# exposes its Scala sources as a `license_srcs` filegroup (globs don't cross
-# package boundaries), which this test reads via $(rootpaths ...). py_test (like
-# //tools/deps) resolves the hermetic Python interpreter for RBE.
+# Apache-2.0 + SPDX file-header enforcement. Each module exposes its Scala sources as a
+# `license_srcs` filegroup (globs don't cross package boundaries), which this test reads via
+# $(rootpaths ...). py_test resolves the hermetic Python interpreter for RBE.
 _LICENSE_SRCS = [
     "//modules/bagit:license_srcs",
     "//modules/ingest:license_srcs",
