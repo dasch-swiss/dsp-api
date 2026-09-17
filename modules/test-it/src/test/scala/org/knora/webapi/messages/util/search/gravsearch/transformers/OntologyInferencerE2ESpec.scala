@@ -76,7 +76,7 @@ class OntologyInferencerE2ESpec extends E2EZSpec {
         )
         val expected = List(
           ValuesPattern(
-            QueryVariable("resTypes5432"),
+            QueryVariable("foo__resTypes__5e1b183d"),
             Set(
               IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
               IriRef("http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri),
@@ -87,14 +87,13 @@ class OntologyInferencerE2ESpec extends E2EZSpec {
           StatementPattern(
             QueryVariable("foo"),
             IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
-            QueryVariable("resTypes5432"),
+            QueryVariable("foo__resTypes__5e1b183d"),
           ),
         )
         ontologyInferencer(
           _.transformStatementInWhere(
             statementPattern = typeStatement,
             simulateInference = true,
-            queryVariableSuffix = Some("5432"),
           ),
         ).map(expandedStatements => assertTrue(expandedStatements == expected))
       },
@@ -107,20 +106,19 @@ class OntologyInferencerE2ESpec extends E2EZSpec {
           )
         val expected = List(
           ValuesPattern(
-            QueryVariable("subProp5432"),
+            QueryVariable("foo__subProp__ff4c495b"),
             Set(
               IriRef("http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri),
               IriRef("http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri),
               IriRef("http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri),
             ),
           ),
-          StatementPattern(QueryVariable("foo"), QueryVariable("subProp5432"), QueryVariable("text")),
+          StatementPattern(QueryVariable("foo"), QueryVariable("foo__subProp__ff4c495b"), QueryVariable("text")),
         )
         ontologyInferencer(
           _.transformStatementInWhere(
             statementPattern = hasValueStatement,
             simulateInference = true,
-            queryVariableSuffix = Some("5432"),
           ),
         ).map(expandedStatements => assertTrue(expandedStatements == expected))
       },
