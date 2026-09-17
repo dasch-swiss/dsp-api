@@ -92,6 +92,48 @@ knora-base:ResourceShape
 
 # TODO: in-built
 
+knora-base:RegionShape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Region ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasColor ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:ColorValue ;
+    sh:message "Instance of Region must have one knora-base:hasColor of type knora-base:ColorValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:Representation ;
+    sh:message "Instance of Region must have one knora-base:isRegionOf of type knora-base:Representation"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionOfValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of Region must have one knora-base:isRegionOfValue of type knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasGeometry ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:GeomValue ;
+    sh:message "Instance of Region must have one knora-base:hasGeometry of type knora-base:GeomValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:class knora-base:TextValue ;
+    sh:message "Instance of Region may have any number of knora-base:hasComment of type knora-base:TextValue"
+  ] .
+
 # Shapes for sub-classes of knora-base:Representation
 
 knora-base:ArchiveRepresentationShape
