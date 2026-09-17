@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.core.TestAppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
@@ -67,6 +68,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     dataNq: String = baselineDataNq,
     adminNq: String = defaultAdminNq,
     allowPlaceholder: Boolean = true,
+    onBehalfOfUser: Option[UserIri] = None,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
       dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
@@ -76,7 +78,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       validator     = new ProjectMigrationImportValidator()
       result       <-
         validator
-          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri)
+          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri, onBehalfOfUser)
           .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
     } yield result
@@ -883,8 +885,83 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         },
       )
     },
+    bulkImportShapesSuite,
     placeholderGateSuite,
   ) @@ TestAspect.timeout(30.seconds)
+
+  private val bulkImportShapesSuite = {
+    // Bulk (data) import validation: bulk-import-shapes.ttl loads next to data-shapes.ttl and
+    // requires every resource and value to be attachedToUser the on-behalf-of user. Passing
+    // onBehalfOfUser = Some(...) enables it; None keeps the migration-import behaviour.
+    val ontologyWithClass = validOntologyNq +
+      s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+         |""".stripMargin
+
+    val OnBehalfOf = "http://rdfh.ch/users/test001"
+    val OtherUser  = "http://rdfh.ch/users/test002"
+    val onBehalfOf = UserIri.unsafeFrom(OnBehalfOf)
+
+    // Both users are declared as knora-admin:User so both pass AttachedToUserExistsShape.
+    // The bulk shape is then the only constraint that can reject OtherUser.
+    val adminBothUsers =
+      s"""<$OnBehalfOf> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+         |<$OtherUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+         |""".stripMargin
+
+    val Resource1 = "http://rdfh.ch/9999/thing001"
+    val Value1    = "http://rdfh.ch/9999/thing001/values/val001"
+
+    def resourceNq(user: String) =
+      s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+         |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+         |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+         |""".stripMargin
+
+    def valueNq(user: String) =
+      s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+         |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+         |<$Value1> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+         |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+         |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+         |""".stripMargin
+
+    suite("BulkImportShapes (data)")(
+      test("accepts resource and value attached to the on-behalf-of user") {
+        val nq = resourceNq(OnBehalfOf) + valueNq(OnBehalfOf)
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+            .map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects resource attached to a different user") {
+        val nq = resourceNq(OtherUser) + valueNq(OnBehalfOf)
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects value attached to a different user") {
+        val nq = resourceNq(OnBehalfOf) + valueNq(OtherUser)
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("migration mode (no on-behalf-of user) accepts a different user") {
+        val nq = resourceNq(OtherUser) + valueNq(OtherUser)
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers).map(result => assertTrue(result.isRight))
+        }
+      },
+    )
+  }
 
   private val SentinelValue = "urn:dasch:placeholder"
 

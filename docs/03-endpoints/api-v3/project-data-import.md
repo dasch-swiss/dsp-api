@@ -97,6 +97,9 @@ Before anything is written to the triplestore, the transformed data is SHACL-val
 shapes. The project's ontologies are fetched from the triplestore to support the validation. Validation failure
 fails the task with a descriptive error message and leaves the triplestore untouched.
 
+The data import applies an extra bulk-import shape: every imported resource and value must be `attachedToUser` the
+`onBehalfOfUser`. This shape is specific to the data import and does not run for the project-migration import.
+
 The presence of at least one project ontology is checked synchronously at trigger time
 (`409 project_ontologies_missing`, see [Key Behaviors](#key-behaviors)). The task also re-checks it as a backstop
 before validation.

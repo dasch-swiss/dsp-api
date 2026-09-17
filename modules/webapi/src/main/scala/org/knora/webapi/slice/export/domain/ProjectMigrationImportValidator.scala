@@ -19,6 +19,7 @@ import org.knora.shacl.ShaclShapes
 import org.knora.shacl.ShaclValidator
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.PlaceholderIri
 
 final class ProjectMigrationImportValidator() {
@@ -35,7 +36,22 @@ final class ProjectMigrationImportValidator() {
   // Tests catch any mismatch since sh:hasValue would match the literal placeholder, failing validation.
   private val ProjectIriPlaceholder = "urn:placeholder:projectIri"
 
-  def validate(ontologyFiles: NonEmptyChunk[Path], dataFiles: NonEmptyChunk[Path], projectIri: ProjectIri): Task[Unit] =
+  // Replaced at runtime with the on-behalf-of user IRI, only when the bulk import shapes are loaded.
+  private val UserIriPlaceholder = "urn:placeholder:userIri"
+
+  /**
+   * Validates the import graph data against the SHACL shapes.
+   *
+   * @param onBehalfOfUser present only for a data (bulk) import: the user every imported resource and value is
+   *                       attributed to. When set, `shacl/bulk-import-shapes.ttl` is loaded in addition to the data
+   *                       shapes and pins `knora-base:attachedToUser` to this user. The migration import passes `None`.
+   */
+  def validate(
+    ontologyFiles: NonEmptyChunk[Path],
+    dataFiles: NonEmptyChunk[Path],
+    projectIri: ProjectIri,
+    onBehalfOfUser: Option[UserIri] = None,
+  ): Task[Unit] =
     for {
       _       <- ZIO.unlessZIO(AppConfig.features(_.allowPlaceholder))(assertNoPlaceholderInObjectPosition(dataFiles))
       builtIn <- ZIO.foreach(builtInOntologyResources) { case (resource, graphIri) =>
@@ -51,9 +67,15 @@ final class ProjectMigrationImportValidator() {
                              .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       dataShapesTtl <- readClasspathResource("shacl/data-shapes.ttl")
                          .map(_.replace(ProjectIriPlaceholder, projectIri.value))
-      shapes = ShaclShapes(
+      bulkShapes <- ZIO.foreach(onBehalfOfUser) { userIri =>
+                      readClasspathResource("shacl/bulk-import-shapes.ttl")
+                        .map(_.replace(UserIriPlaceholder, userIri.value))
+                        .map(RdfData.InMemoryTurtle(_, ""))
+                    }
+      dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")) ++ Chunk.fromIterable(bulkShapes)
+      shapes     = ShaclShapes(
                  ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "")),
-                 dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")),
+                 dataShapes = dataShapes,
                )
       _ <- ShaclValidator
              .validate(graphs, shapes)
