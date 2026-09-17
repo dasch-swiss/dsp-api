@@ -20,7 +20,7 @@ import org.knora.webapi.messages.util.search.*
  * evaluates its right side without the outer bindings; `OPTIONAL`/`UNION`/`FILTER NOT EXISTS` see it), and
  * Fact 7 (a large `VALUES` table poisons join order unless it drives the scan).
  *
- * Tier table (lower is better), data so the spike's result plugs in without touching the procedure:
+ * Tier table (lower is better):
  *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one at any depth.
  *   - T2 Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object,
  *     whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type`
@@ -31,20 +31,17 @@ import org.knora.webapi.messages.util.search.*
  *     contains a `knora-base` class.
  *   - T6 `?x knora-base:attachedToProject <iri>`.
  *   - T7 Plain: everything else; within T7, non-path statements before property-path statements.
- * The measured basis and the provenance of each row (which are measured, which carried forward as
- * hypothesis) are in `docs/specs/2026-09-17-01-gravsearch-prequery-ordering-design.md` § "Tier table
- * (measured)". A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
+ * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
  * `rdfs:subPropertyOf`, is excluded from T2 and ranks T7 regardless of a bound object. A type unit whose
  * object is a single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is
- * unselective-technical: it ranks T7 and may never lead a component, listed by name rather than by
- * namespace (see the design doc's "Change the spike forces" section for why).
+ * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by
+ * name rather than by namespace, deliberately - do not widen this to a namespace test.
  *
  * The recursion seeds in step 4 below (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic
  * mirroring Fuseki's evaluation (Fact 4), not a SPARQL-semantics claim. Likewise, placing every statement
  * before every block is parity with today's `ReorderPatternsByDependency`, not a SPARQL identity: it can
- * change results when a block binds a variable a later statement also uses. Both are deliberate, scoped
- * choices; see the design doc for the argument.
+ * change results when a block binds a variable a later statement also uses.
  */
 object PrequeryPatternOrdering {
 
@@ -102,6 +99,11 @@ object PrequeryPatternOrdering {
     case _                                                      => false
   }
 
+  /**
+   * Deliberately asymmetric: only a bare `IriRef` object naming `LinkValue`/`Resource` is unselective. A
+   * type statement whose object variable is bound by a `VALUES` enumeration is exempt (T5) even if that
+   * enumeration happens to contain only these two classes, because the enumeration can drive the scan.
+   */
   private def isUnselectiveTechnicalType(u: QueryPattern): Boolean = u match {
     case StatementPattern(_: QueryVariable, IriRef(pred, _), IriRef(obj, _)) =>
       pred.toIri == OntologyConstants.Rdf.Type && unselectiveTechnicalClasses.contains(obj.toIri)
@@ -171,6 +173,7 @@ object PrequeryPatternOrdering {
     case other => vars(other).count(bound.contains)
   }
 
+  /** Tie-break precedence, in order: tier, then T7 non-path-before-path, then bound-terms count, then text. */
   private def rank(
     u: QueryPattern,
     bound: Set[QueryVariable],
