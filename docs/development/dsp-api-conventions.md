@@ -245,6 +245,40 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 - Use `check(Gen[T])` for property-based testing
 - **Query builders: prefer golden snapshots** (`GoldenTest` + `assertGolden`) over scattered `q.contains(...)` substring assertions — see `dsp-api-sparql-queries.md` § Testing Query Builders
 
+### Golden snapshot tests
+
+Extend a spec with `GoldenTest` and call `assertGolden(actual, "suffix")` to compare against a stored
+snapshot. The golden file lands in the resources mirror of the spec's package:
+`src/test/scala/.../FooSpec.scala` -> `src/test/resources/.../FooSpec__<suffix>.txt`.
+
+There are three ways to regenerate a golden:
+
+- `rewrite = true` on a single `assertGolden` call.
+- `override val rewriteAll = true` on the spec.
+- The `GOLDEN_REWRITE` environment variable, which needs no source edit:
+  `bazel test <target> --test_filter='.*<Spec>.*' --test_env=GOLDEN_REWRITE=1`
+
+`--test_filter` is compiled as a **Java regex**, so `.*<Spec>.*` is required; a leading bare `*` fails
+with `PatternSyntaxException: Dangling meta character '*'`, which looks like a test failure rather than
+a usage error.
+
+A regeneration run **fails by design** and must be followed by a clean rerun without the env variable,
+which must pass. Inspect the `git diff` of the golden files before accepting them.
+
+**Scope caveat:** `GOLDEN_REWRITE` is only honoured by the testkit trait
+(`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which reaches `modules/test-it` and
+`modules/test-e2e`. `modules/webapi` and `modules/sparql-builder` each carry their own same-named
+`GoldenTest` without the switch, so there `rewrite = true` / `rewriteAll = true` is the only route.
+
+**Placeholder rule for new golden cases:** Bazel runfiles entries are symlinks to the source files, so
+rewriting an already-existing golden file lands in the source tree, but writing a file that does not
+exist yet creates a plain file in the runfiles tree that is discarded after the run. So create an empty
+placeholder file at the expected `src/test/resources/...` path *before* the regeneration run, and
+afterwards use `git status` to confirm the source files actually changed.
+
+Golden comparison is exact text, so the generated output must be deterministic — normalise UUIDs,
+timestamps and other non-deterministic values before snapshotting.
+
 ## Naming Conventions
 
 | Element | Convention | Example |

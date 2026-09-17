@@ -17,25 +17,12 @@ import scala.util.chaining.scalaUtilChainingOps
  * validate its content while enabling automatic updates to the standard with
  * rewrite = true through "assertGolden(..., rewrite = true)" or "rewriteAll = true" in the trait.
  *
- * To regenerate golden files without editing spec source, run the rewrite via the GOLDEN_REWRITE
- * environment variable, e.g.:
- *   bazel test <target> --test_filter='.*<Spec>.*' --test_env=GOLDEN_REWRITE=1
- * This run fails by design (see assertNever below). Follow it with a clean rerun without the env
- * variable, which must pass.
- *
- * GOLDEN_REWRITE only affects specs in modules that depend on //modules/testkit (test-it, test-e2e).
- * modules/webapi and modules/sparql-builder each have their own same-named GoldenTest without it.
- *
- * Placeholder rule for NEW golden cases: Bazel runfiles entries are symlinks to the source files, so
- * a rewrite of an already-existing golden file lands in the source tree. A rewrite of a file that does
- * not exist yet instead creates a plain file in the runfiles tree, which is discarded after the test
- * run. Therefore, before running the rewrite for a new golden case, create an empty placeholder file
- * at the expected path under src/test/resources/... first. After the rewrite run, use git status to
- * confirm the source files actually changed.
- *
- * Use git diff or the test output to inspect the differences and either update the standard or update the code.
- *
+ * A rewrite run fails by design (see assertNever below) and must be followed by a clean rerun.
  * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
+ *
+ * For how to regenerate goldens (the GOLDEN_REWRITE environment variable, which modules it reaches, and
+ * the placeholder rule for new golden files) see docs/development/dsp-api-conventions.md, "Golden snapshot
+ * tests".
  */
 trait GoldenTest {
   val rewriteAll: Boolean = false
