@@ -171,6 +171,68 @@ knora-base:LinkObj-Shape
   ] .
 
 
+# Shapes for Segment
+
+knora-base:Segment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Segment ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:class knora-base:TextValue ;
+    sh:message "Instance of Segment may have any number of knora-base:hasComment of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasSegmentBounds ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:IntervalValue ;
+    sh:message "Segment instance must have one knora-base:hasSegmentBounds of type knora-base:IntervalValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasTitle ;
+    sh:maxCount 1 ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have one knora-base:hasTitle of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasDescription ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have any number of knora-base:hasDescription of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasKeyword ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have any number of knora-base:hasKeyword of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:relatesTo ;
+    sh:minCount 1 ;
+    sh:class knora-base:Resource ;
+    sh:message "Instance of Segment requires at least one knora-base:relatesTo to a Resource that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:relatesToValue ;
+    sh:minCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of Segment requires at least one knora-base:relatesToValue of type knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:relatesTo ;
+    dash:coExistsWith knora-base:relatesToValue ;
+    sh:message "A knora-base:relatesTo always requires a knora-base:relatesToValue"
+  ] .
+
+knora-base:VideoSegment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:VideoSegment ;
+  sh:property [
+
+  ] .
+
 # Shapes for sub-classes of knora-base:Representation
 
 knora-base:ArchiveRepresentation-Shape
