@@ -1,7 +1,6 @@
 # These shapes are an addition to the data-shapes.ttl that are only relevant for the bulk import validation
 
 # Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
-# by ProjectMigrationImportShaclValidator before validation.
 # - urn:placeholder:userIri  →  the IRI of the user the data is being imported on behalf of
 
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
@@ -18,4 +17,12 @@ knora-base:Resource-Shape
     sh:path knora-base:attachedToUser ;
     sh:hasValue <urn:placeholder:userIri> ;
     sh:message "Resource instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
+  ] .
+
+knora-base:Value-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:attachedToUser ;
+    sh:hasValue <urn:placeholder:userIri> ;
+    sh:message "Value instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
   ] .
