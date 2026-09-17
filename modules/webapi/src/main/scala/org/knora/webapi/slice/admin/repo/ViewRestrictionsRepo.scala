@@ -954,8 +954,7 @@ object ViewRestrictionsRepo {
                |  ${classes.resClassPatterns(dedupeRows = true)}
                |  OPTIONAL { ?resource rdfs:label ?label . }
                |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
-               |  FILTER (?resource IN (${Fragment
-          .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
+               |  ${Fragments.filterIn(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
                |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
@@ -1001,8 +1000,7 @@ object ViewRestrictionsRepo {
                |  }
                |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
                |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
-               |  FILTER (?resource IN (${Fragment
-          .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
+               |  ${Fragments.filterIn(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
                |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
