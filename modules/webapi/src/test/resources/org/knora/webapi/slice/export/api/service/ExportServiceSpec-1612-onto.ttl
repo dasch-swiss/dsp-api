@@ -68,6 +68,15 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
                 knora-base:GeonameValue;
         salsah-gui:guiElement  salsah-gui:Geonames .
 
+<http://www.knora.org/ontology/1612/Data#Coordinates>
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "Comment"@en;
+        rdfs:label             "Coordinates Label"@en;
+        rdfs:subPropertyOf     knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:GeolocationValue;
+        salsah-gui:guiElement  salsah-gui:Geolocation .
+
 <http://www.knora.org/ontology/1612/Data#TextRich>
         rdf:type               owl:ObjectProperty;
         rdfs:comment           "Comment"@en;
@@ -129,6 +138,11 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
                            salsah-gui:guiOrder  "4"^^xsd:nonNegativeInteger;
                            owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
                            owl:onProperty       <http://www.knora.org/ontology/1612/Data#Place>
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "5"^^xsd:nonNegativeInteger;
+                           owl:maxCardinality   "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       <http://www.knora.org/ontology/1612/Data#Coordinates>
                          ];
         rdfs:subClassOf  [ rdf:type             owl:Restriction;
                            salsah-gui:guiOrder  "3"^^xsd:nonNegativeInteger;

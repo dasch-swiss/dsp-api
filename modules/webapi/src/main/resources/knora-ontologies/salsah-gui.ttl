@@ -90,6 +90,13 @@
              owl:NamedIndividual .
 
 
+###  http://www.knora.org/ontology/salsah-gui#Geolocation
+
+:Geolocation
+    rdf:type :Guielement,
+             owl:NamedIndividual .
+
+
 ###  http://www.knora.org/ontology/salsah-gui#Geometry
 
 :Geometry

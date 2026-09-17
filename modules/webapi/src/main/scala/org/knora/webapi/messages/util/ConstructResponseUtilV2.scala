@@ -438,6 +438,16 @@ final class ConstructResponseUtilV2(
       comment = valueCommentOption,
     )
 
+  private def makeGeolocationValueContentV2(
+    valueObject: ValueRdfData,
+    valueCommentOption: Option[String],
+  ): GeolocationValueContentV2 =
+    GeolocationValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasGeolocation = valueObject.requireStringObject(OntologyConstants.KnoraBase.ValueHasGeolocation.toSmartIri),
+      comment = valueCommentOption,
+    )
+
   private def makeIntervalValueContentV2(
     valueObject: ValueRdfData,
     valueCommentOption: Option[String],
@@ -547,6 +557,8 @@ final class ConstructResponseUtilV2(
       case OntologyConstants.KnoraBase.GeomValue    => ZIO.succeed(makeGeomValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.GeonameValue =>
         ZIO.succeed(makeGeonameValueContentV2(valueObject, valueCommentOption))
+      case OntologyConstants.KnoraBase.GeolocationValue =>
+        ZIO.succeed(makeGeolocationValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.ListValue =>
         makeHierarchicalListValueContentV2(valueObject, valueCommentOption, targetSchema, requestingUser)
       case OntologyConstants.KnoraBase.IntervalValue =>

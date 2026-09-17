@@ -652,6 +652,7 @@ final case class ApiComplexV2JsonLdRequestParser(
           case DocumentFileValue           => withFileInfo(v, DocumentFileValueContentV2.from)
           case GeomValue                   => ZIO.fromEither(GeomValueContentV2.from(v.r))
           case GeonameValue                => ZIO.fromEither(GeonameValueContentV2.from(v.r))
+          case GeolocationValue            => ZIO.fromEither(GeolocationValueContentV2.from(v.r))
           case IntValue                    => ZIO.fromEither(IntegerValueContentV2.from(v.r))
           case IntervalValue               => ZIO.fromEither(IntervalValueContentV2.from(v.r))
           case ListValue                   => HierarchicalListValueContentV2.from(v.r, converter)

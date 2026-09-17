@@ -311,9 +311,50 @@ Represents a geometrical object as a JSON string, using normalized coordinates. 
 
 - `valueHasGeometry` (1): A JSON string.
 
+##### GeolocationValue
+
+Represents a geographic location as coordinates in a known coordinate reference system (CRS). Property:
+
+- `valueHasGeolocation` (1): An `xsd:string` in the OGC GeoSPARQL 1.1
+  [`wktLiteral`](https://docs.ogc.org/is/22-047r1/22-047r1.html) form — an optional CRS definition IRI in
+  angle brackets, linear whitespace, then a WKT geometry:
+
+```
+<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.55 47.37)
+<http://www.opengis.net/def/crs/EPSG/0/2056>   POINT(2600000 1200000)
+```
+
+Only the lexical form is borrowed from GeoSPARQL, not the class model: a `GeolocationValue` is an
+ordinary `Value` and carries the same system metadata and permissions as any other value.
+
+**Coordinate reference systems** are a closed allowlist of three, identified by OGC definition IRI:
+
+| CRS | IRI | Ordinates | Valid range |
+| --- | --- | --- | --- |
+| WGS84 (CRS84) | `http://www.opengis.net/def/crs/OGC/1.3/CRS84` | longitude, latitude | −180…180, −90…90 |
+| Swiss LV95 | `http://www.opengis.net/def/crs/EPSG/0/2056` | easting, northing | 2 484 273.3…2 837 939.88, 1 073 150.16…1 299 970.97 |
+| Swiss LV03 | `http://www.opengis.net/def/crs/EPSG/0/21781` | easting, northing | 484 273.3…837 939.88, 73 150.16…299 970.97 |
+
+Bounds are inclusive, and the first ordinate is always X — longitude for geographic systems, easting for
+projected ones. `EPSG/0/4326` is **rejected**: it formally declares latitude first, and admitting it
+would put two axis orders in one field. WGS84 is identified as `OGC/1.3/CRS84`, which is
+longitude-first and is also what an untagged literal means; an untagged literal is stored with the
+CRS84 prefix made explicit, so no stored value is ambiguous.
+
+Only a two-dimensional `POINT` is accepted on write; `POINT Z`, lines and areas are rejected. The
+storage form accommodates them unchanged, so admitting them later is a validator change and never a
+data migration.
+
+The complex v2 schema exposes the literal as `geolocationValueAsGeolocation`, along with three
+read-only fields derived on read — `geolocationValueHasCrs`, `geolocationValueHasShape` and
+`geolocationValueHasCoordinates` — so that a client dispatches on a declared shape instead of parsing
+the literal. `valueHasString` holds the bare space-separated coordinates, so that each coordinate is a
+whole token under the text index's whitespace tokenizer.
+
 ##### GeonameValue
 
-Represents a geolocation, using the identifiers found at [GeoNames](http://geonames.org). Property:
+Represents a place by its identifier at [GeoNames](http://geonames.org) — a named feature, not
+coordinates; for coordinates use `GeolocationValue`. Property:
 
 - `valueHasGeonameCode` (1): The identifier of a geographical feature from [GeoNames](http://geonames.org), represented
   as an `xsd:string`.

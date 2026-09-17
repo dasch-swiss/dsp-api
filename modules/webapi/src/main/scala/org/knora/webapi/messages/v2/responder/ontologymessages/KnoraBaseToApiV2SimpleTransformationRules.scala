@@ -99,6 +99,10 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     .withRdfsLabelEn("Geoname code")
     .withRdfsCommentEn("Represents a Geoname code.")
 
+  private val Geolocation = makeStringDatatypeClass(KnoraApiV2Simple.Geolocation)
+    .withRdfsLabelEn("Geolocation literal")
+    .withRdfsCommentEn("Represents a geographic location as an OGC GeoSPARQL wktLiteral.")
+
   private val Geom = makeStringDatatypeClass(KnoraApiV2Simple.Geom)
     .withRdfsLabelEn("Geometry specification")
     .withRdfsCommentEn("Represents a geometry specification in JSON.")
@@ -191,6 +195,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     OntologyConstants.KnoraBase.ValueHasDecimal,
     OntologyConstants.KnoraBase.ValueHasGeometry,
     OntologyConstants.KnoraBase.ValueHasGeonameCode,
+    OntologyConstants.KnoraBase.ValueHasGeolocation,
     OntologyConstants.KnoraBase.ValueHasInteger,
     OntologyConstants.KnoraBase.ValueHasBoolean,
     OntologyConstants.KnoraBase.ValueHasUri,
@@ -246,6 +251,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     OntologyConstants.KnoraBase.TimeValue,
     OntologyConstants.KnoraBase.LinkValue,
     OntologyConstants.KnoraBase.GeonameValue,
+    OntologyConstants.KnoraBase.GeolocationValue,
     OntologyConstants.KnoraBase.FileValue,
     OntologyConstants.KnoraBase.MappingElement,
     OntologyConstants.KnoraBase.MappingComponent,
@@ -278,6 +284,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     Color,
     Interval,
     Geoname,
+    Geolocation,
     Geom,
     ListNode,
   )
