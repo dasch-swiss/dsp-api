@@ -74,5 +74,4 @@ knora-base:Value-Shape
     sh:maxCount 1 ;
     sh:class knora-base:Value ;
     sh:message "Value instance may have at most one knora-base:previousValue of type knora-base:Value"
-] .
-
+  ] .
