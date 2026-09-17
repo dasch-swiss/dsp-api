@@ -65,7 +65,6 @@ knora-base:Resource-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasResourceAuthorship ;
-    sh:minCount 0 ;
     sh:datatype xsd:string ;
     sh:message "Resource instance must have knora-base:hasResourceAuthorship of type xsd:string" ;
   ] ;
@@ -359,7 +358,6 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasComment ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "Value instance may have at most one knora-base:valueHasComment of type xsd:string" ;
@@ -375,7 +373,6 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasUUID ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "Value instance may have at most one knora-base:valueHasUUID of type xsd:string" ;
@@ -653,7 +650,6 @@ knora-base:FileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:originalMimeType ; # TODO: find out if there is sh:in
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "FileValue instance may have at most one knora-base:originalMimeType of type xsd:string"
@@ -661,7 +657,6 @@ knora-base:FileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:originalFilename ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "FileValue instance may have at most one knora-base:originalFilename of type xsd:string"
@@ -669,7 +664,6 @@ knora-base:FileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasCopyrightHolder ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "FileValue instance may have at most one knora-base:hasCopyrightHolder of type xsd:string"
@@ -683,7 +677,6 @@ knora-base:FileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasLicense ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:class knora-base:License ;
     sh:message "FileValue instance may have at most one knora-base:hasLicense of type knora-base:License"
@@ -699,7 +692,6 @@ knora-base:AudioFileValue-Shape
   sh:property [
       a sh:PropertyShape ;
       sh:path knora-base:duration ;
-      sh:minCount 0 ;
       sh:maxCount 1 ;
       sh:datatype xsd:decimal ;
       sh:message "AudioFileValue instance may have at most one knora-base:duration of type xsd:decimal"
@@ -711,7 +703,6 @@ knora-base:DocumentFileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:pageCount ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "DocumentFileValue instance may have at most one knora-base:pageCount of type xsd:integer"
@@ -719,7 +710,6 @@ knora-base:DocumentFileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:dimX ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "DocumentFileValue instance may have at most one knora-base:dimX of type xsd:integer"
@@ -727,7 +717,6 @@ knora-base:DocumentFileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:dimY ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "DocumentFileValue instance may have at most one knora-base:dimY of type xsd:integer"
@@ -743,7 +732,6 @@ knora-base:StillImageFileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:dimX ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "StillImageFileValue instance may have at most one knora-base:dimX of type xsd:integer"
@@ -751,7 +739,6 @@ knora-base:StillImageFileValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:dimY ;
-    sh:minCount 0 ;
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "StillImageFileValue instance may have at most one knora-base:dimY of type xsd:integer"
