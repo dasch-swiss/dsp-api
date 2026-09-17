@@ -652,6 +652,48 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |}
         """.stripMargin
 
+  val queryFilterBeforeStatementsInUnion: String =
+    """
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |
+      |CONSTRUCT {
+      |  ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |  ?thing a anything:Thing .
+      |  {
+      |    {
+      |      ?thing anything:hasText ?text .
+      |      FILTER(?intVal > 1)
+      |    }
+      |    ?thing anything:hasInteger ?int .
+      |    ?int knora-api:intValueAsInt ?intVal .
+      |  } UNION {
+      |    ?thing anything:hasRichtext ?richtext .
+      |  }
+      |}
+        """.stripMargin
+
+  val queryDateFilterInUnionAndTopLevel: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |  ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |  ?thing a anything:Thing .
+      |  ?thing anything:hasDate ?date .
+      |  FILTER(?date < "GREGORIAN:2000"^^knora-api:Date)
+      |  {
+      |    ?thing anything:hasDate ?date .
+      |    FILTER(?date < "GREGORIAN:1900"^^knora-api:Date)
+      |  } UNION {
+      |    ?thing anything:hasInteger ?int .
+      |  }
+      |} ORDER BY ?date
+        """.stripMargin
+
   val queryWithKnoraApiResource: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
       |CONSTRUCT {
@@ -802,6 +844,16 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
           assertGolden(actual.toSparql, "linkTargetAnchor") &&
             assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "linkTargetAnchorShape"),
         )
+    },
+    test("transform a query whose FILTER precedes, in a nested group, the statements binding its variable") {
+      transformQueryWithInference(queryFilterBeforeStatementsInUnion)
+        .map(actual => assertGolden(actual.toSparql, "filterBeforeStatementsInUnion"))
+    },
+    test(
+      "transform a query filtering the same date variable with the same operator inside a UNION branch and at the top level",
+    ) {
+      transformQueryWithInference(queryDateFilterInUnionAndTopLevel)
+        .map(actual => assertGolden(actual.toSparql, "dateFilterInUnionAndTopLevel"))
     },
     test("not remove rdf:type knora-api:Resource if it's needed") {
       transformQuery(queryWithKnoraApiResource)
