@@ -91,4 +91,4 @@ knora-base:Value-Shape
     sh:path knora-base:previousValue ;
     sh:minCount 1 ;
     sh:message "Value may not carry a knora-base:previousValue in the bulk-import"
-  ] . 
+  ] .
