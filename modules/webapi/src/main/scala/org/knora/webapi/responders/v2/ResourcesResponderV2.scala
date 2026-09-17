@@ -356,7 +356,7 @@ final class ResourcesResponderV2(
                .findByShortcode(resourceIri.shortcode)
                .someOrFail(NotFoundException(s"Project ${resourceIri.shortcode} not found"))
       dataGraph      = projectService.getDataGraphForProject(prj).value
-      result        <- triplestore.query(Select(IsResourceInUseQuery.build(resourceIri, dataGraph)))
+      result        <- triplestore.query(IsResourceInUseQuery.build(resourceIri, dataGraph))
       candidates     = result.results.bindings.flatMap(_.rowMap.get("other")).toSet
       otherResources = candidates.flatMap(ResourceIri.from(_).toOption)
       dropped        = candidates.diff(otherResources.map(_.value))
