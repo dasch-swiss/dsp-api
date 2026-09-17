@@ -116,7 +116,7 @@ object TestDataFactory {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )

@@ -476,7 +476,7 @@ final class ResourcesResponderV2(
         _ <- ZIO.logInfo(
                s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
-        _ <- triplestore.query(Update(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri)))
+        _ <- triplestore.query(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO

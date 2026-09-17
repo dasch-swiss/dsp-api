@@ -18,7 +18,6 @@ import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortname
 import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
-import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.RestrictedViewResponse
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -93,7 +92,7 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
             "* `!d,d` The returned image is scaled so that the width and height of the returned image are not " +
             "greater than d, while maintaining the aspect ratio.\n" +
             "* `pct:n` The width and height of the returned image is scaled to n percent of the width and height " +
-            "of the original image. 1<= n <= 100.\n\n" +
+            "of the original image. 1<= n <= 99.\n\n" +
             "If the watermark is set to `true`, the returned image will be watermarked, " +
             "otherwise the default size " + RestrictedView.Size.default.value + " is set.\n\n" +
             "It is only possible to set either the size or the watermark, not both at the same time.",
@@ -103,7 +102,7 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
     val postAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByIri / restrictedViewSettings)
       .in(bodyProjectSetRestrictedViewSizeRequest)
-      .out(jsonBody[RestrictedViewResponse])
+      .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description(
         "Sets the project's restricted view settings identified by the IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
       )
@@ -111,10 +110,24 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
     val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / restrictedViewSettings)
       .in(bodyProjectSetRestrictedViewSizeRequest)
-      .out(jsonBody[RestrictedViewResponse])
+      .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description(
         "Sets the project's restricted view settings identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
       )
+
+    private val deleteRestrictedViewSettingsDescription =
+      "Removes the project's own restricted view setting, so it inherits the platform default " +
+        RestrictedView.Size.default.value + " again. Requires SystemAdmin or ProjectAdmin permissions for the project."
+
+    val deleteAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.delete
+      .in(projectsByIri / restrictedViewSettings)
+      .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .description(deleteRestrictedViewSettingsDescription)
+
+    val deleteAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.delete
+      .in(projectsByShortcode / restrictedViewSettings)
+      .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
+      .description(deleteRestrictedViewSettingsDescription)
 
     val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
       .in(projectsByIri / members)

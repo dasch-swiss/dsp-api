@@ -13,10 +13,11 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.DerivativeAccess
 import org.knora.webapi.slice.admin.domain.model.InternalFilename
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.api.admin.model.PermissionCodeAndProjectRestrictedViewSettings
-import org.knora.webapi.slice.api.admin.model.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.slice.admin.domain.model.OriginalAccess
+import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 /**
  * Integration spec for the wired [[AssetPermissionsCache]] against a real triplestore. It mirrors
@@ -38,20 +39,23 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
   override val rdfDataObjects: List[RdfDataObject] = List(incunabulaRdfData)
 
   override val e2eSpec = suite("The AssetPermissionsCache (wired, real triplestore)")(
-    test("serve a full-quality decision for an authenticated project member (code 6, no settings)") {
+    test("serve a full decision for an authenticated project member") {
       cache(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(incunabulaProject.shortcode, asset),
-      ).map(actual => assertTrue(actual == PermissionCodeAndProjectRestrictedViewSettings(permissionCode = 6, None)))
-    },
-    test("serve a restricted-view decision for an anonymous request (code 1 + settings)") {
-      cache(
-        _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
+        _.getAssetAccess(incunabulaMemberUser)(incunabulaProject.shortcode, asset),
       ).map(actual =>
         assertTrue(
-          actual == PermissionCodeAndProjectRestrictedViewSettings(
-            permissionCode = 1,
-            Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = false)),
-          ),
+          actual.original == OriginalAccess.Grant,
+          actual.derivative == DerivativeAccess.Full,
+        ),
+      )
+    },
+    test("serve a clamped decision for an anonymous request") {
+      cache(
+        _.getAssetAccess(anonymousUser)(incunabulaProject.shortcode, asset),
+      ).map(actual =>
+        assertTrue(
+          actual.original == OriginalAccess.Withhold,
+          actual.derivative == DerivativeAccess.Clamped(RestrictedView.Size.unsafeFrom("!512,512")),
         ),
       )
     },
@@ -62,11 +66,11 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
       for {
         decisionA <-
           cache(
-            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
+            _.getAssetAccess(anonymousUser)(incunabulaProject.shortcode, asset),
           )
         decisionB <-
           cache(
-            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(Shortcode.unsafeFrom("0001"), asset),
+            _.getAssetAccess(anonymousUser)(Shortcode.unsafeFrom("0001"), asset),
           )
       } yield assertTrue(decisionA == decisionB)
     },
@@ -76,21 +80,21 @@ class AssetPermissionsCacheE2ESpec extends E2EZSpec {
       for {
         cached <-
           cache(
-            _.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(incunabulaProject.shortcode, asset),
+            _.getAssetAccess(anonymousUser)(incunabulaProject.shortcode, asset),
           )
         direct <-
-          responder(_.getPermissionCodeAndProjectRestrictedViewSettings(anonymousUser)(asset))
+          responder(_.getAssetAccess(anonymousUser)(asset))
       } yield assertTrue(cached == direct)
     },
     test("cached authenticated decision equals the direct responder decision (REQ-1.3)") {
       for {
         cached <- cache(
-                    _.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(
+                    _.getAssetAccess(incunabulaMemberUser)(
                       incunabulaProject.shortcode,
                       asset,
                     ),
                   )
-        direct <- responder(_.getPermissionCodeAndProjectRestrictedViewSettings(incunabulaMemberUser)(asset))
+        direct <- responder(_.getAssetAccess(incunabulaMemberUser)(asset))
       } yield assertTrue(cached == direct)
     },
   )

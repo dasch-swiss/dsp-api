@@ -5,37 +5,28 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
-object CheckDuplicateOrderQuery extends QueryBuilderHelper {
+object CheckDuplicateOrderQuery {
 
   def build(resourceIri: InternalIri, propertyIri: SmartIri, order: Int): Ask = {
-    val existingValue = variable("existingValue")
-    val isDeletedVar  = variable("isDeleted")
-    val pattern1      = iri(resourceIri.value).has(toRdfIri(propertyIri), existingValue)
-    val pattern2      = existingValue.has(KB.valueHasOrder, literalOf(order))
-    // OPTIONAL so values lacking knora-base:isDeleted (e.g. legacy data) are treated as non-deleted.
-    val optionalDeleted = GraphPatterns.optional(existingValue.has(KB.isDeleted, isDeletedVar))
-    val where           = GraphPatterns
-      .and(pattern1, pattern2, optionalDeleted)
-      .filter(
-        Expressions.or(
-          Expressions.not(Expressions.bound(isDeletedVar)),
-          Expressions.equals(isDeletedVar, literalOf(false)),
-        ),
-      )
-    Ask(s"""
-           |ASK
-           |${where.getQueryString}
-           |""".stripMargin)
+    val resource   = Iri.unsafeFrom(resourceIri.value)
+    val property   = Iri.unsafeFrom(propertyIri.toInternalSchema.toIri)
+    val orderValue = Literal.int(order)
+    Ask(
+      // OPTIONAL so values lacking knora-base:isDeleted (e.g. legacy data) are treated as non-deleted.
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |ASK
+               |WHERE {
+               |  $resource $property ?existingValue .
+               |  ?existingValue knora-base:valueHasOrder $orderValue .
+               |  OPTIONAL { ?existingValue knora-base:isDeleted ?isDeleted . }
+               |  FILTER ( !bound(?isDeleted) || ?isDeleted = false )
+               |}""".render,
+    )
   }
 }

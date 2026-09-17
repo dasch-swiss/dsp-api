@@ -5,26 +5,20 @@
 
 package org.knora.webapi.slice.resources.repo
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.model.vocabulary.RDFS
-import org.eclipse.rdf4j.model.vocabulary.XSD
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
 import zio.IO
 import zio.Random
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
 
 import dsp.errors.SparqlGenerationException
 import dsp.valueobjects.UuidUtil
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.Project
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraBase as KB
 import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -38,7 +32,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
  * 4. Creates a new LinkValue for the new link
  * 5. Updates the link source's last modification date
  */
-object ChangeLinkTargetQuery extends QueryBuilderHelper {
+object ChangeLinkTargetQuery {
+
+  private def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
+    ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   /**
    * Builds a SPARQL UPDATE query to change a link's target resource.
@@ -95,149 +92,130 @@ object ChangeLinkTargetQuery extends QueryBuilderHelper {
              "linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template",
            )
     } yield {
-      val dataGraph                      = graphIri(project)
-      val linkSource                     = toRdfIri(linkSourceIri)
-      val linkProperty                   = toRdfIri(linkUpdateForCurrentLink.linkPropertyIri)
-      val linkValueProperty              = Rdf.iri(linkUpdateForCurrentLink.linkPropertyIri.toInternalSchema.toIri + "Value")
-      val linkTargetForCurrentLink       = Rdf.iri(linkUpdateForCurrentLink.linkTargetIri)
-      val linkTargetForNewLink           = Rdf.iri(linkUpdateForNewLink.linkTargetIri)
-      val newLinkValueForCurrentLink     = Rdf.iri(linkUpdateForCurrentLink.newLinkValueIri.value)
-      val newLinkValueForNewLink         = Rdf.iri(linkUpdateForNewLink.newLinkValueIri.value)
-      val linkSourceClass                = variable("linkSourceClass")
-      val currentLinkValueForCurrentLink = variable("currentLinkValueForCurrentLink")
-      val currentLinkUUID                = variable("currentLinkUUID")
-      val currentLinkPermissions         = variable("currentLinkPermissions")
-      val order                          = variable("order")
-      val linkSourceLastModificationDate = variable("linkSourceLastModificationDate")
-      val linkTargetClass                = variable("linkTargetClass")
-      val expectedTargetClass            = variable("expectedTargetClass")
-      val currentLinkValueForNewLink     = variable("currentLinkValueForNewLink")
-      val currentTimeLiteral             = Rdf.literalOfType(currentTime.toString, XSD.DATETIME)
+      val dataGraph         = Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
+      val linkSource        = Iri.unsafeFrom(linkSourceIri.value)
+      val linkProperty      = Iri.unsafeFrom(linkUpdateForCurrentLink.linkPropertyIri.toInternalSchema.toIri)
+      val linkValueProperty =
+        Iri.unsafeFrom(linkUpdateForCurrentLink.linkPropertyIri.toInternalSchema.toIri + "Value")
+      val linkTargetForCurrentLink   = Iri.unsafeFrom(linkUpdateForCurrentLink.linkTargetIri)
+      val linkTargetForNewLink       = Iri.unsafeFrom(linkUpdateForNewLink.linkTargetIri)
+      val newLinkValueForCurrentLink = Iri.unsafeFrom(linkUpdateForCurrentLink.newLinkValueIri.value)
+      val newLinkValueForNewLink     = Iri.unsafeFrom(linkUpdateForNewLink.newLinkValueIri.value)
+      val deletedByUser              = Iri.unsafeFrom(requestingUser.value)
+      val creatorOfCurrentLinkValue  = Iri.unsafeFrom(linkUpdateForCurrentLink.newLinkValueCreator)
+      val creatorOfNewLinkValue      = Iri.unsafeFrom(linkUpdateForNewLink.newLinkValueCreator)
+      val currentTimeLiteral         = Literal.dateTime(currentTime)
 
-      // DELETE patterns
-      val deletePatterns = Seq(
-        linkSource.has(KB.lastModificationDate, linkSourceLastModificationDate),
-        linkSource.has(linkProperty, linkTargetForCurrentLink),
-        linkSource.has(linkValueProperty, currentLinkValueForCurrentLink),
-        currentLinkValueForCurrentLink.has(KB.valueHasUUID, currentLinkUUID),
-        currentLinkValueForCurrentLink.has(KB.hasPermissions, currentLinkPermissions),
-      )
-
-      // INSERT patterns — new version of LinkValue for the current (deleted) link
-      val insertCurrentLinkValue = Seq(
-        newLinkValueForCurrentLink.isA(KB.linkValue),
-        newLinkValueForCurrentLink.has(RDF.SUBJECT, linkSource),
-        newLinkValueForCurrentLink.has(RDF.PREDICATE, linkProperty),
-        newLinkValueForCurrentLink.has(RDF.OBJECT, linkTargetForCurrentLink),
-        newLinkValueForCurrentLink
-          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForCurrentLink.linkTargetIri, XSD.STRING)),
-        newLinkValueForCurrentLink
-          .has(KB.valueHasRefCount, Rdf.literalOf(linkUpdateForCurrentLink.newReferenceCount)),
-        newLinkValueForCurrentLink.has(KB.valueCreationDate, currentTimeLiteral),
-        newLinkValueForCurrentLink.has(KB.previousValue, currentLinkValueForCurrentLink),
-        newLinkValueForCurrentLink.has(KB.valueHasUUID, currentLinkUUID),
-        newLinkValueForCurrentLink.has(KB.deleteDate, currentTimeLiteral),
-        newLinkValueForCurrentLink.has(KB.deletedBy, toRdfIri(requestingUser)),
-        newLinkValueForCurrentLink.has(KB.isDeleted, Rdf.literalOf(true)),
-        newLinkValueForCurrentLink.has(KB.attachedToUser, Rdf.iri(linkUpdateForCurrentLink.newLinkValueCreator)),
-        newLinkValueForCurrentLink
-          .has(KB.hasPermissions, Rdf.literalOfType(linkUpdateForCurrentLink.newLinkValuePermissions, XSD.STRING)),
-        linkSource.has(linkValueProperty, newLinkValueForCurrentLink),
-      )
-
-      // INSERT patterns — new direct link
-      val insertNewDirectLink = Seq(
-        linkSource.has(linkProperty, linkTargetForNewLink),
-      )
-
-      // INSERT patterns — new LinkValue for the new link
-      val insertNewLinkValueBase = Seq(
-        newLinkValueForNewLink.isA(KB.linkValue),
-        newLinkValueForNewLink.has(RDF.SUBJECT, linkSource),
-        newLinkValueForNewLink.has(RDF.PREDICATE, linkProperty),
-        newLinkValueForNewLink.has(RDF.OBJECT, linkTargetForNewLink),
-        newLinkValueForNewLink
-          .has(KB.valueHasString, Rdf.literalOfType(linkUpdateForNewLink.linkTargetIri, XSD.STRING)),
-      )
-
-      val insertComment =
-        maybeComment.map(c => newLinkValueForNewLink.has(KB.valueHasComment, Rdf.literalOf(c))).toSeq
-
-      val insertNewLinkValueRest = Seq(
-        newLinkValueForNewLink.has(KB.valueHasRefCount, Rdf.literalOf(linkUpdateForNewLink.newReferenceCount)),
-        newLinkValueForNewLink.has(KB.valueHasOrder, order),
-        newLinkValueForNewLink.has(KB.isDeleted, Rdf.literalOf(false)),
-        newLinkValueForNewLink.has(KB.valueHasUUID, Rdf.literalOf(UuidUtil.base64Encode(newLinkValueUUID))),
-        newLinkValueForNewLink.has(KB.valueCreationDate, currentTimeLiteral),
-        newLinkValueForNewLink.has(KB.attachedToUser, Rdf.iri(linkUpdateForNewLink.newLinkValueCreator)),
-        newLinkValueForNewLink
-          .has(KB.hasPermissions, Rdf.literalOfType(linkUpdateForNewLink.newLinkValuePermissions, XSD.STRING)),
-        linkSource.has(linkValueProperty, newLinkValueForNewLink),
-      )
-
-      val insertLastMod = Seq(
-        linkSource.has(KB.lastModificationDate, currentTimeLiteral),
-      )
-
-      val insertPatterns =
-        insertCurrentLinkValue ++ insertNewDirectLink ++ insertNewLinkValueBase ++ insertComment ++ insertNewLinkValueRest ++ insertLastMod
-
-      // WHERE patterns
-      val subClassOfPath = zeroOrMore(RDFS.SUBCLASSOF)
-
-      val wherePatterns: Seq[GraphPattern] = Seq(
-        // Check link source is a Resource and not deleted
-        linkSource.isA(linkSourceClass),
-        linkSourceClass.has(subClassOfPath, KB.Resource),
-        linkSource.has(KB.isDeleted, Rdf.literalOf(false)),
-        // Make sure the current direct link exists
-        linkSource.has(linkProperty, linkTargetForCurrentLink),
-        // Make sure a LinkValue exists for the current link with the correct reference count
-        linkSource.has(linkValueProperty, currentLinkValueForCurrentLink),
-        currentLinkValueForCurrentLink
-          .isA(KB.linkValue)
-          .andHas(RDF.SUBJECT, linkSource)
-          .andHas(RDF.PREDICATE, linkProperty)
-          .andHas(RDF.OBJECT, linkTargetForCurrentLink)
-          .andHas(KB.valueHasRefCount, Rdf.literalOf(linkUpdateForCurrentLink.currentReferenceCount))
-          .andHas(KB.isDeleted, Rdf.literalOf(false))
-          .andHas(KB.valueHasUUID, currentLinkUUID)
-          .andHas(KB.hasPermissions, currentLinkPermissions),
-        // Optional: get the order from the current link value
-        currentLinkValueForCurrentLink.has(KB.valueHasOrder, order).optional(),
-        // Do nothing if a direct link already exists to the new target
-        GraphPatterns.filterNotExists(linkSource.has(linkProperty, linkTargetForNewLink)),
-        // Do nothing if an active LinkValue already exists for the new target
-        GraphPatterns.filterNotExists(
-          linkSource
-            .has(linkValueProperty, currentLinkValueForNewLink)
-            .and(
-              currentLinkValueForNewLink
-                .isA(KB.linkValue)
-                .andHas(RDF.SUBJECT, linkSource)
-                .andHas(RDF.PREDICATE, linkProperty)
-                .andHas(RDF.OBJECT, linkTargetForNewLink)
-                .andHas(KB.isDeleted, Rdf.literalOf(false)),
-            ),
-        ),
-        // Validate new target: exists, not deleted, is a Resource, and satisfies the class constraint
-        linkTargetForNewLink.isA(linkTargetClass).andHas(KB.isDeleted, Rdf.literalOf(false)),
-        linkTargetClass.has(subClassOfPath, KB.Resource),
-        linkProperty.has(KB.objectClassConstraint, expectedTargetClass),
-        linkTargetClass.has(subClassOfPath, expectedTargetClass),
-        // Get the link source's last modification date, if it has one
-        linkSource.has(KB.lastModificationDate, linkSourceLastModificationDate).optional(),
-      )
+      val currentLinkTargetString = Literal.string(linkUpdateForCurrentLink.linkTargetIri)
+      val currentLinkRefCount     = Literal.int(linkUpdateForCurrentLink.newReferenceCount)
+      val currentLinkPermissions  = Literal.string(linkUpdateForCurrentLink.newLinkValuePermissions)
+      val newLinkTargetString     = Literal.string(linkUpdateForNewLink.linkTargetIri)
+      val newLinkRefCount         = Literal.int(linkUpdateForNewLink.newReferenceCount)
+      val newLinkPermissions      = Literal.string(linkUpdateForNewLink.newLinkValuePermissions)
+      val newLinkValueUUIDLiteral = Literal.string(UuidUtil.base64Encode(newLinkValueUUID))
+      val currentRefCount         = Literal.int(linkUpdateForCurrentLink.currentReferenceCount)
 
       val query = Update(
-        Queries
-          .MODIFY()
-          .prefix(RDF.NS, RDFS.NS, XSD.NS, KB.NS)
-          .from(dataGraph)
-          .delete(deletePatterns*)
-          .into(dataGraph)
-          .insert(insertPatterns*)
-          .where(wherePatterns*),
+        sparql"""|PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                 |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                 |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                 |
+                 |DELETE {
+                 |  GRAPH $dataGraph {
+                 |    # Delete the link source's last modification date so we can update it
+                 |    $linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+                 |    # Delete the current direct link
+                 |    $linkSource $linkProperty $linkTargetForCurrentLink .
+                 |    # Detach the current LinkValue from the link source
+                 |    $linkSource $linkValueProperty ?currentLinkValueForCurrentLink .
+                 |    # Delete the UUID and the permissions from the current version of the link value
+                 |    ?currentLinkValueForCurrentLink knora-base:valueHasUUID ?currentLinkUUID .
+                 |    ?currentLinkValueForCurrentLink knora-base:hasPermissions ?currentLinkPermissions .
+                 |  }
+                 |}
+                 |INSERT {
+                 |  GRAPH $dataGraph {
+                 |    # Insert a new version of the current LinkValue, marked as deleted
+                 |    $newLinkValueForCurrentLink a knora-base:LinkValue .
+                 |    $newLinkValueForCurrentLink rdf:subject $linkSource .
+                 |    $newLinkValueForCurrentLink rdf:predicate $linkProperty .
+                 |    $newLinkValueForCurrentLink rdf:object $linkTargetForCurrentLink .
+                 |    $newLinkValueForCurrentLink knora-base:valueHasString $currentLinkTargetString .
+                 |    $newLinkValueForCurrentLink knora-base:valueHasRefCount $currentLinkRefCount .
+                 |    $newLinkValueForCurrentLink knora-base:valueCreationDate $currentTimeLiteral .
+                 |    $newLinkValueForCurrentLink knora-base:previousValue ?currentLinkValueForCurrentLink .
+                 |    $newLinkValueForCurrentLink knora-base:valueHasUUID ?currentLinkUUID .
+                 |    $newLinkValueForCurrentLink knora-base:deleteDate $currentTimeLiteral .
+                 |    $newLinkValueForCurrentLink knora-base:deletedBy $deletedByUser .
+                 |    $newLinkValueForCurrentLink knora-base:isDeleted true .
+                 |    $newLinkValueForCurrentLink knora-base:attachedToUser $creatorOfCurrentLinkValue .
+                 |    $newLinkValueForCurrentLink knora-base:hasPermissions $currentLinkPermissions .
+                 |    $linkSource $linkValueProperty $newLinkValueForCurrentLink .
+                 |    # Insert the new direct link
+                 |    $linkSource $linkProperty $linkTargetForNewLink .
+                 |    # Insert a LinkValue describing the new link
+                 |    $newLinkValueForNewLink a knora-base:LinkValue .
+                 |    $newLinkValueForNewLink rdf:subject $linkSource .
+                 |    $newLinkValueForNewLink rdf:predicate $linkProperty .
+                 |    $newLinkValueForNewLink rdf:object $linkTargetForNewLink .
+                 |    $newLinkValueForNewLink knora-base:valueHasString $newLinkTargetString .
+                 |    ${maybeComment.whenSome(comment =>
+            sparql"$newLinkValueForNewLink knora-base:valueHasComment ${Literal.string(comment)} .",
+          )}
+                 |    $newLinkValueForNewLink knora-base:valueHasRefCount $newLinkRefCount .
+                 |    $newLinkValueForNewLink knora-base:valueHasOrder ?order .
+                 |    $newLinkValueForNewLink knora-base:isDeleted false .
+                 |    $newLinkValueForNewLink knora-base:valueHasUUID $newLinkValueUUIDLiteral .
+                 |    $newLinkValueForNewLink knora-base:valueCreationDate $currentTimeLiteral .
+                 |    $newLinkValueForNewLink knora-base:attachedToUser $creatorOfNewLinkValue .
+                 |    $newLinkValueForNewLink knora-base:hasPermissions $newLinkPermissions .
+                 |    # Attach the new LinkValue to its containing resource
+                 |    $linkSource $linkValueProperty $newLinkValueForNewLink .
+                 |    # Update the link source's last modification date
+                 |    $linkSource knora-base:lastModificationDate $currentTimeLiteral .
+                 |  }
+                 |}
+                 |WHERE {
+                 |  # Check that the link source is a knora-base:Resource and is not deleted
+                 |  $linkSource a ?linkSourceClass .
+                 |  ?linkSourceClass rdfs:subClassOf* knora-base:Resource .
+                 |  $linkSource knora-base:isDeleted false .
+                 |  # Make sure the current direct link exists
+                 |  $linkSource $linkProperty $linkTargetForCurrentLink .
+                 |  # Make sure a LinkValue exists for the current link with the correct reference count
+                 |  $linkSource $linkValueProperty ?currentLinkValueForCurrentLink .
+                 |  ?currentLinkValueForCurrentLink a knora-base:LinkValue ;
+                 |    rdf:subject $linkSource ;
+                 |    rdf:predicate $linkProperty ;
+                 |    rdf:object $linkTargetForCurrentLink ;
+                 |    knora-base:valueHasRefCount $currentRefCount ;
+                 |    knora-base:isDeleted false ;
+                 |    knora-base:valueHasUUID ?currentLinkUUID ;
+                 |    knora-base:hasPermissions ?currentLinkPermissions .
+                 |  # Get the order from the current link value, if it has one
+                 |  OPTIONAL { ?currentLinkValueForCurrentLink knora-base:valueHasOrder ?order . }
+                 |  # Do nothing if a direct link already exists to the new target
+                 |  FILTER NOT EXISTS { $linkSource $linkProperty $linkTargetForNewLink . }
+                 |  # Do nothing if an active LinkValue already exists for the new target
+                 |  FILTER NOT EXISTS {
+                 |    $linkSource $linkValueProperty ?currentLinkValueForNewLink .
+                 |    ?currentLinkValueForNewLink a knora-base:LinkValue ;
+                 |      rdf:subject $linkSource ;
+                 |      rdf:predicate $linkProperty ;
+                 |      rdf:object $linkTargetForNewLink ;
+                 |      knora-base:isDeleted false .
+                 |  }
+                 |  # Validate the new target: it exists, is not deleted, is a knora-base:Resource,
+                 |  # and satisfies the link property's object class constraint
+                 |  $linkTargetForNewLink a ?linkTargetClass ;
+                 |    knora-base:isDeleted false .
+                 |  ?linkTargetClass rdfs:subClassOf* knora-base:Resource .
+                 |  $linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
+                 |  ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+                 |  # Get the link source's last modification date, if it has one, so we can update it
+                 |  OPTIONAL { $linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate . }
+                 |}""".render,
       )
 
       (newLinkValueUUID, query)

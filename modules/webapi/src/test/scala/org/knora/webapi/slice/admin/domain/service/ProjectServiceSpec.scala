@@ -15,7 +15,6 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
@@ -56,7 +55,7 @@ class ProjectServiceSpec extends ZIOSpecDefault {
           keywords = List.empty,
           logo = None,
           selfjoin = SelfJoin.CanJoin,
-          restrictedView = RestrictedView.default,
+          restrictedView = None,
           allowedCopyrightHolders = Set.empty,
           enabledLicenses = Set.empty,
         )
