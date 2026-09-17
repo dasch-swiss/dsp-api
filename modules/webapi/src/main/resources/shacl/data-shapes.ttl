@@ -226,12 +226,57 @@ knora-base:Segment-Shape
     sh:message "A knora-base:relatesTo always requires a knora-base:relatesToValue"
   ] .
 
+knora-base:AudioSegment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:AudioSegment ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAudioSegmentOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:AudioRepresentation ;
+    sh:message "Instance of AudioSegment requires one knora-base:isAudioSegmentOf to a knora-base:AudioRepresentation that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAudioSegmentOfValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of AudioSegment requires ne knora-base:isAudioSegmentOfValue of type knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAudioSegmentOf ;
+    dash:coExistsWith knora-base:isAudioSegmentOfValue ;
+    sh:message "A knora-base:isAudioSegmentOf always requires a knora-base:isAudioSegmentOfValue"
+  ] .
+
 knora-base:VideoSegment-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:VideoSegment ;
   sh:property [
-
-  ] .
+      a sh:PropertyShape ;
+      sh:path knora-base:isVideoSegmentOf ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class knora-base:AudioRepresentation ;
+      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:AudioRepresentation that exists in this graph"
+    ] ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:isVideoSegmentOfValue ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class knora-base:LinkValue ;
+      sh:message "Instance of VideoSegment requires ne knora-base:isVideoSegmentOfValue of type knora-base:LinkValue"
+    ] ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:isVideoSegmentOf ;
+      dash:coExistsWith knora-base:isVideoSegmentOfValue ;
+      sh:message "A knora-base:isVideoSegmentOf always requires a knora-base:isVideoSegmentOfValue"
+    ] .
 
 # Shapes for sub-classes of knora-base:Representation
 
