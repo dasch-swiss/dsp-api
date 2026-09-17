@@ -21,6 +21,8 @@ object SparqlTransformer {
    *
    * @param entity the entity to be used to create a base name for a variable.
    * @return a base name for a variable.
+   * @see [[createInferenceVariable]], which does not reuse this method because it is lossy (distinct
+   *      inputs can escape to the same string) and gives no `VARNAME` guarantee for any entity kind.
    */
   def escapeEntityForVariable(entity: Entity): String = {
     val entityStr = entity match {
@@ -92,9 +94,10 @@ object SparqlTransformer {
    *
    * [[escapeEntityForVariable]] is not reused here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
    * escape to the same string, which would merge two unrelated `VALUES` blocks and intersect their
-   * class sets into an empty result), and it passes through characters that are illegal in a SPARQL
-   * `VARNAME` (an [[XsdLiteral]] object such as `"(DE-588)118531379"` can reach the inference code
-   * as a statement subject).
+   * class sets into an empty result), and it passes an [[XsdLiteral]]'s raw text (e.g.
+   * `"(DE-588)118531379"`) through unchanged, offering no `VARNAME` guarantee for any entity position.
+   * `createInferenceVariable` instead sanitises its `base` unconditionally on every branch, including
+   * the fallback branch.
    *
    * The result is always a valid SPARQL `VARNAME`: the grammar permits a leading digit or an empty
    * base, and the `__kind__hash` suffix is appended unconditionally regardless of what `base`

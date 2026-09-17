@@ -23,6 +23,9 @@ import scala.util.chaining.scalaUtilChainingOps
  * This run fails by design (see assertNever below). Follow it with a clean rerun without the env
  * variable, which must pass.
  *
+ * GOLDEN_REWRITE only affects specs in modules that depend on //modules/testkit (test-it, test-e2e).
+ * modules/webapi and modules/sparql-builder each have their own same-named GoldenTest without it.
+ *
  * Placeholder rule for NEW golden cases: Bazel runfiles entries are symlinks to the source files, so
  * a rewrite of an already-existing golden file lands in the source tree. A rewrite of a file that does
  * not exist yet instead creates a plain file in the runfiles tree, which is discarded after the test

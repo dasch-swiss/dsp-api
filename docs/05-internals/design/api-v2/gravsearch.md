@@ -530,9 +530,11 @@ Identical statements deliberately produce the same variable name. This is harmle
 statement contributes to the `VALUES` block is identical either way, so sharing the variable loses nothing.
 
 The existing lossy `escapeEntityForVariable` helper is not reused here. It collides two different IRIs onto the
-same escaped string (`.../ab#cd` and `.../abc#d` escape alike), and it can pass through characters that are
-illegal in a SPARQL `VARNAME` (an `XsdLiteral` object such as `"(DE-588)118531379"` can reach the inference code
-as a statement subject). Either failure mode would merge two unrelated `VALUES` blocks under one name.
+same escaped string (`.../ab#cd` and `.../abc#d` escape alike), and it passes an `XsdLiteral`'s raw text (e.g.
+`"(DE-588)118531379"`) through unchanged, offering no `VARNAME` guarantee for any entity position.
+`createInferenceVariable` instead sanitises its `base` unconditionally on every branch, including the fallback
+branch. Either failure mode in `escapeEntityForVariable` would merge two unrelated `VALUES` blocks under one
+name.
 
 The suffix must stay unique per statement, not a shared constant: a constant would collapse unrelated `VALUES`
 variables (e.g. one from `?mainRes a Resource`, another from `?val a Value`) into the same variable,
