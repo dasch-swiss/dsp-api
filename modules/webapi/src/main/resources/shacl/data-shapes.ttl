@@ -90,8 +90,6 @@ knora-base:Resource-Shape
   # TODO: add information from edited graphs
   # TODO: check if it is possible to ensure that this is not used directly
 
-# TODO: in-built
-
 knora-base:Region-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Region ;
