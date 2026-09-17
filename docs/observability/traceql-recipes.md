@@ -118,3 +118,31 @@ that got cut off, and exactly what you are usually hunting:
     `span.gravsearch.query.shape`, `span.gravsearch.shape.has_filter`,
     `span.gravsearch.exit_reason`. Intrinsics use a colon — `span:name`, `span:duration`,
     `span:status`, `trace:rootName`.
+
+## 6. Find the query text
+
+Query text lives in **events** on the `gravsearch` root span, not in attributes, so it is selected
+through the event scope: `event:name` for the event name, `event.<key>` for its attributes. Two
+events carry text — the submitted Gravsearch and the generated SPARQL prequery that was actually sent
+to the triplestore:
+
+```traceql
+{ span:name = "gravsearch" && event:name = "gravsearch.query" }
+{ span:name = "gravsearch" && event:name = "gravsearch.prequery" }
+```
+
+Slow queries whose prequery was captured — the set you can reproduce against Fuseki directly:
+
+```traceql
+{ span:name = "gravsearch" && event:name = "gravsearch.prequery" && span:duration > 2s }
+```
+
+Match on the text itself (regex is fully anchored, so wrap with `.*`). Both events use the same
+`db.query.text` key, so pin `event:name` when only one of them is meant:
+
+```traceql
+{ span:name = "gravsearch" && event:name = "gravsearch.query" && event.db.query.text =~ ".*incunabula:title.*" }
+```
+
+See the [Gravsearch Trace Runbook §5](gravsearch-trace-runbook.md#5-read-the-submitted-query) for how
+to read the two texts against each other.

@@ -56,9 +56,10 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
 
   // The wire keys the runbook tells engineers to look for — asserted as literals, not imported from
   // production, so a rename shows up here as a failing test rather than silently following along.
-  private val queryEvent   = "gravsearch.query"
-  private val queryTextKey = AttributeKey.stringKey("db.query.text")
-  private val unparseable  = "this is not a Gravsearch query { ] FILTER"
+  private val queryEvent    = "gravsearch.query"
+  private val prequeryEvent = "gravsearch.prequery"
+  private val queryTextKey  = AttributeKey.stringKey("db.query.text")
+  private val unparseable   = "this is not a Gravsearch query { ] FILTER"
 
   private def bookByTitleQuery(title: String): String =
     s"""PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -99,6 +100,13 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
 
   private def runGravsearchCount(query: String) =
     ZIO.serviceWithZIO[SearchResponderV2](_.gravsearchCountV2(query, anonymousUser, None))
+
+  /** The `db.query.text` of the first `eventName` event on the named span, if any. */
+  private def eventText(spans: Seq[SpanData], span: String, eventName: String): Option[String] =
+    SpanAssertions
+      .findSpan(spans, span)
+      .flatMap(_.getEvents.asScala.find(_.getName == eventName))
+      .flatMap(e => Option(e.getAttributes.get(queryTextKey)))
 
   /** A CLIENT-kind span exists whose direct parent is the span named `parent`. */
   private def clientSpanNestsUnder(spans: Seq[SpanData], parent: String): Boolean =
@@ -174,6 +182,34 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
         SpanAssertions.hasNoAttributeKey(spans, "gravsearch", shapeKey) &&
         SpanAssertions.hasEventWithAttribute(spans, "gravsearch", queryEvent, queryTextKey, unparseable)
     },
+    test("the root span carries the generated prequery as a gravsearch.prequery event (DEV-7302)") {
+      // The prequery is the statement actually sent to the triplestore, so this is the text to re-run
+      // against Fuseki. It is recorded from the same value that is handed to `triplestore.query`.
+      for {
+        spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
+        text   = eventText(spans, "gravsearch", prequeryEvent)
+      } yield assertTrue(
+        text.exists(_.contains("SELECT")),
+        text.exists(_.contains("?book")),
+        // generated SPARQL, not the submitted Gravsearch
+        text.exists(t => !t.contains("knora-api:isMainResource")),
+      )
+    },
+    test("the count path records its own generated prequery as a gravsearch.prequery event (DEV-7302)") {
+      for {
+        spans <- spansAfter(runGravsearchCount(bookByTitleQuery(existingTitle)))
+        text   = eventText(spans, "gravsearch", prequeryEvent)
+      } yield assertTrue(
+        text.exists(_.contains("SELECT")),
+        text.exists(_.toUpperCase.contains("COUNT")),
+      )
+    },
+    test("a query that fails to parse carries no prequery event, because generation never ran (DEV-7302)") {
+      for {
+        spans <- spansAfter(runGravsearch(unparseable).either)
+      } yield SpanAssertions.hasSpan(spans, "gravsearch") &&
+        assertTrue(SpanAssertions.spansWithEvent(spans, prequeryEvent).isEmpty)
+    },
     test("the root span carries the target project shortcodes, and no restriction when unrestricted (DEV-7031)") {
       for {
         spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
@@ -206,12 +242,17 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
       } yield SpanAssertions.hasSpan(spans, "gravsearch") &&
         SpanAssertions.hasNoAttributeKey(spans, "gravsearch", projectShortcodesKey)
     },
-    test("only the root span carries the event, so the stage-span no-events contract stays meaningful") {
+    test("only the root span carries events, so the stage-span no-events contract stays meaningful") {
       // Keeps `SearchResponderV2StageSpanSpec`'s `getEvents.isEmpty` assertion honest: it locks the
       // REQ-1.6 sanitized-error rule, and would silently stop doing so if query text landed on a stage.
+      // Both payload events are checked, and no stage span may carry an event of any name.
       for {
         spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
-      } yield assertTrue(SpanAssertions.spansWithEvent(spans, queryEvent).toList == List("gravsearch"))
+      } yield assertTrue(
+        SpanAssertions.spansWithEvent(spans, queryEvent).toList == List("gravsearch"),
+        SpanAssertions.spansWithEvent(spans, prequeryEvent).toList == List("gravsearch"),
+        spans.filter(_.getName.startsWith("gravsearch.")).forall(_.getEvents.asScala.isEmpty),
+      )
     },
   )
 }
