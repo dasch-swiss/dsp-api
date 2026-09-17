@@ -4,11 +4,8 @@
 # `build --workspace_status_command=tools/workspace_status.sh`.
 #
 # STABLE_* keys land in bazel-out/stable-status.txt (a change re-triggers stamped
-# consumers); everything else goes to volatile-status.txt.
-#
-# The version string is derived from git:
-#   gitVersion = `git describe --tag --dirty --abbrev=7 --always` + non-main branch suffix ('/'->'-')
-#   then '+' -> '-' (Docker tags reject '+').
+# consumers); everything else goes to volatile-status.txt. The version string below
+# rewrites '+' to '-' because Docker tags reject '+'.
 set -euo pipefail
 
 commit="$(git rev-parse HEAD)"

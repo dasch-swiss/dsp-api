@@ -248,8 +248,7 @@ class BagItSpec extends ZIOSpecDefault {
           _        <- Files.writeBytes(dirPath / "a.txt", Chunk.fromArray("aaaa".getBytes("UTF-8")))
           original <- Files.readAllBytes(filePath)
           outputZip = tempDir / "old-policy-bag.zip"
-          // The old policy was all-DEFLATE; passing Deflate everywhere reproduces it. Assert the bag still
-          // validates and its payload extracts byte-for-byte.
+          // Passing Deflate everywhere reproduces the all-DEFLATE policy this case pins.
           entries = List(
                       PayloadEntry.File("notes.txt", filePath, Compression.Deflate),
                       PayloadEntry.Directory("docs", dirPath, Compression.Deflate),

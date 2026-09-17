@@ -126,9 +126,8 @@ object BagCreator {
     }
 
   /**
-   * Emits a progress line after a file is packed, throttled to one line per [[ProgressStepPercent]] of bytes
-   * with a [[ProgressMaxGap]] wall-clock floor. Runs inline (no background fiber), so it cannot affect the
-   * completion or interruption of the surrounding packing effect.
+   * Runs inline (no background fiber), so it cannot affect the completion or interruption of the
+   * surrounding packing effect.
    */
   private def logProgress(
     progress: Ref[BagProgress.ReporterState],

@@ -1,13 +1,10 @@
 name: CI-build-and-test
 
 on:
-  # Run on every push to main to keep main green visible per-commit.
-  # `paths-ignore` skips the whole workflow when a main push touches only these
-  # two files — which is exactly (and only) what a release-please merge commit
-  # changes. That source-identical commit was already fully tested on the feature
-  # PRs behind it, so re-running unit/IT/E2E on it tests nothing new. Applied to
-  # `push` only: on `pull_request` the jobs must still REPORT (as skipped) for
-  # branch protection, so those keep their job-level `if:` guards. See DEV-6678.
+  # `paths-ignore` skips the whole workflow when a main push touches only these two files, which is
+  # exactly (and only) what a release-please merge commit changes. Applied to `push` only: on
+  # `pull_request` the jobs must still REPORT (as skipped) for branch protection, so those keep
+  # their job-level `if:` guards. See DEV-6678.
   push:
     branches:
       - main
@@ -25,16 +22,11 @@ permissions:
 env:
   JAVA_VERSION: 25
 
-# Release PRs (head branch `release-please--*`, opened by release-please) only
-# bump CHANGELOG.md and version.txt — no source changes — so every job below is
-# skipped for them via `!startsWith(github.head_ref, 'release-please')`. This
-# saves CI resources and lets the release PR go green immediately. A required
-# check skipped by a job-level `if:` counts as passing in branch protection, so
-# the release PR stays mergeable. On `push` events `github.head_ref` is empty,
-# so ordinary main pushes run the test jobs (unit/IT/E2E) as usual; the
-# `paths-ignore` on the `push` trigger above then skips the whole workflow for
-# the release-please *merge* commit, which touches only those two files. See
-# DEV-6678.
+# Release PRs (head branch `release-please--*`) only bump CHANGELOG.md and version.txt, so every
+# job below is skipped for them via `!startsWith(github.head_ref, 'release-please')`. A required
+# check skipped by a job-level `if:` counts as passing in branch protection, so the release PR
+# stays mergeable. On `push` events `github.head_ref` is empty, so ordinary main pushes run the
+# test jobs as usual. See DEV-6678.
 
 jobs:
   # All pure-JVM unit tests run in a single job: one `bazel test` over every
@@ -74,13 +66,9 @@ jobs:
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run all unit tests
         run: nix develop --command just test-unit ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-unit.json
-      # Attach the Build Event Protocol JSON so the remote/action cache hit
-      # rate on the NativeLink RBE backend can be analyzed offline. Bazel
-      # emits one BuildMetrics event per invocation whose
-      # actionSummary.runnerCount[] breaks actions down by runner type
-      # (total / remote cache hit / remote / local / internal). `always()`
-      # so a failed build's breakdown (often the most interesting) is still
-      # captured.
+      # Attach the Build Event Protocol JSON so the NativeLink RBE cache-hit rate can be analyzed
+      # offline; its BuildMetrics event breaks actions down by runner type. `always()`, so a failed
+      # build's breakdown is captured too.
       - name: Upload build event JSON (cache-hit-rate analysis)
         if: always()
         uses: actions/upload-artifact@v7
@@ -140,9 +128,8 @@ jobs:
         # docker-load-test-images prerequisite) before running the Bazel tests,
         # so the PR's own images are exercised, not the registry's lagging :latest.
         run: nix develop --command just test-it ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-it.json
-      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
-      # The `:load` prerequisites overwrite this file in turn, so it ends up
-      # holding the `bazel test` invocation's metrics — the one that matters.
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job). The `:load`
+      # prerequisites overwrite this file in turn, so it holds the `bazel test` invocation's metrics.
       - name: Upload build event JSON (cache-hit-rate analysis)
         if: always()
         uses: actions/upload-artifact@v7
@@ -198,9 +185,8 @@ jobs:
         # `just test-e2e` loads the PR's sipi/ingest/fuseki images (via its
         # docker-load-test-images prerequisite) before running the Bazel tests.
         run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-e2e.json
-      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
-      # The `:load` prerequisites overwrite this file in turn, so it ends up
-      # holding the `bazel test` invocation's metrics — the one that matters.
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job). The `:load`
+      # prerequisites overwrite this file in turn, so it holds the `bazel test` invocation's metrics.
       - name: Upload build event JSON (cache-hit-rate analysis)
         if: always()
         uses: actions/upload-artifact@v7
@@ -253,9 +239,8 @@ jobs:
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Run integration tests
         run: nix develop --command just test-ingest-integration ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-ingest-integration.json
-      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job).
-      # The `:load` prerequisites overwrite this file in turn, so it ends up
-      # holding the `bazel test` invocation's metrics — the one that matters.
+      # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job). The `:load`
+      # prerequisites overwrite this file in turn, so it holds the `bazel test` invocation's metrics.
       - name: Upload build event JSON (cache-hit-rate analysis)
         if: always()
         uses: actions/upload-artifact@v7
@@ -354,14 +339,11 @@ jobs:
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
       - name: Build images locally
-        # Build knora-api, knora-sipi and fuseki so docker compose picks up the
-        # PR's images. The registry's :latest for knora-sipi lags by a merge,
-        # which matters across major Sipi base-image bumps (e.g. v4 -> v5
-        # changed CLI surface and the compose `command:`).
-        #
-        # Fuseki's registry :latest likewise lags by a merge, and this PR changes the
-        # Fuseki assembler (modules/fuseki/dsp-repo.ttl). Build it here so the `db`
-        # healthcheck runs against the PR's own assembler config, not the stale registry image.
+        # Build knora-api, knora-sipi and fuseki so docker compose picks up the PR's images: the
+        # registry's :latest lags by a merge for both sipi and fuseki, which matters across major
+        # Sipi base-image bumps (v4 -> v5 changed the CLI surface and the compose `command:`) and
+        # for the Fuseki assembler (modules/fuseki/dsp-repo.ttl) that the `db` healthcheck runs
+        # against.
         run: |
           nix develop --command just docker-build-dsp-api-image ${{ steps.rbe.outputs.flags }}
           nix develop --command just docker-build-sipi-image ${{ steps.rbe.outputs.flags }}

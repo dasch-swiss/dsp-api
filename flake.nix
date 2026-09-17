@@ -29,9 +29,8 @@
           devShells.default = pkgs.mkShell {
             name = "dsp-api";
             packages = with pkgs; [
-              # Bazelisk reads `.bazelversion` and drives the Bazel build (the
-              # `knora-sipi` OCI image via rules_oci). The wrapper keeps the
-              # `bazel` command name working, matching sipi & dsp-repository.
+              # Bazelisk reads `.bazelversion` and drives the Bazel build. The wrapper
+              # keeps the `bazel` command name working, matching sipi & dsp-repository.
               bazelisk
               (writeShellScriptBin "bazel" ''exec ${bazelisk}/bin/bazelisk "$@"'')
 
@@ -55,8 +54,7 @@
               # Metals — provides the `metals-mcp` binary the checked-in `.mcp.json`
               # runs for Scala language intelligence. Shipping it in the dev shell
               # means every checkout gets the pinned version without a separate
-              # `cs install`; Metals bootstraps bazel-bsp itself via its embedded
-              # coursier. See docs/development/dsp-api-metals-mcp.md.
+              # `cs install`. See docs/development/dsp-api-metals-mcp.md.
               metals
             ];
 

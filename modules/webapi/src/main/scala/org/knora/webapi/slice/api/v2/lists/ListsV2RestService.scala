@@ -23,8 +23,6 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsResponder, renderer: KnoraResponseRenderer) {
 
   /**
-   * Gets a list from the triplestore.
-   *
    * @param user           the user making the request.
    * @param listIri        the Iri of the list's root node.
    * @param allLanguages   if true, return rdfs:label and rdfs:comment as language-tagged arrays.
@@ -43,8 +41,6 @@ final class ListsV2RestService(appConfig: AppConfig, listsResponder: ListsRespon
       .flatMap(renderer.render(_, opts))
 
   /**
-   * Gets a single list node from the triplestore.
-   *
    * @param user           the user making the request.
    * @param nodeIri              the Iri of the list node.
    * @param allLanguages   if true, return rdfs:label and rdfs:comment as language-tagged arrays.

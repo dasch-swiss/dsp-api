@@ -54,7 +54,6 @@ class ChangeResourceAuthorshipQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("ChangeResourceAuthorshipQuerySpec")(
     suite("build")(
-      // The generated query is compared against a golden file (src/test/resources/.../<suffix>.txt).
       // Regression guard for the silent no-op bug: the golden output MUST scope the named project graph
       // with `WITH <graph>` (and no `GRAPH` wrapper), so the WHERE clause matches the resource in its
       // graph rather than the dataset default graph -- which is empty on a store without a union default

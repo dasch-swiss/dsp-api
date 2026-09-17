@@ -553,10 +553,10 @@ object CalendarDateRangeV2 {
   }
 
   /**
-   * Builds a [[CalendarDateRangeV2]] from its individual start/end components. A single date is expressed as equal
-   * start and end components. The component constraints enforced by [[CalendarDateV2]] and [[CalendarDateRangeV2]]
-   * (e.g. a day requires a month, Gregorian/Julian dates require an era) are returned as a `Left` rather than thrown.
-   * This does not check that the dates are valid in their calendar; call `toJulianDayRange` on the result for that.
+   * A single date is expressed as equal start and end components. The component constraints enforced by
+   * [[CalendarDateV2]] and [[CalendarDateRangeV2]] (e.g. a day requires a month, Gregorian/Julian dates
+   * require an era) are returned as a `Left` rather than thrown. This does not check that the dates are
+   * valid in their calendar; call `toJulianDayRange` on the result for that.
    *
    * @return the date range, or a `Left` describing why the components are invalid.
    */

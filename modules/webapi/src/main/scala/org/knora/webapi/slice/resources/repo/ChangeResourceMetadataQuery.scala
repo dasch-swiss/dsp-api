@@ -47,10 +47,6 @@ object ChangeResourceMetadataQuery {
       val newDate       = Literal.dateTime(newModificationDate.value)
       val currentDate   = maybeLastModificationDate.map(lmd => Literal.dateTime(lmd.value))
 
-      // The DELETE block drops the previous last modification date (if any) and the old values being replaced;
-      // the INSERT block writes the new modification date plus the label and/or permissions when provided; the
-      // WHERE clause requires the resource to exist with the expected class and lastModificationDate.
-      //
       // WITH <graph> scopes the named graph to the WHERE clause too, not just DELETE/INSERT;
       // an ungraphed WHERE matches the default graph, which is empty (so the update no-ops) on a
       // store without a union default graph, e.g. the in-memory test store. Safe only because the

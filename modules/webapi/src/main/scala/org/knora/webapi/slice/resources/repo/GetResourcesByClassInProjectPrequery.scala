@@ -25,8 +25,8 @@ object GetResourcesByClassInProjectPrequery {
 
     // When ordering is requested, the OPTIONAL block binds the resource's lowest value for the
     // order-by property (the inner FILTER NOT EXISTS rules out any smaller one), and the query is
-    // ordered by that literal first. The inner group braces are kept as the previous builder emitted
-    // them; NOT EXISTS substitutes the outer bindings before evaluating, so they are semantically inert.
+    // ordered by that literal first. The inner group braces are inert: NOT EXISTS substitutes the
+    // outer bindings before evaluating.
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

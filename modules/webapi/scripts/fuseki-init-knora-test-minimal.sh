@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 source fuseki-functions.sh
 
-# Load data
 upload-graph ../src/main/resources/knora-ontologies/knora-admin.ttl http://www.knora.org/ontology/knora-admin
 upload-graph ../src/main/resources/knora-ontologies/knora-base.ttl http://www.knora.org/ontology/knora-base
 upload-graph ../src/main/resources/knora-ontologies/standoff-onto.ttl http://www.knora.org/ontology/standoff

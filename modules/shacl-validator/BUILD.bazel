@@ -1,6 +1,6 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
-# SHACL validator. Pure leaf module; consumed by //modules/webapi in a later phase.
+# SHACL validator. Pure leaf module.
 scala_library(
     name = "shacl-validator",
     format = True,

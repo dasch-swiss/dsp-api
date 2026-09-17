@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 # bazel_binary shim for bazel-bsp (wired via .bazelproject `bazel_binary:`).
 #
-# bazel-bsp re-copies its bundled aspects into .bazelbsp/ on every import, and its
-# core.bzl returns a struct from the sync aspect impl — which Bazel 9 rejects. We can't
-# edit the copy durably (each import clobbers it), so re-apply the struct->provider patch
-# HERE, at every bazel-bsp invocation (after the copy, before the build reads the file).
-# Idempotent + fast. The JavaInfo/CcInfo global fix is the macOS autoload flag in .bazelrc.
-# See docs/development/dsp-api-metals-mcp.md.
+# bazel-bsp re-copies its bundled aspects into .bazelbsp/ on every import, so its core.bzl cannot be
+# patched durably; the struct->provider fix Bazel 9 needs is re-applied HERE on every invocation,
+# after the copy and before the build reads the file. The JavaInfo/CcInfo global fix is the macOS
+# autoload flag in .bazelrc. See docs/development/dsp-api-metals-mcp.md.
 set -euo pipefail
 
 core=".bazelbsp/aspects/core.bzl"

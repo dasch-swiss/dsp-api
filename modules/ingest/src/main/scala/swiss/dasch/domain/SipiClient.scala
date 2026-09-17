@@ -142,8 +142,7 @@ final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
    * Runs a `--json`-emitting sipi command, parsing the structured report on
    * stdout. On a non-zero exit with a parseable `SipiReport.Err`, fails with
    * [[SipiCliError]]; otherwise falls back to the legacy command-failure
-   * `IOException` so callers that don't care about the report still behave
-   * identically to before.
+   * `IOException`.
    */
   private def runWithJsonReport(cmd: swiss.dasch.infrastructure.Command): IO[IOException, ProcessOutput] =
     executor

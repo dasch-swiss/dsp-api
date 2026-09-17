@@ -62,7 +62,6 @@ class AssetMimeTypeMigrationServiceSpec extends ZIOSpecDefault {
 
   private val perExtensionCaseInsensitive =
     suite("backfills regardless of how the extension is cased")(
-      // 15136 of the sampled sidecars name a ".TIF" original.
       test("test.TIF :: image/tiff") {
         for {
           assetDir <- createInfoFile(originalFileExt = "TIF", derivativeFileExt = "jp2")

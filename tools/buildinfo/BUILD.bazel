@@ -2,7 +2,7 @@ load("@rules_python//python:defs.bzl", "py_binary")
 load(":defs.bzl", "buildinfo")
 
 # Extracts an OCI config label from a pinned image layout (used by
-# oci_config_label). py_binary resolves the hermetic interpreter, like //tools/deps.
+# oci_config_label). py_binary resolves the hermetic interpreter for RBE.
 py_binary(
     name = "extract_label",
     srcs = ["extract_label.py"],

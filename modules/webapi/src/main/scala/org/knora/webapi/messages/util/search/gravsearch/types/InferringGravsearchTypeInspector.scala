@@ -1517,7 +1517,6 @@ final class InferringGravsearchTypeInspector(
           )
 
         case OntologyConstants.KnoraApiV2Simple.MatchFulltextFunction =>
-          // The first argument is a variable representing a resource.
           val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentResourceVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)
@@ -1528,7 +1527,6 @@ final class InferringGravsearchTypeInspector(
           )
 
         case OntologyConstants.KnoraApiV2Complex.MatchFulltextFunction =>
-          // The first argument is a variable representing a resource.
           val resourceVar                                       = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
           val currentResourceVarTypesFromFilters: Set[SmartIri] =
             usageIndex.typedEntitiesInFilters.getOrElse(resourceVar, Set.empty)

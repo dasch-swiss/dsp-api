@@ -178,7 +178,7 @@ object EditConflictException {
 }
 
 /**
- * An exception indicating that the request conflicts with the current state of the server (HTTP 409).
+ * Maps to HTTP 409.
  *
  * @param message a description of the error.
  */

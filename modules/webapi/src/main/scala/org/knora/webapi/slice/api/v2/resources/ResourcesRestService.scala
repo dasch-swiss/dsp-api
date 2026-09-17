@@ -115,7 +115,7 @@ final case class ResourcesRestService(
     versionDate: Option[VersionDate],
   ): Task[(RenderedResponse, MediaType)] =
     // Batch size (1..max-batch-size) and non-emptiness are enforced at the request boundary by the
-    // Tapir schema on ResourcesBatchRequest; here we only parse, de-duplicate, and delegate.
+    // Tapir schema on ResourcesBatchRequest.
     for {
       resIris  <- ZIO.foreach(request.resourceIris)(parseResourceIri).map(_.distinct)
       response <- readAndRender(resIris, versionDate, formatOptions, user)

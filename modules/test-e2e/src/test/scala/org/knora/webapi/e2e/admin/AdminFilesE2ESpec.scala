@@ -42,10 +42,9 @@ class AdminFilesE2ESpec extends E2EZSpec {
       )
     },
     test("return the same RV decision when the shortcode does not match the file's project (DEV-6867)") {
-      // The {shortcode} path segment is non-authoritative: the file is identified by its filename alone. An
-      // RV request that previously returned 404 for a mismatched (or nonexistent) project shortcode
-      // must now return 200 with the identical restricted-view decision. This pins the behaviour at the HTTP/routing
-      // layer so a future reintroduction of shortcode validation there would fail CI.
+      // The {shortcode} path segment is non-authoritative: the file is identified by its filename alone, so a
+      // mismatched or nonexistent shortcode still yields the identical restricted-view decision. This pins the
+      // behaviour at the HTTP/routing layer so a future reintroduction of shortcode validation there would fail CI.
       for {
         response <- TestAdminApiClient
                       .getAdminFilesPermissions(Shortcode.unsafeFrom("9999"), "B1D0OkEgfFp-Cew2Seur7Wi.jp2", normalUser)

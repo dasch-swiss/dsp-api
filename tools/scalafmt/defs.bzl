@@ -6,8 +6,8 @@ place) and `<target>.format-test` (check) outputs. Same-named re-exports so
 module BUILD files keep identical rule names — swapping the load line does not
 change how Metals/IntelliJ resolve the rules.
 
-Replaces sbt-scalafmt (`sbt fmt` / `sbt check`). Config: //:.scalafmt.conf,
-wired as the toolchain default via `scala_deps.scalafmt` in MODULE.bazel.
+Config: //:.scalafmt.conf, wired as the toolchain default via `scala_deps.scalafmt` in
+MODULE.bazel.
 """
 
 load(

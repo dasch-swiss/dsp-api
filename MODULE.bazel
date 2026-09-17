@@ -31,13 +31,10 @@ bazel_dep(name = "rules_jvm_external", version = "7.0")
 bazel_dep(name = "rules_java", version = "9.1.0")  # provides remotejdk_25; matches rules_scala's transitive
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 
-# `llvm` (hermeticbuild/hermetic-llvm) registers a fully-hermetic LLVM C/C++
-# toolchain. dsp-api ships no C/C++ product code, but compiling the Scala build
-# requires the rules_scala worker, which builds protobuf/upb from source and
-# thus needs a C toolchain. We use hermetic-llvm (not Bazel's autodetected host
-# clang) so the build is reproducible and works under remote build execution —
-# it bundles per-target glibc stubs + libc++ + compiler-rt and fetches the macOS
-# SDK from Apple's CDN, with no dependency on host Nix/Xcode tooling.
+# `llvm` (hermeticbuild/hermetic-llvm) registers a fully-hermetic LLVM C/C++ toolchain. dsp-api
+# ships no C/C++ product code, but compiling the Scala build requires the rules_scala worker, which
+# builds protobuf/upb from source and so needs a C toolchain. Hermetic-llvm rather than Bazel's
+# autodetected host clang, so the build is reproducible and works under remote build execution.
 bazel_dep(name = "llvm", version = "0.8.10")
 
 # hermetic-llvm hands the Linux kernel + glibc headers to compile actions as a
@@ -65,10 +62,9 @@ scala_deps.settings(fetch_sources = True)
 scala_deps.scala()
 scala_deps.junit()
 
-# scalafmt toolchain (replaces sbt-scalafmt). The bundled engine is scalafmt-core
-# 3.10.7 and it IGNORES the `version` field in .scalafmt.conf; the config file
-# pins the same version only so IDE/CLI scalafmt matches. The toolchain is
-# registered by rules_scala's own `register_toolchains("@rules_scala_toolchains//...:all")`.
+# scalafmt toolchain. The bundled engine is scalafmt-core 3.10.7 and it IGNORES the `version` field
+# in .scalafmt.conf; the config file pins the same version only so IDE/CLI scalafmt matches. The
+# toolchain is registered by rules_scala's own `register_toolchains("@rules_scala_toolchains//...:all")`.
 scala_deps.scalafmt(default_config = "//:.scalafmt.conf")
 use_repo(
     scala_deps,
@@ -170,7 +166,7 @@ maven.install(
         "dev.zio:zio-metrics-connectors_3:2.5.6",
         "dev.zio:zio-metrics-connectors-prometheus_3:2.5.6",
         "dev.zio:zio-opentelemetry_3:3.1.18",
-        # ZIO test (Test scope in sbt; scoped per-target in BUILD files)
+        # ZIO test (scoped per-target in BUILD files)
         "dev.zio:zio-test_3:2.1.26",
         "dev.zio:zio-test-sbt_3:2.1.26",
         "dev.zio:zio-test-junit_3:2.1.26",
@@ -222,8 +218,7 @@ maven.install(
         "org.slf4j:slf4j-api:2.0.18",
         "org.slf4j:slf4j-simple:2.0.18",
         # Supplies org.apache.commons.logging for spring-security-core, which
-        # excludes commons-logging (see maven.artifact below). Was reaching us
-        # transitively via rdf4j-http-client until rdf4j 6 dropped it.
+        # excludes commons-logging (see maven.artifact below).
         "org.slf4j:jcl-over-slf4j:2.0.18",
         # -- dsp-ingest db (Java) --
         "org.xerial:sqlite-jdbc:3.53.2.0",
@@ -286,18 +281,12 @@ use_repo(maven, "maven", "unpinned_maven")
 # Image version coordinates
 #############################################
 
-# Single source of truth for the Apache Jena Fuseki dist (jar) version — the one
-# thing we actually download and pack into the image. Used in two places, both
-# below: the @fuseki_dist tarball (strip_prefix + url) and the image_versions
-# extension. The Fuseki OCI *image* is versioned by release-please (git version,
-# stamped into the image label), like knora-api/dsp-ingest — it is NOT derived
-# from this value. This dist version reaches BUILD files via the generated
-# @dsp_image_versions//:defs.bzl (BUILD files can't load() MODULE.bazel): it
-# feeds the /version report (modules/webapi buildinfo) and the OTLP
-# service.version resource attribute (modules/fuseki), which surfaces the
-# deployed engine version in Grafana. The sipi tag has no entry here — its
-# version is read from the pulled image's OCI label, so its digest is its sole
-# source.
+# Single source of truth for the Apache Jena Fuseki dist (jar) version — the one thing we download
+# and pack into the image. The Fuseki OCI *image* is versioned by release-please (git version,
+# stamped into the image label), like knora-api/dsp-ingest — it is NOT derived from this value.
+# BUILD files can't load() MODULE.bazel, so the value reaches them via the generated
+# @dsp_image_versions//:defs.bzl, feeding the /version report (modules/webapi buildinfo) and the
+# OTLP service.version attribute (modules/fuseki) that shows the deployed engine version.
 FUSEKI_DIST_VERSION = "6.2.0"
 
 image_versions = use_extension("//tools/image_versions:extension.bzl", "image_versions")
@@ -310,14 +299,11 @@ use_repo(image_versions, "dsp_image_versions")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
-# Upstream Sipi image (daschswiss/sipi:v9.1.0), pinned per-arch by manifest
-# digest. Pulling each platform's single image manifest directly avoids
-# index/variant matching — the arm64 entry of the v9.1.0 index carries a `v8`
-# variant, which a bare `linux/arm64` platform request does not match. These two
-# digests are the SOLE source of the sipi version: the /version endpoint reads
-# the tag from the image's own `org.opencontainers.image.version` OCI label
-# (//tools/buildinfo:oci_config_label), so there is no duplicated tag string to
-# keep in sync. To bump, see "Bumping the SIPI version" in CLAUDE.md.
+# Upstream Sipi image (daschswiss/sipi:v9.1.0), pinned per-arch by manifest digest: the arm64 entry
+# of the v9.1.0 index carries a `v8` variant, which a bare `linux/arm64` platform request does not
+# match. These two digests are the SOLE source of the sipi version: the /version endpoint reads the
+# tag from the image's own `org.opencontainers.image.version` OCI label
+# (//tools/buildinfo:oci_config_label). To bump, see "Bumping the SIPI version" in CLAUDE.md.
 # Index digest: sha256:d62611ed01e5413772e90439591f039624dfd12b8a4d12bfc636ce274effc5f1
 oci.pull(
     name = "sipi_base_amd64",
@@ -339,14 +325,11 @@ use_repo(
 # knora-api / dsp-ingest base image (temurin)
 #############################################
 
-# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest: the
-# arm64 index entry carries a `v8` variant, which a bare linux/arm64 platform
-# request does not match. Bump both arches together.
-# Re-resolve after a base bump:
+# eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest: the arm64 index entry
+# carries a `v8` variant, which a bare linux/arm64 platform request does not match. Bump both
+# arches together, re-resolving each (swap amd64 for arm64):
 #   crane manifest eclipse-temurin:25-jre-noble | jq -r \
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
-#   crane manifest eclipse-temurin:25-jre-noble | jq -r \
-#     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="arm64") | .digest'
 # Index digest: sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
 oci.pull(
     name = "temurin_base_amd64",

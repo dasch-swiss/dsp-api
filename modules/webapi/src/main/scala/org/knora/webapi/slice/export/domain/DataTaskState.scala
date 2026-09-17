@@ -29,9 +29,6 @@ final case class StateCompletedError(t: CurrentDataTask)
 final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTaskPersistence) { self =>
 
   /**
-   * Create a new task for the given project and user.
-   * If a task already exists in any state, return an error.
-   *
    * @param projectIri the [[ProjectIri]] for which the task is being created
    * @param user the [[User]] who is creating the task (recorded as `createdBy`)
    * @param onBehalfOf the project user imported data is attributed to; `None` for exports and migration imports

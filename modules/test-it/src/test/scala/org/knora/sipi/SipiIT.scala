@@ -44,8 +44,6 @@ class SipiIT extends ZIOSpecDefault {
   // permission-derived final status (Ok / Unauthorized / Not Found) is produced. zio-http's Client does not follow
   // redirects, so follow them here. We re-resolve the redirect target's *path* through SipiTestContainer.resolveUrl
   // so the follow-up always hits the container's mapped port, never any host/port carried in Sipi's Location header.
-  // (The older zio-http transitively pulled in before the Bazel/sbt version sync followed redirects implicitly,
-  // which masked the need for this.)
   private def requestGet(path: Path, headers: Header*): ZIO[Client & SipiTestContainer, Throwable, Response] = {
     def loop(p: Path, remaining: Int): ZIO[Client & SipiTestContainer, Throwable, Response] =
       for {

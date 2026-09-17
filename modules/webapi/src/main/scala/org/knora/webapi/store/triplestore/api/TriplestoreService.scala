@@ -207,14 +207,13 @@ object TriplestoreService {
       case Standard
       case Maintenance
       case Gravsearch
-      // The fulltext prequery and count run on this tier. It is longer than Standard (the inverted budget
-      // DEV-6864 fixes: the prequery preceded a 120s Gravsearch main query on the 20s Standard tier) but
-      // shorter than Gravsearch, so a broad query still sheds load well before two minutes. Kept distinct
-      // from Gravsearch so fulltext queries are not filed into Gravsearch dashboards (D3, D7).
+      // The fulltext prequery and count run on this tier. It is longer than Standard but shorter than
+      // Gravsearch, so a broad query still sheds load well before two minutes. Kept distinct from
+      // Gravsearch so fulltext queries are not filed into Gravsearch dashboards.
       case Search
       // The fulltext breadth probe (a fast COUNT of Lucene candidates) runs raced against the real query. It
       // reuses the search-timeout value but is a distinct tier so its cheap ~0.2-2.8s samples are not filed into
-      // the search-tier metric alongside the 13-29s real queries (DEV-6864, PROBE).
+      // the search-tier metric alongside the 13-29s real queries (DEV-6864).
       case SearchProbe
       // The admin view-restrictions report. Its queries are whole-project scans grouped by permission literal
       // rather than the bounded lookups Standard is sized for, so 20s cut them off on a large project. A tier of

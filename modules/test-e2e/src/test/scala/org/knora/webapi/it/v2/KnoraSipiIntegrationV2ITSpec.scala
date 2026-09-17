@@ -768,9 +768,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedDocument = savedValueToSavedDocument(savedValue)
 
-        // An archive is served to a caller with view permission, and refused to one who only has
-        // restricted view: an archive is never transcoded, so there is no restricted rendering to fall
-        // back on and serving it would hand over the original by the other route.
+        // Archives are denied under restricted view; the reason is at the Zip create case above.
         _         <- TestSipiApiClient.getFile(savedDocument.url, anythingAdminUser).flatMap(_.assert200)
         anonymous <- TestSipiApiClient.getFile(savedDocument.url)
       } yield assertTrue(
@@ -813,9 +811,7 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
 
         savedDocument = savedValueToSavedDocument(savedValueObj)
 
-        // An archive is served to a caller with view permission, and refused to one who only has
-        // restricted view: an archive is never transcoded, so there is no restricted rendering to fall
-        // back on and serving it would hand over the original by the other route.
+        // Archives are denied under restricted view; the reason is at the Zip create case above.
         _         <- TestSipiApiClient.getFile(savedDocument.url, anythingAdminUser).flatMap(_.assert200)
         anonymous <- TestSipiApiClient.getFile(savedDocument.url)
       } yield assertTrue(

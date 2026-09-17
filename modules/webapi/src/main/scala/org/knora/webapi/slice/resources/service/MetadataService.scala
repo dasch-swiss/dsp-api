@@ -35,10 +35,8 @@ private[service] object ResourcesMetadataQuery {
   val resourceIriVar: Variable          = Variable("resourceIri")
 
   /**
-   * Builds the metadata query for the resources of a project.
-   *
-   * The class constraint sits outside the GRAPH block, mirroring the previous builder in which
-   * the graph applied to the resource pattern group only.
+   * The class constraint sits outside the GRAPH block, so the graph applies to the resource pattern
+   * group only; moving it inside changes what the query matches.
    */
   def build(projectGraph: InternalIri, classIris: List[ResourceClassIri]): Select = {
     val graph = Iri.unsafeFrom(projectGraph.value)
@@ -67,7 +65,7 @@ private[service] object ResourcesMetadataQuery {
                |    }
                |  }
                |}""".render,
-      // A whole-project scan, so it runs on the long timeout tier, as it did before.
+      // A whole-project scan, so it runs on the long timeout tier.
       SparqlTimeout.Gravsearch,
     )
   }

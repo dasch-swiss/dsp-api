@@ -17,8 +17,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.Collections
 
 /**
- * Classpath test fixtures, exposed as real filesystem paths. Under sbt these resources are loose
- * files/directories on the classpath already, so `getResource` resolves to a real `file:` path.
+ * Classpath test fixtures, exposed as real filesystem paths. In a non-Bazel run these resources are
+ * loose files/directories on the classpath, so `getResource` resolves to a real `file:` path.
  * Under Bazel, test resources are packaged into a resource jar, so the resource lives at a `jar:`
  * URI - not a real `java.io.File`, which every consumer of these paths needs
  * (`FileUtils.copyDirectory`, `Body.fromFile`, `Path#toFile` are all default-filesystem-only).

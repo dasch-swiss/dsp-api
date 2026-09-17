@@ -14,11 +14,8 @@ import zio.test.assertTrue
 import scala.jdk.CollectionConverters.*
 
 /**
- * Reusable assertions over the spans captured by [[InMemoryTracing]].
- *
- * Each helper takes the finished spans (from `InMemoryTracing.finishedSpans`) plus the name of the
- * span under test and returns a zio-test [[TestResult]], so several can be combined with `&&`.
- * Helpers that target a single span fail if no span with that name was finished.
+ * Reusable assertions over the spans captured by [[InMemoryTracing]]. Helpers that target a single
+ * span fail if no span with that name was finished.
  */
 object SpanAssertions {
 
@@ -38,8 +35,7 @@ object SpanAssertions {
     assertTrue(!spans.exists(_.getName == name))
 
   /**
-   * `parent` is the direct parent of `child`, matched by span-id within the same trace. Fails if
-   * either span is missing.
+   * `parent` is the direct parent of `child`, matched by span-id within the same trace.
    */
   def isParentChild(spans: Seq[SpanData], parent: String, child: String): TestResult =
     assertTrue(

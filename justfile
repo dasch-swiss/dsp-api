@@ -88,23 +88,17 @@ check *FLAGS='': require-bazel
     markdownlint --config .markdownlint.yml --disable MD013 MD040 \
       --ignore CHANGELOG.md --ignore modules/ingest/CHANGELOG.md -- $(git ls-files '*.md')
 
-# Insert any missing Apache-2.0 SPDX headers into Scala files (replaces sbt headerCreateAll)
+# Insert any missing Apache-2.0 SPDX headers into Scala files
 header-fix: require-bazel
     bazel run //tools/license:fix
 
 ## Scala language intelligence (Metals MCP)
 
-# With sbt gone, Metals connects to the Bazel build via bazel-bsp. Metals bootstraps
-# bazel-bsp itself (its embedded coursier; no `cs` needed) and writes .bsp/bazelbsp.json,
-# driven by the committed .bazelproject (projectview). This recipe just checks the
-# prerequisites and warms Bazel; the running MCP server connects when you call its
-# `import-build` tool once. See docs/development/dsp-api-metals-mcp.md.
-#
-# BAZEL 9: bazel-bsp 4.0.x (bundled with Metals 1.6.7) isn't Bazel-9-compatible out of the box.
-# Two local fixes make it work: a macOS-scoped --incompatible_autoload_externally flag in .bazelrc,
-# and a bazel_binary wrapper (tools/metals/bazel-bsp-wrapper.sh, set in .bazelproject) that patches
-# bazel-bsp's struct-returning aspect on each invocation. So compile/get-usages work. Vendored patch,
-# not a rules_scala issue; tracked at scalameta/metals#8268. See docs/development/dsp-api-metals-mcp.md.
+# Metals connects to the Bazel build via bazel-bsp, which it bootstraps itself from the
+# committed .bazelproject. Two local fixes make bazel-bsp work on Bazel 9: a macOS-scoped
+# --incompatible_autoload_externally flag in .bazelrc, and the tools/metals wrapper that
+# re-patches its struct-returning aspect on each invocation. See docs/development/dsp-api-metals-mcp.md.
+# Check the Metals prerequisites and warm Bazel; call the metals `import-build` tool once to connect.
 metals-bootstrap: require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
@@ -178,8 +172,8 @@ docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-s
 docker-build-fuseki-image *FLAGS='': require-bazel
     bazel run {{FLAGS}} //modules/fuseki:load
 
-# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
 # The Fuseki image is versioned by release-please (git version), same as the other three images.
+# Build + publish the multi-arch Fuseki image to Docker Hub with Bazel (tags: latest + <version>).
 docker-publish-fuseki-image *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail

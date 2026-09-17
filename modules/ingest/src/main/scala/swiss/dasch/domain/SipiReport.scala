@@ -82,8 +82,7 @@ object SipiReport {
 
 /**
  * Typed error raised when a sipi CLI invocation fails with a structured
- * `--json` report on stdout. Extends `IOException` so it slots into the
- * existing `IO[IOException, _]` signatures without a wider refactor.
+ * `--json` report on stdout.
  */
 final case class SipiCliError(
   phase: SipiReport.Phase,

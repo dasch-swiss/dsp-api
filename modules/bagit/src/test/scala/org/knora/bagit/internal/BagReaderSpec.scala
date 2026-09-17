@@ -30,7 +30,7 @@ class BagReaderSpec extends ZIOSpecDefault {
    * Used to assert stack-safety: an iterative/tail-recursive traversal completes here,
    * whereas a naively recursive one raises StackOverflowError (surfaced as a test
    * failure). This makes the assertion independent of the OS path-length limit, so it
-   * holds under sbt, the Bazel sandbox, and RBE alike.
+   * holds in the Bazel sandbox and on RBE alike.
    */
   private def onSmallStack[A](stackBytes: Long)(thunk: => A): Task[A] =
     ZIO.async[Any, Throwable, A] { register =>
@@ -356,8 +356,8 @@ class BagReaderSpec extends ZIOSpecDefault {
       // not the call stack). We prove that deterministically by walking the tree on a
       // small-stack thread: a naively recursive walk would StackOverflow there, the
       // tail-recursive one does not. `depth` stays well within the OS path limit
-      // (macOS PATH_MAX is 1024) so the test is portable across sbt, the Bazel sandbox,
-      // and RBE, where the temp-dir base path can be long. createBag then walks, reads,
+      // (macOS PATH_MAX is 1024) so the test is portable across the Bazel sandbox and RBE,
+      // where the temp-dir base path can be long. createBag then walks, reads,
       // and zips the same tree for end-to-end coverage.
       val depth = 300
       ZIO.scoped {
