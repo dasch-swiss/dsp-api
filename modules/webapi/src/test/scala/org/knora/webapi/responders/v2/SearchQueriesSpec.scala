@@ -5,11 +5,11 @@
 
 package org.knora.webapi.responders.v2
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -17,7 +17,7 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.util.FusekiLucenceQuery
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
+class SearchQueriesSpec extends ZIOSpecDefault {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -26,8 +26,26 @@ class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
   private val resourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
 
-  // Invariants these goldens exist to protect. All were once broken silently, because a golden pins the query
-  // text and cannot tell a correct query from a plausible one — check them by eye when regenerating:
+  // The `SearchQueriesSpec__*.txt` files next to this spec are the verbatim output of the string-interpolating
+  // predecessor of SearchQueries — they are kept byte-unchanged and are compared after canonicalisation by Jena,
+  // which normalises whitespace and prefix expansion but nothing else. Every invariant listed below is visible in
+  // the canonical form, so it is still pinned.
+  private def legacy(name: String): String = {
+    val resource = s"org/knora/webapi/responders/v2/SearchQueriesSpec__$name.txt"
+    val stream   = Option(getClass.getClassLoader.getResourceAsStream(resource))
+      .getOrElse(throw new IllegalStateException(s"Legacy query fixture not found on the classpath: $resource"))
+    try new String(stream.readAllBytes(), "UTF-8")
+    finally stream.close()
+  }
+
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
+  // Invariants these fixtures exist to protect. All were once broken silently, because a fixture pins the query
+  // and cannot tell a correct query from a plausible one — check them by eye when changing a query:
   //
   //  - The text:query list must carry an explicit hit limit. Without one Jena caps the Lucene lookup at 10'000
   //    hits and silently drops matches before the project/class filters apply (DEV-6822).
@@ -42,20 +60,28 @@ class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
   override def spec: Spec[TestEnvironment, Any] = suite("SearchQueriesSpec")(
     test("selectCountByLabel should produce the correct query with project and resource class filters") {
       val query = SearchQueries.selectCountByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri))
-      assertGolden(query.sparql, "countWithProjectAndClass")
+      assertTrue(canonical(query.sparql) == canonical(legacy("countWithProjectAndClass")))
     },
     test("selectCountByLabel should produce the correct query without filters") {
       val query = SearchQueries.selectCountByLabel(luceneQuery, None, None)
-      assertGolden(query.sparql, "countNoFilters")
+      assertTrue(canonical(query.sparql) == canonical(legacy("countNoFilters")))
     },
     test("constructSearchByLabel should produce the correct query with project and resource class filters") {
       val query =
         SearchQueries.constructSearchByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri), 25, 0)
-      assertGolden(query.sparql, "searchWithProjectAndClass")
+      assertTrue(canonical(query.sparql) == canonical(legacy("searchWithProjectAndClass")))
     },
     test("constructSearchByLabel should produce the correct query without filters") {
       val query = SearchQueries.constructSearchByLabel(luceneQuery, None, None, 25, 0)
-      assertGolden(query.sparql, "searchNoFilters")
+      assertTrue(canonical(query.sparql) == canonical(legacy("searchNoFilters")))
+    },
+    test("search terms are SPARQL-escaped exactly once") {
+      // FusekiLucenceQuery.getQueryString is already SPARQL-escaped; the DSL literal must escape the raw value.
+      val query = SearchQueries.selectCountByLabel(FusekiLucenceQuery.unsafeFrom("O'Brien*"), None, None)
+      assertTrue(
+        query.sparql.contains("""(rdfs:label "O\'Brien*" """),
+        !query.sparql.contains("""\\'"""),
+      )
     },
   )
 }
