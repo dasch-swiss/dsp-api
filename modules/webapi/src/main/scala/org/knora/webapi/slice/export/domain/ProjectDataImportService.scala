@@ -12,6 +12,7 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import org.knora.webapi.messages.util.rdf.NQuads
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -136,7 +137,12 @@ final class ProjectDataImportService(
                           .orDieWith(_ => new IllegalStateException("ontologyFiles is empty despite non-empty graphs"))
     adminFile = tempDir / "admin.nq"
     _        <- triplestore.queryToFile(AdminUsersQuery.build, adminDataNamedGraph, adminFile, NQuads)
-    _        <- validator.validate(ontologyFilesNec, NonEmptyChunk(adminFile, dataFile), project.id, Some(onBehalfOf.userIri))
+    _        <- validator.validate(
+           ontologyFilesNec,
+           NonEmptyChunk(adminFile, dataFile),
+           project.id,
+           ImportMode.BulkData(onBehalfOf.userIri),
+         )
   } yield ()
 
   // No ontology cache refresh: a data-graph import adds no ontology triples.

@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.core.TestAppConfig
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 
@@ -68,7 +69,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     dataNq: String = baselineDataNq,
     adminNq: String = defaultAdminNq,
     allowPlaceholder: Boolean = true,
-    onBehalfOfUser: Option[UserIri] = None,
+    mode: ImportMode = ImportMode.Migration,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
       dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
@@ -78,7 +79,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       validator     = new ProjectMigrationImportValidator()
       result       <-
         validator
-          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri, onBehalfOfUser)
+          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri, mode)
           .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
     } yield result
@@ -886,6 +887,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       )
     },
     bulkImportShapesSuite,
+    migrationShapesSuite,
     placeholderGateSuite,
   ) @@ TestAspect.timeout(30.seconds)
 
@@ -936,21 +938,21 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       test("accepts resource and value attached to the on-behalf-of user") {
         val nq = resourceNq(OnBehalfOf) + valueNq(OnBehalfOf)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
             .map(result => assertTrue(result.isRight))
         }
       },
       test("rejects resource attached to a different user") {
         val nq = resourceNq(OtherUser) + valueNq(OnBehalfOf)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
             .map(result => assertTrue(result.isLeft))
         }
       },
       test("rejects value attached to a different user") {
         val nq = resourceNq(OnBehalfOf) + valueNq(OtherUser)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, onBehalfOfUser = Some(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
             .map(result => assertTrue(result.isLeft))
         }
       },
@@ -958,6 +960,69 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         val nq = resourceNq(OtherUser) + valueNq(OtherUser)
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminBothUsers).map(result => assertTrue(result.isRight))
+        }
+      },
+    )
+  }
+
+  private val migrationShapesSuite = {
+    // Migration validation: migration-shapes.ttl loads next to data-shapes.ttl and permits the modification and
+    // deletion predicates that already-modified graphs carry, but caps each at one value. ImportMode.Migration (the
+    // default) enables it. ImportMode.BulkData(...) loads bulk-import-shapes.ttl instead, which forbids these predicates.
+    val ontologyWithClass = validOntologyNq +
+      s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+         |""".stripMargin
+
+    val User1     = "http://rdfh.ch/users/test001"
+    val NonUser   = "http://rdfh.ch/9999/notauser"
+    val Resource1 = "http://rdfh.ch/9999/thing001"
+
+    val adminNq =
+      s"""<$User1> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+         |""".stripMargin
+
+    // The properties every Resource must carry, minus isDeleted, which each test sets itself.
+    val mandatory =
+      s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+         |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToUser> <$User1> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+         |""".stripMargin
+
+    suite("MigrationShapes")(
+      test("accepts a deleted, modified resource with single-valued deletion predicates") {
+        val nq = mandatory +
+          s"""<$Resource1> <${KnoraBase}isDeleted> "true"^^<$XsdBoolean> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}lastModificationDate> "2024-02-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}deleteDate> "2024-03-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}deletedBy> <$User1> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}deleteComment> "obsolete"^^<$XsdString> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminNq).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects a resource carrying two lastModificationDate values") {
+        val nq = mandatory +
+          s"""<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}lastModificationDate> "2024-02-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}lastModificationDate> "2024-03-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminNq).map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects a resource whose deletedBy is not a knora-admin:User") {
+        val nq = mandatory +
+          s"""<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Resource1> <${KnoraBase}deletedBy> <$NonUser> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminNq).map(result => assertTrue(result.isLeft))
         }
       },
     )

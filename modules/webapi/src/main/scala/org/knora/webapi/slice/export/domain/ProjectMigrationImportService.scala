@@ -26,6 +26,7 @@ import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -126,7 +127,7 @@ final class ProjectMigrationImportService(
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
 
         _ <- ZIO.logInfo(s"$taskId: Starting import graph data validation '$projectIri'")
-        _ <- projectImportValidator.validate(ontologyFiles, dataFiles, projectIri)
+        _ <- projectImportValidator.validate(ontologyFiles, dataFiles, projectIri, ImportMode.Migration)
         _ <- ZIO.logInfo(s"$taskId: Graph data validation passed for project '$projectIri'")
 
         // Second parse of admin.nq: idempotent user handling rewrites user triples.
