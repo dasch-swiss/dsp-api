@@ -42,10 +42,10 @@ object Fragments {
   def combine(fragments: Option[Fragment]*): Fragment =
     fragments.flatten.joinLines
 
-  /** Create a VALUES clause. */
-  def values(variable: Variable, iris: Iterable[Iri]): Fragment = {
-    val iriList = iris.map(iri => sparql"$iri").reduce(_ ++ sparql" " ++ _)
-    sparql"VALUES $variable { $iriList }"
+  /** Create a single-variable VALUES clause from IRIs or literals. */
+  def values(variable: Variable, values: Iterable[Iri | Literal]): Fragment = {
+    val valueList = values.map(value => sparql"$value").reduce(_ ++ sparql" " ++ _)
+    sparql"VALUES $variable { $valueList }"
   }
 
   /** Create a subquery (a SELECT embedded in a WHERE clause). */

@@ -148,12 +148,16 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
       val rendered = Fragments.graph(sparql"$g")(sparql"?s ?p ?o .").render
       assertTrue(rendered.startsWith("GRAPH <http://www.knora.org/data/0001/anything> {"))
     },
-    test("values renders a VALUES clause over IRIs") {
-      val v        = Variable("cls")
-      val rendered = Fragments
+    test("values renders VALUES clauses over IRIs and literals") {
+      val v    = Variable("value")
+      val iris = Fragments
         .values(v, List(Iri.unsafeFrom("http://example.org/A"), Iri.unsafeFrom("http://example.org/B")))
         .render
-      assertTrue(rendered == "VALUES ?cls { <http://example.org/A> <http://example.org/B> }")
+      val literals = Fragments.values(v, List(Literal.string("A"), Literal.string("B"))).render
+      assertTrue(
+        iris == "VALUES ?value { <http://example.org/A> <http://example.org/B> }",
+        literals == "VALUES ?value { \"A\" \"B\" }",
+      )
     },
     test("filter and bind render expressions") {
       val n = Variable("n")
