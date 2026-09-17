@@ -596,7 +596,7 @@ knora-base:TextValue-Shape
   ] ;
   sh:property [
     a sh:PropertyShape ;
-    sh:path knora-base:hasTextValueType ;
+    sh:path knora-base:hasTextValueType ; # TODO: find out if there is sh:in
     sh:maxCount 1 ;
     sh:nodeKind sh:IRI ;
     sh:message "TextValue instance may have at most one knora-base:hasTextValueType as an IRI"
