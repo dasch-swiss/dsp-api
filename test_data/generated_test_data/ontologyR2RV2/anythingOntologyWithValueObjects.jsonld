@@ -506,6 +506,15 @@
                     "salsah-gui:guiOrder": 15,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
+                        "@id": "anything:hasGeolocation"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 15,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     }
                 },
@@ -1030,6 +1039,14 @@
                     },
                     "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 14
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasGeolocation"
+                    },
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 15
                 },
                 {
                     "@type": "owl:Restriction",
@@ -2598,6 +2615,15 @@
                     "salsah-gui:guiOrder": 15,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
+                        "@id": "anything:hasGeolocation"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 15,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
                         "@id": "anything:isPartOfOtherThing"
                     }
                 },
@@ -3115,6 +3141,25 @@
                 "@id": "salsah-gui:SimpleText"
             },
             "@id": "anything:hasDocumentTitle"
+        },
+        {
+            "rdfs:label": "Geolocation",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:GeolocationValue"
+            },
+            "salsah-gui:guiElement": {
+                "@id": "salsah-gui:Geolocation"
+            },
+            "@id": "anything:hasGeolocation"
         },
         {
             "rdfs:label": "Geometry",

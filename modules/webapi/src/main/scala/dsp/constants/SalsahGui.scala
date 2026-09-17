@@ -37,6 +37,7 @@ object SalsahGui {
   val Spinbox: IRI       = SalsahGuiPrefixExpansion + "Spinbox"
   val Searchbox: IRI     = SalsahGuiPrefixExpansion + "Searchbox"
   val Date: IRI          = SalsahGuiPrefixExpansion + "Date"
+  val Geolocation: IRI   = SalsahGuiPrefixExpansion + "Geolocation"
   val Geometry: IRI      = SalsahGuiPrefixExpansion + "Geometry"
   val Colorpicker: IRI   = SalsahGuiPrefixExpansion + "Colorpicker"
   val List: IRI          = SalsahGuiPrefixExpansion + "List"

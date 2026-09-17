@@ -25,6 +25,7 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.Geolocation
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
@@ -1849,6 +1850,84 @@ object GeonameValueContentV2 {
     geonameCode <- r.objectString(GeonameValueAsGeonameCode)
     comment     <- objectCommentOption(r)
   } yield GeonameValueContentV2(ApiV2Complex, geonameCode, comment)
+}
+
+/**
+ * Represents a geolocation value: a geographic location as an OGC GeoSPARQL 1.1 `wktLiteral`.
+ *
+ * Holds the **stored literal** rather than parsed ordinates, so that a value reads back exactly as it
+ * was written, and so that a geometry this release does not yet accept — a line, an area, an elevation
+ * — survives a round trip untouched.
+ *
+ * @param valueHasGeolocation the stored literal, always CRS-tagged, e.g.
+ *                            `<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.55 47.37)`.
+ * @param comment             a comment on this [[GeolocationValueContentV2]], if any.
+ */
+case class GeolocationValueContentV2(
+  ontologySchema: OntologySchema,
+  valueHasGeolocation: String,
+  comment: Option[String] = None,
+) extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.GeolocationValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  /**
+   * The bare space-separated coordinates, without the CRS prefix or the geometry wrapper. The Fuseki
+   * text index tokenizes on whitespace only, so storing the whole literal here would index
+   * `POINT(8.55 47.37)` as `point(8.55` and `47.37)`, and a search for `47.37` would match nothing.
+   */
+  override def valueHasString: String = Geolocation.decompose(valueHasGeolocation).coordinates
+
+  override def toOntologySchema(targetSchema: OntologySchema): GeolocationValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: Project,
+    appConfig: AppConfig,
+    schemaOptions: Set[Rendering],
+  ): JsonLDValue =
+    targetSchema match {
+      case ApiV2Simple =>
+        JsonLDUtil.datatypeValueToJsonLDObject(
+          value = valueHasGeolocation,
+          datatype = OntologyConstants.KnoraApiV2Simple.Geolocation.toSmartIri,
+        )
+
+      case ApiV2Complex =>
+        // The parts are derived on read, so that a client dispatches on a declared shape instead of
+        // parsing the literal itself. A part that cannot be derived is omitted rather than guessed.
+        val parts   = Geolocation.decompose(valueHasGeolocation)
+        val derived = Map(
+          GeolocationValueHasCrs         -> parts.crs,
+          GeolocationValueHasShape       -> parts.shape,
+          GeolocationValueHasCoordinates -> parts.coordinates,
+        ).collect { case (predicate, value) if value.nonEmpty => predicate -> JsonLDString(value) }
+        JsonLDObject(
+          Map(GeolocationValueAsGeolocation -> JsonLDString(valueHasGeolocation)) ++ derived,
+        )
+    }
+
+  override def unescape: ValueContentV2 =
+    copy(
+      valueHasGeolocation = Iri.fromSparqlEncodedString(valueHasGeolocation),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)),
+    )
+}
+
+/**
+ * Constructs [[GeolocationValueContentV2]] objects based on JSON-LD input.
+ */
+object GeolocationValueContentV2 {
+  def from(r: Resource): Either[String, GeolocationValueContentV2] = for {
+    submitted   <- r.objectString(GeolocationValueAsGeolocation)
+    geolocation <- ValuesValidator.validateGeolocation(submitted)
+    comment     <- objectCommentOption(r)
+    // Stored with the CRS prefix made explicit, so no stored value is ambiguous, and with the
+    // ordinates exactly as submitted, so decimal precision survives.
+  } yield GeolocationValueContentV2(ApiV2Complex, geolocation.toStoredLiteral, comment)
 }
 
 /**

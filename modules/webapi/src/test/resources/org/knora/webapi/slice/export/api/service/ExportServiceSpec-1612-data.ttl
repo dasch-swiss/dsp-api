@@ -68,6 +68,17 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         knora-base:valueHasString     "http://rdfh.ch/1612/TfZ6cOzQThSMAkCoEeJFjA";
         knora-base:valueHasUUID       "YqpTY98cRPiPq7mv3xttdg" .
 
+<http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Gk8jTn2xQ1uYmLpZaB4cWw>
+        rdf:type                        knora-base:GeolocationValue;
+        knora-base:attachedToUser       <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
+        knora-base:hasPermissions       "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember";
+        knora-base:isDeleted            false;
+        knora-base:valueCreationDate    "2025-11-24T09:32:03.341988Z"^^xsd:dateTime;
+        knora-base:valueHasGeolocation  "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)";
+        knora-base:valueHasOrder        0;
+        knora-base:valueHasString       "8.550 47.37";
+        knora-base:valueHasUUID         "Gk8jTn2xQ1uYmLpZaB4cWw" .
+
 <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/LMXaR3dATMmn5s6NgLn1Ww>
         rdf:type                        knora-base:GeonameValue;
         knora-base:attachedToUser       <http://rdfh.ch/users/NK3AQVhRS-mciGJN3vF2fQ>;
@@ -155,6 +166,8 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
                 <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/q4S8CTYUSQu0_1gxCDRlFw>;
         <http://www.knora.org/ontology/1612/Data#Place>
                 <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/LMXaR3dATMmn5s6NgLn1Ww>;
+        <http://www.knora.org/ontology/1612/Data#Coordinates>
+                <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/Gk8jTn2xQ1uYmLpZaB4cWw>;
         <http://www.knora.org/ontology/1612/Data#TextParagraph>
                 <http://rdfh.ch/1612/wQtVscpOTt-Sc_cH-dQL-w/values/5DQvCd4-SjiAu--9BjjA6A>;
         <http://www.knora.org/ontology/1612/Data#TextRich>

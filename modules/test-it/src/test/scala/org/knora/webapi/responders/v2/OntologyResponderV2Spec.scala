@@ -114,6 +114,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
   val anythingHasDate: IRI                 = anythingOntology + "hasDate"
   val anythingHasDecimal: IRI              = anythingOntology + "hasDecimal"
   val anythingHasGeometry: IRI             = anythingOntology + "hasGeometry"
+  val anythingHasGeolocation: IRI          = anythingOntology + "hasGeolocation"
   val anythingHasGeoname: IRI              = anythingOntology + "hasGeoname"
   val anythingHasInteger: IRI              = anythingOntology + "hasInteger"
   val anythingHasInterval: IRI             = anythingOntology + "hasInterval"
@@ -2170,6 +2171,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasDate,
         anythingHasDecimal,
         anythingHasGeometry,
+        anythingHasGeolocation,
         anythingHasGeoname,
         anythingHasInteger,
         anythingHasInterval,
@@ -2243,6 +2245,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasDate,
         anythingHasDecimal,
         anythingHasGeometry,
+        anythingHasGeolocation,
         anythingHasGeoname,
         anythingHasInteger,
         anythingHasInterval,
@@ -2348,6 +2351,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasDate,
         anythingHasDecimal,
         anythingHasGeometry,
+        anythingHasGeolocation,
         anythingHasGeoname,
         anythingHasInteger,
         anythingHasInterval,

@@ -380,6 +380,36 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withRdfLabelEn("Geoname value as Geoname code")
     .withRdfCommentEn("Represents the literal Geoname code of a GeonameValue.")
 
+  private val GeolocationValueAsGeolocation = makeOwlDatatypeProperty(KA.GeolocationValueAsGeolocation, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeolocationValue)
+    .withRdfLabelEn("Geolocation value as geolocation")
+    .withRdfCommentEn(
+      "Represents the literal geolocation of a GeolocationValue as an OGC GeoSPARQL wktLiteral: a coordinate reference system definition IRI in angle brackets, whitespace, then a WKT geometry.",
+    )
+
+  private val GeolocationValueHasCrs = makeOwlDatatypeProperty(KA.GeolocationValueHasCrs, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeolocationValue)
+    .withRdfLabelEn("geolocation value has CRS")
+    .withRdfCommentEn("The definition IRI of the geolocation's coordinate reference system (computed on read).")
+
+  private val GeolocationValueHasShape = makeOwlDatatypeProperty(KA.GeolocationValueHasShape, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeolocationValue)
+    .withRdfLabelEn("geolocation value has shape")
+    .withRdfCommentEn(
+      "The geolocation's geometry shape, e.g. 'Point' (computed on read), so that a client need not parse the literal to determine it.",
+    )
+
+  private val GeolocationValueHasCoordinates = makeOwlDatatypeProperty(KA.GeolocationValueHasCoordinates, XSD.STRING)
+    .withSubPropertyOf(KA.ValueHas)
+    .withSubjectType(KA.GeolocationValue)
+    .withRdfLabelEn("geolocation value has coordinates")
+    .withRdfCommentEn(
+      "The geolocation's bare coordinates, without the CRS prefix or geometry wrapper (computed on read).",
+    )
+
   private val FileValueAsUrl = makeOwlDatatypeProperty(KA.FileValueAsUrl, XSD.ANYURI)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.FileValue)
@@ -599,6 +629,16 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.GeonameValueAsGeonameCode -> ExactlyOne,
   )
 
+  // Only the literal is required: a create request supplies it alone, and the three derived fields are
+  // read-only projections the server computes. Declaring them ExactlyOne compiles and passes unit tests,
+  // and fails InstanceChecker validation.
+  private val GeolocationValueCardinalities = Map(
+    KA.GeolocationValueAsGeolocation  -> ExactlyOne,
+    KA.GeolocationValueHasCrs         -> ZeroOrOne,
+    KA.GeolocationValueHasShape       -> ZeroOrOne,
+    KA.GeolocationValueHasCoordinates -> ZeroOrOne,
+  )
+
   private val FileValueCardinalities = Map(
     KA.FileValueAsUrl       -> ExactlyOne,
     KA.FileValueHasFilename -> ExactlyOne,
@@ -663,6 +703,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraBase.ValueHasDecimal,
     OntologyConstants.KnoraBase.ValueHasGeometry,
     OntologyConstants.KnoraBase.ValueHasGeonameCode,
+    OntologyConstants.KnoraBase.ValueHasGeolocation,
     OntologyConstants.KnoraBase.ValueHasInteger,
     OntologyConstants.KnoraBase.ValueHasBoolean,
     OntologyConstants.KnoraBase.ValueHasUri,
@@ -721,6 +762,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.GeomValue                   -> GeomValueCardinalities,
     KA.ListValue                   -> ListValueCardinalities,
     KA.GeonameValue                -> GeonameValueCardinalities,
+    KA.GeolocationValue            -> GeolocationValueCardinalities,
     KA.FileValue                   -> FileValueCardinalities,
     KA.StillImageFileValue         -> StillImageFileValueCardinalities,
     KA.StillImageExternalFileValue -> StillImageExternalFileValueCardinalities,
@@ -762,6 +804,10 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     FileValueHasFilename,
     GeometryValueAsGeometry,
     GeonameValueAsGeonameCode,
+    GeolocationValueAsGeolocation,
+    GeolocationValueHasCrs,
+    GeolocationValueHasShape,
+    GeolocationValueHasCoordinates,
     HasCopyrightHolder,
     HasAuthorship,
     HasIncomingLinkValue,

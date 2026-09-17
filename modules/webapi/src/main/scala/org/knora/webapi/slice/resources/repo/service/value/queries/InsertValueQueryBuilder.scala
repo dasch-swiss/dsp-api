@@ -268,6 +268,8 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
         List(valueIri.has(KB.valueHasTimeStamp, literalOfType(timeValue.valueHasTimeStamp.toString, XSD.DATETIME)))
       case geonameValue: GeonameValueContentV2 =>
         List(valueIri.has(KB.valueHasGeonameCode, literalOf(geonameValue.valueHasGeonameCode)))
+      case geolocationValue: GeolocationValueContentV2 =>
+        List(valueIri.has(KB.valueHasGeolocation, literalOf(geolocationValue.valueHasGeolocation)))
       case regionPreviewValue: RegionPreviewValueContentV2 =>
         List(valueIri.has(KB.isRegionPreviewOf, iri(regionPreviewValue.regionIri.value)))
       case _: LinkValueContentV2    => List.empty

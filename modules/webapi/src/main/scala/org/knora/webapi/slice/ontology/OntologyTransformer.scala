@@ -42,6 +42,7 @@ import scala.jdk.CollectionConverters.*
 import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.Geolocation
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
@@ -1074,7 +1075,8 @@ final class OntologyTransformer(
   /**
    * Derive the plain-text `knora-base:valueHasString` from each value's content. Scalar values use the lexical form
    * of their content literal; `ListValue` falls back to the list-node IRI, `RegionPreviewValue` to the region IRI,
-   * and `IntervalValue` composes its two decimal bounds as `"$start - $end"`. `TextValue` (from the stage-1 rename),
+   * `GeolocationValue` to the bare coordinates of its literal, and `IntervalValue` composes its two decimal bounds
+   * as `"$start - $end"`. `TextValue` (from the stage-1 rename),
    * `DateValue` (from `convertDateValues`) and `LinkValue` (from `convertLinkValues`) already carry `valueHasString`
    * and are left untouched; any other value type is left without one.
    */
@@ -1085,6 +1087,7 @@ final class OntologyTransformer(
     val isRegionPreviewOf     = model.createProperty(KnoraBase.IsRegionPreviewOf)
     val valueHasIntervalStart = model.createProperty(KnoraBase.ValueHasIntervalStart)
     val valueHasIntervalEnd   = model.createProperty(KnoraBase.ValueHasIntervalEnd)
+    val valueHasGeolocation   = model.createProperty(KnoraBase.ValueHasGeolocation)
 
     val literalContent: Map[String, Property] = Map(
       KnoraBase.BooleanValue -> KnoraBase.ValueHasBoolean,
@@ -1120,7 +1123,11 @@ final class OntologyTransformer(
           case cls if literalContent.contains(cls) => lexicalOf(v, literalContent(cls))
           case KnoraBase.ListValue                 => iriOf(v, valueHasListNode)
           case KnoraBase.RegionPreviewValue        => iriOf(v, isRegionPreviewOf)
-          case KnoraBase.IntervalValue             =>
+          // Not a plain literalContent entry: valueHasString is the bare coordinates, so that each
+          // one is a whole token under the text index's whitespace tokenizer.
+          case KnoraBase.GeolocationValue =>
+            lexicalOf(v, valueHasGeolocation).map(Geolocation.decompose(_).coordinates)
+          case KnoraBase.IntervalValue =>
             for {
               start <- lexicalOf(v, valueHasIntervalStart)
               end   <- lexicalOf(v, valueHasIntervalEnd)
