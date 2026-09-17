@@ -87,6 +87,42 @@ object SparqlTransformer {
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
 
   /**
+   * Creates a deterministic, content-derived variable name for a `VALUES` block introduced during
+   * ontology inference, replacing the `scala.util.Random` fallback previously used for this purpose.
+   *
+   * [[escapeEntityForVariable]] is not reused here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
+   * escape to the same string, which would merge two unrelated `VALUES` blocks and intersect their
+   * class sets into an empty result), and it passes through characters that are illegal in a SPARQL
+   * `VARNAME` (an [[XsdLiteral]] object such as `"(DE-588)118531379"` can reach the inference code
+   * as a statement subject).
+   *
+   * The result is always a valid SPARQL `VARNAME`: the grammar permits a leading digit or an empty
+   * base, and the `__kind__hash` suffix is appended unconditionally regardless of what `base`
+   * sanitises to.
+   *
+   * Identical statements deliberately produce the same variable name. This is harmless: the
+   * constraint contributed by that statement is identical, so sharing the variable loses nothing.
+   *
+   * @param statement the statement pattern that requires an inference variable.
+   * @param kind       a short discriminator (e.g. `"resTypes"`, `"subProp"`) distinguishing the
+   *                   different `VALUES` blocks that can be derived from the same statement.
+   * @return a deterministic, content-derived variable.
+   */
+  def createInferenceVariable(statement: StatementPattern, kind: String): QueryVariable = {
+    val rawBase = statement.subj match {
+      case QueryVariable(varName) => varName
+      case IriRef(iri, _)         =>
+        val iriStr        = iri.toIri
+        val lastSeparator = math.max(iriStr.lastIndexOf('#'), iriStr.lastIndexOf('/'))
+        if (lastSeparator >= 0) iriStr.substring(lastSeparator + 1) else iriStr
+      case other => other.toSparql
+    }
+    val base = rawBase.replaceAll("[^A-Za-z0-9_]", "")
+    val hash = f"${statement.toSparql.hashCode}%08x"
+    QueryVariable(s"${base}__${kind}__$hash")
+  }
+
+  /**
    * Builds the canonical `FILTER NOT EXISTS { subj knora-base:isDeleted true }` guard for the given
    * subject. Shared by [[optimiseIsDeletedWithFilter]] (which rewrites `isDeleted false` statements)
    * and the `matchFulltext` expansion in
