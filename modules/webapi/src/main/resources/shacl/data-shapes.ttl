@@ -119,12 +119,6 @@ knora-base:Region-Shape
   ] ;
   sh:property [
     a sh:PropertyShape ;
-    sh:path knora-base:hasLinkTo ;
-    dash:coExistsWith knora-base:hasLinkToValue ;
-    sh:message "A knora-base:isRegionOf always requires a knora-base:isRegionOfValue"
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
     sh:path knora-base:hasGeometry ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
@@ -154,12 +148,6 @@ knora-base:LinkObj-Shape
     sh:minCount 1 ;
     sh:class knora-base:LinkValue ;
     sh:message "Instance of LinkObj requires at least one knora-base:hasLinkToValue of type knora-base:LinkValue"
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:hasLinkTo ;
-    dash:coExistsWith knora-base:hasLinkToValue ;
-    sh:message "A knora-base:hasLinkTo always requires a knora-base:hasLinkToValue"
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -216,12 +204,6 @@ knora-base:Segment-Shape
     sh:minCount 1 ;
     sh:class knora-base:LinkValue ;
     sh:message "Instance of Segment requires at least one knora-base:relatesToValue of type knora-base:LinkValue"
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:relatesTo ;
-    dash:coExistsWith knora-base:relatesToValue ;
-    sh:message "A knora-base:relatesTo always requires a knora-base:relatesToValue"
   ] .
 
 knora-base:AudioSegment-Shape
@@ -242,12 +224,6 @@ knora-base:AudioSegment-Shape
     sh:maxCount 1 ;
     sh:class knora-base:LinkValue ;
     sh:message "Instance of AudioSegment requires ne knora-base:isAudioSegmentOfValue of type knora-base:LinkValue"
-  ] ;
-  sh:property [
-    a sh:PropertyShape ;
-    sh:path knora-base:isAudioSegmentOf ;
-    dash:coExistsWith knora-base:isAudioSegmentOfValue ;
-    sh:message "A knora-base:isAudioSegmentOf always requires a knora-base:isAudioSegmentOfValue"
   ] .
 
 knora-base:VideoSegment-Shape
@@ -268,12 +244,6 @@ knora-base:VideoSegment-Shape
       sh:maxCount 1 ;
       sh:class knora-base:LinkValue ;
       sh:message "Instance of VideoSegment requires ne knora-base:isVideoSegmentOfValue of type knora-base:LinkValue"
-    ] ;
-  sh:property [
-      a sh:PropertyShape ;
-      sh:path knora-base:isVideoSegmentOf ;
-      dash:coExistsWith knora-base:isVideoSegmentOfValue ;
-      sh:message "A knora-base:isVideoSegmentOf always requires a knora-base:isVideoSegmentOfValue"
     ] .
 
 # Shapes for sub-classes of knora-base:Representation
