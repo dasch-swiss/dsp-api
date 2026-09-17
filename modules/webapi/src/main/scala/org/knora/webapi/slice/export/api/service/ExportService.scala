@@ -424,8 +424,7 @@ final case class ExportService(
           )
         case gvc: GeonameValueContentV2 =>
           RegularValue(List("https://www.geonames.org/" ++ gvc.valueHasGeonameCode))
-        // The full literal, CRS prefix included: a bare POINT in an export cell would reproduce
-        // exactly the ambiguity this value type removes. valueHasString holds only the coordinates.
+        // The full CRS-prefixed literal; the default case's valueHasString is the bare coordinates.
         case gvc: GeolocationValueContentV2 =>
           RegularValue(List(gvc.valueHasGeolocation))
         case lvc: HierarchicalListValueContentV2 =>

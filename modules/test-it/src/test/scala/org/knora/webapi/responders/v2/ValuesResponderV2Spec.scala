@@ -1722,7 +1722,7 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
         savedValue <- asInstanceOf[GeonameValueContentV2](valueFromTriplestore.valueContent)
       } yield assertTrue(savedValue.valueHasGeonameCode == valueHasGeonameCode)
     },
-    test("create a geolocation value, preserving the submitted decimal precision (REQ-5.10)") {
+    test("create a geolocation value, preserving the submitted decimal precision") {
       val resourceIri = aThingIri
       val propertyIri = geolocationPropertyIri
       val literal     = s"<${Crs.Crs84.iri}> POINT(8.550 47.3700)"
@@ -1748,11 +1748,11 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
         savedValue <- asInstanceOf[GeolocationValueContentV2](valueFromTriplestore.valueContent)
       } yield assertTrue(
         savedValue.valueHasGeolocation == literal,
-        // REQ-4.6: the bare coordinates, so each one is a whole token under the index's tokenizer.
+        // the bare coordinates, so each one is a whole token under the index's tokenizer.
         savedValue.valueHasString == "8.550 47.3700",
       )
     },
-    test("store and read back geometries the write path rejects, unchanged (REQ-7.1, REQ-7.2)") {
+    test("store and read back geometries the write path rejects, unchanged") {
       val resourceIri = aThingIri
       val propertyIri = geolocationPropertyIri
       // Written directly, bypassing the request validator: if admitting lines, areas or elevation

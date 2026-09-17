@@ -98,17 +98,17 @@ class GeolocationValueE2ESpec extends E2EZSpec {
         coordinates == "8.550 47.37",
       )
     },
-    test("stores an untagged literal with an explicit CRS84 prefix (REQ-5.8)") {
+    test("stores an untagged literal with an explicit CRS84 prefix") {
       for {
         value       <- savedGeolocation("POINT(7.44 46.95)")
         geolocation <- ZIO.fromEither(value.getRequiredString(KA.GeolocationValueAsGeolocation))
         crs         <- ZIO.fromEither(value.getRequiredString(KA.GeolocationValueHasCrs))
       } yield assertTrue(geolocation == s"<${Crs.Crs84.iri}> POINT(7.44 46.95)", crs == Crs.Crs84.iri)
     },
-    // REQ-4.7: this is the whole reason valueHasString is the bare coordinates. The Fuseki text index
+    // this is the whole reason valueHasString is the bare coordinates. The Fuseki text index
     // tokenizes on whitespace only, so storing "POINT(8.55 47.37)" would index "point(8.55" and "47.37)"
     // and this search would find nothing.
-    test("finds the resource by a full-text search for a stored coordinate (REQ-4.7)") {
+    test("finds the resource by a full-text search for a stored coordinate") {
       val ordinate  = "46.9481"
       val notStored = "46.9482"
       for {
@@ -119,30 +119,30 @@ class GeolocationValueE2ESpec extends E2EZSpec {
         miss <- TestApiClient.getJsonLd(uri"/v2/search/$notStored", anythingUser1).map(_.body.getOrElse(""))
       } yield assertTrue(hit.body.toString.contains(aThingIri), !miss.contains(aThingIri))
     },
-    test("rejects EPSG:4326 with a 400 naming CRS84 (REQ-5.3)") {
+    test("rejects EPSG:4326 with a 400 naming CRS84") {
       rejectionOf(s"<${Crs.RejectedEpsg4326}> POINT(8.55 47.37)")
         .map(message => assertTrue(message.contains(Crs.Crs84.iri)))
     },
-    test("rejects a CRS outside the allowlist with a 400 (REQ-5.2)") {
+    test("rejects a CRS outside the allowlist with a 400") {
       rejectionOf("<http://www.opengis.net/def/crs/EPSG/0/3857> POINT(8.55 47.37)")
         .map(message => assertTrue(message.contains(Crs.Lv95.iri)))
     },
-    test("rejects an out-of-range coordinate with a 400 naming the ordinate and the CRS (REQ-5.4)") {
+    test("rejects an out-of-range coordinate with a 400 naming the ordinate and the CRS") {
       rejectionOf(s"<${Crs.Crs84.iri}> POINT(8.55 947.37)")
         .map(message => assertTrue(message.contains("latitude"), message.contains(Crs.Crs84.label)))
     },
-    test("rejects a geometry other than a POINT with a 400 (REQ-5.5)") {
+    test("rejects a geometry other than a POINT with a 400") {
       rejectionOf(s"<${Crs.Crs84.iri}> LINESTRING(8.55 47.37, 8.56 47.38)")
         .map(message => assertTrue(message.contains("LINESTRING")))
     },
-    test("rejects an elevation with a 400 (REQ-5.6)") {
+    test("rejects an elevation with a 400") {
       rejectionOf(s"<${Crs.Crs84.iri}> POINT Z (8.55 47.37 400)")
         .map(message => assertTrue(message.contains("POINT Z")))
     },
-    test("rejects a POINT with no coordinate pair with a 400 (REQ-5.7)") {
+    test("rejects a POINT with no coordinate pair with a 400") {
       rejectionOf(s"<${Crs.Crs84.iri}> POINT EMPTY").map(message => assertTrue(message.nonEmpty))
     },
-    test("rejects an unparseable literal with a 400 (REQ-5.1)") {
+    test("rejects an unparseable literal with a 400") {
       rejectionOf("8.55 47.37").map(message => assertTrue(message.nonEmpty))
     },
   )
