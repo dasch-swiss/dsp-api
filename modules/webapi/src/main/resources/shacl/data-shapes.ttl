@@ -12,7 +12,7 @@
 
 # Validates every instance of a knora-base:Resource subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
-knora-base:ResourceShape
+knora-base:Resource-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Resource ;
   sh:property [
@@ -92,7 +92,7 @@ knora-base:ResourceShape
 
 # TODO: in-built
 
-knora-base:RegionShape
+knora-base:Region-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Region ;
   sh:property [
@@ -136,7 +136,7 @@ knora-base:RegionShape
 
 # Shapes for sub-classes of knora-base:Representation
 
-knora-base:ArchiveRepresentationShape
+knora-base:ArchiveRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:ArchiveRepresentation ;
   sh:property [
@@ -147,7 +147,7 @@ knora-base:ArchiveRepresentationShape
     sh:message "ArchiveRepresentation instance must have one knora-base:hasArchiveFileValue of type knora-base:ArchiveFileValue"
   ] .
 
-knora-base:AudioRepresentationShape
+knora-base:AudioRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:AudioRepresentation ;
   sh:property [
@@ -158,7 +158,7 @@ knora-base:AudioRepresentationShape
     sh:message "AudioRepresentation instance must have one knora-base:hasAudioFileValue of type knora-base:AudioFileValue"
   ] .
 
-knora-base:DocumentRepresentationShape
+knora-base:DocumentRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:DocumentRepresentation ;
   sh:property [
@@ -169,7 +169,7 @@ knora-base:DocumentRepresentationShape
     sh:message "DocumentRepresentation instance must have one knora-base:hasDocumentFileValue of type knora-base:DocumentFileValue"
   ] .
 
-knora-base:MovingImageRepresentationShape
+knora-base:MovingImageRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:MovingImageRepresentation ;
   sh:property [
@@ -180,7 +180,7 @@ knora-base:MovingImageRepresentationShape
       sh:message "MovingImageRepresentation instance must have one knora-base:hasMovingImageFileValue of type knora-base:MovingImageFileValue"
     ] .
 
-knora-base:StillImageRepresentationShape
+knora-base:StillImageRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageRepresentation ;
   sh:property [
@@ -191,7 +191,7 @@ knora-base:StillImageRepresentationShape
     sh:message "StillImageRepresentation instance must have one knora-base:hasStillImageFileValue of type knora-base:StillImageAbstractFileValue"
   ] .
 
-knora-base:TextRepresentationShape
+knora-base:TextRepresentation-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:TextRepresentation ;
   sh:property [
@@ -204,7 +204,7 @@ knora-base:TextRepresentationShape
 
 # Validates every instance of a knora-base:Value subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
-knora-base:ValueShape
+knora-base:Value-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
   sh:property [
@@ -273,9 +273,9 @@ knora-base:ValueShape
   # TODO: add information from edited graphs
   # TODO: check if it is possible to ensure that this is not used directly
 
-# All values are subclass of Value, so ValueShape constraints also apply.
+# All values are subclass of Value, so Value-Shape constraints also apply.
 
-knora-base:BooleanValueShape
+knora-base:BooleanValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:BooleanValue ;
   sh:property [
@@ -287,7 +287,7 @@ knora-base:BooleanValueShape
       sh:message "BooleanValue instance must have one knora-base:valueHasBoolean of type xsd:boolean"
     ] .
 
-knora-base:ColorValueShape
+knora-base:ColorValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:ColorValue ;
   sh:property [
@@ -299,7 +299,7 @@ knora-base:ColorValueShape
     sh:message "ColorValue instance must have one knora-base:valueHasColor of type xsd:string"
   ] .
 
-knora-base:DateValueShape
+knora-base:DateValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:DateValue ;
   sh:property [
@@ -349,7 +349,7 @@ knora-base:DateValueShape
    sh:message "DateValue knora-base:valueHasStartJDN must be <= knora-base:valueHasEndJDN"
   ] .
 
-knora-base:DecimalValueShape
+knora-base:DecimalValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:DecimalValue ;
   sh:property [
@@ -361,7 +361,7 @@ knora-base:DecimalValueShape
     sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
   ] .
 
-knora-base:GeomValueShape
+knora-base:GeomValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:GeomValue ;
   sh:property [
@@ -373,7 +373,7 @@ knora-base:GeomValueShape
     sh:message "GeomValue instance must have one knora-base:valueHasGeometry of type xsd:string"
   ] .
 
-knora-base:GeonameValueShape
+knora-base:GeonameValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:GeonameValue ;
   sh:property [
@@ -385,7 +385,7 @@ knora-base:GeonameValueShape
     sh:message "GeonameValue instance must have one knora-base:valueHasGeonameCode of type xsd:string"
   ] .
 
-knora-base:IntervalValueShape
+knora-base:IntervalValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntervalValue ;
   sh:property [
@@ -405,7 +405,7 @@ knora-base:IntervalValueShape
     sh:message "IntervalValue instance must have one knora-base:valueHasIntervalEnd of type xsd:decimal"
   ] .
 
-knora-base:IntValueShape
+knora-base:IntValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:IntValue ;
   sh:property [
@@ -417,7 +417,7 @@ knora-base:IntValueShape
     sh:message "IntValue instance must have one knora-base:valueHasInteger of type xsd:integer"
   ] .
 
-knora-base:LinkValueShape
+knora-base:LinkValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
   sh:property [
@@ -453,7 +453,7 @@ knora-base:LinkValueShape
     sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
   ] .
 
-knora-base:ListValueShape
+knora-base:ListValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:ListValue ;
   sh:property [
@@ -465,7 +465,7 @@ knora-base:ListValueShape
     sh:message "ListValue instance must have one knora-base:valueHasListNode as an IRI"
   ] .
 
-knora-base:TextValueShape
+knora-base:TextValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:TextValue ;
   sh:property [
@@ -497,7 +497,7 @@ knora-base:TextValueShape
     sh:message "TextValue instance may have at most one knora-base:hasTextValueType as an IRI"
   ] .
 
-knora-base:TimeValueShape
+knora-base:TimeValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:TimeValue ;
   sh:property [
@@ -509,7 +509,7 @@ knora-base:TimeValueShape
       sh:message "TimeValue instance must have one knora-base:valueHasTimeStamp of type xsd:dateTime"
     ] .
 
-knora-base:UriValueShape
+knora-base:UriValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:UriValue ;
   sh:property [
@@ -523,7 +523,7 @@ knora-base:UriValueShape
 
 # FileValues
 
-knora-base:FileValueShape
+knora-base:FileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:FileValue ;
   sh:property [
@@ -581,11 +581,11 @@ knora-base:FileValueShape
     sh:message "FileValue instance may have at most one knora-base:hasLicense of type knora-base:License"
   ] .
 
-knora-base:ArchiveFileValueShape
+knora-base:ArchiveFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:ArchiveFileValue .
 
-knora-base:AudioFileValueShape
+knora-base:AudioFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:AudioFileValue ;
   sh:property [
@@ -597,7 +597,7 @@ knora-base:AudioFileValueShape
       sh:message "AudioFileValue instance may have at most one knora-base:duration of type xsd:decimal"
     ] .
 
-knora-base:DocumentFileValueShape
+knora-base:DocumentFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:DocumentFileValue ;
   sh:property [
@@ -625,11 +625,11 @@ knora-base:DocumentFileValueShape
     sh:message "DocumentFileValue instance may have at most one knora-base:dimY of type xsd:integer"
   ] .
 
-knora-base:MovingImageFileValueShape
+knora-base:MovingImageFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:MovingImageFileValue .
 
-knora-base:StillImageFileValueShape
+knora-base:StillImageFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageFileValue ;
   sh:property [
@@ -649,7 +649,7 @@ knora-base:StillImageFileValueShape
     sh:message "StillImageFileValue instance may have at most one knora-base:dimY of type xsd:integer"
   ] .
 
-knora-base:StillImageExternalFileValueShape
+knora-base:StillImageExternalFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageExternalFileValue ;
   sh:property [
@@ -661,11 +661,11 @@ knora-base:StillImageExternalFileValueShape
       sh:message "StillImageExternalFileValue instance requires one knora-base:externalUrl of type xsd:anyURI"
     ] .
 
-knora-base:StillImageVectorFileValueShape
+knora-base:StillImageVectorFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:StillImageVectorFileValue .
 
-knora-base:TextFileValueShape
+knora-base:TextFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:TextFileValue .
 
@@ -673,7 +673,7 @@ knora-base:TextFileValueShape
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
 # unified model, the knora-admin:User nodes are present and SHACL with RDFS
 # inference can verify this.
-knora-base:AttachedToUserExistsShape
+knora-base:AttachedToUserExists-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:property [
@@ -689,7 +689,7 @@ knora-base:AttachedToUserExistsShape
 # System standoff-link LinkValues are exempt: both the data-import transformer
 # (OntologyTransformer.emitStandoffLinkValue) and the v2 create path attach them to SystemUser by
 # design. They are identified by rdf:predicate knora-base:hasStandoffLinkTo.
-knora-base:AttachedToUserNotBuiltInShape
+knora-base:AttachedToUserNotBuiltIn-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:or (
