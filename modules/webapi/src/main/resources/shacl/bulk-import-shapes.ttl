@@ -99,8 +99,12 @@ knora-base:TextValue-Shape
     sh:path knora-base:hasTextValueType ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:in ( knora-base:UnformattedText
-            knora-base:FormattedText
-            knora-base:CustomFormattedText ) ;
+    sh:in ( knora-base:UnformattedText knora-base:FormattedText ) ;
     sh:message "TextValue instance must have one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText knora-base:CustomFormattedText"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasMapping ;
+    sh:value <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+    sh:message "TextValue instance must have knora-base:valueHasMapping standard mapping IRI <http://rdfh.ch/standoff/mappings/StandardMapping>"
   ] .
