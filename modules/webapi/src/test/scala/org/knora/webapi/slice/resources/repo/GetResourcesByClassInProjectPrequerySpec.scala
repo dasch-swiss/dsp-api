@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -14,6 +15,12 @@ import org.knora.webapi.messages.StringFormatter
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -33,8 +40,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
           offset = 0,
           limit = 25,
         )
-        .getQueryString
-        .strip()
+        .sparql
       val expected =
         """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -45,7 +51,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
            |ORDER BY ASC( ?resource )
            |LIMIT 25
            |OFFSET 0""".stripMargin
-      assertTrue(actual == expected)
+      assertTrue(canonical(actual) == canonical(expected))
     },
     test("build with orderByProperty should produce the expected SPARQL query") {
       val actual = GetResourcesByClassInProjectPrequery
@@ -57,8 +63,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
           offset = 0,
           limit = 25,
         )
-        .getQueryString
-        .strip()
+        .sparql
       val expected =
         """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -74,7 +79,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
            |ORDER BY ASC( ?orderByValueLiteral ) ASC( ?resource )
            |LIMIT 25
            |OFFSET 0""".stripMargin
-      assertTrue(actual == expected)
+      assertTrue(canonical(actual) == canonical(expected))
     },
     test("build with non-zero offset should include correct offset") {
       val actual = GetResourcesByClassInProjectPrequery
@@ -86,8 +91,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
           offset = 50,
           limit = 25,
         )
-        .getQueryString
-        .strip()
+        .sparql
       val expected =
         """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -98,7 +102,7 @@ class GetResourcesByClassInProjectPrequerySpec extends ZIOSpecDefault {
            |ORDER BY ASC( ?resource )
            |LIMIT 25
            |OFFSET 50""".stripMargin
-      assertTrue(actual == expected)
+      assertTrue(canonical(actual) == canonical(expected))
     },
   )
 }

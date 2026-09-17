@@ -51,11 +51,9 @@ import org.knora.webapi.testservices.TestApiClient
  * identical resource-IRI set, and RDF isomorphism after normalizing minted value/standoff IRIs,
  * UUIDs, and creation timestamps.
  *
- * One deliberate tolerance remains: `hasPermissions` is excluded from the compare, because the two
- * paths assign permissions differently. Full parity waits on the bulk import honoring a payload
- * `hasPermissions` and resolving class/property DOAPs — see the `hasPermissions` TODO in
- * `OntologyTransformer.addResourceMetadata`. `lastModificationDate` is stripped too, since only the
- * two-step create paths write it.
+ * `hasPermissions` is included in the compare: the bulk import honors a payload `hasPermissions` and
+ * resolves class/property DOAPs per entity, matching the create path. `lastModificationDate` is
+ * stripped, since only the two-step create paths write it.
  *
  * Nothing else is stripped: `hasTextValueType` is written by all three write paths, `valueHasOrder`
  * is carried explicitly by every fixture value (so neither path synthesizes one), and `pageCount` is
@@ -89,6 +87,13 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val richtextIri           = "http://rdfh.ch/9999/msw8injcR6yPKdzYDGwYdw"
   private val migrationCreationIri  = "http://rdfh.ch/9999/1ayv8UcVR3Gk31kCJ2PSxQ"
   private val migrationCreationDate = "2019-01-09T15:45:54.502951Z"
+
+  // Two fixtures whose payload hasPermissions differs starkly from the ProjectMember DOAP default: the default
+  // grants view to KnownUser+UnknownUser, these payloads grant to no anonymous group, so the stored string must
+  // lack "UnknownUser" and match across both write paths.
+  private val explicitResourcePermIri = "http://rdfh.ch/9999/XLUEHedrQPm1nscJDU1SiQ"
+  private val explicitValuePermIri    = "http://rdfh.ch/9999/ag8JD-5YTrCCl8UPHb1Kdw"
+  private val testBooleanInternal     = "http://www.knora.org/ontology/9999/onto#testBoolean"
 
   // richtext_standoff_refcount links `id_empty` from two text values, so its standoff-link LinkValue
   // must carry valueHasRefCount = 2 on both paths (the counter aggregates across text values).
@@ -137,6 +142,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     "text_repr",
     "bitstream_permissions",
     "restricted_image",
+    "explicit_resource_permission",
+    "explicit_value_permission",
     "target_empty_1",
     "target_empty_2",
   )
@@ -145,7 +152,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val plainResources = tier0 ++ tier1 ++ tier2
 
   override val e2eSpec: Spec[env, Any] = suite("Bulk import vs single-resource create parity")(
-    test("both paths produce isomorphic graphs (permissions excluded)") {
+    test("both paths produce isomorphic graphs") {
       for {
         tester <- ZIO
                     .serviceWithZIO[UserService](_.findUserByIri(UserIri.unsafeFrom(testerUserIri)))
@@ -167,8 +174,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         _      <- runSingleCreates(tester)
         graphB <- dumpProjectGraph
       } yield {
-        val normA = normalize(graphA, includePermissions = false)
-        val normB = normalize(graphB, includePermissions = false)
+        val normA = normalize(graphA)
+        val normB = normalize(graphB)
         val iso   = normA.isIsomorphicWith(normB)
 
         val resourcesA = resourceIris(graphA)
@@ -179,6 +186,11 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
         val refCountA = standoffLinkRefCount(graphA, refCountResourceIri, refCountTargetIri)
         val refCountB = standoffLinkRefCount(graphB, refCountResourceIri, refCountTargetIri)
+
+        val resourcePermA = permissionsOf(graphA, explicitResourcePermIri)
+        val resourcePermB = permissionsOf(graphB, explicitResourcePermIri)
+        val valuePermA    = valuePermissionsOf(graphA, explicitValuePermIri, testBooleanInternal)
+        val valuePermB    = valuePermissionsOf(graphB, explicitValuePermIri, testBooleanInternal)
 
         val diff =
           if (iso) ""
@@ -193,7 +205,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           hasLastModification(graphB, richtextIri),
           !hasLastModification(graphA, audioSegmentIri),
         )
-        // Equal triple count on the normalized models (lastModificationDate + hasPermissions stripped).
+        // Equal triple count on the normalized models (lastModificationDate stripped, hasPermissions compared).
         val tripleCountsMatch = assertTrue(normA.size == normB.size)
         // Identical resource-IRI set.
         val resourceSetsMatch = assertTrue(resourcesA == resourcesB)
@@ -202,7 +214,16 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           creationDateA.contains(migrationCreationDate),
           creationDateA == creationDateB,
         )
-        // RDF isomorphism, permissions excluded.
+        // The payload hasPermissions wins over the resolved DOAP on both paths: the stored string lacks the
+        // default's "UnknownUser" grant and matches across both writes, on the resource of
+        // explicit_resource_permission and the value of explicit_value_permission.
+        val payloadPermissionsWin = assertTrue(
+          resourcePermA.exists(p => !p.contains("UnknownUser")),
+          resourcePermA == resourcePermB,
+          valuePermA.exists(p => !p.contains("UnknownUser")),
+          valuePermA == valuePermB,
+        )
+        // RDF isomorphism, hasPermissions included.
         val graphsAreIsomorphic = assertTrue(iso)
         // The standoff-link LinkValue counter aggregates across text values: richtext_standoff_refcount
         // has two text values linking one target, so its refcount is 2 on both paths.
@@ -212,6 +233,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
           tripleCountsMatch &&
           resourceSetsMatch &&
           creationDateSurvives &&
+          payloadPermissionsWin &&
           graphsAreIsomorphic &&
           standoffRefCountsMatch).label(
           s"""|counts: A=${normA.size} B=${normB.size}
@@ -382,7 +404,6 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val sentinelPredicates =
     Set(kb + "valueHasUUID", kb + "standoffTagHasUUID", kb + "creationDate", kb + "valueCreationDate")
   private val lastModProp        = kb + "lastModificationDate"
-  private val hasPermissionsProp = kb + "hasPermissions"
   private val standoffTagPattern =
     """^http://rdfh\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+/values/[A-Za-z0-9_-]+/standoff/\d+$""".r
 
@@ -391,12 +412,12 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   /**
    * Returns a copy of the model with minted value/standoff IRIs replaced by blank nodes, UUIDs and
-   * creation timestamps replaced by a sentinel, lastModificationDate stripped, and (unless
-   * `includePermissions`) hasPermissions stripped. Every occurrence of a given minted IRI maps to
-   * the same blank node, so shared-identity edges (LinkValue subject/object, standoff parents,
-   * previousValue, the segment cross-link) survive.
+   * creation timestamps replaced by a sentinel, and lastModificationDate stripped. hasPermissions is
+   * kept and compared. Every occurrence of a given minted IRI maps to the same blank node, so
+   * shared-identity edges (LinkValue subject/object, standoff parents, previousValue, the segment
+   * cross-link) survive.
    */
-  private def normalize(model: Model, includePermissions: Boolean): Model = {
+  private def normalize(model: Model): Model = {
     val minted: Set[String] =
       model
         .listStatements()
@@ -410,7 +431,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     val sentinel = out.createLiteral("__normalized__")
     model.listStatements().asScala.foreach { st =>
       val p     = st.getPredicate.getURI
-      val strip = p == lastModProp || (p == hasPermissionsProp && !includePermissions)
+      val strip = p == lastModProp
       if (!strip) {
         val subj: Resource =
           if (st.getSubject.isURIResource)
@@ -445,6 +466,18 @@ class BulkImportParityE2ESpec extends E2EZSpec {
 
   private def creationDate(model: Model, resourceIri: String): Option[String] =
     firstObjectOf(model, model.createResource(resourceIri), kb + "creationDate")
+      .map(_.asLiteral().getLexicalForm)
+
+  private def permissionsOf(model: Model, subjectIri: String): Option[String] =
+    firstObjectOf(model, model.createResource(subjectIri), kb + "hasPermissions").map(_.asLiteral().getLexicalForm)
+
+  // The value node is the single object of (resource, property); read its hasPermissions. The single-create path
+  // mints a fresh value IRI, so the value is reached through its owning resource, not by a fixed IRI.
+  private def valuePermissionsOf(model: Model, resourceIri: String, propertyUri: String): Option[String] =
+    firstObjectOf(model, model.createResource(resourceIri), propertyUri).collect {
+      case n if n.isResource => n.asResource
+    }
+      .flatMap(v => firstObjectOf(model, v, kb + "hasPermissions"))
       .map(_.asLiteral().getLexicalForm)
 
   // The standoff-link LinkValue reifies one (resource, target) pair. Find it by its rdf:subject/object,

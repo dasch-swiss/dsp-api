@@ -12,9 +12,6 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries
-import org.eclipse.rdf4j.sparqlbuilder.rdf.*
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -25,15 +22,15 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.QueryBuilderHelper
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
 trait ProjectExportService {
@@ -108,8 +105,7 @@ private object TriGCombiner {
 final class ProjectExportServiceLive(
   projectService: KnoraProjectService,
   triplestore: TriplestoreService,
-) extends ProjectExportService
-    with QueryBuilderHelper {
+) extends ProjectExportService {
 
   private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / s"${project.shortcode}.trig"
 
@@ -151,38 +147,16 @@ final class ProjectExportServiceLive(
    * @return A [[NamedGraphTrigFile]] containing the named graph and location of the file.
    */
   private def downloadProjectAdminData(projectId: ProjectIri, targetDir: Path): Task[NamedGraphTrigFile] = {
-    val projectIri                   = Rdf.iri(projectId.value)
-    val (projectPred, projectObj)    = (`var`("projectPred"), `var`("projectObj"))
-    val (user, userPred, userObj)    = (`var`("user"), `var`("userPred"), `var`("userObj"))
-    val (group, groupPred, groupObj) = (`var`("group"), `var`("groupPred"), `var`("groupObj"))
-    val q                            = Queries
-      .CONSTRUCT(
-        projectIri.has(projectPred, projectObj),
-        user.has(userPred, userObj),
-        group.has(groupPred, groupObj),
-      )
-      .where(
-        projectIri
-          .has(projectPred, projectObj)
-          .union(user.has(userPred, userObj).andHas(KA.isInProject, projectIri))
-          .union(group.has(groupPred, groupObj).andHas(KA.belongsToProject, projectIri)),
-      )
-      .prefix(KA.NS)
-
+    val file = NamedGraphTrigFile(adminDataNamedGraph, targetDir)
     triplestore
-      .queryToFile(q, adminDataNamedGraph, NamedGraphTrigFile(adminDataNamedGraph, targetDir).dataFile, TriG)
-      .as(NamedGraphTrigFile(adminDataNamedGraph, targetDir))
+      .queryToFile(ProjectExportQueries.adminData(projectId), adminDataNamedGraph, file.dataFile, TriG)
+      .as(file)
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
-    val graphIri  = permissionsDataNamedGraph
-    val file      = NamedGraphTrigFile(graphIri, tempDir)
-    val (s, p, o) = spo
-    val query     = Queries
-      .CONSTRUCT(s.has(p, o))
-      .prefix(KA.NS)
-      .where(s.has(KA.forProject, toRdfIri(project.id)).andHas(p, o))
-    triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
+    val graphIri = permissionsDataNamedGraph
+    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    triplestore.queryToFile(ProjectExportQueries.permissionData(project.id), graphIri, file.dataFile, TriG).as(file)
   }
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
@@ -191,4 +165,50 @@ final class ProjectExportServiceLive(
 
 object ProjectExportServiceLive {
   val layer = ZLayer.derive[ProjectExportServiceLive]
+}
+
+/** The CONSTRUCT queries backing the admin and permission parts of a project export. */
+private[service] object ProjectExportQueries {
+
+  /**
+   * The admin metadata of a project: the project itself, the users which are members of it,
+   * and the groups which belong to it.
+   */
+  def adminData(projectId: ProjectIri): Construct = {
+    val projectIri = Iri.unsafeFrom(projectId.value)
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |CONSTRUCT {
+               |  $projectIri ?projectPred ?projectObj .
+               |  ?user ?userPred ?userObj .
+               |  ?group ?groupPred ?groupObj .
+               |}
+               |WHERE {
+               |  ${Fragments.union(
+          sparql"$projectIri ?projectPred ?projectObj .",
+          sparql"""|?user ?userPred ?userObj ;
+                             |  knora-admin:isInProject $projectIri .""",
+          sparql"""|?group ?groupPred ?groupObj ;
+                             |  knora-admin:belongsToProject $projectIri .""",
+        )}
+               |}""".render,
+    )
+  }
+
+  /** All permissions which are attached to the given project. */
+  def permissionData(projectId: ProjectIri): Construct = {
+    val projectIri = Iri.unsafeFrom(projectId.value)
+    Construct(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |
+               |CONSTRUCT {
+               |  ?s ?p ?o .
+               |}
+               |WHERE {
+               |  ?s knora-admin:forProject $projectIri ;
+               |    ?p ?o .
+               |}""".render,
+    )
+  }
 }

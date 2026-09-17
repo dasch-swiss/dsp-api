@@ -105,4 +105,4 @@ The Fuseki triplestore emits OTLP through its JVM's OTel agent under **`service_
 ## Conventions
 
 - Do not use "Knora" in human-readable text (titles/descriptions) — repo-wide convention.
-- After editing markdown here, run `just markdownlint` from the repo root.
+- After editing markdown here, run `just check` from the repo root (its markdownlint step is the CI gate).

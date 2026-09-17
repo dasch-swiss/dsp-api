@@ -23,7 +23,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### Services
 
 - `final class ServiceName(val …)` with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
-- **Carve-out**: trait + `*Live` is allowed for repos and other seams that need in-memory test doubles (`KnoraGroupRepo` / `KnoraGroupRepoLive`, `OntologyRepo`, `JwtService`, `Authenticator`). New repo traits ship an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`.
+- **Carve-out**: trait + `*Live` is allowed for repos and other seams that need in-memory test doubles (`KnoraGroupRepo` / `KnoraGroupRepoLive`, `OntologyRepo`, `JwtService`, `Authenticator`). New repo traits ship an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`. It is also allowed for cross-context **ports** (`docs/adr/0011-cross-context-access-ports-and-adapters.md`): the consumer declares the trait in its `ports` package, the provider implements `<Port>Live` next to its data, `LayersLive` wires it, and a `<Port>InMemory` double lives in the consumer's tests.
 
 ### API layer — three-tier split (mandatory)
 
@@ -179,4 +179,5 @@ See `.github/pull_request_template.md`. For the recommended section structure (M
 - `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
 - `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
 - `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
-- `docs/05-internals/design/adr/` — architectural decisions
+- `docs/adr/0011-cross-context-access-ports-and-adapters.md` - how contexts may depend on each other (ports, adapters, graph sovereignty)
+- `docs/adr/` — architectural decisions

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.ontology.repo
 
+import org.apache.jena.update.UpdateFactory
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
@@ -27,6 +28,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CreateClassQuerySpec extends ZIOSpecDefault {
+
+  private def canonical(query: String): String = {
+    val update = UpdateFactory.create(query)
+    update.getPrefixMapping.clearNsPrefixMap()
+    update.toString
+  }
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -81,30 +88,32 @@ class CreateClassQuerySpec extends ZIOSpecDefault {
         .build(testClassDefWithCardinalities, testLastModificationDate)
         .map((actual: Update) =>
           assertTrue(
-            actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                               |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
-                               |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                               |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |anything:TestClass rdfs:subClassOf knora-base:Resource .
-                               |anything:TestClass rdfs:label "Test \"Class\""@en .
-                               |anything:TestClass rdfs:comment "A test \"class\""@en .
-                               |anything:TestClass rdfs:subClassOf _:node1 .
-                               |_:node1 a owl:Restriction .
-                               |_:node1 owl:onProperty anything:hasText .
-                               |_:node1 owl:cardinality "1"^^xsd:nonNegativeInteger .
-                               |_:node1 salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger .
-                               |anything:TestClass rdfs:subClassOf _:node2 .
-                               |_:node2 a owl:Restriction .
-                               |_:node2 owl:onProperty anything:hasInteger .
-                               |_:node2 owl:maxCardinality "1"^^xsd:nonNegativeInteger . } }
-                               |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                               |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
-                               |FILTER NOT EXISTS { anything:TestClass a ?existingClassType . } }""".stripMargin,
+            canonical(actual.sparql) == canonical(
+              """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                |anything:TestClass rdfs:subClassOf knora-base:Resource .
+                |anything:TestClass rdfs:label "Test \"Class\""@en .
+                |anything:TestClass rdfs:comment "A test \"class\""@en .
+                |anything:TestClass rdfs:subClassOf _:node1 .
+                |_:node1 a owl:Restriction .
+                |_:node1 owl:onProperty anything:hasText .
+                |_:node1 owl:cardinality "1"^^xsd:nonNegativeInteger .
+                |_:node1 salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger .
+                |anything:TestClass rdfs:subClassOf _:node2 .
+                |_:node2 a owl:Restriction .
+                |_:node2 owl:onProperty anything:hasInteger .
+                |_:node2 owl:maxCardinality "1"^^xsd:nonNegativeInteger . } }
+                |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
+                |FILTER NOT EXISTS { anything:TestClass a ?existingClassType . } }""".stripMargin,
+            ),
           ),
         )
     },
@@ -113,20 +122,22 @@ class CreateClassQuerySpec extends ZIOSpecDefault {
         .build(testClassDefWithoutCardinalities, testLastModificationDate)
         .map((actual: Update) =>
           assertTrue(
-            actual.sparql == """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                               |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                               |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                               |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                               |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                               |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
-                               |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
-                               |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
-                               |anything:TestClass rdfs:subClassOf knora-base:Resource .
-                               |anything:TestClass rdfs:label "Simple Test Class"@en . } }
-                               |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
-                               |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
-                               |FILTER NOT EXISTS { anything:TestClass a ?existingClassType . } }""".stripMargin,
+            canonical(actual.sparql) == canonical(
+              """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+                |DELETE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . } }
+                |INSERT { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> knora-base:lastModificationDate "1970-01-01T00:00:00Z"^^xsd:dateTime .
+                |anything:TestClass rdfs:subClassOf knora-base:Resource .
+                |anything:TestClass rdfs:label "Simple Test Class"@en . } }
+                |WHERE { GRAPH <http://www.knora.org/ontology/0001/anything> { <http://www.knora.org/ontology/0001/anything> a owl:Ontology ;
+                |    knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime . }
+                |FILTER NOT EXISTS { anything:TestClass a ?existingClassType . } }""".stripMargin,
+            ),
           ),
         )
     },

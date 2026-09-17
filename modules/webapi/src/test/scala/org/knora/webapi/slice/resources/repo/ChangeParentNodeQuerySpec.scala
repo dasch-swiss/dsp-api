@@ -15,7 +15,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.admin.domain.model.RestrictedView
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ChangeParentNodeQuerySpec extends ZIOSpecDefault {
@@ -35,7 +34,7 @@ class ChangeParentNodeQuerySpec extends ZIOSpecDefault {
     List.empty,
     None,
     SelfJoin.CannotJoin,
-    RestrictedView.default,
+    None,
     Set.empty,
     Set.empty,
   )
@@ -72,7 +71,7 @@ class ChangeParentNodeQuerySpec extends ZIOSpecDefault {
         List.empty,
         None,
         SelfJoin.CannotJoin,
-        RestrictedView.default,
+        None,
         Set.empty,
         Set.empty,
       )
