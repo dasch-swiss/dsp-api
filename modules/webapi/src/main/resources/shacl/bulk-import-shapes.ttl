@@ -1,0 +1,21 @@
+# These shapes are an addition to the data-shapes.ttl that are only relevant for the bulk import validation
+
+# Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
+# by ProjectMigrationImportShaclValidator before validation.
+# - urn:placeholder:userIri  →  the IRI of the user the data is being imported on behalf of
+
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+knora-base:Resource-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:attachedToProject ;
+    sh:hasValue <urn:placeholder:userIri> ;
+    sh:message "Resource instance must have knora-base:attachedToProject equal to <urn:placeholder:userIri>"
+  ] .
