@@ -216,16 +216,14 @@ knora-base:Segment-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:relatesTo ;
-    sh:minCount 1 ;
     sh:class knora-base:Resource ;
-    sh:message "Instance of Segment requires at least one knora-base:relatesTo to a Resource that exists in this graph"
+    sh:message "Segment instance may have any number of knora-base:relatesTo to a Resource that exists in this graph"
   ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:relatesToValue ;
-    sh:minCount 1 ;
     sh:class knora-base:LinkValue ;
-    sh:message "Instance of Segment requires at least one knora-base:relatesToValue of type knora-base:LinkValue"
+    sh:message "Segment instance may have any number of knora-base:relatesToValue of type knora-base:LinkValue"
   ] .
 
 knora-base:AudioSegment-Shape
@@ -370,7 +368,7 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasPermissions ;
-    sh:maxCount 1 ;
+    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "Value instance must have one knora-base:hasPermissions of type xsd:string" ;
@@ -710,7 +708,7 @@ knora-base:FileValue-Shape
   ] ;
   sh:property [
     a sh:PropertyShape ;
-    sh:path knora-base:hasCopyrightHolder ;
+    sh:path knora-base:hasAuthorship ;
     sh:datatype xsd:string ;
     sh:message "FileValue instance can have any number of knora-base:hasAuthorship of type xsd:string"
   ] ;
@@ -832,9 +830,11 @@ knora-base:AttachedToUserNotBuiltIn-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:or (
+    # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
+    # The same guard is duplicated in bulk-import-shapes.ttl Value-Shape — keep both in sync.
     [
-      sh:path rdf:predicate ;
-      sh:hasValue knora-base:hasStandoffLinkTo ;
+      sh:class knora-base:LinkValue ;
+      sh:property [ sh:path rdf:predicate ; sh:hasValue knora-base:hasStandoffLinkTo ] ;
     ]
     [
       sh:path knora-base:attachedToUser ;

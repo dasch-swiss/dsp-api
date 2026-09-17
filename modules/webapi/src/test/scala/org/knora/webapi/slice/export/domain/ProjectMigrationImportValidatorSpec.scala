@@ -90,6 +90,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
        |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
        |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
        |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+       |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
        |<$node> <${KnoraBase}valueHasString> "file"^^<$XsdString> <$DataGraph> .
        |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
        |<$node> <${KnoraBase}internalFilename> "file.bin"^^<$XsdString> <$DataGraph> .
@@ -384,6 +385,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
            |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
            |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
            |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
            |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
            |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
            |""".stripMargin
@@ -419,6 +421,18 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
             s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects value missing knora-base:hasPermissions") {
+          val nq = validResourceNq +
+            s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
@@ -461,6 +475,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
            |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
            |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
            |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
            |<$LinkVal1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
            |<$LinkVal1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
            |<$LinkVal1> <$RdfSubject> <$Resource1> <$DataGraph> .
@@ -560,6 +575,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasGeometry> "geometry-json"^^<$XsdString> <$DataGraph> .
@@ -574,6 +590,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |""".stripMargin
@@ -609,6 +626,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasGeonameCode> "2661604"^^<$XsdString> <$DataGraph> .
@@ -623,6 +641,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |""".stripMargin
@@ -659,6 +678,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasListNode> <$ListNode> <$DataGraph> .
@@ -673,6 +693,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |""".stripMargin
@@ -709,6 +730,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasLanguage> "en"^^<$XsdString> <$DataGraph> .
@@ -726,6 +748,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
                |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
                |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasLanguage> "en"^^<$XsdString> <$DataGraph> .
@@ -764,6 +787,36 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
               FileNode,
             ) +
               fileValueNq(FileNode, s"${KnoraBase}AudioFileValue")
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("accepts a document representation whose file value has a string hasAuthorship") {
+          val nq =
+            representationNq(
+              Resource,
+              s"${KnoraBase}DocumentRepresentation",
+              s"${KnoraBase}hasDocumentFileValue",
+              FileNode,
+            ) +
+              fileValueNq(FileNode, s"${KnoraBase}DocumentFileValue") +
+              s"""<$FileNode> <${KnoraBase}hasAuthorship> "Jane Doe"^^<$XsdString> <$DataGraph> .
+                 |""".stripMargin
+          ZIO.scoped {
+            validate(validOntologyNq, nq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects a document representation whose file value has a non-string hasAuthorship") {
+          val nq =
+            representationNq(
+              Resource,
+              s"${KnoraBase}DocumentRepresentation",
+              s"${KnoraBase}hasDocumentFileValue",
+              FileNode,
+            ) +
+              fileValueNq(FileNode, s"${KnoraBase}DocumentFileValue") +
+              s"""<$FileNode> <${KnoraBase}hasAuthorship> "42"^^<$XsdInteger> <$DataGraph> .
+                 |""".stripMargin
           ZIO.scoped {
             validate(validOntologyNq, nq).map(result => assertTrue(result.isLeft))
           }
@@ -946,6 +999,48 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
           }
         },
+        test("rejects a non-LinkValue that spoofs the standoff-link exemption to attach to SystemUser") {
+          val adminWithSystemUser =
+            s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |<${KnoraAdmin}SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |""".stripMargin
+          val SpoofValue = "http://rdfh.ch/9999/thing001/values/spoof001"
+          val nq         = validResourceNq +
+            s"""<$SpoofValue> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$SpoofValue> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$SpoofValue> <${KnoraBase}attachedToUser> <${KnoraAdmin}SystemUser> <$DataGraph> .
+               |<$SpoofValue> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$SpoofValue> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$SpoofValue> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+               |<$SpoofValue> <$RdfPredicate> <${KnoraBase}hasStandoffLinkTo> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq, adminWithSystemUser).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("accepts a genuine system standoff-link LinkValue attached to SystemUser") {
+          val adminWithSystemUser =
+            s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |<${KnoraAdmin}SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |""".stripMargin
+          val LinkVal = "http://rdfh.ch/9999/thing001/values/link001"
+          val nq      = validResourceNq +
+            s"""<$LinkVal> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}attachedToUser> <${KnoraAdmin}SystemUser> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasString> "$Resource1"^^<$XsdString> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+               |<$LinkVal> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal> <$RdfPredicate> <${KnoraBase}hasStandoffLinkTo> <$DataGraph> .
+               |<$LinkVal> <$RdfObject> <$Resource1> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq, adminWithSystemUser).map(result => assertTrue(result.isRight))
+          }
+        },
       )
     },
     bulkImportShapesSuite,
@@ -992,6 +1087,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
          |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
          |<$Value1> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
          |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
          |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
          |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
          |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}UnformattedText> <$DataGraph> .
@@ -1023,6 +1119,68 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         val nq = resourceNq(OtherUser) + valueNq(OtherUser)
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminBothUsers).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects an UnformattedText value that carries a mapping") {
+        val nq = resourceNq(OnBehalfOf) +
+          s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Value1> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+             |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}UnformattedText> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasMapping> <http://rdfh.ch/standoff/mappings/StandardMapping> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("accepts a FormattedText value with the standard mapping") {
+        val nq = resourceNq(OnBehalfOf) +
+          s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Value1> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+             |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasMapping> <http://rdfh.ch/standoff/mappings/StandardMapping> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects a FormattedText value without the standard mapping") {
+        val nq = resourceNq(OnBehalfOf) +
+          s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Value1> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+             |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("rejects a CustomFormattedText value on bulk import") {
+        val nq = resourceNq(OnBehalfOf) +
+          s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Value1> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+             |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+             |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}CustomFormattedText> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
         }
       },
     )
