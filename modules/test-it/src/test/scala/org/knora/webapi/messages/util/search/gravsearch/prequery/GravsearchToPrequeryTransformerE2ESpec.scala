@@ -621,6 +621,37 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    }
       |}""".stripMargin
 
+  val queryListNodeAnchor: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |
+      |CONSTRUCT {
+      |  ?letter knora-api:isMainResource true .
+      |  ?letter beol:hasSubject ?subj .
+      |} WHERE {
+      |  ?letter a beol:letter .
+      |  ?letter beol:hasSubject ?subj .
+      |  ?subj knora-api:listValueAsListNode <http://rdfh.ch/lists/0801/logarithmic_curves> .
+      |}
+        """.stripMargin
+
+  val queryLinkTargetAnchor: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |
+      |CONSTRUCT {
+      |  ?letter knora-api:isMainResource true .
+      |  ?letter beol:hasAuthor <http://rdfh.ch/0801/anchor-person> .
+      |} WHERE {
+      |  ?letter a beol:letter .
+      |  ?letter beol:hasAuthor <http://rdfh.ch/0801/anchor-person> .
+      |}
+        """.stripMargin
+
   val queryWithKnoraApiResource: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
       |CONSTRUCT {
@@ -757,6 +788,20 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     test("generate the matchFulltext expansion when the FILTER is inside a UNION block") {
       transformQueryWithInference(queryMatchFulltextInUnion)
         .map(actual => assertGolden(actual.toSparql, "matchFulltextInUnion"))
+    },
+    test("transform a query anchored on a list-node value") {
+      transformQueryWithInference(queryListNodeAnchor)
+        .map(actual =>
+          assertGolden(actual.toSparql, "listNodeAnchor") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "listNodeAnchorShape"),
+        )
+    },
+    test("transform a query anchored on a fixed link target") {
+      transformQueryWithInference(queryLinkTargetAnchor)
+        .map(actual =>
+          assertGolden(actual.toSparql, "linkTargetAnchor") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "linkTargetAnchorShape"),
+        )
     },
     test("not remove rdf:type knora-api:Resource if it's needed") {
       transformQuery(queryWithKnoraApiResource)

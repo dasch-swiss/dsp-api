@@ -1,0 +1,8 @@
+STMT var type iri
+STMT var hasAuthor iri
+STMT var hasAuthorValue var
+STMT var type iri
+STMT var object iri
+FNE
+FNE
+FNE
