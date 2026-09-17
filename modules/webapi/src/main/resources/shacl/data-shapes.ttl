@@ -337,7 +337,7 @@ knora-base:Value-Shape
     sh:maxCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance may have at most one knora-base:hasPermissions of type xsd:string" ;
+    sh:message "Value instance must have one knora-base:hasPermissions of type xsd:string" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -345,7 +345,7 @@ knora-base:Value-Shape
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:boolean ;
-    sh:message "Value instance must have knora-base:isDeleted of type xsd:boolean" ;
+    sh:message "Value instance must have one knora-base:isDeleted of type xsd:boolean" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
