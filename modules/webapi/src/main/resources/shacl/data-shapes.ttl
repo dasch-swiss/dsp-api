@@ -87,8 +87,6 @@ knora-base:Resource-Shape
     dash:coExistsWith knora-base:hasStandoffLinkToValue ;
     sh:message "A knora-base:hasStandoffLinkTo always requires a knora-base:hasStandoffLinkToValue"
   ] .
-  # TODO: add information from edited graphs
-  # TODO: check if it is possible to ensure that this is not used directly
 
 knora-base:Region-Shape
   a sh:NodeShape ;
@@ -382,8 +380,6 @@ knora-base:Value-Shape
     sh:datatype xsd:string ;
     sh:message "Value instance may have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
-  # TODO: add information from edited graphs
-  # TODO: check if it is possible to ensure that this is not used directly
 
 # All values are subclass of Value, so Value-Shape constraints also apply.
 
