@@ -455,7 +455,7 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": {
-                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",phase=\"body\"}[$smoothing])) / sum by (path) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:regex}\",phase=\"body\"}[$smoothing])) / sum by (path) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:regex}\",phase=\"body\"}[$smoothing]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -959,7 +959,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
+                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) / sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -982,7 +982,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
+                        "expr": "sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1005,7 +1005,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
+                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1028,7 +1028,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"4xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
+                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",status=\"4xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1051,7 +1051,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
+                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",status=\"5xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1314,7 +1314,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",phase=\"body\"}[$smoothing]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1398,7 +1398,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__interval])) and on (path) (sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__range])) > 0)",
+                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",status=\"5xx\"}[$__interval])) and on (path) (sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\",status=\"5xx\"}[$__range])) > 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1908,7 +1908,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$smoothing]))",
+                        "expr": "sum by (path) (rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:regex}\"}[$smoothing]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",

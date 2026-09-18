@@ -37,8 +37,13 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 - `environment`, `stack` — from `label_values` on the metric.
 - `Route group` — a coarse, single-select bucket (`Search`, `Resources`, `Admin`, `Export`, …); the
   value is a path regex applied as `path=~"${routegroup}"`.
-- `Route (path)`, `Method` — fine multi-select; the per-route panels (5, 6) layer these on top of the
-  route group.
+- `Route (path)`, `Method` — fine multi-select; the per-route panels (5, 12, 13, 14, 18) layer these on
+  top of the route group. `Route (path)` **must be interpolated as `${path:regex}`, never `${path:pipe}`**:
+  route templates contain regex metacharacters (`/v2/resources/*`, `/v2/ontologies/metadata/*`,
+  `{listIri}`), and the raw pipe join turns `*` into a quantifier — `/v2/resources/*` then matches the
+  route `/v2/resources` and never the route it names. Until this was fixed, the busiest prod route
+  (`/v2/resources/*`, ~130k requests/day) was silently absent from every per-route panel and table
+  whenever the variable was `All`.
 - `Exclude routes` — multi-select of path regexes applied as `path!~"${exclude:pipe}"`. Default
   excludes `/health` + `/version`. Safe when empty: PromQL fully anchors regex matchers, so an empty
   exclude drops only empty-path series, not everything.
