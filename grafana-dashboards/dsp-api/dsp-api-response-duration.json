@@ -1290,7 +1290,7 @@
         "kind": "Panel",
         "spec": {
           "id": 13,
-          "title": "Server time per route ($smoothing)",
+          "title": "Server time per route — busy seconds per second ($smoothing)",
           "description": "Seconds of request processing per second, per route, stacked (= rate of the duration sum). Shows where the API spends its time over time, independent of how fast any single request is: a route that is fast but called constantly can dominate. Same filters as the routes table. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
@@ -1344,7 +1344,7 @@
                       "mode": "normal",
                       "group": "A"
                     },
-                    "axisLabel": "busy seconds / s"
+                    "axisWidth": 90
                   }
                 },
                 "overrides": []
@@ -1357,6 +1357,7 @@
                   ],
                   "displayMode": "table",
                   "placement": "right",
+                  "width": 415,
                   "sortBy": "Mean",
                   "sortDesc": true
                 },
@@ -1964,10 +1965,23 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-12"
+                "name": "panel-13"
               },
               "x": 0,
               "y": 31,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+              },
+              "x": 0,
+              "y": 40,
               "width": 24,
               "height": 12
             }
@@ -1977,24 +1991,11 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-13"
-              },
-              "x": 0,
-              "y": 43,
-              "width": 12,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
                 "name": "panel-14"
               },
-              "x": 12,
-              "y": 43,
-              "width": 12,
+              "x": 0,
+              "y": 52,
+              "width": 24,
               "height": 9
             }
           },
@@ -2006,7 +2007,7 @@
                 "name": "panel-15"
               },
               "x": 0,
-              "y": 52,
+              "y": 61,
               "width": 12,
               "height": 9
             }
@@ -2019,7 +2020,7 @@
                 "name": "panel-16"
               },
               "x": 12,
-              "y": 52,
+              "y": 61,
               "width": 12,
               "height": 9
             }
@@ -2032,7 +2033,7 @@
                 "name": "panel-17"
               },
               "x": 0,
-              "y": 61,
+              "y": 70,
               "width": 24,
               "height": 8
             }
@@ -2045,7 +2046,7 @@
                 "name": "panel-7"
               },
               "x": 0,
-              "y": 69,
+              "y": 78,
               "width": 24,
               "height": 11
             }

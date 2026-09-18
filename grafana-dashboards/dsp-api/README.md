@@ -68,8 +68,8 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 ### Proposed comparison panels
 
 Panels 11–17 were added **directly below** the panels they are meant to replace, so the two can be
-compared on real data before anything is removed: 11 under 4, 12–14 after 5, then the triplestore
-panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
+compared on real data before anything is removed: 11 under 4, 13 under 5, then the routes table 12,
+5xx per route 14, the triplestore panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
 were dropped because they got in the way of that comparison. Decisions so far: the stat tiles 1–3
 took the `path!=""` proposal directly (no side-by-side copies); panels 4 and 5 stay, gained the
 restart marker and were aligned with 11 (see below); the avg-ranked routes table (former panel 6) was
@@ -82,12 +82,14 @@ restart marker and were aligned with 11 (see below); the avg-ranked routes table
 - **Route groups next to the global line (4, 11, 5 — all three kept).** The global average mostly
   tracks traffic mix (see Notes); per-group lines separate "reads got slower" from "searches got
   slower", and per-route lines name the culprit. Panel 11 reuses the Route group variable's regexes as
-  fixed queries and deliberately ignores the Route group filter. The three are stacked and **their
-  plot areas are pixel-aligned** so a feature at one x position is the same moment in all three: same
-  height, a right-hand table legend with a fixed `width: 460` on each (panel 4 had a bottom legend and
-  the other two right legends sized by the longest series name, which shifted the plots), and a fixed
-  y-axis `axisWidth: 90` (log and linear axes otherwise produce different tick-label widths). Keep
-  those three values identical when editing any of the three panels.
+  fixed queries and deliberately ignores the Route group filter. Together with the server-time panel
+  13 the four are stacked and **their plot areas are pixel-aligned** so a feature at one x position is
+  the same moment in all of them: same height, a right-hand table legend with a fixed `width: 415` on
+  each (panel 4 had a bottom legend and the others right legends sized by the longest series name,
+  which shifted the plots), a fixed y-axis `axisWidth: 90` (log and linear axes otherwise produce
+  different tick-label widths), and **no y-axis label** (a rotated label is drawn outside `axisWidth`
+  and shifts the plot; the unit is in the title instead). Keep those values identical when editing any
+  of the four panels.
 - **Total time, not just average (12, 13).** Slowest-average routes are rare exports; the routes that
   consume server time on prod are extended search (+ count), resources reads and ontology
   allentities. Panel 12 adds `Total time` (= `increase(duration_sum)`), `4xx`, `5xx`, sorts by total,
