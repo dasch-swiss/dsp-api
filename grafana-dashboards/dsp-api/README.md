@@ -71,16 +71,23 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 Panels 11–17 were added **directly below** the panels they are meant to replace, so the two can be
 compared on real data before anything is removed: 11 under 4, 12–14 after 5–6, then the triplestore
 panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
-were dropped because they got in the way of that comparison. Panels 4–7 are unchanged; the stat tiles
-1–3 took the `path!=""` proposal directly (accepted, no side-by-side copies). What each proposal fixes:
+were dropped because they got in the way of that comparison. Panels 6–7 are unchanged; the stat tiles
+1–3 took the `path!=""` proposal directly (accepted, no side-by-side copies); panels 4 and 5 stay,
+gained the deploy marker and were aligned with 11 (see below). What each proposal fixes:
 
 - **`path!=""` everywhere (1–3, 11–14).** ~11k requests/day on prod carry an empty `path`: CORS
   `OPTIONS` preflights and `HEAD` probes that never matched an endpoint. They inflate the request-rate
   tile and appear as a blank row in the routes table. (They also leak `tapir_request_active`, which
   climbs monotonically until a restart — do not build an in-flight panel on that gauge.)
-- **Route groups instead of a global line (11).** The global average mostly tracks traffic mix (see
-  Notes); per-group lines separate "reads got slower" from "searches got slower". The panel reuses the
-  Route group variable's regexes as fixed queries and deliberately ignores the Route group filter.
+- **Route groups next to the global line (4, 11, 5 — all three kept).** The global average mostly
+  tracks traffic mix (see Notes); per-group lines separate "reads got slower" from "searches got
+  slower", and per-route lines name the culprit. Panel 11 reuses the Route group variable's regexes as
+  fixed queries and deliberately ignores the Route group filter. The three are stacked and **their
+  plot areas are pixel-aligned** so a feature at one x position is the same moment in all three: same
+  height, a right-hand table legend with a fixed `width: 460` on each (panel 4 had a bottom legend and
+  the other two right legends sized by the longest series name, which shifted the plots), and a fixed
+  y-axis `axisWidth: 90` (log and linear axes otherwise produce different tick-label widths). Keep
+  those three values identical when editing any of the three panels.
 - **Total time, not just average (12, 13).** Slowest-average routes are rare exports; the routes that
   consume server time on prod are extended search (+ count), resources reads and ontology
   allentities. Panel 12 adds `Total time` (= `increase(duration_sum)`), `4xx`, `5xx`, sorts by total,
@@ -107,8 +114,8 @@ were dropped because they got in the way of that comparison. Panels 4–7 are un
   container's series (seen on prod: `asserts_env` appeared) makes old and new series overlap for the
   5-minute staleness window, so a `sum` doubles and then halves and reads as a restart, whereas the
   `min` is unchanged; (2) not `resets()` over a subquery window — adjacent windows never share a
-  sample pair, so a drop straddling two windows is invisible. It is filtered to the proposed
-  time-series panels (11, 13–17) so the original panels render unchanged.
+  sample pair, so a drop straddling two windows is invisible. It is filtered to the duration/latency
+  time-series panels (4, 5, 11, 13–17); the stat tiles and tables carry no markers.
 
 ### Query-shape rationale (don't "simplify" these away)
 
