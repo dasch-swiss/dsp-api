@@ -42,19 +42,18 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
  * `rdfs:subPropertyOf`, is excluded from T2 and ranks T7 regardless of a bound object. A type unit whose
  * object is a single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is
- * unselective-technical: it ranks T7 and may never lead a component. Together with T1 pre-emption and the
- * `rdf:object` deferral described below, this is one of the pass's three eligibility rules: each removes
- * some units from `pickNext` candidacy (or forces one in) rather than merely ranking them. These two
- * classes are listed by name
+ * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by name
  * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
  * whose object is a bare `IriRef` in a built-in ontology (for example `?v a knora-base:TextValue` or
  * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
- * component. A term is treated as bound for the bound-terms-count tie-break not only when it is an
- * `IriRef`/`XsdLiteral` or a variable already in the greedy loop's growing `bound` set, but also when it
- * is a variable with a non-empty attached `VALUES`: `attachValues` emits that `VALUES` immediately before
- * the first pattern referencing the variable, so at evaluation time the term is restricted exactly like a
- * bound IRI, and a statement such as `?a ?p ?b` with a `VALUES` on `?p` must not be out-ranked by a
- * store-wide statement such as `?lv <rdf:object> ?o` on term count alone. When two candidates otherwise
+ * component. Together with T1 pre-emption and the `rdf:object` deferral described below, this is one of the
+ * pass's three eligibility rules: each removes some units from `pickNext` candidacy (or forces one in)
+ * rather than merely ranking them. A term is treated as bound for the bound-terms-count tie-break not only
+ * when it is an `IriRef`/`XsdLiteral` or a variable already in the greedy loop's growing `bound` set, but
+ * also when it is a variable with a non-empty attached `VALUES`: `attachValues` emits that `VALUES`
+ * immediately before the first pattern referencing the variable, so at evaluation time the term is restricted
+ * exactly like a bound IRI, and a statement such as `?a ?p ?b` with a `VALUES` on `?p` must not be out-ranked
+ * by a store-wide statement such as `?lv <rdf:object> ?o` on term count alone. When two candidates otherwise
  * tie, a statement whose predicate is a bound IRI in a project data ontology - or a variable predicate
  * whose attached `VALUES` enumerates only project data ontology IRIs - ranks ahead of one that is not,
  * before falling back to the rendered-text key; this keeps a project-scoped predicate (typically far more

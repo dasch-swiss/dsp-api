@@ -1799,3 +1799,18 @@ The remote stack was force-pushed at 14:15 by another session: both layers were 
 differ. `base_commit` for both layers is therefore now `ded89ed9a` (was `cd88f04b5`), and the round-11 commits were
 moved onto the remote PR2 tip `7ad247bc9` (the rewritten `b3d5c17a2`) before pushing. `origin/main` has since moved
 to `44de1cd49`; the stack was deliberately not rebased onto that.
+
+### Review of round 11
+
+`performance-reviewer` and `scala-zio-reviewer` on `b3d5c17a2..HEAD`: no Critical findings, four Warnings, each put
+to `finding-verifier`.
+
+| Finding | Verdict | Action |
+| --- | --- | --- |
+| The new "three eligibility rules" sentence splits "These two classes" from its antecedent in the Scaladoc | real, low | fixed: sentence moved after the unselective-technical explanation |
+| Measured numbers in a Scaladoc violate the comment convention | not real | the convention bans benchmark dumps, not a sourced number justifying an invariant; the file already does this (DEV-6715), and specs are a sink so the comment cannot link to the journal instead |
+| `isDeferred` ignores a `VALUES`-restricted subject, unlike the rest of the tie-break machinery | not real | `OntologyInferencer` only ever attaches `VALUES` to a type-statement object or a predicate variable, never to a link-value subject, so the shape is unreachable |
+| The bound-IRI `rdf:object` shape is only covered by a unit test, not a stage measurement | not real | the `linkTargetAnchor` golden is byte-identical before and after this round, so its query cannot have regressed; it was re-run on stage anyway (0.48 s, rows identical to the H2 replay) |
+
+One suggestion not taken: pinning an exact order in the degenerate all-`rdf:object` case. That case exists to prove
+totality and determinism under the fallback; its exact order carries no claim worth freezing.
