@@ -817,7 +817,10 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     },
     test("reorder query patterns in where clause with union") {
       transformQueryWithInference(queryToReorderWithUnion)
-        .map(actual => assertGolden(actual.toSparql, "reorderWithUnion"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "reorderWithUnion") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "reorderWithUnionShape"),
+        )
     },
     test("reorder query patterns in where clause with optional") {
       transformQueryWithInference(queryWithOptional)
@@ -825,7 +828,10 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     },
     test("reorder query patterns with minus scope") {
       transformQueryWithInference(queryToReorderWithMinus)
-        .map(actual => assertGolden(actual.toSparql, "reorderWithMinus"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "reorderWithMinus") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "reorderWithMinusShape"),
+        )
     },
     test("reorder a query with a cycle") {
       transformQueryWithInference(queryToReorderWithCycle)

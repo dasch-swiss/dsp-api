@@ -1,0 +1,5 @@
+STMT var hasInteger var
+STMT var valueHasInteger var
+UNION
+FNE
+FNE

@@ -64,7 +64,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * `GravsearchToCountPrequeryTransformerE2ESpec`, which live in `modules/test-it`, not in `modules/webapi`
  * alongside this file: a tier change verified only with `bazel test //modules/webapi:test` looks green while
  * silently changing emitted query order. Regenerate them through the `GOLDEN_REWRITE` switch documented in
- * `docs/development/dsp-api-conventions.md` and review the diff.
+ * `docs/development/dsp-api-conventions.md` and review the diff. `just test-gravsearch-prequery` runs both
+ * halves together.
  */
 object PrequeryPatternOrdering {
 

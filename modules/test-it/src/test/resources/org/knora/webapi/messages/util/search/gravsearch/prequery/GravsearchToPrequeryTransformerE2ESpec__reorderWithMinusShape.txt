@@ -1,0 +1,4 @@
+VALUES (3)
+STMT var type var
+MINUS
+FNE
