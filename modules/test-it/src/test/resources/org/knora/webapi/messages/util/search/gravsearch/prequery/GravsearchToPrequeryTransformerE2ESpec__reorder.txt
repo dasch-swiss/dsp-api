@@ -8,10 +8,10 @@ WHERE {
 ?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
 ?letter ?linkingProp1__hasLinkToValue ?letter__linkingProp1__person1__LinkValue .
 ?letter ?linkingProp2 ?person2 .
-?letter__linkingProp2__person2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?person2 .
-?letter ?linkingProp2__hasLinkToValue ?letter__linkingProp2__person2__LinkValue .
 ?person2 <http://www.knora.org/ontology/0801/beol#hasIAFIdentifier> ?gnd2 .
 ?gnd2 <http://www.knora.org/ontology/knora-base#valueHasString> "(DE-588)118696149"^^<http://www.w3.org/2001/XMLSchema#string> .
+?letter__linkingProp2__person2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?person2 .
+?letter ?linkingProp2__hasLinkToValue ?letter__linkingProp2__person2__LinkValue .
 ?letter__linkingProp1__person1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 ?letter__linkingProp2__person2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 FILTER(((?linkingProp1 = <http://www.knora.org/ontology/0801/beol#hasAuthor>) || (?linkingProp1 = <http://www.knora.org/ontology/0801/beol#hasRecipient>)))

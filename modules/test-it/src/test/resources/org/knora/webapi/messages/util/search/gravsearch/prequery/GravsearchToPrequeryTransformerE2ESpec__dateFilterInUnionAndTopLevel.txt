@@ -1,10 +1,10 @@
 SELECT DISTINCT ?thing
 WHERE {
-?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
 ?thing <http://www.knora.org/ontology/0001/anything#hasDate> ?date .
+?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
 {
-?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
 ?thing <http://www.knora.org/ontology/0001/anything#hasDate> ?date .
+?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
 ?date <http://www.knora.org/ontology/knora-base#valueHasEndJDN> ?date__valueHasEndJDN .
 FILTER((?date__valueHasEndJDN < "2415021"^^<http://www.w3.org/2001/XMLSchema#integer>))
 FILTER NOT EXISTS {
