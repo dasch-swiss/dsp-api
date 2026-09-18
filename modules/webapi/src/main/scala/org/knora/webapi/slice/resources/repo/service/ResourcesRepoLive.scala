@@ -133,7 +133,11 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     userIri: InternalIri,
     projectIri: InternalIri,
   ): Task[Unit] =
-    triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
+    // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+    ZIO
+      .attempt(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
+      .orDie
+      .flatMap(query => triplestore.query(query))
 
   def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] =
     for {
@@ -363,8 +367,7 @@ object ResourcesRepoLive {
       value match
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
-        // Second v2-create write site for knora-base:hasTextValueType, alongside buildFormattedTextValuePatterns.
-        // Both derive the IRI from the shared TextValueType.hasTextValueTypeIri, so the write paths cannot diverge.
+        // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)
@@ -430,9 +433,7 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
-    // Emits knora-base:hasTextValueType for the v2 resource-create path via the shared TextValueType.hasTextValueTypeIri.
-    // The other write paths use the same mapping: InsertValueQueryBuilder.textValueTypeIri (v2 add-value) and
-    // OntologyTransformer.addTextValueType (v3 bulk import). See docs/development/dsp-api-text-value-type-parity.md.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val textValueType = v.textValueType match
         case FormattedTextValueType.StandardMapping           => TextValueType.FormattedText
