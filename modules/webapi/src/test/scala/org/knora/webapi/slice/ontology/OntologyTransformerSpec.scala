@@ -1831,6 +1831,86 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val scalarCanonicalization = suite("Stage 2 — scalar canonicalization")(
+    test("DecimalValue arriving as xsd:integer is re-typed to xsd:decimal, matching the create path") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testDecimal",
+          s"${knoraApi}DecimalValue",
+          s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}integer", "@value": "3" }""",
+        ),
+        expectedStage2SingleValue(
+          "testDecimal",
+          "DecimalValue",
+          """knora-base:valueHasDecimal "3"^^xsd:decimal""",
+          "3",
+        ),
+      )
+    },
+    test("DecimalValue in scientific notation canonicalizes to a plain xsd:decimal, matching the create path") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testDecimal",
+          s"${knoraApi}DecimalValue",
+          s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}decimal", "@value": "1E2" }""",
+        ),
+        expectedStage2SingleValue(
+          "testDecimal",
+          "DecimalValue",
+          """knora-base:valueHasDecimal "100"^^xsd:decimal""",
+          "100",
+        ),
+      )
+    },
+    test("IntervalValue bounds arriving as xsd:integer are re-typed to xsd:decimal, matching the create path") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testInterval",
+          s"${knoraApi}IntervalValue",
+          s""""${knoraApi}intervalValueHasStart": { "@type": "${xsd}integer", "@value": "1" },
+             |    "${knoraApi}intervalValueHasEnd":   { "@type": "${xsd}integer", "@value": "10" }""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testInterval",
+          "IntervalValue",
+          s"""knora-base:valueHasIntervalStart "1"^^xsd:decimal ;
+             |     knora-base:valueHasIntervalEnd   "10"^^xsd:decimal""".stripMargin,
+          "1 - 10",
+        ),
+      )
+    },
+    test("UriValue arriving as xsd:string is re-typed to xsd:anyURI, matching the create path") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testUriValue",
+          s"${knoraApi}UriValue",
+          s""""${knoraApi}uriValueAsUri": { "@type": "${xsd}string", "@value": "https://dasch.swiss" }""",
+        ),
+        expectedStage2SingleValue(
+          "testUriValue",
+          "UriValue",
+          """knora-base:valueHasUri "https://dasch.swiss"^^xsd:anyURI""",
+          "https://dasch.swiss",
+        ),
+      )
+    },
+    test("a malformed DecimalValue literal fails the import with a descriptive error") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testDecimal",
+        s"${knoraApi}DecimalValue",
+        s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}string", "@value": "not-a-number" }""",
+      )
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(
+          exit.isFailure,
+          message.contains("Failed to restructure RDF"),
+          message.contains("cannot be canonicalized"),
+        )
+      }
+    },
+  )
+
   private val dateValueRejections = suite("Stage 2 — DateValue rejection")(
     test("rejects a range whose start is after its end with a descriptive error") {
       val jsonLd = resourceWithValueJsonLd(
@@ -2185,6 +2265,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     regionPreviewStage2,
     geomStage2,
     intervalStage2,
+    scalarCanonicalization,
     dateValueRejections,
     fileValuesStage2,
   ).provide(

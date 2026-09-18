@@ -27,6 +27,7 @@ import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -361,6 +362,8 @@ object ResourcesRepoLive {
       value match
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
+        // Second v2-create write site for knora-base:hasTextValueType, alongside buildFormattedTextValuePatterns.
+        // Keep in agreement with the other write paths. See docs/development/dsp-api-text-value-type-parity.md.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)
@@ -372,7 +375,10 @@ object ResourcesRepoLive {
         case IntegerValueInfo(valueHasInteger) =>
           List(iri(valueIri).has(KB.valueHasInteger, literalOf(valueHasInteger)))
         case DecimalValueInfo(valueHasDecimal) =>
-          List(iri(valueIri).has(KB.valueHasDecimal, literalOfType(valueHasDecimal.toString(), XSD.DECIMAL)))
+          List(
+            iri(valueIri)
+              .has(KB.valueHasDecimal, literalOfType(ValuesValidator.canonicalDecimal(valueHasDecimal), XSD.DECIMAL)),
+          )
         case BooleanValueInfo(valueHasBoolean) =>
           List(iri(valueIri).has(KB.valueHasBoolean, literalOf(valueHasBoolean)))
         case UriValueInfo(valueHasUri) =>
@@ -390,8 +396,14 @@ object ResourcesRepoLive {
         case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
           List(
             iri(valueIri)
-              .has(KB.valueHasIntervalStart, literalOfType(valueHasIntervalStart.toString(), XSD.DECIMAL))
-              .andHas(KB.valueHasIntervalEnd, literalOfType(valueHasIntervalEnd.toString(), XSD.DECIMAL)),
+              .has(
+                KB.valueHasIntervalStart,
+                literalOfType(ValuesValidator.canonicalDecimal(valueHasIntervalStart), XSD.DECIMAL),
+              )
+              .andHas(
+                KB.valueHasIntervalEnd,
+                literalOfType(ValuesValidator.canonicalDecimal(valueHasIntervalEnd), XSD.DECIMAL),
+              ),
           )
         case TimeValueInfo(valueHasTimeStamp) =>
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
@@ -417,6 +429,9 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
+    // Emits knora-base:hasTextValueType for the v2 resource-create path. Two other write paths must stay in agreement:
+    // InsertValueQueryBuilder.textValueTypeIri (v2 add-value) and OntologyTransformer.addTextValueType (v3 bulk import).
+    // See docs/development/dsp-api-text-value-type-parity.md before changing the mapping.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val txtTypeIri = v.textValueType match
         case FormattedTextValueType.StandardMapping  => KB.FormattedText

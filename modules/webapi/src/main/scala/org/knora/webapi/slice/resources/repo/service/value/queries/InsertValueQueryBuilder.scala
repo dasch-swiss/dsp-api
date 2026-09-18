@@ -33,6 +33,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
@@ -237,13 +238,21 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
   ): List[TriplePattern] = {
     import org.knora.webapi.messages.v2.responder.valuemessages.*
 
+    // Scalar datatypes here (integer, decimal, uri, interval bounds, timestamp) are emitted with an explicit
+    // datatype. The v3 bulk-import path re-types the same literals to match this:
+    // OntologyTransformer.canonicalizeScalarLiterals. See docs/development/dsp-api-text-value-type-parity.md.
     value match {
       case textValue: TextValueContentV2 =>
         buildTextValuePatterns(valueIri, textValue)
       case intValue: IntegerValueContentV2 =>
         List(valueIri.has(KB.valueHasInteger, literalOf(intValue.valueHasInteger)))
       case decimalValue: DecimalValueContentV2 =>
-        List(valueIri.has(KB.valueHasDecimal, literalOfType(decimalValue.valueHasDecimal.toString, XSD.DECIMAL)))
+        List(
+          valueIri.has(
+            KB.valueHasDecimal,
+            literalOfType(ValuesValidator.canonicalDecimal(decimalValue.valueHasDecimal), XSD.DECIMAL),
+          ),
+        )
       case booleanValue: BooleanValueContentV2 =>
         List(valueIri.has(KB.valueHasBoolean, literalOf(booleanValue.valueHasBoolean)))
       case uriValue: UriValueContentV2 =>
@@ -261,8 +270,14 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       case intervalValue: IntervalValueContentV2 =>
         List(
           valueIri
-            .has(KB.valueHasIntervalStart, literalOfType(intervalValue.valueHasIntervalStart.toString, XSD.DECIMAL))
-            .andHas(KB.valueHasIntervalEnd, literalOfType(intervalValue.valueHasIntervalEnd.toString, XSD.DECIMAL)),
+            .has(
+              KB.valueHasIntervalStart,
+              literalOfType(ValuesValidator.canonicalDecimal(intervalValue.valueHasIntervalStart), XSD.DECIMAL),
+            )
+            .andHas(
+              KB.valueHasIntervalEnd,
+              literalOfType(ValuesValidator.canonicalDecimal(intervalValue.valueHasIntervalEnd), XSD.DECIMAL),
+            ),
         )
       case timeValue: TimeValueContentV2 =>
         List(valueIri.has(KB.valueHasTimeStamp, literalOfType(timeValue.valueHasTimeStamp.toString, XSD.DATETIME)))
@@ -289,9 +304,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
     // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
     // when the payload is parsed.
-    val textValueTypePattern = textValueTypeIri(textValue.textValueType).toList.map { typeIri =>
-      valueIri.has(KB.hasTextValueType, typeIri)
-    }
+    val textValueTypePattern = List(valueIri.has(KB.hasTextValueType, textValueTypeIri(textValue.textValueType)))
 
     if (textValue.standoff.nonEmpty) {
       val mappingPattern = textValue.mappingIri.map { mappingIri =>
@@ -311,13 +324,15 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
   }
 
   /** The knora-base:hasTextValueType IRI for a text value, mirroring ResourcesRepoLive.buildFormattedTextValuePatterns. */
-  private def textValueTypeIri(textValueType: TextValueType): Option[rdf.Iri] =
+  private def textValueTypeIri(textValueType: TextValueType): rdf.Iri =
     textValueType match {
-      case TextValueType.UnformattedText        => Some(KB.UnformattedText)
-      case TextValueType.FormattedText          => Some(KB.FormattedText)
-      case TextValueType.CustomFormattedText(_) => Some(KB.CustomFormattedText)
-      // Unreachable on this path: TextValueContentV2.getTextValue never parses a payload to UndefinedTextType.
-      case TextValueType.UndefinedTextType => None
+      case TextValueType.UnformattedText        => KB.UnformattedText
+      case TextValueType.FormattedText          => KB.FormattedText
+      case TextValueType.CustomFormattedText(_) => KB.CustomFormattedText
+      // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType. Fail loud if that invariant breaks,
+      // rather than silently omitting knora-base:hasTextValueType and diverging from the other two write paths.
+      case TextValueType.UndefinedTextType =>
+        throw new IllegalArgumentException(s"Cannot persist knora-base:hasTextValueType for $textValueType")
     }
 
   private def standoffAttributeToRdfValue(

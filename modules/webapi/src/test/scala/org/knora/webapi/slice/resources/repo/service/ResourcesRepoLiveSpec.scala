@@ -1120,8 +1120,8 @@ class ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-            |            knora-base:valueHasIntervalStart 0.0 ;
-            |            knora-base:valueHasIntervalEnd 100.0 ;
+            |            knora-base:valueHasIntervalStart "0"^^xsd:decimal ;
+            |            knora-base:valueHasIntervalEnd "100"^^xsd:decimal ;
             |    }
             |}
             |""".stripMargin,
