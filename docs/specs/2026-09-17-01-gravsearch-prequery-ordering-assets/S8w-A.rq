@@ -1,0 +1,24 @@
+SELECT DISTINCT ?mainRes (GROUP_CONCAT(DISTINCT(IF(BOUND(?p), STR(?p), "")); SEPARATOR='') AS ?p__Concat)
+WHERE {
+?mainRes <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0812/ekws#Object> .
+?mainRes <http://www.knora.org/ontology/0812/ekws#hasConcept> ?p .
+?mainRes <http://www.knora.org/ontology/0812/ekws#hasConceptValue> ?lv .
+?lv <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?p .
+?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0812/ekws#Concept> .
+?lv <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+FILTER NOT EXISTS {
+ ?mainRes <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?lv <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?p <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?mainRes
+ORDER BY ASC(?mainRes)
+LIMIT 25

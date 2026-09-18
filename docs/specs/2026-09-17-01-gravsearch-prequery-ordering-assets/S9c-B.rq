@@ -1,0 +1,23 @@
+SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?text), STR(?text), "")); SEPARATOR='') AS ?text__Concat)
+WHERE {
+VALUES ?standoffTag__resTypes__57e240da { <http://www.knora.org/ontology/0801/beol#StandoffMarginalTag> <http://www.knora.org/ontology/standoff#StandoffCiteTag> }
+?standoffTag <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?standoffTag__resTypes__57e240da .
+?standoffTag <http://www.knora.org/ontology/knora-base#standoffTagHasEnd> ?standoffTag__standoffTagHasEnd .
+?standoffTag <http://www.knora.org/ontology/knora-base#standoffTagHasStart> ?standoffTag__standoffTagHasStart .
+?text <http://www.knora.org/ontology/knora-base#valueHasStandoff> ?standoffTag .
+?thing <http://www.knora.org/ontology/0801/beol#hasText> ?text .
+?standoffTag <http://www.knora.org/ontology/knora-base#standoffTagHasStartParent>* ?standoffParagraphTag .
+?standoffParagraphTag <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/standoff#StandoffParagraphTag> .
+FILTER((("0"^^<http://www.w3.org/2001/XMLSchema#integer> <= ?standoffTag__standoffTagHasEnd) && ("1000000"^^<http://www.w3.org/2001/XMLSchema#integer> >= ?standoffTag__standoffTagHasStart)))
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing
+ORDER BY ASC(?thing)
+LIMIT 25
