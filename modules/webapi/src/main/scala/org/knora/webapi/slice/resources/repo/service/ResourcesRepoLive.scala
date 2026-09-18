@@ -30,6 +30,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
@@ -363,11 +364,11 @@ object ResourcesRepoLive {
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
         // Second v2-create write site for knora-base:hasTextValueType, alongside buildFormattedTextValuePatterns.
-        // Keep in agreement with the other write paths. See docs/development/dsp-api-text-value-type-parity.md.
+        // Both derive the IRI from the shared TextValueType.hasTextValueTypeIri, so the write paths cannot diverge.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)
-              .has(KB.hasTextValueType, KB.UnformattedText)
+              .has(KB.hasTextValueType, iri(TextValueType.hasTextValueTypeIri(TextValueType.UnformattedText)))
               .andHasOptional(KB.valueHasLanguage, valueHasLanguage.map(literalOf)),
           )
         case v: FormattedTextValueInfo =>
@@ -429,13 +430,14 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
-    // Emits knora-base:hasTextValueType for the v2 resource-create path. Two other write paths must stay in agreement:
-    // InsertValueQueryBuilder.textValueTypeIri (v2 add-value) and OntologyTransformer.addTextValueType (v3 bulk import).
-    // See docs/development/dsp-api-text-value-type-parity.md before changing the mapping.
+    // Emits knora-base:hasTextValueType for the v2 resource-create path via the shared TextValueType.hasTextValueTypeIri.
+    // The other write paths use the same mapping: InsertValueQueryBuilder.textValueTypeIri (v2 add-value) and
+    // OntologyTransformer.addTextValueType (v3 bulk import). See docs/development/dsp-api-text-value-type-parity.md.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
-      val txtTypeIri = v.textValueType match
-        case FormattedTextValueType.StandardMapping  => KB.FormattedText
-        case FormattedTextValueType.CustomMapping(_) => KB.CustomFormattedText
+      val textValueType = v.textValueType match
+        case FormattedTextValueType.StandardMapping           => TextValueType.FormattedText
+        case FormattedTextValueType.CustomMapping(mappingIri) => TextValueType.CustomFormattedText(mappingIri)
+      val txtTypeIri   = iri(TextValueType.hasTextValueTypeIri(textValueType))
       val valuePattern =
         iri(valueIri)
           .has(KB.valueHasMapping, iri(v.mappingIri.value))
