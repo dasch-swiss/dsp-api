@@ -1065,7 +1065,7 @@
         "spec": {
           "id": 11,
           "title": "Average response duration by route group (auto window)",
-          "description": "One line per route group (same regexes as the Route group filter), range-adaptive rate() window (one plot step, at least 15m: 24h -> 15m, 7d -> ~50m), unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api restarts (deploys).",
+          "description": "One line per route group (same regexes as the Route group filter), range-adaptive rate() window (one plot step of ~40 per range, at least 15m: 24h -> ~36m, 7d -> ~4h), unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api restarts (deploys).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1280,7 +1280,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []
@@ -1720,7 +1720,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []
@@ -1806,7 +1806,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []
@@ -2003,7 +2003,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []
@@ -2157,7 +2157,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []
@@ -2240,7 +2240,7 @@
                 }
               ],
               "queryOptions": {
-                "maxDataPoints": 200,
+                "maxDataPoints": 40,
                 "interval": "15m"
               },
               "transformations": []

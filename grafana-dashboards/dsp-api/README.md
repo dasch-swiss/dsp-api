@@ -88,9 +88,10 @@ each proposal fixes:
   `> 1s`, scoped by `span.environment`/`span.stack`).
 - **Errors per route (12, 14).** Status is a label we already have; only the global tile used it.
 - **Range-adaptive window instead of the smoothing knob; `phase="body"` only.** The new time-series
-  panels use `rate(...[$__interval])` with `maxDataPoints: 200` and a `15m` min interval in the
-  panel's query options. Grafana then sets the window to one plot step: 24h → 15m, 7d → ~50m,
-  30d → ~3.6h. A fixed 15m window was unreadably jagged on a 7-day range, and the smoothing knob
+  panels use `rate(...[$__interval])` with `maxDataPoints: 40` and a `15m` min interval in the
+  panel's query options. Grafana then sets the window to one plot step: 24h → ~36m, 7d → ~4h,
+  30d → ~18h (40 points per range; 200 was still too jagged to read over 7 days). A fixed 15m
+  window was unreadably jagged on a 7-day range, and the smoothing knob
   interacts with every other filter and confuses the legend Max (a longer window averages peaks
   down). Adjacent windows tile the range exactly, so nothing is double-counted or skipped. Per route
   the `headers`→`body` difference is < 0.1 ms everywhere, so the phase split carries no information.
