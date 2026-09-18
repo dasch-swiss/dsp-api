@@ -1064,8 +1064,8 @@
         "kind": "Panel",
         "spec": {
           "id": 11,
-          "title": "Average response duration by route group (auto window)",
-          "description": "One line per route group (same regexes as the Route group filter), range-adaptive rate() window (one plot step of ~40 per range, at least 15m: 24h -> ~36m, 7d -> ~4h), unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api restarts (deploys).",
+          "title": "Average response duration by route group (15m)",
+          "description": "One line per route group (same regexes as the Route group filter), fixed 15m rate() window, unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api restarts (deploys).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1085,7 +1085,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1108,7 +1108,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1131,7 +1131,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1154,7 +1154,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1177,7 +1177,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1200,7 +1200,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1223,7 +1223,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1246,7 +1246,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1269,7 +1269,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1279,10 +1279,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
@@ -1688,7 +1685,7 @@
         "kind": "Panel",
         "spec": {
           "id": 13,
-          "title": "Server time per route (auto window)",
+          "title": "Server time per route (15m)",
           "description": "Seconds of request processing per second, per route, stacked (= rate of the duration sum). Shows where the API spends its time over time, independent of how fast any single request is: a route that is fast but called constantly can dominate. Same filters as the routes table. Purple markers are dsp-api restarts (deploys).",
           "links": [],
           "data": {
@@ -1709,7 +1706,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__interval]))",
+                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1719,10 +1716,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
@@ -1774,8 +1768,8 @@
         "kind": "Panel",
         "spec": {
           "id": 14,
-          "title": "5xx responses per route (auto window count)",
-          "description": "Number of 5xx responses per route per plot step (at least 15m); only non-zero windows are drawn, so an empty panel means no server errors in range. Complements the global 5xx-rate stat, which cannot tell you which endpoint failed. Same filters as the routes table.",
+          "title": "5xx responses per route (15m count)",
+          "description": "Number of 5xx responses per route in each 15m window; only non-zero windows are drawn, so an empty panel means no server errors in range. Complements the global 5xx-rate stat, which cannot tell you which endpoint failed. Same filters as the routes table.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1795,7 +1789,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__interval])) > 0",
+                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[15m])) > 0",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1805,10 +1799,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
@@ -1856,7 +1847,7 @@
         "kind": "Panel",
         "spec": {
           "id": 15,
-          "title": "Triplestore round-trip p50 / p95 / p99 by kind (auto window)",
+          "title": "Triplestore round-trip p50 / p95 / p99 by kind (15m)",
           "description": "Latency of the API's own SPARQL round trips to Fuseki (fuseki_request_duration, measured in dsp-api), split into Gravsearch and everything else. This is the only real percentile available today: the histogram buckets are decades (10 ms, 100 ms, 1 s, 10 s, ...), so the quantile is a coarse within-decade interpolation. Read it as \"is the slowdown Fuseki or the API\", not as a precise number. Scoped by environment/stack only. Purple markers are dsp-api restarts (deploys).",
           "links": [],
           "data": {
@@ -1877,7 +1868,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.5, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.5, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1900,7 +1891,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.95, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.95, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1923,7 +1914,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.99, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.99, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1946,7 +1937,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.5, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.5, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1969,7 +1960,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.95, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.95, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1992,7 +1983,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "histogram_quantile(0.99, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[$__interval])))",
+                        "expr": "histogram_quantile(0.99, sum by (le) (rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2002,10 +1993,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
@@ -2056,7 +2044,7 @@
         "kind": "Panel",
         "spec": {
           "id": 16,
-          "title": "Share of triplestore round trips slower than 100 ms / 1 s (auto window)",
+          "title": "Share of triplestore round trips slower than 100 ms / 1 s (15m)",
           "description": "Fraction of SPARQL round trips above a fixed threshold, per kind. Exact (bucket boundaries at 100 ms and 1 s), unlike the interpolated quantiles, and independent of traffic mix, so a step change here after a deploy is a real regression. Scoped by environment/stack only. Purple markers are dsp-api restarts (deploys).",
           "links": [],
           "data": {
@@ -2077,7 +2065,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"1000.0\"}[$__interval])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"+Inf\"}[$__interval])))",
+                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"1000.0\"}[15m])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"+Inf\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2100,7 +2088,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"1000.0\"}[$__interval])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"+Inf\"}[$__interval])))",
+                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"1000.0\"}[15m])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"+Inf\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2123,7 +2111,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"100.0\"}[$__interval])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"+Inf\"}[$__interval])))",
+                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"100.0\"}[15m])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"true\",le=\"+Inf\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2146,7 +2134,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"100.0\"}[$__interval])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"+Inf\"}[$__interval])))",
+                        "expr": "1 - (sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"100.0\"}[15m])) / sum(rate(fuseki_request_duration_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",isGravsearch=\"false\",le=\"+Inf\"}[15m])))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2156,10 +2144,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
@@ -2208,7 +2193,7 @@
         "kind": "Panel",
         "spec": {
           "id": 17,
-          "title": "Triplestore round trips/s by query type (auto window)",
+          "title": "Triplestore round trips/s by query type (15m)",
           "description": "Throughput of SPARQL round trips from dsp-api to Fuseki, by SPARQL form and by the Gravsearch / maintenance flags, stacked. On prod this is dominated by non-search CONSTRUCT queries (resource reads). Scoped by environment/stack only.",
           "links": [],
           "data": {
@@ -2229,7 +2214,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (type, isGravsearch, isMaintenance) (rate(fuseki_request_duration_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}[$__interval]))",
+                        "expr": "sum by (type, isGravsearch, isMaintenance) (rate(fuseki_request_duration_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}[15m]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -2239,10 +2224,7 @@
                   }
                 }
               ],
-              "queryOptions": {
-                "maxDataPoints": 40,
-                "interval": "15m"
-              },
+              "queryOptions": {},
               "transformations": []
             }
           },
