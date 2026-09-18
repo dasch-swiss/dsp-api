@@ -340,8 +340,8 @@ single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is *unsel
 and may never lead a component, because it restricts nothing (it matches essentially the whole store). This
 ban is deliberately by name, not by namespace: several other `knora-base` classes (`Region`, `Annotation`,
 `StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead. Together
-with T1 pre-emption and the `rdf:object` deferral (below), this is one of the pass's three eligibility rules -
-find all three by searching for "eligibility rule".
+with T1 pre-emption, the `rdf:object` deferral, and the type-before-path rule (both below), this is one of the
+pass's four eligibility rules - find all four by searching for "eligibility rule".
 
 Ties within a tier are broken, in order, by: more bound terms first (IRIs, literals, and variables already in
 the bound set); then a statement whose predicate is in a project data ontology, ahead of one whose predicate
@@ -359,7 +359,9 @@ Within one block, the pass emits units one at a time. At each step:
 1. If any remaining candidate is T1 (Lucene), it leads, regardless of connectivity to what is already bound.
    This pre-empts every other rule.
 2. Otherwise, prefer a non-type candidate connected to a variable already bound by an emitted unit in this
-   block.
+   block - except that a further eligibility rule excludes a property-path statement from this step while a
+   candidate `rdf:type` unit whose subject is already bound also exists; that type unit is emitted first (see
+   the type-before-path rule, below).
 3. Otherwise, prefer a type candidate connected to what is already bound — so a type unit is emitted after the
    connected non-type statements of the same component, not before them.
 4. Otherwise (nothing remaining is connected to what is bound), a new component is started: pick the best
@@ -441,7 +443,7 @@ rows it carries forward on a working hypothesis (do not read the table as wholly
 | T4 | Project-class type | measured above plain statements and above project (S1, S8); exclusion of built-in vocabularies other than `knora-base` is measured by S9 (166x) |
 | T5 | Enumerating technical type | measured above project (S2, S2big); T4-versus-T5 is hypothesis (no case contains both) |
 | T6 | `attachedToProject` | measured below T2, T4, T5 (S1, S2, S2big, S6); T6-above-T7 is hypothesis |
-| T7 | Plain | the tier is the residue; the path sub-rule is unmeasured |
+| T7 | Plain | the tier is the residue; the type-before-path eligibility rule that reorders property-path statements against a connected type unit is measured (see below), the rest of the path sub-ordering is not |
 
 The one shape the stage replay found ordered worse than the previous topological sort - two link hops whose
 predicates are variables restricted only by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`),
@@ -451,6 +453,27 @@ emitting it while `?lv` is unbound starts the join from every link value pointin
 until its subject is bound takes this shape from 6.98 s to 0.66 s on stage (identical rows, 5 interleaved runs
 each), about 8x faster than the pre-DEV-7287 order as well. A FILTER-to-`VALUES` rewrite of the same query was
 measured too and is harmful (53 s), so it was not adopted.
+
+A later stage replay found the reverse problem inside `ruleA`: a standoff query
+(`?letter a beol:letter . ?letter beol:hasText ?text . ?text knora-api:textValueHasStandoff ?tag . ?tag a
+standoff:StandoffItalicTag . ?tag knora-api:standoffTagHasStartAncestor ?para . ?para a
+standoff:StandoffParagraphTag`) regressed from 1.5 s to 4.0 s after the DEV-7287 stack merged, because the
+emitted prequery put the `standoffTagHasStartAncestor` path ahead of the type check on its own subject
+(`?tag a standoff:StandoffItalicTag`): Fuseki walked the ancestors of every standoff tag in every letter before
+narrowing to italic tags. The fix is the type-before-path eligibility rule: within `ruleA`, a property-path
+statement is not a candidate while a candidate `rdf:type` unit whose subject is already bound exists, so that
+type unit is emitted first. Per Fact 3 of `docs/development/dsp-api-fuseki-query-execution.md`, a `*`/`+`
+property path fans out from every binding of its anchored end, whereas a type check on an already-bound
+subject costs one index lookup per binding and shrinks the binding set before the path runs - so the cheap,
+selective check belongs first. Measured on stage (dsp-cli, 5 interleaved runs, 1344 rows in both layouts): 3.71
+s with the ancestor path emitted ahead of the type check, 1.20 s with the type check moved directly before the
+path, about 3x. A confirmation run of 3 interleaved pairs on 2026-09-18 gave 3.45-3.50 s versus 1.01-1.03 s,
+same row count. This is deliberately not generalised to "type units before all connected non-type units" -
+that broader rule is unmeasured and would reorder many other golden files; it fires only against property-path
+statements, and only inside `ruleA`. A property-path statement whose bound end is an `IriRef` (the list-node
+anchor shape) is unaffected: T2 already ranks it ahead of the type unit as a component anchor, before `ruleA`
+is ever reached. Regenerating both golden corpora after this change produced no golden diff at all, so the
+rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden file.
 
 ## The `matchFulltext` Function Expansion
 

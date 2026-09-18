@@ -1832,3 +1832,81 @@ Left for the session to decide: round 11 now needs its own follow-up PR off `mai
 the orchestrator's call). Also note that the fast-forward push in this round recreated the deleted remote branch
 `feature/dev-7287-gravsearch-prequery-emits-patterns-in-dependency-order-not` with the pre-squash history plus the
 round-11 commits; it has no PR and should be deleted once the follow-up branch is pushed.
+
+## Round 12: type check before a connected property path
+
+Base: `d5baae162` on `feature/dev-7287-rdf-object-waits-for-its-link-value` (draft PR 4354, off `main`).
+This round implements the second eligibility refinement the dev AFTER timing surfaced once the stack had
+merged.
+
+### The regression
+
+One standoff query got slower, not faster, after the stack landed (1.5 s -> 4.0 s on dev):
+
+```text
+?letter a beol:letter .
+?letter beol:hasText ?text .
+?text knora-api:textValueHasStandoff ?tag .
+?tag a standoff:StandoffItalicTag .
+?tag knora-api:standoffTagHasStartAncestor ?para .
+?para a standoff:StandoffParagraphTag
+```
+
+The emitted prequery (read off the `gravsearch.prequery` trace event) led with `?letter a beol:letter` (T4),
+then the `VALUES` + `?letter ?p ?text` hop, then `?text valueHasStandoff ?tag`, then the
+`standoffTagHasStartParent*` path, then the two type units. Cause: the connected step (`ruleA`) takes every
+connected non-type unit before any connected type unit, so the cheap `?tag a StandoffItalicTag` check landed
+*after* the ancestor path and Fuseki walked the ancestors of every standoff tag in every letter before
+filtering to italic tags.
+
+### The rule
+
+A property-path statement is not a candidate in the connected step while a candidate type unit whose subject
+variable is already bound exists; that type unit is emitted first. Rationale: per Fact 3 a `*`/`+` path fans
+out from every binding of its anchored end, while a type check on a bound subject costs one index lookup per
+binding and shrinks the binding set before the path runs.
+
+Deliberately narrow. It was **not** generalised to "type units before all connected non-type units" (that
+broader rule is unmeasured and would move many goldens); it fires only against property-path statements and
+only inside `ruleA`. A path whose bound end is an `IriRef` still leads its component as a T2 anchor (the
+list-node anchor shape, S4), because T2 selection happens before `ruleA` is ever reached. The T1 pre-emption,
+the unselective-technical ban and the round-11 `rdf:object` deferral are untouched.
+
+Implementation: two new `UnitKey` fields (`isPath`, `typeSubject`) and a `typeCheckPending` predicate that
+`ruleA` filters on. Totality is preserved for free: a type unit whose subject is bound is itself connected, so
+whenever the exclusion can empty `ruleA`, `ruleB` is non-empty. `isTypeUnit` was collapsed onto the new
+`typeUnitSubject` helper so the `rdf:type`-with-variable-subject test has a single source of truth.
+
+Spec: `PrequeryPatternOrderingSpec` gains the standoff essence (exact order, plus an assertion that the italic
+type unit sits at exactly `path index - 1`) and a permutation-invariance case for it; the fixture is listed in
+`allInputs`. The list-node shape guard the brief asked for is already pinned by the pre-existing test "order
+the list-node anchor shape with the bound-IRI path statement leading", which still passes byte-identically -
+no duplicate was added.
+
+### Golden audit (round 12)
+
+**No golden changed.** A `GOLDEN_REWRITE` run of both `GravsearchToPrequeryTransformerE2ESpec` and
+`GravsearchToCountPrequeryTransformerE2ESpec` left `git status` empty, and the clean rerun
+(`just test-gravsearch-prequery`) is green. In particular `standoffTagHasStartAncestor` did not move: its
+restricting type unit is a `VALUES`-backed T5 unit that already leads the block, so the path is never a
+`ruleA` candidate ahead of it. The five prod `<suffix>Shape` files and `reorder` are unchanged, as required.
+
+Consequence worth flagging: the rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden. No
+query in the golden corpus has the shape (a connected `*` path plus a type unit on its already-bound anchor
+variable). Adding a golden fixture for it would close that gap; that is a plan decision, not made here.
+
+### Stage measurement (round 12, 2026-09-18)
+
+Session numbers, 5 interleaved runs through dsp-cli against stage, 1344 rows in both layouts: shipped order
+3.71 s, type-check-first 1.20 s. Confirmed this round with 3 further interleaved pairs of the same two query
+texts, same harness:
+
+| layout | run 1 | run 2 | run 3 | rows |
+| --- | --- | --- | --- | --- |
+| `standoff-cur.rq` (shipped) | 3.50 s | 3.47 s | 3.45 s | 1344 |
+| `standoff-typefirst.rq` (new) | 1.03 s | 1.01 s | 1.03 s | 1344 |
+
+About 3.4x, identical row counts, and the ordering the pass now produces for that AST is exactly the
+`standoff-typefirst.rq` statement order (pinned as the unit case above). Query texts live in
+`~/Desktop/gravsearch-ordering-measurements/h2-replay/`; the raw CSV of this round's runs is session-local
+scratch and not durable.
