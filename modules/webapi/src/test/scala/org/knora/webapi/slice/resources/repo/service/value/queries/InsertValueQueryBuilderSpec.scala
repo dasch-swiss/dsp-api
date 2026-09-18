@@ -111,6 +111,13 @@ object InsertValueQueryBuilderTestSupport {
         comment = Option.when(withComment)("Test decimal comment"),
       )
 
+    def createDecimalValueScientific: DecimalValueContentV2 =
+      DecimalValueContentV2(
+        ontologySchema = ApiV2Complex,
+        valueHasDecimal = BigDecimal("1E2"),
+        comment = None,
+      )
+
     def createBooleanValue(withComment: Boolean = false): BooleanValueContentV2 =
       BooleanValueContentV2(
         ontologySchema = ApiV2Complex,
@@ -870,6 +877,15 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValue()))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "DecimalValueContentV2_withoutComment")
+        },
+        test("emits a scientific-notation decimal as a plain xsd:decimal") {
+          for {
+            builderQuery <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueScientific))
+          } yield assertTrue(
+            builderQuery.contains("\"100\"^^xsd:decimal"),
+            !builderQuery.contains("\"1E+2\"^^xsd:decimal"),
+          )
         },
       ),
       suite("BooleanValueContentV2")(

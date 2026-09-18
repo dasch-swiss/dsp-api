@@ -1847,6 +1847,21 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         ),
       )
     },
+    test("DecimalValue in scientific notation canonicalizes to a plain xsd:decimal, matching the create path") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testDecimal",
+          s"${knoraApi}DecimalValue",
+          s""""${knoraApi}decimalValueAsDecimal": { "@type": "${xsd}decimal", "@value": "1E2" }""",
+        ),
+        expectedStage2SingleValue(
+          "testDecimal",
+          "DecimalValue",
+          """knora-base:valueHasDecimal "100"^^xsd:decimal""",
+          "100",
+        ),
+      )
+    },
     test("IntervalValue bounds arriving as xsd:integer are re-typed to xsd:decimal, matching the create path") {
       runTransformStage2(
         resourceWithValueJsonLd(

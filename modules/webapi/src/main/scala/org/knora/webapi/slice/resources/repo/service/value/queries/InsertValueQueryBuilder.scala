@@ -33,6 +33,7 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
@@ -246,7 +247,12 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       case intValue: IntegerValueContentV2 =>
         List(valueIri.has(KB.valueHasInteger, literalOf(intValue.valueHasInteger)))
       case decimalValue: DecimalValueContentV2 =>
-        List(valueIri.has(KB.valueHasDecimal, literalOfType(decimalValue.valueHasDecimal.toString, XSD.DECIMAL)))
+        List(
+          valueIri.has(
+            KB.valueHasDecimal,
+            literalOfType(ValuesValidator.canonicalDecimal(decimalValue.valueHasDecimal), XSD.DECIMAL),
+          ),
+        )
       case booleanValue: BooleanValueContentV2 =>
         List(valueIri.has(KB.valueHasBoolean, literalOf(booleanValue.valueHasBoolean)))
       case uriValue: UriValueContentV2 =>
@@ -264,8 +270,14 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       case intervalValue: IntervalValueContentV2 =>
         List(
           valueIri
-            .has(KB.valueHasIntervalStart, literalOfType(intervalValue.valueHasIntervalStart.toString, XSD.DECIMAL))
-            .andHas(KB.valueHasIntervalEnd, literalOfType(intervalValue.valueHasIntervalEnd.toString, XSD.DECIMAL)),
+            .has(
+              KB.valueHasIntervalStart,
+              literalOfType(ValuesValidator.canonicalDecimal(intervalValue.valueHasIntervalStart), XSD.DECIMAL),
+            )
+            .andHas(
+              KB.valueHasIntervalEnd,
+              literalOfType(ValuesValidator.canonicalDecimal(intervalValue.valueHasIntervalEnd), XSD.DECIMAL),
+            ),
         )
       case timeValue: TimeValueContentV2 =>
         List(valueIri.has(KB.valueHasTimeStamp, literalOfType(timeValue.valueHasTimeStamp.toString, XSD.DATETIME)))

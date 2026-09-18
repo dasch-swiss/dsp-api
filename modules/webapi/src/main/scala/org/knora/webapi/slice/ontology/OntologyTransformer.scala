@@ -47,6 +47,7 @@ import org.knora.webapi.messages.Geolocation
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
@@ -487,13 +488,13 @@ final class OntologyTransformer(
       model.createTypedLiteral(Instant.parse(lexical.trim).toString, XSDDatatype.XSDdateTime),
     )
     retypeLiterals(model, KnoraBase.ValueHasDecimal)(lexical =>
-      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
     )
     retypeLiterals(model, KnoraBase.ValueHasIntervalStart)(lexical =>
-      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
     )
     retypeLiterals(model, KnoraBase.ValueHasIntervalEnd)(lexical =>
-      model.createTypedLiteral(BigDecimal(lexical.trim).toString, XSDDatatype.XSDdecimal),
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
     )
     retypeLiterals(model, KnoraBase.ValueHasUri)(lexical => model.createTypedLiteral(lexical, XSDDatatype.XSDanyURI))
   }
