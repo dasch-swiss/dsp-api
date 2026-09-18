@@ -51,14 +51,13 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 
 | Panel | Question | Source |
 | --- | --- | --- |
-| 1 Avg response time | Mean full-request duration over the range | `$__range` |
-| 2 Request rate | Requests/s (excludes monitoring when `/health`,`/version` excluded) | `$__rate_interval` |
-| 3 5xx error rate | Share of 5xx over the range | `$__range` |
+| 1 Avg response time | Mean full-request duration over the range; unmatched requests (`path=""`) excluded | `$__range` |
+| 2 Request rate | Requests/s (excludes monitoring when `/health`,`/version` excluded, and unmatched requests) | `$__rate_interval` |
+| 3 5xx error rate | Share of 5xx over the range; unmatched requests excluded | `$__range` |
 | 4 Avg duration — global | Mean duration over time (deploy-regression line) | `[$smoothing]` |
 | 5 Avg duration by route | Mean duration per route over time | `[$smoothing]` |
 | 6 Routes ranked by avg duration | Slowest routes now + how often they run | `$__range` |
 | 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target + scoped project, + the query | Tempo |
-| 8–10 Stat tiles — excl. unmatched | Panels 1–3 with `path!=""` (drops CORS/HEAD requests that matched no endpoint) | as 1–3 |
 | 11 Avg duration by route group | One line per route group instead of one global average | `[$smoothing]` |
 | 12 Routes ranked by total server time | Where the API spends its time; avg, requests, 4xx, 5xx; path links to Tempo | `$__range` |
 | 13 Server time per route | Stacked `rate(duration_sum)` per route over time | `[$smoothing]` |
@@ -69,16 +68,16 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 
 ### Proposed comparison panels
 
-Panels 8–17 were added **directly below** the panels they are meant to replace, so the two can be
-compared on real data before anything is removed: 8–10 under 1–3, 11 under 4, 12–14 after 5–6, then
-the triplestore panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global",
-"Per route", …) were dropped because they got in the way of that comparison. Nothing in panels 1–7
-was changed. What each proposal fixes:
+Panels 11–17 were added **directly below** the panels they are meant to replace, so the two can be
+compared on real data before anything is removed: 11 under 4, 12–14 after 5–6, then the triplestore
+panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
+were dropped because they got in the way of that comparison. Panels 4–7 are unchanged; the stat tiles
+1–3 took the `path!=""` proposal directly (accepted, no side-by-side copies). What each proposal fixes:
 
-- **`path!=""` everywhere (8–14).** ~11k requests/day on prod carry an empty `path`: CORS `OPTIONS`
-  preflights and `HEAD` probes that never matched an endpoint. They inflate the request-rate tile and
-  appear as a blank row in the routes table. (They also leak `tapir_request_active`, which climbs
-  monotonically until a restart — do not build an in-flight panel on that gauge.)
+- **`path!=""` everywhere (1–3, 11–14).** ~11k requests/day on prod carry an empty `path`: CORS
+  `OPTIONS` preflights and `HEAD` probes that never matched an endpoint. They inflate the request-rate
+  tile and appear as a blank row in the routes table. (They also leak `tapir_request_active`, which
+  climbs monotonically until a restart — do not build an in-flight panel on that gauge.)
 - **Route groups instead of a global line (11).** The global average mostly tracks traffic mix (see
   Notes); per-group lines separate "reads got slower" from "searches got slower". The panel reuses the
   Route group variable's regexes as fixed queries and deliberately ignores the Route group filter.

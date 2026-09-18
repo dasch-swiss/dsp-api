@@ -107,7 +107,7 @@
         "spec": {
           "id": 1,
           "title": "Avg response time (selected range)",
-          "description": "Mean full-request duration (phase=body) across the selected environment/stack/route-group, over the dashboard time range. = rate(sum)/rate(count). Honours the Route group and Exclude routes filters, so monitoring calls (/health, /version) can be kept out of the average.",
+          "description": "Mean full-request duration (phase=body) across the selected environment/stack/route-group, over the dashboard time range. = rate(sum)/rate(count). Honours the Route group and Exclude routes filters, so monitoring calls (/health, /version) can be kept out of the average. Requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are excluded (path!=\"\").",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -127,7 +127,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range]))",
                         "instant": true,
                         "range": false
                       }
@@ -193,7 +193,7 @@
         "spec": {
           "id": 2,
           "title": "Request rate",
-          "description": "Total requests per second across the selected environment/stack, Route group and Exclude routes. Excluding /health and /version here removes monitoring traffic from the rate.",
+          "description": "Total requests per second across the selected environment/stack, Route group and Exclude routes. Excluding /health and /version here removes monitoring traffic from the rate. Requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are excluded (path!=\"\").",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -213,7 +213,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\"}[$__rate_interval]))",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\"}[$__rate_interval]))",
                         "instant": true,
                         "range": false
                       }
@@ -263,7 +263,7 @@
         "spec": {
           "id": 3,
           "title": "5xx error rate (range)",
-          "description": "Share of requests returning a 5xx status across the selected environment/stack, Route group and Exclude routes, over the dashboard time range.",
+          "description": "Share of requests returning a 5xx status across the selected environment/stack, Route group and Exclude routes, over the dashboard time range. Requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are excluded (path!=\"\").",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -283,7 +283,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",status=\"5xx\"}[$__range])) or vector(0)) / sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\"}[$__range]))",
+                        "expr": "(sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",status=\"5xx\"}[$__range])) or vector(0)) / sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\"}[$__range]))",
                         "instant": true,
                         "range": false
                       }
@@ -813,248 +813,6 @@
                     "displayName": "Duration"
                   }
                 ]
-              }
-            }
-          }
-        }
-      },
-      "panel-8": {
-        "kind": "Panel",
-        "spec": {
-          "id": 8,
-          "title": "Avg response time (selected range) — excl. unmatched",
-          "description": "Mean full-request duration (phase=body) across the selected environment/stack/route-group, over the dashboard time range. = rate(sum)/rate(count). Honours the Route group and Exclude routes filters, so monitoring calls (/health, /version) can be kept out of the average. Differs from the panel above only by path!=\"\": requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are dropped here.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range]))",
-                        "instant": true,
-                        "range": false
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "decimals": 1,
-                  "unit": "s",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 0.3
-                      },
-                      {
-                        "color": "red",
-                        "value": 1
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              }
-            }
-          }
-        }
-      },
-      "panel-9": {
-        "kind": "Panel",
-        "spec": {
-          "id": 9,
-          "title": "Request rate — excl. unmatched",
-          "description": "Total requests per second across the selected environment/stack, Route group and Exclude routes. Excluding /health and /version here removes monitoring traffic from the rate. Differs from the panel above only by path!=\"\": requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are dropped here.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\"}[$__rate_interval]))",
-                        "instant": true,
-                        "range": false
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "fixedColor": "blue",
-                    "mode": "fixed"
-                  },
-                  "decimals": 1,
-                  "unit": "reqps"
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              }
-            }
-          }
-        }
-      },
-      "panel-10": {
-        "kind": "Panel",
-        "spec": {
-          "id": 10,
-          "title": "5xx error rate (range) — excl. unmatched",
-          "description": "Share of requests returning a 5xx status across the selected environment/stack, Route group and Exclude routes, over the dashboard time range. Differs from the panel above only by path!=\"\": requests that never matched an endpoint (CORS OPTIONS preflights, HEAD probes; ~11k/day on prod) carry an empty path label and are dropped here.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "(sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",status=\"5xx\"}[$__range])) or vector(0)) / sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\"}[$__range]))",
-                        "instant": true,
-                        "range": false
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "decimals": 2,
-                  "unit": "percentunit",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 0.01
-                      },
-                      {
-                        "color": "red",
-                        "value": 0.05
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
               }
             }
           }
@@ -2320,49 +2078,10 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-8"
-              },
-              "x": 0,
-              "y": 4,
-              "width": 8,
-              "height": 4
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-9"
-              },
-              "x": 8,
-              "y": 4,
-              "width": 8,
-              "height": 4
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-10"
-              },
-              "x": 16,
-              "y": 4,
-              "width": 8,
-              "height": 4
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
                 "name": "panel-4"
               },
               "x": 0,
-              "y": 8,
+              "y": 4,
               "width": 24,
               "height": 8
             }
@@ -2375,7 +2094,7 @@
                 "name": "panel-11"
               },
               "x": 0,
-              "y": 16,
+              "y": 12,
               "width": 24,
               "height": 9
             }
@@ -2388,7 +2107,7 @@
                 "name": "panel-5"
               },
               "x": 0,
-              "y": 25,
+              "y": 21,
               "width": 24,
               "height": 9
             }
@@ -2401,7 +2120,7 @@
                 "name": "panel-6"
               },
               "x": 0,
-              "y": 34,
+              "y": 30,
               "width": 24,
               "height": 11
             }
@@ -2414,7 +2133,7 @@
                 "name": "panel-12"
               },
               "x": 0,
-              "y": 45,
+              "y": 41,
               "width": 24,
               "height": 12
             }
@@ -2427,7 +2146,7 @@
                 "name": "panel-13"
               },
               "x": 0,
-              "y": 57,
+              "y": 53,
               "width": 12,
               "height": 9
             }
@@ -2440,7 +2159,7 @@
                 "name": "panel-14"
               },
               "x": 12,
-              "y": 57,
+              "y": 53,
               "width": 12,
               "height": 9
             }
@@ -2453,7 +2172,7 @@
                 "name": "panel-15"
               },
               "x": 0,
-              "y": 66,
+              "y": 62,
               "width": 12,
               "height": 9
             }
@@ -2466,7 +2185,7 @@
                 "name": "panel-16"
               },
               "x": 12,
-              "y": 66,
+              "y": 62,
               "width": 12,
               "height": 9
             }
@@ -2479,7 +2198,7 @@
                 "name": "panel-17"
               },
               "x": 0,
-              "y": 75,
+              "y": 71,
               "width": 24,
               "height": 8
             }
@@ -2492,7 +2211,7 @@
                 "name": "panel-7"
               },
               "x": 0,
-              "y": 83,
+              "y": 79,
               "width": 24,
               "height": 11
             }
