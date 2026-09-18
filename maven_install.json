@@ -60,8 +60,7 @@
     "org.apache.jena:jena-core": -1163935026,
     "org.apache.jena:jena-text": 1653062492,
     "org.bouncycastle:bcprov-jdk15to18": 1499080404,
-    "org.eclipse.rdf4j:rdf4j-client": -1295725016,
-    "org.eclipse.rdf4j:rdf4j-shacl": -607623210,
+    "org.eclipse.rdf4j:rdf4j-queryparser-sparql": -307740180,
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": 1854673555,
     "org.ehcache:ehcache": -2082176898,
     "org.flywaydb:flyway-core": -2045269608,
@@ -95,13 +94,13 @@
     "com.ethlo.time:itu:jar:sources": 649236868,
     "com.fasterxml.jackson.core:jackson-annotations": -1012223496,
     "com.fasterxml.jackson.core:jackson-annotations:jar:sources": -164405597,
-    "com.fasterxml.jackson.core:jackson-core": -1244959148,
-    "com.fasterxml.jackson.core:jackson-core:jar:sources": -1299553159,
-    "com.fasterxml.jackson.core:jackson-databind": 935939622,
+    "com.fasterxml.jackson.core:jackson-core": 347333998,
+    "com.fasterxml.jackson.core:jackson-core:jar:sources": 1597076141,
+    "com.fasterxml.jackson.core:jackson-databind": 11918459,
     "com.fasterxml.jackson.core:jackson-databind:jar:sources": 572042403,
-    "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": -1143218165,
+    "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": -2020628204,
     "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:sources": 1325780484,
-    "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": 1876932344,
+    "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": -1863412739,
     "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:sources": -212458373,
     "com.github.andrewoma.dexx:collection": 417166690,
     "com.github.andrewoma.dexx:collection:jar:sources": 1070451876,
@@ -148,10 +147,8 @@
     "com.lihaoyi:unroll-annotation_3:jar:sources": -1102142611,
     "com.lihaoyi:unroll-plugin_3": -432682312,
     "com.lihaoyi:unroll-plugin_3:jar:sources": -1267756075,
-    "com.networknt:json-schema-validator": 1275368024,
+    "com.networknt:json-schema-validator": 1814564702,
     "com.networknt:json-schema-validator:jar:sources": 668026887,
-    "com.opencsv:opencsv": -1477024427,
-    "com.opencsv:opencsv:jar:sources": 1148444188,
     "com.softwaremill.magnolia1_3:magnolia_3": -961307842,
     "com.softwaremill.magnolia1_3:magnolia_3:jar:sources": 1803286344,
     "com.softwaremill.quicklens:quicklens_3": 1918781905,
@@ -408,8 +405,6 @@
     "io.opentelemetry:opentelemetry-sdk-trace": 1875083461,
     "io.opentelemetry:opentelemetry-sdk-trace:jar:sources": -1759863381,
     "io.opentelemetry:opentelemetry-sdk:jar:sources": -1992707356,
-    "jakarta.json:jakarta.json-api": 908704280,
-    "jakarta.json:jakarta.json-api:jar:sources": -1634357469,
     "jakarta.xml.bind:jakarta.xml.bind-api": 522960898,
     "jakarta.xml.bind:jakarta.xml.bind-api:jar:sources": -869228526,
     "javax.cache:cache-api": -1155577852,
@@ -430,7 +425,7 @@
     "net.sf.jopt-simple:jopt-simple:jar:sources": 1072431863,
     "net.sf.saxon:Saxon-HE": -872814767,
     "net.sf.saxon:Saxon-HE:jar:sources": -65186164,
-    "no.hasmac:hasmac-json-ld": -1308512191,
+    "no.hasmac:hasmac-json-ld": 2051895860,
     "no.hasmac:hasmac-json-ld:jar:sources": -1463025632,
     "org.apache.commons:commons-collections4": -1078772699,
     "org.apache.commons:commons-collections4:jar:sources": 899985523,
@@ -440,24 +435,14 @@
     "org.apache.commons:commons-csv:jar:sources": 519634321,
     "org.apache.commons:commons-lang3": 1841935436,
     "org.apache.commons:commons-lang3:jar:sources": -982252396,
-    "org.apache.commons:commons-math3": -1383243934,
-    "org.apache.commons:commons-math3:jar:sources": -2132756896,
     "org.apache.commons:commons-text": 869132518,
     "org.apache.commons:commons-text:jar:sources": 400790036,
-    "org.apache.datasketches:datasketches-java": 677350316,
-    "org.apache.datasketches:datasketches-java:jar:sources": -1886696911,
-    "org.apache.httpcomponents.client5:httpclient5": -567393073,
-    "org.apache.httpcomponents.client5:httpclient5:jar:sources": 771689088,
-    "org.apache.httpcomponents.core5:httpcore5": 332900645,
-    "org.apache.httpcomponents.core5:httpcore5-h2": -52989829,
-    "org.apache.httpcomponents.core5:httpcore5-h2:jar:sources": -988235276,
-    "org.apache.httpcomponents.core5:httpcore5:jar:sources": 760286222,
-    "org.apache.httpcomponents:httpclient": -630303486,
-    "org.apache.httpcomponents:httpclient-cache": -2008317688,
-    "org.apache.httpcomponents:httpclient-cache:jar:sources": -2080014866,
-    "org.apache.httpcomponents:httpclient:jar:sources": -779528763,
-    "org.apache.httpcomponents:httpcore": 67453319,
-    "org.apache.httpcomponents:httpcore:jar:sources": 2134002822,
+    "org.apache.httpcomponents.client5:httpclient5": -1814870448,
+    "org.apache.httpcomponents.client5:httpclient5:jar:sources": 919700471,
+    "org.apache.httpcomponents.core5:httpcore5": 1180859703,
+    "org.apache.httpcomponents.core5:httpcore5-h2": -1690067709,
+    "org.apache.httpcomponents.core5:httpcore5-h2:jar:sources": -1194800975,
+    "org.apache.httpcomponents.core5:httpcore5:jar:sources": -258723166,
     "org.apache.jena:jena-arq": 1290768947,
     "org.apache.jena:jena-arq:jar:sources": -1251142382,
     "org.apache.jena:jena-base": 1902499006,
@@ -560,9 +545,6 @@
     "org.eclipse.jetty:jetty-webapp:jar:sources": 39344845,
     "org.eclipse.jetty:jetty-xml": 398291446,
     "org.eclipse.jetty:jetty-xml:jar:sources": -89863859,
-    "org.eclipse.rdf4j:rdf4j-client:pom": -860990527,
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api": -630329933,
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api:jar:sources": 466716394,
     "org.eclipse.rdf4j:rdf4j-common-annotation": -1811242603,
     "org.eclipse.rdf4j:rdf4j-common-annotation:jar:sources": -489875452,
     "org.eclipse.rdf4j:rdf4j-common-exception": 1436599895,
@@ -575,100 +557,32 @@
     "org.eclipse.rdf4j:rdf4j-common-order:jar:sources": 907761824,
     "org.eclipse.rdf4j:rdf4j-common-text": 2076694462,
     "org.eclipse.rdf4j:rdf4j-common-text:jar:sources": 2062097167,
-    "org.eclipse.rdf4j:rdf4j-common-transaction": 334344936,
-    "org.eclipse.rdf4j:rdf4j-common-transaction:jar:sources": -457160617,
     "org.eclipse.rdf4j:rdf4j-common-xml": -1214540242,
     "org.eclipse.rdf4j:rdf4j-common-xml:jar:sources": -699925107,
-    "org.eclipse.rdf4j:rdf4j-http-client": 1915844106,
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5": 1563975750,
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources": -521120107,
-    "org.eclipse.rdf4j:rdf4j-http-client-api": 1962003008,
-    "org.eclipse.rdf4j:rdf4j-http-client-api:jar:sources": 419503318,
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk": 326109254,
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources": 1574853768,
-    "org.eclipse.rdf4j:rdf4j-http-client:jar:sources": -338191604,
-    "org.eclipse.rdf4j:rdf4j-http-protocol": 543388705,
-    "org.eclipse.rdf4j:rdf4j-http-protocol:jar:sources": -904545246,
     "org.eclipse.rdf4j:rdf4j-model": 154459970,
     "org.eclipse.rdf4j:rdf4j-model-api": -583177577,
     "org.eclipse.rdf4j:rdf4j-model-api:jar:sources": -592944005,
     "org.eclipse.rdf4j:rdf4j-model-vocabulary": 650851289,
     "org.eclipse.rdf4j:rdf4j-model-vocabulary:jar:sources": -372187587,
     "org.eclipse.rdf4j:rdf4j-model:jar:sources": -1373930819,
-    "org.eclipse.rdf4j:rdf4j-query": -875231357,
+    "org.eclipse.rdf4j:rdf4j-query": -512569344,
     "org.eclipse.rdf4j:rdf4j-query:jar:sources": -1910719977,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": 484749796,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation:jar:sources": -1117251776,
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-model": 1841351855,
+    "org.eclipse.rdf4j:rdf4j-queryalgebra-model": 478756453,
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model:jar:sources": -1481525054,
-    "org.eclipse.rdf4j:rdf4j-queryparser-api": -1636791123,
+    "org.eclipse.rdf4j:rdf4j-queryparser-api": 1486354169,
     "org.eclipse.rdf4j:rdf4j-queryparser-api:jar:sources": -1961895632,
-    "org.eclipse.rdf4j:rdf4j-queryparser-sparql": -1453467444,
+    "org.eclipse.rdf4j:rdf4j-queryparser-sparql": 112556566,
     "org.eclipse.rdf4j:rdf4j-queryparser-sparql:jar:sources": -1690940032,
-    "org.eclipse.rdf4j:rdf4j-queryrender": -1935054277,
-    "org.eclipse.rdf4j:rdf4j-queryrender:jar:sources": -1446941351,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api": 1511249474,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api:jar:sources": 640228909,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": 1882202075,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary:jar:sources": -2033167480,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": -1554775782,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources": -1644920422,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": 1735505986,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources": 1965843090,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": 781020456,
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources": 333782214,
-    "org.eclipse.rdf4j:rdf4j-repository-api": -314972347,
-    "org.eclipse.rdf4j:rdf4j-repository-api:jar:sources": -1514259849,
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": -2074258325,
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware:jar:sources": -1829241910,
-    "org.eclipse.rdf4j:rdf4j-repository-event": -953793399,
-    "org.eclipse.rdf4j:rdf4j-repository-event:jar:sources": -1439049185,
-    "org.eclipse.rdf4j:rdf4j-repository-http": 259643728,
-    "org.eclipse.rdf4j:rdf4j-repository-http:jar:sources": 1614049271,
-    "org.eclipse.rdf4j:rdf4j-repository-manager": 1259135551,
-    "org.eclipse.rdf4j:rdf4j-repository-manager:jar:sources": 392161810,
-    "org.eclipse.rdf4j:rdf4j-repository-sail": 1221896545,
-    "org.eclipse.rdf4j:rdf4j-repository-sail:jar:sources": 736149980,
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": 1663088434,
-    "org.eclipse.rdf4j:rdf4j-repository-sparql:jar:sources": 1548376695,
-    "org.eclipse.rdf4j:rdf4j-rio-api": 129764391,
+    "org.eclipse.rdf4j:rdf4j-rio-api": 378555293,
     "org.eclipse.rdf4j:rdf4j-rio-api:jar:sources": 672905725,
-    "org.eclipse.rdf4j:rdf4j-rio-binary": -988382209,
-    "org.eclipse.rdf4j:rdf4j-rio-binary:jar:sources": 1878245440,
-    "org.eclipse.rdf4j:rdf4j-rio-datatypes": 1822113830,
+    "org.eclipse.rdf4j:rdf4j-rio-datatypes": -997351453,
     "org.eclipse.rdf4j:rdf4j-rio-datatypes:jar:sources": 407915585,
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": 862617160,
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld:jar:sources": 1784165147,
-    "org.eclipse.rdf4j:rdf4j-rio-languages": 1599965020,
+    "org.eclipse.rdf4j:rdf4j-rio-languages": -1219500263,
     "org.eclipse.rdf4j:rdf4j-rio-languages:jar:sources": 154080221,
-    "org.eclipse.rdf4j:rdf4j-rio-n3": -2114021120,
-    "org.eclipse.rdf4j:rdf4j-rio-n3:jar:sources": -1716960086,
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": 2097632089,
-    "org.eclipse.rdf4j:rdf4j-rio-nquads:jar:sources": -2140825491,
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": -709618156,
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples:jar:sources": 2083142276,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": 1675486440,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson:jar:sources": 1034585336,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": 1083741628,
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml:jar:sources": 630320538,
-    "org.eclipse.rdf4j:rdf4j-rio-trig": 1364780340,
+    "org.eclipse.rdf4j:rdf4j-rio-trig": -412150081,
     "org.eclipse.rdf4j:rdf4j-rio-trig:jar:sources": 1418214102,
-    "org.eclipse.rdf4j:rdf4j-rio-trix": -237289699,
-    "org.eclipse.rdf4j:rdf4j-rio-trix:jar:sources": 963417449,
-    "org.eclipse.rdf4j:rdf4j-rio-turtle": 1692802397,
+    "org.eclipse.rdf4j:rdf4j-rio-turtle": -153084140,
     "org.eclipse.rdf4j:rdf4j-rio-turtle:jar:sources": -81468401,
-    "org.eclipse.rdf4j:rdf4j-sail-api": 1304180260,
-    "org.eclipse.rdf4j:rdf4j-sail-api:jar:sources": -1520699221,
-    "org.eclipse.rdf4j:rdf4j-sail-base": -190865037,
-    "org.eclipse.rdf4j:rdf4j-sail-base:jar:sources": -185815078,
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": -1122923846,
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer:jar:sources": 1296450057,
-    "org.eclipse.rdf4j:rdf4j-sail-memory": 1005028949,
-    "org.eclipse.rdf4j:rdf4j-sail-memory:jar:sources": -1860715311,
-    "org.eclipse.rdf4j:rdf4j-sail-model": 230917132,
-    "org.eclipse.rdf4j:rdf4j-sail-model:jar:sources": -1680642002,
-    "org.eclipse.rdf4j:rdf4j-shacl": 1649348744,
-    "org.eclipse.rdf4j:rdf4j-shacl:jar:sources": -280190236,
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": -280093438,
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources": 737011528,
     "org.ehcache:ehcache": -447136515,
@@ -682,7 +596,6 @@
     "org.glassfish.jaxb:txw2": 48157633,
     "org.glassfish.jaxb:txw2:jar:sources": -1552397316,
     "org.glassfish:jakarta.json": -475452808,
-    "org.glassfish:jakarta.json:jar:module": 1329300306,
     "org.glassfish:jakarta.json:jar:sources": -1199095535,
     "org.gwtproject:gwt-servlet": -653689555,
     "org.gwtproject:gwt-servlet:jar:sources": -805169202,
@@ -763,7 +676,7 @@
     "org.typelevel:jawn-parser_3": -2072470113,
     "org.typelevel:jawn-parser_3:jar:sources": 461393166,
     "org.webjars:swagger-ui": -690338883,
-    "org.wiremock:wiremock": -1011530120,
+    "org.wiremock:wiremock": 904756999,
     "org.wiremock:wiremock:jar:sources": 1230375324,
     "org.xerial:sqlite-jdbc": -1929436403,
     "org.xerial:sqlite-jdbc:jar:sources": 1201298594,
@@ -828,10 +741,10 @@
     },
     "com.fasterxml.jackson.core:jackson-core": {
       "shasums": {
-        "jar": "d2e8dd4df1e0f61b786ea06792f5bf4235d8278f158f3be6e997e955931c0c98",
-        "sources": "ff129505a87d094e2cfaa0a99636fd830b71eb8156f13b239bd0b520ca34868a"
+        "jar": "ffab4d957daa2796cf24cb66d0b78a7090f1bcbe17c3a4578f09affaaf137089",
+        "sources": "30265c51a834ab4620efb8d1b30c0b9d9b47761781e14f53dcc12bcb0ea8a841"
       },
-      "version": "2.22.0"
+      "version": "2.20.1"
     },
     "com.fasterxml.jackson.core:jackson-databind": {
       "shasums": {
@@ -1020,13 +933,6 @@
         "sources": "0c3110af9a529b7650b0314df1ad3702d3e4047d89bc89f80d072fc8488d0547"
       },
       "version": "1.5.9"
-    },
-    "com.opencsv:opencsv": {
-      "shasums": {
-        "jar": "f1c55d80a92c8ecfe3f15fb71785d5b156f3674cb5b9ad55dcfd378ffeed2960",
-        "sources": "590bac981c873443361a8e063b46aa5ae9a7975f5709e464f3a3a9eb341934bc"
-      },
-      "version": "5.12.0"
     },
     "com.softwaremill.magnolia1_3:magnolia_3": {
       "shasums": {
@@ -1914,13 +1820,6 @@
       },
       "version": "1.65.0"
     },
-    "jakarta.json:jakarta.json-api": {
-      "shasums": {
-        "jar": "6152cdc29c3e99ad4bfb367d43464c9fe97ac800ddc1952b2452c5e0c21f89fd",
-        "sources": "0a779b48e18979028d57a6926a72907039ae7a995b12658997736eef951b1172"
-      },
-      "version": "2.0.1"
-    },
     "jakarta.xml.bind:jakarta.xml.bind-api": {
       "shasums": {
         "jar": "0037ab1eba33a969b36119c61a9f28313460a85eea9b800470a70cb2227d35f4",
@@ -2026,13 +1925,6 @@
       },
       "version": "3.20.0"
     },
-    "org.apache.commons:commons-math3": {
-      "shasums": {
-        "jar": "1e56d7b058d28b65abd256b8458e3885b674c1d588fa43cd7d1cbb9c7ef2b308",
-        "sources": "e2ff85a3c360d56c51a7021614a194f3fbaf224054642ac535016f118322934d"
-      },
-      "version": "3.6.1"
-    },
     "org.apache.commons:commons-text": {
       "shasums": {
         "jar": "58d2da30f058512a1e7f914e39241deca4dff5c27a085b4ed2faa9e7208067f6",
@@ -2040,54 +1932,26 @@
       },
       "version": "1.15.0"
     },
-    "org.apache.datasketches:datasketches-java": {
-      "shasums": {
-        "jar": "da5ad11655341a90e6464bca40e5995e24441d446d6706ffe0d152251e2dff2d",
-        "sources": "cac9a8148f7ccbbf1a8903bf456f064834467afd2e98987466c2a2895aeed04a"
-      },
-      "version": "9.0.0"
-    },
     "org.apache.httpcomponents.client5:httpclient5": {
       "shasums": {
-        "jar": "80712ff129210d7c73d9fcc1195cbee5c3c34744965c7a05ea107b3648922f18",
-        "sources": "00a6d775d0823c308b3fd4a25f5b7a181256e5b7e83d3844a3e63fad7b02832b"
+        "jar": "2e1e5d0ccf60d078bac6e3b029076afa8433a6a6d93eefdb46bce50720b58b7d",
+        "sources": "94380d816a8a8b15c1f1dcb0434e4d2709e8d5fad1420d73d9fdc27c1945ba3a"
       },
-      "version": "5.6.3"
+      "version": "5.5.1"
     },
     "org.apache.httpcomponents.core5:httpcore5": {
       "shasums": {
-        "jar": "18bfbbabb478dfb67f31aeaf428c387f3c3df654582e1309f708ee1f3086830a",
-        "sources": "1039d1c7d5f09d48fdd684b8268abfd7206648e9939930cccfe88b6b0d36c741"
+        "jar": "8fb4528d3e970aca440523a1bd698a389fa710ecfea4c5c6096698b86d1669ce",
+        "sources": "08dbcd68ee403e432554010e38c2eae2b6c97ce3ed5e0af8e11679870c8f141c"
       },
-      "version": "5.4.3"
+      "version": "5.3.6"
     },
     "org.apache.httpcomponents.core5:httpcore5-h2": {
       "shasums": {
-        "jar": "c7db7026b8e2dea39132b04a6069f6671e2858309b20a146ec5c7dd6ed73a0b6",
-        "sources": "ca7bc36ef8d56f17fb5455596d9dd38b80f8eb8931f8e4e167868356458625fa"
+        "jar": "479a8aa5e6f99030a2a446a68d1f62320698932746f811fc656a1ea06b94184d",
+        "sources": "23816441863ed7e6cade34a1573ac2c203d399a1cb1e542e22d225e6b1f05d44"
       },
-      "version": "5.4.3"
-    },
-    "org.apache.httpcomponents:httpclient": {
-      "shasums": {
-        "jar": "c8bc7e1c51a6d4ce72f40d2ebbabf1c4b68bfe76e732104b04381b493478e9d6",
-        "sources": "55b01f9f4cbec9ac646866a4b64b176570d79e293a556796b5b0263d047ef8e6"
-      },
-      "version": "4.5.14"
-    },
-    "org.apache.httpcomponents:httpclient-cache": {
-      "shasums": {
-        "jar": "5324d2cbc2d311c9f91b82bcbc746ec2a29f1f5b744395a50ff3afb873db1cee",
-        "sources": "9d7e88933bc25084c5d26fc76402587e282a2c2cb00009750abf231c2fa768b8"
-      },
-      "version": "4.5.14"
-    },
-    "org.apache.httpcomponents:httpcore": {
-      "shasums": {
-        "jar": "6c9b3dd142a09dc468e23ad39aad6f75a0f2b85125104469f026e52a474e464f",
-        "sources": "705f8cf3671093b6c1db16bbf6971a7ef400e3819784f1af53e5bc3e67b5a9a0"
-      },
-      "version": "4.4.16"
+      "version": "5.3.6"
     },
     "org.apache.jena:jena-arq": {
       "shasums": {
@@ -2446,19 +2310,6 @@
       },
       "version": "11.0.26"
     },
-    "org.eclipse.rdf4j:rdf4j-client:pom": {
-      "shasums": {
-        "jar": "096ad38775745898a5adaec310b27e6c113f40d109cfd48ec175c74782d70e06"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api": {
-      "shasums": {
-        "jar": "aa1c553458ea3c6906bbfb3c57e732cea61ea8da4a6a04a53028102bb31ad1fa",
-        "sources": "99b7d62d031202ef60fe931d3e9c328a5b2a526f292d0ddb1ec60b110c018e99"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-common-annotation": {
       "shasums": {
         "jar": "dfe2e8d9e37667395ef768744c27ea29490d4ab5ed2cba76361d37602a0740d8",
@@ -2501,52 +2352,10 @@
       },
       "version": "6.0.1"
     },
-    "org.eclipse.rdf4j:rdf4j-common-transaction": {
-      "shasums": {
-        "jar": "c3b2fa82cbbc246ea335aaee3da8754f840a61d6077acb536c11e862932b2b56",
-        "sources": "a55b3a029133e067c3bca5685921001897112aa7ee509309b15fc2adb241efdb"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-common-xml": {
       "shasums": {
         "jar": "18d639eec18b04a2fb4e6f8230a9bffb2ea8021706dc1832c6a63f2cdcf29f2c",
         "sources": "94d8695fb84904db5c0ea02ce42ffc5431e7a3afe475e9f5699df076163fd843"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client": {
-      "shasums": {
-        "jar": "e58689d1a59e68a5e74b86dd4d883a83e86a32455ae7810b64a01842c3f8ca9d",
-        "sources": "1e13e1481d67943c4c4d458b4cb18e906898b6333ba9338ee44f5ef75ab00048"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5": {
-      "shasums": {
-        "jar": "c84aa0254efdf2f93fb724db0febb98398b71daa16112bc052a703408e96c030",
-        "sources": "5fdf31712e4276a8d0d7e179e257bed0958df7b9f7fb388002b4a2d3a7ac15fb"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-api": {
-      "shasums": {
-        "jar": "a912bbce91c512a2160a2dd8ea484311d2e6aa505c90be1fc118b6304dea459b",
-        "sources": "7c50e842209da3a36a6e9fe8b3b3738af484e0565ba4a87c185540dde81570e7"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk": {
-      "shasums": {
-        "jar": "2d8a0ecb7d6d3e55e86a926a34bbd0cb3a041b4f47eda74ee7ed8d2a6e3f0064",
-        "sources": "420f46ad74977b312cbea80621c5a0a1d9fb026f3c2248f4495c07f38337db7f"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-http-protocol": {
-      "shasums": {
-        "jar": "9d820ec0debc079fbf5b09cb4337d90cddc9c7c8ca361a5d69b4c56b026e90e1",
-        "sources": "951d1be584b9017bcfc81e04804076f5c8391ed918748d2d022d7add7a984aa6"
       },
       "version": "6.0.1"
     },
@@ -2578,13 +2387,6 @@
       },
       "version": "6.0.1"
     },
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": {
-      "shasums": {
-        "jar": "b04c41b28cd5f6b2bb5c1fff1375af8da3b406d157fb03c028ca10dd2c5efd67",
-        "sources": "8a6611e75a14dc22208cb050a8cfba8a148d66fa6a5fbda7254807b48a0bfa41"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model": {
       "shasums": {
         "jar": "d5556db876169bb78c93569635c36610b32ff14486e2315ace85198eb4f21ccc",
@@ -2606,108 +2408,10 @@
       },
       "version": "6.0.1"
     },
-    "org.eclipse.rdf4j:rdf4j-queryrender": {
-      "shasums": {
-        "jar": "9129c39ce2b2474f530d4c053f8255ef5f3e156d5e04c864f967edd4f466ff2d",
-        "sources": "1e63ced32f8a2499d1e6fb235d429ee43b69e4ba68c1cddbd319f165d0c996b6"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api": {
-      "shasums": {
-        "jar": "133a585ebe1594b961fa84e9fd6f6f369a7b0b7b0ffc7b94ddddadfb9070ca10",
-        "sources": "8322b536d7b9dd8077ba779bd06714df7217b0ed3338b1515cc7a8d4de82cb7d"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": {
-      "shasums": {
-        "jar": "9596b3a5f537f4fa8474827bf7421e7f623b7a7417db7ee780b5b1d354d67117",
-        "sources": "34aab2330b0c841d079aec834ace21ccefc7687b59405c3dc820faeafc47bd5c"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": {
-      "shasums": {
-        "jar": "0f47dd82281b63435cd2ffed4ad2597d064495b613b386145e026cc2198511da",
-        "sources": "fa3f57f93b6f332ff57b03e68c7782de332b7c7b0ee6f1fdf17b1a71308fad71"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": {
-      "shasums": {
-        "jar": "f299e2992f33b071a7c9cf891bc20b230e74e91b31fdc60e2a71b42caffd303e",
-        "sources": "5c26303cc7b66b58e9d4594323b73be0f79582ea722ee3b04c8b9d413aeb95fd"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": {
-      "shasums": {
-        "jar": "6cc75c4171de965211a4e4213deb0bef6db2d81b5576860baf6e0d3f605e9505",
-        "sources": "7b05a813240ee688172f428c0214567895c77a001549278c1965be1d49d380fc"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-api": {
-      "shasums": {
-        "jar": "5f4207dc483c82ef85dda96d2ff653ea925405d9ba24113801892a4414b4ed7e",
-        "sources": "de8b33a7fbeecceff1f447d4ad9d191d8aee20cd139a4e397646c38c7583a346"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": {
-      "shasums": {
-        "jar": "f80851887340b0ff860337c55c62b50b3afa339b573d962a301c960525506128",
-        "sources": "efbb279d04eceb059a96639e2c71e330ac1cdaeceacdd2d74e4fb6d91b32e9ce"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-event": {
-      "shasums": {
-        "jar": "d737ea077d9509ab02b932737bad38cd47ad016541733a7c0b108c13360a202a",
-        "sources": "5804a795c4ea268a3236e1af78379f7bc960656351729ea97e0030387141f59f"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-http": {
-      "shasums": {
-        "jar": "b19c8f886b22c9dbb28910feb494f2c0f24967292827f2c7b4a7cd2f7de2cefa",
-        "sources": "99c4ed642128a71bd725851b3f677fa062dc03d3c7f3be9d6c2f6b9b9a3228b8"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-manager": {
-      "shasums": {
-        "jar": "745eecc30ad2f1a736c577f5e1ca318c016e004e8a03a1c0f37f8e66a85d48fc",
-        "sources": "8c915004eee0ed58a016e49d2d22d5115c72a3c27c63fb3d25ce7f56f6e6fc8e"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sail": {
-      "shasums": {
-        "jar": "06f9cf2c9453b14595f2ffa5ede754d852588efb51bdaa9755f448536e34c78f",
-        "sources": "d8e98e9c6d910a4ecd784fa1c7869423021c42d71409c45f76faa65115057919"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": {
-      "shasums": {
-        "jar": "7ab47a151d84f6a6927902be8c74202ffe557767ac2431b24c0155e9cf542d38",
-        "sources": "1c0a7cafce566a31161b426b714e051536ce6c0f422e497071aea3b5edb0ca9e"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-rio-api": {
       "shasums": {
         "jar": "ca81bc9a24da4c8e85ee5028f1f0e733d36b24aa1a5eb4af4566bc81037b7001",
         "sources": "5c71c08ffe993379e37cf6fc2d01cff73cf7c84b7a201f3a0a9e8c3759c65518"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-binary": {
-      "shasums": {
-        "jar": "912e08b317811886d1bc39f76616e5bd93c27b0aea783fcdf090f3a3b8d3f22b",
-        "sources": "ad4624afd4c54bdbe5299693b3a8fc3728556b17dc9917a5630cec7b299144a5"
       },
       "version": "6.0.1"
     },
@@ -2718,52 +2422,10 @@
       },
       "version": "6.0.1"
     },
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": {
-      "shasums": {
-        "jar": "71f5da368efee62928c8eec5dad1fbe69902e062306a0eb15fe2460b99f2a2d4",
-        "sources": "e9adcc3c7214d4ba7751d83f30bda7fe37a95b6d713134e4e469ab4149d5e1d1"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-rio-languages": {
       "shasums": {
         "jar": "3c64b956fe15a73ab1176cf3359021ec19785550af02038bd096e4a8120be47e",
         "sources": "7b986677d899ffaffc339186f74fe53edd98823c6a06f2d94a42b8472d918f81"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-n3": {
-      "shasums": {
-        "jar": "696e446f2e6ebeacf38681c860e61318b43ff6b6b3513b07eb9ff20b9ee79541",
-        "sources": "2ac27fc9065d4132421b36263e15f3f356c8b1a024e1ebd528a8fe0540c30397"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": {
-      "shasums": {
-        "jar": "6f8579de7a1cca5a8e91f1e3b3bda111ff2141d365189d54e05e2952ed36c527",
-        "sources": "ff471d3c8026ada565ba65d43c323a49bd3cf4e983b5dca796b437f29fcd105e"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": {
-      "shasums": {
-        "jar": "0f39d41794fc7c6f300a5344cb0319ca85be5148165fd1daa354c5598d06b4c9",
-        "sources": "626de04d5879cd8ed52770b7f77947a107050bec498d7d6404547c5baee3603c"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": {
-      "shasums": {
-        "jar": "a8f805c14eb08f95ec1ae497d0da0d729529038ebca2a01c435a07be2e0d49c5",
-        "sources": "21e00ef440cc1c3e6a4f32e10ff1bf0d67f904ffae6815416f7ef1523da5201a"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": {
-      "shasums": {
-        "jar": "49e0ac2ba29da8f0e7235cd284f45cb117870cd6af1f80cc896d831c47f10e2e",
-        "sources": "36b7d698c33087ffe19841a24bae07ba270a86beee159925113929dc763e93d1"
       },
       "version": "6.0.1"
     },
@@ -2774,59 +2436,10 @@
       },
       "version": "6.0.1"
     },
-    "org.eclipse.rdf4j:rdf4j-rio-trix": {
-      "shasums": {
-        "jar": "6ca5b4b7b444d61a1d852e9c5d043d1c76df75fc92a1bc517d2b3677b6e753fe",
-        "sources": "b2173a1ce7af3a932bf039fe2e4b1b26ecf8289dd9b89cc5afe5407369cc70ea"
-      },
-      "version": "6.0.1"
-    },
     "org.eclipse.rdf4j:rdf4j-rio-turtle": {
       "shasums": {
         "jar": "73ebf06c8a6305c0b0c947412aaac70c2efe3203e423d65c2be2e8a18514da67",
         "sources": "ecb195945b249f98fb1c7de4d250fcaa64bce4c14b802b32afbaacbab9bbcffd"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-api": {
-      "shasums": {
-        "jar": "bb1c316519d9136d2cc2af8a50b128a642877faddda250209fe79f23f53dbb3c",
-        "sources": "4bffaef96e76c1fa1c4cf7281cd6e1b2bbdaaba0a11db04e813798f8eebce8b6"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-base": {
-      "shasums": {
-        "jar": "8a8500100b10185395c8032b1ef47484ae633043404b160210c916811d2667f3",
-        "sources": "77cb67879478fcd93692628b008aff4e7f70603ec047cd9a1f5e22ddb5436b7f"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": {
-      "shasums": {
-        "jar": "933e15b27ac12bc5e8cd37a0db5de6ca0ce715372e80c6e4067f665a0ddca607",
-        "sources": "30838c1445f41784fedc1ee510cf236685371156736dcbccb0c1c1b3eae9f8d7"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-memory": {
-      "shasums": {
-        "jar": "20ef007c280a659e207c53f7fa977bb2b2663fb6e914b9a6f1628dfa7f2c285f",
-        "sources": "c647086771aa2666595416ea2b8474193d72c8623186b6384c388d4389ccab71"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-model": {
-      "shasums": {
-        "jar": "f2dd560f1cc218b449eda5f9bc3282326f371335b0a8a92faedb9425a21bfeeb",
-        "sources": "84410a7a9354a00b94e774db94e29be9f57c13184dcccc170dd546076fc412b9"
-      },
-      "version": "6.0.1"
-    },
-    "org.eclipse.rdf4j:rdf4j-shacl": {
-      "shasums": {
-        "jar": "76093baa98a76bc96719d457eb3e6adb6899ee110e3cf931849986e7ea4e6661",
-        "sources": "e4065a5aa61ed6691c3fa87c3e78018cb2fb38f3e9e08abfdef9f41e9169ea8a"
       },
       "version": "6.0.1"
     },
@@ -2875,7 +2488,6 @@
     "org.glassfish:jakarta.json": {
       "shasums": {
         "jar": "52539b39498b86ca9910b0eacc608a8c78de8db3842caa84bc87169372202cc0",
-        "module": "5693bff8f3bf6c0e970a60ba663a4a2f3088f1d361a967bb2307de76726c721d",
         "sources": "4a799d3961be710c9d18481d47bb4041f44f2bc73ab0672b65f45b9aaf8a653f"
       },
       "version": "2.0.1"
@@ -3286,12 +2898,6 @@
       "com.fasterxml.jackson.core:jackson-databind",
       "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
       "org.slf4j:slf4j-api"
-    ],
-    "com.opencsv:opencsv": [
-      "commons-beanutils:commons-beanutils",
-      "org.apache.commons:commons-collections4",
-      "org.apache.commons:commons-lang3",
-      "org.apache.commons:commons-text"
     ],
     "com.softwaremill.sttp.apispec:asyncapi-model_3": [
       "com.softwaremill.sttp.apispec:apispec-model_3"
@@ -3828,11 +3434,6 @@
       "org.xmlresolver:xmlresolver",
       "org.xmlresolver:xmlresolver:jar:data"
     ],
-    "no.hasmac:hasmac-json-ld": [
-      "com.google.guava:guava",
-      "jakarta.json:jakarta.json-api",
-      "org.glassfish:jakarta.json"
-    ],
     "org.apache.commons:commons-compress": [
       "commons-codec:commons-codec",
       "commons-io:commons-io",
@@ -3852,13 +3453,6 @@
     ],
     "org.apache.httpcomponents.core5:httpcore5-h2": [
       "org.apache.httpcomponents.core5:httpcore5"
-    ],
-    "org.apache.httpcomponents:httpclient": [
-      "commons-codec:commons-codec",
-      "org.apache.httpcomponents:httpcore"
-    ],
-    "org.apache.httpcomponents:httpclient-cache": [
-      "org.apache.httpcomponents:httpclient"
     ],
     "org.apache.jena:jena-arq": [
       "com.apicatalog:titanium-json-ld",
@@ -4061,55 +3655,6 @@
       "org.eclipse.jetty:jetty-util",
       "org.slf4j:slf4j-api"
     ],
-    "org.eclipse.rdf4j:rdf4j-client:pom": [
-      "org.eclipse.rdf4j:rdf4j-common-annotation",
-      "org.eclipse.rdf4j:rdf4j-common-exception",
-      "org.eclipse.rdf4j:rdf4j-common-io",
-      "org.eclipse.rdf4j:rdf4j-common-iterator",
-      "org.eclipse.rdf4j:rdf4j-common-text",
-      "org.eclipse.rdf4j:rdf4j-common-transaction",
-      "org.eclipse.rdf4j:rdf4j-common-xml",
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-http-protocol",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-model-api",
-      "org.eclipse.rdf4j:rdf4j-model-vocabulary",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-queryparser-sparql",
-      "org.eclipse.rdf4j:rdf4j-queryrender",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-binary",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-text",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-repository-contextaware",
-      "org.eclipse.rdf4j:rdf4j-repository-event",
-      "org.eclipse.rdf4j:rdf4j-repository-http",
-      "org.eclipse.rdf4j:rdf4j-repository-manager",
-      "org.eclipse.rdf4j:rdf4j-repository-sparql",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-binary",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-jsonld",
-      "org.eclipse.rdf4j:rdf4j-rio-languages",
-      "org.eclipse.rdf4j:rdf4j-rio-n3",
-      "org.eclipse.rdf4j:rdf4j-rio-nquads",
-      "org.eclipse.rdf4j:rdf4j-rio-ntriples",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfjson",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfxml",
-      "org.eclipse.rdf4j:rdf4j-rio-trig",
-      "org.eclipse.rdf4j:rdf4j-rio-trix",
-      "org.eclipse.rdf4j:rdf4j-rio-turtle",
-      "org.eclipse.rdf4j:rdf4j-sparqlbuilder"
-    ],
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.slf4j:slf4j-api"
-    ],
     "org.eclipse.rdf4j:rdf4j-common-exception": [
       "org.eclipse.rdf4j:rdf4j-common-annotation",
       "org.eclipse.rdf4j:rdf4j-model-api"
@@ -4130,46 +3675,9 @@
       "org.eclipse.rdf4j:rdf4j-model-api",
       "org.slf4j:slf4j-api"
     ],
-    "org.eclipse.rdf4j:rdf4j-common-transaction": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.slf4j:slf4j-api"
-    ],
     "org.eclipse.rdf4j:rdf4j-common-xml": [
       "org.eclipse.rdf4j:rdf4j-model-api",
       "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client": [
-      "org.eclipse.rdf4j:rdf4j-common-transaction",
-      "org.eclipse.rdf4j:rdf4j-http-client-apache5",
-      "org.eclipse.rdf4j:rdf4j-http-client-api",
-      "org.eclipse.rdf4j:rdf4j-http-client-jdk",
-      "org.eclipse.rdf4j:rdf4j-http-protocol",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-binary",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-sail-api",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5": [
-      "org.apache.httpcomponents.client5:httpclient5",
-      "org.eclipse.rdf4j:rdf4j-http-client-api",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-api": [
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk": [
-      "org.eclipse.rdf4j:rdf4j-http-client-api",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-protocol": [
-      "org.eclipse.rdf4j:rdf4j-common-xml",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-rio-ntriples"
     ],
     "org.eclipse.rdf4j:rdf4j-model": [
       "com.google.guava:guava",
@@ -4194,19 +3702,6 @@
       "tools.jackson.core:jackson-core",
       "tools.jackson.core:jackson-databind"
     ],
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": [
-      "com.google.guava:guava",
-      "org.apache.commons:commons-math3",
-      "org.apache.datasketches:datasketches-java",
-      "org.eclipse.rdf4j:rdf4j-collection-factory-api",
-      "org.eclipse.rdf4j:rdf4j-common-iterator",
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-repository-sparql",
-      "org.slf4j:slf4j-api"
-    ],
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model": [
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-query"
@@ -4223,102 +3718,6 @@
       "org.eclipse.rdf4j:rdf4j-rio-trig",
       "org.jetbrains:annotations"
     ],
-    "org.eclipse.rdf4j:rdf4j-queryrender": [
-      "com.google.code.gson:gson",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-sail-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "tools.jackson.core:jackson-core"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": [
-      "org.eclipse.rdf4j:rdf4j-common-xml",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": [
-      "com.opencsv:opencsv",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "org.slf4j:jcl-over-slf4j"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-api": [
-      "org.eclipse.rdf4j:rdf4j-common-exception",
-      "org.eclipse.rdf4j:rdf4j-common-transaction",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-rio-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-event": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-repository-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-http": [
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-http-protocol",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-binary",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-manager": [
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-http-protocol",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-repository-event",
-      "org.eclipse.rdf4j:rdf4j-repository-http",
-      "org.eclipse.rdf4j:rdf4j-repository-sparql",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-sail": [
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-turtle",
-      "org.eclipse.rdf4j:rdf4j-sail-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": [
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-queryparser-sparql",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml",
-      "org.eclipse.rdf4j:rdf4j-repository-api"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-api": [
       "com.fasterxml.jackson.core:jackson-annotations",
       "com.github.jsonld-java:jsonld-java",
@@ -4329,71 +3728,13 @@
       "tools.jackson.core:jackson-core",
       "tools.jackson.core:jackson-databind"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-binary": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-datatypes": [
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-rio-api"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": [
-      "com.fasterxml.jackson.core:jackson-core",
-      "com.google.guava:guava",
-      "commons-io:commons-io",
-      "jakarta.json:jakarta.json-api",
-      "no.hasmac:hasmac-json-ld",
-      "org.apache.httpcomponents:httpclient",
-      "org.apache.httpcomponents:httpclient-cache",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages",
-      "org.glassfish:jakarta.json:jar:module",
-      "org.slf4j:jcl-over-slf4j"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-languages": [
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-rio-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-n3": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages",
-      "org.eclipse.rdf4j:rdf4j-rio-turtle"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": [
-      "commons-io:commons-io",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages",
-      "org.eclipse.rdf4j:rdf4j-rio-ntriples"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": [
-      "commons-io:commons-io",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": [
-      "commons-io:commons-io",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages",
-      "tools.jackson.core:jackson-core"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": [
-      "commons-io:commons-io",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-trig": [
       "org.eclipse.rdf4j:rdf4j-model",
@@ -4402,68 +3743,12 @@
       "org.eclipse.rdf4j:rdf4j-rio-languages",
       "org.eclipse.rdf4j:rdf4j-rio-turtle"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-trix": [
-      "commons-io:commons-io",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-rio-datatypes",
-      "org.eclipse.rdf4j:rdf4j-rio-languages"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-turtle": [
       "commons-io:commons-io",
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-rio-api",
       "org.eclipse.rdf4j:rdf4j-rio-datatypes",
       "org.eclipse.rdf4j:rdf4j-rio-languages"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-api": [
-      "org.eclipse.rdf4j:rdf4j-collection-factory-api",
-      "org.eclipse.rdf4j:rdf4j-common-order",
-      "org.eclipse.rdf4j:rdf4j-common-transaction",
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-base": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-queryrender",
-      "org.eclipse.rdf4j:rdf4j-sail-api",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-queryparser-api",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-rio-api",
-      "org.eclipse.rdf4j:rdf4j-sail-base",
-      "org.eclipse.rdf4j:rdf4j-sail-model",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-memory": [
-      "org.eclipse.rdf4j:rdf4j-model",
-      "org.eclipse.rdf4j:rdf4j-query",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
-      "org.eclipse.rdf4j:rdf4j-sail-base",
-      "org.slf4j:slf4j-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-model": [
-      "com.google.guava:guava",
-      "org.eclipse.rdf4j:rdf4j-sail-api"
-    ],
-    "org.eclipse.rdf4j:rdf4j-shacl": [
-      "org.apache.commons:commons-lang3",
-      "org.apache.commons:commons-text",
-      "org.eclipse.rdf4j:rdf4j-repository-sail",
-      "org.eclipse.rdf4j:rdf4j-sail-api",
-      "org.eclipse.rdf4j:rdf4j-sail-inferencer",
-      "org.eclipse.rdf4j:rdf4j-sail-memory"
     ],
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": [
       "org.eclipse.rdf4j:rdf4j-model"
@@ -4669,9 +3954,9 @@
       "com.fasterxml.jackson.core.exc",
       "com.fasterxml.jackson.core.filter",
       "com.fasterxml.jackson.core.format",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0.bte",
-      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_22_0.chr",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_20_1",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_20_1.bte",
+      "com.fasterxml.jackson.core.internal.shaded.fdp.v2_20_1.chr",
       "com.fasterxml.jackson.core.io",
       "com.fasterxml.jackson.core.io.schubfach",
       "com.fasterxml.jackson.core.json",
@@ -5010,23 +4295,6 @@
       "com.networknt.schema.serialization.node",
       "com.networknt.schema.utils",
       "com.networknt.schema.walk"
-    ],
-    "com.opencsv:opencsv": [
-      "com.opencsv",
-      "com.opencsv.bean",
-      "com.opencsv.bean.comparator",
-      "com.opencsv.bean.concurrent",
-      "com.opencsv.bean.customconverter",
-      "com.opencsv.bean.exceptionhandler",
-      "com.opencsv.bean.function",
-      "com.opencsv.bean.processor",
-      "com.opencsv.bean.util",
-      "com.opencsv.bean.validators",
-      "com.opencsv.enums",
-      "com.opencsv.exceptions",
-      "com.opencsv.processor",
-      "com.opencsv.stream.reader",
-      "com.opencsv.validators"
     ],
     "com.softwaremill.magnolia1_3:magnolia_3": [
       "magnolia1"
@@ -5798,11 +5066,6 @@
       "io.opentelemetry.sdk.trace.internal.shaded.jctools.util",
       "io.opentelemetry.sdk.trace.samplers"
     ],
-    "jakarta.json:jakarta.json-api": [
-      "jakarta.json",
-      "jakarta.json.spi",
-      "jakarta.json.stream"
-    ],
     "jakarta.xml.bind:jakarta.xml.bind-api": [
       "jakarta.xml.bind",
       "jakarta.xml.bind.annotation",
@@ -6116,83 +5379,6 @@
       "org.apache.commons.lang3.tuple",
       "org.apache.commons.lang3.util"
     ],
-    "org.apache.commons:commons-math3": [
-      "org.apache.commons.math3",
-      "org.apache.commons.math3.analysis",
-      "org.apache.commons.math3.analysis.differentiation",
-      "org.apache.commons.math3.analysis.function",
-      "org.apache.commons.math3.analysis.integration",
-      "org.apache.commons.math3.analysis.integration.gauss",
-      "org.apache.commons.math3.analysis.interpolation",
-      "org.apache.commons.math3.analysis.polynomials",
-      "org.apache.commons.math3.analysis.solvers",
-      "org.apache.commons.math3.complex",
-      "org.apache.commons.math3.dfp",
-      "org.apache.commons.math3.distribution",
-      "org.apache.commons.math3.distribution.fitting",
-      "org.apache.commons.math3.exception",
-      "org.apache.commons.math3.exception.util",
-      "org.apache.commons.math3.filter",
-      "org.apache.commons.math3.fitting",
-      "org.apache.commons.math3.fitting.leastsquares",
-      "org.apache.commons.math3.fraction",
-      "org.apache.commons.math3.genetics",
-      "org.apache.commons.math3.geometry",
-      "org.apache.commons.math3.geometry.enclosing",
-      "org.apache.commons.math3.geometry.euclidean.oned",
-      "org.apache.commons.math3.geometry.euclidean.threed",
-      "org.apache.commons.math3.geometry.euclidean.twod",
-      "org.apache.commons.math3.geometry.euclidean.twod.hull",
-      "org.apache.commons.math3.geometry.hull",
-      "org.apache.commons.math3.geometry.partitioning",
-      "org.apache.commons.math3.geometry.partitioning.utilities",
-      "org.apache.commons.math3.geometry.spherical.oned",
-      "org.apache.commons.math3.geometry.spherical.twod",
-      "org.apache.commons.math3.linear",
-      "org.apache.commons.math3.ml.clustering",
-      "org.apache.commons.math3.ml.clustering.evaluation",
-      "org.apache.commons.math3.ml.distance",
-      "org.apache.commons.math3.ml.neuralnet",
-      "org.apache.commons.math3.ml.neuralnet.oned",
-      "org.apache.commons.math3.ml.neuralnet.sofm",
-      "org.apache.commons.math3.ml.neuralnet.sofm.util",
-      "org.apache.commons.math3.ml.neuralnet.twod",
-      "org.apache.commons.math3.ml.neuralnet.twod.util",
-      "org.apache.commons.math3.ode",
-      "org.apache.commons.math3.ode.events",
-      "org.apache.commons.math3.ode.nonstiff",
-      "org.apache.commons.math3.ode.sampling",
-      "org.apache.commons.math3.optim",
-      "org.apache.commons.math3.optim.linear",
-      "org.apache.commons.math3.optim.nonlinear.scalar",
-      "org.apache.commons.math3.optim.nonlinear.scalar.gradient",
-      "org.apache.commons.math3.optim.nonlinear.scalar.noderiv",
-      "org.apache.commons.math3.optim.nonlinear.vector",
-      "org.apache.commons.math3.optim.nonlinear.vector.jacobian",
-      "org.apache.commons.math3.optim.univariate",
-      "org.apache.commons.math3.optimization",
-      "org.apache.commons.math3.optimization.direct",
-      "org.apache.commons.math3.optimization.fitting",
-      "org.apache.commons.math3.optimization.general",
-      "org.apache.commons.math3.optimization.linear",
-      "org.apache.commons.math3.optimization.univariate",
-      "org.apache.commons.math3.primes",
-      "org.apache.commons.math3.random",
-      "org.apache.commons.math3.special",
-      "org.apache.commons.math3.stat",
-      "org.apache.commons.math3.stat.clustering",
-      "org.apache.commons.math3.stat.correlation",
-      "org.apache.commons.math3.stat.descriptive",
-      "org.apache.commons.math3.stat.descriptive.moment",
-      "org.apache.commons.math3.stat.descriptive.rank",
-      "org.apache.commons.math3.stat.descriptive.summary",
-      "org.apache.commons.math3.stat.inference",
-      "org.apache.commons.math3.stat.interval",
-      "org.apache.commons.math3.stat.ranking",
-      "org.apache.commons.math3.stat.regression",
-      "org.apache.commons.math3.transform",
-      "org.apache.commons.math3.util"
-    ],
     "org.apache.commons:commons-text": [
       "org.apache.commons.text",
       "org.apache.commons.text.diff",
@@ -6202,34 +5388,6 @@
       "org.apache.commons.text.numbers",
       "org.apache.commons.text.similarity",
       "org.apache.commons.text.translate"
-    ],
-    "org.apache.datasketches:datasketches-java": [
-      "org.apache.datasketches",
-      "org.apache.datasketches.common",
-      "org.apache.datasketches.common.positional",
-      "org.apache.datasketches.count",
-      "org.apache.datasketches.cpc",
-      "org.apache.datasketches.fdt",
-      "org.apache.datasketches.filters",
-      "org.apache.datasketches.filters.bloomfilter",
-      "org.apache.datasketches.frequencies",
-      "org.apache.datasketches.hash",
-      "org.apache.datasketches.hll",
-      "org.apache.datasketches.hllmap",
-      "org.apache.datasketches.kll",
-      "org.apache.datasketches.partitions",
-      "org.apache.datasketches.quantiles",
-      "org.apache.datasketches.quantilescommon",
-      "org.apache.datasketches.req",
-      "org.apache.datasketches.sampling",
-      "org.apache.datasketches.tdigest",
-      "org.apache.datasketches.theta",
-      "org.apache.datasketches.thetacommon",
-      "org.apache.datasketches.tuple",
-      "org.apache.datasketches.tuple.adouble",
-      "org.apache.datasketches.tuple.aninteger",
-      "org.apache.datasketches.tuple.arrayofdoubles",
-      "org.apache.datasketches.tuple.strings"
     ],
     "org.apache.httpcomponents.client5:httpclient5": [
       "org.apache.hc.client5.http",
@@ -6241,7 +5399,6 @@
       "org.apache.hc.client5.http.config",
       "org.apache.hc.client5.http.cookie",
       "org.apache.hc.client5.http.entity",
-      "org.apache.hc.client5.http.entity.compress",
       "org.apache.hc.client5.http.entity.mime",
       "org.apache.hc.client5.http.impl",
       "org.apache.hc.client5.http.impl.async",
@@ -6271,7 +5428,6 @@
       "org.apache.hc.core5.http.impl",
       "org.apache.hc.core5.http.impl.bootstrap",
       "org.apache.hc.core5.http.impl.io",
-      "org.apache.hc.core5.http.impl.io.support",
       "org.apache.hc.core5.http.impl.nio",
       "org.apache.hc.core5.http.impl.routing",
       "org.apache.hc.core5.http.io",
@@ -6309,60 +5465,8 @@
       "org.apache.hc.core5.http2.nio.command",
       "org.apache.hc.core5.http2.nio.pool",
       "org.apache.hc.core5.http2.nio.support",
-      "org.apache.hc.core5.http2.priority",
       "org.apache.hc.core5.http2.protocol",
       "org.apache.hc.core5.http2.ssl"
-    ],
-    "org.apache.httpcomponents:httpclient": [
-      "org.apache.http.auth",
-      "org.apache.http.auth.params",
-      "org.apache.http.client",
-      "org.apache.http.client.config",
-      "org.apache.http.client.entity",
-      "org.apache.http.client.methods",
-      "org.apache.http.client.params",
-      "org.apache.http.client.protocol",
-      "org.apache.http.client.utils",
-      "org.apache.http.conn",
-      "org.apache.http.conn.params",
-      "org.apache.http.conn.routing",
-      "org.apache.http.conn.scheme",
-      "org.apache.http.conn.socket",
-      "org.apache.http.conn.ssl",
-      "org.apache.http.conn.util",
-      "org.apache.http.cookie",
-      "org.apache.http.cookie.params",
-      "org.apache.http.impl.auth",
-      "org.apache.http.impl.client",
-      "org.apache.http.impl.conn",
-      "org.apache.http.impl.conn.tsccm",
-      "org.apache.http.impl.cookie",
-      "org.apache.http.impl.execchain"
-    ],
-    "org.apache.httpcomponents:httpclient-cache": [
-      "org.apache.http.client.cache",
-      "org.apache.http.impl.client.cache",
-      "org.apache.http.impl.client.cache.ehcache",
-      "org.apache.http.impl.client.cache.memcached"
-    ],
-    "org.apache.httpcomponents:httpcore": [
-      "org.apache.http",
-      "org.apache.http.annotation",
-      "org.apache.http.concurrent",
-      "org.apache.http.config",
-      "org.apache.http.entity",
-      "org.apache.http.impl",
-      "org.apache.http.impl.bootstrap",
-      "org.apache.http.impl.entity",
-      "org.apache.http.impl.io",
-      "org.apache.http.impl.pool",
-      "org.apache.http.io",
-      "org.apache.http.message",
-      "org.apache.http.params",
-      "org.apache.http.pool",
-      "org.apache.http.protocol",
-      "org.apache.http.ssl",
-      "org.apache.http.util"
     ],
     "org.apache.jena:jena-arq": [
       "org.apache.jena.atlas.csv",
@@ -7585,10 +6689,6 @@
     "org.eclipse.jetty:jetty-xml": [
       "org.eclipse.jetty.xml"
     ],
-    "org.eclipse.rdf4j:rdf4j-collection-factory-api": [
-      "org.eclipse.rdf4j.collection.factory.api",
-      "org.eclipse.rdf4j.collection.factory.impl"
-    ],
     "org.eclipse.rdf4j:rdf4j-common-annotation": [
       "org.eclipse.rdf4j.common.annotation"
     ],
@@ -7611,32 +6711,8 @@
     "org.eclipse.rdf4j:rdf4j-common-text": [
       "org.eclipse.rdf4j.common.text"
     ],
-    "org.eclipse.rdf4j:rdf4j-common-transaction": [
-      "org.eclipse.rdf4j.common.transaction"
-    ],
     "org.eclipse.rdf4j:rdf4j-common-xml": [
       "org.eclipse.rdf4j.common.xml"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client": [
-      "org.eclipse.rdf4j.http.client",
-      "org.eclipse.rdf4j.http.client.query",
-      "org.eclipse.rdf4j.http.client.shacl",
-      "org.eclipse.rdf4j.http.client.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5": [
-      "org.eclipse.rdf4j.http.client.apache5"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-api": [
-      "org.eclipse.rdf4j.http.client.spi"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk": [
-      "org.eclipse.rdf4j.http.client.jdk"
-    ],
-    "org.eclipse.rdf4j:rdf4j-http-protocol": [
-      "org.eclipse.rdf4j.http.protocol",
-      "org.eclipse.rdf4j.http.protocol.error",
-      "org.eclipse.rdf4j.http.protocol.transaction",
-      "org.eclipse.rdf4j.http.protocol.transaction.operations"
     ],
     "org.eclipse.rdf4j:rdf4j-model": [
       "org.eclipse.rdf4j.model.datatypes",
@@ -7656,28 +6732,6 @@
       "org.eclipse.rdf4j.query.explanation",
       "org.eclipse.rdf4j.query.impl"
     ],
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": [
-      "org.eclipse.rdf4j.query.algebra.evaluation",
-      "org.eclipse.rdf4j.query.algebra.evaluation.federation",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.stdev",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.variance",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.hash",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.string",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.triple",
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd",
-      "org.eclipse.rdf4j.query.algebra.evaluation.impl",
-      "org.eclipse.rdf4j.query.algebra.evaluation.impl.evaluationsteps",
-      "org.eclipse.rdf4j.query.algebra.evaluation.impl.evaluationsteps.values",
-      "org.eclipse.rdf4j.query.algebra.evaluation.iterator",
-      "org.eclipse.rdf4j.query.algebra.evaluation.optimizer",
-      "org.eclipse.rdf4j.query.algebra.evaluation.sketch",
-      "org.eclipse.rdf4j.query.algebra.evaluation.util"
-    ],
     "org.eclipse.rdf4j:rdf4j-queryalgebra-model": [
       "org.eclipse.rdf4j.query.algebra",
       "org.eclipse.rdf4j.query.algebra.evaluation.federation",
@@ -7694,153 +6748,21 @@
       "org.eclipse.rdf4j.query.parser.sparql.aggregate",
       "org.eclipse.rdf4j.query.parser.sparql.ast"
     ],
-    "org.eclipse.rdf4j:rdf4j-queryrender": [
-      "org.eclipse.rdf4j.queryrender",
-      "org.eclipse.rdf4j.queryrender.sparql",
-      "org.eclipse.rdf4j.queryrender.sparql.experimental",
-      "org.eclipse.rdf4j.queryrender.sparql.ir",
-      "org.eclipse.rdf4j.queryrender.sparql.ir.util",
-      "org.eclipse.rdf4j.queryrender.sparql.ir.util.transform",
-      "org.eclipse.rdf4j.queryrender.sparql.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-api": [
-      "org.eclipse.rdf4j.query.resultio",
-      "org.eclipse.rdf4j.query.resultio.helpers"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": [
-      "org.eclipse.rdf4j.query.resultio.binary"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": [
-      "org.eclipse.rdf4j.query.resultio.sparqljson"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": [
-      "org.eclipse.rdf4j.query.resultio.sparqlxml"
-    ],
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": [
-      "org.eclipse.rdf4j.query.resultio.text",
-      "org.eclipse.rdf4j.query.resultio.text.csv",
-      "org.eclipse.rdf4j.query.resultio.text.tsv"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-api": [
-      "org.eclipse.rdf4j.repository",
-      "org.eclipse.rdf4j.repository.base",
-      "org.eclipse.rdf4j.repository.config",
-      "org.eclipse.rdf4j.repository.filters",
-      "org.eclipse.rdf4j.repository.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": [
-      "org.eclipse.rdf4j.repository.contextaware",
-      "org.eclipse.rdf4j.repository.contextaware.config"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-event": [
-      "org.eclipse.rdf4j.repository.event",
-      "org.eclipse.rdf4j.repository.event.base",
-      "org.eclipse.rdf4j.repository.event.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-http": [
-      "org.eclipse.rdf4j.repository.http",
-      "org.eclipse.rdf4j.repository.http.config",
-      "org.eclipse.rdf4j.repository.http.helpers"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-manager": [
-      "org.eclipse.rdf4j.repository.manager",
-      "org.eclipse.rdf4j.repository.manager.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-sail": [
-      "org.eclipse.rdf4j.repository.evaluation",
-      "org.eclipse.rdf4j.repository.sail",
-      "org.eclipse.rdf4j.repository.sail.config",
-      "org.eclipse.rdf4j.repository.sail.helpers"
-    ],
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": [
-      "org.eclipse.rdf4j.repository.sparql",
-      "org.eclipse.rdf4j.repository.sparql.config",
-      "org.eclipse.rdf4j.repository.sparql.federation",
-      "org.eclipse.rdf4j.repository.sparql.query"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-api": [
       "org.eclipse.rdf4j.rio",
       "org.eclipse.rdf4j.rio.helpers"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-binary": [
-      "org.eclipse.rdf4j.rio.binary"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-datatypes": [
       "org.eclipse.rdf4j.rio.datatypes"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": [
-      "org.eclipse.rdf4j.rio.jsonld",
-      "org.eclipse.rdf4j.rio.ndjsonld"
     ],
     "org.eclipse.rdf4j:rdf4j-rio-languages": [
       "org.eclipse.rdf4j.rio.languages"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-n3": [
-      "org.eclipse.rdf4j.rio.n3"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": [
-      "org.eclipse.rdf4j.rio.nquads"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": [
-      "org.eclipse.rdf4j.rio.ntriples"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": [
-      "org.eclipse.rdf4j.rio.rdfjson"
-    ],
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": [
-      "org.eclipse.rdf4j.rio.rdfxml",
-      "org.eclipse.rdf4j.rio.rdfxml.util"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-trig": [
       "org.eclipse.rdf4j.rio.trig"
     ],
-    "org.eclipse.rdf4j:rdf4j-rio-trix": [
-      "org.eclipse.rdf4j.rio.trix"
-    ],
     "org.eclipse.rdf4j:rdf4j-rio-turtle": [
       "org.eclipse.rdf4j.rio.turtle"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-api": [
-      "org.eclipse.rdf4j.common.concurrent.locks",
-      "org.eclipse.rdf4j.common.concurrent.locks.diagnostics",
-      "org.eclipse.rdf4j.sail",
-      "org.eclipse.rdf4j.sail.config",
-      "org.eclipse.rdf4j.sail.features",
-      "org.eclipse.rdf4j.sail.helpers"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-base": [
-      "org.eclipse.rdf4j.sail",
-      "org.eclipse.rdf4j.sail.base",
-      "org.eclipse.rdf4j.sail.base.config",
-      "org.eclipse.rdf4j.sail.evaluation",
-      "org.eclipse.rdf4j.sail.inferencer"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": [
-      "org.eclipse.rdf4j.sail.inferencer.fc",
-      "org.eclipse.rdf4j.sail.inferencer.fc.config",
-      "org.eclipse.rdf4j.sail.inferencer.util"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-memory": [
-      "org.eclipse.rdf4j.sail.memory",
-      "org.eclipse.rdf4j.sail.memory.config",
-      "org.eclipse.rdf4j.sail.memory.model"
-    ],
-    "org.eclipse.rdf4j:rdf4j-sail-model": [
-      "org.eclipse.rdf4j.sail.model"
-    ],
-    "org.eclipse.rdf4j:rdf4j-shacl": [
-      "org.eclipse.rdf4j.sail.shacl",
-      "org.eclipse.rdf4j.sail.shacl.ast",
-      "org.eclipse.rdf4j.sail.shacl.ast.constraintcomponents",
-      "org.eclipse.rdf4j.sail.shacl.ast.paths",
-      "org.eclipse.rdf4j.sail.shacl.ast.planNodes",
-      "org.eclipse.rdf4j.sail.shacl.ast.targets",
-      "org.eclipse.rdf4j.sail.shacl.config",
-      "org.eclipse.rdf4j.sail.shacl.results",
-      "org.eclipse.rdf4j.sail.shacl.results.lazy",
-      "org.eclipse.rdf4j.sail.shacl.wrapper",
-      "org.eclipse.rdf4j.sail.shacl.wrapper.data",
-      "org.eclipse.rdf4j.sail.shacl.wrapper.shape"
     ],
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": [
       "org.eclipse.rdf4j.sparqlbuilder.constraint",
@@ -8128,10 +7050,6 @@
       "jakarta.json",
       "jakarta.json.spi",
       "jakarta.json.stream",
-      "org.glassfish.json",
-      "org.glassfish.json.api"
-    ],
-    "org.glassfish:jakarta.json:jar:module": [
       "org.glassfish.json",
       "org.glassfish.json.api"
     ],
@@ -9524,8 +8442,6 @@
       "com.lihaoyi:unroll-plugin_3:jar:sources",
       "com.networknt:json-schema-validator",
       "com.networknt:json-schema-validator:jar:sources",
-      "com.opencsv:opencsv",
-      "com.opencsv:opencsv:jar:sources",
       "com.softwaremill.magnolia1_3:magnolia_3",
       "com.softwaremill.magnolia1_3:magnolia_3:jar:sources",
       "com.softwaremill.quicklens:quicklens_3",
@@ -9782,8 +8698,6 @@
       "io.opentelemetry:opentelemetry-sdk-trace",
       "io.opentelemetry:opentelemetry-sdk-trace:jar:sources",
       "io.opentelemetry:opentelemetry-sdk:jar:sources",
-      "jakarta.json:jakarta.json-api",
-      "jakarta.json:jakarta.json-api:jar:sources",
       "jakarta.xml.bind:jakarta.xml.bind-api",
       "jakarta.xml.bind:jakarta.xml.bind-api:jar:sources",
       "javax.cache:cache-api",
@@ -9814,24 +8728,14 @@
       "org.apache.commons:commons-csv:jar:sources",
       "org.apache.commons:commons-lang3",
       "org.apache.commons:commons-lang3:jar:sources",
-      "org.apache.commons:commons-math3",
-      "org.apache.commons:commons-math3:jar:sources",
       "org.apache.commons:commons-text",
       "org.apache.commons:commons-text:jar:sources",
-      "org.apache.datasketches:datasketches-java",
-      "org.apache.datasketches:datasketches-java:jar:sources",
       "org.apache.httpcomponents.client5:httpclient5",
       "org.apache.httpcomponents.client5:httpclient5:jar:sources",
       "org.apache.httpcomponents.core5:httpcore5",
       "org.apache.httpcomponents.core5:httpcore5-h2",
       "org.apache.httpcomponents.core5:httpcore5-h2:jar:sources",
       "org.apache.httpcomponents.core5:httpcore5:jar:sources",
-      "org.apache.httpcomponents:httpclient",
-      "org.apache.httpcomponents:httpclient-cache",
-      "org.apache.httpcomponents:httpclient-cache:jar:sources",
-      "org.apache.httpcomponents:httpclient:jar:sources",
-      "org.apache.httpcomponents:httpcore",
-      "org.apache.httpcomponents:httpcore:jar:sources",
       "org.apache.jena:jena-arq",
       "org.apache.jena:jena-arq:jar:sources",
       "org.apache.jena:jena-base",
@@ -9934,9 +8838,6 @@
       "org.eclipse.jetty:jetty-webapp:jar:sources",
       "org.eclipse.jetty:jetty-xml",
       "org.eclipse.jetty:jetty-xml:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-client:pom",
-      "org.eclipse.rdf4j:rdf4j-collection-factory-api",
-      "org.eclipse.rdf4j:rdf4j-collection-factory-api:jar:sources",
       "org.eclipse.rdf4j:rdf4j-common-annotation",
       "org.eclipse.rdf4j:rdf4j-common-annotation:jar:sources",
       "org.eclipse.rdf4j:rdf4j-common-exception",
@@ -9949,20 +8850,8 @@
       "org.eclipse.rdf4j:rdf4j-common-order:jar:sources",
       "org.eclipse.rdf4j:rdf4j-common-text",
       "org.eclipse.rdf4j:rdf4j-common-text:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-common-transaction",
-      "org.eclipse.rdf4j:rdf4j-common-transaction:jar:sources",
       "org.eclipse.rdf4j:rdf4j-common-xml",
       "org.eclipse.rdf4j:rdf4j-common-xml:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-http-client",
-      "org.eclipse.rdf4j:rdf4j-http-client-apache5",
-      "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-http-client-api",
-      "org.eclipse.rdf4j:rdf4j-http-client-api:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-http-client-jdk",
-      "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-http-client:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-http-protocol",
-      "org.eclipse.rdf4j:rdf4j-http-protocol:jar:sources",
       "org.eclipse.rdf4j:rdf4j-model",
       "org.eclipse.rdf4j:rdf4j-model-api",
       "org.eclipse.rdf4j:rdf4j-model-api:jar:sources",
@@ -9971,78 +8860,22 @@
       "org.eclipse.rdf4j:rdf4j-model:jar:sources",
       "org.eclipse.rdf4j:rdf4j-query",
       "org.eclipse.rdf4j:rdf4j-query:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation",
-      "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation:jar:sources",
       "org.eclipse.rdf4j:rdf4j-queryalgebra-model",
       "org.eclipse.rdf4j:rdf4j-queryalgebra-model:jar:sources",
       "org.eclipse.rdf4j:rdf4j-queryparser-api",
       "org.eclipse.rdf4j:rdf4j-queryparser-api:jar:sources",
       "org.eclipse.rdf4j:rdf4j-queryparser-sparql",
       "org.eclipse.rdf4j:rdf4j-queryparser-sparql:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryrender",
-      "org.eclipse.rdf4j:rdf4j-queryrender:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-api:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-binary",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-binary:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-text",
-      "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-api",
-      "org.eclipse.rdf4j:rdf4j-repository-api:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-contextaware",
-      "org.eclipse.rdf4j:rdf4j-repository-contextaware:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-event",
-      "org.eclipse.rdf4j:rdf4j-repository-event:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-http",
-      "org.eclipse.rdf4j:rdf4j-repository-http:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-manager",
-      "org.eclipse.rdf4j:rdf4j-repository-manager:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-sail",
-      "org.eclipse.rdf4j:rdf4j-repository-sail:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-repository-sparql",
-      "org.eclipse.rdf4j:rdf4j-repository-sparql:jar:sources",
       "org.eclipse.rdf4j:rdf4j-rio-api",
       "org.eclipse.rdf4j:rdf4j-rio-api:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-binary",
-      "org.eclipse.rdf4j:rdf4j-rio-binary:jar:sources",
       "org.eclipse.rdf4j:rdf4j-rio-datatypes",
       "org.eclipse.rdf4j:rdf4j-rio-datatypes:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-jsonld",
-      "org.eclipse.rdf4j:rdf4j-rio-jsonld:jar:sources",
       "org.eclipse.rdf4j:rdf4j-rio-languages",
       "org.eclipse.rdf4j:rdf4j-rio-languages:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-n3",
-      "org.eclipse.rdf4j:rdf4j-rio-n3:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-nquads",
-      "org.eclipse.rdf4j:rdf4j-rio-nquads:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-ntriples",
-      "org.eclipse.rdf4j:rdf4j-rio-ntriples:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfjson",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfjson:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfxml",
-      "org.eclipse.rdf4j:rdf4j-rio-rdfxml:jar:sources",
       "org.eclipse.rdf4j:rdf4j-rio-trig",
       "org.eclipse.rdf4j:rdf4j-rio-trig:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-rio-trix",
-      "org.eclipse.rdf4j:rdf4j-rio-trix:jar:sources",
       "org.eclipse.rdf4j:rdf4j-rio-turtle",
       "org.eclipse.rdf4j:rdf4j-rio-turtle:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-sail-api",
-      "org.eclipse.rdf4j:rdf4j-sail-api:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-sail-base",
-      "org.eclipse.rdf4j:rdf4j-sail-base:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-sail-inferencer",
-      "org.eclipse.rdf4j:rdf4j-sail-inferencer:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-sail-memory",
-      "org.eclipse.rdf4j:rdf4j-sail-memory:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-sail-model",
-      "org.eclipse.rdf4j:rdf4j-sail-model:jar:sources",
-      "org.eclipse.rdf4j:rdf4j-shacl",
-      "org.eclipse.rdf4j:rdf4j-shacl:jar:sources",
       "org.eclipse.rdf4j:rdf4j-sparqlbuilder",
       "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources",
       "org.ehcache:ehcache",
@@ -10056,7 +8889,6 @@
       "org.glassfish.jaxb:txw2",
       "org.glassfish.jaxb:txw2:jar:sources",
       "org.glassfish:jakarta.json",
-      "org.glassfish:jakarta.json:jar:module",
       "org.glassfish:jakarta.json:jar:sources",
       "org.gwtproject:gwt-servlet",
       "org.gwtproject:gwt-servlet:jar:sources",
@@ -10796,178 +9628,6 @@
         "org.eclipse.jetty.webapp.WebXmlConfiguration"
       ]
     },
-    "org.eclipse.rdf4j:rdf4j-common-transaction": {
-      "org.eclipse.rdf4j.common.transaction.TransactionSettingFactory": [
-        "org.eclipse.rdf4j.common.transaction.DataImportMetricsFactory",
-        "org.eclipse.rdf4j.common.transaction.IsolationLevelFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-common-transaction:jar:sources": {
-      "org.eclipse.rdf4j.common.transaction.TransactionSettingFactory": [
-        "org.eclipse.rdf4j.common.transaction.DataImportMetricsFactory",
-        "org.eclipse.rdf4j.common.transaction.IsolationLevelFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5": {
-      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
-        "org.eclipse.rdf4j.http.client.apache5.ApacheHC5RDF4JHttpClientFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-apache5:jar:sources": {
-      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
-        "org.eclipse.rdf4j.http.client.apache5.ApacheHC5RDF4JHttpClientFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk": {
-      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
-        "org.eclipse.rdf4j.http.client.jdk.JdkRDF4JHttpClientFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-http-client-jdk:jar:sources": {
-      "org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientFactory": [
-        "org.eclipse.rdf4j.http.client.jdk.JdkRDF4JHttpClientFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation": {
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.Function": [
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Day",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Hours",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Minutes",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Month",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Now",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Seconds",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Timezone",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Tz",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Year",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.MD5",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA1",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA256",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA384",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA512",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Abs",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Ceil",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Floor",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Rand",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Round",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.STRUUID",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.StrDt",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.StrLang",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.UUID",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Concat",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Contains",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.EncodeForUri",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.LowerCase",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Replace",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrAfter",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrBefore",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrEnds",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrLen",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrStarts",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Substring",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.UpperCase",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.IsTripleFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.StatementFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TripleObjectFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TriplePredicateFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TripleSubjectFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.BooleanCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.ByteCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DateCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DateTimeCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DecimalCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DoubleCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.FloatCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.IntCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.IntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.LongCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NegativeIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NonNegativeIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NonPositiveIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.PositiveIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.ShortCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.StringCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedByteCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedIntCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedLongCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedShortCast"
-      ],
-      "org.eclipse.rdf4j.query.parser.sparql.aggregate.AggregateFunctionFactory": [
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.stdev.PopulationStandardDeviationAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.stdev.StandardDeviationAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.variance.PopulationVarianceAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.variance.VarianceAggregateFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryalgebra-evaluation:jar:sources": {
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.Function": [
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Day",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Hours",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Minutes",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Month",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Now",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Seconds",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Timezone",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Tz",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.datetime.Year",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.MD5",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA1",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA256",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA384",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.hash.SHA512",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Abs",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Ceil",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Floor",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Rand",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.numeric.Round",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.STRUUID",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.StrDt",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.StrLang",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.rdfterm.UUID",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Concat",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Contains",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.EncodeForUri",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.LowerCase",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Replace",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrAfter",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrBefore",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrEnds",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrLen",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.StrStarts",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.Substring",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.string.UpperCase",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.IsTripleFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.StatementFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TripleObjectFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TriplePredicateFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.triple.TripleSubjectFunction",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.BooleanCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.ByteCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DateCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DateTimeCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DecimalCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.DoubleCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.FloatCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.IntCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.IntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.LongCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NegativeIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NonNegativeIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.NonPositiveIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.PositiveIntegerCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.ShortCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.StringCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedByteCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedIntCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedLongCast",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.xsd.UnsignedShortCast"
-      ],
-      "org.eclipse.rdf4j.query.parser.sparql.aggregate.AggregateFunctionFactory": [
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.stdev.PopulationStandardDeviationAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.stdev.StandardDeviationAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.variance.PopulationVarianceAggregateFactory",
-        "org.eclipse.rdf4j.query.algebra.evaluation.function.aggregate.variance.VarianceAggregateFactory"
-      ]
-    },
     "org.eclipse.rdf4j:rdf4j-queryparser-sparql": {
       "org.eclipse.rdf4j.query.parser.QueryParserFactory": [
         "org.eclipse.rdf4j.query.parser.sparql.SPARQLParserFactory"
@@ -10980,152 +9640,6 @@
       ],
       "org.eclipse.rdf4j.query.parser.sparql.aggregate.AggregateFunctionFactory": []
     },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary": {
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.binary.BinaryQueryResultParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.binary.BinaryQueryResultWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-binary:jar:sources": {
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.binary.BinaryQueryResultParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.binary.BinaryQueryResultWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:jar:sources": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLBooleanJSONWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:jar:sources": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLBooleanXMLWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.BooleanTextParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.BooleanTextWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-queryresultio-text:jar:sources": {
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.BooleanTextParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.BooleanQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.BooleanTextWriterFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultParserFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVParserFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVParserFactory"
-      ],
-      "org.eclipse.rdf4j.query.resultio.TupleQueryResultWriterFactory": [
-        "org.eclipse.rdf4j.query.resultio.text.csv.SPARQLResultsCSVWriterFactory",
-        "org.eclipse.rdf4j.query.resultio.text.tsv.SPARQLResultsTSVWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.contextaware.config.ContextAwareFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-contextaware:jar:sources": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.contextaware.config.ContextAwareFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-http": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.http.config.HTTPRepositoryFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-http:jar:sources": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.http.config.HTTPRepositoryFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sail": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.sail.config.ProxyRepositoryFactory",
-        "org.eclipse.rdf4j.repository.sail.config.SailRepositoryFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sail:jar:sources": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.sail.config.ProxyRepositoryFactory",
-        "org.eclipse.rdf4j.repository.sail.config.SailRepositoryFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sparql": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-repository-sparql:jar:sources": {
-      "org.eclipse.rdf4j.repository.config.RepositoryFactory": [
-        "org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryFactory"
-      ]
-    },
     "org.eclipse.rdf4j:rdf4j-rio-api": {
       "java.nio.file.spi.FileTypeDetector": [
         "org.eclipse.rdf4j.rio.helpers.RioFileTypeDetector"
@@ -11134,22 +9648,6 @@
     "org.eclipse.rdf4j:rdf4j-rio-api:jar:sources": {
       "java.nio.file.spi.FileTypeDetector": [
         "org.eclipse.rdf4j.rio.helpers.RioFileTypeDetector"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-binary": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.binary.BinaryRDFParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.binary.BinaryRDFWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-binary:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.binary.BinaryRDFParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.binary.BinaryRDFWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-rio-datatypes": {
@@ -11170,26 +9668,6 @@
         "org.eclipse.rdf4j.rio.datatypes.XMLSchemaDatatypeHandler"
       ]
     },
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory",
-        "org.eclipse.rdf4j.rio.ndjsonld.NDJSONLDParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory",
-        "org.eclipse.rdf4j.rio.ndjsonld.NDJSONLDWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-jsonld:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory",
-        "org.eclipse.rdf4j.rio.ndjsonld.NDJSONLDParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory",
-        "org.eclipse.rdf4j.rio.ndjsonld.NDJSONLDWriterFactory"
-      ]
-    },
     "org.eclipse.rdf4j:rdf4j-rio-languages": {
       "org.eclipse.rdf4j.rio.LanguageHandler": [
         "org.eclipse.rdf4j.rio.languages.BCP47LanguageHandler",
@@ -11200,86 +9678,6 @@
       "org.eclipse.rdf4j.rio.LanguageHandler": [
         "org.eclipse.rdf4j.rio.languages.BCP47LanguageHandler",
         "org.eclipse.rdf4j.rio.languages.RFC3066LanguageHandler"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-n3": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.n3.N3ParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.n3.N3WriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-n3:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.n3.N3ParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.n3.N3WriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-nquads": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.nquads.NQuadsParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.nquads.NQuadsWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-nquads:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.nquads.NQuadsParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.nquads.NQuadsWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.ntriples.NTriplesParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.ntriples.NTriplesWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-ntriples:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.ntriples.NTriplesParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.ntriples.NTriplesWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.rdfjson.RDFJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.rdfjson.RDFJSONWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfjson:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.rdfjson.RDFJSONParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.rdfjson.RDFJSONWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.rdfxml.RDFXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.rdfxml.RDFXMLWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-rdfxml:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.rdfxml.RDFXMLParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.rdfxml.RDFXMLWriterFactory"
       ]
     },
     "org.eclipse.rdf4j:rdf4j-rio-trig": {
@@ -11298,22 +9696,6 @@
         "org.eclipse.rdf4j.rio.trig.TriGWriterFactory"
       ]
     },
-    "org.eclipse.rdf4j:rdf4j-rio-trix": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.trix.TriXParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.trix.TriXWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-rio-trix:jar:sources": {
-      "org.eclipse.rdf4j.rio.RDFParserFactory": [
-        "org.eclipse.rdf4j.rio.trix.TriXParserFactory"
-      ],
-      "org.eclipse.rdf4j.rio.RDFWriterFactory": [
-        "org.eclipse.rdf4j.rio.trix.TriXWriterFactory"
-      ]
-    },
     "org.eclipse.rdf4j:rdf4j-rio-turtle": {
       "org.eclipse.rdf4j.rio.RDFParserFactory": [
         "org.eclipse.rdf4j.rio.turtle.TurtleParserFactory"
@@ -11328,56 +9710,6 @@
       ],
       "org.eclipse.rdf4j.rio.RDFWriterFactory": [
         "org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer": {
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.CustomGraphQueryInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.DedupingInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.DirectTypeHierarchyInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.SchemaCachingRDFSInferencerFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-inferencer:jar:sources": {
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.CustomGraphQueryInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.DedupingInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.DirectTypeHierarchyInferencerFactory",
-        "org.eclipse.rdf4j.sail.inferencer.fc.config.SchemaCachingRDFSInferencerFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-memory": {
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.memory.config.MemoryStoreFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-sail-memory:jar:sources": {
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.memory.config.MemoryStoreFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-shacl": {
-      "org.eclipse.rdf4j.common.transaction.TransactionSettingFactory": [
-        "org.eclipse.rdf4j.sail.shacl.PerformanceHintFactory",
-        "org.eclipse.rdf4j.sail.shacl.ValidationApproachFactory"
-      ],
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.Function": [
-        "org.eclipse.rdf4j.sail.shacl.ast.XmlDatatypeUtilFunction"
-      ],
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.shacl.config.ShaclSailFactory"
-      ]
-    },
-    "org.eclipse.rdf4j:rdf4j-shacl:jar:sources": {
-      "org.eclipse.rdf4j.common.transaction.TransactionSettingFactory": [
-        "org.eclipse.rdf4j.sail.shacl.PerformanceHintFactory",
-        "org.eclipse.rdf4j.sail.shacl.ValidationApproachFactory"
-      ],
-      "org.eclipse.rdf4j.query.algebra.evaluation.function.Function": [
-        "org.eclipse.rdf4j.sail.shacl.ast.XmlDatatypeUtilFunction"
-      ],
-      "org.eclipse.rdf4j.sail.config.SailFactory": [
-        "org.eclipse.rdf4j.sail.shacl.config.ShaclSailFactory"
       ]
     },
     "org.ehcache:ehcache": {
@@ -11515,11 +9847,6 @@
       ],
       "jakarta.xml.bind.JAXBContextFactory": [
         "org.glassfish.jaxb.runtime.v2.JAXBContextFactory"
-      ]
-    },
-    "org.glassfish:jakarta.json:jar:module": {
-      "jakarta.json.spi.JsonProvider": [
-        "org.glassfish.json.JsonProviderImpl"
       ]
     },
     "org.jline:jline-terminal-jna": {
