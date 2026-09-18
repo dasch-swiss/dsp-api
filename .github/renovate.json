@@ -49,13 +49,6 @@
         "org.apache.jena:**"
       ],
       "enabled": false
-    },
-    {
-      "description": "Ignore graph-core (breaking changes, from .scala-steward.conf)",
-      "matchPackageNames": [
-        "org.scala-graph:graph-core_3"
-      ],
-      "enabled": false
     }
   ]
 }
