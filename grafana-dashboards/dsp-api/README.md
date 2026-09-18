@@ -101,6 +101,10 @@ restart marker and were aligned with 11 (see below); the avg-ranked routes table
   axes otherwise produce different tick-label widths), and **no y-axis label** (a rotated label is
   drawn outside `axisWidth` and shifts the plot; the unit is in the title instead). Keep those values
   identical when editing any of the seven panels.
+- **Same name, same colour.** Panels 5, 11, 13, 14, 17, 18, 19, 20 use `color.mode:
+  palette-classic-by-name`, which picks the colour from a hash of the series display name rather than
+  its position, so a route or route group has one colour across all panels. Keep it on any panel that
+  is keyed by route or group; with the default `palette-classic` the colours reshuffle per panel.
 - **Server time needs a requests panel next to it (13+18, 19+20).** Server time is requests × duration.
   A route or group whose server time grows because it is called more is load, not something to
   optimise away; one whose server time grows while its requests do not is a slowdown. So each

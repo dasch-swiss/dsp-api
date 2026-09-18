@@ -489,6 +489,9 @@
                     },
                     "axisSoftMin": 0,
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -909,6 +912,9 @@
                       "log": 2
                     },
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -1348,6 +1354,9 @@
                       "group": "A"
                     },
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -1431,6 +1440,9 @@
                       "group": "A"
                     },
                     "axisSoftMin": 0
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -1859,6 +1871,9 @@
                       "mode": "normal",
                       "group": "A"
                     }
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -1942,6 +1957,9 @@
                       "group": "A"
                     },
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -2187,6 +2205,9 @@
                       "group": "A"
                     },
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
@@ -2432,6 +2453,9 @@
                       "group": "A"
                     },
                     "axisWidth": 90
+                  },
+                  "color": {
+                    "mode": "palette-classic-by-name"
                   }
                 },
                 "overrides": []
