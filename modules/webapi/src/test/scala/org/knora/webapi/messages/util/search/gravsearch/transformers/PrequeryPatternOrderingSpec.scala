@@ -207,6 +207,19 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val luceneLeadT2Stmt                    = StatementPattern(letter, hasAuthorIri, anchorIri)
   private val luceneGroupInput: Seq[QueryPattern] = Seq(luceneLeadT2Stmt, luceneGroup)
 
+  // Case 9b/9c (T1 leads regardless of connectivity): a text:query statement, bare or wrapped in a
+  // GroupPattern, leads a block even when nothing has bound its variable yet, while a plain statement
+  // whose variable the outer scope already bound is connected. Parity with `moveLuceneToBeginning`.
+  private val luceneOuterBoundVar                  = QueryVariable("obVar")
+  private val luceneUnboundVar                     = QueryVariable("luceneVar")
+  private val luceneOuterBound: Set[QueryVariable] = Set(luceneOuterBoundVar)
+  private val connectedPlainStmt                   = StatementPattern(luceneOuterBoundVar, genericPropIri, n)
+  private val unconnectedLuceneStmt                =
+    StatementPattern(luceneUnboundVar, luceneQueryIri, XsdLiteral("test", OntologyConstants.Xsd.String.toSmartIri))
+  private val luceneLeadsUnconnectedInput: Seq[QueryPattern]      = Seq(connectedPlainStmt, unconnectedLuceneStmt)
+  private val unconnectedLuceneGroup                              = GroupPattern(Seq(unconnectedLuceneStmt))
+  private val luceneGroupLeadsUnconnectedInput: Seq[QueryPattern] = Seq(connectedPlainStmt, unconnectedLuceneGroup)
+
   // Case 10 (attached VALUES adjacency): the VALUES on ?subj is emitted immediately before the statement
   // using ?subj, wherever that statement lands.
   private val attachAnchorStmt                       = StatementPattern(letter, hasAuthorIri, anchorIri)
@@ -377,6 +390,17 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
       assertTrue(
         actual.head == luceneGroup,
         actual.head.asInstanceOf[GroupPattern].patterns == luceneGroupInner,
+      )
+    },
+    test("let a bare text:query statement lead even when unconnected, over a connected plain statement") {
+      val actual = PrequeryPatternOrdering.order(luceneLeadsUnconnectedInput, luceneOuterBound)
+      assertTrue(actual.head == unconnectedLuceneStmt)
+    },
+    test("let a Lucene GroupPattern lead even when unconnected, without reordering its own patterns") {
+      val actual = PrequeryPatternOrdering.order(luceneGroupLeadsUnconnectedInput, luceneOuterBound)
+      assertTrue(
+        actual.head == unconnectedLuceneGroup,
+        actual.head.asInstanceOf[GroupPattern].patterns == Seq(unconnectedLuceneStmt),
       )
     },
     test("attach a unit-referenced VALUES immediately before the statement using it") {

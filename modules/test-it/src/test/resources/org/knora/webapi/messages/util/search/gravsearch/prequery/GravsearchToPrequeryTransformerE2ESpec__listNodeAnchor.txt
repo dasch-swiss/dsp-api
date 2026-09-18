@@ -1,9 +1,9 @@
 SELECT DISTINCT ?letter (GROUP_CONCAT(DISTINCT(IF(BOUND(?subj), STR(?subj), "")); SEPARATOR='') AS ?subj__Concat)
 WHERE {
-?letter <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0801/beol#letter> .
-?letter <http://www.knora.org/ontology/0801/beol#hasSubject> ?subj .
-?subj <http://www.knora.org/ontology/knora-base#valueHasListNode> ?subj__httpwwwknoraorgontologyknorabasevalueHasListNode__httprdfhchlists0801logarithmic_curves__listNodeVar .
 <http://rdfh.ch/lists/0801/logarithmic_curves> <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?subj__httpwwwknoraorgontologyknorabasevalueHasListNode__httprdfhchlists0801logarithmic_curves__listNodeVar .
+?subj <http://www.knora.org/ontology/knora-base#valueHasListNode> ?subj__httpwwwknoraorgontologyknorabasevalueHasListNode__httprdfhchlists0801logarithmic_curves__listNodeVar .
+?letter <http://www.knora.org/ontology/0801/beol#hasSubject> ?subj .
+?letter <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0801/beol#letter> .
 FILTER NOT EXISTS {
  ?letter <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 

@@ -1,13 +1,13 @@
 SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?int), STR(?int), "")); SEPARATOR='') AS ?int__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?richtext), STR(?richtext), "")); SEPARATOR='') AS ?richtext__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?text), STR(?text), "")); SEPARATOR='') AS ?text__Concat)
 WHERE {
-?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 {
 ?richtext <http://jena.apache.org/text#query> "test"^^<http://www.w3.org/2001/XMLSchema#string> .
-?thing <http://www.knora.org/ontology/0001/anything#hasRichtext> ?richtext .
-?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
-?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
+?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
+?thing <http://www.knora.org/ontology/0001/anything#hasRichtext> ?richtext .
 FILTER NOT EXISTS {
  ?richtext <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 
@@ -18,10 +18,10 @@ FILTER NOT EXISTS {
 }
 } UNION {
 ?text <http://jena.apache.org/text#query> "test"^^<http://www.w3.org/2001/XMLSchema#string> .
-?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
-?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
-?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
+?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 FILTER NOT EXISTS {
  ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 

@@ -14,6 +14,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
+import org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -320,7 +321,9 @@ final class QueryTraverser()(implicit stringFormatter: StringFormatter) {
                     whereTransformer = transformer,
                     limitInferenceToOntologies = limitInferenceToOntologies,
                   )
-      whereClause = WhereClause(patterns)
+      // The single ordering seam for the prequery: every relative ordering of its WHERE patterns is
+      // decided here, by PrequeryPatternOrdering, and nowhere else.
+      whereClause = WhereClause(PrequeryPatternOrdering.order(patterns))
     } yield inputQuery.copy(fromClause = None, whereClause = whereClause)
   }
 }

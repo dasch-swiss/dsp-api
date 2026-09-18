@@ -1,7 +1,7 @@
 SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?text), STR(?text), "")); SEPARATOR='') AS ?text__Concat)
 WHERE {
-?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 ?text <http://www.knora.org/ontology/knora-base#valueHasString> ?text__valueHasString .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 {
 ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
@@ -11,8 +11,8 @@ FILTER NOT EXISTS {
 
 }
 } UNION {
-?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 ?text <http://www.knora.org/ontology/knora-base#valueHasString> ?text__valueHasString .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 FILTER(regex(?text__valueHasString, "Abel", "i"))
 FILTER NOT EXISTS {
  ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .

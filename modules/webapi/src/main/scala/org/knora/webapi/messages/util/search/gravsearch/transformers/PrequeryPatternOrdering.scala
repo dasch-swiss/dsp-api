@@ -12,7 +12,7 @@ import org.knora.webapi.messages.util.search.*
 
 /**
  * Orders the patterns of one Gravsearch prequery WHERE block so that Fuseki (TDB2, no `stats.opt`)
- * evaluates them in a sane order. This is a pure function, not wired into the prequery pipeline yet.
+ * evaluates them in a sane order.
  *
  * Relies on the engine facts documented in `docs/development/dsp-api-fuseki-query-execution.md`: Fact 1
  * (Fuseki reorders heuristically but only within one BGP, essentially preserving document order across
@@ -37,11 +37,14 @@ import org.knora.webapi.messages.util.search.*
  * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by
  * name rather than by namespace, deliberately - do not widen this to a namespace test.
  *
- * The recursion seeds in step 4 below (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
- * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic
+ * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set;
+ * `OPTIONAL`/`UNION` branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic
  * mirroring Fuseki's evaluation (Fact 4), not a SPARQL-semantics claim. Likewise, placing every statement
  * before every block is parity with today's `ReorderPatternsByDependency`, not a SPARQL identity: it can
- * change results when a block binds a variable a later statement also uses.
+ * change results when a block binds a variable a later statement also uses. A T1 Lucene unit leads its
+ * block regardless of connectivity, matching the `moveLuceneToBeginning` pass this replaces, whose own
+ * Scaladoc records the measured ~300x cost of evaluating the class `VALUES` enumeration before the
+ * index-anchored Lucene lookup.
  */
 object PrequeryPatternOrdering {
 
@@ -190,19 +193,21 @@ object PrequeryPatternOrdering {
     valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
   ): QueryPattern = candidates.minBy(rank(_, bound, valuesByVar))
 
-  /** Rules 3a-3d: picks the next unit to emit from the units still remaining. */
+  /** Rule T1, then rules 3a-3d: picks the next unit to emit from the units still remaining. */
   private def pickNext(
     remaining: Seq[QueryPattern],
     bound: Set[QueryVariable],
     valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
   ): QueryPattern = {
     def connected(u: QueryPattern) = vars(u).intersect(bound).nonEmpty
+    val ruleT1                     = remaining.filter(u => tierNum(u, valuesByVar) == 1)
     val (typeUnits, nonType)       = remaining.partition(isTypeUnit)
     val ruleA                      = nonType.filter(connected)
     val ruleB                      = typeUnits.filter(connected)
     val ruleC                      = remaining.filterNot(isUnselectiveTechnicalType)
 
-    if (ruleA.nonEmpty) bestOf(ruleA, bound, valuesByVar)
+    if (ruleT1.nonEmpty) bestOf(ruleT1, bound, valuesByVar)
+    else if (ruleA.nonEmpty) bestOf(ruleA, bound, valuesByVar)
     else if (ruleB.nonEmpty) bestOf(ruleB, bound, valuesByVar)
     else if (ruleC.nonEmpty) bestOf(ruleC, bound, valuesByVar)
     else bestOf(remaining, bound, valuesByVar)

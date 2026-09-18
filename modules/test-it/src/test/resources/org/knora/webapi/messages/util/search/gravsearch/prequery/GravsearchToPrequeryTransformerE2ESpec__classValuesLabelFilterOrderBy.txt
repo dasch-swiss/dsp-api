@@ -2,8 +2,8 @@ SELECT DISTINCT ?src (GROUP_CONCAT(DISTINCT(IF(BOUND(?title), STR(?title), ""));
 WHERE {
 VALUES ?src__resTypes__37ff9d79 { <http://www.knora.org/ontology/0801/beol#basicLetter> <http://www.knora.org/ontology/0801/beol#letter> <http://www.knora.org/ontology/0801/beol#manuscript> <http://www.knora.org/ontology/0801/beol#writtenSource> }
 ?src <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?src__resTypes__37ff9d79 .
-?src <http://www.w3.org/2000/01/rdf-schema#label> ?label .
 ?src <http://www.knora.org/ontology/0801/beol#title> ?title .
+?src <http://www.w3.org/2000/01/rdf-schema#label> ?label .
 ?title <http://www.knora.org/ontology/knora-base#valueHasString> ?titleStr .
 FILTER((?titleStr = "Basel"^^<http://www.w3.org/2001/XMLSchema#string>))
 FILTER NOT EXISTS {

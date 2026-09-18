@@ -1,13 +1,13 @@
 SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?text), STR(?text), "")); SEPARATOR='') AS ?text__Concat)
 WHERE {
-?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
+?standoffParagraphTag <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/standoff#StandoffParagraphTag> .
+?standoffDateTag <http://www.knora.org/ontology/knora-base#standoffTagHasStartParent>* ?standoffParagraphTag .
+?standoffDateTag <http://www.knora.org/ontology/knora-base#valueHasEndJDN> ?standoffDateTag__valueHasEndJDN .
+?standoffDateTag <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?standoffDateTag__valueHasStartJDN .
 ?text <http://www.knora.org/ontology/knora-base#valueHasStandoff> ?standoffDateTag .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 VALUES ?standoffDateTag__resTypes__57e240da { <http://www.knora.org/ontology/0001/anything#StandoffEventTag> <http://www.knora.org/ontology/knora-base#StandoffDateTag> }
 ?standoffDateTag <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?standoffDateTag__resTypes__57e240da .
-?standoffDateTag <http://www.knora.org/ontology/knora-base#standoffTagHasStartParent>* ?standoffParagraphTag .
-?standoffParagraphTag <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/standoff#StandoffParagraphTag> .
-?standoffDateTag <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?standoffDateTag__valueHasStartJDN .
-?standoffDateTag <http://www.knora.org/ontology/knora-base#valueHasEndJDN> ?standoffDateTag__valueHasEndJDN .
 FILTER((("2457747"^^<http://www.w3.org/2001/XMLSchema#integer> <= ?standoffDateTag__valueHasEndJDN) && ("2457747"^^<http://www.w3.org/2001/XMLSchema#integer> >= ?standoffDateTag__valueHasStartJDN)))
 FILTER NOT EXISTS {
  ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
