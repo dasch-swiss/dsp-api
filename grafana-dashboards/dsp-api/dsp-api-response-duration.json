@@ -511,168 +511,6 @@
           }
         }
       },
-      "panel-6": {
-        "kind": "Panel",
-        "spec": {
-          "id": 6,
-          "title": "Routes ranked by average duration (range)",
-          "description": "Per-route average duration (phase=body) and request count over the dashboard time range, sorted slowest first. Only routes with at least one request in the range are shown (avoids 0/0 = NaN rows). Honours the Route group / Route (path) / Method / Exclude filters. This is the quickest way to see which endpoints are slow right now, and how often they are actually called.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "expr": "sum by (path, method) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\"}[$__range])) > 0)",
-                        "instant": true,
-                        "range": false,
-                        "format": "table",
-                        "queryType": "instant"
-                      }
-                    }
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "B",
-                    "query": {
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "expr": "sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~\"${path:pipe}\",method=~\"${method:pipe}\"}[$__range]))",
-                        "instant": true,
-                        "range": false,
-                        "format": "table",
-                        "queryType": "instant"
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": [
-                {
-                  "kind": "merge",
-                  "spec": {
-                    "id": "merge",
-                    "options": {}
-                  }
-                },
-                {
-                  "kind": "organize",
-                  "spec": {
-                    "id": "organize",
-                    "options": {
-                      "excludeByName": {
-                        "Time": true
-                      },
-                      "indexByName": {
-                        "method": 0,
-                        "path": 1,
-                        "Value #A": 2,
-                        "Value #B": 3
-                      },
-                      "renameByName": {
-                        "Value #A": "Avg duration",
-                        "Value #B": "Requests"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "table",
-            "version": "",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "custom": {
-                    "align": "auto",
-                    "filterable": false
-                  }
-                },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Avg duration"
-                    },
-                    "properties": [
-                      {
-                        "id": "unit",
-                        "value": "s"
-                      },
-                      {
-                        "id": "decimals",
-                        "value": 3
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "mode": "gradient",
-                          "type": "color-background"
-                        }
-                      },
-                      {
-                        "id": "color",
-                        "value": {
-                          "mode": "continuous-GrYlRd"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "Requests"
-                    },
-                    "properties": [
-                      {
-                        "id": "unit",
-                        "value": "short"
-                      },
-                      {
-                        "id": "decimals",
-                        "value": 0
-                      }
-                    ]
-                  }
-                ]
-              },
-              "options": {
-                "showHeader": true,
-                "sortBy": [
-                  {
-                    "desc": true,
-                    "displayName": "Avg duration"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
       "panel-7": {
         "kind": "Panel",
         "spec": {
@@ -1098,7 +936,7 @@
         "spec": {
           "id": 12,
           "title": "Routes ranked by total server time (range)",
-          "description": "Per route and method over the dashboard range: total seconds of server time (= sum of all request durations), average duration, request count, 4xx and 5xx counts. Sorted by total time: the routes that consume the most server time are where optimisation pays off (on prod: extended search and its count, resources reads, ontology allentities), which is a different list from the slowest-average routes (rare exports). Only routes with traffic in the range are shown. Unmatched requests (path=\"\") excluded. Click a path to open Tempo with the server spans of that route slower than 1 s in the selected environment/stack. Honours Route group / Route (path) / Method / Exclude filters.",
+          "description": "Per route and method over the dashboard range: total seconds of server time (= sum of all request durations), average duration, request count, 4xx and 5xx counts. Sorted by total time: the routes that consume the most server time are where optimisation pays off (on prod: extended search and its count, resources reads, ontology allentities), which is a different list from the slowest-average routes (rare exports). Only routes that reported at least one request duration in the range are shown (no rows with an empty time). Unmatched requests (path=\"\") excluded. Click a path to open Tempo with the server spans of that route slower than 1 s in the selected environment/stack. Honours Route group / Route (path) / Method / Exclude filters.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1118,7 +956,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) > 0)",
+                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) / sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1141,7 +979,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range]))",
+                        "expr": "sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1164,7 +1002,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) > 0)",
+                        "expr": "sum by (path, method) (increase(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1187,7 +1025,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"4xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) > 0)",
+                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"4xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -1210,7 +1048,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) > 0)",
+                        "expr": "(sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__range])) or (sum by (path, method) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$__range])) * 0)) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",phase=\"body\"}[$__range])) > 0)",
                         "instant": true,
                         "range": false,
                         "queryType": "instant",
@@ -2126,23 +1964,10 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-6"
-              },
-              "x": 0,
-              "y": 31,
-              "width": 24,
-              "height": 11
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
                 "name": "panel-12"
               },
               "x": 0,
-              "y": 42,
+              "y": 31,
               "width": 24,
               "height": 12
             }
@@ -2155,7 +1980,7 @@
                 "name": "panel-13"
               },
               "x": 0,
-              "y": 54,
+              "y": 43,
               "width": 12,
               "height": 9
             }
@@ -2168,7 +1993,7 @@
                 "name": "panel-14"
               },
               "x": 12,
-              "y": 54,
+              "y": 43,
               "width": 12,
               "height": 9
             }
@@ -2181,7 +2006,7 @@
                 "name": "panel-15"
               },
               "x": 0,
-              "y": 63,
+              "y": 52,
               "width": 12,
               "height": 9
             }
@@ -2194,7 +2019,7 @@
                 "name": "panel-16"
               },
               "x": 12,
-              "y": 63,
+              "y": 52,
               "width": 12,
               "height": 9
             }
@@ -2207,7 +2032,7 @@
                 "name": "panel-17"
               },
               "x": 0,
-              "y": 72,
+              "y": 61,
               "width": 24,
               "height": 8
             }
@@ -2220,7 +2045,7 @@
                 "name": "panel-7"
               },
               "x": 0,
-              "y": 80,
+              "y": 69,
               "width": 24,
               "height": 11
             }

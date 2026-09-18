@@ -56,7 +56,6 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 | 3 5xx error rate | Share of 5xx over the range; unmatched requests excluded | `$__range` |
 | 4 Avg duration — global | Mean duration over time (deploy-regression line) | `[$smoothing]` |
 | 5 Avg duration by route | Mean duration per route over time | `[$smoothing]` |
-| 6 Routes ranked by avg duration | Slowest routes now + how often they run | `$__range` |
 | 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target + scoped project, + the query | Tempo |
 | 11 Avg duration by route group | One line per route group instead of one global average | `[$smoothing]` |
 | 12 Routes ranked by total server time | Where the API spends its time; avg, requests, 4xx, 5xx; path links to Tempo | `$__range` |
@@ -69,11 +68,12 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 ### Proposed comparison panels
 
 Panels 11–17 were added **directly below** the panels they are meant to replace, so the two can be
-compared on real data before anything is removed: 11 under 4, 12–14 after 5–6, then the triplestore
+compared on real data before anything is removed: 11 under 4, 12–14 after 5, then the triplestore
 panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
-were dropped because they got in the way of that comparison. Panels 6–7 are unchanged; the stat tiles
-1–3 took the `path!=""` proposal directly (accepted, no side-by-side copies); panels 4 and 5 stay,
-gained the deploy marker and were aligned with 11 (see below). What each proposal fixes:
+were dropped because they got in the way of that comparison. Decisions so far: the stat tiles 1–3
+took the `path!=""` proposal directly (no side-by-side copies); panels 4 and 5 stay, gained the
+restart marker and were aligned with 11 (see below); the avg-ranked routes table (former panel 6) was
+**replaced** by the total-server-time table 12; panel 7 is unchanged. What each proposal fixes:
 
 - **`path!=""` everywhere (1–3, 11–14).** ~11k requests/day on prod carry an empty `path`: CORS
   `OPTIONS` preflights and `HEAD` probes that never matched an endpoint. They inflate the request-rate
@@ -124,19 +124,17 @@ gained the deploy marker and were aligned with 11 (see below). What each proposa
 
 ### Query-shape rationale (don't "simplify" these away)
 
-- **Panel 6 is a Tempo-style two-query join.** Query A is avg duration, query B is `increase()` request
-  count; both carry `format: "table"` **and** query `version: "v0"`. Without `format: table` the
-  Prometheus results come back as time-series-wide frames and the `merge` transform produces one column
-  per series (raw label header + NaN rows) instead of `method | path | Avg | Requests`. And the server
-  **silently strips `format` when `version` is empty** — so both are load-bearing. Query A is also
-  guarded with `and (<countB> > 0)` to drop routes with no traffic in the range (`0/0 = NaN`, which
-  otherwise sorts to the top).
+- **Panel 12 is a Tempo-style multi-query join.** Query A is avg duration, B `increase()` request
+  count, C total time, D 4xx count, E 5xx count; all carry `format: "table"` **and** query
+  `version: "v0"`, and are merged on `path, method`. Without `format: table` the Prometheus results
+  come back as time-series-wide frames and the `merge` transform produces one column per series (raw
+  label header + NaN rows) instead of `method | path | Total | Avg | Requests | 4xx | 5xx`. And the
+  server **silently strips `format` when `version` is empty** — so both are load-bearing. A and C are
+  guarded with `and (<B> > 0)` to drop routes with no traffic in the range (`0/0 = NaN`, which
+  otherwise sorts to the top); D/E are filled with `or (<B> * 0)` so routes without errors show `0`
+  rather than an empty cell (an empty cell would sort unpredictably and read as "unknown").
 - **Requests is `increase()` (a count), not `rate()`.** The slow routes here are rare (export/candelete
   run a handful of times an hour); a per-second rate rounds to `0.00` and reads as broken.
-- **Panel 12 is the same join with five queries.** A avg, B requests, C total time, D 4xx, E 5xx — all
-  `format: table` + `version: v0`, merged on `path, method`. C/D/E are guarded with `and (<B> > 0)` like
-  A, and D/E are filled with `or (<B> * 0)` so routes without errors show `0` rather than an empty cell
-  (an empty cell would sort unpredictably and read as "unknown").
 - **Panel 5 uses a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route
   (`/v3/export/resources`, multiple seconds) otherwise compresses every other route into the baseline.
   An earlier `topk()` was removed — in a range graph it re-picks members every step and renders as
