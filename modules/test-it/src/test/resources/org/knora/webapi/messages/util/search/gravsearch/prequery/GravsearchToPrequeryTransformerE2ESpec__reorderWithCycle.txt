@@ -19,14 +19,6 @@ VALUES ?thing2__subProp__a5f452a8 { <http://www.knora.org/ontology/0001/anything
 ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 ?thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 FILTER NOT EXISTS {
- ?thing2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-
-}
-FILTER NOT EXISTS {
- ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-
-}
-FILTER NOT EXISTS {
  ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 
 }
@@ -40,6 +32,14 @@ FILTER NOT EXISTS {
 }
 FILTER NOT EXISTS {
  ?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?thing2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 
 }
 }
