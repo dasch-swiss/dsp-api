@@ -425,6 +425,14 @@ optimizer uses the fixed variable-counting heuristic, and `OPTIONAL` blocks are 
 evaluated in document order. Written pattern order is load-bearing: the store largely executes
 the query in the shape you emit.
 
+For Gravsearch prequeries, this is not the pattern order the transformer code writes: a single
+connectivity-aware pass, `PrequeryPatternOrdering`, reorders every prequery WHERE block at one
+seam, `QueryTraverser.transformSelectToSelect`. So a change to the pass or its tiers shows up as
+a golden-file diff in `GravsearchToPrequeryTransformerE2ESpec` and
+`GravsearchToCountPrequeryTransformerE2ESpec`; `just test-gravsearch-prequery` runs both halves.
+See "Query Optimisation by Connectivity-Aware Pattern Ordering" in
+`docs/05-internals/design/api-v2/gravsearch.md` for the ordering rules.
+
 ### Selective patterns first — always before OPTIONALs
 
 Place the most selective pattern (a bound IRI, a literal lookup such as a shortcode) **first**

@@ -444,7 +444,9 @@ class SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
             |  }
             |}
             |""".stripMargin
-        verifySearchCountResult(query, 52, Some(anythingUser1))
+        // The prequery now emits the class statement before the MINUS block, so the MINUS
+        // excludes the two Things that have anything:hasBoolean, matching the FILTER NOT EXISTS test below.
+        verifySearchCountResult(query, 50, Some(anythingUser1))
       },
       test("count anything:Thing that doesn't have a boolean property (FILTER NOT EXISTS)") {
         val query =

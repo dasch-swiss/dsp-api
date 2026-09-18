@@ -30,18 +30,17 @@ final case class ConstructTransformer(
       patterns <- optimizeAndTransformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
     } yield inputQuery.copy(whereClause = WhereClause(patterns))
 
+  /**
+   * The main-query (CONSTRUCT) path deliberately has no pattern-ordering pass: no `BindPattern`, no Lucene
+   * `text:query` statement and no `GroupPattern` can reach it, because those are introduced only by the
+   * prequery generator. Ordering for the prequery lives in `PrequeryPatternOrdering`.
+   */
   private def optimizeAndTransformPatterns(
     patterns: Seq[QueryPattern],
     limit: Option[Set[SmartIri]],
   ): Task[Seq[QueryPattern]] = for {
     optimisedPatterns <-
-      ZIO.attempt(
-        SparqlTransformer.moveBindToBeginning(
-          SparqlTransformer.optimiseIsDeletedWithFilter(
-            SparqlTransformer.moveLuceneToBeginning(patterns),
-          ),
-        ),
-      )
+      ZIO.attempt(SparqlTransformer.optimiseIsDeletedWithFilter(patterns))
     transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
   } yield transformedPatterns.flatten
 

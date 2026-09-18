@@ -1,8 +1,8 @@
 SELECT DISTINCT ?thing
 WHERE {
 {
-?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?intVal .
 FILTER((?intVal > "1"^^<http://www.w3.org/2001/XMLSchema#integer>))
 FILTER NOT EXISTS {

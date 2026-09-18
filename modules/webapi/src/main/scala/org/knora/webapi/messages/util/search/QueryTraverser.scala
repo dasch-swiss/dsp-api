@@ -14,6 +14,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
+import org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -320,7 +321,14 @@ final class QueryTraverser()(implicit stringFormatter: StringFormatter) {
                     whereTransformer = transformer,
                     limitInferenceToOntologies = limitInferenceToOntologies,
                   )
-      whereClause = WhereClause(patterns)
+      // The prequery's ordering seam: PrequeryPatternOrdering decides the order of the statement and
+      // GroupPattern units, and the placement of BIND / VALUES / blocks / filters / FILTER NOT EXISTS
+      // relative to those units. It does not decide the relative order within the filter group, the
+      // block group or the FILTER NOT EXISTS group, nor the order inside a GroupPattern (which it
+      // treats as an opaque leaf); those are inherited from StatementsFirst and
+      // SparqlTransformer.optimiseIsDeletedWithFilter, which run at every nesting level earlier in
+      // the pipeline.
+      whereClause = WhereClause(PrequeryPatternOrdering.order(patterns))
     } yield inputQuery.copy(fromClause = None, whereClause = whereClause)
   }
 }

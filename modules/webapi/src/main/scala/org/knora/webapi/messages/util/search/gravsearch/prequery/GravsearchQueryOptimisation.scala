@@ -5,16 +5,12 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.hyperedges.DiHyperEdge
-import scalax.collection.immutable.Graph
-
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation.StringHyperGraph
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
-import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
+import org.knora.webapi.messages.util.search.gravsearch.prequery.StatementsFirst.statementsFirst
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
@@ -23,7 +19,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
  * A feature factory that constructs Gravsearch query optimisation algorithms.
  */
 object GravsearchQueryOptimisation {
-  type StringHyperGraph = Graph[String, DiHyperEdge[String]]
 
   def optimiseQueryPatterns(
     patterns: Seq[QueryPattern],
@@ -31,7 +26,7 @@ object GravsearchQueryOptimisation {
   ): Seq[QueryPattern] = {
     val removedRedundant = removeRedundantKnoraApiResource(patterns)
     val removedEntities  = removeEntitiesInferredFromProperty(removedRedundant, typeInspectionResult)
-    val result           = reorderPatternsByDependency(removedEntities)
+    val result           = statementsFirst(removedEntities)
     result
   }
 }
@@ -176,192 +171,36 @@ private object RemoveEntitiesInferredFromProperty {
 }
 
 /**
- * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
+ * Moves statement patterns ahead of other patterns at each nesting level. The real ordering (subject/object
+ * connectivity, anchor tiers) is done afterwards by `PrequeryPatternOrdering` in
+ * `QueryTraverser.transformSelectToSelect`, and that pass cannot subsume this partition: this one changes
+ * which patterns get generated, not just their order. `GravsearchQueryOptimisation.optimiseQueryPatterns` is
+ * reached from `AbstractPrequeryGenerator` via `QueryTraverser.transformWherePatterns`, which runs it before
+ * the per-pattern transform loop in the same method, and `AbstractPrequeryGenerator` is stateful across that
+ * loop. A FILTER or BIND handed to the generator before the statements it depends on therefore yields
+ * different generated patterns. The regression goldens `filterBeforeStatementsInUnion` and
+ * `dateFilterInUnionAndTopLevel` are the cases that fail if this partition is dropped.
  */
-private object ReorderPatternsByDependency {
+private object StatementsFirst {
 
-  /**
-   * Converts a sequence of query patterns into DAG representing dependencies between
-   * the subjects and objects used, performs a topological sort of the graph, and reorders
-   * the query patterns according to the topological order.
-   *
-   * @param statementPatterns the query patterns to be reordered.
-   * @return the reordered query patterns.
-   */
-  private def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
-    @scala.annotation.tailrec
-    def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): StringHyperGraph = {
-      val graph: StringHyperGraph = graphComponents.foldLeft(Graph.empty: StringHyperGraph) { (graph, edgeDef) =>
-        val edge = DiHyperEdge(edgeDef._1)(edgeDef._2)
-        graph ++ Vector(edge) // add nodes and edges to graph
-      }
-
-      if (graph.isCyclic) {
-        // get the cycle
-        val cycle: graph.Cycle = graph.findCycle.get
-
-        // the cyclic node is the one that cycle starts and ends with
-        val cyclicNode: graph.NodeT        = cycle.endNode
-        val cyclicEdge: graph.EdgeT        = cyclicNode.edges.last
-        val originNodeOfCyclicEdge: String = cyclicEdge.node1.outer
-        val TargetNodeOfCyclicEdge: String = cyclicEdge.node2.outer
-        val graphComponentsWithOutCycle    =
-          graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
-
-        makeGraphWithoutCycles(graphComponentsWithOutCycle)
-      } else {
-        graph
-      }
-    }
-
-    def createGraph: StringHyperGraph = {
-      val graphComponents: Seq[(String, String)] = statementPatterns.map { statementPattern =>
-        // transform every statementPattern to pair of nodes that will consist an edge.
-        val node1 = statementPattern.subj.toSparql
-        val node2 = statementPattern.obj.toSparql
-        (node1, node2)
-      }
-
-      makeGraphWithoutCycles(graphComponents)
-    }
-
-    /**
-     * Finds topological orders that don't end with an object of rdf:type.
-     *
-     * @param orders the orders to be filtered.
-     * @param statementPatterns the statement patterns that the orders are based on.
-     * @return the filtered topological orders.
-     */
-    def findOrdersNotEndingWithObjectOfRdfType(
-      orders: Set[Vector[StringHyperGraph#NodeT]],
-      statementPatterns: Seq[StatementPattern],
-    ): Set[Vector[StringHyperGraph#NodeT]] = {
-      type NodeT = StringHyperGraph#NodeT
-
-      // Find the nodes that are objects of rdf:type in the statement patterns.
-      val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns.filter { statementPattern =>
-        statementPattern.pred match {
-          case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
-          case _              => false
-        }
-      }.map { statementPattern =>
-        statementPattern.obj.toSparql
-      }.toSet
-
-      // Filter out the topological orders that end with any of those nodes.
-      orders.filterNot { (order: Vector[NodeT]) =>
-        nodesThatAreObjectsOfRdfType.contains(order.last.outer)
-      }
-    }
-
-    /**
-     * Tries to find the best topological order for the graph, by finding all possible topological orders
-     * and eliminating those whose last node is the object of rdf:type.
-     *
-     * @param graph the graph to be ordered.
-     * @param statementPatterns the statement patterns that were used to create the graph.
-     * @return a topological order.
-     */
-    def findBestTopologicalOrder(
-      graph: StringHyperGraph,
-      statementPatterns: Seq[StatementPattern],
-    ): Vector[StringHyperGraph#NodeT] = {
-      type NodeT = StringHyperGraph#NodeT
-
-      /**
-       * An ordering for sorting topological orders.
-       */
-      object TopologicalOrderOrdering extends Ordering[Vector[NodeT]] {
-        private def orderToString(order: Vector[NodeT]) = order.map(_.outer).mkString("|")
-
-        override def compare(left: Vector[NodeT], right: Vector[NodeT]): Int =
-          orderToString(left).compare(orderToString(right))
-      }
-
-      // Get all the possible topological orders for the graph.
-      val allTopologicalOrders: Set[Vector[NodeT]] = TopologicalSortUtil.findAllTopologicalOrderPermutations(graph)
-
-      // Did we find any topological orders?
-      if (allTopologicalOrders.isEmpty) {
-        // No, the graph is cyclical.
-        Vector.empty
-      } else {
-        // Yes. Is there only one possible order?
-        if (allTopologicalOrders.size == 1) {
-          // Yes. Don't bother filtering.
-          allTopologicalOrders.head
-        } else {
-          // There's more than one possible order. Find orders that don't end with an object of rdf:type.
-          val ordersNotEndingWithObjectOfRdfType: Set[Vector[NodeT]] =
-            findOrdersNotEndingWithObjectOfRdfType(allTopologicalOrders, statementPatterns)
-
-          // Are there any?
-          val preferredOrders = if (ordersNotEndingWithObjectOfRdfType.nonEmpty) {
-            // Yes. Use one of those.
-            ordersNotEndingWithObjectOfRdfType
-          } else {
-            // No. Use any order.
-            allTopologicalOrders
-          }
-
-          // Sort the preferred orders to produce a deterministic result, and return one of them.
-          preferredOrders.min(using TopologicalOrderOrdering)
-        }
-      }
-    }
-
-    def sortStatementPatterns(
-      createdGraph: StringHyperGraph,
-      statementPatterns: Seq[StatementPattern],
-    ): Seq[QueryPattern] = {
-      type NodeT = StringHyperGraph#NodeT
-
-      // Try to find the best topological order for the graph.
-      val topologicalOrder: Vector[NodeT] =
-        findBestTopologicalOrder(graph = createdGraph, statementPatterns = statementPatterns)
-
-      // Was a topological order found?
-      if (topologicalOrder.nonEmpty) {
-        // Yes. Sort the statement patterns according to the reverse topological order.
-        topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-          val nextStatements = statementPatterns.filter(_.obj.toSparql.equals(node.outer)).toVector
-          nextStatements ++ sortedStatements
-        }
-      } else {
-        // No topological order found.
-        statementPatterns
-      }
-    }
-
-    sortStatementPatterns(createGraph, statementPatterns)
-  }
-
-  /**
-   * Performs the optimisation.
-   *
-   * @param patterns the query patterns.
-   * @return the optimised query patterns.
-   */
-  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+  def statementsFirst(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     val (statementPatterns, otherPatterns) = patterns.partition {
       case _: StatementPattern => true
       case _                   => false
     }
 
-    val sortedStatementPatterns = createAndSortGraph(statementPatterns.asInstanceOf[Seq[StatementPattern]])
-
     val sortedOtherPatterns = otherPatterns.map {
       case unionPattern: UnionPattern =>
-        UnionPattern(unionPattern.blocks.map(reorderPatternsByDependency))
+        UnionPattern(unionPattern.blocks.map(statementsFirst))
       case optionalPattern: OptionalPattern =>
-        OptionalPattern(reorderPatternsByDependency(optionalPattern.patterns))
+        OptionalPattern(statementsFirst(optionalPattern.patterns))
       case minusPattern: MinusPattern =>
-        MinusPattern(reorderPatternsByDependency(minusPattern.patterns))
+        MinusPattern(statementsFirst(minusPattern.patterns))
       case filterNotExistsPattern: FilterNotExistsPattern =>
-        FilterNotExistsPattern(reorderPatternsByDependency(filterNotExistsPattern.patterns))
+        FilterNotExistsPattern(statementsFirst(filterNotExistsPattern.patterns))
       case pattern: QueryPattern => pattern
     }
 
-    sortedStatementPatterns ++ sortedOtherPatterns
+    statementPatterns ++ sortedOtherPatterns
   }
 }

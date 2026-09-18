@@ -888,9 +888,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `GravsearchParser`, `GravsearchQueryChecker`, `GravsearchTypeInspectionRunner`,
     `InferringGravsearchTypeInspector`, `GravsearchToPrequeryTransformer`,
     `GravsearchToCountPrequeryTransformer`, `GravsearchQueryOptimisation`, `GravsearchMainQueryGenerator`,
-    `MainQueryResultProcessor`, `QueryTraverser`, `ConstructTransformer`, `SelectTransformer`,
-    `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`, `FulltextBreadthGuard`,
-    `FulltextSearchTerms`, `SearchFulltextQuery`, `SearchQueries`, `ApacheLuceneSupport`,
+    `MainQueryResultProcessor`, `QueryTraverser`, `PrequeryPatternOrdering`, `ConstructTransformer`,
+    `SelectTransformer`, `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`,
+    `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`, `SearchQueries`, `ApacheLuceneSupport`,
     `LuceneQueryString`, `SearchTimeoutException`, `ResourceCountV2`
 - **Public interface**: the `SearchResponderV2` trait (`gravsearchV2`, `gravsearchCountV2`,
     `fulltextSearchV2`, `fulltextSearchCountV2`, `searchResourcesByLabelV2`,
@@ -945,6 +945,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `SearchFulltextQuerySpec`, `GetResourceWithSpecifiedPropertiesGravsearchQuerySpec`,
         `GetIncomingImageLinksGravsearchQuerySpec`); a change to emitted SPARQL shows up as a golden diff -
         enforcement: review (`REVIEW.md` section SPARQL).
+    - `PrequeryPatternOrdering`, applied at the single seam `QueryTraverser.transformSelectToSelect`, is the
+        only pass that orders prequery WHERE-block patterns - enforcement: review.
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or

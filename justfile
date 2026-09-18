@@ -62,6 +62,12 @@ docker-load-test-images *FLAGS='': require-bazel
 test-it *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-it:test //modules/test-it:test_gravsearch_span {{FLAGS}}
 
+# Run the prequery ordering unit tests and the golden E2E specs they must stay in sync with, together; needs no Docker images
+test-gravsearch-prequery *FLAGS='': require-bazel
+    bazel test //modules/webapi:test --test_filter='.*PrequeryPatternOrderingSpec.*' {{FLAGS}}
+    bazel test //modules/test-it:test --test_filter='.*GravsearchToPrequeryTransformerE2ESpec.*' {{FLAGS}}
+    bazel test //modules/test-it:test --test_filter='.*GravsearchToCountPrequeryTransformerE2ESpec.*' {{FLAGS}}
+
 # Run End-2-End tests for dsp-api
 test-e2e *FLAGS='': require-bazel (docker-load-test-images FLAGS)
     bazel test //modules/test-e2e:test {{FLAGS}}

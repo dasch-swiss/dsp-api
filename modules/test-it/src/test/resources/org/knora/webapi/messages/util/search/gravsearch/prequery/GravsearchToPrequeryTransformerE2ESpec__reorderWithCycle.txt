@@ -1,31 +1,23 @@
 SELECT DISTINCT ?thing
 WHERE {
-VALUES ?thing2__subProp__ee5e347e { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
-?thing2 ?thing2__subProp__ee5e347e ?thing .
-VALUES ?thing2__subProp__a5f452a8 { <http://www.knora.org/ontology/0001/anything#hasBlueThingValue> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> }
-?thing2 ?thing2__subProp__a5f452a8 ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue .
-?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
-?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?thing .
-VALUES ?thing__subProp__575a79dd { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
-?thing ?thing__subProp__575a79dd ?thing1 .
 VALUES ?thing__subProp__52afed97 { <http://www.knora.org/ontology/0001/anything#hasBlueThingValue> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> }
 ?thing ?thing__subProp__52afed97 ?thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue .
-?thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+VALUES ?thing__subProp__575a79dd { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
+?thing ?thing__subProp__575a79dd ?thing1 .
 ?thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?thing1 .
 VALUES ?thing1__subProp__5b25a4e9 { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
 ?thing1 ?thing1__subProp__5b25a4e9 ?thing2 .
+VALUES ?thing2__subProp__ee5e347e { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
+?thing2 ?thing2__subProp__ee5e347e ?thing .
 VALUES ?thing1__subProp__d516bad4 { <http://www.knora.org/ontology/0001/anything#hasBlueThingValue> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> }
 ?thing1 ?thing1__subProp__d516bad4 ?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue .
-?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 ?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?thing2 .
-FILTER NOT EXISTS {
- ?thing2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-
-}
-FILTER NOT EXISTS {
- ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-
-}
+VALUES ?thing2__subProp__a5f452a8 { <http://www.knora.org/ontology/0001/anything#hasBlueThingValue> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> }
+?thing2 ?thing2__subProp__a5f452a8 ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue .
+?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?thing .
+?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+?thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
 FILTER NOT EXISTS {
  ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 
@@ -40,6 +32,14 @@ FILTER NOT EXISTS {
 }
 FILTER NOT EXISTS {
  ?thing1__httpwwwknoraorgontology0001anythinghasOtherThing__thing2__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?thing2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 
 }
 }
