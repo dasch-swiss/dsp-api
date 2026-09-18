@@ -37,9 +37,8 @@ class SelectTransformer(
       limitInferenceToOntologies = limitInferenceToOntologies,
     )
 
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
-    moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
-  }
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
+    ZIO.attempt(optimiseIsDeletedWithFilter(patterns))
 
   def limitToProjectPattern(projectIri: SmartIri) = StatementPattern(
     subj = mainRes,

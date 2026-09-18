@@ -264,7 +264,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     Seq(attachAnchorStmt, orderingOptBlk, filter2, filter1, fne2, fne1)
 
   // Case 14 (MINUS parity): a statement binding a variable also used in a MINUS body is still hoisted
-  // before the MINUS -- deliberate parity with today's ReorderPatternsByDependency, not a SPARQL identity
+  // before the MINUS -- deliberate consistency with the StatementsFirst partition, not a SPARQL identity
   // (MINUS does not actually export bindings outward).
   private val minusBody                     = MinusPattern(Seq(StatementPattern(letter, hasSubjectIri, subj)))
   private val minusInput: Seq[QueryPattern] = Seq(minusBody, attachAnchorStmt)

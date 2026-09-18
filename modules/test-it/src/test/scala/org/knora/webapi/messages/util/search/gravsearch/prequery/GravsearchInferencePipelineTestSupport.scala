@@ -41,11 +41,12 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
  * Shared by [[GravsearchToPrequeryTransformerE2ESpec]] and [[GravsearchToCountPrequeryTransformerE2ESpec]]:
  * runs the full two-stage prequery pipeline — prequery generation (transformConstructToSelect, where a
  * FILTER like matchFulltext is replaced by its expansion) followed by the inference pass
- * (transformSelectToSelect via SelectTransformer, where the optimizer's moveLuceneToBeginning hoists a
- * GroupPattern expansion and OntologyInferencer expands rdf:type/property statements). This mirrors
- * SearchResponderV2.gravsearchV2's own composition and is what golden-snapshotting an expansion needs:
- * taking the snapshot after only the first stage would miss traps (BIND hoisting, rdf:type-with-variable-object
- * rejection, join-order pessimization) that only manifest once the inference pass runs.
+ * (transformSelectToSelect via SelectTransformer, where PrequeryPatternOrdering places the Lucene
+ * GroupPattern expansion first (tier T1) and OntologyInferencer expands rdf:type/property statements).
+ * This mirrors SearchResponderV2.gravsearchV2's own composition and is what golden-snapshotting an
+ * expansion needs: taking the snapshot after only the first stage would miss traps (BIND hoisting,
+ * rdf:type-with-variable-object rejection, join-order pessimization) that only manifest once the
+ * inference pass runs.
  */
 object GravsearchInferencePipelineTestSupport {
 

@@ -21,7 +21,9 @@ import org.knora.webapi.messages.util.search.*
  * Fact 7 (a large `VALUES` table poisons join order unless it drives the scan).
  *
  * Tier table (lower is better):
- *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one at any depth.
+ *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one at any depth. T1
+ *     pre-empts the connectivity rule: a T1 unit leads its block whether or not it is connected to the
+ *     already-bound variables.
  *   - T2 Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object,
  *     whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type`
  *     statement with an `IriRef` subject.
@@ -37,14 +39,13 @@ import org.knora.webapi.messages.util.search.*
  * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by
  * name rather than by namespace, deliberately - do not widen this to a namespace test.
  *
- * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set;
- * `OPTIONAL`/`UNION` branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic
- * mirroring Fuseki's evaluation (Fact 4), not a SPARQL-semantics claim. Likewise, placing every statement
- * before every block is parity with today's `ReorderPatternsByDependency`, not a SPARQL identity: it can
- * change results when a block binds a variable a later statement also uses. A T1 Lucene unit leads its
- * block regardless of connectivity, matching the `moveLuceneToBeginning` pass this replaces, whose own
- * Scaladoc records the measured ~300x cost of evaluating the class `VALUES` enumeration before the
- * index-anchored Lucene lookup.
+ * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
+ * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
+ * evaluation (Fact 4), not a SPARQL-semantics claim. Likewise, placing every statement before every block stays
+ * consistent with the `StatementsFirst` partition earlier in the pipeline, not a SPARQL identity: it can change results
+ * when a block binds a variable a later statement also uses. A T1 Lucene unit leads its block regardless of
+ * connectivity, matching the legacy hoisting pass this replaces, which recorded the class `VALUES` enumeration as ~300x
+ * slower than the index-anchored Lucene lookup in the DEV-6715 performance spike.
  */
 object PrequeryPatternOrdering {
 

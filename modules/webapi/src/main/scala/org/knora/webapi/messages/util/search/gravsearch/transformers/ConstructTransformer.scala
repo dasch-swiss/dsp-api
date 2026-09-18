@@ -35,13 +35,7 @@ final case class ConstructTransformer(
     limit: Option[Set[SmartIri]],
   ): Task[Seq[QueryPattern]] = for {
     optimisedPatterns <-
-      ZIO.attempt(
-        SparqlTransformer.moveBindToBeginning(
-          SparqlTransformer.optimiseIsDeletedWithFilter(
-            SparqlTransformer.moveLuceneToBeginning(patterns),
-          ),
-        ),
-      )
+      ZIO.attempt(SparqlTransformer.optimiseIsDeletedWithFilter(patterns))
     transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
   } yield transformedPatterns.flatten
 
