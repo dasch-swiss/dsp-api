@@ -1910,3 +1910,32 @@ About 3.4x, identical row counts, and the ordering the pass now produces for tha
 `standoff-typefirst.rq` statement order (pinned as the unit case above). Query texts live in
 `~/Desktop/gravsearch-ordering-measurements/h2-replay/`; the raw CSV of this round's runs is session-local
 scratch and not durable.
+
+### Review of round 12
+
+`performance-reviewer` and `scala-zio-reviewer` on `d5baae162..HEAD`: no Critical findings, two Warnings (one
+raised by both reviewers) and three Suggestions. Each Warning went to `finding-verifier`.
+
+| Finding | Verdict | Action |
+| --- | --- | --- |
+| `typeCheckPending` does not exclude unselective-technical type units, so `?x a knora-base:Resource` with `?x` bound defers a connected path even though it restricts nothing - contradicting the rule's own "cheap *and selective*" rationale, and a behaviour flip versus before the rule | real | fixed: `typeCheckPending` now requires `!isUnselectiveTechnical`; new spec fixture `typeBeforeUnselectivePathInput` pins that the path is no longer deferred for it |
+| `typeCheckPending` is block-global, not scoped to the path's own variables, so an unrelated pending type check delays a path in another component; the prose allegedly promises per-anchor scoping | not real | the verifier quoted both the Scaladoc and `gravsearch.md`: each states the rule in exactly the block-global form the code implements. The effect is a one-step delay that the next `ruleB` pick immediately undoes. Left as is |
+
+Suggestions taken: `UnitKey.isType` was redundant with `typeSubject.isDefined` and was dropped (with
+`isTypeUnit`, now callerless), and the Scaladoc claim that an `IriRef`-anchored path "is unaffected" was
+narrowed to the case where such a path *leads its component* - `isPath` gates on `isPropertyPath`, not on
+tier, so the same statement can reach `ruleA` later. Both corrections were mirrored into `gravsearch.md`.
+
+Suggestion not taken: shrinking `UnitKey` further (it is 12 fields after the `isType` removal); every
+remaining field is documented and load-bearing, including the deliberate `isPath`/`pathRank` non-overlap.
+
+Re-verified after the fix: `GOLDEN_REWRITE` on both golden specs still produces **no** diff, the clean
+`just test-gravsearch-prequery` rerun is green, the full `bazel test //modules/webapi:test` is green,
+`just fmt` is a no-op and `just check` is green.
+
+### Deferral
+
+No golden file covers the type-before-path shape (a connected `*` path plus a selective type unit on its
+already-bound anchor); the rule is pinned only by `PrequeryPatternOrderingSpec`. Adding a Gravsearch fixture
+that produces this shape to `GravsearchToPrequeryTransformerE2ESpec` would close the gap. Left to the session
+as a plan decision.

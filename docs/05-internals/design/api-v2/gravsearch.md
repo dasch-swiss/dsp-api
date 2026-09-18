@@ -461,8 +461,11 @@ standoff:StandoffParagraphTag`) regressed from 1.5 s to 4.0 s after the DEV-7287
 emitted prequery put the `standoffTagHasStartAncestor` path ahead of the type check on its own subject
 (`?tag a standoff:StandoffItalicTag`): Fuseki walked the ancestors of every standoff tag in every letter before
 narrowing to italic tags. The fix is the type-before-path eligibility rule: within `ruleA`, a property-path
-statement is not a candidate while a candidate `rdf:type` unit whose subject is already bound exists, so that
-type unit is emitted first. Per Fact 3 of `docs/development/dsp-api-fuseki-query-execution.md`, a `*`/`+`
+statement is not a candidate while a candidate *selective* `rdf:type` unit whose subject is already bound
+exists, so that type unit is emitted first; a bound-subject type unit that is unselective-technical (its
+object is a bare `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource`) does not defer a path,
+since it restricts essentially nothing and deferring the path for it would buy none of the rule's benefit.
+Per Fact 3 of `docs/development/dsp-api-fuseki-query-execution.md`, a `*`/`+`
 property path fans out from every binding of its anchored end, whereas a type check on an already-bound
 subject costs one index lookup per binding and shrinks the binding set before the path runs - so the cheap,
 selective check belongs first. Measured on stage (dsp-cli, 5 interleaved runs, 1344 rows in both layouts): 3.71
@@ -470,9 +473,11 @@ s with the ancestor path emitted ahead of the type check, 1.20 s with the type c
 path, about 3x. A confirmation run of 3 interleaved pairs on 2026-09-18 gave 3.45-3.50 s versus 1.01-1.03 s,
 same row count. This is deliberately not generalised to "type units before all connected non-type units" -
 that broader rule is unmeasured and would reorder many other golden files; it fires only against property-path
-statements, and only inside `ruleA`. A property-path statement whose bound end is an `IriRef` (the list-node
-anchor shape) is unaffected: T2 already ranks it ahead of the type unit as a component anchor, before `ruleA`
-is ever reached. Regenerating both golden corpora after this change produced no golden diff at all, so the
+statements, and only inside `ruleA`. A property-path statement that leads its component (its variable end
+not yet bound, so a bound `IriRef` on the other end anchors it - the list-node anchor shape) is unaffected:
+T2 already ranks it ahead of the type unit as a component anchor, before `ruleA` is ever reached; the same
+path statement can still reach `ruleA` later in the same run, once its `IriRef` end is no longer what starts
+the component. Regenerating both golden corpora after this change produced no golden diff at all, so the
 rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden file.
 
 ## The `matchFulltext` Function Expansion
