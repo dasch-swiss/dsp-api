@@ -14,7 +14,6 @@
     "com.softwaremill.sttp.client4:zio-json_3": -1985812838,
     "com.softwaremill.sttp.client4:zio_3": -2141540027,
     "com.softwaremill.sttp.tapir:tapir-json-zio_3": -1235497439,
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": 321007346,
     "com.softwaremill.sttp.tapir:tapir-refined_3": 396491109,
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3": 522367654,
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": -1972142903,
@@ -23,8 +22,6 @@
     "commons-io:commons-io": 1305681826,
     "commons-validator:commons-validator": -1849831310,
     "dev.optics:monocle-core_3": 1598778482,
-    "dev.optics:monocle-macro_3": 82206083,
-    "dev.optics:monocle-refined_3": 485163608,
     "dev.zio:zio-cache_3": -1303758854,
     "dev.zio:zio-config-magnolia_3": 712513304,
     "dev.zio:zio-config-typesafe_3": -1204877329,
@@ -35,7 +32,6 @@
     "dev.zio:zio-logging_3": -997840293,
     "dev.zio:zio-metrics-connectors-prometheus_3": 1836403142,
     "dev.zio:zio-metrics-connectors_3": -1199080001,
-    "dev.zio:zio-mock_3": -906823466,
     "dev.zio:zio-nio_3": -1537208182,
     "dev.zio:zio-opentelemetry_3": 1870955318,
     "dev.zio:zio-prelude_3": -1112830619,
@@ -43,8 +39,6 @@
     "dev.zio:zio-schema_3": -197346223,
     "dev.zio:zio-streams_3": -1886543376,
     "dev.zio:zio-test-junit_3": -684377216,
-    "dev.zio:zio-test-magnolia_3": -842632360,
-    "dev.zio:zio-test-sbt_3": -2108717751,
     "dev.zio:zio-test_3": 1207795713,
     "dev.zio:zio_3": 2079383510,
     "eu.timepit:refined_3": 793952909,
@@ -193,8 +187,6 @@
     "com.softwaremill.sttp.tapir:tapir-json-zio_3:jar:sources": 2096928986,
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": -537265267,
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3:jar:sources": 1954534506,
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": 212190745,
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:jar:sources": 859713593,
     "com.softwaremill.sttp.tapir:tapir-refined_3": 1056004499,
     "com.softwaremill.sttp.tapir:tapir-refined_3:jar:sources": -2032283509,
     "com.softwaremill.sttp.tapir:tapir-server_3": 2058746051,
@@ -239,12 +231,6 @@
     "commons-validator:commons-validator:jar:sources": 1288604053,
     "dev.optics:monocle-core_3": 1490497332,
     "dev.optics:monocle-core_3:jar:sources": 873146664,
-    "dev.optics:monocle-law_3": 1080699249,
-    "dev.optics:monocle-law_3:jar:sources": 875602418,
-    "dev.optics:monocle-macro_3": 471102300,
-    "dev.optics:monocle-macro_3:jar:sources": -571506960,
-    "dev.optics:monocle-refined_3": -1371608153,
-    "dev.optics:monocle-refined_3:jar:sources": 1869831135,
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": -1692071345,
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3:jar:sources": 343704133,
     "dev.zio:izumi-reflect_3": -655092843,
@@ -279,8 +265,6 @@
     "dev.zio:zio-metrics-connectors-prometheus_3:jar:sources": 658693039,
     "dev.zio:zio-metrics-connectors_3": 704154611,
     "dev.zio:zio-metrics-connectors_3:jar:sources": -202368306,
-    "dev.zio:zio-mock_3": 1886871178,
-    "dev.zio:zio-mock_3:jar:sources": -526943379,
     "dev.zio:zio-nio_3": 1955173943,
     "dev.zio:zio-nio_3:jar:sources": -1261065214,
     "dev.zio:zio-opentelemetry_3": 1036932251,
@@ -307,10 +291,6 @@
     "dev.zio:zio-streams_3:jar:sources": -1160030206,
     "dev.zio:zio-test-junit_3": 63704887,
     "dev.zio:zio-test-junit_3:jar:sources": 1370688858,
-    "dev.zio:zio-test-magnolia_3": -729503711,
-    "dev.zio:zio-test-magnolia_3:jar:sources": 1150114640,
-    "dev.zio:zio-test-sbt_3": 1552516807,
-    "dev.zio:zio-test-sbt_3:jar:sources": 1795313818,
     "dev.zio:zio-test_3": -2076573586,
     "dev.zio:zio-test_3:jar:sources": 895591478,
     "dev.zio:zio_3": -1077749875,
@@ -657,8 +637,6 @@
     "org.typelevel:cats-free_3:jar:sources": 1143434049,
     "org.typelevel:cats-kernel_3": 537631886,
     "org.typelevel:cats-kernel_3:jar:sources": 1608215695,
-    "org.typelevel:discipline-core_3": -1865296662,
-    "org.typelevel:discipline-core_3:jar:sources": -511015175,
     "org.typelevel:jawn-parser_3": -2072470113,
     "org.typelevel:jawn-parser_3:jar:sources": 461393166,
     "org.webjars:swagger-ui": -690338883,
@@ -1074,13 +1052,6 @@
       },
       "version": "1.13.25"
     },
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": {
-      "shasums": {
-        "jar": "43635b1349cb48843eb98b3ad64cbc89e1db1df56b82adf05f0b26299e2b15f5",
-        "sources": "a37c5b5618de269147c17d24190cec3e2c5551add86365fd27b89d531a4eac5e"
-      },
-      "version": "1.13.25"
-    },
     "com.softwaremill.sttp.tapir:tapir-refined_3": {
       "shasums": {
         "jar": "81f2b560c72944b56b4efa6b4dfabc3319490357c167363baf9bb6b74859734d",
@@ -1235,27 +1206,6 @@
       },
       "version": "3.3.0"
     },
-    "dev.optics:monocle-law_3": {
-      "shasums": {
-        "jar": "e0c4f68a8b1672441e825dc7b4f1783c2f412f314da219cd799342b50b043d73",
-        "sources": "a6da275a51ea2048ced0e8a1ac1a2d63abd16726f07a17c8708088d48bf04f09"
-      },
-      "version": "3.3.0"
-    },
-    "dev.optics:monocle-macro_3": {
-      "shasums": {
-        "jar": "206afbebf620d7f968cc7bc0eae33223855cf52089be2094b0b38b608021bb2a",
-        "sources": "0672eea7759acb701ecce8da18f4f77c423c20a0406ff3e81545875591fa572f"
-      },
-      "version": "3.3.0"
-    },
-    "dev.optics:monocle-refined_3": {
-      "shasums": {
-        "jar": "69e615cf8033dac4ae30361ca8471a1af56ac5a9e2a0e7b0e9bbda6bcbacecbb",
-        "sources": "87b0b2f3c36ada9b4555b32f8d3bd80f830499e75e33c19a0b775019a72c828c"
-      },
-      "version": "3.3.0"
-    },
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": {
       "shasums": {
         "jar": "d6f013e6038f3c06a1e401ca23a8b0f70a4d5ba81fa4cc6e8a5df89e1b411f80",
@@ -1375,13 +1325,6 @@
       },
       "version": "2.5.6"
     },
-    "dev.zio:zio-mock_3": {
-      "shasums": {
-        "jar": "d149993bc5de26ff014c36933f5580ba484cd9933d8bcc9761dfd9db88cc7c3a",
-        "sources": "e4348152c490310aaf017dfbf8b6fd31110a2e2ede6b00dd9761062a432155ff"
-      },
-      "version": "1.0.0-RC12"
-    },
     "dev.zio:zio-nio_3": {
       "shasums": {
         "jar": "b2af82bd127914a045425b7f648faa7e07ee0e0734e44034addbde40a0bc7e0b",
@@ -1470,20 +1413,6 @@
       "shasums": {
         "jar": "e2645493aa92195ed29495415b2df4b4bbcbae343904e8a913274a2c81d76e56",
         "sources": "269b45b73edfebb89d5ccb0b67d748997c3f6b7c276e245311c6cc4f287a665a"
-      },
-      "version": "2.1.26"
-    },
-    "dev.zio:zio-test-magnolia_3": {
-      "shasums": {
-        "jar": "d9f8c598cb110aefdd83c8f5387821d17d9fd2f8e8a42d961732c7441ff8ec5c",
-        "sources": "90a01a4f7cce0cbb132aadc53390f2d01c35e553f0c5aa9241c804d73b8677ad"
-      },
-      "version": "2.1.26"
-    },
-    "dev.zio:zio-test-sbt_3": {
-      "shasums": {
-        "jar": "e2cac884ea5f5e539351661f33ce502abfcef8f29988f4e755e80dcae75c27b9",
-        "sources": "d5f4c71e57f3d6836bb75f1202d9c8525655c5f32cd5ed502cbc1b90bd89dd55"
       },
       "version": "2.1.26"
     },
@@ -2688,13 +2617,6 @@
       },
       "version": "2.13.0"
     },
-    "org.typelevel:discipline-core_3": {
-      "shasums": {
-        "jar": "010159161a9136e2bff671ffb93d15c83518201a7d3c63f036334897a6ae392a",
-        "sources": "48c116b832f38e4ab4d702695ee8ac9add090628e72cde34a088979bce6bda34"
-      },
-      "version": "1.7.0"
-    },
     "org.typelevel:jawn-parser_3": {
       "shasums": {
         "jar": "7eda53af568b548938472ca55d235c310f9fcf5262c1e4847185ce6655aa6cd1",
@@ -2916,11 +2838,6 @@
       "com.softwaremill.sttp.tapir:tapir-apispec-docs_3",
       "com.softwaremill.sttp.tapir:tapir-core_3"
     ],
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": [
-      "com.softwaremill.sttp.tapir:tapir-server_3",
-      "io.opentelemetry.semconv:opentelemetry-semconv",
-      "io.opentelemetry:opentelemetry-api"
-    ],
     "com.softwaremill.sttp.tapir:tapir-refined_3": [
       "com.softwaremill.sttp.tapir:tapir-core_3",
       "eu.timepit:refined_3"
@@ -2977,19 +2894,6 @@
     "dev.optics:monocle-core_3": [
       "org.typelevel:cats-core_3",
       "org.typelevel:cats-free_3"
-    ],
-    "dev.optics:monocle-law_3": [
-      "dev.optics:monocle-core_3",
-      "org.typelevel:discipline-core_3"
-    ],
-    "dev.optics:monocle-macro_3": [
-      "dev.optics:monocle-core_3"
-    ],
-    "dev.optics:monocle-refined_3": [
-      "dev.optics:monocle-core_3",
-      "dev.optics:monocle-law_3",
-      "eu.timepit:refined_3",
-      "org.typelevel:cats-core_3"
     ],
     "dev.zio:izumi-reflect_3": [
       "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3"
@@ -3064,11 +2968,6 @@
     "dev.zio:zio-metrics-connectors_3": [
       "dev.zio:zio_3"
     ],
-    "dev.zio:zio-mock_3": [
-      "dev.zio:zio-streams_3",
-      "dev.zio:zio-test_3",
-      "dev.zio:zio_3"
-    ],
     "dev.zio:zio-nio_3": [
       "dev.zio:zio-streams_3",
       "dev.zio:zio_3",
@@ -3119,15 +3018,6 @@
     "dev.zio:zio-test-junit_3": [
       "dev.zio:zio-test_3",
       "junit:junit"
-    ],
-    "dev.zio:zio-test-magnolia_3": [
-      "com.softwaremill.magnolia1_3:magnolia_3",
-      "dev.zio:zio-test_3"
-    ],
-    "dev.zio:zio-test-sbt_3": [
-      "dev.zio:zio-test_3",
-      "dev.zio:zio_3",
-      "org.scala-sbt:test-interface"
     ],
     "dev.zio:zio-test_3": [
       "dev.zio:zio-streams_3",
@@ -3759,9 +3649,6 @@
     "org.typelevel:cats-free_3": [
       "org.typelevel:cats-core_3"
     ],
-    "org.typelevel:discipline-core_3": [
-      "org.scalacheck:scalacheck_3"
-    ],
     "org.wiremock:wiremock": [
       "com.fasterxml.jackson.core:jackson-annotations",
       "com.fasterxml.jackson.core:jackson-core",
@@ -4305,9 +4192,6 @@
     "com.softwaremill.sttp.tapir:tapir-openapi-docs_3": [
       "sttp.tapir.docs.openapi"
     ],
-    "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3": [
-      "sttp.tapir.server.tracing.opentelemetry"
-    ],
     "com.softwaremill.sttp.tapir:tapir-refined_3": [
       "sttp.tapir.codec.refined"
     ],
@@ -4486,18 +4370,6 @@
       "monocle.std",
       "monocle.syntax"
     ],
-    "dev.optics:monocle-law_3": [
-      "monocle.law.discipline",
-      "monocle.law.discipline.function"
-    ],
-    "dev.optics:monocle-macro_3": [
-      "monocle.macros",
-      "monocle.macros.syntax"
-    ],
-    "dev.optics:monocle-refined_3": [
-      "monocle.refined",
-      "monocle.refined.internal"
-    ],
     "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3": [
       "izumi.reflect.thirdparty.internal.boopickle"
     ],
@@ -4586,10 +4458,6 @@
       "zio.metrics.connectors",
       "zio.metrics.connectors.internal"
     ],
-    "dev.zio:zio-mock_3": [
-      "zio.mock",
-      "zio.mock.internal"
-    ],
     "dev.zio:zio-nio_3": [
       "zio.nio",
       "zio.nio.channels",
@@ -4662,12 +4530,6 @@
     ],
     "dev.zio:zio-test-junit_3": [
       "zio.test.junit"
-    ],
-    "dev.zio:zio-test-magnolia_3": [
-      "zio.test.magnolia"
-    ],
-    "dev.zio:zio-test-sbt_3": [
-      "zio.test.sbt"
     ],
     "dev.zio:zio-test_3": [
       "zio.test",
@@ -7902,9 +7764,6 @@
       "cats.kernel.instances.uuid",
       "cats.kernel.instances.vector"
     ],
-    "org.typelevel:discipline-core_3": [
-      "org.typelevel.discipline"
-    ],
     "org.typelevel:jawn-parser_3": [
       "org.typelevel.jawn"
     ],
@@ -8188,8 +8047,6 @@
       "com.softwaremill.sttp.tapir:tapir-json-zio_3:jar:sources",
       "com.softwaremill.sttp.tapir:tapir-openapi-docs_3",
       "com.softwaremill.sttp.tapir:tapir-openapi-docs_3:jar:sources",
-      "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3",
-      "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:jar:sources",
       "com.softwaremill.sttp.tapir:tapir-refined_3",
       "com.softwaremill.sttp.tapir:tapir-refined_3:jar:sources",
       "com.softwaremill.sttp.tapir:tapir-server_3",
@@ -8234,12 +8091,6 @@
       "commons-validator:commons-validator:jar:sources",
       "dev.optics:monocle-core_3",
       "dev.optics:monocle-core_3:jar:sources",
-      "dev.optics:monocle-law_3",
-      "dev.optics:monocle-law_3:jar:sources",
-      "dev.optics:monocle-macro_3",
-      "dev.optics:monocle-macro_3:jar:sources",
-      "dev.optics:monocle-refined_3",
-      "dev.optics:monocle-refined_3:jar:sources",
       "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3",
       "dev.zio:izumi-reflect-thirdparty-boopickle-shaded_3:jar:sources",
       "dev.zio:izumi-reflect_3",
@@ -8274,8 +8125,6 @@
       "dev.zio:zio-metrics-connectors-prometheus_3:jar:sources",
       "dev.zio:zio-metrics-connectors_3",
       "dev.zio:zio-metrics-connectors_3:jar:sources",
-      "dev.zio:zio-mock_3",
-      "dev.zio:zio-mock_3:jar:sources",
       "dev.zio:zio-nio_3",
       "dev.zio:zio-nio_3:jar:sources",
       "dev.zio:zio-opentelemetry_3",
@@ -8302,10 +8151,6 @@
       "dev.zio:zio-streams_3:jar:sources",
       "dev.zio:zio-test-junit_3",
       "dev.zio:zio-test-junit_3:jar:sources",
-      "dev.zio:zio-test-magnolia_3",
-      "dev.zio:zio-test-magnolia_3:jar:sources",
-      "dev.zio:zio-test-sbt_3",
-      "dev.zio:zio-test-sbt_3:jar:sources",
       "dev.zio:zio-test_3",
       "dev.zio:zio-test_3:jar:sources",
       "dev.zio:zio_3",
@@ -8652,8 +8497,6 @@
       "org.typelevel:cats-free_3:jar:sources",
       "org.typelevel:cats-kernel_3",
       "org.typelevel:cats-kernel_3:jar:sources",
-      "org.typelevel:discipline-core_3",
-      "org.typelevel:discipline-core_3:jar:sources",
       "org.typelevel:jawn-parser_3",
       "org.typelevel:jawn-parser_3:jar:sources",
       "org.webjars:swagger-ui",

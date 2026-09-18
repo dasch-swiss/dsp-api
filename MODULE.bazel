@@ -168,10 +168,7 @@ maven.install(
         "dev.zio:zio-opentelemetry_3:3.1.18",
         # ZIO test (scoped per-target in BUILD files)
         "dev.zio:zio-test_3:2.1.26",
-        "dev.zio:zio-test-sbt_3:2.1.26",
         "dev.zio:zio-test-junit_3:2.1.26",
-        "dev.zio:zio-test-magnolia_3:2.1.26",
-        "dev.zio:zio-mock_3:1.0.0-RC12",
         # -- sttp client4 (`_3`) --
         "com.softwaremill.sttp.client4:zio_3:4.0.25",
         "com.softwaremill.sttp.client4:zio-json_3:4.0.25",
@@ -182,11 +179,8 @@ maven.install(
         "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.25",
         "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.25",
         "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.25",
-        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.25",
         # -- monocle (`_3`) --
         "dev.optics:monocle-core_3:3.3.0",
-        "dev.optics:monocle-macro_3:3.3.0",
-        "dev.optics:monocle-refined_3:3.3.0",
         # -- other Scala (`_3`) --
         "eu.timepit:refined_3:0.11.4",
         "org.scala-graph:graph-core_3:2.0.2",
