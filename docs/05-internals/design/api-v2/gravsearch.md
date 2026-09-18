@@ -339,7 +339,9 @@ institutionalise the pathology Fact 1's bound-object corollary warns about. A ty
 single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is *unselective-technical*: it ranks T7
 and may never lead a component, because it restricts nothing (it matches essentially the whole store). This
 ban is deliberately by name, not by namespace: several other `knora-base` classes (`Region`, `Annotation`,
-`StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead.
+`StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead. Together
+with T1 pre-emption and the `rdf:object` deferral (below), this is one of the pass's three eligibility rules -
+find all three by searching for "eligibility rule".
 
 Ties within a tier are broken, in order, by: more bound terms first (IRIs, literals, and variables already in
 the bound set); then a statement whose predicate is in a project data ontology, ahead of one whose predicate
@@ -349,15 +351,21 @@ is built-in; then the lexical order of the pattern's rendered SPARQL text (see "
 
 Within one block, the pass emits units one at a time. At each step:
 
-1. If any remaining unit is T1 (Lucene), it leads, regardless of connectivity to what is already bound. This
-   pre-empts every other rule.
-2. Otherwise, prefer a non-type unit connected to a variable already bound by an emitted unit in this block.
-3. Otherwise, prefer a type unit connected to what is already bound — so a type unit is emitted after the
+0. First, an eligibility rule narrows the candidate pool: a statement whose predicate is the bound IRI
+   `rdf:object` and whose subject is a variable not yet bound is removed from candidacy - unless that would
+   empty the pool, in which case it is put back. This defers the generated link-value statement
+   (`?lv rdf:object ?o`) until its link value `?lv` is bound, instead of starting the join from every link
+   value pointing at the object.
+1. If any remaining candidate is T1 (Lucene), it leads, regardless of connectivity to what is already bound.
+   This pre-empts every other rule.
+2. Otherwise, prefer a non-type candidate connected to a variable already bound by an emitted unit in this
+   block.
+3. Otherwise, prefer a type candidate connected to what is already bound — so a type unit is emitted after the
    connected non-type statements of the same component, not before them.
 4. Otherwise (nothing remaining is connected to what is bound), a new component is started: pick the best
-   remaining unit by (tier, tie-break) among all non-type units and all type units *except*
+   remaining candidate by (tier, tie-break) among all non-type units and all type units *except*
    unselective-technical ones.
-5. If nothing else qualifies, fall back to the best remaining unit overall.
+5. If nothing else qualifies, fall back to the best remaining candidate overall.
 
 Each step picks exactly one unit and adds its variables to the bound set, so the pass consumes one unit per
 step and terminates on any input — cycles included — without needing a DAG.
@@ -435,13 +443,14 @@ rows it carries forward on a working hypothesis (do not read the table as wholly
 | T6 | `attachedToProject` | measured below T2, T4, T5 (S1, S2, S2big, S6); T6-above-T7 is hypothesis |
 | T7 | Plain | the tier is the residue; the path sub-rule is unmeasured |
 
-**Known trade-off (accepted 2026-09-18).** The stage replay of the golden corpus found one shape that the pass
-orders worse than the previous topological sort did: two link hops whose predicates are variables restricted only
-by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`), anchored by a literal (the `reorder` golden).
-It runs 1.83x slower than before on stage (6.67 s against 3.65 s, identical rows). A layout exists that runs in
-0.46 s, but no local tie-break reaches it: at the deciding step the two candidates tie on every key, so reaching
-it needs lookahead or cost-based ordering. Accepted because the shape is rare in real traffic and the previous
-fast order for it was accidental; a follow-up tracks the redesign.
+The one shape the stage replay found ordered worse than the previous topological sort - two link hops whose
+predicates are variables restricted only by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`),
+anchored by a literal (the `reorder` golden) - is fixed by the `rdf:object` deferral rule (above). `rdf:object`
+appears in a prequery only on the generated link-value node (`?s <linkValueProp> ?lv . ?lv rdf:object ?o`), and
+emitting it while `?lv` is unbound starts the join from every link value pointing at the object. Deferring it
+until its subject is bound takes this shape from 6.98 s to 0.66 s on stage (identical rows, 5 interleaved runs
+each), about 8x faster than the pre-DEV-7287 order as well. A FILTER-to-`VALUES` rewrite of the same query was
+measured too and is harmful (53 s), so it was not adopted.
 
 ## The `matchFulltext` Function Expansion
 

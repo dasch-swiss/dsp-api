@@ -1735,3 +1735,67 @@ no local rule reaches it (see "Open: the `reorder` shape" under round 10). Decis
 the design doc and the PR body, and open a follow-up for lookahead or cost-based ordering of variable-predicate
 link chains. Rationale: the shape is rare in real traffic, the measured wins are on the shapes that make up most of
 the Fuseki time above 1 s, and PR 1's fast order for this shape was accidental.
+
+## Round 11: rdf:object eligibility rule
+
+Supersedes "Accepted trade-off: the `reorder` shape" above: the trade-off is resolved, not shipped.
+
+The session's four-layout replay of the `reorder` prequery on stage (5 interleaved runs each, identical 25 rows)
+measured: the round-10 order 6.98 s, layout vA 0.66 s, a FILTER-to-`VALUES` rewrite alone 53 s (harmful, dropped),
+vA plus `VALUES` 0.64 s. Hand-tracing the greedy pass showed that one added eligibility rule reproduces vA
+statement for statement, so no lookahead or cost-based search is needed after all.
+
+**The rule.** A statement whose predicate is the bound IRI `rdf:object` and whose subject is a variable not yet in
+the loop's `bound` set is not a `pickNext` candidate - neither for the connected step nor for leading a new
+component - as long as any other unit is a candidate. `rdf:object` occurs in a prequery only on the generated
+link-value node (`?s <linkValueProp> ?lv . ?lv rdf:object ?o`); the link value is reached from its resource, so the
+check belongs right after the statement that binds `?lv`. Emitting it earlier starts the join from every link value
+pointing at the object. Once `?lv` is bound the statement has three bound terms and the existing bound-terms
+tie-break puts it next, so the rule only ever delays it. If nothing else is a candidate it is eligible as before, so
+the pass stays total and permutation-invariant.
+
+Implementation: `UnitKey.deferSubject: Option[QueryVariable]` (from `rdfObjectDeferSubject`), and `pickNext` narrows
+its index set with `isDeferred` before the existing T1 / connected-non-type / connected-type / non-unselective
+cascade, falling back to all indices when the narrowing would empty the pool. The pass now has three eligibility
+rules - T1 pre-emption, the unselective-technical ban, and this deferral - documented together in the object
+Scaladoc.
+
+Spec cases added to `PrequeryPatternOrderingSpec`: the `reorder` essence with its exact expected order, a
+bound-IRI link-target regression guard (the S3 shape, where `rdf:object <iri>` must stay immediately after the
+statement binding its subject), a degenerate all-`rdf:object` input, and permutation invariance for the first case.
+
+### Golden audit
+
+Regenerating both golden specs changed exactly two files, both belonging to the `reorder` case:
+
+| Golden | Change | Verdict |
+| --- | --- | --- |
+| `GravsearchToPrequeryTransformerE2ESpec__reorder.txt` | each of the two `rdf:object` statements moves from before its `?letter ?linkingPropN__hasLinkToValue ?lvN` statement to immediately after it | intended; the file is now byte-identical to the measured vA layout |
+| `GravsearchToPrequeryTransformerE2ESpec__reorderShape.txt` | the same two moves in the shape projection | intended, follows the golden above |
+
+Unchanged as required: `linkTargetAnchor` (its `rdf:object <iri>` already follows `hasAuthorValue`, which binds the
+subject, so the rule never fires), `reorderWithCycle`, `optional`, `matchFulltextInUnion`, every other golden
+containing `rdf:object`, the five prod `<suffix>Shape` files, and the entire count-prequery corpus.
+
+### Stage measurement (2026-09-18)
+
+The regenerated `reorder` golden text is byte-identical to `reorder-vA.rq`, so the interleaved run is a
+self-consistency check rather than an A/B: 5 runs of the golden text against 5 runs of the vA reference, medians
+0.77 s and 0.76 s wall clock through dsp-cli (that includes roughly 0.1 s of CLI and HTTP overhead, so the numbers
+sit on top of the 0.66 s the session measured for vA). Rows: 25, byte-identical to `reorder-vA.sorted.csv`. Against
+the round-10 order measured with the same harness (6.98 s) this is a 9x improvement, and the shape is now faster
+than the pre-DEV-7287 topological sort (3.65 s) rather than 1.83x slower.
+
+Control runs of the other two anchored goldens, both in their previous sub-second class with rows identical to the
+H2 replay: `linkTargetAnchor` 0.48 s, `listNodeAnchor` 0.46 s.
+
+Raw files: `/private/tmp/.../scratchpad/r11-timings.csv` (session-local, not durable) and
+`~/Desktop/gravsearch-ordering-measurements/h2-replay/` for the reference layouts.
+
+### Base change
+
+The remote stack was force-pushed at 14:15 by another session: both layers were rebased onto `main` at
+`ded89ed9a`. The rebase is content-identical (range-diff clean: 20 PR1 and 28 PR2 commits unchanged), but the SHAs
+differ. `base_commit` for both layers is therefore now `ded89ed9a` (was `cd88f04b5`), and the round-11 commits were
+moved onto the remote PR2 tip `7ad247bc9` (the rewritten `b3d5c17a2`) before pushing. `origin/main` has since moved
+to `44de1cd49`; the stack was deliberately not rebased onto that.
