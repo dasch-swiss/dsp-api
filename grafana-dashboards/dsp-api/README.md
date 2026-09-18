@@ -137,6 +137,13 @@ restart marker and were aligned with 11 (see below); the avg-ranked routes table
   rather than an empty cell (an empty cell would sort unpredictably and read as "unknown").
 - **Requests is `increase()` (a count), not `rate()`.** The slow routes here are rare (export/candelete
   run a handful of times an hour); a per-second rate rounds to `0.00` and reads as broken.
+- **Panel 14 counts per plot step, not per smoothing window.** Its bars are
+  `increase(...[$__interval])`, so consecutive bars tile the range without overlap and the legend
+  **Total** adds up to the 5xx column of the table (up to `increase()` extrapolation: on prod, 2 errors
+  in 24 h summed to 2.2 across 10-minute steps, displayed as `2` with `decimals: 0`). A first version
+  used `[$smoothing]`, which counted the same error in every overlapping window and showed totals that
+  contradicted the table. The `and on (path) (… [$__range] > 0)` clause keeps only routes that had a
+  5xx somewhere in the range, so the legend does not list every route with a zero.
 - **Panel 5 uses a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route
   (`/v3/export/resources`, multiple seconds) otherwise compresses every other route into the baseline.
   An earlier `topk()` was removed — in a range graph it re-picks members every step and renders as

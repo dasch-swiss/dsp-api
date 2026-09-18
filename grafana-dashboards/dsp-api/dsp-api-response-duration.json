@@ -1374,8 +1374,8 @@
         "kind": "Panel",
         "spec": {
           "id": 14,
-          "title": "5xx responses per route ($smoothing count)",
-          "description": "Number of 5xx responses per route per Smoothing window; only non-zero windows are drawn, so an empty panel means no server errors in range. Complements the global 5xx-rate stat, which cannot tell you which endpoint failed. Same filters as the routes table.",
+          "title": "5xx responses per route (count per plot step)",
+          "description": "How many 5xx responses each route returned in each plot step, as stacked bars. The window is $__interval (= one plot step), so consecutive bars tile the range without overlap and the legend Total adds up to the 5xx column of the routes table above (up to increase() extrapolation, which can make a count read 1.0 or 0.99). An earlier version used the Smoothing window, which counted the same error in every overlapping window and inflated the total. Only routes with at least one 5xx in range appear. Same filters as the routes table; grouped by path only.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1395,7 +1395,7 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$smoothing])) > 0",
+                        "expr": "sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__interval])) and on (path) (sum by (path) (increase(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\",status=\"5xx\"}[$__range])) > 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -1417,14 +1417,17 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "decimals": 0,
                   "custom": {
-                    "drawStyle": "line",
-                    "fillOpacity": 0,
-                    "lineInterpolation": "linear",
+                    "drawStyle": "bars",
+                    "fillOpacity": 80,
                     "lineWidth": 1,
-                    "showPoints": "always",
-                    "axisSoftMin": 0,
-                    "pointSize": 5
+                    "showPoints": "never",
+                    "stacking": {
+                      "mode": "normal",
+                      "group": "A"
+                    },
+                    "axisSoftMin": 0
                   }
                 },
                 "overrides": []
