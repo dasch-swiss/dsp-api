@@ -350,6 +350,14 @@ object PrequeryPatternOrdering {
     val (unitAttached, rest)     = b.values.partition(v => unitVars.contains(v.variable))
     val (blockAttached, orphans) = rest.partition(v => nonUnitVars.contains(v.variable))
 
+    /**
+     * `b.binds` is hoisted unconditionally to the front (see the final line of this method) and seeds
+     * `bound0` with only each bind's target variable (`vars` on a `BindPattern` never looks at the bind
+     * expression). That is safe only because the Gravsearch parser never accepts a bind expression that
+     * reads a variable -- today a bind's expression is always a constant, so nothing it reads needs to be
+     * bound first. If that ever changed, both the seed and the hoist would need to account for the
+     * variables the expression reads, not just the target.
+     */
     val bound0                          = outerBound ++ b.binds.flatMap(vars).toSet
     val (orderedUnits, boundAfterUnits) = emitUnits(b.units, valuesByVar, bound0)
     val unitsWithValues                 = attachValues(orderedUnits, unitAttached)

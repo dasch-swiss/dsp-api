@@ -15,19 +15,20 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 
 /**
- * Cases 1-4 pin the DEV-7287 shapes from the ordering plan/design docs by hand-built AST; case 5 pins the
- * restated rule that a `VALUES`-bound classless type unit may lead even when it enumerates
- * `knora-base:Resource`; case 6 pins that `knora-base:LinkValue` may never lead. Case 7 is the
- * size-preservation check applied to every input in `allInputs`, which must list every fixture the suite
- * defines. The remaining suite (below) pins the structural and invariance rules from the ordering
- * plan/design docs: bind-first, Lucene-group opacity, `VALUES` attachment (unit-, block-attached, orphan),
- * filter/FNE placement, `MINUS`/`OPTIONAL` recursion seeds, disconnected components, cycle termination,
- * permutation invariance, and the T2/T7 tier exclusions. Two more cases pin the unselective-technical
- * list by name: `knora-base:Resource` may never lead, while `knora-base:ListNode` still may, so widening
- * the rule to a `knora-base` namespace test turns this suite red. The last two cases pin the two measured
- * DEV-7287 stage regressions: a standoff `rdf:type` unit must not lead ahead of the `VALUES` anchoring a
- * `*` property path, and a project-scoped predicate must win the rendered-text tie-break over a store-wide
- * built-in one.
+ * Pins the DEV-7287 `PrequeryPatternOrdering` behaviour by hand-built AST.
+ *
+ * Covers: real-world query shapes (list-node anchor, link-target anchor, the "tanner" shape with and
+ * without a project limit) with a bound-IRI or project-class type unit leading; the restated rule that a
+ * `VALUES`-bound classless type unit may lead even when it enumerates `knora-base:Resource`; the ban on
+ * `knora-base:LinkValue` and `knora-base:Resource` type units ever leading a component, while
+ * `knora-base:ListNode` remains eligible; a size-preservation check applied to every input in `allInputs`,
+ * which must list every fixture the suite defines; bind-first emission; Lucene-group opacity and its
+ * ability to lead even when unconnected; `VALUES` attachment (unit-attached, block-attached, orphan);
+ * filter/FNE placement; `MINUS`/`OPTIONAL` recursion seeds; disconnected components staying contiguous;
+ * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the two
+ * measured DEV-7287 stage regressions -- a standoff `rdf:type` unit must not lead ahead of the `VALUES`
+ * anchoring a `*` property path, and a project-scoped predicate must win the rendered-text tie-break over
+ * a store-wide built-in one.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
@@ -104,7 +105,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     ),
   )
 
-  // Case 1: list node anchor. `?letter a beol:letter ; beol:hasSubject ?subj . ?subj knora-api:listValueAsListNode <node>`, expanded.
+  // List node anchor. `?letter a beol:letter ; beol:hasSubject ?subj . ?subj knora-api:listValueAsListNode <node>`, expanded.
   private val listNodeExpected: Seq[QueryPattern] = Seq(
     StatementPattern(listNodeIri, hasSubListNodeIri, lnv),
     StatementPattern(subj, valueHasListNodeIri, lnv),
@@ -118,7 +119,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     listNodeExpected(0),
   )
 
-  // Case 2: link target anchor. `?letter a beol:letter ; beol:hasAuthor <anchor>`, expanded.
+  // Link target anchor. `?letter a beol:letter ; beol:hasAuthor <anchor>`, expanded.
   private val linkTargetExpected: Seq[QueryPattern] = Seq(
     StatementPattern(letter, hasAuthorIri, anchorIri),
     StatementPattern(letter, hasAuthorValueIri, letterLinkV),
@@ -134,7 +135,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     linkTargetExpected(0),
   )
 
-  // Case 3/4: tanner. `?src a beol:writtenSource ; rdfs:label ?label ; beol:title ?title . ?title valueHasString ?titleStr`.
+  // Tanner shape. `?src a beol:writtenSource ; rdfs:label ?label ; beol:title ?title . ?title valueHasString ?titleStr`.
   private val tannerValues = ValuesPattern(
     resTypes,
     Set(writtenSourceIri, manuscriptIri, basicLetterIri, letterIri),
@@ -182,7 +183,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     tannerFilter,
   )
 
-  // Case 5: restated 3c. A classless `VALUES` still containing `knora-base:Resource` must lead over `attachedToProject`.
+  // A classless `VALUES` still containing `knora-base:Resource` must lead over `attachedToProject`.
   private val classlessValues                   = ValuesPattern(resTypes, Set(resourceTypeIri, deletedResourceIri))
   private val classlessTypeStmt                 = StatementPattern(res, rdfTypeIri, resTypes)
   private val classlessProjStmt                 = StatementPattern(res, attachedToProjIri, projectIri)
@@ -200,7 +201,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     classlessLabelStmt,
   )
 
-  // Case 6: `knora-base:LinkValue` may never lead a component, even in a fully anchorless chain.
+  // Linked chain: `knora-base:LinkValue` may never lead a component, even in a fully anchorless chain.
   private val linkValueBannedInput: Seq[QueryPattern] = Seq(
     StatementPattern(aLinkV, rdfTypeIri, linkValueTypeIri),
     StatementPattern(p, hasFamilyNameIri, n),
@@ -208,7 +209,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     StatementPattern(aLinkV, rdfObjectIri, p),
   )
 
-  // Case 8 (bind first): a BindPattern is emitted before every unit, whatever its input position.
+  // Bind first: a BindPattern is emitted before every unit, whatever its input position.
   private val bindVar                           = QueryVariable("bindVar")
   private val bindPattern                       = BindPattern(bindVar, IntegerLiteral(1))
   private val bindFirstInput: Seq[QueryPattern] = Seq(
@@ -217,7 +218,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     StatementPattern(letter, rdfTypeIri, letterIri),
   )
 
-  // Case 9 (Lucene group opaque): a GroupPattern containing text:query leads a T2 statement, and its own
+  // Lucene group opaque: a GroupPattern containing text:query leads a T2 statement, and its own
   // `patterns` sequence is never reordered inside.
   private val luceneGroupInner: Seq[QueryPattern] = Seq(
     StatementPattern(letter, luceneQueryIri, XsdLiteral("test", OntologyConstants.Xsd.String.toSmartIri)),
@@ -227,7 +228,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val luceneLeadT2Stmt                    = StatementPattern(letter, hasAuthorIri, anchorIri)
   private val luceneGroupInput: Seq[QueryPattern] = Seq(luceneLeadT2Stmt, luceneGroup)
 
-  // Case 9b/9c (T1 leads regardless of connectivity): a text:query statement, bare or wrapped in a
+  // T1 leads regardless of connectivity: a text:query statement, bare or wrapped in a
   // GroupPattern, leads a block even when nothing has bound its variable yet, while a plain statement
   // whose variable the outer scope already bound is connected. Parity with `moveLuceneToBeginning`.
   private val luceneOuterBoundVar                  = QueryVariable("obVar")
@@ -240,26 +241,26 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val unconnectedLuceneGroup                              = GroupPattern(Seq(unconnectedLuceneStmt))
   private val luceneGroupLeadsUnconnectedInput: Seq[QueryPattern] = Seq(connectedPlainStmt, unconnectedLuceneGroup)
 
-  // Case 10 (attached VALUES adjacency): the VALUES on ?subj is emitted immediately before the statement
+  // Attached VALUES adjacency: the VALUES on ?subj is emitted immediately before the statement
   // using ?subj, wherever that statement lands.
   private val attachAnchorStmt                       = StatementPattern(letter, hasAuthorIri, anchorIri)
   private val attachSubjStmt                         = StatementPattern(letter, hasSubjectIri, subj)
   private val attachValuesPattern                    = ValuesPattern(subj, Set(anchorIri))
   private val attachedValuesInput: Seq[QueryPattern] = Seq(attachValuesPattern, attachSubjStmt, attachAnchorStmt)
 
-  // Case 11 (orphan VALUES last among units, before blocks/filters).
+  // Orphan VALUES last among units, before blocks/filters.
   private val orphanValues                             = ValuesPattern(QueryVariable("orphanVar"), Set(anchorIri))
   private val orphanWithFilterInput: Seq[QueryPattern] =
     Seq(orphanValues, attachAnchorStmt, attachSubjStmt, basel)
 
-  // Case 12 (block-attached VALUES): a VALUES referenced only inside an OPTIONAL is emitted immediately
+  // Block-attached VALUES: a VALUES referenced only inside an OPTIONAL is emitted immediately
   // before that OPTIONAL, not hoisted to the front.
   private val optVar                                = QueryVariable("optVar")
   private val blockValues                           = ValuesPattern(optVar, Set(anchorIri))
   private val optionalBlock                         = OptionalPattern(Seq(StatementPattern(letter, hasSubjectIri, optVar)))
   private val blockAttachedInput: Seq[QueryPattern] = Seq(blockValues, attachAnchorStmt, optionalBlock)
 
-  // Case 13 (filters/FNE ordering): statements, then blocks, then filters, then FNE last; each keeps its
+  // Filters/FNE ordering: statements, then blocks, then filters, then FNE last; each keeps its
   // own relative input order.
   private val filter1 = FilterPattern(
     CompareExpression(
@@ -283,13 +284,13 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val filterFneExpected: Seq[QueryPattern] =
     Seq(attachAnchorStmt, orderingOptBlk, filter2, filter1, fne2, fne1)
 
-  // Case 14 (MINUS parity): a statement binding a variable also used in a MINUS body is still hoisted
+  // MINUS parity: a statement binding a variable also used in a MINUS body is still hoisted
   // before the MINUS -- deliberate consistency with the StatementsFirst partition, not a SPARQL identity
   // (MINUS does not actually export bindings outward).
   private val minusBody                     = MinusPattern(Seq(StatementPattern(letter, hasSubjectIri, subj)))
   private val minusInput: Seq[QueryPattern] = Seq(minusBody, attachAnchorStmt)
 
-  // Case 15 (recursion seeds): OPTIONAL/UNION/FNE recurse with the outer bound set as seed, MINUS recurses
+  // Recursion seeds: OPTIONAL/UNION/FNE recurse with the outer bound set as seed, MINUS recurses
   // with an empty seed. Same block content, different seed, different inner order.
   private val outerVar                          = QueryVariable("outerV")
   private val seedBx                            = QueryVariable("bx")
@@ -301,7 +302,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val optSeedInput: Seq[QueryPattern]   = Seq(outerAnchor, OptionalPattern(Seq(seedStmtA, seedStmtB)))
   private val minusSeedInput: Seq[QueryPattern] = Seq(outerAnchor, MinusPattern(Seq(seedStmtA, seedStmtB)))
 
-  // Case 16 (two disconnected components stay contiguous, T2-anchored leading).
+  // Two disconnected components stay contiguous, T2-anchored leading.
   private val c1                                      = QueryVariable("c1")
   private val c1b                                     = QueryVariable("c1b")
   private val c2                                      = QueryVariable("c2")
@@ -313,7 +314,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val disconnectedInput: Seq[QueryPattern]    = Seq(s2b, s1b, typeS2, s1a)
   private val disconnectedExpected: Seq[QueryPattern] = Seq(s1a, s1b, typeS2, s2b)
 
-  // Case 17 (cycle terminates): ?thing hasOtherThing ?thing1 . ?thing1 hasOtherThing ?thing2 .
+  // Cycle terminates: ?thing hasOtherThing ?thing1 . ?thing1 hasOtherThing ?thing2 .
   // ?thing2 hasOtherThing ?thing, each link property expanded.
   private val thing                                                                                               = QueryVariable("thing")
   private val thing1                                                                                              = QueryVariable("thing1")
@@ -331,17 +332,17 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val cycleInput: Seq[QueryPattern] =
     expandLink(thing, lvA, thing1) ++ expandLink(thing1, lvB, thing2) ++ expandLink(thing2, lvC, thing)
 
-  // Case 18 (permutation invariance): the order of statements/GroupPatterns/VALUES is a pure function of
+  // Permutation invariance: the order of statements/GroupPatterns/VALUES is a pure function of
   // the input set. Binds, blocks and filters are excluded from the permuted set by design.
   private val permutationBase: Seq[QueryPattern] =
     linkTargetExpected :+ ValuesPattern(letterLinkV, Set(linkValueTypeIri))
 
-  // Case 19: an rdf:type statement with an IriRef subject ranks T2, leading over a plain T7 statement.
+  // An rdf:type statement with an IriRef subject ranks T2, leading over a plain T7 statement.
   private val typeIriSubjStmt                          = StatementPattern(anchorIri, rdfTypeIri, letterIri)
   private val plainT7Stmt                              = StatementPattern(subj, hasFamilyNameIri, n)
   private val typeIriSubjLeadsInput: Seq[QueryPattern] = Seq(plainT7Stmt, typeIriSubjStmt)
 
-  // Case 20: `rdfs:subClassOf*` ranks T7 (path) despite the bound object, and follows the statement that
+  // `rdfs:subClassOf*` ranks T7 (path) despite the bound object, and follows the statement that
   // binds its subject; within T7 it sorts after a non-path T7 statement.
   private val xVar                                = QueryVariable("x")
   private val subClassPathStmt                    = StatementPattern(xVar, subClassOfStarIri, anchorIri)
@@ -349,20 +350,30 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val subClassInput: Seq[QueryPattern]    = Seq(subClassPathStmt, bindXStmt)
   private val subClassExpected: Seq[QueryPattern] = Seq(bindXStmt, subClassPathStmt)
 
-  // Case 21: a variable predicate is not promoted to T2 despite a bound object (Fact 1's bound-object
+  // A variable predicate is not promoted to T2 despite a bound object (Fact 1's bound-object
   // corollary); a T2 statement leads over it.
   private val varPredVar                      = QueryVariable("vp")
   private val varPredStmt                     = StatementPattern(subj, varPredVar, anchorIri)
   private val t2LeadsOverVarPredStmt          = StatementPattern(letter, hasAuthorIri, anchorIri)
   private val varPredInput: Seq[QueryPattern] = Seq(varPredStmt, t2LeadsOverVarPredStmt)
 
-  // Case 22: `knora-base:Resource`, the second unselective-technical class, may never lead a component
+  // A non-type statement with a bound `XsdLiteral` object ranks T3: it leads a plain statement with no
+  // bound literal, but still ranks behind a bound-IRI (T2) statement.
+  private val boundLiteralStmt =
+    StatementPattern(subj, hasFamilyNameIri, XsdLiteral("Muster", OntologyConstants.Xsd.String.toSmartIri))
+  private val boundLiteralPlainCompanionStmt       = StatementPattern(p, hasFamilyNameIri, n)
+  private val boundLiteralInput: Seq[QueryPattern] =
+    Seq(boundLiteralPlainCompanionStmt, boundLiteralStmt, t2LeadsOverVarPredStmt)
+  private val boundLiteralExpected: Seq[QueryPattern] =
+    Seq(t2LeadsOverVarPredStmt, boundLiteralStmt, boundLiteralPlainCompanionStmt)
+
+  // `knora-base:Resource`, the second unselective-technical class, may never lead a component
   // either.
   private val resourceTypeStmt                       = StatementPattern(res, rdfTypeIri, resourceTypeIri)
   private val resourceCompanionStmt                  = StatementPattern(res, hasFamilyNameIri, n)
   private val resourceBannedInput: Seq[QueryPattern] = Seq(resourceTypeStmt, resourceCompanionStmt)
 
-  // Case 23: `knora-base:ListNode` is a knora-base class deliberately absent from the unselective-technical
+  // `knora-base:ListNode` is a knora-base class deliberately absent from the unselective-technical
   // list, so its type unit stays eligible to lead. Widening the rule to a knora-base namespace test would
   // demote this unit and swap the emitted order.
   private val listNodeTypeStmt                             = StatementPattern(n, rdfTypeIri, listNodeClassIri)
@@ -370,7 +381,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val listNodeTypeLeadsInput: Seq[QueryPattern]    = Seq(listNodeLabelStmt, listNodeTypeStmt)
   private val listNodeTypeLeadsExpected: Seq[QueryPattern] = Seq(listNodeTypeStmt, listNodeLabelStmt)
 
-  // Case 24 (DEV-7287 standoff regression, measured 166x): the standoff paragraph-tag type unit must not
+  // DEV-7287 standoff regression, measured 166x: the standoff paragraph-tag type unit must not
   // lead ahead of the VALUES + type unit that anchors the `standoffTagHasStartParent*` property path.
   // `?standoffParagraphTag` names a built-in standoff class (T7, plain), while `?standoffDateTag`'s type is
   // bound by a VALUES enumerating one project class and one knora-base class (T5), so the VALUES and its
@@ -398,7 +409,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     standoffTypeParagraphStmt,
   )
 
-  // Case 25 (DEV-7287 sort-by-date regression, measured 6.3x): without the predicate tie-break, the lexical
+  // DEV-7287 sort-by-date regression, measured 6.3x: without the predicate tie-break, the lexical
   // key would put `?date knora-base:valueHasStartJDN ?jdn` first because "date" < "thing"; the project
   // predicate `anything:hasDate` must instead win the tie and lead.
   private val dateProjectStmt                 = StatementPattern(thing, hasDateIri, date)
@@ -434,6 +445,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     listNodeTypeLeadsInput,
     standoffInput,
     dateInput,
+    boundLiteralInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -562,6 +574,9 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
       "let the project predicate win the tie-break over a store-wide knora-base predicate (DEV-7287, measured 6.3x)",
     ) {
       assertTrue(PrequeryPatternOrdering.order(dateInput) == dateExpected)
+    },
+    test("rank a non-type statement with a bound XsdLiteral object as T3, between T2 and a plain T7 statement") {
+      assertTrue(PrequeryPatternOrdering.order(boundLiteralInput) == boundLiteralExpected)
     },
   )
 }
