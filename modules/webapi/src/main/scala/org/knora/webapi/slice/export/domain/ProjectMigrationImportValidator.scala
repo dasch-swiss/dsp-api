@@ -18,7 +18,9 @@ import org.knora.shacl.RdfGraphs
 import org.knora.shacl.ShaclShapes
 import org.knora.shacl.ShaclValidator
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.common.PlaceholderIri
 
 final class ProjectMigrationImportValidator() {
@@ -35,7 +37,24 @@ final class ProjectMigrationImportValidator() {
   // Tests catch any mismatch since sh:hasValue would match the literal placeholder, failing validation.
   private val ProjectIriPlaceholder = "urn:placeholder:projectIri"
 
-  def validate(ontologyFiles: NonEmptyChunk[Path], dataFiles: NonEmptyChunk[Path], projectIri: ProjectIri): Task[Unit] =
+  // Replaced at runtime with the on-behalf-of user IRI, only when the bulk import shapes are loaded.
+  private val UserIriPlaceholder = "urn:placeholder:userIri"
+
+  /**
+   * Validates the import graph data against the SHACL shapes.
+   *
+   * @param mode selects the extra data shapes layered on top of `shacl/data-shapes.ttl`.
+   *             `ImportMode.Migration` loads `shacl/migration-shapes.ttl`, which allows the modification and
+   *             deletion predicates that already-modified graphs carry. `ImportMode.BulkData` loads
+   *             `shacl/bulk-import-shapes.ttl`, which forbids those predicates and pins
+   *             `knora-base:attachedToUser` to the on-behalf-of user. The two shape files never load together.
+   */
+  def validate(
+    ontologyFiles: NonEmptyChunk[Path],
+    dataFiles: NonEmptyChunk[Path],
+    projectIri: ProjectIri,
+    mode: ImportMode,
+  ): Task[Unit] =
     for {
       _       <- ZIO.unlessZIO(AppConfig.features(_.allowPlaceholder))(assertNoPlaceholderInObjectPosition(dataFiles))
       builtIn <- ZIO.foreach(builtInOntologyResources) { case (resource, graphIri) =>
@@ -51,9 +70,19 @@ final class ProjectMigrationImportValidator() {
                              .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       dataShapesTtl <- readClasspathResource("shacl/data-shapes.ttl")
                          .map(_.replace(ProjectIriPlaceholder, projectIri.value))
-      shapes = ShaclShapes(
+      extraDataShapes <- mode match {
+                           case ImportMode.Migration =>
+                             readClasspathResource("shacl/migration-shapes.ttl")
+                               .map(ttl => Chunk(RdfData.InMemoryTurtle(ttl, "")))
+                           case ImportMode.BulkData(userIri) =>
+                             readClasspathResource("shacl/bulk-import-shapes.ttl")
+                               .map(_.replace(UserIriPlaceholder, userIri.value))
+                               .map(ttl => Chunk(RdfData.InMemoryTurtle(ttl, "")))
+                         }
+      dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")) ++ extraDataShapes
+      shapes     = ShaclShapes(
                  ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "")),
-                 dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")),
+                 dataShapes = dataShapes,
                )
       _ <- ShaclValidator
              .validate(graphs, shapes)
@@ -120,5 +149,14 @@ final class ProjectMigrationImportValidator() {
 }
 
 object ProjectMigrationImportValidator {
+
+  /**
+   * Selects the extra data shapes layered on top of `shacl/data-shapes.ttl`.
+   */
+  enum ImportMode {
+    case Migration
+    case BulkData(onBehalfOfUser: UserIri)
+  }
+
   val layer: ULayer[ProjectMigrationImportValidator] = ZLayer.derive[ProjectMigrationImportValidator]
 }

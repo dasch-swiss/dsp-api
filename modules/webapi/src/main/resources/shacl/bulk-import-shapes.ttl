@@ -1,0 +1,125 @@
+# These shapes are an addition to the data-shapes.ttl that are only relevant for the bulk import validation
+
+# Placeholder IRIs (urn:placeholder:*) are replaced at runtime with actual values
+# - urn:placeholder:userIri  →  the IRI of the user the data is being imported on behalf of
+
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+knora-base:Resource-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:attachedToUser ;
+    sh:hasValue <urn:placeholder:userIri> ;
+    sh:message "Resource instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isDeleted ;
+    sh:hasValue "false"^^xsd:boolean ;
+    sh:message "Resource instance may not be marked as knora-base:isDeleted true" ;
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:lastModificationDate ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:lastModificationDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deleteDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deletedBy in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:minCount 1 ;
+    sh:message "Resources may not carry a knora-base:deleteComment in the bulk-import"
+  ] .
+
+knora-base:Value-Shape
+  # System standoff-link LinkValues attach to the built-in SystemUser by design
+  # (OntologyTransformer.emitStandoffLinkValue), so they are exempt from the on-behalf-of pin.
+  # They are identified by rdf:predicate knora-base:hasStandoffLinkTo, matching AttachedToUserNotBuiltIn-Shape.
+  sh:or (
+    # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
+    # The same guard is duplicated in data-shapes.ttl AttachedToUserNotBuiltIn-Shape — keep both in sync.
+    [
+      sh:class knora-base:LinkValue ;
+      sh:property [ sh:path rdf:predicate ; sh:hasValue knora-base:hasStandoffLinkTo ] ;
+    ]
+    [
+      sh:path knora-base:attachedToUser ;
+      sh:hasValue <urn:placeholder:userIri> ;
+      sh:message "Value instance must have knora-base:attachedToUser equal to <urn:placeholder:userIri>" ;
+    ]
+  ) ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isDeleted ;
+    sh:hasValue "false"^^xsd:boolean ;
+    sh:message "Value instance may not be marked as knora-base:isDeleted true" ;
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:lastModificationDate ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:lastModificationDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deleteDate in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deletedBy in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:deleteComment in the bulk-import"
+  ] ;
+  sh:not [
+    a sh:PropertyShape ;
+    sh:path knora-base:previousValue ;
+    sh:minCount 1 ;
+    sh:message "Value may not carry a knora-base:previousValue in the bulk-import"
+  ] .
+
+knora-base:TextValue-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasTextValueType ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ( knora-base:UnformattedText knora-base:FormattedText ) ;
+    sh:message "TextValue instance must have one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText"
+  ] ;
+  # UnformattedText carries no mapping; FormattedText must use the standard mapping.
+  sh:or (
+    [
+      sh:property [ sh:path knora-base:hasTextValueType ; sh:hasValue knora-base:UnformattedText ] ;
+      sh:property [ sh:path knora-base:valueHasMapping ; sh:maxCount 0 ] ;
+    ]
+    [
+      sh:property [ sh:path knora-base:hasTextValueType ; sh:hasValue knora-base:FormattedText ] ;
+      sh:property [ sh:path knora-base:valueHasMapping ; sh:hasValue <http://rdfh.ch/standoff/mappings/StandardMapping> ] ;
+    ]
+  ) .

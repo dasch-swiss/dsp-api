@@ -3,6 +3,7 @@
 # - urn:placeholder:projectIri  →  the IRI of the project being imported
 
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
@@ -11,7 +12,7 @@
 
 # Validates every instance of a knora-base:Resource subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
-knora-base:ResourceShape
+knora-base:Resource-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Resource ;
   sh:property [
@@ -34,7 +35,8 @@ knora-base:ResourceShape
     sh:path knora-base:attachedToUser ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "Resource instance must have knora-base:attachedToUser" ;
+    sh:nodeKind sh:IRI ;
+    sh:message "Resource instance must have knora-base:attachedToUser of type IRI" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -59,11 +61,293 @@ knora-base:ResourceShape
     sh:maxCount 1 ;
     sh:datatype xsd:dateTime ;
     sh:message "Resource instance must have knora-base:creationDate of type xsd:dateTime" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasResourceAuthorship ;
+    sh:datatype xsd:string ;
+    sh:message "Resource instance must have knora-base:hasResourceAuthorship of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasStandoffLinkTo ;
+    sh:class knora-base:Resource ;
+    sh:message "The target of knora-base:hasStandoffLinkTo must be a resource that is present in the data graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasStandoffLinkToValue ;
+    sh:class knora-base:LinkValue ;
+    sh:message "The target of knora-base:hasStandoffLinkTo must be a knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasStandoffLinkTo ;
+    dash:coExistsWith knora-base:hasStandoffLinkToValue ;
+    sh:message "A knora-base:hasStandoffLinkTo always requires a knora-base:hasStandoffLinkToValue"
+  ] .
+
+knora-base:Region-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Region ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasColor ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:ColorValue ;
+    sh:message "Instance of Region must have one knora-base:hasColor of type knora-base:ColorValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:Representation ;
+    sh:message "Instance of Region must have one knora-base:isRegionOf of type knora-base:Representation"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionOfValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of Region must have one knora-base:isRegionOfValue of type knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasGeometry ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:GeomValue ;
+    sh:message "Instance of Region must have one knora-base:hasGeometry of type knora-base:GeomValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:class knora-base:TextValue ;
+    sh:message "Instance of Region may have any number of knora-base:hasComment of type knora-base:TextValue"
+  ] .
+
+knora-base:LinkObj-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:LinkObj ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasLinkTo ;
+    sh:minCount 1 ;
+    sh:class knora-base:Resource ;
+    sh:message "Instance of LinkObj requires at least one knora-base:hasLinkTo to a Resource that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasLinkToValue ;
+    sh:minCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of LinkObj requires at least one knora-base:hasLinkToValue of type knora-base:LinkValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:class knora-base:TextValue ;
+    sh:message "Instance of LinkObj may have any number of knora-base:hasComment of type knora-base:TextValue"
+  ] .
+
+knora-base:Annotation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Annotation ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:minCount 1 ;
+    sh:class knora-base:TextValue ;
+    sh:message "Annotation instance must have at least one knora-base:hasComment of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAnnotationOf ;
+    sh:minCount 1 ;
+    sh:class knora-base:Resource ;
+    sh:message "Annotation instance must have at least one knora-base:isAnnotationOf to a Resource that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAnnotationOfValue ;
+    sh:minCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Annotation instance must have at least one knora-base:isAnnotationOfValue of type knora-base:LinkValue"
+  ] .
+
+
+# Shapes for Segment
+
+knora-base:Segment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Segment ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasComment ;
+    sh:class knora-base:TextValue ;
+    sh:message "Instance of Segment may have any number of knora-base:hasComment of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasSegmentBounds ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:IntervalValue ;
+    sh:message "Segment instance must have one knora-base:hasSegmentBounds of type knora-base:IntervalValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasTitle ;
+    sh:maxCount 1 ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have one knora-base:hasTitle of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasDescription ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have any number of knora-base:hasDescription of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    sh:path knora-base:hasKeyword ;
+    sh:class knora-base:TextValue ;
+    sh:message "Segment instance may have any number of knora-base:hasKeyword of type knora-base:TextValue"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:relatesTo ;
+    sh:class knora-base:Resource ;
+    sh:message "Segment instance may have any number of knora-base:relatesTo to a Resource that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:relatesToValue ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Segment instance may have any number of knora-base:relatesToValue of type knora-base:LinkValue"
+  ] .
+
+knora-base:AudioSegment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:AudioSegment ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAudioSegmentOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:AudioRepresentation ;
+    sh:message "Instance of AudioSegment requires one knora-base:isAudioSegmentOf to a knora-base:AudioRepresentation that exists in this graph"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isAudioSegmentOfValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:LinkValue ;
+    sh:message "Instance of AudioSegment requires ne knora-base:isAudioSegmentOfValue of type knora-base:LinkValue"
+  ] .
+
+knora-base:VideoSegment-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:VideoSegment ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:isVideoSegmentOf ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class knora-base:MovingImageRepresentation ;
+      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:MovingImageRepresentation that exists in this graph"
+    ] ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:isVideoSegmentOfValue ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class knora-base:LinkValue ;
+      sh:message "Instance of VideoSegment requires one knora-base:isVideoSegmentOfValue of type knora-base:LinkValue"
+    ] .
+
+# Shapes for sub-classes of knora-base:Representation
+
+knora-base:ArchiveRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ArchiveRepresentation ;
+  sh:property [
+    sh:path knora-base:hasArchiveFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:ArchiveFileValue ;
+    sh:message "ArchiveRepresentation instance must have one knora-base:hasArchiveFileValue of type knora-base:ArchiveFileValue"
+  ] .
+
+knora-base:DDDRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DDDRepresentation ;
+  sh:property [
+    sh:path knora-base:hasDDDFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:DDDFileValue ;
+    sh:message "DDDRepresentation instance must have one knora-base:hasDDDFileValue of type knora-base:DDDFileValue"
+  ] .
+
+knora-base:AudioRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:AudioRepresentation ;
+  sh:property [
+    sh:path knora-base:hasAudioFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:AudioFileValue ;
+    sh:message "AudioRepresentation instance must have one knora-base:hasAudioFileValue of type knora-base:AudioFileValue"
+  ] .
+
+knora-base:DocumentRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DocumentRepresentation ;
+  sh:property [
+    sh:path knora-base:hasDocumentFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:DocumentFileValue ;
+    sh:message "DocumentRepresentation instance must have one knora-base:hasDocumentFileValue of type knora-base:DocumentFileValue"
+  ] .
+
+knora-base:MovingImageRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:MovingImageRepresentation ;
+  sh:property [
+      sh:path knora-base:hasMovingImageFileValue ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class knora-base:MovingImageFileValue ;
+      sh:message "MovingImageRepresentation instance must have one knora-base:hasMovingImageFileValue of type knora-base:MovingImageFileValue"
+    ] .
+
+knora-base:StillImageRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageRepresentation ;
+  sh:property [
+    sh:path knora-base:hasStillImageFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:StillImageAbstractFileValue ;
+    sh:message "StillImageRepresentation instance must have one knora-base:hasStillImageFileValue of type knora-base:StillImageAbstractFileValue"
+  ] .
+
+knora-base:TextRepresentation-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextRepresentation ;
+  sh:property [
+    sh:path knora-base:hasTextFileValue ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:TextFileValue ;
+    sh:message "TextRepresentation instance must have one knora-base:hasTextFileValue of type knora-base:TextFileValue"
   ] .
 
 # Validates every instance of a knora-base:Value subclass.
 # With RDFS inference, sh:targetClass matches instances of all subclasses.
-knora-base:ValueShape
+knora-base:Value-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
   sh:property [
@@ -84,10 +368,10 @@ knora-base:ValueShape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasPermissions ;
-    sh:maxCount 1 ;
+    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance must have at most one knora-base:hasPermissions of type xsd:string" ;
+    sh:message "Value instance must have one knora-base:hasPermissions of type xsd:string" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -95,12 +379,183 @@ knora-base:ValueShape
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:boolean ;
-    sh:message "Value instance must have knora-base:isDeleted of type xsd:boolean" ;
+    sh:message "Value instance must have one knora-base:isDeleted of type xsd:boolean" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasOrder ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "Value instance may have at most one knora-base:valueHasOrder of type xsd:integer" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasComment ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance may have at most one knora-base:valueHasComment of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasString ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance must have one knora-base:valueHasString of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasUUID ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance may have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
 
-# Validates every instance of knora-base:LinkValue.
-# LinkValue is a subclass of Value, so ValueShape constraints also apply.
-knora-base:LinkValueShape
+# All values are subclass of Value, so Value-Shape constraints also apply.
+
+knora-base:BooleanValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:BooleanValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasBoolean ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:boolean ;
+      sh:message "BooleanValue instance must have one knora-base:valueHasBoolean of type xsd:boolean"
+    ] .
+
+knora-base:ColorValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ColorValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasColor ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "ColorValue instance must have one knora-base:valueHasColor of type xsd:string"
+  ] .
+
+knora-base:DateValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DateValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasCalendar ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:in ( "GREGORIAN" "JULIAN" "ISLAMIC" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasCalendar in (GREGORIAN, JULIAN, ISLAMIC)"  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasStartPrecision ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:in ( "DAY" "MONTH" "YEAR" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasStartPrecision in (DAY, MONTH, YEAR)"  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasEndPrecision ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:in ( "DAY" "MONTH" "YEAR" ) ;
+    sh:message "DateValue instance must have one knora-base:valueHasEndPrecision in (DAY, MONTH, YEAR)"  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasStartJDN ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DateValue instance must have one knora-base:valueHasStartJDN of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasEndJDN ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DateValue instance must have one knora-base:valueHasEndJDN of type xsd:integer"
+  ] ;
+  sh:property [
+   a sh:PropertyShape ;
+   sh:path knora-base:valueHasStartJDN ;
+   sh:lessThanOrEquals knora-base:valueHasEndJDN ;
+   sh:message "DateValue knora-base:valueHasStartJDN must be <= knora-base:valueHasEndJDN"
+  ] .
+
+knora-base:DecimalValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DecimalValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasDecimal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:decimal ;
+    sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
+  ] .
+
+knora-base:GeomValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:GeomValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasGeometry ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "GeomValue instance must have one knora-base:valueHasGeometry of type xsd:string"
+  ] .
+
+knora-base:GeonameValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:GeonameValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasGeonameCode ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "GeonameValue instance must have one knora-base:valueHasGeonameCode of type xsd:string"
+  ] .
+
+knora-base:IntervalValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:IntervalValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasIntervalStart ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:decimal ;
+    sh:message "IntervalValue instance must have one knora-base:valueHasIntervalStart of type xsd:decimal"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasIntervalEnd ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:decimal ;
+    sh:message "IntervalValue instance must have one knora-base:valueHasIntervalEnd of type xsd:decimal"
+  ] .
+
+knora-base:IntValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:IntValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasInteger ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "IntValue instance must have one knora-base:valueHasInteger of type xsd:integer"
+  ] .
+
+knora-base:LinkValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
   sh:property [
@@ -108,21 +563,24 @@ knora-base:LinkValueShape
     sh:path rdf:subject ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:subject" ;
+    sh:class knora-base:Resource ;
+    sh:message "LinkValue instance must have rdf:subject of type knora-base:Resource" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:predicate ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:predicate" ;
+    sh:nodeKind sh:IRI ;
+    sh:message "LinkValue instance must have rdf:predicate of type sh:IRI" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:object ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:message "LinkValue instance must have rdf:object" ;
+    sh:class knora-base:Resource ;
+    sh:message "LinkValue instance must have rdf:object of type knora-base:Resource" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -133,11 +591,226 @@ knora-base:LinkValueShape
     sh:message "LinkValue instance must have knora-base:valueHasRefCount of type xsd:integer" ;
   ] .
 
+knora-base:ListValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ListValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasListNode ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "ListValue instance must have one knora-base:valueHasListNode as an IRI"
+  ] .
+
+knora-base:TextValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasLanguage ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasLanguage of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasMapping ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasMapping as an IRI"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasMaxStandoffStartIndex ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasMaxStandoffStartIndex of type xsd:integer"
+  ] .
+
+knora-base:TimeValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TimeValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasTimeStamp ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:dateTime ;
+      sh:message "TimeValue instance must have one knora-base:valueHasTimeStamp of type xsd:dateTime"
+    ] .
+
+knora-base:UriValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:UriValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasUri ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:anyURI ;
+      sh:message "UriValue instance must have one knora-base:valueHasUri of type xsd:anyURI"
+    ] .
+
+knora-base:RegionPreviewValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:RegionPreviewValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:isRegionPreviewOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class knora-base:Region ;
+    sh:message "RegionPreviewValue instance must have one knora-base:isRegionPreviewOf of type knora-base:Region"
+  ] .
+
+# FileValues
+
+knora-base:FileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:FileValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:internalFilename ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance must have one knora-base:internalFilename of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:internalMimeType ; # TODO: find out if there is sh:in
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance must have one knora-base:internalMimeType of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:originalMimeType ; # TODO: find out if there is sh:in
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance may have at most one knora-base:originalMimeType of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:originalFilename ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance may have at most one knora-base:originalFilename of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasCopyrightHolder ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance may have at most one knora-base:hasCopyrightHolder of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasAuthorship ;
+    sh:datatype xsd:string ;
+    sh:message "FileValue instance can have any number of knora-base:hasAuthorship of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasLicense ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "FileValue instance may have at most one knora-base:hasLicense as an IRI"
+  ] .
+
+knora-base:ArchiveFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:ArchiveFileValue .
+
+knora-base:DDDFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DDDFileValue .
+
+knora-base:AudioFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:AudioFileValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:duration ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:decimal ;
+      sh:message "AudioFileValue instance may have at most one knora-base:duration of type xsd:decimal"
+    ] .
+
+knora-base:DocumentFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:DocumentFileValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:pageCount ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:pageCount of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimX ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:dimX of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimY ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "DocumentFileValue instance may have at most one knora-base:dimY of type xsd:integer"
+  ] .
+
+knora-base:MovingImageFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:MovingImageFileValue .
+
+knora-base:StillImageFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageFileValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimX ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "StillImageFileValue instance may have at most one knora-base:dimX of type xsd:integer"
+    ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:dimY ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:message "StillImageFileValue instance may have at most one knora-base:dimY of type xsd:integer"
+  ] .
+
+knora-base:StillImageExternalFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageExternalFileValue ;
+  sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:externalUrl ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:string ;
+      sh:message "StillImageExternalFileValue instance requires one knora-base:externalUrl of type xsd:string"
+    ] .
+
+knora-base:StillImageVectorFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:StillImageVectorFileValue .
+
+knora-base:TextFileValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:TextFileValue .
+
 # Validates that every knora-base:attachedToUser value (on resources and values)
 # references a node of type knora-admin:User. Since admin.nq is loaded into the
 # unified model, the knora-admin:User nodes are present and SHACL with RDFS
 # inference can verify this.
-knora-base:AttachedToUserExistsShape
+knora-base:AttachedToUserExists-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:property [
@@ -153,13 +826,15 @@ knora-base:AttachedToUserExistsShape
 # System standoff-link LinkValues are exempt: both the data-import transformer
 # (OntologyTransformer.emitStandoffLinkValue) and the v2 create path attach them to SystemUser by
 # design. They are identified by rdf:predicate knora-base:hasStandoffLinkTo.
-knora-base:AttachedToUserNotBuiltInShape
+knora-base:AttachedToUserNotBuiltIn-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:or (
+    # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
+    # The same guard is duplicated in bulk-import-shapes.ttl Value-Shape — keep both in sync.
     [
-      sh:path rdf:predicate ;
-      sh:hasValue knora-base:hasStandoffLinkTo ;
+      sh:class knora-base:LinkValue ;
+      sh:property [ sh:path rdf:predicate ; sh:hasValue knora-base:hasStandoffLinkTo ] ;
     ]
     [
       sh:path knora-base:attachedToUser ;

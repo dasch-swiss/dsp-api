@@ -1,0 +1,89 @@
+# These shapes are an addition to the data-shapes.ttl that are relevant to validate graphs that have been modified
+# for example live graphs in the database or for migration
+
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix dash:       <http://datashapes.org/dash#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+knora-base:Resource-Shape
+  sh:property [
+   a sh:PropertyShape ;
+   sh:path knora-base:lastModificationDate ;
+   sh:maxCount 1 ;
+   sh:datatype xsd:dateTime ;
+   sh:message "Resource instance may have at most one knora-base:lastModificationDate of type xsd:dateTime"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Resource instance may have at most one knora-base:deleteDate of type xsd:dateTime"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:maxCount 1 ;
+    sh:class knora-admin:User ;
+    sh:message "Resource instance may have at most one knora-base:deletedBy of type knora-admin:User"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Resource instance may have at most one knora-base:deleteComment of type xsd:string"
+] .
+
+knora-base:Value-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:lastModificationDate ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Value instance may have at most one knora-base:lastModificationDate of type xsd:dateTime"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteDate ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Value instance may have at most one knora-base:deleteDate of type xsd:dateTime"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deletedBy ;
+    sh:maxCount 1 ;
+    sh:class knora-admin:User ;
+    sh:message "Value instance may have at most one knora-base:deletedBy of type knora-admin:User"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:deleteComment ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Value instance may have at most one knora-base:deleteComment of type xsd:string"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:previousValue ;
+    sh:maxCount 1 ;
+    sh:class knora-base:Value ;
+    sh:message "Value instance may have at most one knora-base:previousValue of type knora-base:Value"
+  ] .
+
+knora-base:TextValue-Shape
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasTextValueType ;
+    sh:maxCount 1 ;
+    sh:in ( knora-base:UnformattedText
+            knora-base:FormattedText
+            knora-base:CustomFormattedText
+            knora-base:UndefinedTextType ) ;
+    sh:message "TextValue instance may have at most one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText knora-base:CustomFormattedText knora-base:UndefinedTextType"
+  ] .

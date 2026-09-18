@@ -12,6 +12,7 @@ import zio.stream.ZSink
 import zio.stream.ZStream
 
 import org.knora.webapi.messages.util.rdf.NQuads
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
@@ -84,7 +85,7 @@ final class ProjectDataImportService(
                          .mapError(e => new RuntimeException(s"Transformation failed: ${e.message}"))
         _ <- ZIO.logInfo(s"$taskId: Transformed data to knora-base for project '${project.id}'")
 
-        _ <- validate(taskId, project, Path.fromJava(transformed))
+        _ <- validate(taskId, project, Path.fromJava(transformed), onBehalfOf)
         _ <- ZIO.logInfo(s"$taskId: Validation passed for project '${project.id}'")
 
         // Re-verify the create-only precondition immediately before the upload: non-list data may have appeared
@@ -113,7 +114,12 @@ final class ProjectDataImportService(
    * instance size, not import size). Including it in the data chunk means the shared validator's placeholder scan
    * also runs over it, which is harmless for typing-only triples.
    */
-  private def validate(taskId: DataTaskId, project: KnoraProject, dataFile: Path): ZIO[Scope, Throwable, Unit] = for {
+  private def validate(
+    taskId: DataTaskId,
+    project: KnoraProject,
+    dataFile: Path,
+    onBehalfOf: User,
+  ): ZIO[Scope, Throwable, Unit] = for {
     graphs <- projectService.getOntologyGraphsForProject(project)
     // Backstop for the synchronous `project_ontologies_missing` check in the RestService: defends against a project
     // whose ontologies vanish between trigger and validation. Message aligned with `V3ErrorCode.project_ontologies_missing`.
@@ -131,7 +137,12 @@ final class ProjectDataImportService(
                           .orDieWith(_ => new IllegalStateException("ontologyFiles is empty despite non-empty graphs"))
     adminFile = tempDir / "admin.nq"
     _        <- triplestore.queryToFile(AdminUsersQuery.build, adminDataNamedGraph, adminFile, NQuads)
-    _        <- validator.validate(ontologyFilesNec, NonEmptyChunk(adminFile, dataFile), project.id)
+    _        <- validator.validate(
+           ontologyFilesNec,
+           NonEmptyChunk(adminFile, dataFile),
+           project.id,
+           ImportMode.BulkData(onBehalfOf.userIri),
+         )
   } yield ()
 
   // No ontology cache refresh: a data-graph import adds no ontology triples.
