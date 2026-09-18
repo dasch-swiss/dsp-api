@@ -16,22 +16,26 @@ import org.knora.webapi.messages.util.search.*
 
 /**
  * Cases 1-4 pin the DEV-7287 shapes from the ordering plan/design docs by hand-built AST; case 5 pins the
- * restated rule 3c (a `VALUES`-bound classless type unit may lead even when it enumerates
- * `knora-base:Resource`); case 6 pins that `knora-base:LinkValue` may never lead. Case 7 is the
+ * restated rule that a `VALUES`-bound classless type unit may lead even when it enumerates
+ * `knora-base:Resource`; case 6 pins that `knora-base:LinkValue` may never lead. Case 7 is the
  * size-preservation check applied to every input in `allInputs`, which must list every fixture the suite
  * defines. The remaining suite (below) pins the structural and invariance rules from the ordering
  * plan/design docs: bind-first, Lucene-group opacity, `VALUES` attachment (unit-, block-attached, orphan),
  * filter/FNE placement, `MINUS`/`OPTIONAL` recursion seeds, disconnected components, cycle termination,
- * permutation invariance, and the T2/T7 tier exclusions. The last two cases pin the unselective-technical
+ * permutation invariance, and the T2/T7 tier exclusions. Two more cases pin the unselective-technical
  * list by name: `knora-base:Resource` may never lead, while `knora-base:ListNode` still may, so widening
- * the rule to a `knora-base` namespace test turns this suite red.
+ * the rule to a `knora-base` namespace test turns this suite red. The last two cases pin the two measured
+ * DEV-7287 stage regressions: a standoff `rdf:type` unit must not lead ahead of the `VALUES` anchoring a
+ * `*` property path, and a project-scoped predicate must win the rendered-text tie-break over a store-wide
+ * built-in one.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
 
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val beol = "http://www.knora.org/ontology/0801/beol#"
+  private val beol     = "http://www.knora.org/ontology/0801/beol#"
+  private val anything = "http://www.knora.org/ontology/0001/anything#"
 
   private val letterIri         = IriRef((beol + "letter").toSmartIri)
   private val hasSubjectIri     = IriRef((beol + "hasSubject").toSmartIri)
@@ -54,6 +58,16 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val resourceTypeIri     = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
   private val deletedResourceIri  = IriRef(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
   private val listNodeClassIri    = IriRef(OntologyConstants.KnoraBase.ListNode.toSmartIri)
+
+  private val standoffParagraphTagIri   = IriRef(OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri)
+  private val standoffTagHasStartParent =
+    IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
+  private val valueHasStandoffIri  = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
+  private val hasTextIri           = IriRef((anything + "hasText").toSmartIri)
+  private val standoffEventTagIri  = IriRef((anything + "StandoffEventTag").toSmartIri)
+  private val standoffDateTagKbIri = IriRef(OntologyConstants.KnoraBase.StandoffDateTag.toSmartIri)
+  private val hasDateIri           = IriRef((anything + "hasDate").toSmartIri)
+  private val valueHasStartJdnIri  = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri)
 
   private val listNodeIri = IriRef("http://rdfh.ch/lists/0801/logarithmic_curves".toSmartIri)
   private val anchorIri   = IriRef("http://rdfh.ch/0801/anchor-person".toSmartIri)
@@ -79,6 +93,8 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val aLinkV      = QueryVariable("a__linkValue")
   private val p           = QueryVariable("p")
   private val n           = QueryVariable("n")
+  private val date        = QueryVariable("date")
+  private val jdn         = QueryVariable("jdn")
 
   private def basel: FilterPattern = FilterPattern(
     CompareExpression(
@@ -354,6 +370,42 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val listNodeTypeLeadsInput: Seq[QueryPattern]    = Seq(listNodeLabelStmt, listNodeTypeStmt)
   private val listNodeTypeLeadsExpected: Seq[QueryPattern] = Seq(listNodeTypeStmt, listNodeLabelStmt)
 
+  // Case 24 (DEV-7287 standoff regression, measured 166x): the standoff paragraph-tag type unit must not
+  // lead ahead of the VALUES + type unit that anchors the `standoffTagHasStartParent*` property path.
+  // `?standoffParagraphTag` names a built-in standoff class (T7, plain), while `?standoffDateTag`'s type is
+  // bound by a VALUES enumerating one project class and one knora-base class (T5), so the VALUES and its
+  // type statement now lead, and the property path is evaluated once its `standoffDateTag` end is bound.
+  private val standoffTypeParagraphStmt        = StatementPattern(subj, rdfTypeIri, standoffParagraphTagIri)
+  private val standoffPathStmt                 = StatementPattern(lnv, standoffTagHasStartParent, subj)
+  private val standoffValueHasStmt             = StatementPattern(title, valueHasStandoffIri, lnv)
+  private val standoffHasTextStmt              = StatementPattern(thing, hasTextIri, title)
+  private val standoffTypesValues              = ValuesPattern(resTypes, Set(standoffEventTagIri, standoffDateTagKbIri))
+  private val standoffTypesStmt                = StatementPattern(lnv, rdfTypeIri, resTypes)
+  private val standoffInput: Seq[QueryPattern] = Seq(
+    standoffTypeParagraphStmt,
+    standoffPathStmt,
+    standoffValueHasStmt,
+    standoffHasTextStmt,
+    standoffTypesValues,
+    standoffTypesStmt,
+  )
+  private val standoffExpected: Seq[QueryPattern] = Seq(
+    standoffTypesValues,
+    standoffTypesStmt,
+    standoffValueHasStmt,
+    standoffHasTextStmt,
+    standoffPathStmt,
+    standoffTypeParagraphStmt,
+  )
+
+  // Case 25 (DEV-7287 sort-by-date regression, measured 6.3x): without the predicate tie-break, the lexical
+  // key would put `?date knora-base:valueHasStartJDN ?jdn` first because "date" < "thing"; the project
+  // predicate `anything:hasDate` must instead win the tie and lead.
+  private val dateProjectStmt                 = StatementPattern(thing, hasDateIri, date)
+  private val dateJdnStmt                     = StatementPattern(date, valueHasStartJdnIri, jdn)
+  private val dateInput: Seq[QueryPattern]    = Seq(dateJdnStmt, dateProjectStmt)
+  private val dateExpected: Seq[QueryPattern] = Seq(dateProjectStmt, dateJdnStmt)
+
   private val allInputs: Seq[Seq[QueryPattern]] = Seq(
     listNodeInput,
     linkTargetInput,
@@ -380,6 +432,8 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     permutationBase,
     resourceBannedInput,
     listNodeTypeLeadsInput,
+    standoffInput,
+    dateInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -492,6 +546,22 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     },
     test("still let a knora-base:ListNode type unit lead, since it is not unselective-technical") {
       assertTrue(PrequeryPatternOrdering.order(listNodeTypeLeadsInput) == listNodeTypeLeadsExpected)
+    },
+    test(
+      "anchor the standoff `standoffTagHasStartParent*` path with the VALUES + type unit, not the plain paragraph-tag type (DEV-7287, measured 166x)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(standoffInput)
+      assertTrue(
+        actual == standoffExpected,
+        actual.head == standoffTypesValues,
+        actual(1) == standoffTypesStmt,
+        actual.head != standoffTypeParagraphStmt,
+      )
+    },
+    test(
+      "let the project predicate win the tie-break over a store-wide knora-base predicate (DEV-7287, measured 6.3x)",
+    ) {
+      assertTrue(PrequeryPatternOrdering.order(dateInput) == dateExpected)
     },
   )
 }

@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * Orders the patterns of one Gravsearch prequery WHERE block so that Fuseki (TDB2, no `stats.opt`)
@@ -29,9 +30,12 @@ import org.knora.webapi.messages.util.search.*
  *     whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type`
  *     statement with an `IriRef` subject.
  *   - T3 Bound literal: a non-type statement with an `XsdLiteral` object.
- *   - T4 Project-class type unit.
+ *   - T4 Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal
+ *     ontology IRI carrying a project shortcode), either directly or as the sole content of an
+ *     enumerating `VALUES`.
  *   - T5 Enumerating technical type unit: `rdf:type` on a variable bound by a `VALUES` that still
- *     contains a `knora-base` class.
+ *     contains a class from a built-in ontology (`knora-base`, `standoff`, `salsah-gui`, `knora-admin`,
+ *     or `shared`).
  *   - T6 `?x knora-base:attachedToProject <iri>`.
  *   - T7 Plain: everything else; within T7, non-path statements before property-path statements.
  * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
@@ -39,9 +43,13 @@ import org.knora.webapi.messages.util.search.*
  * object is a single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is
  * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by name
  * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
- * whose object is a bare `IriRef` in the `knora-base` namespace (for example `?v a knora-base:TextValue` or
+ * whose object is a bare `IriRef` in a built-in ontology (for example `?v a knora-base:TextValue` or
  * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
- * component.
+ * component. When two candidates otherwise tie, a statement whose predicate is a bound IRI in a project
+ * data ontology ranks ahead of one that is not, before falling back to the rendered-text key; this keeps
+ * a project-scoped predicate (typically far more selective on stage) as the join driver ahead of a
+ * store-wide built-in predicate such as `knora-base:valueHasStartJDN` that would otherwise win on lexical
+ * order alone.
  *
  * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
@@ -71,6 +79,26 @@ object PrequeryPatternOrdering {
 
   private val unselectiveTechnicalClasses: Set[String] =
     Set(OntologyConstants.KnoraBase.LinkValue, OntologyConstants.KnoraBase.Resource)
+
+  /**
+   * True iff `iri` is an internal ontology IRI carrying a project shortcode, i.e. it is shaped
+   * `http://www.knora.org/ontology/<shortcode>/<name>#...`. The built-in technical ontologies
+   * (`knora-base`, `standoff`, `salsah-gui`, `knora-admin`) have a single path segment after the
+   * internal-ontology prefix and fail this test; so does `shared`, whose first segment is not a
+   * valid shortcode.
+   */
+  private def isProjectDataOntologyIri(iri: String): Boolean = {
+    val prefix = OntologyConstants.KnoraInternal.InternalOntologyStart + "/"
+    if (!iri.startsWith(prefix)) false
+    else {
+      val afterPrefix = iri.substring(prefix.length)
+      val path        = afterPrefix.takeWhile(_ != '#')
+      path.split('/').toList match {
+        case shortcode :: _ :: Nil => Shortcode.from(shortcode).isRight
+        case _                     => false
+      }
+    }
+  }
 
   private case class Buckets(
     binds: Vector[BindPattern],
@@ -143,10 +171,10 @@ object PrequeryPatternOrdering {
     else
       s.obj match {
         case IriRef(iri, _) =>
-          if (!iri.toIri.startsWith(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion)) 4 else 7
+          if (isProjectDataOntologyIri(iri.toIri)) 4 else 7
         case v: QueryVariable =>
           val iris = valuesByVar.getOrElse(v, Seq.empty).flatMap(_.values).map(_.iri.toIri)
-          if (iris.nonEmpty && iris.forall(!_.startsWith(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))) 4
+          if (iris.nonEmpty && iris.forall(isProjectDataOntologyIri)) 4
           else if (iris.nonEmpty) 5
           else 7
         case _ => 7
@@ -189,20 +217,27 @@ object PrequeryPatternOrdering {
     case other => vars(other).count(bound.contains)
   }
 
+  /** True for a non-type statement whose predicate is a bound IRI in a project data ontology. */
+  private def hasProjectDataPredicate(u: QueryPattern): Boolean = u match {
+    case StatementPattern(_, IriRef(pred, _), _) => isProjectDataOntologyIri(pred.toIri)
+    case _                                       => false
+  }
+
   /**
-   * Tie-break precedence, in order: tier, then T7 non-path-before-path, then bound-terms count, then text.
-   * The final key must stay the rendered SPARQL: it makes the result independent of input order and of
-   * `Set`/`Map` iteration order, which is what the permutation-invariance spec case pins. Do not replace it
-   * with a positional index.
+   * Tie-break precedence, in order: tier, then T7 non-path-before-path, then bound-terms count, then
+   * project-data predicate before any other predicate, then text. The final key must stay the rendered
+   * SPARQL: it makes the result independent of input order and of `Set`/`Map` iteration order, which is
+   * what the permutation-invariance spec case pins. Do not replace it with a positional index.
    */
   private def rank(
     u: QueryPattern,
     bound: Set[QueryVariable],
     valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
-  ): (Int, Int, Int, String) = {
-    val t        = tierNum(u, valuesByVar)
-    val pathRank = if (t == 7 && isPropertyPath(u)) 1 else 0
-    (t, pathRank, -boundTermsCount(u, bound), u.toSparql)
+  ): (Int, Int, Int, Int, String) = {
+    val t             = tierNum(u, valuesByVar)
+    val pathRank      = if (t == 7 && isPropertyPath(u)) 1 else 0
+    val predicateRank = if (hasProjectDataPredicate(u)) 0 else 1
+    (t, pathRank, -boundTermsCount(u, bound), predicateRank, u.toSparql)
   }
 
   private def bestOf(
@@ -211,7 +246,7 @@ object PrequeryPatternOrdering {
     valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
   ): QueryPattern = candidates.minBy(rank(_, bound, valuesByVar))
 
-  /** Rule T1, then rules 3a-3d: picks the next unit to emit from the units still remaining. */
+  /** Rule T1, then connectivity and unselective-technical filters, in order: picks the next unit to emit from the units still remaining. */
   private def pickNext(
     remaining: Seq[QueryPattern],
     bound: Set[QueryVariable],
