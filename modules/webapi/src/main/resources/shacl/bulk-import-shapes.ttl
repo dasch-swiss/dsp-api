@@ -54,11 +54,13 @@ knora-base:Value-Shape
   # (OntologyTransformer.emitStandoffLinkValue), so they are exempt from the on-behalf-of pin.
   # They are identified by rdf:predicate knora-base:hasStandoffLinkTo, matching AttachedToUserNotBuiltIn-Shape.
   sh:or (
-    # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
+    # The exempted node must be a LinkValue that carries the standoff predicate and attaches to SystemUser.
+    # A LinkValue on any other built-in user (for example AnonymousUser) is not exempt.
     # The same guard is duplicated in data-shapes.ttl AttachedToUserNotBuiltIn-Shape — keep both in sync.
     [
       sh:class knora-base:LinkValue ;
       sh:property [ sh:path rdf:predicate ; sh:hasValue knora-base:hasStandoffLinkTo ] ;
+      sh:property [ sh:path knora-base:attachedToUser ; sh:hasValue knora-admin:SystemUser ] ;
     ]
     [
       sh:path knora-base:attachedToUser ;
