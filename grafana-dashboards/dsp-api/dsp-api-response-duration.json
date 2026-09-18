@@ -397,7 +397,6 @@
                   },
                   "unit": "s",
                   "custom": {
-                    "axisLabel": "avg duration",
                     "drawStyle": "line",
                     "fillOpacity": 10,
                     "lineInterpolation": "smooth",
