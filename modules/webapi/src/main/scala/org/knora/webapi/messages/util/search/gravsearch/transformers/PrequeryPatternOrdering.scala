@@ -21,8 +21,9 @@ import org.knora.webapi.messages.util.search.*
  * Fact 7 (a large `VALUES` table poisons join order unless it drives the scan).
  *
  * Tier table (lower is better):
- *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one at any depth. T1
- *     pre-empts the connectivity rule: a T1 unit leads its block whether or not it is connected to the
+ *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one directly or in a nested
+ *     [[GroupPattern]]; a `text:query` inside an `OPTIONAL`/`UNION`/`MINUS` within the group is not found.
+ *     T1 pre-empts the connectivity rule: a T1 unit leads its block whether or not it is connected to the
  *     already-bound variables.
  *   - T2 Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object,
  *     whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type`
@@ -36,8 +37,11 @@ import org.knora.webapi.messages.util.search.*
  * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
  * `rdfs:subPropertyOf`, is excluded from T2 and ranks T7 regardless of a bound object. A type unit whose
  * object is a single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is
- * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by
- * name rather than by namespace, deliberately - do not widen this to a namespace test.
+ * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by name
+ * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
+ * whose object is a bare `IriRef` in the `knora-base` namespace (for example `?v a knora-base:TextValue` or
+ * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
+ * component.
  *
  * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
@@ -46,13 +50,21 @@ import org.knora.webapi.messages.util.search.*
  * when a block binds a variable a later statement also uses. A T1 Lucene unit leads its block regardless of
  * connectivity, matching the legacy hoisting pass this replaces, which recorded the class `VALUES` enumeration as ~300x
  * slower than the index-anchored Lucene lookup in the DEV-6715 performance spike.
+ *
+ * This pass's output is pinned by the golden files driven by `GravsearchToPrequeryTransformerE2ESpec` and
+ * `GravsearchToCountPrequeryTransformerE2ESpec`, which live in `modules/test-it`, not in `modules/webapi`
+ * alongside this file: a tier change verified only with `bazel test //modules/webapi:test` looks green while
+ * silently changing emitted query order. Regenerate them through the `GOLDEN_REWRITE` switch documented in
+ * `docs/development/dsp-api-conventions.md` and review the diff.
  */
 object PrequeryPatternOrdering {
 
   /**
    * Reorders `patterns` for connectivity-aware evaluation. `outerBound` is the set of variables already
-   * bound by an enclosing scope (used when recursing into `OPTIONAL`/`UNION`/`FILTER NOT EXISTS`/`GROUP`
-   * blocks). Preserves the size of the input.
+   * bound by an enclosing scope; it exists for the internal per-block recursion
+   * (`OPTIONAL`/`UNION`/`MINUS`/`FILTER NOT EXISTS`) and for tests - production has a single call site, which
+   * passes one argument. A [[GroupPattern]] is an opaque leaf and is never recursed into. Preserves the size
+   * of the input.
    */
   def order(patterns: Seq[QueryPattern], outerBound: Set[QueryVariable] = Set.empty): Seq[QueryPattern] =
     orderGroup(patterns, outerBound)
@@ -177,7 +189,12 @@ object PrequeryPatternOrdering {
     case other => vars(other).count(bound.contains)
   }
 
-  /** Tie-break precedence, in order: tier, then T7 non-path-before-path, then bound-terms count, then text. */
+  /**
+   * Tie-break precedence, in order: tier, then T7 non-path-before-path, then bound-terms count, then text.
+   * The final key must stay the rendered SPARQL: it makes the result independent of input order and of
+   * `Set`/`Map` iteration order, which is what the permutation-invariance spec case pins. Do not replace it
+   * with a positional index.
+   */
   private def rank(
     u: QueryPattern,
     bound: Set[QueryVariable],

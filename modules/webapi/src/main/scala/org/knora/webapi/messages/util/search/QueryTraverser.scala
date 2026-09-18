@@ -321,8 +321,13 @@ final class QueryTraverser()(implicit stringFormatter: StringFormatter) {
                     whereTransformer = transformer,
                     limitInferenceToOntologies = limitInferenceToOntologies,
                   )
-      // The single ordering seam for the prequery: every relative ordering of its WHERE patterns is
-      // decided here, by PrequeryPatternOrdering, and nowhere else.
+      // The prequery's ordering seam: PrequeryPatternOrdering decides the order of the statement and
+      // GroupPattern units, and the placement of BIND / VALUES / blocks / filters / FILTER NOT EXISTS
+      // relative to those units. It does not decide the relative order within the filter group, the
+      // block group or the FILTER NOT EXISTS group, nor the order inside a GroupPattern (which it
+      // treats as an opaque leaf); those are inherited from StatementsFirst and
+      // SparqlTransformer.optimiseIsDeletedWithFilter, which run at every nesting level earlier in
+      // the pipeline.
       whereClause = WhereClause(PrequeryPatternOrdering.order(patterns))
     } yield inputQuery.copy(fromClause = None, whereClause = whereClause)
   }

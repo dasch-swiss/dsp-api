@@ -173,13 +173,13 @@ private object RemoveEntitiesInferredFromProperty {
 /**
  * Moves statement patterns ahead of other patterns at each nesting level. The real ordering (subject/object
  * connectivity, anchor tiers) is done afterwards by `PrequeryPatternOrdering` in
- * `QueryTraverser.transformSelectToSelect`; this partition only guards two shapes that pass has no way to
- * fix because they are not statement-to-statement reordering problems: (a) a FILTER inside a nested braced
- * group written before the statements it binds against, and (b) a BIND pattern or block written before the
- * statements its expression depends on. The trivial `{ FILTER ... stmts }` shape still works without this
- * partition, so testing only that shape wrongly suggests it is dead; the regression goldens
- * `filterBeforeStatementsInUnion` and `dateFilterInUnionAndTopLevel` are the cases that actually fail if it
- * is dropped.
+ * `QueryTraverser.transformSelectToSelect`, and that pass cannot subsume this partition: this one changes
+ * which patterns get generated, not just their order. `GravsearchQueryOptimisation.optimiseQueryPatterns` is
+ * reached from `AbstractPrequeryGenerator` via `QueryTraverser.transformWherePatterns`, which runs it before
+ * the per-pattern transform loop in the same method, and `AbstractPrequeryGenerator` is stateful across that
+ * loop. A FILTER or BIND handed to the generator before the statements it depends on therefore yields
+ * different generated patterns. The regression goldens `filterBeforeStatementsInUnion` and
+ * `dateFilterInUnionAndTopLevel` are the cases that fail if this partition is dropped.
  */
 private object StatementsFirst {
 
