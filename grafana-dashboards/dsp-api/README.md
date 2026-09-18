@@ -67,11 +67,13 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 | 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share, traffic-mix independent | `[$smoothing]` |
 | 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
 
-### Proposed comparison panels (rows titled "… (proposed)")
+### Proposed comparison panels
 
-Panels 8–17 were added **next to** the panels they are meant to replace, in their own rows, so the
-two can be compared on real data before anything is removed. Nothing in panels 1–7 was changed. What
-each proposal fixes:
+Panels 8–17 were added **directly below** the panels they are meant to replace, so the two can be
+compared on real data before anything is removed: 8–10 under 1–3, 11 under 4, 12–14 after 5–6, then
+the triplestore panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global",
+"Per route", …) were dropped because they got in the way of that comparison. Nothing in panels 1–7
+was changed. What each proposal fixes:
 
 - **`path!=""` everywhere (8–14).** ~11k requests/day on prod carry an empty `path`: CORS `OPTIONS`
   preflights and `HEAD` probes that never matched an endpoint. They inflate the request-rate tile and

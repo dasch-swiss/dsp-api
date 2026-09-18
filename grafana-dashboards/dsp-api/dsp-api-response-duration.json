@@ -2273,312 +2273,228 @@
       }
     },
     "layout": {
-      "kind": "RowsLayout",
+      "kind": "GridLayout",
       "spec": {
-        "rows": [
+        "items": [
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Global — $environment / $stack",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-2"
-                        },
-                        "x": 8,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-3"
-                        },
-                        "x": 16,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-4"
-                        },
-                        "x": 0,
-                        "y": 4,
-                        "width": 24,
-                        "height": 8
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              },
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 4
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Global (proposed) — $environment / $stack",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-8"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-9"
-                        },
-                        "x": 8,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-10"
-                        },
-                        "x": 16,
-                        "y": 0,
-                        "width": 8,
-                        "height": 4
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-11"
-                        },
-                        "x": 0,
-                        "y": 4,
-                        "width": 24,
-                        "height": 9
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              },
+              "x": 8,
+              "y": 0,
+              "width": 8,
+              "height": 4
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Per route — $environment / $stack",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-5"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 24,
-                        "height": 9
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-6"
-                        },
-                        "x": 0,
-                        "y": 9,
-                        "width": 24,
-                        "height": 11
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              },
+              "x": 16,
+              "y": 0,
+              "width": 8,
+              "height": 4
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Per route (proposed) — $environment / $stack",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-12"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 24,
-                        "height": 12
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-13"
-                        },
-                        "x": 0,
-                        "y": 12,
-                        "width": 12,
-                        "height": 9
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-14"
-                        },
-                        "x": 12,
-                        "y": 12,
-                        "width": 12,
-                        "height": 9
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              },
+              "x": 0,
+              "y": 4,
+              "width": 8,
+              "height": 4
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Triplestore (proposed) — $environment / $stack (API-side Fuseki round trips)",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-15"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 12,
-                        "height": 9
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-16"
-                        },
-                        "x": 12,
-                        "y": 0,
-                        "width": 12,
-                        "height": 9
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-17"
-                        },
-                        "x": 0,
-                        "y": 9,
-                        "width": 24,
-                        "height": 8
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-9"
+              },
+              "x": 8,
+              "y": 4,
+              "width": 8,
+              "height": 4
             }
           },
           {
-            "kind": "RowsLayoutRow",
+            "kind": "GridLayoutItem",
             "spec": {
-              "title": "Slowest Gravsearch — $environment / $stack (traces)",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-7"
-                        },
-                        "x": 0,
-                        "y": 0,
-                        "width": 24,
-                        "height": 11
-                      }
-                    }
-                  ]
-                }
-              }
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-10"
+              },
+              "x": 16,
+              "y": 4,
+              "width": 8,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              },
+              "x": 0,
+              "y": 8,
+              "width": 24,
+              "height": 8
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
+              },
+              "x": 0,
+              "y": 16,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              },
+              "x": 0,
+              "y": 34,
+              "width": 24,
+              "height": 11
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+              },
+              "x": 0,
+              "y": 45,
+              "width": 24,
+              "height": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-13"
+              },
+              "x": 0,
+              "y": 57,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+              },
+              "x": 12,
+              "y": 57,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-15"
+              },
+              "x": 0,
+              "y": 66,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-16"
+              },
+              "x": 12,
+              "y": 66,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-17"
+              },
+              "x": 0,
+              "y": 75,
+              "width": 24,
+              "height": 8
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              },
+              "x": 0,
+              "y": 83,
+              "width": 24,
+              "height": 11
             }
           }
         ]
