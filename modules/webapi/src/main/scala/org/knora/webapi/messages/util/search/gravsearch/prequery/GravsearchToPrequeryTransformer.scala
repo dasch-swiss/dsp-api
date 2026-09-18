@@ -246,8 +246,12 @@ class GravsearchToPrequeryTransformer(
   /**
    * Returns the columns to be specified in the SELECT query.
    */
-  override def getSelectColumns: Task[Seq[SelectQueryColumn]] =
-    ZIO.succeed(Seq(mainResourceVariable) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat)
+  override def getSelectColumns: Task[Seq[SelectQueryColumn]] = {
+    // Sorted to keep the rendered query byte-stable for the golden snapshots, independent of Set iteration order.
+    val groupConcatColumns =
+      (dependentResourceGroupConcat ++ valueObjectGroupConcat).toSeq.sortBy(_.outputVariable.variableName)
+    ZIO.succeed(mainResourceVariable +: groupConcatColumns)
+  }
 
   /**
    * Returns the variables that were used in [[GroupConcat]] expressions in the prequery to represent values

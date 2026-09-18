@@ -17,9 +17,12 @@ import scala.util.chaining.scalaUtilChainingOps
  * validate its content while enabling automatic updates to the standard with
  * rewrite = true through "assertGolden(..., rewrite = true)" or "rewriteAll = true" in the trait.
  *
- * Use git diff or the test output to inspect the differences and either update the standard or update the code.
- *
+ * A rewrite run fails by design (see assertNever below) and must be followed by a clean rerun.
  * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
+ *
+ * For how to regenerate goldens (the GOLDEN_REWRITE environment variable, which modules it reaches, and
+ * the placeholder rule for new golden files) see docs/development/dsp-api-conventions.md, "Golden snapshot
+ * tests".
  */
 trait GoldenTest {
   val rewriteAll: Boolean = false
@@ -37,7 +40,7 @@ trait GoldenTest {
       new String(Files.readAllBytes(path), "UTF-8")
     }
 
-    if (rewrite || rewriteAll) {
+    if (rewrite || rewriteAll || sys.env.get("GOLDEN_REWRITE").exists(_.nonEmpty)) {
       // NOTE: this should prevent infinite loops, if the output is stable
       if (expected != Some(actual)) Files.write(path, actual.getBytes("UTF-8")): Unit
 

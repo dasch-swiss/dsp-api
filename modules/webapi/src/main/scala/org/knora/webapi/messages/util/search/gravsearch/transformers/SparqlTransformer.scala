@@ -21,6 +21,8 @@ object SparqlTransformer {
    *
    * @param entity the entity to be used to create a base name for a variable.
    * @return a base name for a variable.
+   * @see [[createInferenceVariable]], which does not reuse this method because it is lossy (distinct
+   *      inputs can escape to the same string) and gives no `VARNAME` guarantee for any entity kind.
    */
   def escapeEntityForVariable(entity: Entity): String = {
     val entityStr = entity match {
@@ -85,6 +87,34 @@ object SparqlTransformer {
    */
   def createUniqueVariableFromStatementForLinkValue(baseStatement: StatementPattern): QueryVariable =
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
+
+  /**
+   * Creates a deterministic, content-derived variable name for a `VALUES` block introduced during
+   * ontology inference, replacing the `scala.util.Random` fallback previously used for this purpose.
+   *
+   * Do not substitute [[escapeEntityForVariable]] here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
+   * escape alike), and a collision would merge two unrelated `VALUES` blocks and empty the result set.
+   * See `docs/05-internals/design/api-v2/gravsearch.md` § "Determinism for Snapshot Testing" for the
+   * full rationale.
+   *
+   * @param statement the statement pattern that requires an inference variable.
+   * @param kind       a short discriminator (e.g. `"resTypes"`, `"subProp"`) distinguishing the
+   *                   different `VALUES` blocks that can be derived from the same statement.
+   * @return a deterministic, content-derived variable.
+   */
+  def createInferenceVariable(statement: StatementPattern, kind: String): QueryVariable = {
+    val rawBase = statement.subj match {
+      case QueryVariable(varName) => varName
+      case IriRef(iri, _)         =>
+        val iriStr        = iri.toIri
+        val lastSeparator = math.max(iriStr.lastIndexOf('#'), iriStr.lastIndexOf('/'))
+        if (lastSeparator >= 0) iriStr.substring(lastSeparator + 1) else iriStr
+      case other => other.toSparql
+    }
+    val base = rawBase.replaceAll("[^A-Za-z0-9_]", "")
+    val hash = f"${statement.toSparql.hashCode}%08x"
+    QueryVariable(s"${base}__${kind}__$hash")
+  }
 
   /**
    * Builds the canonical `FILTER NOT EXISTS { subj knora-base:isDeleted true }` guard for the given

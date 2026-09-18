@@ -123,6 +123,7 @@ nav:
 # (the files link to the root CONTEXT.md index, which is outside the docs directory).
 exclude_docs: |
   contexts/
+  specs/
 
 plugins:
   - search

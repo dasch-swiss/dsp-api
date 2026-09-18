@@ -1,0 +1,12 @@
+SELECT DISTINCT ?book
+WHERE {
+?book <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0803/incunabula#book> .
+?book <http://www.w3.org/2000/01/rdf-schema#label> "Zeitglöcklein des Lebens und Leidens Christi"^^<http://www.w3.org/2001/XMLSchema#string> .
+FILTER NOT EXISTS {
+ ?book <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?book
+ORDER BY ASC(?book)
+LIMIT 25

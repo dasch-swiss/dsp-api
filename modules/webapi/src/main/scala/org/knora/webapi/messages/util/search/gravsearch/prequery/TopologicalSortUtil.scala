@@ -41,7 +41,10 @@ object TopologicalSortUtil {
      * @return a list of all permutations of topological order.
      */
     def findPermutations(layeredOrder: graph.LayeredTopologicalOrder[NodeT]): List[Vector[NodeT]] = {
-      val lastLayerNodes: Vector[NodeT]                    = layeredOrder.last._2.toVector
+      // scala-graph's layer buffer iterates in System.identityHashCode order, which varies per JVM run;
+      // only the last layer's order is disambiguated below via permutations, so every layer's nodes are
+      // pinned to a stable lexicographic order (by string form) here to keep the result deterministic.
+      val lastLayerNodes: Vector[NodeT]                    = layeredOrder.last._2.toVector.sortBy(_.outer.toString)
       val allLowerLayers: Iterable[(Int, Iterable[NodeT])] = layeredOrder.dropRight(1)
 
       // Find all permutations of last layer nodes; i.e leaf nodes.
@@ -53,7 +56,7 @@ object TopologicalSortUtil {
           // Iterate over the previous layers to add the nodes into the order w.r.t. edges.
           val orderedLowerLayerNodes: Vector[NodeT] = allLowerLayers.iterator.foldRight(lastLayerPermutation) {
             (layer, acc) =>
-              val layerNodes: Vector[NodeT] = layer._2.toVector
+              val layerNodes: Vector[NodeT] = layer._2.toVector.sortBy(_.outer.toString)
               // Get those nodes within a layer that are origins of outgoing edges to the nodes already in set of ordered nodes.
               val origins: Set[NodeT] = acc.foldRight(Set.empty[NodeT]) { (node, originsAcc) =>
                 val maybeOriginNode: Option[NodeT] =

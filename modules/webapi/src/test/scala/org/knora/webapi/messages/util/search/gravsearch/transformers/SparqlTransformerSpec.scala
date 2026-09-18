@@ -175,5 +175,39 @@ class SparqlTransformerSpec extends ZIOSpecDefault {
       val expectedPatterns: Seq[QueryPattern] = Seq(groupPattern, resourceTypeStatement)
       assertTrue(optimisedPatterns == expectedPatterns)
     },
+    test("create an inference variable whose name is a valid SPARQL VARNAME even for an illegal-character object") {
+      val statement = StatementPattern(
+        subj = QueryVariable("foo"),
+        pred = IriRef(hasTextIRI),
+        obj = XsdLiteral(value = "(DE-588)118531379", datatype = OntologyConstants.Xsd.String.toSmartIri),
+      )
+      val generatedQueryVar = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      assertTrue(generatedQueryVar.variableName.matches("^[A-Za-z0-9_]+$"))
+    },
+    test("create different inference variables for statements colliding under escapeEntityForVariable") {
+      val statementA = StatementPattern(
+        subj = IriRef("http://www.knora.org/ontology/0001/ab#cd".toSmartIri),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val statementB = StatementPattern(
+        subj = IriRef("http://www.knora.org/ontology/0001/abc#d".toSmartIri),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val varA = SparqlTransformer.createInferenceVariable(statementA, "resTypes")
+      val varB = SparqlTransformer.createInferenceVariable(statementB, "resTypes")
+      assertTrue(varA != varB)
+    },
+    test("create the same inference variable for the same statement") {
+      val statement = StatementPattern(
+        subj = QueryVariable("foo"),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val varA = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      val varB = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      assertTrue(varA == varB)
+    },
   )
 }

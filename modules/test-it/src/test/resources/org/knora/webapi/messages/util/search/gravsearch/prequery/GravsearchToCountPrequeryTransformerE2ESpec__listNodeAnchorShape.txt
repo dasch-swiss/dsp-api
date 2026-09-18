@@ -1,0 +1,6 @@
+STMT var type iri
+STMT var hasSubject var
+STMT var valueHasListNode var
+STMT iri hasSubListNode* var
+FNE
+FNE

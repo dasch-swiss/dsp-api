@@ -1,0 +1,19 @@
+SELECT DISTINCT (COUNT(DISTINCT ?thing) AS ?count)
+WHERE {
+VALUES ?thing__resTypes__2fdb3955 { <http://www.knora.org/ontology/0001/anything#BlueThing> <http://www.knora.org/ontology/0001/anything#Thing> <http://www.knora.org/ontology/0001/anything#ThingWithSeqnum> }
+?thing <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?thing__resTypes__2fdb3955 .
+OPTIONAL {
+?thing <http://www.knora.org/ontology/0001/anything#hasDecimal> ?decimal .
+?decimal <http://www.knora.org/ontology/knora-base#valueHasDecimal> ?decimal__valueHasDecimal .
+FILTER((?decimal__valueHasDecimal > "2"^^<http://www.w3.org/2001/XMLSchema#decimal>))
+FILTER NOT EXISTS {
+ ?decimal <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+LIMIT 1

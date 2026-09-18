@@ -11,9 +11,23 @@ import dsp.errors.AssertionException
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.search.BindPattern
 import org.knora.webapi.messages.util.search.ConstructClause
+import org.knora.webapi.messages.util.search.Entity
+import org.knora.webapi.messages.util.search.FilterNotExistsPattern
+import org.knora.webapi.messages.util.search.FilterPattern
+import org.knora.webapi.messages.util.search.GroupPattern
+import org.knora.webapi.messages.util.search.IriRef
+import org.knora.webapi.messages.util.search.MinusPattern
+import org.knora.webapi.messages.util.search.OptionalPattern
+import org.knora.webapi.messages.util.search.QueryPattern
 import org.knora.webapi.messages.util.search.QueryTraverser
+import org.knora.webapi.messages.util.search.QueryVariable
 import org.knora.webapi.messages.util.search.SelectQuery
+import org.knora.webapi.messages.util.search.StatementPattern
+import org.knora.webapi.messages.util.search.UnionPattern
+import org.knora.webapi.messages.util.search.ValuesPattern
+import org.knora.webapi.messages.util.search.XsdLiteral
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
@@ -21,6 +35,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTrans
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * Shared by [[GravsearchToPrequeryTransformerE2ESpec]] and [[GravsearchToCountPrequeryTransformerE2ESpec]]:
@@ -43,6 +58,7 @@ object GravsearchInferencePipelineTestSupport {
       AppConfig,
     ) => AbstractPrequeryGenerator,
     dropOrderBy: Boolean = false,
+    limitResultsToProject: Option[ProjectIri] = None,
   )(implicit
     sf: StringFormatter,
   ): ZIO[
@@ -83,8 +99,46 @@ object GravsearchInferencePipelineTestSupport {
                                inputQuery = prequery,
                                transformer = selectTransformer,
                                limitInferenceToOntologies = ontologiesForInference,
-                               limitResultsToProject = None,
+                               limitResultsToProject = limitResultsToProject,
                              ),
                            )
   } yield transformedPrequery
+
+  /**
+   * Renders one line per top-level pattern of `query.whereClause.patterns`, in traversal order, so pattern
+   * order becomes mechanically diffable in a golden file. This is needed because the rendered SPARQL is flat
+   * (nested patterns start at column 0), so a text grep on the query string cannot tell top-level order.
+   */
+  def shapeSummary(query: SelectQuery): String = {
+    def entityKind(entity: Entity): String = entity match {
+      case _: QueryVariable => "var"
+      case _: IriRef        => "iri"
+      case _: XsdLiteral    => "lit"
+      case _                => "other"
+    }
+
+    def predicateSummary(pred: Entity): String = pred match {
+      case _: QueryVariable => "?var"
+      case iriRef: IriRef   =>
+        val iriStr         = iriRef.iri.toString
+        val separatorIndex = if (iriStr.contains("#")) iriStr.lastIndexOf('#') else iriStr.lastIndexOf('/')
+        val localName      = iriStr.substring(separatorIndex + 1)
+        iriRef.propertyPathOperator.fold(localName)(_ => s"$localName*")
+      case _ => "other"
+    }
+
+    def patternSummary(pattern: QueryPattern): String = pattern match {
+      case StatementPattern(subj, pred, obj) => s"STMT ${entityKind(subj)} ${predicateSummary(pred)} ${entityKind(obj)}"
+      case ValuesPattern(_, values)          => s"VALUES (${values.size})"
+      case _: BindPattern                    => "BIND"
+      case _: FilterPattern                  => "FILTER"
+      case _: FilterNotExistsPattern         => "FNE"
+      case _: OptionalPattern                => "OPTIONAL"
+      case _: UnionPattern                   => "UNION"
+      case _: MinusPattern                   => "MINUS"
+      case _: GroupPattern                   => "GROUP"
+    }
+
+    query.whereClause.patterns.map(patternSummary).mkString("\n")
+  }
 }
