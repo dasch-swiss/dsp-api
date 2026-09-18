@@ -769,7 +769,10 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     },
     test("transform an input query using rdfs:label and a literal in the simple schema") {
       transformQueryWithInference(InputQueryWithRdfsLabelAndLiteralInSimpleSchema)
-        .map(actual => assertGolden(actual.toSparql, "rdfsLabelAndLiteral"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "rdfsLabelAndLiteral") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "rdfsLabelAndLiteralShape"),
+        )
     },
     test("transform an input query using rdfs:label and a literal in the complex schema") {
       transformQueryWithInference(InputQueryWithRdfsLabelAndLiteralInComplexSchema)
@@ -797,11 +800,20 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     },
     test("transform an input query with knora-api:standoffTagHasStartAncestor") {
       transformQueryWithInference(queryWithStandoffTagHasStartAncestor)
-        .map(actual => assertGolden(actual.toSparql, "standoffTagHasStartAncestor"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "standoffTagHasStartAncestor") &&
+            assertGolden(
+              GravsearchInferencePipelineTestSupport.shapeSummary(actual),
+              "standoffTagHasStartAncestorShape",
+            ),
+        )
     },
     test("reorder query patterns in where clause") {
       transformQueryWithInference(queryToReorder)
-        .map(actual => assertGolden(actual.toSparql, "reorder"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "reorder") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "reorderShape"),
+        )
     },
     test("reorder query patterns in where clause with union") {
       transformQueryWithInference(queryToReorderWithUnion)
@@ -817,7 +829,10 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     },
     test("reorder a query with a cycle") {
       transformQueryWithInference(queryToReorderWithCycle)
-        .map(actual => assertGolden(actual.toSparql, "reorderWithCycle"))
+        .map(actual =>
+          assertGolden(actual.toSparql, "reorderWithCycle") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "reorderWithCycleShape"),
+        )
     },
     test(
       "generate the fulltext-index-anchored matchFulltext expansion for a classless query, hoisted ahead of the class-VALUES block",

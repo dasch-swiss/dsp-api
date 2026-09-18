@@ -1,0 +1,24 @@
+STMT var object var
+VALUES (2)
+STMT var ?var var
+VALUES (2)
+STMT var ?var var
+STMT var object var
+VALUES (2)
+STMT var ?var var
+VALUES (2)
+STMT var ?var var
+VALUES (2)
+STMT var ?var var
+STMT var object var
+VALUES (2)
+STMT var ?var var
+STMT var type iri
+STMT var type iri
+STMT var type iri
+FNE
+FNE
+FNE
+FNE
+FNE
+FNE

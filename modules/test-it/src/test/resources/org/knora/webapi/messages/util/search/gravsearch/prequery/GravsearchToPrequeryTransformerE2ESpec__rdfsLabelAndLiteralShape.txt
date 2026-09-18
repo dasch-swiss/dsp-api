@@ -1,0 +1,3 @@
+STMT var label lit
+STMT var type iri
+FNE

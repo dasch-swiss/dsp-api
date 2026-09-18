@@ -461,7 +461,10 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     test("order the tanner shape with a project limit, attachedToProject right after the type unit") {
       assertTrue(PrequeryPatternOrdering.order(tannerWithProjectInput) == tannerWithProjectExpected)
     },
-    test("let a classless VALUES-bound type unit lead over attachedToProject (restated rule 3c)") {
+    test(
+      "let a classless VALUES-bound type unit lead over attachedToProject " +
+        "(when no unit is connected to anything already bound, the leader is chosen among all units that are not unselective-technical)",
+    ) {
       assertTrue(PrequeryPatternOrdering.order(classlessInput) == classlessExpected)
     },
     test("never let an unselective-technical knora-base:LinkValue type unit lead a component") {
