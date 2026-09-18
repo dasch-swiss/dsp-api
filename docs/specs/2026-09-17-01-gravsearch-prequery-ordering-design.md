@@ -20,7 +20,8 @@ This document was revised after review checkpoint 3. Five follow-up measurements
 (`F0`, `S8w`, `S8w-D`, `S2big`, and the net-time re-expression); two of them changed a conclusion, and the
 changes are called out where they occur.
 
-Raw material lives next to this file in `2026-09-17-01-gravsearch-prequery-ordering-assets/`:
+Raw material is not tracked in the repository (decision at ship time, 2026-09-18: the per-case tables in this
+document are the record). It is kept on Balduin's machine under `~/Desktop/gravsearch-ordering-measurements/` as `spike-assets/`:
 
 - `generate.py` — generates every layout file, so that the layouts of one case are provably identical except
   for pattern order.

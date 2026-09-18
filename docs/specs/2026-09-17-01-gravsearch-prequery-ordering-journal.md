@@ -593,8 +593,9 @@ session rather than decided here.
 Gate H1 re-probed clear at the start of round 4. All 24 layouts measured on stage through dsp-cli per the
 Phase 3 protocol (one discarded warm-up round, then five timed round-robin rounds; `S4-D` and `S8-C` run once).
 Full write-up, tables and threats to validity in
-`docs/specs/2026-09-17-01-gravsearch-prequery-ordering-design.md`; raw data in the sibling `-assets/`
-directory (`results.csv`, `generate.py`, `stage.sh`, `run-case.py`, 24 `.rq` files).
+`docs/specs/2026-09-17-01-gravsearch-prequery-ordering-design.md`; raw data (`results.csv`, `generate.py`,
+`stage.sh`, `run-case.py`, the `.rq` layout files) was kept outside the repository at ship time, under
+`~/Desktop/gravsearch-ordering-measurements/` (`spike-assets/`), together with the H2 replay and the dev timing harness.
 
 **Harness floor: 0.13 s** (case `F0`, `SELECT (1 AS ?x) WHERE {}`, 5 runs, 0.13–0.14). Every conclusion below
 is taken on **net** time (median minus the floor), which is what makes S3/S5/S7 readable; the first pass of
