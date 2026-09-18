@@ -1814,3 +1814,21 @@ to `finding-verifier`.
 
 One suggestion not taken: pinning an exact order in the degenerate all-`rdf:object` case. That case exists to prove
 totality and determinism under the fallback; its exact order carries no claim worth freezing.
+
+### Correction to "Base change": the stack shipped mid-round
+
+The "Base change" note above is superseded by what the push revealed. While round 11 was running, both stack layers
+were squash-merged into `main` at 12:58 UTC: PR 4348 (DEV-7288) as `9a2efa885` and PR 4349 (DEV-7287) as
+`a523c827c`, and both branches were deleted. The force-push reported at 14:15 local was the last rebase before that
+merge, not a new base to build on.
+
+Consequence for round 11: its four commits do not belong to PR 4349 any more (that PR is `MERGED` and its head is
+`1ad31ba2e`, a pre-squash commit that is not an ancestor of `main`). They were replayed onto `origin/main` at
+`a523c827c` as `71b8cb7a8`, `91f234f38`, `cc0411e6f`, `a7241793f` on the local branch
+`round11-rdf-object-eligibility`; the replay is content-identical to the pre-merge tip (`git diff` empty) and the
+full `//modules/webapi:test`, `just test-gravsearch-prequery` and `just check` gates are green on top of `main`.
+
+Left for the session to decide: round 11 now needs its own follow-up PR off `main` (branch name and PR body are not
+the orchestrator's call). Also note that the fast-forward push in this round recreated the deleted remote branch
+`feature/dev-7287-gravsearch-prequery-emits-patterns-in-dependency-order-not` with the pre-squash history plus the
+round-11 commits; it has no PR and should be deleted once the follow-up branch is pushed.
