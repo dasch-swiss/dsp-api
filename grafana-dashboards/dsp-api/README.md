@@ -94,15 +94,18 @@ each proposal fixes:
   SPARQL round trips, with `isGravsearch`/`isSearch`/`isMaintenance`/`type` labels and **decade buckets**
   (10 ms, 100 ms, 1 s, 10 s … in `millis`). Quantiles are therefore coarse within-decade
   interpolations — read them as "is it Fuseki or the API"; the threshold shares in 16 are exact.
-- **Deploy markers.** A dashboard annotation ("dsp-api restart / deploy", purple) fires on a reset of
+- **Deploy markers.** A dashboard annotation ("dsp-api restart / deploy", purple) fires on a drop of
   the process CPU counter. No version/build-info metric is exported (`target_info` for this service has
   no `service_version`), and every restart gives the container a new `container_id`, so a plain
-  `resets()` never fires — the query sums by `stack` first:
-  `count(resets(sum by (stack) (process_cpu_seconds_total{…})[$__interval:1m]) > 0)`, min step `2m`.
-  The subquery window **must** equal the annotation step: consecutive evaluations then tile the range
-  with no gaps, giving exactly one marker per restart on any dashboard range (a fixed `[5m:1m]` missed
-  restarts on a 7-day range once the step grew past 5 min). It is filtered to the proposed time-series
-  panels (11, 13–17) so the original panels render unchanged.
+  `resets()` never fires — the query aggregates by `stack` first and compares with one step earlier:
+  `count(min by (stack) (process_cpu_seconds_total{…}) < min by (stack) (… offset $__interval))`, min
+  step `2m`. That is true for exactly one evaluation point per restart on any dashboard range. Two
+  traps, both hit while building it: (1) `min`, not `sum` — a relabel that adds a label to a running
+  container's series (seen on prod: `asserts_env` appeared) makes old and new series overlap for the
+  5-minute staleness window, so a `sum` doubles and then halves and reads as a restart, whereas the
+  `min` is unchanged; (2) not `resets()` over a subquery window — adjacent windows never share a
+  sample pair, so a drop straddling two windows is invisible. It is filtered to the proposed
+  time-series panels (11, 13–17) so the original panels render unchanged.
 
 ### Query-shape rationale (don't "simplify" these away)
 

@@ -68,7 +68,7 @@
             "spec": {
               "editorMode": "code",
               "refId": "Anno",
-              "expr": "count(resets(sum by (stack) (process_cpu_seconds_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"})[$__interval:1m]) > 0)",
+              "expr": "count(min by (stack) (process_cpu_seconds_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"}) < min by (stack) (process_cpu_seconds_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"} offset $__interval))",
               "legendFormat": "restart"
             }
           },
