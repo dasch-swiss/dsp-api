@@ -33,9 +33,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  *   - T4 Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal
  *     ontology IRI carrying a project shortcode), either directly or as the sole content of an
  *     enumerating `VALUES`.
- *   - T5 Enumerating technical type unit: `rdf:type` on a variable bound by a `VALUES` that still
- *     contains a class from a built-in ontology (`knora-base`, `standoff`, `salsah-gui`, `knora-admin`,
- *     or `shared`).
+ *   - T5 Enumerating technical type unit: `rdf:type` on a variable bound by a non-empty `VALUES`
+ *     enumeration where not every entry is a class in a project data ontology - for example an
+ *     enumeration mixing project and built-in classes, or naming an external IRI, or naming only classes
+ *     from a built-in ontology (`knora-base`, `standoff`, `salsah-gui`, `knora-admin`, or `shared`).
  *   - T6 `?x knora-base:attachedToProject <iri>`.
  *   - T7 Plain: everything else; within T7, non-path statements before property-path statements.
  * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
@@ -104,7 +105,7 @@ object PrequeryPatternOrdering {
     binds: Vector[BindPattern],
     values: Vector[ValuesPattern],
     units: Vector[QueryPattern],
-    blocks: Vector[QueryPattern],
+    blocks: Vector[OptionalPattern | UnionPattern | MinusPattern],
     filters: Vector[FilterPattern],
     notExists: Vector[FilterNotExistsPattern],
   )
@@ -159,10 +160,16 @@ object PrequeryPatternOrdering {
     case _                                          => false
   }
 
+  /** True iff `pred` is the Fuseki full-text-search predicate (`text:query`). */
+  private def isLuceneQueryPredicate(pred: Entity): Boolean = pred match {
+    case IriRef(iri, _) => iri.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+    case _              => false
+  }
+
   private def containsLucene(g: GroupPattern): Boolean = g.patterns.exists {
-    case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
-    case inner: GroupPattern                     => containsLucene(inner)
-    case _                                       => false
+    case StatementPattern(_, pred, _) => isLuceneQueryPredicate(pred)
+    case inner: GroupPattern          => containsLucene(inner)
+    case _                            => false
   }
 
   /** Tier of an `rdf:type` unit whose subject is a variable; see the object's Scaladoc for the rules. */
@@ -182,8 +189,8 @@ object PrequeryPatternOrdering {
 
   private def statementTier(s: StatementPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): Int =
     s.pred match {
-      case IriRef(pred, _) if pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate => 1
-      case IriRef(pred, _) if pred.toIri == OntologyConstants.Rdf.Type                    =>
+      case pred if isLuceneQueryPredicate(pred)                        => 1
+      case IriRef(pred, _) if pred.toIri == OntologyConstants.Rdf.Type =>
         s.subj match {
           case _: IriRef        => 2
           case _: QueryVariable => typeTier(s, valuesByVar)
@@ -217,10 +224,45 @@ object PrequeryPatternOrdering {
     case other => vars(other).count(bound.contains)
   }
 
-  /** True for a non-type statement whose predicate is a bound IRI in a project data ontology. */
+  /**
+   * True iff `u` is a statement whose predicate is a bound IRI in a project data ontology. This matches
+   * against any predicate, including `rdf:type`; a type statement fails it in practice because `rdf` is
+   * not a project data ontology, not because type statements are special-cased out.
+   */
   private def hasProjectDataPredicate(u: QueryPattern): Boolean = u match {
     case StatementPattern(_, IriRef(pred, _), _) => isProjectDataOntologyIri(pred.toIri)
     case _                                       => false
+  }
+
+  /**
+   * A unit's rank fields that do not depend on the greedy loop's growing `bound` set: the tier, the
+   * property-path tie-break, the project-data-predicate tie-break, the rendered SPARQL used as the final
+   * tie-break, the unit's own variables, and the two membership flags `pickNext` branches on. Computed
+   * once per unit before the loop so the per-step work is only the bound-terms count.
+   */
+  private case class UnitKey(
+    unit: QueryPattern,
+    tier: Int,
+    pathRank: Int,
+    predicateRank: Int,
+    sparql: String,
+    varsOf: Set[QueryVariable],
+    isType: Boolean,
+    isUnselectiveTechnical: Boolean,
+  )
+
+  private def unitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
+    val t = tierNum(u, valuesByVar)
+    UnitKey(
+      unit = u,
+      tier = t,
+      pathRank = if (t == 7 && isPropertyPath(u)) 1 else 0,
+      predicateRank = if (hasProjectDataPredicate(u)) 0 else 1,
+      sparql = u.toSparql,
+      varsOf = vars(u),
+      isType = isTypeUnit(u),
+      isUnselectiveTechnical = isUnselectiveTechnicalType(u),
+    )
   }
 
   /**
@@ -229,69 +271,53 @@ object PrequeryPatternOrdering {
    * SPARQL: it makes the result independent of input order and of `Set`/`Map` iteration order, which is
    * what the permutation-invariance spec case pins. Do not replace it with a positional index.
    */
-  private def rank(
-    u: QueryPattern,
-    bound: Set[QueryVariable],
-    valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
-  ): (Int, Int, Int, Int, String) = {
-    val t             = tierNum(u, valuesByVar)
-    val pathRank      = if (t == 7 && isPropertyPath(u)) 1 else 0
-    val predicateRank = if (hasProjectDataPredicate(u)) 0 else 1
-    (t, pathRank, -boundTermsCount(u, bound), predicateRank, u.toSparql)
+  private def rank(k: UnitKey, bound: Set[QueryVariable]): (Int, Int, Int, Int, String) =
+    (k.tier, k.pathRank, -boundTermsCount(k.unit, bound), k.predicateRank, k.sparql)
+
+  private def bestOf(indices: Seq[Int], remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int =
+    indices.minBy(i => rank(remaining(i), bound))
+
+  /**
+   * Rule T1, then connectivity and unselective-technical filters, in order: picks the index (into
+   * `remaining`) of the next unit to emit.
+   */
+  private def pickNext(remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int = {
+    def connected(k: UnitKey) = k.varsOf.intersect(bound).nonEmpty
+    val indices               = remaining.indices
+    val ruleT1                = indices.filter(i => remaining(i).tier == 1)
+    val (typeIdx, nonTypeIdx) = indices.partition(i => remaining(i).isType)
+    val ruleA                 = nonTypeIdx.filter(i => connected(remaining(i)))
+    val ruleB                 = typeIdx.filter(i => connected(remaining(i)))
+    val ruleC                 = indices.filterNot(i => remaining(i).isUnselectiveTechnical)
+
+    if (ruleT1.nonEmpty) bestOf(ruleT1, remaining, bound)
+    else if (ruleA.nonEmpty) bestOf(ruleA, remaining, bound)
+    else if (ruleB.nonEmpty) bestOf(ruleB, remaining, bound)
+    else if (ruleC.nonEmpty) bestOf(ruleC, remaining, bound)
+    else bestOf(indices, remaining, bound)
   }
 
-  private def bestOf(
-    candidates: Seq[QueryPattern],
-    bound: Set[QueryVariable],
-    valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
-  ): QueryPattern = candidates.minBy(rank(_, bound, valuesByVar))
-
-  /** Rule T1, then connectivity and unselective-technical filters, in order: picks the next unit to emit from the units still remaining. */
-  private def pickNext(
-    remaining: Seq[QueryPattern],
-    bound: Set[QueryVariable],
-    valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
-  ): QueryPattern = {
-    def connected(u: QueryPattern) = vars(u).intersect(bound).nonEmpty
-    val ruleT1                     = remaining.filter(u => tierNum(u, valuesByVar) == 1)
-    val (typeUnits, nonType)       = remaining.partition(isTypeUnit)
-    val ruleA                      = nonType.filter(connected)
-    val ruleB                      = typeUnits.filter(connected)
-    val ruleC                      = remaining.filterNot(isUnselectiveTechnicalType)
-
-    if (ruleT1.nonEmpty) bestOf(ruleT1, bound, valuesByVar)
-    else if (ruleA.nonEmpty) bestOf(ruleA, bound, valuesByVar)
-    else if (ruleB.nonEmpty) bestOf(ruleB, bound, valuesByVar)
-    else if (ruleC.nonEmpty) bestOf(ruleC, bound, valuesByVar)
-    else bestOf(remaining, bound, valuesByVar)
-  }
-
-  /** Emits `units` (step 3), attaching each unit-referenced `VALUES` immediately before its unit. */
+  /** Emits `units` (step 3) in greedy tier/connectivity order, without attaching any `VALUES`. */
   private def emitUnits(
     units: Seq[QueryPattern],
-    unitAttachedValues: Seq[ValuesPattern],
     valuesByVar: Map[QueryVariable, Seq[ValuesPattern]],
     bound0: Set[QueryVariable],
   ): (Seq[QueryPattern], Set[QueryVariable]) = {
-    val byVar = unitAttachedValues.groupBy(_.variable)
 
     @tailrec
     def loop(
-      remaining: Vector[QueryPattern],
+      remaining: Vector[UnitKey],
       bound: Set[QueryVariable],
-      attachedVars: Set[QueryVariable],
       acc: Vector[QueryPattern],
     ): (Vector[QueryPattern], Set[QueryVariable]) =
       if (remaining.isEmpty) (acc, bound)
       else {
-        val chosen   = pickNext(remaining, bound, valuesByVar)
-        val idx      = remaining.indexWhere(_ eq chosen)
-        val toAttach = byVar.keySet.diff(attachedVars).filter(vars(chosen).contains).toSeq.sortBy(_.variableName)
-        val emitted  = toAttach.flatMap(byVar)
-        loop(remaining.patch(idx, Nil, 1), bound ++ vars(chosen), attachedVars ++ toAttach, acc ++ emitted :+ chosen)
+        val idx    = pickNext(remaining, bound)
+        val chosen = remaining(idx)
+        loop(remaining.patch(idx, Nil, 1), bound ++ chosen.varsOf, acc :+ chosen.unit)
       }
 
-    loop(units.toVector, bound0, Set.empty, Vector.empty)
+    loop(units.map(unitKey(_, valuesByVar)).toVector, bound0, Vector.empty)
   }
 
   /** Inserts each block-attached `VALUES` immediately before the first element that references it. */
@@ -305,11 +331,13 @@ object PrequeryPatternOrdering {
     out
   }
 
-  private def recurseBlock(block: QueryPattern, bound: Set[QueryVariable]): QueryPattern = block match {
+  private def recurseBlock(
+    block: OptionalPattern | UnionPattern | MinusPattern,
+    bound: Set[QueryVariable],
+  ): QueryPattern = block match {
     case OptionalPattern(ps) => OptionalPattern(orderGroup(ps, bound))
     case UnionPattern(bs)    => UnionPattern(bs.map(orderGroup(_, bound)))
     case MinusPattern(ps)    => MinusPattern(orderGroup(ps, Set.empty))
-    case other               => other
   }
 
   private def orderGroup(patterns: Seq[QueryPattern], outerBound: Set[QueryVariable]): Seq[QueryPattern] = {
@@ -323,12 +351,13 @@ object PrequeryPatternOrdering {
     val (blockAttached, orphans) = rest.partition(v => nonUnitVars.contains(v.variable))
 
     val bound0                          = outerBound ++ b.binds.flatMap(vars).toSet
-    val (orderedUnits, boundAfterUnits) = emitUnits(b.units, unitAttached, valuesByVar, bound0)
+    val (orderedUnits, boundAfterUnits) = emitUnits(b.units, valuesByVar, bound0)
+    val unitsWithValues                 = attachValues(orderedUnits, unitAttached)
 
     val recursedBlocks    = b.blocks.map(recurseBlock(_, boundAfterUnits))
     val recursedNotExists = b.notExists.map(fne => FilterNotExistsPattern(orderGroup(fne.patterns, boundAfterUnits)))
     val tail              = attachValues(recursedBlocks ++ b.filters ++ recursedNotExists, blockAttached)
 
-    b.binds ++ orderedUnits ++ orphans ++ tail
+    b.binds ++ unitsWithValues ++ orphans ++ tail
   }
 }
