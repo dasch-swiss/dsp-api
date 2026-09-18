@@ -42,7 +42,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf` /
  * `rdfs:subPropertyOf`, is excluded from T2 and ranks T7 regardless of a bound object. A type unit whose
  * object is a single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is
- * unselective-technical: it ranks T7 and may never lead a component. These two classes are listed by name
+ * unselective-technical: it ranks T7 and may never lead a component. Together with T1 pre-emption and the
+ * `rdf:object` deferral described below, this is one of the pass's three eligibility rules: each removes
+ * some units from `pickNext` candidacy (or forces one in) rather than merely ranking them. These two
+ * classes are listed by name
  * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
  * whose object is a bare `IriRef` in a built-in ontology (for example `?v a knora-base:TextValue` or
  * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
@@ -56,7 +59,17 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * whose attached `VALUES` enumerates only project data ontology IRIs - ranks ahead of one that is not,
  * before falling back to the rendered-text key; this keeps a project-scoped predicate (typically far more
  * selective on stage) as the join driver ahead of a store-wide built-in predicate such as
- * `knora-base:valueHasStartJDN` that would otherwise win on lexical order alone.
+ * `knora-base:valueHasStartJDN` that would otherwise win on lexical order alone. A statement whose predicate
+ * is the bound IRI `rdf:object` and whose subject is a variable not yet in `bound` is deferred: it is not a
+ * `pickNext` candidate, connected or otherwise, as long as some other unit is. `rdf:object` occurs in
+ * prequeries only on the generated link-value node (`?s <linkValueProp> ?lv . ?lv rdf:object ?o`); the link
+ * value is reached from its resource, so the check belongs right after the statement that binds `?lv`.
+ * Emitting it while `?lv` is unbound starts the join from every link value pointing at the object instead.
+ * Measured on stage with the `reorder` golden shape: 6.98 s with the statement emitted early against 0.66 s
+ * with it deferred; an earlier variant of this shape (`reorderWithCycle`) hit the 120 s timeout. Once `?lv`
+ * is bound the statement has three bound terms and the existing bound-terms tie-break puts it next, so the
+ * rule only ever delays it. If no other unit is a candidate the statement is eligible as before, so the pass
+ * stays total and permutation-invariant.
  *
  * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
@@ -277,7 +290,19 @@ object PrequeryPatternOrdering {
     isUnselectiveTechnical: Boolean,
     restrictedTermsCount: Int,
     loopVars: Seq[QueryVariable],
+    deferSubject: Option[QueryVariable],
   )
+
+  /**
+   * `Some(subj)` iff `u` is a statement whose predicate is the bound IRI `rdf:object` and whose subject is
+   * the variable `subj`; see the object's Scaladoc for why such a statement is deferred until `subj` is
+   * bound.
+   */
+  private def rdfObjectDeferSubject(u: QueryPattern): Option[QueryVariable] = u match {
+    case StatementPattern(subj: QueryVariable, IriRef(pred, _), _) if pred.toIri == OntologyConstants.Rdf.Object =>
+      Some(subj)
+    case _ => None
+  }
 
   private def unitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
     val t                                                      = tierNum(u, valuesByVar)
@@ -311,6 +336,7 @@ object PrequeryPatternOrdering {
       isUnselectiveTechnical = isUnselectiveTechnicalType(u),
       restrictedTermsCount = restrictedCount,
       loopVars = loopVars,
+      deferSubject = rdfObjectDeferSubject(u),
     )
   }
 
@@ -331,24 +357,33 @@ object PrequeryPatternOrdering {
   private def bestOf(indices: Seq[Int], remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int =
     indices.minBy(i => rank(remaining(i), bound))
 
+  /** True iff `k`'s `rdf:object` statement must wait until its subject is in `bound`; see `rdfObjectDeferSubject`. */
+  private def isDeferred(k: UnitKey, bound: Set[QueryVariable]): Boolean =
+    k.deferSubject.exists(subj => !bound.contains(subj))
+
   /**
    * Rule T1, then connectivity and unselective-technical filters, in order: picks the index (into
-   * `remaining`) of the next unit to emit.
+   * `remaining`) of the next unit to emit. The `rdf:object` deferral is applied first, narrowing the
+   * candidate pool the other rules choose from; it falls back to every index when deferral would empty
+   * the pool, so a degenerate all-deferred input stays total.
    */
   private def pickNext(remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int = {
     def connected(k: UnitKey) = k.varsOf.intersect(bound).nonEmpty
     val indices               = remaining.indices
-    val ruleT1                = indices.filter(i => remaining(i).tier == 1)
-    val (typeIdx, nonTypeIdx) = indices.partition(i => remaining(i).isType)
+    val eligible              = indices.filterNot(i => isDeferred(remaining(i), bound))
+    val candidates            = if (eligible.nonEmpty) eligible else indices
+
+    val ruleT1                = candidates.filter(i => remaining(i).tier == 1)
+    val (typeIdx, nonTypeIdx) = candidates.partition(i => remaining(i).isType)
     val ruleA                 = nonTypeIdx.filter(i => connected(remaining(i)))
     val ruleB                 = typeIdx.filter(i => connected(remaining(i)))
-    val ruleC                 = indices.filterNot(i => remaining(i).isUnselectiveTechnical)
+    val ruleC                 = candidates.filterNot(i => remaining(i).isUnselectiveTechnical)
 
     if (ruleT1.nonEmpty) bestOf(ruleT1, remaining, bound)
     else if (ruleA.nonEmpty) bestOf(ruleA, remaining, bound)
     else if (ruleB.nonEmpty) bestOf(ruleB, remaining, bound)
     else if (ruleC.nonEmpty) bestOf(ruleC, remaining, bound)
-    else bestOf(indices, remaining, bound)
+    else bestOf(candidates, remaining, bound)
   }
 
   /** Emits `units` (step 3) in greedy tier/connectivity order, without attaching any `VALUES`. */

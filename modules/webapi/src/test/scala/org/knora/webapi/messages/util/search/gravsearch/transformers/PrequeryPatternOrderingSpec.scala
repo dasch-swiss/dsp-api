@@ -83,6 +83,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val hasYIri             = IriRef((anything + "hasY").toSmartIri)
   private val hasXValueIri        = IriRef((anything + "hasXValue").toSmartIri)
   private val hasYValueIri        = IriRef((anything + "hasYValue").toSmartIri)
+  private val hasIAFIdentifierIri = IriRef((anything + "hasIAFIdentifier").toSmartIri)
 
   private val letter      = QueryVariable("letter")
   private val subj        = QueryVariable("subj")
@@ -477,6 +478,74 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     purePredValues,
   )
 
+  // DEV-7287 `rdf:object` deferral, the `reorder` essence: `?lv rdf:object ?p` must wait until `?lv` is
+  // bound by the statement above it (`?r ?lpv ?lv`), even though on term count alone it would otherwise be
+  // a connected T7 candidate as soon as `?p` is bound. `?r ?lp ?p` (which also only binds `?p`, not `?lv`)
+  // must therefore be emitted before it, and the deferred statement becomes eligible again, immediately
+  // after `?r ?lpv ?lv` binds its subject.
+  private val reorderG           = QueryVariable("reorderG")
+  private val reorderP           = QueryVariable("reorderP")
+  private val reorderR           = QueryVariable("reorderR")
+  private val reorderLp          = QueryVariable("reorderLp")
+  private val reorderLpv         = QueryVariable("reorderLpv")
+  private val reorderLv          = QueryVariable("reorderLv")
+  private val reorderLiteralStmt =
+    StatementPattern(reorderG, valueHasStringIri, XsdLiteral("lit", OntologyConstants.Xsd.String.toSmartIri))
+  private val reorderIafStmt                  = StatementPattern(reorderP, hasIAFIdentifierIri, reorderG)
+  private val reorderLpStmt                   = StatementPattern(reorderR, reorderLp, reorderP)
+  private val reorderLpvStmt                  = StatementPattern(reorderR, reorderLpv, reorderLv)
+  private val reorderObjectStmt               = StatementPattern(reorderLv, rdfObjectIri, reorderP)
+  private val reorderLvTypeStmt               = StatementPattern(reorderLv, rdfTypeIri, linkValueTypeIri)
+  private val reorderInput: Seq[QueryPattern] = Seq(
+    reorderLvTypeStmt,
+    reorderObjectStmt,
+    reorderLpvStmt,
+    reorderLpStmt,
+    reorderIafStmt,
+    reorderLiteralStmt,
+  )
+  private val reorderExpected: Seq[QueryPattern] = Seq(
+    reorderLiteralStmt,
+    reorderIafStmt,
+    reorderLpStmt,
+    reorderLpvStmt,
+    reorderObjectStmt,
+    reorderLvTypeStmt,
+  )
+
+  // DEV-7287 `rdf:object` deferral, bound-IRI link-target regression guard: here `?lv rdf:object <iri>` is
+  // T2 on tier alone (its object is a bound IRI), yet the deferral still holds it back until `?lv` is bound
+  // by `?r hasXValue ?lv`; it must not be pushed past the end of the block once eligible again.
+  private val linkGuardR                        = QueryVariable("linkGuardR")
+  private val linkGuardLv                       = QueryVariable("linkGuardLv")
+  private val linkGuardAnchorStmt               = StatementPattern(linkGuardR, hasXIri, anchorIri)
+  private val linkGuardValueStmt                = StatementPattern(linkGuardR, hasXValueIri, linkGuardLv)
+  private val linkGuardObjectStmt               = StatementPattern(linkGuardLv, rdfObjectIri, anchorIri)
+  private val linkGuardTypeStmt                 = StatementPattern(linkGuardLv, rdfTypeIri, linkValueTypeIri)
+  private val linkGuardInput: Seq[QueryPattern] = Seq(
+    linkGuardTypeStmt,
+    linkGuardObjectStmt,
+    linkGuardValueStmt,
+    linkGuardAnchorStmt,
+  )
+  private val linkGuardExpected: Seq[QueryPattern] = Seq(
+    linkGuardAnchorStmt,
+    linkGuardValueStmt,
+    linkGuardObjectStmt,
+    linkGuardTypeStmt,
+  )
+
+  // DEV-7287 `rdf:object` deferral, degenerate input: every unit is a deferred `rdf:object` statement whose
+  // subject is never bound by anything else. The eligible set would be empty at every step, so `pickNext`
+  // falls back to every remaining index; the pass stays total and returns both statements.
+  private val degenLv1                                   = QueryVariable("degenLv1")
+  private val degenLv2                                   = QueryVariable("degenLv2")
+  private val degenO1                                    = QueryVariable("degenO1")
+  private val degenO2                                    = QueryVariable("degenO2")
+  private val degenStmt1                                 = StatementPattern(degenLv1, rdfObjectIri, degenO1)
+  private val degenStmt2                                 = StatementPattern(degenLv2, rdfObjectIri, degenO2)
+  private val degenerateDeferralInput: Seq[QueryPattern] = Seq(degenStmt1, degenStmt2)
+
   private val allInputs: Seq[Seq[QueryPattern]] = Seq(
     listNodeInput,
     linkTargetInput,
@@ -508,6 +577,9 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     boundLiteralInput,
     essenceInput,
     mixedPredicateTieInput,
+    reorderInput,
+    linkGuardInput,
+    degenerateDeferralInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -662,6 +734,44 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     test("order the essence-of-the-cycle shape identically for every permutation of the input") {
       val reference = PrequeryPatternOrdering.order(essenceInput)
       assertTrue(essenceInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
+    },
+    test(
+      "defer `?lv rdf:object ?p` until `?lv` is bound, so it is emitted right after `?r ?lpv ?lv` " +
+        "and after the connected `?r ?lp ?p` statement (DEV-7287 rdf:object deferral, reorder essence)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(reorderInput)
+      assertTrue(
+        actual == reorderExpected,
+        actual.indexOf(reorderLpStmt) < actual.indexOf(reorderObjectStmt),
+        actual.indexOf(reorderObjectStmt) == actual.indexOf(reorderLpvStmt) + 1,
+      )
+    },
+    test(
+      "defer a bound-IRI `?lv rdf:object <iri>` statement despite its T2 tier, without pushing it past the end " +
+        "(DEV-7287 rdf:object deferral, link-target regression guard)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(linkGuardInput)
+      assertTrue(
+        actual == linkGuardExpected,
+        actual.head == linkGuardAnchorStmt,
+        actual.indexOf(linkGuardObjectStmt) == actual.indexOf(linkGuardValueStmt) + 1,
+      )
+    },
+    test(
+      "stay total when every unit is a deferred rdf:object statement with a never-bound subject " +
+        "(DEV-7287 rdf:object deferral, degenerate input)",
+    ) {
+      val actual    = PrequeryPatternOrdering.order(degenerateDeferralInput)
+      val actualToo = PrequeryPatternOrdering.order(degenerateDeferralInput)
+      assertTrue(
+        actual.size == degenerateDeferralInput.size,
+        actual.toSet == degenerateDeferralInput.toSet,
+        actual == actualToo,
+      )
+    },
+    test("order the reorder-essence shape identically for every permutation of the input (rdf:object deferral)") {
+      val reference = PrequeryPatternOrdering.order(reorderInput)
+      assertTrue(reorderInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
     },
   )
 }
