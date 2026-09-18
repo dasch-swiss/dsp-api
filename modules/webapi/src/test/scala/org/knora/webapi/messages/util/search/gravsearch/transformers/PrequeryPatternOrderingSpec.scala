@@ -444,6 +444,29 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     typeBeforePathParagraphTypeStmt,
   )
 
+  // DEV-7287 review finding: an unselective-technical bound-subject type unit (`?lnv a knora-base:Resource`)
+  // must NOT defer the property path anchored on that same variable, unlike the selective
+  // `?lnv a standoff:StandoffItalicTag` above -- it restricts essentially nothing, so waiting for it buys
+  // none of the type-before-path rule's benefit. Same shape as `typeBeforePathInput`, with the italic-tag
+  // type replaced by an unselective one.
+  private val typeBeforeUnselectiveTypeStmt                     = StatementPattern(lnv, rdfTypeIri, resourceTypeIri)
+  private val typeBeforeUnselectivePathInput: Seq[QueryPattern] = Seq(
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+    typeBeforeUnselectiveTypeStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathResStmt,
+  )
+  private val typeBeforeUnselectivePathExpected: Seq[QueryPattern] = Seq(
+    typeBeforePathResStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathPathStmt,
+    typeBeforeUnselectiveTypeStmt,
+    typeBeforePathParagraphTypeStmt,
+  )
+
   // DEV-7287 sort-by-date regression, measured 6.3x: without the predicate tie-break, the lexical
   // key would put `?date knora-base:valueHasStartJDN ?jdn` first because "date" < "thing"; the project
   // predicate `anything:hasDate` must instead win the tie and lead.
@@ -604,6 +627,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     listNodeTypeLeadsInput,
     standoffInput,
     typeBeforePathInput,
+    typeBeforeUnselectivePathInput,
     dateInput,
     boundLiteralInput,
     essenceInput,
@@ -756,6 +780,16 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     test("order the type-before-path shape identically for every permutation of the input") {
       val reference = PrequeryPatternOrdering.order(typeBeforePathInput)
       assertTrue(typeBeforePathInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
+    },
+    test(
+      "do not let an unselective-technical bound-subject type unit defer the property path anchored on it " +
+        "(DEV-7287 review finding)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(typeBeforeUnselectivePathInput)
+      assertTrue(
+        actual == typeBeforeUnselectivePathExpected,
+        actual.indexOf(typeBeforePathPathStmt) < actual.indexOf(typeBeforeUnselectiveTypeStmt),
+      )
     },
     test("rank a non-type statement with a bound XsdLiteral object as T3, between T2 and a plain T7 statement") {
       assertTrue(PrequeryPatternOrdering.order(boundLiteralInput) == boundLiteralExpected)
