@@ -42,7 +42,7 @@
       {
         "kind": "AnnotationQuery",
         "spec": {
-          "name": "dsp-api restart / deploy",
+          "name": "dsp-api restart",
           "builtIn": false,
           "enable": true,
           "hide": false,
@@ -76,8 +76,8 @@
           },
           "legacyOptions": {
             "step": "2m",
-            "titleFormat": "dsp-api restart / deploy",
-            "textFormat": "process CPU counter reset on at least one selected stack (container restarted, usually a deploy)",
+            "titleFormat": "dsp-api restart",
+            "textFormat": "The API container of at least one selected stack (re)started: its process CPU counter dropped. Deploys do this, but so do crashes, host reboots and manual restarts; with Stack = All on prod this includes ~30 RDU boxes.",
             "useValueForTime": false
           }
         }
@@ -351,7 +351,7 @@
         "spec": {
           "id": 4,
           "title": "Average response duration — global",
-          "description": "Mean full-request duration (phase=body) over time, scoped by Route group and Exclude routes. = rate(sum)/rate(count). This is the line to watch for regressions after a deploy; excluding /health and /version removes the day/night artefact caused by the traffic mix shifting to monitoring calls off-hours. Purple markers are dsp-api restarts (deploys).",
+          "description": "Mean full-request duration (phase=body) over time, scoped by Route group and Exclude routes. = rate(sum)/rate(count). This is the line to watch for regressions after a deploy; excluding /health and /version removes the day/night artefact caused by the traffic mix shifting to monitoring calls off-hours. Purple markers are dsp-api restarts (deploys). Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -415,7 +415,7 @@
                   ],
                   "displayMode": "table",
                   "placement": "right",
-                  "width": 460,
+                  "width": 415,
                   "sortBy": "Mean",
                   "sortDesc": true
                 },
@@ -433,7 +433,7 @@
         "spec": {
           "id": 5,
           "title": "Average response duration by route",
-          "description": "Mean full-request duration (phase=body) per route over time, within the selected Route group / Route (path) / Exclude filters. Y-axis is log2 so a single slow-but-rare route (e.g. /v3/export/resources) does not flatten the rest. Legend shows mean/max per route. Purple markers are dsp-api restarts (deploys).",
+          "description": "Mean full-request duration (phase=body) per route over time, within the selected Route group / Route (path) / Exclude filters. Y-axis is log2 so a single slow-but-rare route (e.g. /v3/export/resources) does not flatten the rest. Legend shows mean/max per route. Purple markers are dsp-api restarts (deploys). Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -498,7 +498,7 @@
                   ],
                   "displayMode": "table",
                   "placement": "right",
-                  "width": 460,
+                  "width": 415,
                   "sortBy": "Mean",
                   "sortDesc": true
                 },
@@ -830,7 +830,7 @@
         "spec": {
           "id": 11,
           "title": "Average response duration by route group ($smoothing)",
-          "description": "One line per route group (same regexes as the Route group filter), rate() window = the Smoothing window knob (as panels 4/5), unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api restarts (deploys).",
+          "description": "One line per route group (same regexes as the Route group filter), rate() window = the Smoothing window knob (as panels 4/5), unmatched requests excluded. Replaces the single global average: that line mostly tracks the traffic mix (fast automated /v2/resources/* reads at night, human-driven search/admin by day), whereas per-group lines separate \"reads got slower\" from \"searches got slower\". Honours Method and Exclude routes, deliberately ignores the Route group filter. Log2 y-axis so groups that differ by 10x stay readable. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1080,7 +1080,7 @@
                   ],
                   "displayMode": "table",
                   "placement": "right",
-                  "width": 460,
+                  "width": 415,
                   "sortBy": "Mean",
                   "sortDesc": true
                 },
@@ -1453,7 +1453,7 @@
         "spec": {
           "id": 13,
           "title": "Server time per route ($smoothing)",
-          "description": "Seconds of request processing per second, per route, stacked (= rate of the duration sum). Shows where the API spends its time over time, independent of how fast any single request is: a route that is fast but called constantly can dominate. Same filters as the routes table. Purple markers are dsp-api restarts (deploys).",
+          "description": "Seconds of request processing per second, per route, stacked (= rate of the duration sum). Shows where the API spends its time over time, independent of how fast any single request is: a route that is fast but called constantly can dominate. Same filters as the routes table. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1615,7 +1615,7 @@
         "spec": {
           "id": 15,
           "title": "Triplestore round-trip p50 / p95 / p99 by kind ($smoothing)",
-          "description": "Latency of the API's own SPARQL round trips to Fuseki (fuseki_request_duration, measured in dsp-api), split into Gravsearch and everything else. This is the only real percentile available today: the histogram buckets are decades (10 ms, 100 ms, 1 s, 10 s, ...), so the quantile is a coarse within-decade interpolation. Read it as \"is the slowdown Fuseki or the API\", not as a precise number. Scoped by environment/stack only. Purple markers are dsp-api restarts (deploys).",
+          "description": "Latency of the API's own SPARQL round trips to Fuseki (fuseki_request_duration, measured in dsp-api), split into Gravsearch and everything else. This is the only real percentile available today: the histogram buckets are decades (10 ms, 100 ms, 1 s, 10 s, ...), so the quantile is a coarse within-decade interpolation. Read it as \"is the slowdown Fuseki or the API\", not as a precise number. Scoped by environment/stack only. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",

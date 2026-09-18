@@ -104,10 +104,15 @@ gained the deploy marker and were aligned with 11 (see below). What each proposa
   SPARQL round trips, with `isGravsearch`/`isSearch`/`isMaintenance`/`type` labels and **decade buckets**
   (10 ms, 100 ms, 1 s, 10 s … in `millis`). Quantiles are therefore coarse within-decade
   interpolations — read them as "is it Fuseki or the API"; the threshold shares in 16 are exact.
-- **Deploy markers.** A dashboard annotation ("dsp-api restart / deploy", purple) fires on a drop of
-  the process CPU counter. No version/build-info metric is exported (`target_info` for this service has
-  no `service_version`), and every restart gives the container a new `container_id`, so a plain
-  `resets()` never fires — the query aggregates by `stack` first and compares with one step earlier:
+- **Restart markers.** A dashboard annotation ("dsp-api restart", purple) fires when the API
+  container of a selected stack (re)started, detected as a drop of its process CPU counter. That is
+  what a deploy does, but crashes, host reboots and manual restarts look the same, and with
+  `Stack = All` on prod the ~30 RDU boxes are included (their rolling restarts show as several markers
+  an hour apart). Select a stack to see only its restarts. A true *deploy* marker needs a build-info
+  metric (`dsp_api_build_info{version=…}`) that dsp-api does not export yet — follow-up. No
+  version/build-info metric is exported (`target_info` for this service has no `service_version`), and
+  every restart gives the container a new `container_id`, so a plain `resets()` never fires — the
+  query aggregates by `stack` first and compares with one step earlier:
   `count(min by (stack) (process_cpu_seconds_total{…}) < min by (stack) (… offset $__interval))`, min
   step `2m`. That is true for exactly one evaluation point per restart on any dashboard range. Two
   traps, both hit while building it: (1) `min`, not `sum` — a relabel that adds a label to a running
