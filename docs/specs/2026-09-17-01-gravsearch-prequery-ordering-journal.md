@@ -1614,3 +1614,75 @@ and the `MINUS` takes effect: the arithmetic is 52 total minus 2 Things with `an
 test data, giving 50. The sibling test for the same intent, "... (FILTER NOT EXISTS)", already expected 50.
 This was a latent correctness bug in the old prequery ordering that DEV-7287 fixes; the test expectation was
 stale and has been corrected to 50.
+
+## Round 10: H2 regression fix
+
+The H2 stage replay found one hard regression on PR 2. The `reorderWithCycle` prequery (a link property with
+subproperties, expanded to a `VALUES` over the predicate variable) timed out at 120 s on stage, where the PR 1
+text ran in 0.3 s. The PR 2 text opened with `?thing1__...__LinkValue <rdf:object> ?thing2 .` - subject and
+object unbound, i.e. a scan over every link value in the store. Mechanism: all units in that block are T7, so
+the leader is decided by the tie-break; the bound-terms count credited the `rdf:object` predicate IRI as one
+bound term while a variable predicate restricted by an attached (not yet emitted) `VALUES` counted as zero, so
+the store-wide statement won. The project-data-ontology predicate preference could not rescue it, because it
+ran after the bound-terms count and did not recognise a variable predicate as project-scoped even when its
+`VALUES` listed only project IRIs.
+
+Fix (commit `f327048ad`): a variable with a non-empty attached `VALUES` counts as a bound term in the
+tie-break, on par with a bound IRI - `attachValues` emits that `VALUES` immediately before the first pattern
+referencing the variable, so the term is restricted exactly like a bound IRI at evaluation time. The project
+predicate preference additionally accepts a variable predicate whose attached `VALUES` enumerates only project
+data ontology IRIs (a mixed or built-in-containing enumeration stays ineligible, mirroring `typeTier`). Tiers,
+the T2 exclusion of variable predicates, the by-name ban on `LinkValue`/`Resource` leading, the rendered-text
+final key and permutation invariance are unchanged. `PrequeryPatternOrderingSpec` gained the reduced cycle
+shape (a `VALUES`-restricted statement leads, `rdf:object` never leads a component), a mixed-`VALUES` case that
+must not win the project preference, and permutation invariance for the reduced shape.
+
+Golden audit (commit `7647ddea4`): exactly two files changed, `GravsearchToPrequeryTransformerE2ESpec__reorderWithCycle.txt`
+and its `...reorderWithCycleShape.txt` summary. The prequery now opens with a `VALUES`-restricted statement and
+every `rdf:object` statement follows the statement binding its subject. No other golden changed - in particular
+the five prod-shape files are byte-identical, as are `reorder`, `reorderWithUnion`, `reorderWithMinus` and the
+count goldens.
+
+Stage measurement (dsp-cli, `-s stage --timeout 120 --accept csv`, five runs each, before/after interleaved;
+"before" is the PR 1 text from `h2-replay/`):
+
+| query            | before (median) | after (median) | rows |
+|------------------|-----------------|----------------|------|
+| reorderWithCycle | 0.12 s          | 0.12 s         | 0    |
+| reorder          | 3.65 s          | 6.67 s         | 25   |
+
+`reorderWithCycle` is back in the sub-second range (it returns 0 rows on stage, the anything project is absent,
+so only the timing is meaningful; the 120 s timeout is gone). Result rows for `reorder` are byte-identical to
+the before run after sorting, 25 rows both ways.
+
+### Open: the `reorder` shape is still 1.8x slower than PR 1
+
+`reorder` was not touched by this fix - its golden is unchanged - and it remains reproducibly slower than the
+PR 1 layout (6.67 s vs 3.65 s, five interleaved runs each, spread under 0.15 s). Its PR 2 text leads with the
+most selective statement available (`?gnd1 knora-base:valueHasString "(DE-588)118531379"`), which is right, but
+then emits `?letter__linkingProp1__person1__LinkValue rdf:object ?person1` at position 3, before the statement
+binding that link value. Here the predicate variable is restricted by a top-level `FILTER` (`?linkingProp1 =
+beol:hasAuthor || = beol:hasRecipient`), not by a `VALUES`, so this round's rule does not apply.
+
+Hand-permuted A/B on stage (three runs each, the variants are kept untracked in the assets directory as
+`h2-replay/reorder-v{A,B,C,D}.rq`), all returning the same 25 rows:
+
+| layout                                                                    | median  |
+|---------------------------------------------------------------------------|---------|
+| PR 1 (`reorder-before.rq`)                                                | 3.64 s  |
+| PR 2 (current golden)                                                     | 6.69 s  |
+| vC: `rdf:object` moved one slot later, still before its subject's binder  | 6.60 s  |
+| vB: both `rdf:object` statements pushed to the end of the statement block | 10.70 s |
+| vD: the `person1` `rdf:object` moved directly behind its subject's binder | 1.96 s  |
+| vA: both `rdf:object` statements moved directly behind their binders      | 0.46 s  |
+
+So a layout 8x faster than PR 1 exists for this shape, but no local tie-break rule reaches it. The obvious
+candidate rules were refuted by measurement: deferring `rdf:object` by itself does not help (vC), and deferring
+it to the end makes things worse (vB) - what wins is emitting it *immediately after* the statement that binds
+its subject, which the greedy pass cannot choose without lookahead, because at the deciding step the two
+candidates are indistinguishable on every local key (both have an unbound subject and a bound object, and the
+winning one introduces *more* fresh variables, so a fewest-fresh-variables rule picks the wrong one too). This
+is a cost-based-search question, not a tie-break defect, and it is left for a follow-up rather than fixed here.
+The decision it raises: ship PR 2 with a known 1.8x regression on this one corpus shape, against the measured
+wins elsewhere (list node 4.2 s to 0.48 s, link target 0.70 s to 0.14 s, the cycle shape 120 s to 0.12 s), or
+block the merge on a lookahead redesign.
