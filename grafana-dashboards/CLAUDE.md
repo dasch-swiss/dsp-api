@@ -23,9 +23,17 @@ its display title. Files are Kubernetes-style resources (`apiVersion`, `kind`, `
   name matches an `elements` key and each panel `id`. Verify queries live with the `query_prometheus`
   MCP tool against `grafanacloud-prom`.
 - Use the **`grafana-cloud`** MCP variant, not `grafana-local` (local Grafana at :3000 is usually not
-  running). `list_provisioning_repositories` returns 403 on cloud (namespace), so pre-merge preview
-  isn't available — rely on `query_prometheus` + a merge to `main`.
-- **Git Sync only pulls `main`.** Nothing reaches Grafana from a feature branch; it must be merged.
+  running). `list_provisioning_repositories` returns 403 on cloud, but the raw API works:
+  `grafana_api_request` on `/apis/provisioning.grafana.app/v0alpha1/namespaces/stacks-726087/repositories`
+  lists the repositories (this one is `repository-48835de`, "VRE Dashboards", `target: folder`).
+- **Pre-merge preview exists.** Grafana renders a dashboard straight from a pushed branch:
+  `https://dasch.grafana.net/dashboard/provisioning/repository-48835de/preview/<path-under-grafana-dashboards>?ref=<branch>&pull_request_url=<pr>`
+  (`generate_deeplink` with `provisioningPreview {repo, path, ref, pullRequestUrl}` builds it, and
+  `get_panel_image` with the same `provisioningPreview` renders a panel from the branch for a visual
+  check). The link follows the branch, so it always shows the latest push. Put it in the PR body.
+  Note the path is relative to the repository's `grafana-dashboards` root (`dsp-api/<file>.json`).
+- **Git Sync only pulls `main`.** Nothing reaches the synced folder from a feature branch until it is
+  merged; the preview above is the way to look before that.
 
 ## SIPI metrics gotchas (hard-won)
 
@@ -72,7 +80,9 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
 
 - **dsp-api auth route** (`tapir_request_duration_seconds_*`, service DSP_svc_api): SIPI calls
   `/admin/files/{projectShortcode}/{filename}` for a permission check on every IIIF request. This
-  metric has **no `_bucket`** (only `count`/`sum`) → average latency only, no percentiles. It has no
+  metric arrives with **no `_bucket`** (only `count`/`sum`) → average latency only, no percentiles.
+  The app emits the buckets; the ops-deploy scrape filter drops them
+  ([ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434) enables them). It has no
   `deployment_environment_name`; scope it by `instance=~"dasch-vre-$environment-01"` (dsp-api also
   answers on the LS box, so `environment` alone over-counts).
 - **Container CPU/mem** (cAdvisor, `container_*`, `job=integrations/docker`): use exact
