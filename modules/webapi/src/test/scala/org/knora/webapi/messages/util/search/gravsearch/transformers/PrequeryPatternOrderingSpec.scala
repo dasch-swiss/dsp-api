@@ -25,10 +25,11 @@ import org.knora.webapi.messages.util.search.*
  * which must list every fixture the suite defines; bind-first emission; Lucene-group opacity and its
  * ability to lead even when unconnected; `VALUES` attachment (unit-attached, block-attached, orphan);
  * filter/FNE placement; `MINUS`/`OPTIONAL` recursion seeds; disconnected components staying contiguous;
- * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the two
+ * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the three
  * measured DEV-7287 stage regressions -- a standoff `rdf:type` unit must not lead ahead of the `VALUES`
- * anchoring a `*` property path, and a project-scoped predicate must win the rendered-text tie-break over
- * a store-wide built-in one.
+ * anchoring a `*` property path, a project-scoped predicate must win the rendered-text tie-break over
+ * a store-wide built-in one, and a candidate `rdf:type` unit with an already-bound subject must be emitted
+ * directly before the property path anchored on that variable.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
@@ -61,6 +62,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val listNodeClassIri    = IriRef(OntologyConstants.KnoraBase.ListNode.toSmartIri)
 
   private val standoffParagraphTagIri   = IriRef(OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri)
+  private val standoffItalicTagIri      = IriRef(OntologyConstants.Standoff.StandoffItalicTag.toSmartIri)
   private val standoffTagHasStartParent =
     IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
   private val valueHasStandoffIri  = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
@@ -414,6 +416,34 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     standoffTypeParagraphStmt,
   )
 
+  // DEV-7287 type-before-path regression, measured 3.1x: a candidate `rdf:type` unit whose subject is
+  // already bound (`?lnv a standoff:StandoffItalicTag`) must be emitted directly before the property path
+  // anchored on that same variable (`?lnv standoffTagHasStartParent* ?subj`), rather than after it; the
+  // paragraph-tag type unit on the path's still-unbound end (`?subj`) stays last, as before.
+  private val typeBeforePathThingIri                 = IriRef((anything + "Thing").toSmartIri)
+  private val typeBeforePathResStmt                  = StatementPattern(res, rdfTypeIri, typeBeforePathThingIri)
+  private val typeBeforePathHasTextStmt              = StatementPattern(res, hasTextIri, title)
+  private val typeBeforePathValueHasStmt             = StatementPattern(title, valueHasStandoffIri, lnv)
+  private val typeBeforePathItalicTypeStmt           = StatementPattern(lnv, rdfTypeIri, standoffItalicTagIri)
+  private val typeBeforePathPathStmt                 = StatementPattern(lnv, standoffTagHasStartParent, subj)
+  private val typeBeforePathParagraphTypeStmt        = StatementPattern(subj, rdfTypeIri, standoffParagraphTagIri)
+  private val typeBeforePathInput: Seq[QueryPattern] = Seq(
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+    typeBeforePathItalicTypeStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathResStmt,
+  )
+  private val typeBeforePathExpected: Seq[QueryPattern] = Seq(
+    typeBeforePathResStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathItalicTypeStmt,
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+  )
+
   // DEV-7287 sort-by-date regression, measured 6.3x: without the predicate tie-break, the lexical
   // key would put `?date knora-base:valueHasStartJDN ?jdn` first because "date" < "thing"; the project
   // predicate `anything:hasDate` must instead win the tie and lead.
@@ -573,6 +603,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     resourceBannedInput,
     listNodeTypeLeadsInput,
     standoffInput,
+    typeBeforePathInput,
     dateInput,
     boundLiteralInput,
     essenceInput,
@@ -711,6 +742,20 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
       "let the project predicate win the tie-break over a store-wide knora-base predicate (DEV-7287, measured 6.3x)",
     ) {
       assertTrue(PrequeryPatternOrdering.order(dateInput) == dateExpected)
+    },
+    test(
+      "emit a candidate rdf:type unit with an already-bound subject directly before the property path " +
+        "anchored on it, rather than after (DEV-7287 type-before-path rule, measured 3.1x)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(typeBeforePathInput)
+      assertTrue(
+        actual == typeBeforePathExpected,
+        actual.indexOf(typeBeforePathPathStmt) == actual.indexOf(typeBeforePathItalicTypeStmt) + 1,
+      )
+    },
+    test("order the type-before-path shape identically for every permutation of the input") {
+      val reference = PrequeryPatternOrdering.order(typeBeforePathInput)
+      assertTrue(typeBeforePathInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
     },
     test("rank a non-type statement with a bound XsdLiteral object as T3, between T2 and a plain T7 statement") {
       assertTrue(PrequeryPatternOrdering.order(boundLiteralInput) == boundLiteralExpected)

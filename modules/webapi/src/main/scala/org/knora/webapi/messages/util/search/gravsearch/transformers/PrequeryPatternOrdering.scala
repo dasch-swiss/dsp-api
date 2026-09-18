@@ -46,14 +46,15 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
  * whose object is a bare `IriRef` in a built-in ontology (for example `?v a knora-base:TextValue` or
  * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
- * component. Together with T1 pre-emption and the `rdf:object` deferral described below, this is one of the
- * pass's three eligibility rules: each removes some units from `pickNext` candidacy (or forces one in)
- * rather than merely ranking them. A term is treated as bound for the bound-terms-count tie-break not only
- * when it is an `IriRef`/`XsdLiteral` or a variable already in the greedy loop's growing `bound` set, but
- * also when it is a variable with a non-empty attached `VALUES`: `attachValues` emits that `VALUES`
- * immediately before the first pattern referencing the variable, so at evaluation time the term is restricted
- * exactly like a bound IRI, and a statement such as `?a ?p ?b` with a `VALUES` on `?p` must not be out-ranked
- * by a store-wide statement such as `?lv <rdf:object> ?o` on term count alone. When two candidates otherwise
+ * component. Together with T1 pre-emption, the `rdf:object` deferral, and the type-before-path rule, the
+ * last two described below, this is one of the pass's four eligibility rules: each removes some units from
+ * `pickNext` candidacy (or forces one in) rather than merely ranking them. A term is treated as bound for the
+ * bound-terms-count tie-break not only when it is an `IriRef`/`XsdLiteral` or a variable already in the
+ * greedy loop's growing `bound` set, but also when it is a variable with a non-empty attached `VALUES`:
+ * `attachValues` emits that `VALUES` immediately before the first pattern referencing the variable, so at
+ * evaluation time the term is restricted exactly like a bound IRI, and a statement such as `?a ?p ?b` with a
+ * `VALUES` on `?p` must not be out-ranked by a store-wide statement such as `?lv <rdf:object> ?o` on term
+ * count alone. When two candidates otherwise
  * tie, a statement whose predicate is a bound IRI in a project data ontology - or a variable predicate
  * whose attached `VALUES` enumerates only project data ontology IRIs - ranks ahead of one that is not,
  * before falling back to the rendered-text key; this keeps a project-scoped predicate (typically far more
@@ -69,6 +70,19 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * is bound the statement has three bound terms and the existing bound-terms tie-break puts it next, so the
  * rule only ever delays it. If no other unit is a candidate the statement is eligible as before, so the pass
  * stays total and permutation-invariant.
+ *
+ * Within the connected non-type step (`ruleA`), a property-path statement is not a candidate while a
+ * candidate `rdf:type` unit whose subject is already in `bound` exists; that type unit is emitted first
+ * (`typeCheckPending` in `pickNext`). Rationale: per Fact 3, a `*`/`+` path fans out from every binding of
+ * its anchored end, while a type check on an already-bound subject costs one index lookup per binding and
+ * shrinks the binding set before the path runs - so the cheap, selective check belongs first. Measured on
+ * stage (dsp-cli, 5 interleaved runs, 1344 rows both) for a standoff-italic-inside-paragraph query: 3.71 s
+ * with the paragraph-anchor path emitted ahead of the type check on its target, 1.20 s with the type check
+ * moved directly before the path. This is deliberately not generalised to "type units before all connected
+ * non-type units" - that broader rule is unmeasured and would reorder many other golden files; it fires
+ * only against property-path statements, and only inside `ruleA`. A property-path statement whose bound end
+ * is an `IriRef` (the list-node anchor shape) is unaffected: T2 already ranks it ahead of the type unit as a
+ * component anchor, before `ruleA` is ever reached.
  *
  * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
@@ -158,10 +172,14 @@ object PrequeryPatternOrdering {
     case g: GroupPattern                   => g.patterns.flatMap(vars).toSet
   }
 
-  private def isTypeUnit(u: QueryPattern): Boolean = u match {
-    case StatementPattern(_: QueryVariable, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Rdf.Type
-    case _                                                      => false
+  /** `Some(subj)` iff `u` is an `rdf:type` statement with variable subject `subj`; see the object's Scaladoc. */
+  private def typeUnitSubject(u: QueryPattern): Option[QueryVariable] = u match {
+    case StatementPattern(subj: QueryVariable, IriRef(pred, _), _) if pred.toIri == OntologyConstants.Rdf.Type =>
+      Some(subj)
+    case _ => None
   }
+
+  private def isTypeUnit(u: QueryPattern): Boolean = typeUnitSubject(u).isDefined
 
   /**
    * Deliberately asymmetric: only a bare `IriRef` object naming `LinkValue`/`Resource` is unselective. A
@@ -276,7 +294,9 @@ object PrequeryPatternOrdering {
    * `StatementPattern` with multiplicity (one entry per occurrence among subject/predicate/object, as
    * `boundTermsCount` did before this split), for any other unit kind as `varsOf` minus the
    * `VALUES`-restricted variables. A variable that is both `VALUES`-restricted and later added to `bound`
-   * counts once, via `restrictedTermsCount`, never twice.
+   * counts once, via `restrictedTermsCount`, never twice. `isPath` is `isPropertyPath(unit)` (`pathRank` is
+   * only meaningful within T7, so it cannot be reused for the type-before-path rule). `typeSubject` is
+   * `Some(v)` iff the unit is an `rdf:type` statement with variable subject `v` - see `typeUnitSubject`.
    */
   private case class UnitKey(
     unit: QueryPattern,
@@ -290,6 +310,8 @@ object PrequeryPatternOrdering {
     restrictedTermsCount: Int,
     loopVars: Seq[QueryVariable],
     deferSubject: Option[QueryVariable],
+    isPath: Boolean,
+    typeSubject: Option[QueryVariable],
   )
 
   /**
@@ -336,6 +358,8 @@ object PrequeryPatternOrdering {
       restrictedTermsCount = restrictedCount,
       loopVars = loopVars,
       deferSubject = rdfObjectDeferSubject(u),
+      isPath = isPropertyPath(u),
+      typeSubject = typeUnitSubject(u),
     )
   }
 
@@ -364,7 +388,10 @@ object PrequeryPatternOrdering {
    * Rule T1, then connectivity and unselective-technical filters, in order: picks the index (into
    * `remaining`) of the next unit to emit. The `rdf:object` deferral is applied first, narrowing the
    * candidate pool the other rules choose from; it falls back to every index when deferral would empty
-   * the pool, so a degenerate all-deferred input stays total.
+   * the pool, so a degenerate all-deferred input stays total. Within the connected non-type step (`ruleA`),
+   * a property-path statement is excluded while a candidate type unit with an already-bound subject exists
+   * (`typeCheckPending`); that type unit is itself connected, so it falls into `ruleB` and the pool never
+   * empties.
    */
   private def pickNext(remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int = {
     def connected(k: UnitKey) = k.varsOf.intersect(bound).nonEmpty
@@ -374,9 +401,12 @@ object PrequeryPatternOrdering {
 
     val ruleT1                = candidates.filter(i => remaining(i).tier == 1)
     val (typeIdx, nonTypeIdx) = candidates.partition(i => remaining(i).isType)
-    val ruleA                 = nonTypeIdx.filter(i => connected(remaining(i)))
-    val ruleB                 = typeIdx.filter(i => connected(remaining(i)))
-    val ruleC                 = candidates.filterNot(i => remaining(i).isUnselectiveTechnical)
+    val typeCheckPending      = candidates.exists(i => remaining(i).typeSubject.exists(bound.contains))
+    val ruleA                 = nonTypeIdx
+      .filter(i => connected(remaining(i)))
+      .filterNot(i => typeCheckPending && remaining(i).isPath)
+    val ruleB = typeIdx.filter(i => connected(remaining(i)))
+    val ruleC = candidates.filterNot(i => remaining(i).isUnselectiveTechnical)
 
     if (ruleT1.nonEmpty) bestOf(ruleT1, remaining, bound)
     else if (ruleA.nonEmpty) bestOf(ruleA, remaining, bound)
