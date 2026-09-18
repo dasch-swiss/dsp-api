@@ -5,13 +5,9 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.KnoraAdminPrefixExpansion
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
@@ -24,32 +20,32 @@ class UpgradePluginPR3110 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  private val removeAllInstitutions: ModifyQuery = {
-    val (s, p, o) = spo
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
-      .delete(s.has(p, o))
-      .from(Vocabulary.NamedGraphs.dataAdmin)
-      .where(
-        s.isA(Rdf.iri(KnoraAdminPrefixExpansion, "Institution"))
-          .andHas(p, o)
-          .from(Vocabulary.NamedGraphs.dataAdmin),
-      )
-  }
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
 
-  private val removeAllBelongsToInstitutionTriples: ModifyQuery = {
-    val (s, o)               = (variable("s"), variable("o"))
-    val belongsToInstitution = Rdf.iri(KnoraAdminPrefixExpansion, "belongsToInstitution")
-    Queries
-      .MODIFY()
-      .prefix(Vocabulary.KnoraAdmin.NS, RDF.NS)
-      .delete(s.has(belongsToInstitution, o))
-      .from(Vocabulary.NamedGraphs.dataAdmin)
-      .where(s.has(belongsToInstitution, o).from(Vocabulary.NamedGraphs.dataAdmin))
-  }
+  private[plugins] val removeAllInstitutions: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |DELETE {
+             |  GRAPH $adminGraph { ?s ?p ?o . }
+             |}
+             |WHERE {
+             |  GRAPH $adminGraph {
+             |    ?s a knora-admin:Institution ;
+             |       ?p ?o .
+             |  }
+             |}""".render,
+  )
 
-  override def getQueries: List[ModifyQuery] = List(
+  private[plugins] val removeAllBelongsToInstitutionTriples: Update = Update(
+    sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+             |DELETE {
+             |  GRAPH $adminGraph { ?s knora-admin:belongsToInstitution ?o . }
+             |}
+             |WHERE {
+             |  GRAPH $adminGraph { ?s knora-admin:belongsToInstitution ?o . }
+             |}""".render,
+  )
+
+  override def getQueries: List[Update] = List(
     removeAllInstitutions,
     removeAllBelongsToInstitutionTriples,
   )

@@ -34,6 +34,12 @@ object Fragments {
   def filter(expr: Fragment): Fragment =
     sparql"FILTER($expr)"
 
+  /** Create a FILTER that tests whether a variable is one of the supplied IRIs or literals. */
+  def filterIn(variable: Variable, values: Iterable[Iri | Literal]): Fragment = {
+    val valueList = Fragment.join(values.map(_.toFragment), Fragment.raw(", "))
+    sparql"FILTER ($variable IN ($valueList))"
+  }
+
   /** Create a BIND expression. */
   def bind(expr: Fragment, variable: Variable): Fragment =
     sparql"BIND($expr AS $variable)"
@@ -42,10 +48,10 @@ object Fragments {
   def combine(fragments: Option[Fragment]*): Fragment =
     fragments.flatten.joinLines
 
-  /** Create a VALUES clause. */
-  def values(variable: Variable, iris: Iterable[Iri]): Fragment = {
-    val iriList = iris.map(iri => sparql"$iri").reduce(_ ++ sparql" " ++ _)
-    sparql"VALUES $variable { $iriList }"
+  /** Create a single-variable VALUES clause from IRIs or literals. */
+  def values(variable: Variable, values: Iterable[Iri | Literal]): Fragment = {
+    val valueList = values.map(value => sparql"$value").reduce(_ ++ sparql" " ++ _)
+    sparql"VALUES $variable { $valueList }"
   }
 
   /** Create a subquery (a SELECT embedded in a WHERE clause). */

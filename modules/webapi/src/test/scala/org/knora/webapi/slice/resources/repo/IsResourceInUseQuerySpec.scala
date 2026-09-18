@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import org.apache.jena.query.QueryFactory
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -14,11 +15,17 @@ import org.knora.webapi.slice.common.ResourceIri
 @RunWith(classOf[DspZTestJUnitRunner])
 class IsResourceInUseQuerySpec extends ZIOSpecDefault {
 
+  private def canonical(query: String): String = {
+    val parsed = QueryFactory.create(query)
+    parsed.getPrefixMapping.clearNsPrefixMap()
+    parsed.toString
+  }
+
   override def spec: Spec[TestEnvironment, Any] = suite("IsResourceInUseQuery")(
     test("pins both selective incoming-reference probes in GRAPH-scoped subqueries") {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing")
       val dataGraph   = "http://www.knora.org/data/0001/anything"
-      val actual      = IsResourceInUseQuery.build(resourceIri, dataGraph).getQueryString
+      val actual      = IsResourceInUseQuery.build(resourceIri, dataGraph).sparql
       val expected    =
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT DISTINCT ?other
@@ -34,7 +41,14 @@ class IsResourceInUseQuerySpec extends ZIOSpecDefault {
           |FILTER NOT EXISTS { GRAPH <http://www.knora.org/data/0001/anything> { ?other a knora-base:LinkValue . } }
           |FILTER ( REGEX( STR( ?other ), "^http://rdfh\\.ch/[0-9A-Fa-f]{4}/[A-Za-z0-9_-]+$" ) ) } }
           |""".stripMargin
-      assertTrue(actual == expected)
+      assertTrue(
+        canonical(actual) == canonical(expected),
+        // The two GRAPH-scoped subqueries are the performance barrier (DEV-6885); keep them pinned
+        // textually as well, so a refactor cannot quietly flatten them away.
+        actual.contains("SELECT ?other WHERE { GRAPH <http://www.knora.org/data/0001/anything> {"),
+        actual.contains("SELECT ?other ?valueNode"),
+        actual.contains("FILTER NOT EXISTS { GRAPH <http://www.knora.org/data/0001/anything> {"),
+      )
     },
   )
 }

@@ -8,7 +8,7 @@ parent [`../README.md`](../README.md) for Git Sync mechanics).
 
 | File | Dashboard | What it answers |
 | --- | --- | --- |
-| `dsp-api-response-duration.json` | DSP-API — Response Duration | Request latency & throughput, global and per route. Detailed below. |
+| `dsp-api-response-duration.json` | DSP-API — Response Duration | Request latency, throughput and server time, global, per route group and per route. Detailed below. |
 | `dsp-backend.json` | DSP-API — Backend | JVM / runtime / triplestore-facing backend health. |
 | `dsp-gravsearch.json` | DSP-API — Gravsearch | Gravsearch volume, outcome and duration percentiles by query shape (metrics). |
 | `dsp-route-usage.json` | DSP-API — Route Usage | Which API and dsp-app routes are called, and how often. |
@@ -18,56 +18,127 @@ and [`traceql-recipes.md`](../../docs/observability/traceql-recipes.md).
 
 ## DSP-API — Response Duration
 
-**Purpose:** spot latency regressions and slow endpoints for DSP-API, from the tapir request metrics
-(`tapir_request_*`, `service_name="DSP_svc_api"`). **Audience:** whoever is watching a deploy or
-chasing a slow route.
+**Purpose:** spot latency regressions and slow or expensive endpoints for DSP-API, from the tapir
+request metrics (`tapir_request_*`, `service_name="DSP_svc_api"`) and the API-side Fuseki round-trip
+histogram (`fuseki_request_duration_*`). **Audience:** whoever is watching a deploy or chasing a slow
+route.
 
-**Averages, not percentiles.** Every duration figure is `rate(sum)/rate(count)` on `phase="body"`
-(full-request duration). This metric has **no histogram buckets**, so percentiles are not available
-here — use the Gravsearch dashboard / Tempo for tail latency.
+### Metrics and their limits
 
-**Filters (scope every panel unless noted):**
+- **Request durations are averages**, `rate(sum)/rate(count)` on `phase="body"` (full request). The
+  metric arrives with **no histogram buckets**: dsp-api emits them, but the ops-deploy scrape filter
+  (`grafana.metrics.filter` in `roles/dsp-deploy/templates/docker-compose-svc.yml.j2`) whitelists only
+  `_sum`/`_count`. [ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434) enables
+  `_bucket` (~5,600 extra series); once deployed, the duration panels can move to `histogram_quantile()`.
+  The `phase="headers"` series carry no information (`headers`→`body` differs by < 0.1 ms per route).
+- **`fuseki_request_duration_bucket` is the only real histogram**: dsp-api's own timing of SPARQL round
+  trips, labels `isGravsearch` / `isSearch` / `isMaintenance` / `type`, unit `millis`, **decade buckets**
+  (10 ms, 100 ms, 1 s, 10 s …). Quantiles from it are coarse within-decade interpolations; the
+  threshold shares (panel 16) are exact.
+- **`path=""` is unmatched traffic**: CORS `OPTIONS` preflights and `HEAD` probes that hit no endpoint,
+  ~11k/day on prod. Every panel excludes it with `path!=""`. These requests also leak
+  `tapir_request_active` (incremented, never decremented) — do not build an in-flight panel on that
+  gauge until dsp-api fixes it.
+- **No version metric.** `target_info` for this service has no `service_version` and there is no
+  build-info gauge, so deploys can only be inferred from restarts (see the marker below). A
+  `dsp_api_build_info{version=…}` gauge in dsp-api (plus the scrape whitelist) would give real deploy
+  markers.
 
-- `environment`, `stack` — from `label_values` on the metric.
-- `Route group` — a coarse, single-select bucket (`Search`, `Resources`, `Admin`, `Export`, …); the
-  value is a path regex applied as `path=~"${routegroup}"`.
-- `Route (path)`, `Method` — fine multi-select; the per-route panels (5, 6) layer these on top of the
-  route group.
-- `Exclude routes` — multi-select of path regexes applied as `path!~"${exclude:pipe}"`. Default
-  excludes `/health` + `/version`. Safe when empty: PromQL fully anchors regex matchers, so an empty
-  exclude drops only empty-path series, not everything.
-- `Smoothing window` — **only** the `rate()` window (`[$smoothing]`) on the two time-series panels
-  (4, 5). It changes how smooth those lines are (larger window → peaks averaged down, so the legend
-  **Max** drops while the **Mean** stays put); it does **not** touch the stat tiles or tables, which
-  use `$__range`. Keep it ≤ the dashboard time range or `rate()` runs short of data.
+### Filters
 
-**Panels:**
+- `environment`, `stack` — from `label_values` on the metric. With `Stack = All` on prod the ~30 RDU
+  boxes are included; select a stack for one deployment.
+- `Route group` — single-select; the value is a path regex applied as `path=~"${routegroup}"`.
+- `Route (path)`, `Method` — multi-select; per-route panels (5, 12, 13, 14, 18) layer these on top of
+  the route group. **`Route (path)` must be interpolated as `` path=~`${path:regex}` ``** (the `:regex`
+  format inside a PromQL *backtick* string): route templates contain regex metacharacters
+  (`/v2/resources/*`, `/v2/ontologies/metadata/*`, `{listIri}`). With `${path:pipe}` the `*` becomes a
+  quantifier and `/v2/resources/*` — the busiest prod route — silently drops out of every per-route
+  panel while `/v2/resources` matches instead. The backticks are required because Grafana's escaping
+  emits `\/` and `\{`, which a double-quoted PromQL string rejects as unknown escape sequences.
+- `Exclude routes` — multi-select of path regexes applied as `path!~"${exclude:pipe}"`. Default excludes
+  `/health` + `/version`. Safe when empty: PromQL fully anchors regex matchers.
+- `Smoothing window` — the `rate()` window (`[$smoothing]`) on **every** time-series panel. A larger
+  window averages peaks down (legend **Max** drops, **Mean** stays). Stat tiles and tables use
+  `$__range` instead. Keep it ≤ the dashboard time range.
+
+### Panels
 
 | Panel | Question | Source |
 | --- | --- | --- |
 | 1 Avg response time | Mean full-request duration over the range | `$__range` |
-| 2 Request rate | Requests/s (excludes monitoring when `/health`,`/version` excluded) | `$__rate_interval` |
+| 2 Request rate | Requests/s | `$__rate_interval` |
 | 3 5xx error rate | Share of 5xx over the range | `$__range` |
-| 4 Avg duration — global | Mean duration over time (deploy-regression line) | `[$smoothing]` |
-| 5 Avg duration by route | Mean duration per route over time | `[$smoothing]` |
-| 6 Routes ranked by avg duration | Slowest routes now + how often they run | `$__range` |
-| 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target + scoped project, + the query | Tempo |
+| 4 Avg duration — global | Mean duration over time | `[$smoothing]` |
+| 11 Avg duration by route group | One line per route group; "reads slower" vs "searches slower" | `[$smoothing]` |
+| 5 Avg duration by route | Mean duration per route over time (log2 axis) | `[$smoothing]` |
+| 13 Server time per route | Stacked `rate(duration_sum)` per route — where the time goes | `[$smoothing]` |
+| 18 Requests per route | Stacked req/s per route — the denominator for 13 | `[$smoothing]` |
+| 19 Server time per route group | Stacked `rate(duration_sum)` per group | `[$smoothing]` |
+| 20 Requests per route group | Stacked req/s per group — the denominator for 19 | `[$smoothing]` |
+| 12 Routes ranked by total server time | Total time, avg, requests, 4xx, 5xx per route; path links to Tempo | `$__range` |
+| 14 5xx responses per route | When errors happened (approximate count) | `[$__interval]` |
+| 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency, Gravsearch vs other | `[$smoothing]` |
+| 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share | `[$smoothing]` |
+| 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
+| 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their project, the query | Tempo |
+
+The table lists panels in layout order (one flat grid, no rows). Server time is requests × duration:
+each server-time panel is followed by its requests panel so that load (server time rising with
+requests) can be told from slowdown (server time rising without them).
+
+### Layout rules (keep these identical across panels 4, 11, 5, 13, 18, 19, 20)
+
+The seven stacked time-series panels are pixel-aligned so one x position is the same moment in all of
+them: same height (9), right-hand table legend with fixed `width: 415`, y-axis `axisWidth: 90`, and
+**no axis label** (a rotated label is drawn outside `axisWidth` and shifts the plot; put the unit in
+the title). Panels keyed by route, route group or query type (5, 11, 13, 14, 17, 18, 19, 20) use
+`color.mode: palette-classic-by-name`, so the same name has the same colour in every panel (with the
+default palette colours reshuffle per panel).
+
+### Restart marker
+
+The "dsp-api restart" annotation (purple) fires when the API container of a selected stack
+(re)started. Deploys do this, but so do crashes, host reboots and manual restarts; on prod about 5 of
+8 markers per month coincide with a deploy. Query:
+`count(min by (stack) (process_cpu_seconds_total{…}) < min by (stack) (… offset $__interval))`, min
+step `2m`, shown on panels 4, 5, 11, 13–20. Three load-bearing choices:
+
+- **Aggregate by `stack` first.** Every restart gives the container a new `container_id`, i.e. a new
+  series, so a plain `resets()` never fires.
+- **`min`, not `sum`.** A relabel that adds a label to a running container's series (seen on prod:
+  `asserts_env`) makes old and new series overlap for the 5-minute staleness window; a `sum` doubles and
+  halves and reads as a restart, the `min` does not move. A real restart drops the `min` to the fresh
+  container's near-zero counter.
+- **Compare with one step earlier, not `resets()` over a subquery window.** Adjacent subquery windows
+  never share a sample pair, so a drop that straddles two windows is invisible. `X < X offset
+  $__interval` is true for exactly one evaluation point per restart on any range.
 
 ### Query-shape rationale (don't "simplify" these away)
 
-- **Panel 6 is a Tempo-style two-query join.** Query A is avg duration, query B is `increase()` request
-  count; both carry `format: "table"` **and** query `version: "v0"`. Without `format: table` the
-  Prometheus results come back as time-series-wide frames and the `merge` transform produces one column
-  per series (raw label header + NaN rows) instead of `method | path | Avg | Requests`. And the server
-  **silently strips `format` when `version` is empty** — so both are load-bearing. Query A is also
-  guarded with `and (<countB> > 0)` to drop routes with no traffic in the range (`0/0 = NaN`, which
-  otherwise sorts to the top).
+- **Panel 12 is a Tempo-style multi-query join.** Query A is avg duration, B `increase()` request
+  count, C total time, D 4xx count, E 5xx count; all carry `format: "table"` **and** query
+  `version: "v0"`, and are merged on `path, method`. Without `format: table` the Prometheus results
+  come back as time-series-wide frames and the `merge` transform produces one column per series (raw
+  label header + NaN rows) instead of `method | path | Total | Avg | Requests | 4xx | 5xx`. And the
+  server **silently strips `format` when `version` is empty** — so both are load-bearing. Every query is
+  guarded with `and (<duration count> > 0)` so only routes that reported a duration in the range appear
+  (avoids `0/0 = NaN` rows and rows with an empty time); D/E are filled with `or (<B> * 0)` so routes
+  without errors show `0` rather than an empty cell.
 - **Requests is `increase()` (a count), not `rate()`.** The slow routes here are rare (export/candelete
   run a handful of times an hour); a per-second rate rounds to `0.00` and reads as broken.
-- **Panel 5 uses a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route
-  (`/v3/export/resources`, multiple seconds) otherwise compresses every other route into the baseline.
-  An earlier `topk()` was removed — in a range graph it re-picks members every step and renders as
-  flicker; the log axis is the real fix.
+- **Panel 14 is approximate by construction — read it for *when*, trust the table for *how many*.**
+  Its bars are `increase(...[$__interval])`, so consecutive bars tile the range without overlap, but
+  `increase()` extrapolates sparse counts and the legend **Total** can exceed the table's 5xx column by
+  about one per burst. An exact count is not achievable from this counter: a tapir 5xx series is **born
+  at the first error** for a route (and reborn with a new label set on a relabel), so a per-step
+  difference `X - X offset $__interval` misses every birth, and a birth fallback
+  `X - (X offset … or X * 0)` re-counts the whole counter on each relabel. Do not use `[$smoothing]`
+  here: overlapping windows count the same error several times. The `and on (path) (… [$__range] > 0)`
+  clause keeps only routes that had a 5xx somewhere in the range.
+- **Panels 5 and 11 use a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route or
+  group (`/v3/export/resources`, multiple seconds) otherwise compresses every other line into the
+  baseline. `topk()` is not a substitute — in a range graph it re-picks members every step and flickers.
 - **Panel 7 (Gravsearch traces)** queries Tempo (`grafanacloud-dasch-traces`) for `gravsearch` spans
   over the `Gravsearch duration ≥` threshold, `tableType: "spans"`, scoped by `span.environment` /
   `span.stack` (the span carries both). The verbatim query is **not** a column — it lives on the span's
@@ -105,8 +176,11 @@ here — use the Gravsearch dashboard / Tempo for tail latency.
 - The day/night swing in average duration is a **traffic-mix** effect, not health-check noise: at night
   ~82% of traffic is fast automated `/v2/resources/*` (~21 ms) and `/v2/node/{listIri}` (~6 ms) reads at
   steady throughput; daytime layers heavier human-driven search/admin/ontology calls on top. Excluding
-  `/health`+`/version` barely moves it. A per-route-group average (Route group filter) separates "are
-  reads fast" from "are searches fast".
+  `/health`+`/version` barely moves it. The per-route-group panel (11) separates "are reads fast" from
+  "are searches fast".
+- On prod the routes that consume the most server time are extended search (+ its count), resources
+  reads and ontology allentities; the slowest-average routes are rare exports. Optimisation pays off
+  on the former list.
 - Panel 7's **Project** and **Scoped to** columns are live (DEV-7031): `gravsearch.project_shortcodes` is a
   bounded, sorted, comma-separated set and `gravsearch.project_restriction` a single project IRI, both on the
   `gravsearch` root span, and both stay off the Alloy spanmetrics dimension list (which selects only

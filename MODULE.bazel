@@ -168,10 +168,7 @@ maven.install(
         "dev.zio:zio-opentelemetry_3:3.1.18",
         # ZIO test (scoped per-target in BUILD files)
         "dev.zio:zio-test_3:2.1.26",
-        "dev.zio:zio-test-sbt_3:2.1.26",
         "dev.zio:zio-test-junit_3:2.1.26",
-        "dev.zio:zio-test-magnolia_3:2.1.26",
-        "dev.zio:zio-mock_3:1.0.0-RC12",
         # -- sttp client4 (`_3`) --
         "com.softwaremill.sttp.client4:zio_3:4.0.25",
         "com.softwaremill.sttp.client4:zio-json_3:4.0.25",
@@ -182,11 +179,8 @@ maven.install(
         "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3:1.13.25",
         "com.softwaremill.sttp.tapir:tapir-refined_3:1.13.25",
         "com.softwaremill.sttp.tapir:tapir-zio-metrics_3:1.13.25",
-        "com.softwaremill.sttp.tapir:tapir-opentelemetry-tracing_3:1.13.25",
         # -- monocle (`_3`) --
         "dev.optics:monocle-core_3:3.3.0",
-        "dev.optics:monocle-macro_3:3.3.0",
-        "dev.optics:monocle-refined_3:3.3.0",
         # -- other Scala (`_3`) --
         "eu.timepit:refined_3:0.11.4",
         "org.scala-graph:graph-core_3:2.0.2",
@@ -195,8 +189,11 @@ maven.install(
         # -- RDF / Jena / rdf4j (Java) --
         "org.apache.jena:jena-core:6.2.0",
         "org.apache.jena:jena-text:6.2.0",
-        "org.eclipse.rdf4j:rdf4j-client:6.0.1",
-        "org.eclipse.rdf4j:rdf4j-shacl:6.0.1",
+        # rdf4j is on its way out (DEV-7303). Only two things still use it: the
+        # SPARQL parser in GravsearchParser and the not-yet-migrated SparqlBuilder
+        # query sites. Both coordinates below are imported directly; the model and
+        # vocabulary packages come transitively from them.
+        "org.eclipse.rdf4j:rdf4j-queryparser-sparql:6.0.1",
         "org.eclipse.rdf4j:rdf4j-sparqlbuilder:6.0.1",
         "org.topbraid:shacl:1.5.0",
         # -- OpenTelemetry (Java) --
@@ -217,9 +214,13 @@ maven.install(
         "commons-io:commons-io:2.22.0",
         "org.slf4j:slf4j-api:2.0.18",
         "org.slf4j:slf4j-simple:2.0.18",
-        # Supplies org.apache.commons.logging for spring-security-core, which
+        # Supplies org.apache.commons.logging for commons-validator, which
         # excludes commons-logging (see maven.artifact below).
         "org.slf4j:jcl-over-slf4j:2.0.18",
+        # Password hashing only (BCrypt/SCrypt in PasswordService). Deliberately
+        # spring-security-crypto and not spring-security-core: crypto has no
+        # dependencies of its own, while core drags in the Spring context.
+        "org.springframework.security:spring-security-crypto:7.0.6",
         # -- dsp-ingest db (Java) --
         "org.xerial:sqlite-jdbc:3.53.2.0",
         "org.flywaydb:flyway-core:12.10.0",
@@ -264,16 +265,6 @@ maven.artifact(
     exclusions = ["commons-logging:commons-logging"],
     group = "commons-validator",
     version = "1.10.1",
-)
-maven.artifact(
-    name = "maven",
-    artifact = "spring-security-core",
-    exclusions = [
-        "commons-logging:commons-logging",
-        "org.springframework:spring-aop",
-    ],
-    group = "org.springframework.security",
-    version = "7.0.6",
 )
 use_repo(maven, "maven", "unpinned_maven")
 

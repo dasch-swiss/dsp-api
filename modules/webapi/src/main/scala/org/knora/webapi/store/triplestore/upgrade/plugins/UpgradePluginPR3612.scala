@@ -5,17 +5,12 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.eclipse.rdf4j.sparqlbuilder.core.query.*
-import org.eclipse.rdf4j.sparqlbuilder.graphpattern.*
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf
-
+import org.knora.sparqlbuilder.*
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.IsDaschRecommended.Yes
 import org.knora.webapi.slice.admin.domain.model.License
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary
-import org.knora.webapi.slice.common.repo.rdf.Vocabulary.KnoraAdmin as KA
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.upgrade.GraphsForMigration
 import org.knora.webapi.store.triplestore.upgrade.MigrateSpecificGraphs
 
@@ -26,44 +21,55 @@ class UpgradePluginPR3612 extends AbstractSparqlUpdatePlugin {
   override def graphsForMigration: GraphsForMigration =
     MigrateSpecificGraphs.from(AdminConstants.adminDataNamedGraph)
 
-  private val addDefaultCopyrightHolder: ModifyQuery = {
-    val s            = variable("projectIri")
-    val holderValues = CopyrightHolder.default.map(_.value)
+  private val adminGraph: Iri = Iri.unsafeFrom(AdminConstants.adminDataNamedGraph.value)
 
-    val insertPattern: TriplePattern = s.isA(KA.KnoraProject)
-    holderValues.foreach(insertPattern.andHas(KA.hasAllowedCopyrightHolder, _))
+  private val projectIri      = Variable("projectIri")
+  private val defaultValue    = Variable("defaultValue")
+  private val existingDefault = Variable("existingDefault")
 
-    val wherePattern: GraphPattern = holderValues.foldLeft(s.isA(KA.KnoraProject))((p: GraphPattern, h: String) =>
-      p.filterNotExists(s.has(KA.hasAllowedCopyrightHolder, h)),
+  /**
+   * Both VALUES clauses intentionally contain the complete default set. The outer clause expands
+   * the INSERT; the inner clause makes the update skip a project when any default already exists.
+   * This preserves the legacy all-or-nothing behaviour.
+   */
+  private[plugins] val addDefaultCopyrightHolder: Update = {
+    val defaults = CopyrightHolder.default.toSeq.sorted.map(holder => Literal.string(holder.value))
+    Update(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |WITH $adminGraph
+               |INSERT {
+               |  $projectIri knora-admin:hasAllowedCopyrightHolder $defaultValue .
+               |}
+               |WHERE {
+               |  $projectIri a knora-admin:knoraProject .
+               |  ${Fragments.values(defaultValue, defaults)}
+               |  FILTER NOT EXISTS {
+               |    $projectIri knora-admin:hasAllowedCopyrightHolder $existingDefault .
+               |    ${Fragments.values(existingDefault, defaults)}
+               |  }
+               |}""".render,
     )
-
-    Queries
-      .MODIFY()
-      .`with`(Vocabulary.NamedGraphs.dataAdmin)
-      .delete(insertPattern)
-      .insert(insertPattern)
-      .where(wherePattern)
-      .prefix(KA.NS)
   }
 
-  private val addDefaultEnabledLicenses: ModifyQuery = {
-    val s           = variable("projectIri")
-    val licenseIris = License.BUILT_IN.filter(_.isRecommended == Yes).map(_.id.value).map(Rdf.iri)
-
-    val insertPattern: TriplePattern = s.isA(KA.KnoraProject)
-    licenseIris.foreach(insertPattern.andHas(KA.hasEnabledLicense, _))
-
-    val wherePattern: GraphPattern = licenseIris.foldLeft(s.isA(KA.KnoraProject))((p: GraphPattern, iri: Iri) =>
-      p.filterNotExists(s.has(KA.hasEnabledLicense, iri)),
+  /** Same shape as `addDefaultCopyrightHolder`, for the enabled licenses. */
+  private[plugins] val addDefaultEnabledLicenses: Update = {
+    val defaults = License.BUILT_IN.filter(_.isRecommended == Yes).toSeq.map(l => Iri.unsafeFrom(l.id.value))
+    Update(
+      sparql"""|PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+               |WITH $adminGraph
+               |INSERT {
+               |  $projectIri knora-admin:hasEnabledLicense $defaultValue .
+               |}
+               |WHERE {
+               |  $projectIri a knora-admin:knoraProject .
+               |  ${Fragments.values(defaultValue, defaults)}
+               |  FILTER NOT EXISTS {
+               |    $projectIri knora-admin:hasEnabledLicense $existingDefault .
+               |    ${Fragments.values(existingDefault, defaults)}
+               |  }
+               |}""".render,
     )
-    Queries
-      .MODIFY()
-      .`with`(Vocabulary.NamedGraphs.dataAdmin)
-      .delete(insertPattern)
-      .insert(insertPattern)
-      .where(wherePattern)
-      .prefix(KA.NS)
   }
 
-  override def getQueries: List[ModifyQuery] = List(addDefaultCopyrightHolder, addDefaultEnabledLicenses)
+  override def getQueries: List[Update] = List(addDefaultCopyrightHolder, addDefaultEnabledLicenses)
 }

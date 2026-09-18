@@ -178,9 +178,13 @@ Naming follows OpenTelemetry Semantic Conventions where they reach:
 | Payload attribute | `db.query.text` (use the generated `DbAttributes.DB_QUERY_TEXT`) | The stable semconv key for query text, and the rename target of the deprecated `db.statement`. Pairs with the shape attribute, which is `db.query.summary` semantics |
 | Event name | `<vertical>.query`, e.g. `gravsearch.query` | Semconv defines no event name for "payload captured", so this one is ours. Keep it bounded and predictable |
 
-Two caveats worth stating rather than glossing: semconv scopes `db.*` to database queries, and the
-statement actually sent to the database here is the *generated* SPARQL, not the client's Gravsearch;
-and the event carries **unredacted user input**, which is a deliberate, signed-off position for
+A vertical may capture more than one payload, as long as each stays an event on the root span with its
+own name. Gravsearch records both ends of its translation: `gravsearch.query` holds the submitted
+Gravsearch, `gravsearch.prequery` the generated SELECT prequery actually sent to the triplestore,
+recorded right after the generate stage closes so it survives an interrupted execution.
+
+Two caveats worth stating rather than glossing: semconv scopes `db.*` to database queries, so it fits
+the generated SPARQL exactly and the client's Gravsearch only by extension; and the event carries **unredacted user input**, which is a deliberate, signed-off position for
 Gravsearch (search terms, not record content) — re-decide it per vertical rather than inheriting it.
 
 ## 7. Errors and interruptions without leaks

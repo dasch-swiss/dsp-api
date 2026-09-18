@@ -57,8 +57,8 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.SanitizedSpan
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resources.repo.GetResourcePropertiesAndValuesQuery
 import org.knora.webapi.slice.resources.repo.GetResourcesByClassInProjectPrequery
+import org.knora.webapi.slice.resources.repo.SearchResultResourcesQuery
 import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.slice.search.FulltextSearchTerms
 import org.knora.webapi.slice.search.SearchTimeoutException
@@ -113,6 +113,10 @@ trait SearchResponderV2 {
   /** Records the submitted Gravsearch query as a `gravsearch.query` event on the root span. */
   protected final def recordQueryOnRoot(query: IRI): UIO[Unit] =
     SearchResponderV2.recordQueryOnRoot(tracing, query)
+
+  /** Adds the `gravsearch.prequery` event to the root span; call it outside any `stageSpan`, which carry no events. */
+  protected final def recordPrequeryOnRoot(prequery: String): UIO[Unit] =
+    SearchResponderV2.recordPrequeryOnRoot(tracing, prequery)
 
   /** Sets `gravsearch.project_shortcodes` + `gravsearch.project_restriction` on the root span. */
   protected final def setProjectsOnRoot(query: ConstructQuery, limitToProject: Option[ProjectIri]): UIO[Unit] =
@@ -549,8 +553,9 @@ final class SearchResponderV2Live(
    */
   // HONEST-TIMEOUT (DEV-6864): a triplestore timeout on the fulltext prequery/count reaches the client as a bare
   // 500 via BaseEndpoints' catch-all. Translate it into a search-specific 503 with a hedged message so the residue
-  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied at the Select.search call sites — the
-  // search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the prequery.
+  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied where SearchFulltextQuery.build's queries
+  // run — the search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the
+  // prequery.
   private def translateSearchTimeout(searchValue: String): PartialFunction[Throwable, Task[Nothing]] = {
     // Only TriplestoreTimeoutException matches, so a query the breadth guard interrupts (a fast refusal winning
     // the race) never triggers this — the interruption propagates as such and is not logged as a failure.
@@ -584,7 +589,7 @@ final class SearchResponderV2Live(
       bindings <-
         fulltextBreadthGuard
           .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
-            triplestore.query(Select.search(countSparql)).catchSome(translateSearchTimeout(searchValue)),
+            triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
@@ -640,7 +645,7 @@ final class SearchResponderV2Live(
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
           .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
-            triplestore.query(Select.search(searchSparql)).catchSome(translateSearchTimeout(searchValue)),
+            triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 
       mainResourceVar = QueryVariable("resource")
@@ -791,6 +796,8 @@ final class SearchResponderV2Live(
                        } yield countQuery.toSparql
                      }
 
+      _ <- recordPrequeryOnRoot(countSparql)
+
       countResponse <- stageSpan("gravsearch.prequery.execute")(triplestore.query(Select.gravsearch(countSparql)))
 
       _ <- // query response should contain one result with one row with the name "count"
@@ -874,6 +881,8 @@ final class SearchResponderV2Live(
                            }
       (prequerySparql, gravsearchToPrequeryTransformer, mainResourceVar, ontologiesForInferenceMaybe) =
         prequeryGenerated
+
+      _ <- recordPrequeryOnRoot(prequerySparql)
 
       prequeryResponseNotMerged <-
         stageSpan("gravsearch.prequery.execute")(
@@ -1145,17 +1154,7 @@ final class SearchResponderV2Live(
           // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
           // at most one page of standoff per text value.
           val resourceRequestSparql =
-            Construct(
-              GetResourcePropertiesAndValuesQuery.build(
-                resourceIris = mainResourceIris,
-                preview = false,
-                withDeleted = false,
-                queryAllNonStandoff = true,
-                queryStandoff = queryStandoff,
-                maybePropertyIri = None,
-                maybeVersionDate = None,
-              ),
-            )
+            SearchResultResourcesQuery.build(mainResourceIris, queryStandoff)
 
           for {
             resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
@@ -1450,7 +1449,7 @@ object SearchResponderV2 {
   def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
     SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey)(_ => effect)
 
-  // ---- submitted query capture (DEV-6858) ---------------------------------------------------------
+  // ---- query capture: submitted Gravsearch (DEV-6858), generated prequery (DEV-7302) --------------
 
   /**
    * Records the submitted Gravsearch query verbatim as a `gravsearch.query` **event** on the current
@@ -1468,6 +1467,17 @@ object SearchResponderV2 {
   def recordQueryOnRoot(tracing: Tracing, query: IRI): UIO[Unit] =
     tracing.getCurrentSpanUnsafe.map { span =>
       val _ = span.addEvent("gravsearch.query", Attributes.of(DbAttributes.DB_QUERY_TEXT, query))
+    }
+
+  /**
+   * Records the generated SELECT prequery verbatim as a `gravsearch.prequery` event on the current (root)
+   * span: the statement actually sent to the triplestore, where `gravsearch.query` holds what the client
+   * submitted. Same rules as [[recordQueryOnRoot]]: an event, never a span attribute, and never inside a
+   * `stageSpan`. Call it as soon as generation finishes, so an interrupted execution still carries it.
+   */
+  def recordPrequeryOnRoot(tracing: Tracing, prequery: String): UIO[Unit] =
+    tracing.getCurrentSpanUnsafe.map { span =>
+      val _ = span.addEvent("gravsearch.prequery", Attributes.of(DbAttributes.DB_QUERY_TEXT, prequery))
     }
 
   // ---- query shape (Decision 4: bounded, human-readable, literal-invariant) ------------------------
