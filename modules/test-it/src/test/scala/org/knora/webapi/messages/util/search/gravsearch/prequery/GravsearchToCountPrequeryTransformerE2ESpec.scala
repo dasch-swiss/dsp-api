@@ -104,22 +104,6 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
       |} ORDER BY ASC(?decimal)
         """.stripMargin
 
-  val queryListNodeAnchor: String =
-    """
-      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      |
-      |CONSTRUCT {
-      |  ?letter knora-api:isMainResource true .
-      |  ?letter beol:hasSubject ?subj .
-      |} WHERE {
-      |  ?letter a beol:letter .
-      |  ?letter beol:hasSubject ?subj .
-      |  ?subj knora-api:listValueAsListNode <http://rdfh.ch/lists/0801/logarithmic_curves> .
-      |}
-        """.stripMargin
-
   override val e2eSpec = suite("The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object")(
     test("generate the fulltext-index-anchored matchFulltext expansion for a classless count query") {
       transformQueryWithInference(queryClasslessMatchFulltext)
@@ -136,7 +120,7 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
         .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterionAndFilterComplex"))
     },
     test("transform a count query anchored on a list-node value") {
-      transformQueryWithInference(queryListNodeAnchor)
+      transformQueryWithInference(GravsearchInferencePipelineTestSupport.queryListNodeAnchor)
         .map(actual =>
           assertGolden(actual.toSparql, "listNodeAnchor") &&
             assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "listNodeAnchorShape"),

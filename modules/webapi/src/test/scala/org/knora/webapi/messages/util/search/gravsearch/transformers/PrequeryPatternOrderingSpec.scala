@@ -18,10 +18,13 @@ import org.knora.webapi.messages.util.search.*
  * Cases 1-4 pin the DEV-7287 shapes from the ordering plan/design docs by hand-built AST; case 5 pins the
  * restated rule 3c (a `VALUES`-bound classless type unit may lead even when it enumerates
  * `knora-base:Resource`); case 6 pins that `knora-base:LinkValue` may never lead. Case 7 is the
- * size-preservation check applied to every input above. The remaining suite (below) pins the structural
- * and invariance rules from the ordering plan/design docs: bind-first, Lucene-group opacity, `VALUES`
- * attachment (unit-, block-attached, orphan), filter/FNE placement, `MINUS`/`OPTIONAL` recursion seeds,
- * disconnected components, cycle termination, permutation invariance, and the T2/T7 tier exclusions.
+ * size-preservation check applied to every input in `allInputs`, which must list every fixture the suite
+ * defines. The remaining suite (below) pins the structural and invariance rules from the ordering
+ * plan/design docs: bind-first, Lucene-group opacity, `VALUES` attachment (unit-, block-attached, orphan),
+ * filter/FNE placement, `MINUS`/`OPTIONAL` recursion seeds, disconnected components, cycle termination,
+ * permutation invariance, and the T2/T7 tier exclusions. The last two cases pin the unselective-technical
+ * list by name: `knora-base:Resource` may never lead, while `knora-base:ListNode` still may, so widening
+ * the rule to a `knora-base` namespace test turns this suite red.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
@@ -50,6 +53,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val linkValueTypeIri    = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)
   private val resourceTypeIri     = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
   private val deletedResourceIri  = IriRef(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+  private val listNodeClassIri    = IriRef(OntologyConstants.KnoraBase.ListNode.toSmartIri)
 
   private val listNodeIri = IriRef("http://rdfh.ch/lists/0801/logarithmic_curves".toSmartIri)
   private val anchorIri   = IriRef("http://rdfh.ch/0801/anchor-person".toSmartIri)
@@ -336,6 +340,20 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val t2LeadsOverVarPredStmt          = StatementPattern(letter, hasAuthorIri, anchorIri)
   private val varPredInput: Seq[QueryPattern] = Seq(varPredStmt, t2LeadsOverVarPredStmt)
 
+  // Case 22: `knora-base:Resource`, the second unselective-technical class, may never lead a component
+  // either.
+  private val resourceTypeStmt                       = StatementPattern(res, rdfTypeIri, resourceTypeIri)
+  private val resourceCompanionStmt                  = StatementPattern(res, hasFamilyNameIri, n)
+  private val resourceBannedInput: Seq[QueryPattern] = Seq(resourceTypeStmt, resourceCompanionStmt)
+
+  // Case 23: `knora-base:ListNode` is a knora-base class deliberately absent from the unselective-technical
+  // list, so its type unit stays eligible to lead. Widening the rule to a knora-base namespace test would
+  // demote this unit and swap the emitted order.
+  private val listNodeTypeStmt                             = StatementPattern(n, rdfTypeIri, listNodeClassIri)
+  private val listNodeLabelStmt                            = StatementPattern(n, rdfsLabelIri, label)
+  private val listNodeTypeLeadsInput: Seq[QueryPattern]    = Seq(listNodeLabelStmt, listNodeTypeStmt)
+  private val listNodeTypeLeadsExpected: Seq[QueryPattern] = Seq(listNodeTypeStmt, listNodeLabelStmt)
+
   private val allInputs: Seq[Seq[QueryPattern]] = Seq(
     listNodeInput,
     linkTargetInput,
@@ -357,6 +375,11 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     typeIriSubjLeadsInput,
     subClassInput,
     varPredInput,
+    luceneLeadsUnconnectedInput,
+    luceneGroupLeadsUnconnectedInput,
+    permutationBase,
+    resourceBannedInput,
+    listNodeTypeLeadsInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -463,6 +486,12 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     },
     test("never promote a variable predicate to T2 despite a bound object; a T2 statement leads over it") {
       assertTrue(PrequeryPatternOrdering.order(varPredInput).head == t2LeadsOverVarPredStmt)
+    },
+    test("never let an unselective-technical knora-base:Resource type unit lead a component") {
+      assertTrue(PrequeryPatternOrdering.order(resourceBannedInput) == Seq(resourceCompanionStmt, resourceTypeStmt))
+    },
+    test("still let a knora-base:ListNode type unit lead, since it is not unselective-technical") {
+      assertTrue(PrequeryPatternOrdering.order(listNodeTypeLeadsInput) == listNodeTypeLeadsExpected)
     },
   )
 }

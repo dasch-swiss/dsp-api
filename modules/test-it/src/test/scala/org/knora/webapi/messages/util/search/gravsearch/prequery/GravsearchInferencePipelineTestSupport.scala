@@ -50,6 +50,28 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
  */
 object GravsearchInferencePipelineTestSupport {
 
+  /**
+   * Shared verbatim by the page and count specs: both transformers emit the same WHERE clause for this
+   * query and differ only in SELECT and ORDER BY, so their `listNodeAnchorShape` goldens must stay
+   * byte-identical. Keeping one copy of the query text is what makes that comparison meaningful - do not
+   * inline it back into either spec.
+   */
+  val queryListNodeAnchor: String =
+    """
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |
+      |CONSTRUCT {
+      |  ?letter knora-api:isMainResource true .
+      |  ?letter beol:hasSubject ?subj .
+      |} WHERE {
+      |  ?letter a beol:letter .
+      |  ?letter beol:hasSubject ?subj .
+      |  ?subj knora-api:listValueAsListNode <http://rdfh.ch/lists/0801/logarithmic_curves> .
+      |}
+        """.stripMargin
+
   def transformQueryWithInference(
     query: String,
     buildTransformer: (
