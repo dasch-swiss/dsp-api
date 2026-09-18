@@ -301,169 +301,134 @@ Similarly, the API replaces `knora-api:standoffTagHasStartAncestor` with `knora-
 ## Optimisation of generated SPARQL
 
 The triplestore-specific transformers in `SparqlTransformer.scala` can run optimisations on the generated SPARQL, in
-the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For example, `moveLuceneToBeginning` moves
-Lucene queries to the beginning of the block in which they occur.
+the method `optimiseQueryPatterns` inherited from `WhereTransformer`. `optimiseIsDeletedWithFilter` is now the
+only pass left in `optimiseQueryPatterns`; pattern ordering (formerly done here) has moved to the single seam
+described below.
 
-### Query Optimization by Topological Sorting of Statements
+### Query Optimisation by Connectivity-Aware Pattern Ordering
 
-In Jena Fuseki, the performance of a query highly depends on the order of the query statements. 
-For example, a query such as the one below:
+In Jena Fuseki, the performance of a query highly depends on the order of the query statements. Without a
+`stats.opt` statistics file, TDB2 reorders triple patterns for selectivity only within one Basic Graph
+Pattern, and only by counting bound terms (Fact 1 of `docs/development/dsp-api-fuseki-query-execution.md`);
+it never reorders across an `OPTIONAL`, `UNION`, `MINUS`, property-path, or subquery boundary. So the written
+order of a prequery's patterns is, in large part, the execution plan Fuseki runs.
 
-```sparql
-PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+`PrequeryPatternOrdering.order` (in the `transformers` package) reorders each WHERE block's patterns for this,
+and is applied at exactly one seam: `QueryTraverser.transformSelectToSelect` calls it once, after the
+per-pattern transform loop has produced the prequery's WHERE patterns. It replaces three legacy passes that
+each hoisted or reordered patterns independently — a graph-library-based topological sort and two separate
+statement-hoisting passes for `BIND` and Lucene statements — with a single greedy pass over the whole block.
 
-CONSTRUCT {
-  ?letter knora-api:isMainResource true .
-  ?letter ?linkingProp1  ?person1 .
-  ?letter ?linkingProp2  ?person2 .
-  ?letter beol:creationDate ?date .
-} WHERE {
-  ?letter beol:creationDate ?date .
+#### The tier table
 
-  ?letter ?linkingProp1 ?person1 .
-  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+Every unit (a `StatementPattern` or an opaque `GroupPattern`) is assigned a tier; lower tiers lead:
 
-  ?letter ?linkingProp2 ?person2 .
-  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+| Tier | Unit |
+| --- | --- |
+| T1 | Lucene: a `text:query` statement, or a `GroupPattern` containing one directly or in a nested `GroupPattern` |
+| T2 | Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object, whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type` statement with an `IriRef` subject |
+| T3 | Bound literal: a non-type statement with an `XsdLiteral` object |
+| T4 | Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal ontology IRI carrying a project shortcode), either directly or as the sole content of an enumerating `VALUES` |
+| T5 | Enumerating technical type unit: `rdf:type` on a variable bound by a non-empty `VALUES` enumeration where not every entry is a class in a project data ontology |
+| T6 | `?x knora-base:attachedToProject <iri>` |
+| T7 | Plain: everything else; within T7, non-path statements before property-path statements |
 
-  ?person1 beol:hasIAFIdentifier ?gnd1 .
-  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+A non-type statement with a variable predicate, or with predicate `rdfs:subClassOf`/`rdfs:subPropertyOf`, is
+excluded from T2 and ranks T7 regardless of a bound object — promoting a wildcard-predicate scan would
+institutionalise the pathology Fact 1's bound-object corollary warns about. A type unit whose object is a
+single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is *unselective-technical*: it ranks T7
+and may never lead a component, because it restricts nothing (it matches essentially the whole store). This
+ban is deliberately by name, not by namespace: several other `knora-base` classes (`Region`, `Annotation`,
+`StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead.
 
-  ?person2 beol:hasIAFIdentifier ?gnd2 .
-  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
-} ORDER BY ?date
-```
+Ties within a tier are broken, in order, by: more bound terms first (IRIs, literals, and variables already in
+the bound set); then a statement whose predicate is in a project data ontology, ahead of one whose predicate
+is built-in; then the lexical order of the pattern's rendered SPARQL text (see "Determinism", below).
 
-takes a very long time with Fuseki. The performance of this query can be improved
-by moving up the statements with literal objects that are not dependent on any other statement:
+#### The greedy connectivity rule
 
-```
-  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
-  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
-```
+Within one block, the pass emits units one at a time. At each step:
 
-The rest of the query then reads:
+1. If any remaining unit is T1 (Lucene), it leads, regardless of connectivity to what is already bound. This
+   pre-empts every other rule.
+2. Otherwise, prefer a non-type unit connected to a variable already bound by an emitted unit in this block.
+3. Otherwise, prefer a type unit connected to what is already bound — so a type unit is emitted after the
+   connected non-type statements of the same component, not before them.
+4. Otherwise (nothing remaining is connected to what is bound), a new component is started: pick the best
+   remaining unit by (tier, tie-break) among all non-type units and all type units *except*
+   unselective-technical ones.
+5. If nothing else qualifies, fall back to the best remaining unit overall.
 
-```
-  ?person1 beol:hasIAFIdentifier ?gnd1 .
-  ?person2 beol:hasIAFIdentifier ?gnd2 .
-  ?letter ?linkingProp1 ?person1 .
-  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+Each step picks exactly one unit and adds its variables to the bound set, so the pass consumes one unit per
+step and terminates on any input — cycles included — without needing a DAG.
 
-  ?letter ?linkingProp2 ?person2 .
-  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
- ?letter beol:creationDate ?date .
-```
+`BindPattern`s are hoisted to the front of the block unconditionally (safe only because a Gravsearch bind
+expression is always a constant, never a variable read); `ValuesPattern`s are re-attached immediately before
+the first unit or block that references their variable; `FilterPattern`s and `FilterNotExistsPattern`s follow
+the ordered units. A `GroupPattern` (used by the `matchFulltext` expansion, below) is an opaque leaf: its
+contents are never inspected beyond the T1 Lucene check, and it is never recursed into.
 
-Since users cannot be expected to know about performance of triplestores in order to write efficient queries, 
-an optimization method to automatically rearrange the statements of the given queries has been implemented. 
-Upon receiving the Gravsearch query, the algorithm converts the query to a graph. For each statement pattern,
-the subject of the statement is the origin node, the predicate is a directed edge, and the object 
-is the target node. For the query above, this conversion would result in the following graph:
+#### Recursion into nested blocks
 
-![query_graph](figures/query_graph.png)
+`OPTIONAL`, `UNION` (each branch separately), and `FILTER NOT EXISTS` are recursed into with the *outer*
+block's bound-variable set as the seed, because Fuseki evaluates them with the outer bindings visible.
+`MINUS` is recursed into with an *empty* seed, because Fact 4 of
+`docs/development/dsp-api-fuseki-query-execution.md` establishes that Fuseki evaluates a `MINUS`'s right side
+without the outer bindings. These seeds are an execution-plan heuristic mirroring Fuseki's evaluation, not a
+SPARQL-semantics claim: placing every statement before every block (the `StatementsFirst` partition,
+described below) can change results when a block binds a variable a later statement also uses, and is kept
+consistent with that partition rather than derived from SPARQL identity.
 
-The [Graph for Scala](http://www.scala-graph.org/) library is used to construct the graph and sort it using [Kahn's 
-topological sorting algorithm](https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm).
+#### Determinism
 
-The algorithm returns the nodes of the graph ordered in several layers, where the 
-root element `?letter` is in layer 0, `[?date, ?person1, ?person2]` are in layer 1, `[?gnd1, ?gnd2]` in layer 2, and the 
-leaf nodes `[(DE-588)118531379, (DE-588)118696149]` are given in the last layer (i.e. layer 3). 
-According to Kahn's algorithm, there are multiple valid permutations of the topological order. The graph in the example
-above has 24 valid permutations of topological order. Here are two of them (nodes are ordered from left to right with the 
-highest order to the lowest):
- 
-- `(?letter, ?date, ?person2, ?person1, ?gnd2, ?gnd1, (DE-588)118696149, (DE-588)118531379)`   
-- `(?letter, ?date, ?person1, ?person2, ?gnd1, ?gnd2, (DE-588)118531379, (DE-588)118696149)`.   
+The pass's tie-break chain always ends in the unit's rendered SPARQL text (`pattern.toSparql`), never a
+positional index into the input. This makes the emitted order a function of the pattern *set*, independent of
+the order patterns arrived in and of `Set`/`Map` iteration order — which is what keeps the golden corpus in
+`GravsearchToPrequeryTransformerE2ESpec` and `GravsearchToCountPrequeryTransformerE2ESpec` byte-stable across
+runs. The pass consumes exactly one unit per step regardless of what remains, so it terminates on any input,
+cycles included.
 
-From all valid topological orders, one is chosen based on certain criteria; for example, the leaf node should not 
-belong to a statement that has predicate `rdf:type`, since that could match all resources of the specified type.
-Once the best order is chosen, it is used to re-arrange the query statements. Starting from the last leaf node, i.e. 
-`(DE-588)118696149`, the method finds the statement pattern which has this node as its object, and brings this statement 
-to the top of the query. This rearrangement continues so that the statements with the fewest dependencies on other 
-statements are all brought to the top of the query. The resulting query is as follows:
+See DEV-7287 for the ticket this pass was built under, and the object Scaladoc of
+`PrequeryPatternOrdering` for the authoritative tier and tie-break rules.
 
-```sparql
-PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+#### Measured basis
 
-CONSTRUCT {
-  ?letter knora-api:isMainResource true .
-  ?letter ?linkingProp1  ?person1 .
-  ?letter ?linkingProp2  ?person2 .
-  ?letter beol:creationDate ?date .
-} WHERE {
-  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
-  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
-  ?person2 beol:hasIAFIdentifier ?gnd2 .
-  ?person1 beol:hasIAFIdentifier ?gnd1 .
-  ?letter ?linkingProp2 ?person2 .
-  ?letter ?linkingProp1 ?person1 .
-  ?letter beol:creationDate ?date .
-  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
-  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
-} ORDER BY ?date
-```
+The tier table above, and the connectivity rule's treatment of type units and unselective-technical classes,
+were derived from a spike that measured wall-clock time on the **stage** triplestore (a copy of prod) through
+the dsp-cli SPARQL passthrough (`dsp vre sparql query -s stage`) — never against a local Fuseki or a dump.
+Measurements were taken 2026-09-17 (a mini follow-up round on 2026-09-18). The exact Fuseki server version
+running on stage that day was not captured by the spike; the only in-repo Fuseki version pin is the Jena dist
+version used to build the image (`FUSEKI_DIST_VERSION` in `MODULE.bazel`, `6.2.0` at time of writing), which
+is not confirmed to be what stage ran on the measurement date.
 
-Note that position of the FILTER statements does not play a significant role in the optimization. 
+Per-case results (decision rule: a layout wins when its median is at least 20% faster than the runner-up and
+its minimum is not slower than the runner-up's median; otherwise the case ties):
 
-If a Gravsearch query contains statements in `UNION`, `OPTIONAL`, `MINUS`, or `FILTER NOT EXISTS`, they are reordered 
-by defining a graph per block. For example, consider the following query with `UNION`:
+| Case | Question | Winner | Effect |
+| --- | --- | --- | --- |
+| S1 | Project-class type vs. `attachedToProject` leading | type-first (A/D tie) | 12-20x net over project-first |
+| S2 / S2big | Technical type `VALUES` vs. `attachedToProject` | type-`VALUES`-first | 16x (0102), >=17x (0812, censored competitors) |
+| S3 | Which bound-IRI statement leads | tie (below harness resolution) | both ~30x over today's order |
+| S4 | Property-path anchor vs. tier-only sort | connectivity-aware order | 11x over today; tier-only order regresses 2.7x-worse |
+| S5 | Bound literal as anchor | literal-first | 40 ms, weakest result in the spike |
+| S6 | Bound IRI vs. `attachedToProject` | bound-IRI-first | outright win, net cost 0 vs. 1.06 s |
+| S7 | "Leads to a FILTER" preference | tie | no preference added |
+| S8 / S8w | Anchorless link query; may a technical type lead | project-class type leads; `LinkValue` type must never lead | leading with `LinkValue` type is >=25x worse |
+| S9 | Built-in `standoff` class as component leader | anchor (`VALUES`) before the built-in type statement | 166x |
+| S10 | Built-in predicate driving a sort-by-date join | project predicate before the built-in predicate | 6.3x-9.8x |
 
-```sparql
-{
-    ?thing anything:hasRichtext ?richtext .
-    FILTER knora-api:matchText(?richtext, "test")
-    ?thing anything:hasInteger ?int .
-    ?int knora-api:intValueAsInt 1 .
-}
-UNION
-{
-    ?thing anything:hasText ?text .
-    FILTER knora-api:matchText(?text, "test")
-    ?thing anything:hasInteger ?int .
-    ?int knora-api:intValueAsInt 3 .
-}
-```
+Measured tier table, with the provenance distinction the spike draws between rows it measured directly and
+rows it carries forward on a working hypothesis (do not read the table as wholly empirical):
 
-This would result in one graph per block of the `UNION`. Each graph is then sorted, and the statements of its 
-block are rearranged according to the topological order of graph. This is the result:
-
-```sparql
-{
-   ?int knora-api:intValueAsInt 1 .
-    ?thing anything:hasRichtext ?richtext .
-    ?thing anything:hasInteger ?int .
-    FILTER(knora-api:matchText(?richtext, "test"))
-} UNION {
-    ?int knora-api:intValueAsInt 3 .
-    ?thing anything:hasText ?text .
-    ?thing anything:hasInteger ?int .
-    FILTER(knora-api:matchText(?text, "test"))
-}
-```
-
-### Cyclic Graphs
-
-The topological sorting algorithm can only be used for DAGs (directed acyclic graphs). However,
-a Gravsearch query can contains statements that result in a cyclic graph, e.g.:
-
-```
-PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-
-CONSTRUCT {
-    ?thing knora-api:isMainResource true .
-} WHERE {
-  ?thing anything:hasOtherThing ?thing1 .
-  ?thing1 anything:hasOtherThing ?thing2 .
-  ?thing2 anything:hasOtherThing ?thing . 
-}
-```
-
-In this case, the algorithm tries to break the cycles in order to sort the graph. If this is not possible,
-the query statements are not reordered.
+| Tier | Unit | Provenance |
+| --- | --- | --- |
+| T1 | Lucene | hypothesis - no case measures it |
+| T2 | Bound IRI | measured above types and project (S4, S6); the choice within T2 is below resolution (S3) |
+| T3 | Bound literal | existence measured (S5, 40 ms, one shape); rank relative to T2 and T6 is hypothesis |
+| T4 | Project-class type | measured above plain statements and above project (S1, S8); exclusion of built-in vocabularies other than `knora-base` is measured by S9 (166x) |
+| T5 | Enumerating technical type | measured above project (S2, S2big); T4-versus-T5 is hypothesis (no case contains both) |
+| T6 | `attachedToProject` | measured below T2, T4, T5 (S1, S2, S2big, S6); T6-above-T7 is hypothesis |
+| T7 | Plain | the tier is the residue; the path sub-rule is unmeasured |
 
 ## The `matchFulltext` Function Expansion
 
@@ -482,11 +447,11 @@ to the match itself for a direct label hit.
 A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once
 it goes through the passes described above:
 
-1. **The optimizer passes hoist or reorder statements independently of scoping.** `moveBindToBeginning` would
-   hoist the `BIND(COALESCE(...))` above the `OPTIONAL` blocks it depends on, leaving it referencing unbound
-   variables. `reorderPatternsByDependency` (topological sorting, above) would place the trailing
-   `?resourceVar a ?resClass` check before the `BIND` that introduces `?resourceVar`, which is illegal SPARQL
-   scoping.
+1. **The optimizer passes hoist or reorder statements independently of scoping.** `PrequeryPatternOrdering`
+   hoists `BindPattern`s to the front of a block unconditionally, which would place `BIND(COALESCE(...))`
+   above the `OPTIONAL` blocks it depends on, leaving it referencing unbound variables. Its greedy
+   connectivity rule (above) would also place the trailing `?resourceVar a ?resClass` check before the `BIND`
+   that introduces `?resourceVar`, which is illegal SPARQL scoping.
 2. **The inference pass rejects `rdf:type` statements with a variable object.** `OntologyInferencer.transformStatementInWhere`
    throws `GravsearchException` when the object of `rdf:type` is a variable rather than an IRI (see
    [Inference](#inference), above) — but the expansion's value-type check (`?match a ?valType`) and its final
@@ -509,10 +474,10 @@ resource class selected) still carries the user's `?mainRes a knora-api:Resource
 relevant-ontologies inference nothing to narrow on, `OntologyInferencer` expands it into a `VALUES` block
 enumerating every resource class in the repository. Evaluating that block before the (cheap, index-anchored)
 Lucene lookup measured roughly 300× slower in the performance spike behind this feature — the classic
-join-order pessimization `moveLuceneToBeginning` (above) already exists to prevent for a bare Lucene
-`StatementPattern`. `moveLuceneToBeginning` was extended to also recognize a `GroupPattern` whose contents
-include a Lucene statement, so the whole expansion — not just a bare statement — gets hoisted ahead of
-patterns like the class-enumeration `VALUES` block.
+join-order pessimization `PrequeryPatternOrdering`'s T1 Lucene tier (above) already exists to prevent for a
+bare Lucene `StatementPattern`. T1 also recognizes a `GroupPattern` whose contents include a Lucene statement
+at any depth, and T1 pre-empts the connectivity rule unconditionally, so the whole expansion — not just a
+bare statement — leads its block ahead of patterns like the class-enumeration `VALUES` block.
 
 ### Determinism for Snapshot Testing
 
@@ -540,11 +505,7 @@ The suffix must stay unique per statement, not a shared constant: a constant wou
 variables (e.g. one from `?mainRes a Resource`, another from `?val a Value`) into the same variable,
 intersecting their blocks into silently empty results.
 
-There is a second, independent source of nondeterminism that this work also fixed: `TopologicalSortUtil`'s
-`findPermutations` walks scala-graph's per-layer node buffers, which iterate in `System.identityHashCode`
-order — an order that varies from one JVM run to the next. `GravsearchQueryOptimisation.findBestTopologicalOrder`
-only disambiguates the *last* layer via its permutations, so any dependency graph with two or more non-origin
-nodes in an earlier layer would render its WHERE patterns in a different order on every run.
-`TopologicalSortUtil` now sorts each layer's nodes by their string form (`sortBy(_.outer.toString)`) before
-building permutations, pinning the order. The resulting layer order is deterministic but arbitrary with
-respect to selectivity — this is a determinism guarantee for snapshot testing, not a query-performance choice.
+The other source of pattern-order nondeterminism is handled by `PrequeryPatternOrdering` itself: its final
+tie-break is always the unit's rendered SPARQL text, never a positional index, so the emitted order is a
+function of the pattern set and is independent of the order patterns arrived in or of `Set`/`Map` iteration
+order (see "Determinism", above).
