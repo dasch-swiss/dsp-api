@@ -57,6 +57,7 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
@@ -358,8 +359,6 @@ final class OntologyTransformer(
     val textValueType    = KnoraBase.TextValue
     val textValueAsXml   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
     val hasTextValueType = model.createProperty(KnoraBase.HasTextValueType)
-    val formattedText    = model.createResource(KnoraBase.FormattedText)
-    val unformattedText  = model.createResource(KnoraBase.UnformattedText)
 
     val textValues = model
       .listSubjects()
@@ -372,13 +371,13 @@ final class OntologyTransformer(
       }
       .toList
 
-    // Set hasTextValueType on every text value, matching the v2 resource-create path (ResourcesRepoLive)
-    // and the v2 add-value path (POST /v2/values, InsertValueQueryBuilder). This path emits only
-    // UnformattedText or FormattedText; it never emits CustomFormattedText, because rejectCustomMapping
+    // Set hasTextValueType on every text value via the shared TextValueType.hasTextValueTypeIri, the same mapping the
+    // v2 resource-create path (ResourcesRepoLive) and the v2 add-value path (InsertValueQueryBuilder) use. This path
+    // emits only UnformattedText or FormattedText; it never emits CustomFormattedText, because rejectCustomMapping
     // rejects a non-standard mapping before write (REQ-6.2). See docs/development/dsp-api-text-value-type-parity.md.
     textValues.foreach { v =>
-      val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
-      v.addProperty(hasTextValueType, valueType)
+      val valueType = if (v.hasProperty(textValueAsXml)) TextValueType.FormattedText else TextValueType.UnformattedText
+      v.addProperty(hasTextValueType, model.createResource(TextValueType.hasTextValueTypeIri(valueType)))
     }
   }
 

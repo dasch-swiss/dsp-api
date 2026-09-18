@@ -928,6 +928,26 @@ enum TextValueType {
   case UndefinedTextType
 }
 
+object TextValueType {
+
+  /**
+   * The internal `knora-base:hasTextValueType` IRI a write path emits for a text value. The three write paths share
+   * this one mapping: the v2 add-value path (InsertValueQueryBuilder), the v2 resource-create path (ResourcesRepoLive)
+   * and the v3 bulk-import path (OntologyTransformer). So an imported text value and a create-path text value hold the
+   * same marker, and a divergence fails a build, not a review. The read path (this file's JSON-LD response) stays
+   * separate: it emits external `knora-api` IRIs and keeps `UndefinedTextType`, which no write path can produce. See
+   * docs/development/dsp-api-text-value-type-parity.md.
+   */
+  def hasTextValueTypeIri(textValueType: TextValueType): String =
+    textValueType match {
+      case UnformattedText        => OntologyConstants.KnoraBase.UnformattedText
+      case FormattedText          => OntologyConstants.KnoraBase.FormattedText
+      case CustomFormattedText(_) => OntologyConstants.KnoraBase.CustomFormattedText
+      case UndefinedTextType      =>
+        throw new IllegalArgumentException(s"Cannot persist knora-base:hasTextValueType for $textValueType")
+    }
+}
+
 /**
  * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
  *
@@ -1024,6 +1044,9 @@ case class TextValueContentV2(
           schemaOptions = schemaOptions,
         )
 
+        // Read path: maps to external knora-api IRIs, not the internal knora-base IRIs of the write paths
+        // (TextValueType.hasTextValueTypeIri). It is the only path that reaches UndefinedTextType, so it maps that
+        // case rather than failing. See docs/development/dsp-api-text-value-type-parity.md.
         val textValueTypeIri = textValueType match
           case TextValueType.UnformattedText        => UnformattedText
           case TextValueType.FormattedText          => FormattedText

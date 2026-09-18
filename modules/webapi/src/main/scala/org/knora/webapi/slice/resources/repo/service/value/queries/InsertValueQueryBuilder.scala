@@ -323,17 +323,11 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     }
   }
 
-  /** The knora-base:hasTextValueType IRI for a text value, mirroring ResourcesRepoLive.buildFormattedTextValuePatterns. */
+  // The knora-base:hasTextValueType IRI for a text value. All write paths derive it from the shared
+  // TextValueType.hasTextValueTypeIri, so the three paths cannot diverge. TextValueContentV2.getTextValue never parses
+  // a payload to UndefinedTextType, so the shared mapping fails loud if that invariant breaks.
   private def textValueTypeIri(textValueType: TextValueType): rdf.Iri =
-    textValueType match {
-      case TextValueType.UnformattedText        => KB.UnformattedText
-      case TextValueType.FormattedText          => KB.FormattedText
-      case TextValueType.CustomFormattedText(_) => KB.CustomFormattedText
-      // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType. Fail loud if that invariant breaks,
-      // rather than silently omitting knora-base:hasTextValueType and diverging from the other two write paths.
-      case TextValueType.UndefinedTextType =>
-        throw new IllegalArgumentException(s"Cannot persist knora-base:hasTextValueType for $textValueType")
-    }
+    iri(TextValueType.hasTextValueTypeIri(textValueType))
 
   private def standoffAttributeToRdfValue(
     attr: org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2,
