@@ -371,10 +371,8 @@ final class OntologyTransformer(
       }
       .toList
 
-    // Set hasTextValueType on every text value via the shared TextValueType.hasTextValueTypeIri, the same mapping the
-    // v2 resource-create path (ResourcesRepoLive) and the v2 add-value path (InsertValueQueryBuilder) use. This path
-    // emits only UnformattedText or FormattedText; it never emits CustomFormattedText, because rejectCustomMapping
-    // rejects a non-standard mapping before write (REQ-6.2). See docs/development/dsp-api-text-value-type-parity.md.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri; this path emits only Unformatted/FormattedText,
+    // never CustomFormattedText. See docs/development/dsp-api-text-value-type-parity.md.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) TextValueType.FormattedText else TextValueType.UnformattedText
       v.addProperty(hasTextValueType, model.createResource(TextValueType.hasTextValueTypeIri(valueType)))

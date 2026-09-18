@@ -191,6 +191,7 @@ See `.github/pull_request_template.md`. For the recommended section structure (M
 - `docs/development/dsp-api-iri-handling.md` — universal IRI handling rules
 - `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
 - `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
+- `docs/development/dsp-api-text-value-type-parity.md` — three-write-path parity for text-value-type IRIs and scalar decimals
 - `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
 - `docs/adr/0011-cross-context-access-ports-and-adapters.md` - how contexts may depend on each other (ports, adapters, graph sovereignty)
 - `docs/adr/` — architectural decisions

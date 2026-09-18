@@ -300,10 +300,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       valueIri.has(KB.valueHasLanguage, literalOf(lang))
     }
 
-    // Persist knora-base:hasTextValueType on every text value, mirroring the v2 resource-create path
-    // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
-    // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
-    // when the payload is parsed.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
     val textValueTypePattern = List(valueIri.has(KB.hasTextValueType, textValueTypeIri(textValue.textValueType)))
 
     if (textValue.standoff.nonEmpty) {
@@ -323,9 +320,9 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     }
   }
 
-  // The knora-base:hasTextValueType IRI for a text value. All write paths derive it from the shared
-  // TextValueType.hasTextValueTypeIri, so the three paths cannot diverge. TextValueContentV2.getTextValue never parses
-  // a payload to UndefinedTextType, so the shared mapping fails loud if that invariant breaks.
+  // The knora-base:hasTextValueType IRI for a text value, via the shared TextValueType.hasTextValueTypeIri.
+  // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType, so the shared mapping's loud
+  // failure on that case guards an invariant rather than a reachable path.
   private def textValueTypeIri(textValueType: TextValueType): rdf.Iri =
     iri(TextValueType.hasTextValueTypeIri(textValueType))
 
