@@ -425,7 +425,9 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   // have a variable predicate restricted by an attached VALUES enumerating only project-data-ontology
   // predicate IRIs, so each must count as fully bound on the bound-terms tie-break, exactly like the plain
   // `?lv rdf:object ?b` statement; only the project-predicate tie-break then keeps `rdf:object` from
-  // leading. `?lv rdf:type knora-base:LinkValue` stays unselective-technical and never leads.
+  // leading. `?lv rdf:type knora-base:LinkValue` stays unselective-technical and never leads. The ordering
+  // is fully deterministic (the final tie-break is the rendered SPARQL text), so the expected order below
+  // pins the exact winner rather than accepting either VALUES-restricted statement.
   private val essenceA                        = QueryVariable("essenceA")
   private val essenceB                        = QueryVariable("essenceB")
   private val essenceP                        = QueryVariable("essenceP")
@@ -444,6 +446,14 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     essencePvValues,
     essenceAPStmt,
     essencePValues,
+  )
+  private val essenceExpected: Seq[QueryPattern] = Seq(
+    essencePValues,
+    essenceAPStmt,
+    essencePvValues,
+    essenceAPvStmt,
+    essenceObjectStmt,
+    essenceLvTypeStmt,
   )
 
   // A mixed VALUES on a predicate variable (one project-data-ontology IRI, one knora-base IRI) must not
@@ -637,11 +647,11 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
       "let a VALUES-restricted predicate variable statement lead over a store-wide `rdf:object` statement " +
         "on the essence of the reorderWithCycle shape (DEV-7287 stage regression)",
     ) {
-      val statementOrder = PrequeryPatternOrdering.order(essenceInput).collect { case s: StatementPattern => s }
+      val actual = PrequeryPatternOrdering.order(essenceInput)
       assertTrue(
-        statementOrder.head == essenceAPStmt || statementOrder.head == essenceAPvStmt,
-        statementOrder.head != essenceObjectStmt,
-        statementOrder.indexOf(essenceObjectStmt) > 0,
+        actual == essenceExpected,
+        actual.head != essenceObjectStmt,
+        actual.indexOf(essenceObjectStmt) > 0,
       )
     },
     test("never grant the project-predicate tie-break to a VALUES mixing a knora-base IRI with a project IRI") {
