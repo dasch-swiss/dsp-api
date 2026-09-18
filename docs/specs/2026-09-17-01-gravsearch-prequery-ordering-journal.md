@@ -1600,3 +1600,16 @@ change its rendered SPARQL, which the three E2E specs confirm byte-for-byte.
   technical-type ban to a namespace; never fall back to input order on ties; never link code comments into
   `docs/specs/`.
 
+## Round 9: CI fix
+
+CI on PR #4349 failed exactly one E2E test: `SearchEndpointPostGravsearchCountE2ESpec` "count anything:Thing
+that doesn't have a boolean property (MINUS)", which asserted a count of 52. Before DEV-7287 the prequery
+emitted the class statement AFTER the `MINUS` block (visible in PR1's golden
+`GravsearchToPrequeryTransformerE2ESpec__reorderWithMinus.txt`: `MINUS {...}` first, then the `VALUES` /
+`?thing rdf:type ?resTypes`). Per SPARQL algebra a `MINUS` evaluated against an empty solution removes
+nothing, so the old test counted all 52 `anything:Thing` resources visible to `anythingUser1`. The new
+ordering pass emits all top-level statements before blocks, so the class statement now precedes the `MINUS`
+and the `MINUS` takes effect: the arithmetic is 52 total minus 2 Things with `anything:hasBoolean` in the
+test data, giving 50. The sibling test for the same intent, "... (FILTER NOT EXISTS)", already expected 50.
+This was a latent correctness bug in the old prequery ordering that DEV-7287 fixes; the test expectation was
+stale and has been corrected to 50.

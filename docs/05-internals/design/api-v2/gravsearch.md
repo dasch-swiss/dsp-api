@@ -379,6 +379,11 @@ SPARQL-semantics claim: placing every statement before every block (the `Stateme
 described below) can change results when a block binds a variable a later statement also uses, and is kept
 consistent with that partition rather than derived from SPARQL identity.
 
+A `MINUS` (or `OPTIONAL`) written after the class statement in the Gravsearch text was previously emitted
+*before* it in the prequery whenever the class statement was the only statement binding the variable the
+block shared with the rest of the query, which made the `MINUS` a no-op (it ran against an empty solution).
+Because this pass emits all top-level statements before blocks, such a `MINUS` now takes effect.
+
 #### Determinism
 
 The pass's tie-break chain always ends in the unit's rendered SPARQL text (`pattern.toSparql`), never a
