@@ -723,6 +723,23 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
         assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("offset date-time"))
       }
     },
+    test("rejects a non-literal payload creationDate loudly") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${knoraApi}creationDate": { "@id": "http://example.org/not-a-literal" },
+           |    "${onto}testBoolean": { "@id": "$valueIri", "@type": "${knoraApi}BooleanValue",
+           |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true } },
+           |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+           |}]""".stripMargin
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("non-literal"))
+      }
+    },
   )
 
   /** Full expected `knora-base` graph for a single-value resource, including synthesised resource + value metadata. */
