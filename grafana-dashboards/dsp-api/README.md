@@ -98,8 +98,11 @@ each proposal fixes:
   the process CPU counter. No version/build-info metric is exported (`target_info` for this service has
   no `service_version`), and every restart gives the container a new `container_id`, so a plain
   `resets()` never fires — the query sums by `stack` first:
-  `count(resets(sum by (stack) (process_cpu_seconds_total{…})[5m:1m]) > 0)`. It is filtered to the
-  proposed time-series panels (11, 13–17) so the original panels render unchanged.
+  `count(resets(sum by (stack) (process_cpu_seconds_total{…})[$__interval:1m]) > 0)`, min step `2m`.
+  The subquery window **must** equal the annotation step: consecutive evaluations then tile the range
+  with no gaps, giving exactly one marker per restart on any dashboard range (a fixed `[5m:1m]` missed
+  restarts on a 7-day range once the step grew past 5 min). It is filtered to the proposed time-series
+  panels (11, 13–17) so the original panels render unchanged.
 
 ### Query-shape rationale (don't "simplify" these away)
 

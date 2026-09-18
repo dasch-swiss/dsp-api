@@ -68,12 +68,12 @@
             "spec": {
               "editorMode": "code",
               "refId": "Anno",
-              "expr": "count(resets(sum by (stack) (process_cpu_seconds_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"})[5m:1m]) > 0)",
+              "expr": "count(resets(sum by (stack) (process_cpu_seconds_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\"})[$__interval:1m]) > 0)",
               "legendFormat": "restart"
             }
           },
           "legacyOptions": {
-            "step": "5m",
+            "step": "2m",
             "titleFormat": "dsp-api restart / deploy",
             "textFormat": "process CPU counter reset on at least one selected stack (container restarted, usually a deploy)",
             "useValueForTime": false
