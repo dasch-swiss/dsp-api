@@ -114,6 +114,10 @@ trait SearchResponderV2 {
   protected final def recordQueryOnRoot(query: IRI): UIO[Unit] =
     SearchResponderV2.recordQueryOnRoot(tracing, query)
 
+  /** Adds the `gravsearch.prequery` event to the root span; call it outside any `stageSpan`, which carry no events. */
+  protected final def recordPrequeryOnRoot(prequery: String): UIO[Unit] =
+    SearchResponderV2.recordPrequeryOnRoot(tracing, prequery)
+
   /** Sets `gravsearch.project_shortcodes` + `gravsearch.project_restriction` on the root span. */
   protected final def setProjectsOnRoot(query: ConstructQuery, limitToProject: Option[ProjectIri]): UIO[Unit] =
     SearchResponderV2.setProjectsOnRoot(tracing, query, limitToProject)
@@ -792,6 +796,8 @@ final class SearchResponderV2Live(
                        } yield countQuery.toSparql
                      }
 
+      _ <- recordPrequeryOnRoot(countSparql)
+
       countResponse <- stageSpan("gravsearch.prequery.execute")(triplestore.query(Select.gravsearch(countSparql)))
 
       _ <- // query response should contain one result with one row with the name "count"
@@ -875,6 +881,8 @@ final class SearchResponderV2Live(
                            }
       (prequerySparql, gravsearchToPrequeryTransformer, mainResourceVar, ontologiesForInferenceMaybe) =
         prequeryGenerated
+
+      _ <- recordPrequeryOnRoot(prequerySparql)
 
       prequeryResponseNotMerged <-
         stageSpan("gravsearch.prequery.execute")(
@@ -1441,7 +1449,7 @@ object SearchResponderV2 {
   def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
     SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey)(_ => effect)
 
-  // ---- submitted query capture (DEV-6858) ---------------------------------------------------------
+  // ---- query capture: submitted Gravsearch (DEV-6858), generated prequery (DEV-7302) --------------
 
   /**
    * Records the submitted Gravsearch query verbatim as a `gravsearch.query` **event** on the current
@@ -1459,6 +1467,17 @@ object SearchResponderV2 {
   def recordQueryOnRoot(tracing: Tracing, query: IRI): UIO[Unit] =
     tracing.getCurrentSpanUnsafe.map { span =>
       val _ = span.addEvent("gravsearch.query", Attributes.of(DbAttributes.DB_QUERY_TEXT, query))
+    }
+
+  /**
+   * Records the generated SELECT prequery verbatim as a `gravsearch.prequery` event on the current (root)
+   * span: the statement actually sent to the triplestore, where `gravsearch.query` holds what the client
+   * submitted. Same rules as [[recordQueryOnRoot]]: an event, never a span attribute, and never inside a
+   * `stageSpan`. Call it as soon as generation finishes, so an interrupted execution still carries it.
+   */
+  def recordPrequeryOnRoot(tracing: Tracing, prequery: String): UIO[Unit] =
+    tracing.getCurrentSpanUnsafe.map { span =>
+      val _ = span.addEvent("gravsearch.prequery", Attributes.of(DbAttributes.DB_QUERY_TEXT, prequery))
     }
 
   // ---- query shape (Decision 4: bounded, human-readable, literal-invariant) ------------------------

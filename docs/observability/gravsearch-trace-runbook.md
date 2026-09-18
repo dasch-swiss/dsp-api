@@ -102,15 +102,26 @@ On a failed or interrupted stage span you may also see:
 
 ## 5. Read the submitted query
 
-The root `gravsearch` span carries the **query the client submitted, verbatim**, as a span **event**:
+The root `gravsearch` span carries **two query texts, verbatim**, as span **events** — the Gravsearch
+that came in, and the SPARQL that went out:
 
-| Field | Value |
-| --- | --- |
-| Event name | `gravsearch.query` |
-| Event attribute | `db.query.text` — the query string exactly as submitted, unredacted and untruncated |
+| Event name | Event attribute | What it holds |
+| --- | --- | --- |
+| `gravsearch.query` | `db.query.text` | The Gravsearch string exactly as submitted, unredacted and untruncated |
+| `gravsearch.prequery` | `db.query.text` | The generated SELECT **prequery** — the statement actually sent to the triplestore |
 
-Every Gravsearch execution carries it, client-submitted or internally generated (see
+`gravsearch.query` is on every Gravsearch execution, client-submitted or internally generated (see
 [§7](#not-every-captured-query-came-from-a-researcher)).
+
+`gravsearch.prequery` is recorded on both the page path and the count path, right after
+`gravsearch.prequery.generate` closes — so it is present even when the execution that follows is slow
+enough to be interrupted, which is the trace you most want it on. It is absent whenever generation
+never ran (a parse failure, an interrupt before that point); its absence therefore means the same
+thing as a missing `gravsearch.prequery.generate` span, not a broken capture.
+
+The two are complementary: the Gravsearch says what was asked for, the prequery is the thing to paste
+into Fuseki to reproduce the cost. When the prequery looks nothing like the Gravsearch's pattern order,
+that is the transformation pipeline at work, not a mismatch.
 
 In the Grafana trace view, select the `gravsearch` root span and open its **Events** section (next to
 Attributes). Copy the text and re-run it against dev or prod to reproduce the slow query — this is
@@ -121,13 +132,17 @@ attributes:
 
 ```traceql
 { span:name = "gravsearch" && event:name = "gravsearch.query" }
+{ span:name = "gravsearch" && event:name = "gravsearch.prequery" }
 { span:name = "gravsearch" && event.db.query.text =~ ".*incunabula:title.*" }
 ```
 
+Both events use `db.query.text`, so a bare `event.db.query.text` match hits either one; add
+`event:name` when you mean a specific one.
+
 Regex matches are fully anchored, hence the leading and trailing `.*`.
 
-It is recorded **before** the parse stage, so it is present even when the query is malformed. That is
-deliberate: the parse-failure and shape-less-early-interrupt topologies in
+`gravsearch.query` is recorded **before** the parse stage, so it is present even when the query is
+malformed. That is deliberate: the parse-failure and shape-less-early-interrupt topologies in
 [§7](#7-absent-spans-four-normal-topologies) have almost nothing else on them, and the query text is
 what makes those traces diagnosable at all.
 
