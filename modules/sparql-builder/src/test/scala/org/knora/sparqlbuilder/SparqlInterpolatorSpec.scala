@@ -166,6 +166,18 @@ class SparqlInterpolatorSpec extends ZIOSpecDefault with GoldenTest {
         Fragments.bind(sparql"NOW()", n).render == "BIND(NOW() AS ?n)",
       )
     },
+    test("filterIn renders typed values separated by commas") {
+      val resource = Variable("resource")
+      val values   = List(
+        Iri.unsafeFrom("http://example.org/A"),
+        Iri.unsafeFrom("http://example.org/B"),
+      )
+      assertTrue(
+        Fragments.filterIn(resource, values).render ==
+          "FILTER (?resource IN (<http://example.org/A>, <http://example.org/B>))",
+        Fragments.filterIn(resource, List.empty).render == "FILTER (?resource IN ())",
+      )
+    },
     test("property path operator sits outside the interpolated IRI") {
       val cls      = Variable("cls")
       val rendered = sparql"$cls $rdfsSubClassOf* $kbResource .".render

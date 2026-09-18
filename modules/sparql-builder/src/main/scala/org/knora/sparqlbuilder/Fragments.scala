@@ -34,6 +34,12 @@ object Fragments {
   def filter(expr: Fragment): Fragment =
     sparql"FILTER($expr)"
 
+  /** Create a FILTER that tests whether a variable is one of the supplied IRIs or literals. */
+  def filterIn(variable: Variable, values: Iterable[Iri | Literal]): Fragment = {
+    val valueList = Fragment.join(values.map(_.toFragment), Fragment.raw(", "))
+    sparql"FILTER ($variable IN ($valueList))"
+  }
+
   /** Create a BIND expression. */
   def bind(expr: Fragment, variable: Variable): Fragment =
     sparql"BIND($expr AS $variable)"
