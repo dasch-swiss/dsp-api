@@ -114,7 +114,7 @@ trait SearchResponderV2 {
   protected final def recordQueryOnRoot(query: IRI): UIO[Unit] =
     SearchResponderV2.recordQueryOnRoot(tracing, query)
 
-  /** Records the generated SELECT prequery as a `gravsearch.prequery` event on the root span. */
+  /** Adds the `gravsearch.prequery` event to the root span; call it outside any `stageSpan`, which carry no events. */
   protected final def recordPrequeryOnRoot(prequery: String): UIO[Unit] =
     SearchResponderV2.recordPrequeryOnRoot(tracing, prequery)
 
@@ -1449,7 +1449,7 @@ object SearchResponderV2 {
   def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
     SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey)(_ => effect)
 
-  // ---- submitted query capture (DEV-6858) ---------------------------------------------------------
+  // ---- query capture: submitted Gravsearch (DEV-6858), generated prequery (DEV-7302) --------------
 
   /**
    * Records the submitted Gravsearch query verbatim as a `gravsearch.query` **event** on the current
@@ -1470,18 +1470,10 @@ object SearchResponderV2 {
     }
 
   /**
-   * Records the generated SELECT prequery verbatim as a `gravsearch.prequery` **event** on the current
-   * (root) span. This is the statement actually sent to the triplestore, whereas `gravsearch.query`
-   * holds the Gravsearch the client submitted; a slow trace usually needs both — the one to re-run
-   * against Fuseki, the other to attribute the cost back to what was asked for.
-   *
-   * Same three rules as [[recordQueryOnRoot]]: an event rather than a span attribute, because the Alloy
-   * `otelcol.connector.spanmetrics` dimension list reads span attributes and generated SPARQL is
-   * unbounded; on the root span only; and never inside a `stageSpan`, since stage spans are asserted to
-   * carry no events at all (the REQ-1.6 sanitized-error lock).
-   *
-   * Called right after `gravsearch.prequery.generate` closes, so the prequery is on the trace even when
-   * the execution that follows it is interrupted — which is exactly the trace worth reading.
+   * Records the generated SELECT prequery verbatim as a `gravsearch.prequery` event on the current (root)
+   * span: the statement actually sent to the triplestore, where `gravsearch.query` holds what the client
+   * submitted. Same rules as [[recordQueryOnRoot]]: an event, never a span attribute, and never inside a
+   * `stageSpan`. Call it as soon as generation finishes, so an interrupted execution still carries it.
    */
   def recordPrequeryOnRoot(tracing: Tracing, prequery: String): UIO[Unit] =
     tracing.getCurrentSpanUnsafe.map { span =>

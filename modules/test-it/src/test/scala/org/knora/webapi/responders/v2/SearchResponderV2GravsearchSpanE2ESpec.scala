@@ -183,8 +183,6 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
         SpanAssertions.hasEventWithAttribute(spans, "gravsearch", queryEvent, queryTextKey, unparseable)
     },
     test("the root span carries the generated prequery as a gravsearch.prequery event (DEV-7302)") {
-      // The prequery is the statement actually sent to the triplestore, so this is the text to re-run
-      // against Fuseki. It is recorded from the same value that is handed to `triplestore.query`.
       for {
         spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
         text   = eventText(spans, "gravsearch", prequeryEvent)
@@ -245,7 +243,6 @@ class SearchResponderV2GravsearchSpanE2ESpec extends E2EZSpec {
     test("only the root span carries events, so the stage-span no-events contract stays meaningful") {
       // Keeps `SearchResponderV2StageSpanSpec`'s `getEvents.isEmpty` assertion honest: it locks the
       // REQ-1.6 sanitized-error rule, and would silently stop doing so if query text landed on a stage.
-      // Both payload events are checked, and no stage span may carry an event of any name.
       for {
         spans <- spansAfter(runGravsearch(bookByTitleQuery(existingTitle)))
       } yield assertTrue(
