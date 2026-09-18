@@ -79,6 +79,10 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val hasOtherThingValIri = IriRef((beol + "hasOtherThingValue").toSmartIri)
   private val genericPropIri      = IriRef((beol + "genericProp").toSmartIri)
   private val subClassOfStarIri   = IriRef(OntologyConstants.Rdfs.SubClassOf.toSmartIri, Some('*'))
+  private val hasXIri             = IriRef((anything + "hasX").toSmartIri)
+  private val hasYIri             = IriRef((anything + "hasY").toSmartIri)
+  private val hasXValueIri        = IriRef((anything + "hasXValue").toSmartIri)
+  private val hasYValueIri        = IriRef((anything + "hasYValue").toSmartIri)
 
   private val letter      = QueryVariable("letter")
   private val subj        = QueryVariable("subj")
@@ -417,6 +421,52 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val dateInput: Seq[QueryPattern]    = Seq(dateJdnStmt, dateProjectStmt)
   private val dateExpected: Seq[QueryPattern] = Seq(dateProjectStmt, dateJdnStmt)
 
+  // DEV-7287 stage regression, essence of the `reorderWithCycle` shape: `?a ?p ?b` and `?a ?pv ?lv` each
+  // have a variable predicate restricted by an attached VALUES enumerating only project-data-ontology
+  // predicate IRIs, so each must count as fully bound on the bound-terms tie-break, exactly like the plain
+  // `?lv rdf:object ?b` statement; only the project-predicate tie-break then keeps `rdf:object` from
+  // leading. `?lv rdf:type knora-base:LinkValue` stays unselective-technical and never leads.
+  private val essenceA                        = QueryVariable("essenceA")
+  private val essenceB                        = QueryVariable("essenceB")
+  private val essenceP                        = QueryVariable("essenceP")
+  private val essencePv                       = QueryVariable("essencePv")
+  private val essenceLv                       = QueryVariable("essenceLv")
+  private val essencePValues                  = ValuesPattern(essenceP, Set(hasXIri, hasYIri))
+  private val essencePvValues                 = ValuesPattern(essencePv, Set(hasXValueIri, hasYValueIri))
+  private val essenceAPStmt                   = StatementPattern(essenceA, essenceP, essenceB)
+  private val essenceAPvStmt                  = StatementPattern(essenceA, essencePv, essenceLv)
+  private val essenceObjectStmt               = StatementPattern(essenceLv, rdfObjectIri, essenceB)
+  private val essenceLvTypeStmt               = StatementPattern(essenceLv, rdfTypeIri, linkValueTypeIri)
+  private val essenceInput: Seq[QueryPattern] = Seq(
+    essenceObjectStmt,
+    essenceLvTypeStmt,
+    essenceAPvStmt,
+    essencePvValues,
+    essenceAPStmt,
+    essencePValues,
+  )
+
+  // A mixed VALUES on a predicate variable (one project-data-ontology IRI, one knora-base IRI) must not
+  // get the project-predicate tie-break; only a VALUES whose every entry is project-data does. Both
+  // statements are otherwise identical in shape and tie on tier, path-rank and bound-terms count, so
+  // predicateRank is the only differentiator.
+  private val mixedPredVar                              = QueryVariable("mixedPredVar")
+  private val purePredVar                               = QueryVariable("purePredVar")
+  private val mixedPredSubj                             = QueryVariable("mixedPredSubj")
+  private val mixedPredObj                              = QueryVariable("mixedPredObj")
+  private val purePredSubj                              = QueryVariable("purePredSubj")
+  private val purePredObj                               = QueryVariable("purePredObj")
+  private val mixedPredValues                           = ValuesPattern(mixedPredVar, Set(hasXIri, valueHasStringIri))
+  private val purePredValues                            = ValuesPattern(purePredVar, Set(hasXIri, hasYIri))
+  private val mixedPredicateStmt                        = StatementPattern(mixedPredSubj, mixedPredVar, mixedPredObj)
+  private val purePredicateStmt                         = StatementPattern(purePredSubj, purePredVar, purePredObj)
+  private val mixedPredicateTieInput: Seq[QueryPattern] = Seq(
+    mixedPredicateStmt,
+    mixedPredValues,
+    purePredicateStmt,
+    purePredValues,
+  )
+
   private val allInputs: Seq[Seq[QueryPattern]] = Seq(
     listNodeInput,
     linkTargetInput,
@@ -446,6 +496,8 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     standoffInput,
     dateInput,
     boundLiteralInput,
+    essenceInput,
+    mixedPredicateTieInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -580,6 +632,26 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     },
     test("rank a non-type statement with a bound XsdLiteral object as T3, between T2 and a plain T7 statement") {
       assertTrue(PrequeryPatternOrdering.order(boundLiteralInput) == boundLiteralExpected)
+    },
+    test(
+      "let a VALUES-restricted predicate variable statement lead over a store-wide `rdf:object` statement " +
+        "on the essence of the reorderWithCycle shape (DEV-7287 stage regression)",
+    ) {
+      val statementOrder = PrequeryPatternOrdering.order(essenceInput).collect { case s: StatementPattern => s }
+      assertTrue(
+        statementOrder.head == essenceAPStmt || statementOrder.head == essenceAPvStmt,
+        statementOrder.head != essenceObjectStmt,
+        statementOrder.indexOf(essenceObjectStmt) > 0,
+      )
+    },
+    test("never grant the project-predicate tie-break to a VALUES mixing a knora-base IRI with a project IRI") {
+      val statementOrder =
+        PrequeryPatternOrdering.order(mixedPredicateTieInput).collect { case s: StatementPattern => s }
+      assertTrue(statementOrder.head == purePredicateStmt, statementOrder.head != mixedPredicateStmt)
+    },
+    test("order the essence-of-the-cycle shape identically for every permutation of the input") {
+      val reference = PrequeryPatternOrdering.order(essenceInput)
+      assertTrue(essenceInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
     },
   )
 }

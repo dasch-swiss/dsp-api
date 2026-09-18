@@ -46,11 +46,17 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * rather than by namespace, deliberately - do not widen this to a namespace test: any other `rdf:type` unit
  * whose object is a bare `IriRef` in a built-in ontology (for example `?v a knora-base:TextValue` or
  * `?n a knora-base:ListNode`) also ranks T7, but is not unselective-technical and may still lead a
- * component. When two candidates otherwise tie, a statement whose predicate is a bound IRI in a project
- * data ontology ranks ahead of one that is not, before falling back to the rendered-text key; this keeps
- * a project-scoped predicate (typically far more selective on stage) as the join driver ahead of a
- * store-wide built-in predicate such as `knora-base:valueHasStartJDN` that would otherwise win on lexical
- * order alone.
+ * component. A term is treated as bound for the bound-terms-count tie-break not only when it is an
+ * `IriRef`/`XsdLiteral` or a variable already in the greedy loop's growing `bound` set, but also when it
+ * is a variable with a non-empty attached `VALUES`: `attachValues` emits that `VALUES` immediately before
+ * the first pattern referencing the variable, so at evaluation time the term is restricted exactly like a
+ * bound IRI, and a statement such as `?a ?p ?b` with a `VALUES` on `?p` must not be out-ranked by a
+ * store-wide statement such as `?lv <rdf:object> ?o` on term count alone. When two candidates otherwise
+ * tie, a statement whose predicate is a bound IRI in a project data ontology - or a variable predicate
+ * whose attached `VALUES` enumerates only project data ontology IRIs - ranks ahead of one that is not,
+ * before falling back to the rendered-text key; this keeps a project-scoped predicate (typically far more
+ * selective on stage) as the join driver ahead of a store-wide built-in predicate such as
+ * `knora-base:valueHasStartJDN` that would otherwise win on lexical order alone.
  *
  * The recursion seeds used when descending into a block (`MINUS` recursed with an empty bound set; `OPTIONAL`/`UNION`
  * branches/`FILTER NOT EXISTS` recursed with the outer bound set) are an execution-plan heuristic mirroring Fuseki's
@@ -214,38 +220,51 @@ object PrequeryPatternOrdering {
     case _                   => 7
   }
 
-  /**
-   * For a `StatementPattern`, counts bound terms over subject, predicate and object (an `IriRef`/`XsdLiteral`
-   * term is always counted; a `QueryVariable` term only if `bound` contains it). For any other unit kind,
-   * counts against `k.varsOf`, the variable set `UnitKey` already cached once per unit -- recomputing it from
-   * `k.unit` on every greedy-loop step would redo bound-independent work the cache exists to avoid.
-   */
-  private def boundTermsCount(k: UnitKey, bound: Set[QueryVariable]): Int = k.unit match {
-    case StatementPattern(subj, pred, obj) =>
-      Seq(subj, pred, obj).count {
-        case _: IriRef        => true
-        case _: XsdLiteral    => true
-        case v: QueryVariable => bound.contains(v)
-        case _                => false
-      }
-    case _ => k.varsOf.count(bound.contains)
-  }
+  /** True iff `v` has a non-empty attached `VALUES`, restricting it independently of the greedy loop's `bound` set. */
+  private def isValuesRestricted(v: QueryVariable, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): Boolean =
+    valuesByVar.get(v).exists(_.exists(_.values.nonEmpty))
 
   /**
-   * True iff `u` is a statement whose predicate is a bound IRI in a project data ontology. This matches
-   * against any predicate, including `rdf:type`; a type statement fails it in practice because `rdf` is
-   * not a project data ontology, not because type statements are special-cased out.
+   * Counts bound terms for `k` against the loop's growing `bound` set: `k.restrictedTermsCount` (an
+   * `IriRef`/`XsdLiteral` term, or a variable term with a non-empty attached `VALUES` - see the object's
+   * Scaladoc) plus however many of `k.loopVars` `bound` already contains. Both fields are precomputed once
+   * per unit in `unitKey`, since they do not depend on `bound`; recomputing them from `k.unit` on every
+   * greedy-loop step would redo bound-independent work the cache exists to avoid.
    */
-  private def hasProjectDataPredicate(u: QueryPattern): Boolean = u match {
-    case StatementPattern(_, IriRef(pred, _), _) => isProjectDataOntologyIri(pred.toIri)
-    case _                                       => false
-  }
+  private def boundTermsCount(k: UnitKey, bound: Set[QueryVariable]): Int =
+    k.restrictedTermsCount + k.loopVars.count(bound.contains)
+
+  /**
+   * True iff `u` is a statement whose predicate is a bound IRI in a project data ontology, or whose
+   * predicate is a variable with a non-empty attached `VALUES` in which every entry is a project data
+   * ontology IRI (mirroring `typeTier`'s all-entries-must-be-project rule). This matches against any
+   * predicate, including `rdf:type`; a type statement fails it in practice because `rdf` is not a project
+   * data ontology, not because type statements are special-cased out. A mixed `VALUES` (any non-project
+   * entry, e.g. a `knora-base` IRI) or an empty one stays false.
+   */
+  private def hasProjectDataPredicate(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): Boolean =
+    u match {
+      case StatementPattern(_, IriRef(pred, _), _)  => isProjectDataOntologyIri(pred.toIri)
+      case StatementPattern(_, v: QueryVariable, _) =>
+        val iris = valuesByVar.getOrElse(v, Seq.empty).flatMap(_.values).map(_.iri.toIri)
+        iris.nonEmpty && iris.forall(isProjectDataOntologyIri)
+      case _ => false
+    }
 
   /**
    * A unit's rank fields that do not depend on the greedy loop's growing `bound` set: the tier, the
    * property-path tie-break, the project-data-predicate tie-break, the rendered SPARQL used as the final
-   * tie-break, the unit's own variables, and the two membership flags `pickNext` branches on. Computed
-   * once per unit before the loop so the per-step work is only the bound-terms count.
+   * tie-break, the unit's own variables, the two membership flags `pickNext` branches on, and the
+   * bound-terms-count split (see `boundTermsCount`). Computed once per unit before the loop so the
+   * per-step work is only checking `loopVars` against `bound`.
+   *
+   * `restrictedTermsCount` counts the terms already restricted independently of the loop: an
+   * `IriRef`/`XsdLiteral` term, or a `QueryVariable` term with a non-empty attached `VALUES`.
+   * `loopVars` lists the remaining variable terms the loop must check against `bound` - for a
+   * `StatementPattern` with multiplicity (one entry per occurrence among subject/predicate/object, as
+   * `boundTermsCount` did before this split), for any other unit kind as `varsOf` minus the
+   * `VALUES`-restricted variables. A variable that is both `VALUES`-restricted and later added to `bound`
+   * counts once, via `restrictedTermsCount`, never twice.
    */
   private case class UnitKey(
     unit: QueryPattern,
@@ -256,19 +275,42 @@ object PrequeryPatternOrdering {
     varsOf: Set[QueryVariable],
     isType: Boolean,
     isUnselectiveTechnical: Boolean,
+    restrictedTermsCount: Int,
+    loopVars: Seq[QueryVariable],
   )
 
   private def unitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
-    val t = tierNum(u, valuesByVar)
+    val t                                                      = tierNum(u, valuesByVar)
+    val (restrictedCount, loopVars): (Int, Seq[QueryVariable]) = u match {
+      case StatementPattern(subj, pred, obj) =>
+        val terms      = Seq(subj, pred, obj)
+        val restricted = terms.count {
+          case _: IriRef                                              => true
+          case _: XsdLiteral                                          => true
+          case v: QueryVariable if isValuesRestricted(v, valuesByVar) => true
+          case _                                                      => false
+        }
+        val remaining = terms.collect {
+          case v: QueryVariable if !isValuesRestricted(v, valuesByVar) => v
+        }
+        (restricted, remaining)
+      case _ =>
+        val allVars    = vars(u)
+        val restricted = allVars.count(v => isValuesRestricted(v, valuesByVar))
+        val remaining  = allVars.filterNot(v => isValuesRestricted(v, valuesByVar)).toSeq
+        (restricted, remaining)
+    }
     UnitKey(
       unit = u,
       tier = t,
       pathRank = if (t == 7 && isPropertyPath(u)) 1 else 0,
-      predicateRank = if (hasProjectDataPredicate(u)) 0 else 1,
+      predicateRank = if (hasProjectDataPredicate(u, valuesByVar)) 0 else 1,
       sparql = u.toSparql,
       varsOf = vars(u),
       isType = isTypeUnit(u),
       isUnselectiveTechnical = isUnselectiveTechnicalType(u),
+      restrictedTermsCount = restrictedCount,
+      loopVars = loopVars,
     )
   }
 
