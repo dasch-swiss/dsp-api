@@ -1686,3 +1686,52 @@ is a cost-based-search question, not a tie-break defect, and it is left for a fo
 The decision it raises: ship PR 2 with a known 1.8x regression on this one corpus shape, against the measured
 wins elsewhere (list node 4.2 s to 0.48 s, link target 0.70 s to 0.14 s, the cycle shape 120 s to 0.12 s), or
 block the merge on a lookahead redesign.
+
+## H2 stage replay (session, 2026-09-18)
+
+Every SPARQL golden that changed between PR 1 and PR 2 (14 files) plus the five prod shapes (S1, S3, S4, S9, S10
+layouts) was run in both versions on stage via dsp-cli and the sorted result rows were byte-compared.
+
+- 17 of 19 pairs identical. Two not verifiable: `optional` times out at 120 s on both sides (pre-existing),
+  `reorderWithCycle` timed out on the PR 2 side only, the regression fixed in round 10.
+- The intended `MINUS` difference (`reorderWithMinus`) is not observable on stage (the `anything` project is absent);
+  the E2E expectation change in round 9 covers it. Stage did show the cost of the old shape: 41.7 s (`MINUS` first)
+  against 0.3 s (reordered) for the same empty answer.
+- Prod shapes, identical rows, before to after: list node 6.5 s to 0.6 s, link target 0.8 s to 0.3 s, tanner 0.4 s
+  to 0.3 s, standoff 28.8 s to 0.3 s, sort-by-date 2.1 s to 0.4 s.
+- Coverage caveat: 9 of the 14 goldens target the test-only `anything` project or fixture literals, so they compare
+  empty against empty. Real rows were compared for `listNodeAnchor` (page and count), `reorder` and the prod shapes.
+
+Files: `~/Desktop/gravsearch-ordering-measurements/h2-replay/` (README with the per-file verdicts, `results.csv`,
+the before/after query texts and result CSVs).
+
+## Dev timing baseline (session, 2026-09-18)
+
+Harness and BEFORE baseline for the post-deploy check, taken against `api.dev.dasch.swiss` on `main` before the stack
+(`webapi v39.0.0-33-gded89ed`). Dev carries prod-like data (111,939 `ekws:Object`, the DEV-7287 list node with
+19,459 hits, tanner 0102, beol 0801), so the prod shapes were used with real IRIs. Nine interleaved runs per query
+on `/v2/searchextended` and `/v2/searchextended/count`; medians:
+
+| query | search | count |
+| --- | --- | --- |
+| 01 list node (ekws hasMedium + list node) | 4.11 s (no spread) | 4.21 s |
+| 02 link target, median in-degree | 0.79 s | 0.71 s |
+| 03 link target, large in-degree | 0.94 s | 0.82 s |
+| 04 label + FILTER + ORDER BY, tanner | 44.3 s (bimodal 0.2 to 45 s) | 44.2 s |
+| 05 label + FILTER + ORDER BY, ekws | 1.35 s | 7.08 s |
+| 06 standoff ancestor, beol | 1.47 s | 0.93 s |
+| 07 date sort, ekws | 2.22 s | 1.04 s |
+| 08 control: class + property, ekws | 1.58 s | 1.18 s |
+
+AFTER: once the stack is deployed to dev, run `RUNS=9 bash measure.sh after-<version>` in
+`~/Desktop/gravsearch-ordering-measurements/dev-timing/` and compare medians (04 and 05 are bimodal, never compare
+single runs).
+
+## Accepted trade-off: the `reorder` shape (Balduin, 2026-09-18)
+
+The `reorder` golden (two link hops with `FILTER`-restricted variable predicates and a literal anchor) stays 1.83x
+slower than PR 1's order on stage (6.67 s against 3.65 s, identical rows). A layout exists that runs in 0.46 s, but
+no local rule reaches it (see "Open: the `reorder` shape" under round 10). Decision: ship, record the trade-off in
+the design doc and the PR body, and open a follow-up for lookahead or cost-based ordering of variable-predicate
+link chains. Rationale: the shape is rare in real traffic, the measured wins are on the shapes that make up most of
+the Fuseki time above 1 s, and PR 1's fast order for this shape was accidental.

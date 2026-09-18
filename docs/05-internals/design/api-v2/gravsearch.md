@@ -435,6 +435,14 @@ rows it carries forward on a working hypothesis (do not read the table as wholly
 | T6 | `attachedToProject` | measured below T2, T4, T5 (S1, S2, S2big, S6); T6-above-T7 is hypothesis |
 | T7 | Plain | the tier is the residue; the path sub-rule is unmeasured |
 
+**Known trade-off (accepted 2026-09-18).** The stage replay of the golden corpus found one shape that the pass
+orders worse than the previous topological sort did: two link hops whose predicates are variables restricted only
+by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`), anchored by a literal (the `reorder` golden).
+It runs 1.83x slower than before on stage (6.67 s against 3.65 s, identical rows). A layout exists that runs in
+0.46 s, but no local tie-break reaches it: at the deciding step the two candidates tie on every key, so reaching
+it needs lookahead or cost-based ordering. Accepted because the shape is rare in real traffic and the previous
+fast order for it was accidental; a follow-up tracks the redesign.
+
 ## The `matchFulltext` Function Expansion
 
 `knora-api:matchFulltext` (see
