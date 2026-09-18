@@ -57,7 +57,10 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19,
+              20
             ]
           },
           "query": {
@@ -1375,7 +1378,7 @@
         "spec": {
           "id": 14,
           "title": "5xx responses per route (count per plot step)",
-          "description": "How many 5xx responses each route returned in each plot step, as stacked bars. The window is $__interval (= one plot step), so consecutive bars tile the range without overlap and the legend Total adds up to the 5xx column of the routes table above (up to increase() extrapolation, which can make a count read 1.0 or 0.99). An earlier version used the Smoothing window, which counted the same error in every overlapping window and inflated the total. Only routes with at least one 5xx in range appear. Same filters as the routes table; grouped by path only.",
+          "description": "Roughly how many 5xx responses each route returned in each plot step, as stacked bars (increase() over one plot step, so bars tile the range without overlap). Read it for WHEN errors happened; for HOW MANY trust the 5xx column of the table above: increase() extrapolates sparse counts, so the legend Total can exceed the table by about one per burst (prod: 5 vs 4). Only routes with at least one 5xx in range appear. Same filters as the routes table; grouped by path only.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1879,6 +1882,580 @@
             }
           }
         }
+      },
+      "panel-18": {
+        "kind": "Panel",
+        "spec": {
+          "id": 18,
+          "title": "Requests per route ($smoothing)",
+          "description": "Requests per second per route, stacked, same filters as the server-time panel above it. Read the two together: server time that rises with requests is load, server time that rises without them is a slowdown. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum by (path) (rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~\"${path:pipe}\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "{{path}}"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "reqps",
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 35,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "showPoints": "never",
+                    "axisSoftMin": 0,
+                    "stacking": {
+                      "mode": "normal",
+                      "group": "A"
+                    },
+                    "axisWidth": 90
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "mean",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "width": 415,
+                  "sortBy": "Mean",
+                  "sortDesc": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-19": {
+        "kind": "Panel",
+        "spec": {
+          "id": 19,
+          "title": "Server time per route group — busy seconds per second ($smoothing)",
+          "description": "Seconds of request processing per second, per route group (same regexes as the Route group filter), stacked. Where the API spends its time, at group level; compare with the requests per group below to tell load from slowdown. Honours Method and Exclude routes, deliberately ignores the Route group filter. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Search"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Resources"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Values"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Ontologies"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "E",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Lists"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "F",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Admin"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "G",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Export"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "H",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Import"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 35,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "showPoints": "never",
+                    "axisSoftMin": 0,
+                    "stacking": {
+                      "mode": "normal",
+                      "group": "A"
+                    },
+                    "axisWidth": 90
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "mean",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "width": 415,
+                  "sortBy": "Mean",
+                  "sortDesc": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-20": {
+        "kind": "Panel",
+        "spec": {
+          "id": 20,
+          "title": "Requests per route group ($smoothing)",
+          "description": "Requests per second per route group, stacked; the denominator for the server-time panel above. Honours Method and Exclude routes, deliberately ignores the Route group filter. Purple markers are dsp-api container restarts (deploys, but also crashes/reboots).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Search"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Resources"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Values"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Ontologies"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "E",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Lists"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "F",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Admin"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "G",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Export"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "H",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(rate(tapir_request_total{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\"}[$smoothing]))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Import"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "reqps",
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 35,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "showPoints": "never",
+                    "axisSoftMin": 0,
+                    "stacking": {
+                      "mode": "normal",
+                      "group": "A"
+                    },
+                    "axisWidth": 90
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "mean",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "width": 415,
+                  "sortBy": "Mean",
+                  "sortDesc": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "layout": {
@@ -1981,10 +2558,49 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-12"
+                "name": "panel-18"
               },
               "x": 0,
               "y": 40,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-19"
+              },
+              "x": 0,
+              "y": 49,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-20"
+              },
+              "x": 0,
+              "y": 58,
+              "width": 24,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+              },
+              "x": 0,
+              "y": 67,
               "width": 24,
               "height": 12
             }
@@ -1997,7 +2613,7 @@
                 "name": "panel-14"
               },
               "x": 0,
-              "y": 52,
+              "y": 79,
               "width": 24,
               "height": 9
             }
@@ -2010,7 +2626,7 @@
                 "name": "panel-15"
               },
               "x": 0,
-              "y": 61,
+              "y": 88,
               "width": 12,
               "height": 9
             }
@@ -2023,7 +2639,7 @@
                 "name": "panel-16"
               },
               "x": 12,
-              "y": 61,
+              "y": 88,
               "width": 12,
               "height": 9
             }
@@ -2036,7 +2652,7 @@
                 "name": "panel-17"
               },
               "x": 0,
-              "y": 70,
+              "y": 97,
               "width": 24,
               "height": 8
             }
@@ -2049,7 +2665,7 @@
                 "name": "panel-7"
               },
               "x": 0,
-              "y": 78,
+              "y": 105,
               "width": 24,
               "height": 11
             }

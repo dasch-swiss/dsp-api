@@ -64,12 +64,15 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 | 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency as seen from dsp-api, Gravsearch vs other | `[$smoothing]` |
 | 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share, traffic-mix independent | `[$smoothing]` |
 | 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
+| 18 Requests per route | Stacked req/s per route; the denominator for 13 | `[$smoothing]` |
+| 19 Server time per route group | Stacked `rate(duration_sum)` per route group | `[$smoothing]` |
+| 20 Requests per route group | Stacked req/s per route group; the denominator for 19 | `[$smoothing]` |
 
 ### Proposed comparison panels
 
 Panels 11–17 were added **directly below** the panels they are meant to replace, so the two can be
-compared on real data before anything is removed: 11 under 4, 13 under 5, then the routes table 12,
-5xx per route 14, the triplestore panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
+compared on real data before anything is removed: 11 under 4, then 5, then the server-time/requests
+block 13, 18, 19, 20, then the routes table 12, 5xx per route 14, the triplestore panels 15–17, then 7. The layout is one flat grid — the former row headers ("Global", "Per route", …)
 were dropped because they got in the way of that comparison. Decisions so far: the stat tiles 1–3
 took the `path!=""` proposal directly (no side-by-side copies); panels 4 and 5 stay, gained the
 restart marker and were aligned with 11 (see below); the avg-ranked routes table (former panel 6) was
@@ -82,14 +85,19 @@ restart marker and were aligned with 11 (see below); the avg-ranked routes table
 - **Route groups next to the global line (4, 11, 5 — all three kept).** The global average mostly
   tracks traffic mix (see Notes); per-group lines separate "reads got slower" from "searches got
   slower", and per-route lines name the culprit. Panel 11 reuses the Route group variable's regexes as
-  fixed queries and deliberately ignores the Route group filter. Together with the server-time panel
-  13 the four are stacked and **their plot areas are pixel-aligned** so a feature at one x position is
-  the same moment in all of them: same height, a right-hand table legend with a fixed `width: 415` on
-  each (panel 4 had a bottom legend and the others right legends sized by the longest series name,
-  which shifted the plots), a fixed y-axis `axisWidth: 90` (log and linear axes otherwise produce
-  different tick-label widths), and **no y-axis label** (a rotated label is drawn outside `axisWidth`
-  and shifts the plot; the unit is in the title instead). Keep those values identical when editing any
-  of the four panels.
+  fixed queries and deliberately ignores the Route group filter. Together with the server-time and
+  requests panels 13, 18, 19, 20 the seven are stacked and **their plot areas are pixel-aligned** so a
+  feature at one x position is the same moment in all of them: same height, a right-hand table legend
+  with a fixed `width: 415` on each (panel 4 had a bottom legend and the others right legends sized by
+  the longest series name, which shifted the plots), a fixed y-axis `axisWidth: 90` (log and linear
+  axes otherwise produce different tick-label widths), and **no y-axis label** (a rotated label is
+  drawn outside `axisWidth` and shifts the plot; the unit is in the title instead). Keep those values
+  identical when editing any of the seven panels.
+- **Server time needs a requests panel next to it (13+18, 19+20).** Server time is requests × duration.
+  A route or group whose server time grows because it is called more is load, not something to
+  optimise away; one whose server time grows while its requests do not is a slowdown. So each
+  server-time panel is followed by the matching requests panel, per route and per route group, with
+  the same stacking so the shares can be compared by eye.
 - **Total time, not just average (12, 13).** Slowest-average routes are rare exports; the routes that
   consume server time on prod are extended search (+ count), resources reads and ontology
   allentities. Panel 12 adds `Total time` (= `increase(duration_sum)`), `4xx`, `5xx`, sorts by total,
@@ -137,13 +145,15 @@ restart marker and were aligned with 11 (see below); the avg-ranked routes table
   rather than an empty cell (an empty cell would sort unpredictably and read as "unknown").
 - **Requests is `increase()` (a count), not `rate()`.** The slow routes here are rare (export/candelete
   run a handful of times an hour); a per-second rate rounds to `0.00` and reads as broken.
-- **Panel 14 counts per plot step, not per smoothing window.** Its bars are
-  `increase(...[$__interval])`, so consecutive bars tile the range without overlap and the legend
-  **Total** adds up to the 5xx column of the table (up to `increase()` extrapolation: on prod, 2 errors
-  in 24 h summed to 2.2 across 10-minute steps, displayed as `2` with `decimals: 0`). A first version
-  used `[$smoothing]`, which counted the same error in every overlapping window and showed totals that
-  contradicted the table. The `and on (path) (… [$__range] > 0)` clause keeps only routes that had a
-  5xx somewhere in the range, so the legend does not list every route with a zero.
+- **Panel 14 is approximate by construction — read it for *when*, trust the table for *how many*.**
+  Its bars are `increase(...[$__interval])`, so consecutive bars tile the range without overlap, but
+  `increase()` extrapolates sparse counts and the legend **Total** can exceed the table's 5xx column by
+  about one per burst (prod, 7 d: 5 vs 4). An exact count is not achievable from this counter: a tapir
+  5xx series is **born at the first error** for a route (and reborn with a new label set on a relabel),
+  so a per-step difference `X - X offset $__interval` misses every birth (undercounted 2 vs 4), and a
+  birth fallback `X - (X offset … or X * 0)` re-counts the whole counter on each relabel (6–7 vs 4).
+  A first version used `[$smoothing]`, which counted the same error in every overlapping window. The
+  `and on (path) (… [$__range] > 0)` clause keeps only routes that had a 5xx somewhere in the range.
 - **Panel 5 uses a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route
   (`/v3/export/resources`, multiple seconds) otherwise compresses every other route into the baseline.
   An earlier `topk()` was removed — in a range graph it re-picks members every step and renders as
