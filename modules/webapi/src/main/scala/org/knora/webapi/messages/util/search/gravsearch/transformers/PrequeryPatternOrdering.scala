@@ -214,7 +214,13 @@ object PrequeryPatternOrdering {
     case _                   => 7
   }
 
-  private def boundTermsCount(unit: QueryPattern, bound: Set[QueryVariable]): Int = unit match {
+  /**
+   * For a `StatementPattern`, counts bound terms over subject, predicate and object (an `IriRef`/`XsdLiteral`
+   * term is always counted; a `QueryVariable` term only if `bound` contains it). For any other unit kind,
+   * counts against `k.varsOf`, the variable set `UnitKey` already cached once per unit -- recomputing it from
+   * `k.unit` on every greedy-loop step would redo bound-independent work the cache exists to avoid.
+   */
+  private def boundTermsCount(k: UnitKey, bound: Set[QueryVariable]): Int = k.unit match {
     case StatementPattern(subj, pred, obj) =>
       Seq(subj, pred, obj).count {
         case _: IriRef        => true
@@ -222,7 +228,7 @@ object PrequeryPatternOrdering {
         case v: QueryVariable => bound.contains(v)
         case _                => false
       }
-    case other => vars(other).count(bound.contains)
+    case _ => k.varsOf.count(bound.contains)
   }
 
   /**
@@ -271,9 +277,14 @@ object PrequeryPatternOrdering {
    * project-data predicate before any other predicate, then text. The final key must stay the rendered
    * SPARQL: it makes the result independent of input order and of `Set`/`Map` iteration order, which is
    * what the permutation-invariance spec case pins. Do not replace it with a positional index.
+   *
+   * For a `VALUES`-bearing unit, the rendered text includes the inference variable name that
+   * `SparqlTransformer.createInferenceVariable` derives from a truncated hash of the statement; this final
+   * key therefore inherits whatever injectivity that naming has, and two statements colliding on that hash
+   * would tie here too (see that method's Scaladoc for the collision caveat).
    */
   private def rank(k: UnitKey, bound: Set[QueryVariable]): (Int, Int, Int, Int, String) =
-    (k.tier, k.pathRank, -boundTermsCount(k.unit, bound), k.predicateRank, k.sparql)
+    (k.tier, k.pathRank, -boundTermsCount(k, bound), k.predicateRank, k.sparql)
 
   private def bestOf(indices: Seq[Int], remaining: Vector[UnitKey], bound: Set[QueryVariable]): Int =
     indices.minBy(i => rank(remaining(i), bound))

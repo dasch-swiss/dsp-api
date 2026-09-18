@@ -325,11 +325,11 @@ Every unit (a `StatementPattern` or an opaque `GroupPattern`) is assigned a tier
 
 | Tier | Unit |
 | --- | --- |
-| T1 | Lucene: a `text:query` statement, or a `GroupPattern` containing one directly or in a nested `GroupPattern` |
+| T1 | Lucene: a `text:query` statement, or a `GroupPattern` containing one directly or in a nested `GroupPattern`; a `text:query` inside an `OPTIONAL`, `UNION`, or `MINUS` within the group is not found |
 | T2 | Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object, whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type` statement with an `IriRef` subject |
 | T3 | Bound literal: a non-type statement with an `XsdLiteral` object |
 | T4 | Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal ontology IRI carrying a project shortcode), either directly or as the sole content of an enumerating `VALUES` |
-| T5 | Enumerating technical type unit: `rdf:type` on a variable bound by a non-empty `VALUES` enumeration where not every entry is a class in a project data ontology |
+| T5 | Enumerating technical type unit: `rdf:type` on a variable bound by a non-empty `VALUES` enumeration where not every entry is a class in a project data ontology - for example an enumeration mixing project and built-in classes, or naming an external IRI, or naming only classes from a built-in ontology (`knora-base`, `standoff`, `salsah-gui`, `knora-admin`, or `shared`) |
 | T6 | `?x knora-base:attachedToProject <iri>` |
 | T7 | Plain: everything else; within T7, non-path statements before property-path statements |
 
