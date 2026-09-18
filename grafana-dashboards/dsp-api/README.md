@@ -42,11 +42,10 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 - `Exclude routes` — multi-select of path regexes applied as `path!~"${exclude:pipe}"`. Default
   excludes `/health` + `/version`. Safe when empty: PromQL fully anchors regex matchers, so an empty
   exclude drops only empty-path series, not everything.
-- `Smoothing window` — **only** the `rate()` window (`[$smoothing]`) on the two original time-series
-  panels (4, 5). It changes how smooth those lines are (larger window → peaks averaged down, so the
-  legend **Max** drops while the **Mean** stays put); it does **not** touch the stat tiles or tables,
-  which use `$__range`, nor the proposed panels, which use a fixed `15m`. Keep it ≤ the dashboard time
-  range or `rate()` runs short of data.
+- `Smoothing window` — the `rate()` window (`[$smoothing]`) on **every** time-series panel (4, 5, 11,
+  13–17). It changes how smooth those lines are (larger window → peaks averaged down, so the legend
+  **Max** drops while the **Mean** stays put); it does **not** touch the stat tiles or tables, which
+  use `$__range`. Keep it ≤ the dashboard time range or `rate()` runs short of data.
 
 **Panels:**
 
@@ -60,13 +59,13 @@ round-trip histogram (`fuseki_request_duration_bucket`, panels 15–16).
 | 6 Routes ranked by avg duration | Slowest routes now + how often they run | `$__range` |
 | 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their target + scoped project, + the query | Tempo |
 | 8–10 Stat tiles — excl. unmatched | Panels 1–3 with `path!=""` (drops CORS/HEAD requests that matched no endpoint) | as 1–3 |
-| 11 Avg duration by route group | One line per route group instead of one global average | `[15m]` |
+| 11 Avg duration by route group | One line per route group instead of one global average | `[$smoothing]` |
 | 12 Routes ranked by total server time | Where the API spends its time; avg, requests, 4xx, 5xx; path links to Tempo | `$__range` |
-| 13 Server time per route | Stacked `rate(duration_sum)` per route over time | `[15m]` |
-| 14 5xx responses per route | Which endpoint failed, when | `[15m]` |
-| 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency as seen from dsp-api, Gravsearch vs other | `[15m]` |
-| 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share, traffic-mix independent | `[15m]` |
-| 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[15m]` |
+| 13 Server time per route | Stacked `rate(duration_sum)` per route over time | `[$smoothing]` |
+| 14 5xx responses per route | Which endpoint failed, when | `[$smoothing]` |
+| 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency as seen from dsp-api, Gravsearch vs other | `[$smoothing]` |
+| 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share, traffic-mix independent | `[$smoothing]` |
+| 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
 
 ### Proposed comparison panels (rows titled "… (proposed)")
 
@@ -87,9 +86,12 @@ each proposal fixes:
   and gives `path` an internal Tempo link (`span.http.route = ${__data.fields.path}`, server spans
   `> 1s`, scoped by `span.environment`/`span.stack`).
 - **Errors per route (12, 14).** Status is a label we already have; only the global tile used it.
-- **Fixed `15m` window, `phase="body"` only.** Per route the `headers`→`body` difference is < 0.1 ms
-  everywhere, so the phase split carries no information; the smoothing knob interacts with every other
-  filter and confuses the legend Max.
+- **Same `[$smoothing]` window as panels 4/5, `phase="body"` only.** Every time series on the
+  dashboard must follow the one Smoothing window knob, so the original and proposed panels smooth
+  identically and stay comparable. (A fixed `15m` window and a range-adaptive `[$__interval]` window
+  were both tried and rejected: the first is unreadable at 7 days, the second takes the choice away
+  from the reader.) Per route the `headers`→`body` difference is < 0.1 ms everywhere, so the phase
+  split carries no information.
 - **Triplestore latency (15–17).** `fuseki_request_duration_bucket` is dsp-api's own histogram of
   SPARQL round trips, with `isGravsearch`/`isSearch`/`isMaintenance`/`type` labels and **decade buckets**
   (10 ms, 100 ms, 1 s, 10 s … in `millis`). Quantiles are therefore coarse within-decade
