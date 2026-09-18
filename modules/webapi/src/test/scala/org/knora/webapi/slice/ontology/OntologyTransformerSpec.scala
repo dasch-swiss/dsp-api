@@ -689,6 +689,40 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |""".stripMargin,
       )
     },
+    test("rejects an unparseable payload creationDate loudly") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${knoraApi}creationDate": { "@type": "${xsd}string", "@value": "not-a-date" },
+           |    "${onto}testBoolean": { "@id": "$valueIri", "@type": "${knoraApi}BooleanValue",
+           |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true } },
+           |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+           |}]""".stripMargin
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("offset date-time"))
+      }
+    },
+    test("rejects an offset-less payload creationDate loudly") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${knoraApi}creationDate": { "@type": "${xsd}dateTime", "@value": "2011-12-03T10:15:30" },
+           |    "${onto}testBoolean": { "@id": "$valueIri", "@type": "${knoraApi}BooleanValue",
+           |      "${knoraApi}booleanValueAsBoolean": { "@type": "${xsd}boolean", "@value": true } },
+           |    "@context": { "rdfs": "http://www.w3.org/2000/01/rdf-schema#" }
+           |}]""".stripMargin
+      runTransformStage2Failure(jsonLd).map { exit =>
+        val message = messageOf(exit)
+        assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("offset date-time"))
+      }
+    },
   )
 
   /** Full expected `knora-base` graph for a single-value resource, including synthesised resource + value metadata. */

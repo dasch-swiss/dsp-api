@@ -36,6 +36,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
 import scala.jdk.CollectionConverters.*
 
@@ -216,8 +217,9 @@ final class OntologyTransformer(
                // the resolved class DOAP applies.
                val permission = payloadPermission.fold(classDoaps(resourceClass))(payloadPerms)
                // A payload creationDate is honored but re-emitted as xsd:dateTime: the create path stores
-               // it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp) does
-               // not survive.
+               // it via an Instant, so the datatype the payload declared (for example xsd:dateTimeStamp)
+               // does not survive. An unparseable or offset-less value fails the import loudly, so
+               // provenance is never silently rewritten to the import-time clock.
                val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
                // Strip any payload-supplied system metadata before synthesizing, so a payload value does
                // not coexist with the synthesized one (the data graph enforces maxCount 1).
@@ -229,11 +231,23 @@ final class OntologyTransformer(
                r.addProperty(attachedToUser, userResource)
                r.addProperty(attachedToProject, projectResource)
                r.addProperty(hasPermissions, permission)
-               val creationDateValue = payloadCreationDate
-                 .filter(_.isLiteral)
-                 .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
-                 .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
-                 .getOrElse(creationDateLit)
+               val creationDateValue = payloadCreationDate match {
+                 case Some(node) if node.isLiteral =>
+                   val lexical = node.asLiteral.getLexicalForm
+                   val instant =
+                     try OffsetDateTime.parse(lexical).toInstant()
+                     catch {
+                       case e: DateTimeParseException =>
+                         throw new IllegalArgumentException(
+                           s"Resource $r has a knora-base:creationDate '$lexical' that is not an offset date-time",
+                           e,
+                         )
+                     }
+                   model.createTypedLiteral(instant.toString, XSDDatatype.XSDdateTime)
+                 case Some(node) =>
+                   throw new IllegalArgumentException(s"Resource $r has a non-literal knora-base:creationDate: $node")
+                 case None => creationDateLit
+               }
                r.addProperty(creationDate, creationDateValue)
                r.addProperty(isDeleted, falseLit)
              }
