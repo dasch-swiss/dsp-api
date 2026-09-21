@@ -25,10 +25,11 @@ import org.knora.webapi.messages.util.search.*
  * which must list every fixture the suite defines; bind-first emission; Lucene-group opacity and its
  * ability to lead even when unconnected; `VALUES` attachment (unit-attached, block-attached, orphan);
  * filter/FNE placement; `MINUS`/`OPTIONAL` recursion seeds; disconnected components staying contiguous;
- * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the two
+ * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the three
  * measured DEV-7287 stage regressions -- a standoff `rdf:type` unit must not lead ahead of the `VALUES`
- * anchoring a `*` property path, and a project-scoped predicate must win the rendered-text tie-break over
- * a store-wide built-in one.
+ * anchoring a `*` property path, a project-scoped predicate must win the rendered-text tie-break over
+ * a store-wide built-in one, and a candidate `rdf:type` unit with an already-bound subject must be emitted
+ * directly before the property path anchored on that variable.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
@@ -61,6 +62,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val listNodeClassIri    = IriRef(OntologyConstants.KnoraBase.ListNode.toSmartIri)
 
   private val standoffParagraphTagIri   = IriRef(OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri)
+  private val standoffItalicTagIri      = IriRef(OntologyConstants.Standoff.StandoffItalicTag.toSmartIri)
   private val standoffTagHasStartParent =
     IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
   private val valueHasStandoffIri  = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
@@ -83,6 +85,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val hasYIri             = IriRef((anything + "hasY").toSmartIri)
   private val hasXValueIri        = IriRef((anything + "hasXValue").toSmartIri)
   private val hasYValueIri        = IriRef((anything + "hasYValue").toSmartIri)
+  private val hasIAFIdentifierIri = IriRef((anything + "hasIAFIdentifier").toSmartIri)
 
   private val letter      = QueryVariable("letter")
   private val subj        = QueryVariable("subj")
@@ -413,6 +416,57 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     standoffTypeParagraphStmt,
   )
 
+  // DEV-7287 type-before-path regression, measured 3.1x: a candidate `rdf:type` unit whose subject is
+  // already bound (`?lnv a standoff:StandoffItalicTag`) must be emitted directly before the property path
+  // anchored on that same variable (`?lnv standoffTagHasStartParent* ?subj`), rather than after it; the
+  // paragraph-tag type unit on the path's still-unbound end (`?subj`) stays last, as before.
+  private val typeBeforePathThingIri                 = IriRef((anything + "Thing").toSmartIri)
+  private val typeBeforePathResStmt                  = StatementPattern(res, rdfTypeIri, typeBeforePathThingIri)
+  private val typeBeforePathHasTextStmt              = StatementPattern(res, hasTextIri, title)
+  private val typeBeforePathValueHasStmt             = StatementPattern(title, valueHasStandoffIri, lnv)
+  private val typeBeforePathItalicTypeStmt           = StatementPattern(lnv, rdfTypeIri, standoffItalicTagIri)
+  private val typeBeforePathPathStmt                 = StatementPattern(lnv, standoffTagHasStartParent, subj)
+  private val typeBeforePathParagraphTypeStmt        = StatementPattern(subj, rdfTypeIri, standoffParagraphTagIri)
+  private val typeBeforePathInput: Seq[QueryPattern] = Seq(
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+    typeBeforePathItalicTypeStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathResStmt,
+  )
+  private val typeBeforePathExpected: Seq[QueryPattern] = Seq(
+    typeBeforePathResStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathItalicTypeStmt,
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+  )
+
+  // DEV-7287 review finding: an unselective-technical bound-subject type unit (`?lnv a knora-base:Resource`)
+  // must NOT defer the property path anchored on that same variable, unlike the selective
+  // `?lnv a standoff:StandoffItalicTag` above -- it restricts essentially nothing, so waiting for it buys
+  // none of the type-before-path rule's benefit. Same shape as `typeBeforePathInput`, with the italic-tag
+  // type replaced by an unselective one.
+  private val typeBeforeUnselectiveTypeStmt                     = StatementPattern(lnv, rdfTypeIri, resourceTypeIri)
+  private val typeBeforeUnselectivePathInput: Seq[QueryPattern] = Seq(
+    typeBeforePathPathStmt,
+    typeBeforePathParagraphTypeStmt,
+    typeBeforeUnselectiveTypeStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathResStmt,
+  )
+  private val typeBeforeUnselectivePathExpected: Seq[QueryPattern] = Seq(
+    typeBeforePathResStmt,
+    typeBeforePathHasTextStmt,
+    typeBeforePathValueHasStmt,
+    typeBeforePathPathStmt,
+    typeBeforeUnselectiveTypeStmt,
+    typeBeforePathParagraphTypeStmt,
+  )
+
   // DEV-7287 sort-by-date regression, measured 6.3x: without the predicate tie-break, the lexical
   // key would put `?date knora-base:valueHasStartJDN ?jdn` first because "date" < "thing"; the project
   // predicate `anything:hasDate` must instead win the tie and lead.
@@ -477,6 +531,74 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     purePredValues,
   )
 
+  // DEV-7287 `rdf:object` deferral, the `reorder` essence: `?lv rdf:object ?p` must wait until `?lv` is
+  // bound by the statement above it (`?r ?lpv ?lv`), even though on term count alone it would otherwise be
+  // a connected T7 candidate as soon as `?p` is bound. `?r ?lp ?p` (which also only binds `?p`, not `?lv`)
+  // must therefore be emitted before it, and the deferred statement becomes eligible again, immediately
+  // after `?r ?lpv ?lv` binds its subject.
+  private val reorderG           = QueryVariable("reorderG")
+  private val reorderP           = QueryVariable("reorderP")
+  private val reorderR           = QueryVariable("reorderR")
+  private val reorderLp          = QueryVariable("reorderLp")
+  private val reorderLpv         = QueryVariable("reorderLpv")
+  private val reorderLv          = QueryVariable("reorderLv")
+  private val reorderLiteralStmt =
+    StatementPattern(reorderG, valueHasStringIri, XsdLiteral("lit", OntologyConstants.Xsd.String.toSmartIri))
+  private val reorderIafStmt                  = StatementPattern(reorderP, hasIAFIdentifierIri, reorderG)
+  private val reorderLpStmt                   = StatementPattern(reorderR, reorderLp, reorderP)
+  private val reorderLpvStmt                  = StatementPattern(reorderR, reorderLpv, reorderLv)
+  private val reorderObjectStmt               = StatementPattern(reorderLv, rdfObjectIri, reorderP)
+  private val reorderLvTypeStmt               = StatementPattern(reorderLv, rdfTypeIri, linkValueTypeIri)
+  private val reorderInput: Seq[QueryPattern] = Seq(
+    reorderLvTypeStmt,
+    reorderObjectStmt,
+    reorderLpvStmt,
+    reorderLpStmt,
+    reorderIafStmt,
+    reorderLiteralStmt,
+  )
+  private val reorderExpected: Seq[QueryPattern] = Seq(
+    reorderLiteralStmt,
+    reorderIafStmt,
+    reorderLpStmt,
+    reorderLpvStmt,
+    reorderObjectStmt,
+    reorderLvTypeStmt,
+  )
+
+  // DEV-7287 `rdf:object` deferral, bound-IRI link-target regression guard: here `?lv rdf:object <iri>` is
+  // T2 on tier alone (its object is a bound IRI), yet the deferral still holds it back until `?lv` is bound
+  // by `?r hasXValue ?lv`; it must not be pushed past the end of the block once eligible again.
+  private val linkGuardR                        = QueryVariable("linkGuardR")
+  private val linkGuardLv                       = QueryVariable("linkGuardLv")
+  private val linkGuardAnchorStmt               = StatementPattern(linkGuardR, hasXIri, anchorIri)
+  private val linkGuardValueStmt                = StatementPattern(linkGuardR, hasXValueIri, linkGuardLv)
+  private val linkGuardObjectStmt               = StatementPattern(linkGuardLv, rdfObjectIri, anchorIri)
+  private val linkGuardTypeStmt                 = StatementPattern(linkGuardLv, rdfTypeIri, linkValueTypeIri)
+  private val linkGuardInput: Seq[QueryPattern] = Seq(
+    linkGuardTypeStmt,
+    linkGuardObjectStmt,
+    linkGuardValueStmt,
+    linkGuardAnchorStmt,
+  )
+  private val linkGuardExpected: Seq[QueryPattern] = Seq(
+    linkGuardAnchorStmt,
+    linkGuardValueStmt,
+    linkGuardObjectStmt,
+    linkGuardTypeStmt,
+  )
+
+  // DEV-7287 `rdf:object` deferral, degenerate input: every unit is a deferred `rdf:object` statement whose
+  // subject is never bound by anything else. The eligible set would be empty at every step, so `pickNext`
+  // falls back to every remaining index; the pass stays total and returns both statements.
+  private val degenLv1                                   = QueryVariable("degenLv1")
+  private val degenLv2                                   = QueryVariable("degenLv2")
+  private val degenO1                                    = QueryVariable("degenO1")
+  private val degenO2                                    = QueryVariable("degenO2")
+  private val degenStmt1                                 = StatementPattern(degenLv1, rdfObjectIri, degenO1)
+  private val degenStmt2                                 = StatementPattern(degenLv2, rdfObjectIri, degenO2)
+  private val degenerateDeferralInput: Seq[QueryPattern] = Seq(degenStmt1, degenStmt2)
+
   private val allInputs: Seq[Seq[QueryPattern]] = Seq(
     listNodeInput,
     linkTargetInput,
@@ -504,10 +626,15 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     resourceBannedInput,
     listNodeTypeLeadsInput,
     standoffInput,
+    typeBeforePathInput,
+    typeBeforeUnselectivePathInput,
     dateInput,
     boundLiteralInput,
     essenceInput,
     mixedPredicateTieInput,
+    reorderInput,
+    linkGuardInput,
+    degenerateDeferralInput,
   )
 
   override val spec = suite("PrequeryPatternOrdering")(
@@ -640,6 +767,30 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     ) {
       assertTrue(PrequeryPatternOrdering.order(dateInput) == dateExpected)
     },
+    test(
+      "emit a candidate rdf:type unit with an already-bound subject directly before the property path " +
+        "anchored on it, rather than after (DEV-7287 type-before-path rule, measured 3.1x)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(typeBeforePathInput)
+      assertTrue(
+        actual == typeBeforePathExpected,
+        actual.indexOf(typeBeforePathPathStmt) == actual.indexOf(typeBeforePathItalicTypeStmt) + 1,
+      )
+    },
+    test("order the type-before-path shape identically for every permutation of the input") {
+      val reference = PrequeryPatternOrdering.order(typeBeforePathInput)
+      assertTrue(typeBeforePathInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
+    },
+    test(
+      "do not let an unselective-technical bound-subject type unit defer the property path anchored on it " +
+        "(DEV-7287 review finding)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(typeBeforeUnselectivePathInput)
+      assertTrue(
+        actual == typeBeforeUnselectivePathExpected,
+        actual.indexOf(typeBeforePathPathStmt) < actual.indexOf(typeBeforeUnselectiveTypeStmt),
+      )
+    },
     test("rank a non-type statement with a bound XsdLiteral object as T3, between T2 and a plain T7 statement") {
       assertTrue(PrequeryPatternOrdering.order(boundLiteralInput) == boundLiteralExpected)
     },
@@ -662,6 +813,44 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     test("order the essence-of-the-cycle shape identically for every permutation of the input") {
       val reference = PrequeryPatternOrdering.order(essenceInput)
       assertTrue(essenceInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
+    },
+    test(
+      "defer `?lv rdf:object ?p` until `?lv` is bound, so it is emitted right after `?r ?lpv ?lv` " +
+        "and after the connected `?r ?lp ?p` statement (DEV-7287 rdf:object deferral, reorder essence)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(reorderInput)
+      assertTrue(
+        actual == reorderExpected,
+        actual.indexOf(reorderLpStmt) < actual.indexOf(reorderObjectStmt),
+        actual.indexOf(reorderObjectStmt) == actual.indexOf(reorderLpvStmt) + 1,
+      )
+    },
+    test(
+      "defer a bound-IRI `?lv rdf:object <iri>` statement despite its T2 tier, without pushing it past the end " +
+        "(DEV-7287 rdf:object deferral, link-target regression guard)",
+    ) {
+      val actual = PrequeryPatternOrdering.order(linkGuardInput)
+      assertTrue(
+        actual == linkGuardExpected,
+        actual.head == linkGuardAnchorStmt,
+        actual.indexOf(linkGuardObjectStmt) == actual.indexOf(linkGuardValueStmt) + 1,
+      )
+    },
+    test(
+      "stay total when every unit is a deferred rdf:object statement with a never-bound subject " +
+        "(DEV-7287 rdf:object deferral, degenerate input)",
+    ) {
+      val actual    = PrequeryPatternOrdering.order(degenerateDeferralInput)
+      val actualToo = PrequeryPatternOrdering.order(degenerateDeferralInput)
+      assertTrue(
+        actual.size == degenerateDeferralInput.size,
+        actual.toSet == degenerateDeferralInput.toSet,
+        actual == actualToo,
+      )
+    },
+    test("order the reorder-essence shape identically for every permutation of the input (rdf:object deferral)") {
+      val reference = PrequeryPatternOrdering.order(reorderInput)
+      assertTrue(reorderInput.permutations.forall(p => PrequeryPatternOrdering.order(p) == reference))
     },
   )
 }

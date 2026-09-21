@@ -339,7 +339,9 @@ institutionalise the pathology Fact 1's bound-object corollary warns about. A ty
 single `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource` is *unselective-technical*: it ranks T7
 and may never lead a component, because it restricts nothing (it matches essentially the whole store). This
 ban is deliberately by name, not by namespace: several other `knora-base` classes (`Region`, `Annotation`,
-`StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead.
+`StillImageRepresentation`, `ListNode`, `DeletedResource`) are selective and must remain able to lead. Together
+with T1 pre-emption, the `rdf:object` deferral, and the type-before-path rule (both below), this is one of the
+pass's four eligibility rules - find all four by searching for "eligibility rule".
 
 Ties within a tier are broken, in order, by: more bound terms first (IRIs, literals, and variables already in
 the bound set); then a statement whose predicate is in a project data ontology, ahead of one whose predicate
@@ -349,15 +351,23 @@ is built-in; then the lexical order of the pattern's rendered SPARQL text (see "
 
 Within one block, the pass emits units one at a time. At each step:
 
-1. If any remaining unit is T1 (Lucene), it leads, regardless of connectivity to what is already bound. This
-   pre-empts every other rule.
-2. Otherwise, prefer a non-type unit connected to a variable already bound by an emitted unit in this block.
-3. Otherwise, prefer a type unit connected to what is already bound — so a type unit is emitted after the
+0. First, an eligibility rule narrows the candidate pool: a statement whose predicate is the bound IRI
+   `rdf:object` and whose subject is a variable not yet bound is removed from candidacy - unless that would
+   empty the pool, in which case it is put back. This defers the generated link-value statement
+   (`?lv rdf:object ?o`) until its link value `?lv` is bound, instead of starting the join from every link
+   value pointing at the object.
+1. If any remaining candidate is T1 (Lucene), it leads, regardless of connectivity to what is already bound.
+   This pre-empts every other rule.
+2. Otherwise, prefer a non-type candidate connected to a variable already bound by an emitted unit in this
+   block - except that a further eligibility rule excludes a property-path statement from this step while a
+   candidate `rdf:type` unit whose subject is already bound also exists; that type unit is emitted first (see
+   the type-before-path rule, below).
+3. Otherwise, prefer a type candidate connected to what is already bound — so a type unit is emitted after the
    connected non-type statements of the same component, not before them.
 4. Otherwise (nothing remaining is connected to what is bound), a new component is started: pick the best
-   remaining unit by (tier, tie-break) among all non-type units and all type units *except*
+   remaining candidate by (tier, tie-break) among all non-type units and all type units *except*
    unselective-technical ones.
-5. If nothing else qualifies, fall back to the best remaining unit overall.
+5. If nothing else qualifies, fall back to the best remaining candidate overall.
 
 Each step picks exactly one unit and adds its variables to the bound set, so the pass consumes one unit per
 step and terminates on any input — cycles included — without needing a DAG.
@@ -433,15 +443,42 @@ rows it carries forward on a working hypothesis (do not read the table as wholly
 | T4 | Project-class type | measured above plain statements and above project (S1, S8); exclusion of built-in vocabularies other than `knora-base` is measured by S9 (166x) |
 | T5 | Enumerating technical type | measured above project (S2, S2big); T4-versus-T5 is hypothesis (no case contains both) |
 | T6 | `attachedToProject` | measured below T2, T4, T5 (S1, S2, S2big, S6); T6-above-T7 is hypothesis |
-| T7 | Plain | the tier is the residue; the path sub-rule is unmeasured |
+| T7 | Plain | the tier is the residue; the type-before-path eligibility rule that reorders property-path statements against a connected type unit is measured (see below), the rest of the path sub-ordering is not |
 
-**Known trade-off (accepted 2026-09-18).** The stage replay of the golden corpus found one shape that the pass
-orders worse than the previous topological sort did: two link hops whose predicates are variables restricted only
-by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`), anchored by a literal (the `reorder` golden).
-It runs 1.83x slower than before on stage (6.67 s against 3.65 s, identical rows). A layout exists that runs in
-0.46 s, but no local tie-break reaches it: at the deciding step the two candidates tie on every key, so reaching
-it needs lookahead or cost-based ordering. Accepted because the shape is rare in real traffic and the previous
-fast order for it was accidental; a follow-up tracks the redesign.
+The one shape the stage replay found ordered worse than the previous topological sort - two link hops whose
+predicates are variables restricted only by a `FILTER` (`?linkingProp1 = beol:hasAuthor || beol:hasRecipient`),
+anchored by a literal (the `reorder` golden) - is fixed by the `rdf:object` deferral rule (above). `rdf:object`
+appears in a prequery only on the generated link-value node (`?s <linkValueProp> ?lv . ?lv rdf:object ?o`), and
+emitting it while `?lv` is unbound starts the join from every link value pointing at the object. Deferring it
+until its subject is bound takes this shape from 6.98 s to 0.66 s on stage (identical rows, 5 interleaved runs
+each), about 8x faster than the pre-DEV-7287 order as well. A FILTER-to-`VALUES` rewrite of the same query was
+measured too and is harmful (53 s), so it was not adopted.
+
+A later stage replay found the reverse problem inside `ruleA`: a standoff query
+(`?letter a beol:letter . ?letter beol:hasText ?text . ?text knora-api:textValueHasStandoff ?tag . ?tag a
+standoff:StandoffItalicTag . ?tag knora-api:standoffTagHasStartAncestor ?para . ?para a
+standoff:StandoffParagraphTag`) regressed from 1.5 s to 4.0 s after the DEV-7287 stack merged, because the
+emitted prequery put the `standoffTagHasStartAncestor` path ahead of the type check on its own subject
+(`?tag a standoff:StandoffItalicTag`): Fuseki walked the ancestors of every standoff tag in every letter before
+narrowing to italic tags. The fix is the type-before-path eligibility rule: within `ruleA`, a property-path
+statement is not a candidate while a candidate *selective* `rdf:type` unit whose subject is already bound
+exists, so that type unit is emitted first; a bound-subject type unit that is unselective-technical (its
+object is a bare `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource`) does not defer a path,
+since it restricts essentially nothing and deferring the path for it would buy none of the rule's benefit.
+Per Fact 3 of `docs/development/dsp-api-fuseki-query-execution.md`, a `*`/`+`
+property path fans out from every binding of its anchored end, whereas a type check on an already-bound
+subject costs one index lookup per binding and shrinks the binding set before the path runs - so the cheap,
+selective check belongs first. Measured on stage (dsp-cli, 5 interleaved runs, 1344 rows in both layouts): 3.71
+s with the ancestor path emitted ahead of the type check, 1.20 s with the type check moved directly before the
+path, about 3x. A confirmation run of 3 interleaved pairs on 2026-09-18 gave 3.45-3.50 s versus 1.01-1.03 s,
+same row count. This is deliberately not generalised to "type units before all connected non-type units" -
+that broader rule is unmeasured and would reorder many other golden files; it fires only against property-path
+statements, and only inside `ruleA`. A property-path statement that leads its component (its variable end
+not yet bound, so a bound `IriRef` on the other end anchors it - the list-node anchor shape) is unaffected:
+T2 already ranks it ahead of the type unit as a component anchor, before `ruleA` is ever reached; the same
+path statement can still reach `ruleA` later in the same run, once its `IriRef` end is no longer what starts
+the component. Regenerating both golden corpora after this change produced no golden diff at all, so the
+rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden file.
 
 ## The `matchFulltext` Function Expansion
 

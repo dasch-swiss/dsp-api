@@ -1735,3 +1735,207 @@ no local rule reaches it (see "Open: the `reorder` shape" under round 10). Decis
 the design doc and the PR body, and open a follow-up for lookahead or cost-based ordering of variable-predicate
 link chains. Rationale: the shape is rare in real traffic, the measured wins are on the shapes that make up most of
 the Fuseki time above 1 s, and PR 1's fast order for this shape was accidental.
+
+## Round 11: rdf:object eligibility rule
+
+Supersedes "Accepted trade-off: the `reorder` shape" above: the trade-off is resolved, not shipped.
+
+The session's four-layout replay of the `reorder` prequery on stage (5 interleaved runs each, identical 25 rows)
+measured: the round-10 order 6.98 s, layout vA 0.66 s, a FILTER-to-`VALUES` rewrite alone 53 s (harmful, dropped),
+vA plus `VALUES` 0.64 s. Hand-tracing the greedy pass showed that one added eligibility rule reproduces vA
+statement for statement, so no lookahead or cost-based search is needed after all.
+
+**The rule.** A statement whose predicate is the bound IRI `rdf:object` and whose subject is a variable not yet in
+the loop's `bound` set is not a `pickNext` candidate - neither for the connected step nor for leading a new
+component - as long as any other unit is a candidate. `rdf:object` occurs in a prequery only on the generated
+link-value node (`?s <linkValueProp> ?lv . ?lv rdf:object ?o`); the link value is reached from its resource, so the
+check belongs right after the statement that binds `?lv`. Emitting it earlier starts the join from every link value
+pointing at the object. Once `?lv` is bound the statement has three bound terms and the existing bound-terms
+tie-break puts it next, so the rule only ever delays it. If nothing else is a candidate it is eligible as before, so
+the pass stays total and permutation-invariant.
+
+Implementation: `UnitKey.deferSubject: Option[QueryVariable]` (from `rdfObjectDeferSubject`), and `pickNext` narrows
+its index set with `isDeferred` before the existing T1 / connected-non-type / connected-type / non-unselective
+cascade, falling back to all indices when the narrowing would empty the pool. The pass now has three eligibility
+rules - T1 pre-emption, the unselective-technical ban, and this deferral - documented together in the object
+Scaladoc.
+
+Spec cases added to `PrequeryPatternOrderingSpec`: the `reorder` essence with its exact expected order, a
+bound-IRI link-target regression guard (the S3 shape, where `rdf:object <iri>` must stay immediately after the
+statement binding its subject), a degenerate all-`rdf:object` input, and permutation invariance for the first case.
+
+### Golden audit
+
+Regenerating both golden specs changed exactly two files, both belonging to the `reorder` case:
+
+| Golden | Change | Verdict |
+| --- | --- | --- |
+| `GravsearchToPrequeryTransformerE2ESpec__reorder.txt` | each of the two `rdf:object` statements moves from before its `?letter ?linkingPropN__hasLinkToValue ?lvN` statement to immediately after it | intended; the file is now byte-identical to the measured vA layout |
+| `GravsearchToPrequeryTransformerE2ESpec__reorderShape.txt` | the same two moves in the shape projection | intended, follows the golden above |
+
+Unchanged as required: `linkTargetAnchor` (its `rdf:object <iri>` already follows `hasAuthorValue`, which binds the
+subject, so the rule never fires), `reorderWithCycle`, `optional`, `matchFulltextInUnion`, every other golden
+containing `rdf:object`, the five prod `<suffix>Shape` files, and the entire count-prequery corpus.
+
+### Stage measurement (2026-09-18)
+
+The regenerated `reorder` golden text is byte-identical to `reorder-vA.rq`, so the interleaved run is a
+self-consistency check rather than an A/B: 5 runs of the golden text against 5 runs of the vA reference, medians
+0.77 s and 0.76 s wall clock through dsp-cli (that includes roughly 0.1 s of CLI and HTTP overhead, so the numbers
+sit on top of the 0.66 s the session measured for vA). Rows: 25, byte-identical to `reorder-vA.sorted.csv`. Against
+the round-10 order measured with the same harness (6.98 s) this is a 9x improvement, and the shape is now faster
+than the pre-DEV-7287 topological sort (3.65 s) rather than 1.83x slower.
+
+Control runs of the other two anchored goldens, both in their previous sub-second class with rows identical to the
+H2 replay: `linkTargetAnchor` 0.48 s, `listNodeAnchor` 0.46 s.
+
+Raw files: `/private/tmp/.../scratchpad/r11-timings.csv` (session-local, not durable) and
+`~/Desktop/gravsearch-ordering-measurements/h2-replay/` for the reference layouts.
+
+### Base change
+
+The remote stack was force-pushed at 14:15 by another session: both layers were rebased onto `main` at
+`ded89ed9a`. The rebase is content-identical (range-diff clean: 20 PR1 and 28 PR2 commits unchanged), but the SHAs
+differ. `base_commit` for both layers is therefore now `ded89ed9a` (was `cd88f04b5`), and the round-11 commits were
+moved onto the remote PR2 tip `7ad247bc9` (the rewritten `b3d5c17a2`) before pushing. `origin/main` has since moved
+to `44de1cd49`; the stack was deliberately not rebased onto that.
+
+### Review of round 11
+
+`performance-reviewer` and `scala-zio-reviewer` on `b3d5c17a2..HEAD`: no Critical findings, four Warnings, each put
+to `finding-verifier`.
+
+| Finding | Verdict | Action |
+| --- | --- | --- |
+| The new "three eligibility rules" sentence splits "These two classes" from its antecedent in the Scaladoc | real, low | fixed: sentence moved after the unselective-technical explanation |
+| Measured numbers in a Scaladoc violate the comment convention | not real | the convention bans benchmark dumps, not a sourced number justifying an invariant; the file already does this (DEV-6715), and specs are a sink so the comment cannot link to the journal instead |
+| `isDeferred` ignores a `VALUES`-restricted subject, unlike the rest of the tie-break machinery | not real | `OntologyInferencer` only ever attaches `VALUES` to a type-statement object or a predicate variable, never to a link-value subject, so the shape is unreachable |
+| The bound-IRI `rdf:object` shape is only covered by a unit test, not a stage measurement | not real | the `linkTargetAnchor` golden is byte-identical before and after this round, so its query cannot have regressed; it was re-run on stage anyway (0.48 s, rows identical to the H2 replay) |
+
+One suggestion not taken: pinning an exact order in the degenerate all-`rdf:object` case. That case exists to prove
+totality and determinism under the fallback; its exact order carries no claim worth freezing.
+
+### Correction to "Base change": the stack shipped mid-round
+
+The "Base change" note above is superseded by what the push revealed. While round 11 was running, both stack layers
+were squash-merged into `main` at 12:58 UTC: PR 4348 (DEV-7288) as `9a2efa885` and PR 4349 (DEV-7287) as
+`a523c827c`, and both branches were deleted. The force-push reported at 14:15 local was the last rebase before that
+merge, not a new base to build on.
+
+Consequence for round 11: its four commits do not belong to PR 4349 any more (that PR is `MERGED` and its head is
+`1ad31ba2e`, a pre-squash commit that is not an ancestor of `main`). They were replayed onto `origin/main` at
+`a523c827c` as `71b8cb7a8`, `91f234f38`, `cc0411e6f`, `a7241793f` on the local branch
+`round11-rdf-object-eligibility`; the replay is content-identical to the pre-merge tip (`git diff` empty) and the
+full `//modules/webapi:test`, `just test-gravsearch-prequery` and `just check` gates are green on top of `main`.
+
+Left for the session to decide: round 11 now needs its own follow-up PR off `main` (branch name and PR body are not
+the orchestrator's call). Also note that the fast-forward push in this round recreated the deleted remote branch
+`feature/dev-7287-gravsearch-prequery-emits-patterns-in-dependency-order-not` with the pre-squash history plus the
+round-11 commits; it has no PR and should be deleted once the follow-up branch is pushed.
+
+## Round 12: type check before a connected property path
+
+Base: `d5baae162` on `feature/dev-7287-rdf-object-waits-for-its-link-value` (draft PR 4354, off `main`).
+This round implements the second eligibility refinement the dev AFTER timing surfaced once the stack had
+merged.
+
+### The regression
+
+One standoff query got slower, not faster, after the stack landed (1.5 s -> 4.0 s on dev):
+
+```text
+?letter a beol:letter .
+?letter beol:hasText ?text .
+?text knora-api:textValueHasStandoff ?tag .
+?tag a standoff:StandoffItalicTag .
+?tag knora-api:standoffTagHasStartAncestor ?para .
+?para a standoff:StandoffParagraphTag
+```
+
+The emitted prequery (read off the `gravsearch.prequery` trace event) led with `?letter a beol:letter` (T4),
+then the `VALUES` + `?letter ?p ?text` hop, then `?text valueHasStandoff ?tag`, then the
+`standoffTagHasStartParent*` path, then the two type units. Cause: the connected step (`ruleA`) takes every
+connected non-type unit before any connected type unit, so the cheap `?tag a StandoffItalicTag` check landed
+*after* the ancestor path and Fuseki walked the ancestors of every standoff tag in every letter before
+filtering to italic tags.
+
+### The rule
+
+A property-path statement is not a candidate in the connected step while a candidate type unit whose subject
+variable is already bound exists; that type unit is emitted first. Rationale: per Fact 3 a `*`/`+` path fans
+out from every binding of its anchored end, while a type check on a bound subject costs one index lookup per
+binding and shrinks the binding set before the path runs.
+
+Deliberately narrow. It was **not** generalised to "type units before all connected non-type units" (that
+broader rule is unmeasured and would move many goldens); it fires only against property-path statements and
+only inside `ruleA`. A path whose bound end is an `IriRef` still leads its component as a T2 anchor (the
+list-node anchor shape, S4), because T2 selection happens before `ruleA` is ever reached. The T1 pre-emption,
+the unselective-technical ban and the round-11 `rdf:object` deferral are untouched.
+
+Implementation: two new `UnitKey` fields (`isPath`, `typeSubject`) and a `typeCheckPending` predicate that
+`ruleA` filters on. Totality is preserved for free: a type unit whose subject is bound is itself connected, so
+whenever the exclusion can empty `ruleA`, `ruleB` is non-empty. `isTypeUnit` was collapsed onto the new
+`typeUnitSubject` helper so the `rdf:type`-with-variable-subject test has a single source of truth.
+
+Spec: `PrequeryPatternOrderingSpec` gains the standoff essence (exact order, plus an assertion that the italic
+type unit sits at exactly `path index - 1`) and a permutation-invariance case for it; the fixture is listed in
+`allInputs`. The list-node shape guard the brief asked for is already pinned by the pre-existing test "order
+the list-node anchor shape with the bound-IRI path statement leading", which still passes byte-identically -
+no duplicate was added.
+
+### Golden audit (round 12)
+
+**No golden changed.** A `GOLDEN_REWRITE` run of both `GravsearchToPrequeryTransformerE2ESpec` and
+`GravsearchToCountPrequeryTransformerE2ESpec` left `git status` empty, and the clean rerun
+(`just test-gravsearch-prequery`) is green. In particular `standoffTagHasStartAncestor` did not move: its
+restricting type unit is a `VALUES`-backed T5 unit that already leads the block, so the path is never a
+`ruleA` candidate ahead of it. The five prod `<suffix>Shape` files and `reorder` are unchanged, as required.
+
+Consequence worth flagging: the rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden. No
+query in the golden corpus has the shape (a connected `*` path plus a type unit on its already-bound anchor
+variable). Adding a golden fixture for it would close that gap; that is a plan decision, not made here.
+
+### Stage measurement (round 12, 2026-09-18)
+
+Session numbers, 5 interleaved runs through dsp-cli against stage, 1344 rows in both layouts: shipped order
+3.71 s, type-check-first 1.20 s. Confirmed this round with 3 further interleaved pairs of the same two query
+texts, same harness:
+
+| layout | run 1 | run 2 | run 3 | rows |
+| --- | --- | --- | --- | --- |
+| `standoff-cur.rq` (shipped) | 3.50 s | 3.47 s | 3.45 s | 1344 |
+| `standoff-typefirst.rq` (new) | 1.03 s | 1.01 s | 1.03 s | 1344 |
+
+About 3.4x, identical row counts, and the ordering the pass now produces for that AST is exactly the
+`standoff-typefirst.rq` statement order (pinned as the unit case above). Query texts live in
+`~/Desktop/gravsearch-ordering-measurements/h2-replay/`; the raw CSV of this round's runs is session-local
+scratch and not durable.
+
+### Review of round 12
+
+`performance-reviewer` and `scala-zio-reviewer` on `d5baae162..HEAD`: no Critical findings, two Warnings (one
+raised by both reviewers) and three Suggestions. Each Warning went to `finding-verifier`.
+
+| Finding | Verdict | Action |
+| --- | --- | --- |
+| `typeCheckPending` does not exclude unselective-technical type units, so `?x a knora-base:Resource` with `?x` bound defers a connected path even though it restricts nothing - contradicting the rule's own "cheap *and selective*" rationale, and a behaviour flip versus before the rule | real | fixed: `typeCheckPending` now requires `!isUnselectiveTechnical`; new spec fixture `typeBeforeUnselectivePathInput` pins that the path is no longer deferred for it |
+| `typeCheckPending` is block-global, not scoped to the path's own variables, so an unrelated pending type check delays a path in another component; the prose allegedly promises per-anchor scoping | not real | the verifier quoted both the Scaladoc and `gravsearch.md`: each states the rule in exactly the block-global form the code implements. The effect is a one-step delay that the next `ruleB` pick immediately undoes. Left as is |
+
+Suggestions taken: `UnitKey.isType` was redundant with `typeSubject.isDefined` and was dropped (with
+`isTypeUnit`, now callerless), and the Scaladoc claim that an `IriRef`-anchored path "is unaffected" was
+narrowed to the case where such a path *leads its component* - `isPath` gates on `isPropertyPath`, not on
+tier, so the same statement can reach `ruleA` later. Both corrections were mirrored into `gravsearch.md`.
+
+Suggestion not taken: shrinking `UnitKey` further (it is 12 fields after the `isType` removal); every
+remaining field is documented and load-bearing, including the deliberate `isPath`/`pathRank` non-overlap.
+
+Re-verified after the fix: `GOLDEN_REWRITE` on both golden specs still produces **no** diff, the clean
+`just test-gravsearch-prequery` rerun is green, the full `bazel test //modules/webapi:test` is green,
+`just fmt` is a no-op and `just check` is green.
+
+### Deferral
+
+No golden file covers the type-before-path shape (a connected `*` path plus a selective type unit on its
+already-bound anchor); the rule is pinned only by `PrequeryPatternOrderingSpec`. Adding a Gravsearch fixture
+that produces this shape to `GravsearchToPrequeryTransformerE2ESpec` would close the gap. Left to the session
+as a plan decision.
