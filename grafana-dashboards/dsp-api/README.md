@@ -68,43 +68,48 @@ route.
 - `Smoothing window` — the `rate()` window (`[$smoothing]`) on **every** time-series panel. A larger
   window averages peaks down (legend **Max** drops, **Mean** stays). Stat tiles and tables use
   `$__range` instead. Keep it ≤ the dashboard time range.
-- `Percentile` — `p50` / `p90` / `p95` / `p99` (default `p95`), the value is the quantile applied as
-  `histogram_quantile($quantile, …)` in panels 21 and 22; titles show it via `${quantile:text}`.
-  Panels 1, 4 and 12 show fixed percentiles and ignore it.
+- `Statistic` — `avg` / `p50` / `p90` / `p95` / `p99` (default `p95`) for the two switchable panels,
+  11 (by route group) and 5 (by route); their titles show it via `${statistic:text}`. The value is the
+  quantile, and `avg` is encoded as `-1` (see *Query-shape rationale*). Panels 1, 4 and 12 always show
+  avg plus fixed percentiles and ignore it. Switch to `avg` for ranges before the buckets existed.
 
 ### Panels
 
-| Panel | Question | Source |
-| --- | --- | --- |
-| 1 Response time | avg, p50, p95, p99 of full-request duration over the range | `$__range` |
-| 2 Request rate | Requests/s | `$__rate_interval` |
-| 3 5xx error rate | Share of 5xx over the range | `$__range` |
-| 4 Response duration — global | avg, p50, p95, p99 over time: does the tail move with the mean? | `[$smoothing]` |
-| 11 Avg duration by route group | One line per route group; "reads slower" vs "searches slower" | `[$smoothing]` |
-| 21 Percentile by route group | Same groups at the selected percentile: all of it slower, or only its tail? | `[$smoothing]` |
-| 5 Avg duration by route | Mean duration per route over time (log2 axis) | `[$smoothing]` |
-| 22 Percentile by route | Per route at the selected percentile (log2 axis) | `[$smoothing]` |
-| 13 Server time per route | Stacked `rate(duration_sum)` per route — where the time goes | `[$smoothing]` |
-| 18 Requests per route | Stacked req/s per route — the denominator for 13 | `[$smoothing]` |
-| 19 Server time per route group | Stacked `rate(duration_sum)` per group | `[$smoothing]` |
-| 20 Requests per route group | Stacked req/s per group — the denominator for 19 | `[$smoothing]` |
-| 12 Routes ranked by total server time | Total time, avg, p50, p95, requests, 4xx, 5xx per route; path links to Tempo | `$__range` |
-| 14 5xx responses per route | When errors happened (approximate count) | `[$__interval]` |
-| 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency, Gravsearch vs other | `[$smoothing]` |
-| 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share | `[$smoothing]` |
-| 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
-| 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their project, the query | Tempo |
+Four rows, one per question. Only **Health** is open by default; a collapsed row runs no queries, so
+the dashboard loads with just the overview.
 
-The table lists panels in layout order (one flat grid, no rows). Server time is requests × duration:
-each server-time panel is followed by its requests panel so that load (server time rising with
-requests) can be told from slowdown (server time rising without them).
+| Row | Panel | Question | Source |
+| --- | --- | --- | --- |
+| Health | 1 Response time | avg, p50, p95, p99 of full-request duration over the range | `$__range` |
+| Health | 2 Request rate | Requests/s | `$__rate_interval` |
+| Health | 3 5xx error rate | Share of 5xx over the range | `$__range` |
+| Health | 4 Response duration — global | avg, p50, p95, p99 over time: does the tail move with the mean? | `[$smoothing]` |
+| Health | 11 Duration by route group | One line per group at the selected Statistic; "reads slower" vs "searches slower" | `[$smoothing]` |
+| Where the time goes | 12 Routes ranked by total server time | Total time, avg, p50, p95, requests, 4xx, 5xx per route; path links to Tempo | `$__range` |
+| Where the time goes | 19 Server time per route group | Stacked `rate(duration_sum)` per group | `[$smoothing]` |
+| Where the time goes | 20 Requests per route group | Stacked req/s per group — the denominator for 19 | `[$smoothing]` |
+| Where the time goes | 13 Server time per route | Stacked `rate(duration_sum)` per route | `[$smoothing]` |
+| Where the time goes | 18 Requests per route | Stacked req/s per route — the denominator for 13 | `[$smoothing]` |
+| Route detail | 5 Duration by route | Per route at the selected Statistic (log2 axis) | `[$smoothing]` |
+| Route detail | 14 5xx responses per route | When errors happened (approximate count) | `[$__interval]` |
+| Triplestore and Gravsearch | 15 Triplestore p50/p95/p99 by kind | Fuseki round-trip latency, Gravsearch vs other | `[$smoothing]` |
+| Triplestore and Gravsearch | 16 Share of triplestore round trips > 100 ms / > 1 s | Exact threshold share | `[$smoothing]` |
+| Triplestore and Gravsearch | 17 Triplestore round trips/s by query type | SPARQL throughput by form and flags | `[$smoothing]` |
+| Triplestore and Gravsearch | 7 Slowest Gravsearch queries (traces) | Individual slow gravsearch executions, their project, the query | Tempo |
 
-### Layout rules (keep these identical across panels 4, 11, 21, 5, 22, 13, 18, 19, 20)
+The table lists panels in layout order. Reading path: Health says *whether* something moved and in
+which route group; **Where the time goes** says whether it is load or slowdown (server time is
+requests × duration, so each server-time panel is followed by its requests panel: server time rising
+with requests is load, rising without them is slowdown); **Route detail** names the route; the last
+row says whether it is Fuseki and which query. Row membership is the design — a new panel goes into
+the row whose question it answers, not at the bottom.
 
-The nine stacked time-series panels are pixel-aligned so one x position is the same moment in all of
-them: same height (9), right-hand table legend with fixed `width: 415`, y-axis `axisWidth: 90`, and
+### Layout rules (keep these identical across panels 4, 11, 5, 13, 18, 19, 20)
+
+The seven full-width time-series panels are pixel-aligned so one x position is the same moment in all of
+them, across rows: same height (9), right-hand table legend with fixed `width: 415`, y-axis `axisWidth: 90`, and
 **no axis label** (a rotated label is drawn outside `axisWidth` and shifts the plot; put the unit in
-the title). Panels keyed by route, route group or query type (5, 11, 13, 14, 17, 18, 19, 20, 21, 22) use
+the title). Panels keyed by route, route group or query type (5, 11, 13, 14, 17, 18, 19, 20) use
 `color.mode: palette-classic-by-name`, so the same name has the same colour in every panel (with the
 default palette colours reshuffle per panel).
 
@@ -114,7 +119,7 @@ The "dsp-api restart" annotation (purple) fires when the API container of a sele
 (re)started. Deploys do this, but so do crashes, host reboots and manual restarts; on prod about 5 of
 8 markers per month coincide with a deploy. Query:
 `count(min by (stack) (process_cpu_seconds_total{…}) < min by (stack) (… offset $__interval))`, min
-step `2m`, shown on panels 4, 5, 11, 13–22. Three load-bearing choices:
+step `2m`, shown on panels 4, 5, 11, 13–20. Three load-bearing choices:
 
 - **Aggregate by `stack` first.** Every restart gives the container a new `container_id`, i.e. a new
   series, so a plain `resets()` never fires.
@@ -149,16 +154,25 @@ step `2m`, shown on panels 4, 5, 11, 13–22. Three load-bearing choices:
   `X - (X offset … or X * 0)` re-counts the whole counter on each relabel. Do not use `[$smoothing]`
   here: overlapping windows count the same error several times. The `and on (path) (… [$__range] > 0)`
   clause keeps only routes that had a 5xx somewhere in the range.
-- **Panels 5, 11, 21 and 22 use a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route or
+- **Panels 5 and 11 use a log2 y-axis** (`scaleDistribution: log`). A single slow-but-rare route or
   group (`/v3/export/resources`, multiple seconds) otherwise compresses every other line into the
   baseline. `topk()` is not a substitute — in a range graph it re-picks members every step and flickers.
-- **Percentiles sit next to the averages, they do not replace them** (panels 1, 4, 12, and 21/22 beside
-  11/5). The average has full history and is what server time (13, 19) is built from; the percentiles
-  exist only since the buckets were scraped (see *Metrics and their limits*). Aggregate buckets with
+- **Panels 5 and 11 switch between avg and a percentile with two gated queries per series.** Each line
+  has an avg query ending in `and on () (vector($statistic) < 0)` and a percentile query ending in
+  `and on () (vector($statistic) >= 0)`, both with the same legend, so exactly one returns data and the
+  colour (by name) stays the same. `avg` is the value `-1`. The percentile's argument is
+  `scalar(clamp_min(vector($statistic), 0))`: a bare `histogram_quantile(-1, …)` in avg mode is gated
+  away correctly but still raises a PromQL warning, which Grafana shows on the panel. Grafana has no
+  conditional queries, so this is the only way to have one panel per question instead of an avg and a
+  percentile copy of each. Do not drop either query, the gates or the clamp.
+- **Percentiles complement the averages, they do not replace them** (panels 1, 4 and 12 show both; 5 and
+  11 switch). The average has full history and is what server time (13, 19) is built from; the
+  percentiles exist only since the buckets were scraped (see *Metrics and their limits*). Aggregate buckets with
   `sum by (le, …)` *before* `histogram_quantile()` — a quantile of per-series quantiles is meaningless, and
   every restart mints new series (new `container_id`), so the `sum` is also what stitches them together.
-  Percentiles per route (22, table p95) are noisy for rare routes: with a handful of requests per window
-  p99 is simply the slowest request.
+  Percentiles per route (5, table p95) are noisy for rare routes: with a handful of requests per window
+  p99 is simply the slowest request. A route-group percentile (11) pools the group's routes, so the
+  busiest one sets it (Lists is mostly `/v2/node`); when a group moves, look for the route in panel 5.
 - **Panel 7 (Gravsearch traces)** queries Tempo (`grafanacloud-dasch-traces`) for `gravsearch` spans
   over the `Gravsearch duration ≥` threshold, `tableType: "spans"`, scoped by `span.environment` /
   `span.stack` (the span carries both). The verbatim query is **not** a column — it lives on the span's
