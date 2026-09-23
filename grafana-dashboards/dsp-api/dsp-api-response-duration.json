@@ -111,7 +111,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Response time (selected range): avg, p50 / p95 / p99",
+          "title": "Response time (range)",
           "description": "Full-request duration (phase=body) over the dashboard range: avg = rate(sum)/rate(count), percentiles = histogram_quantile over rate(_bucket[$__range]). Scoped by the Route group, Method and Exclude routes filters. Requests that matched no endpoint (CORS OPTIONS preflights, HEAD probes; empty path label) are excluded. Percentiles come from tapir_request_duration_seconds_bucket, scraped since ops-deploy#1434 (stage from 2026-09-21, prod from 2026-09-23 ~06:00 UTC); earlier ranges show no percentile data. Buckets: 5, 10, 25, 50, 75, 100, 250, 500, 750 ms, 1, 2.5, 5, 7.5, 10, 15, 30, 45, 60 s; histogram_quantile() interpolates linearly inside a bucket and caps at 60 s.",
           "links": [],
           "data": {
