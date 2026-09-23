@@ -26,19 +26,20 @@ route.
 ### Metrics and their limits
 
 - **Request durations are averages**, `rate(sum)/rate(count)` on `phase="body"` (full request). The
-  metric arrives with **no histogram buckets**: dsp-api emits them, but the ops-deploy scrape filter
-  (`grafana.metrics.filter` in `roles/dsp-deploy/templates/docker-compose-svc.yml.j2`) whitelists only
-  `_sum`/`_count`. [ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434) enables
-  `_bucket` (~5,600 extra series); once deployed, the duration panels can move to `histogram_quantile()`.
-  The `phase="headers"` series carry no information (`headers`→`body` differs by < 0.1 ms per route).
-- **`fuseki_request_duration_bucket` is the only real histogram**: dsp-api's own timing of SPARQL round
+  `_bucket` series are scraped since [ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434)
+  (prod since 2026-09-23), so the duration panels can move to `histogram_quantile()`.
+  dsp-api emits only `phase="body"`: the `phase="headers"` series carried no information
+  (`headers`→`body` differed by < 0.1 ms per route) and doubled the histogram's series count.
+  Buckets are `5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s, 30s, 60s` (+Inf), and
+  `/health` and `/version` are not recorded at all; the `Exclude routes` default and the `Monitoring`
+  route group only still match data from before that change (all in `RequestMetrics.scala`).
+- **`fuseki_request_duration_bucket` is the second histogram**: dsp-api's own timing of SPARQL round
   trips, labels `isGravsearch` / `isSearch` / `isMaintenance` / `type`, unit `millis`, **decade buckets**
   (10 ms, 100 ms, 1 s, 10 s …). Quantiles from it are coarse within-decade interpolations; the
   threshold shares (panel 16) are exact.
 - **`path=""` is unmatched traffic**: CORS `OPTIONS` preflights and `HEAD` probes that hit no endpoint,
-  ~11k/day on prod. Every panel excludes it with `path!=""`. These requests also leak
-  `tapir_request_active` (incremented, never decremented) — do not build an in-flight panel on that
-  gauge until dsp-api fixes it.
+  ~11k/day on prod. Every panel excludes it with `path!=""`. These requests leaked the
+  `tapir_request_active` gauge (incremented, never decremented), so dsp-api no longer emits it.
 - **No version metric.** `target_info` for this service has no `service_version` and there is no
   build-info gauge, so deploys can only be inferred from restarts (see the marker below). A
   `dsp_api_build_info{version=…}` gauge in dsp-api (plus the scrape whitelist) would give real deploy
