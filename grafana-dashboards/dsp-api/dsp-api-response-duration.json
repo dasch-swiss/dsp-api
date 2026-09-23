@@ -3467,8 +3467,8 @@
           "label": "Statistic",
           "query": "avg : -1, p50 : 0.5, p90 : 0.9, p95 : 0.95, p99 : 0.99",
           "current": {
-            "text": "p95",
-            "value": "0.95"
+            "text": "avg",
+            "value": "-1"
           },
           "allowCustomValue": false,
           "hide": "dontHide",

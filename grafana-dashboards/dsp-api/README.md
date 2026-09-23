@@ -68,10 +68,13 @@ route.
 - `Smoothing window` — the `rate()` window (`[$smoothing]`) on **every** time-series panel. A larger
   window averages peaks down (legend **Max** drops, **Mean** stays). Stat tiles and tables use
   `$__range` instead. Keep it ≤ the dashboard time range.
-- `Statistic` — `avg` / `p50` / `p90` / `p95` / `p99` (default `p95`) for the two switchable panels,
+- `Statistic` — `avg` / `p50` / `p90` / `p95` / `p99` (default `avg`) for the two switchable panels,
   11 (by route group) and 5 (by route); their titles show it via `${statistic:text}`. The value is the
   quantile, and `avg` is encoded as `-1` (see *Query-shape rationale*). Panels 1, 4 and 12 always show
-  avg plus fixed percentiles and ignore it. Switch to `avg` for ranges before the buckets existed.
+  avg plus fixed percentiles and ignore it. **The default is `avg` on purpose:** the main use of panel 11
+  is comparing before and after a deploy, and only the average has history on both sides of every deploy
+  (percentiles exist only since the buckets were scraped). Switch to a percentile to see whether a
+  group's tail moved.
 
 ### Panels
 
