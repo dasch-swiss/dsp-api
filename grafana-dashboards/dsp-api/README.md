@@ -30,9 +30,13 @@ route.
   `tapir_request_duration_seconds_bucket`, which the ops-deploy scrape filter dropped until
   [ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434): scraped on stage from
   2026-09-21 and on prod from 2026-09-23 ~06:00 UTC, so **percentile panels are empty before that**.
-  Buckets: 5, 10, 25, 50, 75, 100, 250, 500, 750 ms, 1, 2.5, 5, 7.5, 10, 15, 30, 45, 60 s; quantiles
-  interpolate linearly inside a bucket and cap at 60 s. The `phase="headers"` series carry no
-  information (`headers`→`body` differs by < 0.1 ms per route).
+  Buckets are `5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s, 30s, 60s` (+Inf); before
+  [#4356](https://github.com/dasch-swiss/dsp-api/pull/4356) they also had 75 ms, 750 ms, 7.5 s, 15 s and 45 s.
+  Quantiles interpolate linearly inside a bucket and cap at 60 s.
+- dsp-api emits only `phase="body"`: the `phase="headers"` series carried no information
+  (`headers`→`body` differed by < 0.1 ms per route) and doubled the histogram's series count.
+  `/health` and `/version` are not recorded at all; the `Exclude routes` default and the `Monitoring`
+  route group only still match data from before that change (all in `RequestMetrics.scala`).
 - **Latency includes 4xx.** Duration series carry a `status` class label (`2xx`/`4xx`/`5xx`) and no panel
   filters on it. A burst of fast rejections (seen on prod 2026-09-23: ~1,170 `4xx` on
   `/v2/searchextended*` in 5 minutes) pulls avg and p50 down without anything getting faster; when
@@ -43,9 +47,8 @@ route.
   (panel 16) are exact. It has full history, so it is the percentile baseline for anything before the
   tapir buckets existed.
 - **`path=""` is unmatched traffic**: CORS `OPTIONS` preflights and `HEAD` probes that hit no endpoint,
-  ~11k/day on prod. Every panel excludes it with `path!=""`. These requests also leak
-  `tapir_request_active` (incremented, never decremented) — do not build an in-flight panel on that
-  gauge until dsp-api fixes it.
+  ~11k/day on prod. Every panel excludes it with `path!=""`. These requests leaked the
+  `tapir_request_active` gauge (incremented, never decremented), so dsp-api no longer emits it.
 - **No version metric.** `target_info` for this service has no `service_version` and there is no
   build-info gauge, so deploys can only be inferred from restarts (see the marker below). A
   `dsp_api_build_info{version=…}` gauge in dsp-api (plus the scrape whitelist) would give real deploy
