@@ -7,7 +7,7 @@ DELETE { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate ?reso
 INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
 <http://rdfh.ch/0001/thing/values/value> a knora-base:IntervalValue ;
     knora-base:isDeleted false ;
-    knora-base:valueHasString "50.0 - 50.0" ;
+    knora-base:valueHasString "50 - 50" ;
     knora-base:valueHasUUID "0000000000000000000000" .
 <http://rdfh.ch/0001/thing/values/value> knora-base:valueHasIntervalStart "50"^^xsd:decimal ;
     knora-base:valueHasIntervalEnd "50"^^xsd:decimal .
