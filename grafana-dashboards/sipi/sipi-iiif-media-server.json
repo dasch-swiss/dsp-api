@@ -620,8 +620,8 @@
         "kind": "Panel",
         "spec": {
           "id": 17,
-          "title": "Auth route avg latency (/admin/files)",
-          "description": "Average latency of the dsp-api permission check (rate of sum / rate of count; the tapir metric has no histogram buckets, so no percentiles). Adds directly to every IIIF request.",
+          "title": "Auth route latency (/admin/files): avg, p50 / p95 / p99",
+          "description": "Latency of the dsp-api permission check SIPI makes before serving a file (phase=body, full request); adds directly to every IIIF request. avg = rate(sum)/rate(count); percentiles = histogram_quantile over the tapir_request_duration_seconds_bucket series, which are scraped since ops-deploy#1434 (prod from 2026-09-23 ~06:00 UTC), so older ranges show only the average. Lowest bucket is 5 ms: a p50 below it is an interpolation, read it as \"< 5 ms\".",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -640,9 +640,75 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": {
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{path=\"/admin/files/{projectShortcode}/{filename}\",phase=\"body\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])) / sum(rate(tapir_request_duration_seconds_count{path=\"/admin/files/{projectShortcode}/{filename}\",phase=\"body\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval]))",
                         "instant": false,
                         "legendFormat": "avg latency",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.5, sum by (le) (rate(tapir_request_duration_seconds_bucket{path=\"/admin/files/{projectShortcode}/{filename}\",phase=\"body\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p50",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by (le) (rate(tapir_request_duration_seconds_bucket{path=\"/admin/files/{projectShortcode}/{filename}\",phase=\"body\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p95",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.99, sum by (le) (rate(tapir_request_duration_seconds_bucket{path=\"/admin/files/{projectShortcode}/{filename}\",phase=\"body\",instance=~\"dasch-vre-$environment-01\"}[$__rate_interval])))",
+                        "instant": false,
+                        "legendFormat": "p99",
                         "queryType": "range",
                         "range": true
                       }
