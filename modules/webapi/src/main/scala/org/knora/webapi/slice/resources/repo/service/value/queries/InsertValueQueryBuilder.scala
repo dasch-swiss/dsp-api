@@ -300,10 +300,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       valueIri.has(KB.valueHasLanguage, literalOf(lang))
     }
 
-    // Persist knora-base:hasTextValueType on every text value, mirroring the v2 resource-create path
-    // (ResourcesRepoLive.buildFormattedTextValuePatterns) and the bulk-import path
-    // (OntologyTransformer.addTextValueType). The IRI is derived from the value's own TextValueType tag, which is set
-    // when the payload is parsed.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
     val textValueTypePattern = List(valueIri.has(KB.hasTextValueType, textValueTypeIri(textValue.textValueType)))
 
     if (textValue.standoff.nonEmpty) {
@@ -323,17 +320,11 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
     }
   }
 
-  /** The knora-base:hasTextValueType IRI for a text value, mirroring ResourcesRepoLive.buildFormattedTextValuePatterns. */
+  // The knora-base:hasTextValueType IRI for a text value, via the shared TextValueType.hasTextValueTypeIri.
+  // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType, so the shared mapping's loud
+  // failure on that case guards an invariant rather than a reachable path.
   private def textValueTypeIri(textValueType: TextValueType): rdf.Iri =
-    textValueType match {
-      case TextValueType.UnformattedText        => KB.UnformattedText
-      case TextValueType.FormattedText          => KB.FormattedText
-      case TextValueType.CustomFormattedText(_) => KB.CustomFormattedText
-      // TextValueContentV2.getTextValue never parses a payload to UndefinedTextType. Fail loud if that invariant breaks,
-      // rather than silently omitting knora-base:hasTextValueType and diverging from the other two write paths.
-      case TextValueType.UndefinedTextType =>
-        throw new IllegalArgumentException(s"Cannot persist knora-base:hasTextValueType for $textValueType")
-    }
+    iri(TextValueType.hasTextValueTypeIri(textValueType))
 
   private def standoffAttributeToRdfValue(
     attr: org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagAttributeV2,
