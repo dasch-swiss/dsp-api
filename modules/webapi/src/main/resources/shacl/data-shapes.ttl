@@ -827,11 +827,13 @@ knora-base:AttachedToUserNotBuiltIn-Shape
   sh:targetSubjectsOf knora-base:attachedToUser ;
   sh:description "Rejects data that attaches a resource or value to the built-in SystemUser or AnonymousUser. Rebind such data to project users before migration. System standoff-link LinkValues are exempt, because the import transformer and the v2 create path attach them to SystemUser by design. The exemption keys on a LinkValue that carries rdf:predicate knora-base:hasStandoffLinkTo." ;
   sh:or (
-    # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
+    # The exempted node must be a LinkValue that carries the standoff predicate and attaches to SystemUser.
+    # A LinkValue on any other built-in user (for example AnonymousUser) is not exempt.
     # The same guard is duplicated in bulk-import-shapes.ttl Value-Shape — keep both in sync.
     [
       sh:class knora-base:LinkValue ;
       sh:property [ sh:path rdf:predicate ; sh:hasValue knora-base:hasStandoffLinkTo ] ;
+      sh:property [ sh:path knora-base:attachedToUser ; sh:hasValue knora-admin:SystemUser ] ;
     ]
     [
       sh:path knora-base:attachedToUser ;
