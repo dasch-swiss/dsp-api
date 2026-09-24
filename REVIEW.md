@@ -55,6 +55,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] New overridable project-wide defaults are named `hasDefault*` (payload key `default*`) — see `docs/development/dsp-api-conventions.md` § Ontology Conventions
 - [ ] Stored values that fail validation on read are skipped **with a logged warning** — not a 500, not a silent drop
 - [ ] Built-in ontology changes follow the version-bump rules (`docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies); no duplicate bump for a change a stacked sibling PR already bumps for; generated ontology fixtures regenerated via `OntologyFormatsE2ESpec`, not hand-edited
+- [ ] Changes to how `knora-base:hasTextValueType` or a scalar literal datatype is written keep the three write paths in agreement — v2 create, v2 add-value, v3 bulk import. See `docs/development/dsp-api-text-value-type-parity.md`
 
 ### Observability
 

@@ -1324,7 +1324,7 @@ case class DecimalValueContentV2(
     OntologyConstants.KnoraBase.DecimalValue.toSmartIri.toOntologySchema(ontologySchema)
   }
 
-  override lazy val valueHasString: String = valueHasDecimal.toString
+  override lazy val valueHasString: String = ValuesValidator.canonicalDecimal(valueHasDecimal)
 
   override def toOntologySchema(targetSchema: OntologySchema): DecimalValueContentV2 =
     copy(ontologySchema = targetSchema)
@@ -1508,7 +1508,8 @@ case class IntervalValueContentV2(
     OntologyConstants.KnoraBase.IntervalValue.toSmartIri.toOntologySchema(ontologySchema)
   }
 
-  override lazy val valueHasString: String = s"$valueHasIntervalStart - $valueHasIntervalEnd"
+  override lazy val valueHasString: String =
+    s"${ValuesValidator.canonicalDecimal(valueHasIntervalStart)} - ${ValuesValidator.canonicalDecimal(valueHasIntervalEnd)}"
 
   override def toOntologySchema(targetSchema: OntologySchema): IntervalValueContentV2 =
     copy(ontologySchema = targetSchema)

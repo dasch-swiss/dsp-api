@@ -7,9 +7,9 @@ DELETE { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate ?reso
 INSERT { GRAPH ?dataNamedGraph { ?resource knora-base:lastModificationDate "2023-08-01T10:30:00Z"^^xsd:dateTime .
 <http://rdfh.ch/0001/thing/values/value> a knora-base:DecimalValue ;
     knora-base:isDeleted false ;
-    knora-base:valueHasString "0.0" ;
+    knora-base:valueHasString "0" ;
     knora-base:valueHasUUID "0000000000000000000000" .
-<http://rdfh.ch/0001/thing/values/value> knora-base:valueHasDecimal "0.0"^^xsd:decimal .
+<http://rdfh.ch/0001/thing/values/value> knora-base:valueHasDecimal "0"^^xsd:decimal .
 <http://rdfh.ch/0001/thing/values/value> knora-base:attachedToUser <http://0.0.0.0:3333/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:valueHasOrder ?nextOrder ;
