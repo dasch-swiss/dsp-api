@@ -80,6 +80,7 @@ knora-base:TextValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasTextValueType ;
+    sh:description "The text type of a stored value: UnformattedText (plain), FormattedText (DSP standard markup), CustomFormattedText (project-defined markup), or UndefinedTextType (data that does not match its ontology definition)." ;
     sh:maxCount 1 ;
     sh:in ( knora-base:UnformattedText
             knora-base:FormattedText
