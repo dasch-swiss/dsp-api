@@ -10,11 +10,10 @@
 @prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
-# Validates every instance of a knora-base:Resource subclass.
-# With RDFS inference, sh:targetClass matches instances of all subclasses.
 knora-base:Resource-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Resource ;
+  sh:description "Validates every knora-base:Resource subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the base metadata that every resource shares, and the standoff-link reification pair." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -42,7 +41,7 @@ knora-base:Resource-Shape
     a sh:PropertyShape ;
     sh:path knora-base:attachedToProject ;
     sh:hasValue <urn:placeholder:projectIri> ;
-    sh:maxCount 1 ;
+    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:message "Resource instance must have exactly one knora-base:attachedToProject equal to <urn:placeholder:projectIri>" ;
   ] ;
@@ -83,6 +82,7 @@ knora-base:Resource-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasStandoffLinkTo ;
+    sh:description "A standoff link inside formatted text points from this resource to a target resource through knora-base:hasStandoffLinkTo. The matching knora-base:hasStandoffLinkToValue reifies that link. Both must appear together, so the link and its reified statement never fall out of sync." ;
     dash:coExistsWith knora-base:hasStandoffLinkToValue ;
     sh:message "A knora-base:hasStandoffLinkTo always requires a knora-base:hasStandoffLinkToValue"
   ] .
@@ -345,11 +345,10 @@ knora-base:TextRepresentation-Shape
     sh:message "TextRepresentation instance must have one knora-base:hasTextFileValue of type knora-base:TextFileValue"
   ] .
 
-# Validates every instance of a knora-base:Value subclass.
-# With RDFS inference, sh:targetClass matches instances of all subclasses.
 knora-base:Value-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
+  sh:description "Validates every knora-base:Value subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the metadata that every value shares." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueCreationDate ;
@@ -440,9 +439,11 @@ knora-base:ColorValue-Shape
 knora-base:DateValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:DateValue ;
+  sh:description "Validates a date value. dsp-api stores a date as a Julian Day Number range plus a calendar and a start and end precision, not as a formatted string." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasCalendar ;
+    sh:description "The calendar used to read the date: GREGORIAN, JULIAN, or ISLAMIC. It fixes how the Julian Day Numbers map to a human date." ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
@@ -451,6 +452,7 @@ knora-base:DateValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasStartPrecision ;
+    sh:description "How exact the start of the date is: DAY, MONTH, or YEAR. A coarse precision marks the day or month as unknown." ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
@@ -459,6 +461,7 @@ knora-base:DateValue-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueHasEndPrecision ;
+    sh:description "How exact the end of the date is: DAY, MONTH, or YEAR. A coarse precision marks the day or month as unknown." ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
@@ -483,6 +486,7 @@ knora-base:DateValue-Shape
   sh:property [
    a sh:PropertyShape ;
    sh:path knora-base:valueHasStartJDN ;
+   sh:description "A date is a range of Julian Day Numbers. The start day must not fall after the end day." ;
    sh:lessThanOrEquals knora-base:valueHasEndJDN ;
    sh:message "DateValue knora-base:valueHasStartJDN must be <= knora-base:valueHasEndJDN"
   ] .
@@ -558,6 +562,7 @@ knora-base:IntValue-Shape
 knora-base:LinkValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:LinkValue ;
+  sh:description "A LinkValue is a reification node for a direct link between two resources (an rdf:Statement). It records the source resource (rdf:subject), the link property (rdf:predicate), and the target resource (rdf:object). The reference count tracks how many identical links exist, so a link can carry its own permissions and history." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdf:subject ;
@@ -806,13 +811,10 @@ knora-base:TextFileValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:TextFileValue .
 
-# Validates that every knora-base:attachedToUser value (on resources and values)
-# references a node of type knora-admin:User. Since admin.nq is loaded into the
-# unified model, the knora-admin:User nodes are present and SHACL with RDFS
-# inference can verify this.
 knora-base:AttachedToUserExists-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
+  sh:description "Checks that every knora-base:attachedToUser value points to a real knora-admin:User. sh:targetSubjectsOf selects every node that has an owner. The admin data loads into the same model, so RDFS inference can confirm the user exists." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:attachedToUser ;
@@ -820,15 +822,10 @@ knora-base:AttachedToUserExists-Shape
     sh:message "knora-base:attachedToUser must reference a knora-admin:User instance" ;
   ] .
 
-# Rejects imports whose data graph attaches resources or values to the built-in
-# SystemUser or AnonymousUser. These IRIs exist on every target instance and
-# pre-migration cleanup is required to rebind such data to project-scoped users.
-# System standoff-link LinkValues are exempt: both the data-import transformer
-# (OntologyTransformer.emitStandoffLinkValue) and the v2 create path attach them to SystemUser by
-# design. They are identified by rdf:predicate knora-base:hasStandoffLinkTo.
 knora-base:AttachedToUserNotBuiltIn-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
+  sh:description "Rejects data that attaches a resource or value to the built-in SystemUser or AnonymousUser. Rebind such data to project users before migration. System standoff-link LinkValues are exempt, because the import transformer and the v2 create path attach them to SystemUser by design. The exemption keys on a LinkValue that carries rdf:predicate knora-base:hasStandoffLinkTo." ;
   sh:or (
     # The exempted node must be a LinkValue that carries the standoff predicate and attaches to SystemUser.
     # A LinkValue on any other built-in user (for example AnonymousUser) is not exempt.
