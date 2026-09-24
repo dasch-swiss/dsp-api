@@ -59,7 +59,6 @@
     "org.ehcache:ehcache": -2082176898,
     "org.flywaydb:flyway-core": -2045269608,
     "org.glassfish:jakarta.json": 1056313227,
-    "org.scala-graph:graph-core_3": 599998029,
     "org.scala-lang.modules:scala-xml_3": -1340734140,
     "org.scala-lang:scala-library": 1230160761,
     "org.scala-lang:scala3-library_3": 1771369610,
@@ -599,8 +598,6 @@
     "org.rnorth.duct-tape:duct-tape:jar:sources": -1798015648,
     "org.roaringbitmap:RoaringBitmap": -193479411,
     "org.roaringbitmap:RoaringBitmap:jar:sources": 956527586,
-    "org.scala-graph:graph-core_3": -2098830282,
-    "org.scala-graph:graph-core_3:jar:sources": 847535680,
     "org.scala-lang.modules:scala-asm": -679780990,
     "org.scala-lang.modules:scala-asm:jar:sources": -1053518001,
     "org.scala-lang.modules:scala-collection-compat_3": -1493780292,
@@ -613,12 +610,8 @@
     "org.scala-lang:scala3-interfaces:jar:sources": 109369527,
     "org.scala-sbt:compiler-interface": -680869281,
     "org.scala-sbt:compiler-interface:jar:sources": 1557741819,
-    "org.scala-sbt:test-interface": -896079610,
-    "org.scala-sbt:test-interface:jar:sources": -427347570,
     "org.scala-sbt:util-interface": 106470229,
     "org.scala-sbt:util-interface:jar:sources": 533924268,
-    "org.scalacheck:scalacheck_3": 1013984743,
-    "org.scalacheck:scalacheck_3:jar:sources": -1474185735,
     "org.slf4j:jcl-over-slf4j": 1113513525,
     "org.slf4j:jcl-over-slf4j:jar:sources": 494484499,
     "org.slf4j:slf4j-api": 500377983,
@@ -2484,13 +2477,6 @@
       },
       "version": "1.6.15"
     },
-    "org.scala-graph:graph-core_3": {
-      "shasums": {
-        "jar": "889a4d1f1829efc34699dac0ab179718471ed693bb515f905ba8c61151d8ff31",
-        "sources": "d836167f990f2f8c585a05e24e5e925c570b92adcfde021d6880c8c1772b5b27"
-      },
-      "version": "2.0.2"
-    },
     "org.scala-lang.modules:scala-asm": {
       "shasums": {
         "jar": "fa582f7352f5ee5c244d7fe93c2a1d95dada2d281e1af9a535f0b5153c75088c",
@@ -2533,26 +2519,12 @@
       },
       "version": "1.3.5"
     },
-    "org.scala-sbt:test-interface": {
-      "shasums": {
-        "jar": "15f70b38bb95f3002fec9aea54030f19bb4ecfbad64c67424b5e5fea09cd749e",
-        "sources": "c314491c9df4f0bd9dd125ef1d51228d70bd466ee57848df1cd1b96aea18a5ad"
-      },
-      "version": "1.0"
-    },
     "org.scala-sbt:util-interface": {
       "shasums": {
         "jar": "89028234b4621ac92761676a00e2e47598fcf5232a9bb994a7ed6dee94eb5aa2",
         "sources": "469b23bde6234973f9b0e8afcf2e4ef0a7747f11000235f50038cab1cbe0ed02"
       },
       "version": "1.3.0"
-    },
-    "org.scalacheck:scalacheck_3": {
-      "shasums": {
-        "jar": "ee357875d395b3731e82a515efdef051ba3f898bb9081f3c4635da9fe235fcc8",
-        "sources": "bdee99fb73133bddde10549db983130b46ba6678bfd8972bcd562aa4b5b11d1b"
-      },
-      "version": "1.18.1"
     },
     "org.slf4j:jcl-over-slf4j": {
       "shasums": {
@@ -3607,9 +3579,6 @@
     "org.rnorth.duct-tape:duct-tape": [
       "org.jetbrains:annotations"
     ],
-    "org.scala-graph:graph-core_3": [
-      "org.scalacheck:scalacheck_3"
-    ],
     "org.scala-lang:scala3-compiler_3": [
       "org.jline:jline-reader",
       "org.jline:jline-terminal",
@@ -3621,9 +3590,6 @@
     "org.scala-sbt:compiler-interface": [
       "com.google.protobuf:protobuf-java",
       "org.scala-sbt:util-interface"
-    ],
-    "org.scalacheck:scalacheck_3": [
-      "org.scala-sbt:test-interface"
     ],
     "org.slf4j:jcl-over-slf4j": [
       "org.slf4j:slf4j-api"
@@ -7091,26 +7057,6 @@
       "org.roaringbitmap.insights",
       "org.roaringbitmap.longlong"
     ],
-    "org.scala-graph:graph-core_3": [
-      "scala.collection",
-      "scala.collection.mutable",
-      "scalax.collection",
-      "scalax.collection.config",
-      "scalax.collection.edges",
-      "scalax.collection.edges.labeled",
-      "scalax.collection.edges.multilabeled",
-      "scalax.collection.generator",
-      "scalax.collection.generator.parameters",
-      "scalax.collection.generic",
-      "scalax.collection.hyperedges",
-      "scalax.collection.hyperedges.labeled",
-      "scalax.collection.hyperedges.multilabeled",
-      "scalax.collection.hyperedges.ordered",
-      "scalax.collection.hyperedges.ordered.labeled",
-      "scalax.collection.hyperedges.ordered.multilabeled",
-      "scalax.collection.immutable",
-      "scalax.collection.mutable"
-    ],
     "org.scala-lang.modules:scala-asm": [
       "scala.tools.asm",
       "scala.tools.asm.commons",
@@ -7191,19 +7137,8 @@
       "xsbti.compile",
       "xsbti.compile.analysis"
     ],
-    "org.scala-sbt:test-interface": [
-      "org.scalatools.testing",
-      "sbt.testing"
-    ],
     "org.scala-sbt:util-interface": [
       "xsbti"
-    ],
-    "org.scalacheck:scalacheck_3": [
-      "org.scalacheck",
-      "org.scalacheck.commands",
-      "org.scalacheck.rng",
-      "org.scalacheck.time",
-      "org.scalacheck.util"
     ],
     "org.slf4j:jcl-over-slf4j": [
       "org.apache.commons.logging",
@@ -8459,8 +8394,6 @@
       "org.rnorth.duct-tape:duct-tape:jar:sources",
       "org.roaringbitmap:RoaringBitmap",
       "org.roaringbitmap:RoaringBitmap:jar:sources",
-      "org.scala-graph:graph-core_3",
-      "org.scala-graph:graph-core_3:jar:sources",
       "org.scala-lang.modules:scala-asm",
       "org.scala-lang.modules:scala-asm:jar:sources",
       "org.scala-lang.modules:scala-collection-compat_3",
@@ -8473,12 +8406,8 @@
       "org.scala-lang:scala3-interfaces:jar:sources",
       "org.scala-sbt:compiler-interface",
       "org.scala-sbt:compiler-interface:jar:sources",
-      "org.scala-sbt:test-interface",
-      "org.scala-sbt:test-interface:jar:sources",
       "org.scala-sbt:util-interface",
       "org.scala-sbt:util-interface:jar:sources",
-      "org.scalacheck:scalacheck_3",
-      "org.scalacheck:scalacheck_3:jar:sources",
       "org.slf4j:jcl-over-slf4j",
       "org.slf4j:jcl-over-slf4j:jar:sources",
       "org.slf4j:slf4j-api",

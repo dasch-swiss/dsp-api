@@ -1,0 +1,32 @@
+SELECT DISTINCT ?document
+WHERE {
+VALUES ?document__resTypes__63704284 { <http://www.knora.org/ontology/0801/beol#basicLetter> <http://www.knora.org/ontology/0801/beol#letter> <http://www.knora.org/ontology/0801/beol#manuscript> <http://www.knora.org/ontology/0801/beol#writtenSource> }
+?document <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?document__resTypes__63704284 .
+OPTIONAL {
+?familyName <http://jena.apache.org/text#query> "Bernoulli"^^<http://www.w3.org/2001/XMLSchema#string> .
+?document <http://www.knora.org/ontology/0801/beol#hasRecipient> ?recipient .
+?recipient <http://www.knora.org/ontology/0801/beol#hasFamilyName> ?familyName .
+?document <http://www.knora.org/ontology/0801/beol#hasRecipientValue> ?document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue .
+?document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?recipient .
+?document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+FILTER NOT EXISTS {
+ ?document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?recipient <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?familyName <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+FILTER NOT EXISTS {
+ ?document <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?document
+ORDER BY ASC(?document)
+LIMIT 25

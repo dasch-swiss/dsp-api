@@ -79,10 +79,12 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
 ## Non-SIPI metrics on this dashboard
 
 - **dsp-api auth route** (`tapir_request_duration_seconds_*`, service DSP_svc_api): SIPI calls
-  `/admin/files/{projectShortcode}/{filename}` for a permission check on every IIIF request. This
-  metric arrives with **no `_bucket`** (only `count`/`sum`) → average latency only, no percentiles.
-  The app emits the buckets; the ops-deploy scrape filter drops them
-  ([ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434) enables them). It has no
+  `/admin/files/{projectShortcode}/{filename}` for a permission check on every IIIF request. Its
+  `_bucket` series are scraped since [ops-deploy#1434](https://github.com/dasch-swiss/ops-deploy/pull/1434)
+  (prod from 2026-09-23), so the panel shows avg plus p50/p95/p99; ranges before that have only the
+  average. Filter `phase="body"` (tapir also emits a `headers` phase, which would count every request twice).
+  The lowest bucket is 5 ms and this route usually answers faster, so its p50 is an interpolation
+  below the first bucket — read it as "< 5 ms". It has no
   `deployment_environment_name`; scope it by `instance=~"dasch-vre-$environment-01"` (dsp-api also
   answers on the LS box, so `environment` alone over-counts).
 - **Container CPU/mem** (cAdvisor, `container_*`, `job=integrations/docker`): use exact

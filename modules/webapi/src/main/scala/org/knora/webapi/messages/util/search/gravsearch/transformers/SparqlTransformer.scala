@@ -21,6 +21,8 @@ object SparqlTransformer {
    *
    * @param entity the entity to be used to create a base name for a variable.
    * @return a base name for a variable.
+   * @see [[createInferenceVariable]], which does not reuse this method because it is lossy (distinct
+   *      inputs can escape to the same string) and gives no `VARNAME` guarantee for any entity kind.
    */
   def escapeEntityForVariable(entity: Entity): String = {
     val entityStr = entity match {
@@ -87,6 +89,34 @@ object SparqlTransformer {
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
 
   /**
+   * Creates a deterministic, content-derived variable name for a `VALUES` block introduced during
+   * ontology inference, replacing the `scala.util.Random` fallback previously used for this purpose.
+   *
+   * Do not substitute [[escapeEntityForVariable]] here: it is lossy (e.g. `.../ab#cd` and `.../abc#d`
+   * escape alike), and a collision would merge two unrelated `VALUES` blocks and empty the result set.
+   * See `docs/05-internals/design/api-v2/gravsearch.md` § "Determinism for Snapshot Testing" for the
+   * full rationale.
+   *
+   * @param statement the statement pattern that requires an inference variable.
+   * @param kind       a short discriminator (e.g. `"resTypes"`, `"subProp"`) distinguishing the
+   *                   different `VALUES` blocks that can be derived from the same statement.
+   * @return a deterministic, content-derived variable.
+   */
+  def createInferenceVariable(statement: StatementPattern, kind: String): QueryVariable = {
+    val rawBase = statement.subj match {
+      case QueryVariable(varName) => varName
+      case IriRef(iri, _)         =>
+        val iriStr        = iri.toIri
+        val lastSeparator = math.max(iriStr.lastIndexOf('#'), iriStr.lastIndexOf('/'))
+        if (lastSeparator >= 0) iriStr.substring(lastSeparator + 1) else iriStr
+      case other => other.toSparql
+    }
+    val base = rawBase.replaceAll("[^A-Za-z0-9_]", "")
+    val hash = f"${statement.toSparql.hashCode}%08x"
+    QueryVariable(s"${base}__${kind}__$hash")
+  }
+
+  /**
    * Builds the canonical `FILTER NOT EXISTS { subj knora-base:isDeleted true }` guard for the given
    * subject. Shared by [[optimiseIsDeletedWithFilter]] (which rewrites `isDeleted false` statements)
    * and the `matchFulltext` expansion in
@@ -131,48 +161,5 @@ object SparqlTransformer {
     }
 
     otherPatterns ++ filterPatterns
-  }
-
-  /**
-   * Optimises a query by moving BIND patterns to the beginning of a block.
-   *
-   * @param patterns the block of patterns to be optimised.
-   * @return the result of the optimisation.
-   */
-  def moveBindToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (bindQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-      case _: BindPattern => true
-      case _              => false
-    }
-
-    bindQueryPatterns ++ otherPatterns
-  }
-
-  /**
-   * `true` if the pattern is a Lucene query statement, or a [[GroupPattern]] containing one at its
-   * top level (e.g. the `matchFulltext` expansion) — used by [[moveLuceneToBeginning]].
-   */
-  private def containsLuceneQuery(pattern: QueryPattern): Boolean = pattern match {
-    case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
-    case groupPattern: GroupPattern              => groupPattern.patterns.exists(containsLuceneQuery)
-    case _                                       => false
-  }
-
-  /**
-   * Optimises a query by moving Lucene query patterns to the beginning of a block. This also hoists a
-   * [[GroupPattern]] whose contents include a Lucene query statement (e.g. the `matchFulltext`
-   * expansion): leaving it in place risks a class-first join order, since document order is otherwise
-   * whatever position the FILTER it replaced happened to end up in. For a classless query this is not
-   * just slow but catastrophic — the ontology-cache VALUES block for `?mainRes a knora-api:Resource`
-   * enumerates every resource class in the repository, and evaluating that before the (cheap,
-   * index-anchored) Lucene lookup measured ~300x slower in the performance spike for DEV-6715.
-   *
-   * @param patterns the block of patterns to be optimised.
-   * @return the result of the optimisation.
-   */
-  def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (luceneQueryPatterns, otherPatterns) = patterns.partition(containsLuceneQuery)
-
-    luceneQueryPatterns ++ otherPatterns
   }
 }

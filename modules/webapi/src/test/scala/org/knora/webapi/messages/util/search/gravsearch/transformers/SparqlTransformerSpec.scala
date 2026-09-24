@@ -89,91 +89,39 @@ class SparqlTransformerSpec extends ZIOSpecDefault {
       )
       assertTrue(optimisedPatterns == expectedPatterns)
     },
-    test("move a BIND pattern to the beginning of a block") {
-      val typeStatement = StatementPattern(
+    test("create an inference variable whose name is a valid SPARQL VARNAME even for an illegal-character object") {
+      val statement = StatementPattern(
+        subj = QueryVariable("foo"),
+        pred = IriRef(hasTextIRI),
+        obj = XsdLiteral(value = "(DE-588)118531379", datatype = OntologyConstants.Xsd.String.toSmartIri),
+      )
+      val generatedQueryVar = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      assertTrue(generatedQueryVar.variableName.matches("^[A-Za-z0-9_]+$"))
+    },
+    test("create different inference variables for statements colliding under escapeEntityForVariable") {
+      val statementA = StatementPattern(
+        subj = IriRef("http://www.knora.org/ontology/0001/ab#cd".toSmartIri),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val statementB = StatementPattern(
+        subj = IriRef("http://www.knora.org/ontology/0001/abc#d".toSmartIri),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI),
+      )
+      val varA = SparqlTransformer.createInferenceVariable(statementA, "resTypes")
+      val varB = SparqlTransformer.createInferenceVariable(statementB, "resTypes")
+      assertTrue(varA != varB)
+    },
+    test("create the same inference variable for the same statement") {
+      val statement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI),
       )
-      val hasValueStatement =
-        StatementPattern(
-          subj = QueryVariable("foo"),
-          pred = IriRef(hasTextIRI),
-          obj = QueryVariable("text"),
-        )
-      val bindPattern =
-        BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
-      val patterns: Seq[QueryPattern] = Seq(
-        typeStatement,
-        hasValueStatement,
-        bindPattern,
-      )
-      val optimisedPatterns                   = SparqlTransformer.moveBindToBeginning(patterns)
-      val expectedPatterns: Seq[QueryPattern] = Seq(
-        bindPattern,
-        typeStatement,
-        hasValueStatement,
-      )
-      assertTrue(optimisedPatterns == expectedPatterns)
-    },
-    test("move a Lucene query pattern to the beginning of a block") {
-      val hasValueStatement =
-        StatementPattern(
-          subj = QueryVariable("foo"),
-          pred = IriRef(hasTextIRI),
-          obj = QueryVariable("text"),
-        )
-      val valueHasStringStatement =
-        StatementPattern(
-          subj = QueryVariable("text"),
-          pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-          QueryVariable("text__valueHasString"),
-        )
-      val luceneQueryPattern = StatementPattern(
-        subj = QueryVariable("text"),
-        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = XsdLiteral(
-          value = "Zeitglöcklein",
-          datatype = OntologyConstants.Xsd.String.toSmartIri,
-        ),
-      )
-      val patterns: Seq[QueryPattern] = Seq(
-        hasValueStatement,
-        valueHasStringStatement,
-        luceneQueryPattern,
-      )
-      val optimisedPatterns                   = SparqlTransformer.moveLuceneToBeginning(patterns)
-      val expectedPatterns: Seq[QueryPattern] = Seq(
-        luceneQueryPattern,
-        hasValueStatement,
-        valueHasStringStatement,
-      )
-      assertTrue(optimisedPatterns == expectedPatterns)
-    },
-    test("move a GroupPattern containing a Lucene query pattern to the beginning of a block") {
-      // Simulates the classless-query pathology from the DEV-6715 spike: a plain rdf:type statement
-      // (which the inference pass later expands into a repo-wide VALUES block of every resource class)
-      // sitting before the matchFulltext expansion in document order would otherwise force that
-      // expensive VALUES join to run before the cheap, index-anchored Lucene lookup.
-      val resourceTypeStatement = StatementPattern(
-        subj = QueryVariable("mainRes"),
-        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI),
-      )
-      val luceneQueryPattern = StatementPattern(
-        subj = QueryVariable("match__matchFulltext"),
-        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = XsdLiteral(value = "term", datatype = OntologyConstants.Xsd.String.toSmartIri),
-      )
-      val bindResource = BindPattern(
-        variable = QueryVariable("mainRes"),
-        expression = QueryVariable("match__matchFulltext"),
-      )
-      val groupPattern                        = GroupPattern(Seq(luceneQueryPattern, bindResource))
-      val patterns: Seq[QueryPattern]         = Seq(resourceTypeStatement, groupPattern)
-      val optimisedPatterns                   = SparqlTransformer.moveLuceneToBeginning(patterns)
-      val expectedPatterns: Seq[QueryPattern] = Seq(groupPattern, resourceTypeStatement)
-      assertTrue(optimisedPatterns == expectedPatterns)
+      val varA = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      val varB = SparqlTransformer.createInferenceVariable(statement, "resTypes")
+      assertTrue(varA == varB)
     },
   )
 }

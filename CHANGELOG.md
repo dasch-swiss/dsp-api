@@ -1,5 +1,67 @@
 # Changelog
 
+## [40.0.0](https://github.com/dasch-swiss/dsp-api/compare/v39.0.0...v40.0.0) (2026-09-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **admin:** return an asset access decision instead of a permission code ([#4329](https://github.com/dasch-swiss/dsp-api/issues/4329))
+
+### Maintenances
+
+* **ci:** keep the docs job's checkout unshallowed (DEV-7265) ([#4336](https://github.com/dasch-swiss/dsp-api/issues/4336)) ([ea7369e](https://github.com/dasch-swiss/dsp-api/commit/ea7369ea5cd89b9074e19e0c08459377c1a39f16))
+* depend on spring-security-crypto instead of spring-security-core (DEV-7303) ([#4344](https://github.com/dasch-swiss/dsp-api/issues/4344)) ([c100935](https://github.com/dasch-swiss/dsp-api/commit/c10093519d4fa55a66b6aff858b7217cc1f751f6))
+* deterministic Gravsearch inference variable names and golden prequery snapshots (DEV-7288) ([#4348](https://github.com/dasch-swiss/dsp-api/issues/4348)) ([9a2efa8](https://github.com/dasch-swiss/dsp-api/commit/9a2efa8852680d8afa22d59ca89404b3a79d4d5b))
+* drop six declared dependencies that nothing imports (DEV-7303) ([#4346](https://github.com/dasch-swiss/dsp-api/issues/4346)) ([c62ae32](https://github.com/dasch-swiss/dsp-api/commit/c62ae32ba6b3ec3741642e7b010b0cf6f1d19aa4))
+* migrate admin-data export, data-graph-exists and replace-cardinalities queries to interpolated SPARQL DSL (DEV-7214) ([#4305](https://github.com/dasch-swiss/dsp-api/issues/4305)) ([7d64cfc](https://github.com/dasch-swiss/dsp-api/commit/7d64cfc7e38556c47ae1810fdf5614d81874d7b4))
+* migrate file-value permissions lookup and by-property view-restrictions queries to interpolated SPARQL DSL (DEV-7230) ([#4320](https://github.com/dasch-swiss/dsp-api/issues/4320)) ([8df495c](https://github.com/dasch-swiss/dsp-api/commit/8df495c7b00a1df8a704125651abc1f676713f81))
+* migrate legal-info authorship, project export and resource metadata queries to interpolated SPARQL DSL (DEV-7221) ([#4312](https://github.com/dasch-swiss/dsp-api/issues/4312)) ([2ae5fa9](https://github.com/dasch-swiss/dsp-api/commit/2ae5fa9927223875fabfae51ff9fc8cce9615d56))
+* migrate link-value queries to interpolated SPARQL DSL (DEV-7218) ([#4309](https://github.com/dasch-swiss/dsp-api/issues/4309)) ([34160d2](https://github.com/dasch-swiss/dsp-api/commit/34160d2765d543f5b03d6719e3b1eda6cf5da0a8))
+* migrate list-node creation, duplicate-order check and erase-resource queries to interpolated SPARQL DSL (DEV-7215) ([#4306](https://github.com/dasch-swiss/dsp-api/issues/4306)) ([64b1214](https://github.com/dasch-swiss/dsp-api/commit/64b1214787d765fb01c0158ee5da54c28a6f6076))
+* migrate Lucene search queries and export resource finder to interpolated SPARQL DSL (DEV-7224) ([#4315](https://github.com/dasch-swiss/dsp-api/issues/4315)) ([4ba7fa3](https://github.com/dasch-swiss/dsp-api/commit/4ba7fa38e8f87ded474a4ac9b5a262e4877571ea))
+* migrate ontology entity creation and add-cardinalities queries to interpolated SPARQL DSL (DEV-7212) ([#4303](https://github.com/dasch-swiss/dsp-api/issues/4303)) ([80e2130](https://github.com/dasch-swiss/dsp-api/commit/80e213054afcffe597a10cc5c402403ec6e1b333))
+* migrate ontology label/comment and GUI-element change queries to interpolated SPARQL DSL (DEV-7210) ([#4301](https://github.com/dasch-swiss/dsp-api/issues/4301)) ([85095c3](https://github.com/dasch-swiss/dsp-api/commit/85095c3cf0399c5e7b57a4691df9cb9f001ef297))
+* migrate ontology mapping and XSL-transformation metadata queries to interpolated SPARQL DSL (DEV-7211) ([#4302](https://github.com/dasch-swiss/dsp-api/issues/4302)) ([7bfec66](https://github.com/dasch-swiss/dsp-api/commit/7bfec660ab3f4bb9c8e925845b5cf9fca3b4b546))
+* migrate project export graph queries to interpolated SPARQL DSL (DEV-7213) ([#4304](https://github.com/dasch-swiss/dsp-api/issues/4304)) ([15a3113](https://github.com/dasch-swiss/dsp-api/commit/15a31135abbb12b7de1c3024a75f212d293a7e93))
+* migrate resource metadata, class-browsing prequery and delete-link queries to interpolated SPARQL DSL (DEV-7217) ([#4308](https://github.com/dasch-swiss/dsp-api/issues/4308)) ([f910218](https://github.com/dasch-swiss/dsp-api/commit/f910218c7db8d14b260f5d1f34c515b35e4916b2))
+* migrate resource repo query objects to interpolated SPARQL DSL (DEV-7223) ([#4314](https://github.com/dasch-swiss/dsp-api/issues/4314)) ([9f1c224](https://github.com/dasch-swiss/dsp-api/commit/9f1c224f269a23c0b20b2ad08b5b16fc0137f840))
+* migrate standoff mapping and resource authorship queries to interpolated SPARQL DSL (DEV-7216) ([#4307](https://github.com/dasch-swiss/dsp-api/issues/4307)) ([0aadb2f](https://github.com/dasch-swiss/dsp-api/commit/0aadb2f5f0bcf8e227d5bbf5fb3c5e263926d867))
+* migrate the admin entity repositories to interpolated SPARQL DSL (DEV-7234) ([#4324](https://github.com/dasch-swiss/dsp-api/issues/4324)) ([d7dc683](https://github.com/dasch-swiss/dsp-api/commit/d7dc683a13f5ac47b9c6e59876fc0f3ceac57dae))
+* migrate the class-based view-restrictions report queries to interpolated SPARQL DSL (DEV-7233) ([#4323](https://github.com/dasch-swiss/dsp-api/issues/4323)) ([540603d](https://github.com/dasch-swiss/dsp-api/commit/540603d3d1735caf77d677f13064e507d727865c))
+* migrate the ResourcesRepoLive read queries to interpolated SPARQL DSL (DEV-7229) ([#4319](https://github.com/dasch-swiss/dsp-api/issues/4319)) ([dd9136d](https://github.com/dasch-swiss/dsp-api/commit/dd9136d0c0a5b8873184f419ed231c18ebbc2ca4))
+* migrate the SPARQL-update upgrade plugins to interpolated SPARQL DSL (DEV-7222) ([#4313](https://github.com/dasch-swiss/dsp-api/issues/4313)) ([e9ccba7](https://github.com/dasch-swiss/dsp-api/commit/e9ccba7803bca4775e6fdcaabfc88b3d08b84638))
+* migrate the ValueRepo queries to interpolated SPARQL DSL (DEV-7228) ([#4318](https://github.com/dasch-swiss/dsp-api/issues/4318)) ([bf4cd28](https://github.com/dasch-swiss/dsp-api/commit/bf4cd28b11d069d55e89e6b466a320725ed53ae7))
+* migrate user-IRI maintenance actions and the permission-in-use guard to interpolated SPARQL DSL (DEV-7220) ([#4310](https://github.com/dasch-swiss/dsp-api/issues/4310)) ([7a20c68](https://github.com/dasch-swiss/dsp-api/commit/7a20c681ca114a64dc4b04bd50b7ebd3acd214e6))
+* narrow the rdf4j dependency to what is actually imported (DEV-7304) ([#4343](https://github.com/dasch-swiss/dsp-api/issues/4343)) ([5fe76b5](https://github.com/dasch-swiss/dsp-api/commit/5fe76b55ec68ff224604ae6f26b8df5633655f24))
+
+
+### Documentation
+
+* add ARCH-MAP.md and CONTEXT.md, adopt ADR-0011 ports contract, move ADRs to docs/adr ([#4331](https://github.com/dasch-swiss/dsp-api/issues/4331)) ([fe032f1](https://github.com/dasch-swiss/dsp-api/commit/fe032f1b34d42e68de427c1dfb65290e70852d7a))
+
+
+### Enhancements
+
+* add the geolocation value type (DEV-7285) ([#4340](https://github.com/dasch-swiss/dsp-api/issues/4340)) ([c756b09](https://github.com/dasch-swiss/dsp-api/commit/c756b0998379d9854c79fe2ce12889301b8d61d1))
+* **admin:** return an asset access decision instead of a permission code ([#4329](https://github.com/dasch-swiss/dsp-api/issues/4329)) ([9ddad36](https://github.com/dasch-swiss/dsp-api/commit/9ddad36b771c393b94e5438f3ea2cd5ea9cab31d))
+* bulk-import permission parity — honor payload hasPermissions and resolve per-entity DOAPs ([#4330](https://github.com/dasch-swiss/dsp-api/issues/4330)) ([699ce12](https://github.com/dasch-swiss/dsp-api/commit/699ce12fe6022c3afb42680e6ecabff27932b3cc))
+* **grafana:** add proposed comparison panels to the response-duration dashboard ([#4347](https://github.com/dasch-swiss/dsp-api/issues/4347)) ([ded89ed](https://github.com/dasch-swiss/dsp-api/commit/ded89ed9ae151b81275e7dc529746a6bd500cf48))
+* record the generated Gravsearch prequery as a gravsearch.prequery trace event (DEV-7302) ([#4342](https://github.com/dasch-swiss/dsp-api/issues/4342)) ([cd88f04](https://github.com/dasch-swiss/dsp-api/commit/cd88f04b5d7fffac75ed5b0e3ab0397f428ea35d))
+* validate knora-base structure with SHACL data-shapes (DEV-7289) ([#4341](https://github.com/dasch-swiss/dsp-api/issues/4341)) ([44de1cd](https://github.com/dasch-swiss/dsp-api/commit/44de1cd4922a3c00763cb5ca869d6c3787957c09))
+
+
+### Bug Fixes
+
+* **ci:** health-gate API startup and dump logs on healthcheck failure ([#4327](https://github.com/dasch-swiss/dsp-api/issues/4327)) ([610cff0](https://github.com/dasch-swiss/dsp-api/commit/610cff0bdae1662224f2963d33288c24e3f77c5e))
+* conform ontology SHACL shapes to W3C SHACL-SPARQL syntax rules ([#4338](https://github.com/dasch-swiss/dsp-api/issues/4338)) ([49383fa](https://github.com/dasch-swiss/dsp-api/commit/49383fab1efe02992baec66c980b452e6f3efe28))
+* **ingest:** write JSON sidecars atomically ([#4332](https://github.com/dasch-swiss/dsp-api/issues/4332)) ([c332051](https://github.com/dasch-swiss/dsp-api/commit/c3320514b87dd4838561131411e68d71f6f725e8))
+
+
+### Performance Improvements
+
+* order Gravsearch prequery patterns by connectivity from bound anchors (DEV-7287) ([#4349](https://github.com/dasch-swiss/dsp-api/issues/4349)) ([a523c82](https://github.com/dasch-swiss/dsp-api/commit/a523c827c0404a2ce94e00304b79f9910ff9517a))
+* refine candidate eligibility in the Gravsearch prequery ordering pass (DEV-7287) ([#4354](https://github.com/dasch-swiss/dsp-api/issues/4354)) ([e8a4b14](https://github.com/dasch-swiss/dsp-api/commit/e8a4b14eac70dadde2226ff893a3c4aad6337cfd))
+
 ## [39.0.0](https://github.com/dasch-swiss/dsp-api/compare/v38.1.0...v39.0.0) (2026-09-11)
 
 

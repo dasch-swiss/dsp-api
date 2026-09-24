@@ -1,0 +1,20 @@
+SELECT DISTINCT ?thing (GROUP_CONCAT(DISTINCT(IF(BOUND(?date), STR(?date), "")); SEPARATOR='') AS ?date__Concat)
+WHERE {
+VALUES ?thing__resTypes__2fdb3955 { <http://www.knora.org/ontology/0001/anything#BlueThing> <http://www.knora.org/ontology/0001/anything#Thing> <http://www.knora.org/ontology/0001/anything#ThingWithSeqnum> }
+?thing <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?thing__resTypes__2fdb3955 .
+OPTIONAL {
+?thing <http://www.knora.org/ontology/0001/anything#hasDate> ?date .
+?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
+FILTER NOT EXISTS {
+ ?date <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing ?date__valueHasStartJDN
+ORDER BY DESC(?date__valueHasStartJDN) ASC(?thing)
+LIMIT 25

@@ -1,0 +1,24 @@
+STMT var valueHasString lit
+STMT var hasIAFIdentifier var
+STMT var ?var var
+STMT var creationDate var
+STMT var valueHasStartJDN var
+STMT var ?var var
+STMT var object var
+STMT var ?var var
+STMT var hasIAFIdentifier var
+STMT var valueHasString lit
+STMT var ?var var
+STMT var object var
+STMT var type iri
+STMT var type iri
+FILTER
+FILTER
+FNE
+FNE
+FNE
+FNE
+FNE
+FNE
+FNE
+FNE

@@ -1,0 +1,11 @@
+VALUES (2)
+STMT var type var
+STMT var valueHasEndJDN var
+STMT var valueHasStartJDN var
+STMT var valueHasStandoff var
+STMT var hasText var
+STMT var standoffTagHasStartParent* var
+STMT var type iri
+FILTER
+FNE
+FNE

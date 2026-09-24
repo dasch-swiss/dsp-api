@@ -1,0 +1,8 @@
+VALUES (4)
+STMT var type var
+STMT var title var
+STMT var label var
+STMT var valueHasString var
+FILTER
+FNE
+FNE

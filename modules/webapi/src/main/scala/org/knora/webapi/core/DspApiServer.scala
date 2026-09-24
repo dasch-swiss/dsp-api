@@ -32,7 +32,6 @@ import sttp.tapir.server.interceptor.content.NotAcceptableInterceptor
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.interpreter.BodyListener
-import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ServerResponse
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
@@ -186,7 +185,7 @@ object DspApiServer {
             .maxAge(30.minutes.asScala),
         ),
       )
-      .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+      .metricsInterceptor(RequestMetrics.interceptor)
       .notAcceptableInterceptor(new PassthroughAwareNotAcceptableInterceptor)
       .addInterceptor(spanNameInterceptor(ctxStore))
       .options

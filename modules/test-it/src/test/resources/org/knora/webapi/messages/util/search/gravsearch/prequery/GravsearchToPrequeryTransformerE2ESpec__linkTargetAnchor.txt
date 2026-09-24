@@ -1,0 +1,23 @@
+SELECT DISTINCT ?letter (GROUP_CONCAT(DISTINCT(IF(BOUND(?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue), STR(?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue), "")); SEPARATOR='') AS ?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue__Concat)
+WHERE {
+?letter <http://www.knora.org/ontology/0801/beol#hasAuthor> <http://rdfh.ch/0801/anchor-person> .
+?letter <http://www.knora.org/ontology/0801/beol#hasAuthorValue> ?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue .
+?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> <http://rdfh.ch/0801/anchor-person> .
+?letter <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0801/beol#letter> .
+?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+FILTER NOT EXISTS {
+ ?letter <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?letter__httpwwwknoraorgontology0801beolhasAuthor__httprdfhch0801anchorperson__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ <http://rdfh.ch/0801/anchor-person> <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?letter
+ORDER BY ASC(?letter)
+LIMIT 25

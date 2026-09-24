@@ -425,6 +425,14 @@ optimizer uses the fixed variable-counting heuristic, and `OPTIONAL` blocks are 
 evaluated in document order. Written pattern order is load-bearing: the store largely executes
 the query in the shape you emit.
 
+For Gravsearch prequeries, this is not the pattern order the transformer code writes: a single
+connectivity-aware pass, `PrequeryPatternOrdering`, reorders every prequery WHERE block at one
+seam, `QueryTraverser.transformSelectToSelect`. So a change to the pass or its tiers shows up as
+a golden-file diff in `GravsearchToPrequeryTransformerE2ESpec` and
+`GravsearchToCountPrequeryTransformerE2ESpec`; `just test-gravsearch-prequery` runs both halves.
+See "Query Optimisation by Connectivity-Aware Pattern Ordering" in
+`docs/05-internals/design/api-v2/gravsearch.md` for the ordering rules.
+
 ### Selective patterns first — always before OPTIONALs
 
 Place the most selective pattern (a bound IRI, a literal lookup such as a shortcode) **first**
@@ -826,7 +834,9 @@ Extend the spec with `GoldenTest` and snapshot the generated SPARQL. The golden 
 written to the resources mirror of the spec's package
 (`src/test/scala/.../FooSpec.scala` → `src/test/resources/.../FooSpec__<suffix>.txt`).
 To create or update goldens, set `rewrite = true` on a call or `override val rewriteAll =
-true` on the spec, run once, then turn it off again; review the resulting diff.
+true` on the spec, run once, then turn it off again; review the resulting diff. For the
+`GOLDEN_REWRITE` environment variable, which modules honour it, and the placeholder rule
+for new golden files, see `dsp-api-conventions.md` § Golden snapshot tests.
 
 ```scala
 object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {

@@ -424,7 +424,9 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
  * @param values   the IRIs that will be assigned to the variable.
  */
 case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends QueryPattern {
-  override def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"
+  // Sorted to keep the rendered query byte-stable for the golden snapshots, independent of Set iteration order.
+  override def toSparql: String =
+    s"VALUES ${variable.toSparql} { ${values.toSeq.map(_.toSparql).sorted.mkString(" ")} }\n"
 }
 
 /**
@@ -482,8 +484,9 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 /**
  * Represents a fully opaque group of patterns, rendered verbatim as `{ ... }`. Every traversal pass
  * (both [[org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation]]
- * optimizations and the [[org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer]]
- * inference pass) treats a `GroupPattern` as an opaque leaf and passes it through unchanged; only
+ * optimizations, the [[org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer]]
+ * inference pass, and [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]])
+ * treats a `GroupPattern` as an opaque leaf and passes it through unchanged; only
  * [[QueryTraverser]] and [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]]
  * need an explicit case for it (their matches are otherwise exhaustive). Used to emit hand-proven SPARQL
  * shapes whose interior must survive unmodified, e.g. the `matchFulltext` function's expansion.

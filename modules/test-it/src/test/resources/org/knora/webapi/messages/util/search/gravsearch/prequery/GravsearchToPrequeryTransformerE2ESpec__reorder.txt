@@ -1,0 +1,54 @@
+SELECT DISTINCT ?letter (GROUP_CONCAT(DISTINCT(IF(BOUND(?date), STR(?date), "")); SEPARATOR='') AS ?date__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?letter__linkingProp1__person1__LinkValue), STR(?letter__linkingProp1__person1__LinkValue), "")); SEPARATOR='') AS ?letter__linkingProp1__person1__LinkValue__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?letter__linkingProp2__person2__LinkValue), STR(?letter__linkingProp2__person2__LinkValue), "")); SEPARATOR='') AS ?letter__linkingProp2__person2__LinkValue__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?person1), STR(?person1), "")); SEPARATOR='') AS ?person1__Concat) (GROUP_CONCAT(DISTINCT(IF(BOUND(?person2), STR(?person2), "")); SEPARATOR='') AS ?person2__Concat)
+WHERE {
+?gnd1 <http://www.knora.org/ontology/knora-base#valueHasString> "(DE-588)118531379"^^<http://www.w3.org/2001/XMLSchema#string> .
+?person1 <http://www.knora.org/ontology/0801/beol#hasIAFIdentifier> ?gnd1 .
+?letter ?linkingProp1 ?person1 .
+?letter <http://www.knora.org/ontology/0801/beol#creationDate> ?date .
+?date <http://www.knora.org/ontology/knora-base#valueHasStartJDN> ?date__valueHasStartJDN .
+?letter ?linkingProp1__hasLinkToValue ?letter__linkingProp1__person1__LinkValue .
+?letter__linkingProp1__person1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?person1 .
+?letter ?linkingProp2 ?person2 .
+?person2 <http://www.knora.org/ontology/0801/beol#hasIAFIdentifier> ?gnd2 .
+?gnd2 <http://www.knora.org/ontology/knora-base#valueHasString> "(DE-588)118696149"^^<http://www.w3.org/2001/XMLSchema#string> .
+?letter ?linkingProp2__hasLinkToValue ?letter__linkingProp2__person2__LinkValue .
+?letter__linkingProp2__person2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?person2 .
+?letter__linkingProp1__person1__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+?letter__linkingProp2__person2__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+FILTER(((?linkingProp1 = <http://www.knora.org/ontology/0801/beol#hasAuthor>) || (?linkingProp1 = <http://www.knora.org/ontology/0801/beol#hasRecipient>)))
+FILTER(((?linkingProp2 = <http://www.knora.org/ontology/0801/beol#hasAuthor>) || (?linkingProp2 = <http://www.knora.org/ontology/0801/beol#hasRecipient>)))
+FILTER NOT EXISTS {
+ ?letter <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?date <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?letter__linkingProp1__person1__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?person1 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?letter__linkingProp2__person2__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?person2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?gnd1 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?gnd2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?letter ?date__valueHasStartJDN
+ORDER BY ASC(?date__valueHasStartJDN) ASC(?letter)
+LIMIT 25

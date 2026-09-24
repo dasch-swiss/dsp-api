@@ -183,7 +183,6 @@ maven.install(
         "dev.optics:monocle-core_3:3.3.0",
         # -- other Scala (`_3`) --
         "eu.timepit:refined_3:0.11.4",
-        "org.scala-graph:graph-core_3:2.0.2",
         "org.scala-lang.modules:scala-xml_3:2.4.0",
         "com.github.tototoshi:scala-csv_3:2.0.0",
         # -- RDF / Jena / rdf4j (Java) --

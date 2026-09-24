@@ -111,8 +111,8 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Avg response time (selected range)",
-          "description": "Mean full-request duration (phase=body) over the dashboard range, rate(sum)/rate(count). Scoped by the Route group, Method and Exclude routes filters. Requests that matched no endpoint (CORS OPTIONS preflights, HEAD probes; empty path label) are excluded.",
+          "title": "Response time (range)",
+          "description": "Full-request duration (phase=body) over the dashboard range: avg = rate(sum)/rate(count), percentiles = histogram_quantile over rate(_bucket[$__range]). Scoped by the Route group, Method and Exclude routes filters. Requests that matched no endpoint (CORS OPTIONS preflights, HEAD probes; empty path label) are excluded. Percentiles come from tapir_request_duration_seconds_bucket, scraped since ops-deploy#1434 (stage from 2026-09-21, prod from 2026-09-23 ~06:00 UTC); earlier ranges show no percentile data. Buckets: 5, 10, 25, 50, 75, 100, 250, 500, 750 ms, 1, 2.5, 5, 7.5, 10, 15, 30, 45, 60 s; histogram_quantile() interpolates linearly inside a bucket and caps at 60 s.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -134,7 +134,74 @@
                         "editorMode": "code",
                         "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range]))",
                         "instant": true,
-                        "range": false
+                        "range": false,
+                        "legendFormat": "avg"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.5, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])))",
+                        "instant": true,
+                        "range": false,
+                        "legendFormat": "p50"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.95, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])))",
+                        "instant": true,
+                        "range": false,
+                        "legendFormat": "p95"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.99, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$__range])))",
+                        "instant": true,
+                        "range": false,
+                        "legendFormat": "p99"
                       }
                     }
                   }
@@ -187,7 +254,7 @@
                   "fields": "",
                   "values": false
                 },
-                "textMode": "auto"
+                "textMode": "value_and_name"
               }
             }
           }
@@ -353,8 +420,8 @@
         "kind": "Panel",
         "spec": {
           "id": 4,
-          "title": "Average response duration — global",
-          "description": "Mean full-request duration (phase=body) over time, scoped by Route group, Method and Exclude routes; rate() window = Smoothing window. The day/night swing is traffic mix (fast automated reads at night, human-driven searches by day), not health checks. Purple markers: dsp-api container restarts (deploys, but also crashes/reboots).",
+          "title": "Response duration — global: avg, p50 / p95 / p99",
+          "description": "Full-request duration (phase=body) over time, scoped by Route group, Method and Exclude routes; rate() window = Smoothing window. avg = rate(sum)/rate(count) and has full history; the percentiles show how the tail moves independently of the mean (a rising p99 with a flat avg is a few very slow requests). Percentiles come from tapir_request_duration_seconds_bucket, scraped since ops-deploy#1434 (stage from 2026-09-21, prod from 2026-09-23 ~06:00 UTC); earlier ranges show no percentile data. Buckets: 5, 10, 25, 50, 75, 100, 250, 500, 750 ms, 1, 2.5, 5, 7.5, 10, 15, 30, 45, 60 s; histogram_quantile() interpolates linearly inside a bucket and caps at 60 s. The day/night swing is traffic mix (fast automated reads at night, human-driven searches by day), not health checks. Purple markers: dsp-api container restarts (deploys, but also crashes/reboots).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -373,11 +440,77 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": {
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing]))",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
                         "legendFormat": "avg (body, $smoothing)"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.5, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "p50 ($smoothing)"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.95, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "p95 ($smoothing)"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(0.99, sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",stack=~\"${stack:regex}\",phase=\"body\"}[$smoothing])))",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "p99 ($smoothing)"
                       }
                     }
                   }
@@ -408,7 +541,53 @@
                     "axisWidth": 90
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byFrameRefID",
+                      "options": "B"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "blue",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byFrameRefID",
+                      "options": "C"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "orange",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byFrameRefID",
+                      "options": "D"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "red",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
                 "legend": {
@@ -435,8 +614,8 @@
         "kind": "Panel",
         "spec": {
           "id": 5,
-          "title": "Average response duration by route",
-          "description": "Mean full-request duration (phase=body) per route over time, within the Route group / Route (path) / Method / Exclude filters; rate() window = Smoothing window. Log2 y-axis so one slow, rare route does not flatten the rest. Purple markers: dsp-api container restarts (deploys, but also crashes/reboots).",
+          "title": "${statistic:text} response duration by route ($smoothing)",
+          "description": "Full-request duration (phase=body) per route, within the Route group / Route (path) / Exclude filters; rate() window = Smoothing window. Rare routes are noisy at high percentiles: with a handful of requests per window p99 is effectively the slowest request. Statistic filter picks avg (rate(sum)/rate(count), full history) or a percentile (histogram_quantile). Each series has two queries, gated with `and on () (vector($statistic) < 0)` / `>= 0` so exactly one returns data: avg is encoded as -1, and the quantile argument is clamped to >= 0 so avg mode raises no PromQL warning. Do not drop either query, the gates or the clamp. Percentiles come from tapir_request_duration_seconds_bucket, scraped since ops-deploy#1434 (stage from 2026-09-21, prod from 2026-09-23 ~06:00 UTC); earlier ranges have only the average. Buckets 5 ms … 60 s; histogram_quantile() interpolates inside a bucket and caps at 60 s. Log2 y-axis. Purple markers: dsp-api container restarts.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -455,7 +634,29 @@
                       "kind": "DataQuery",
                       "version": "",
                       "spec": {
-                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~`${path:regex}`,phase=\"body\"}[$smoothing])) / sum by (path) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~`${path:regex}`,phase=\"body\"}[$smoothing]))",
+                        "expr": "sum by (path) (rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~`${path:regex}`,phase=\"body\"}[$smoothing])) / sum by (path) (rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~`${path:regex}`,phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "{{path}}"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "",
+                      "spec": {
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le, path) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",stack=~\"${stack:regex}\",path=~`${path:regex}`,phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -673,8 +874,8 @@
         "kind": "Panel",
         "spec": {
           "id": 11,
-          "title": "Average response duration by route group ($smoothing)",
-          "description": "Mean full-request duration per route group (same regexes as the Route group filter), one line each plus All; rate() window = Smoothing window. Separates \"reads got slower\" from \"searches got slower\", which the global average blurs. Honours Method and Exclude routes; ignores the Route group filter by design. Log2 y-axis. Purple markers: dsp-api container restarts (deploys, but also crashes/reboots).",
+          "title": "${statistic:text} response duration by route group ($smoothing)",
+          "description": "Full-request duration (phase=body) per route group (same regexes as the Route group filter), one line each plus All; rate() window = Smoothing window. Separates \"reads got slower\" from \"searches got slower\", which the global panel blurs. A group percentile pools all its routes, so the busiest route sets it (Lists is mostly /v2/node): when a group moves, find the route in the Route detail row. Honours Method and Exclude routes; ignores the Route group filter by design. Statistic filter picks avg (rate(sum)/rate(count), full history) or a percentile (histogram_quantile). Each series has two queries, gated with `and on () (vector($statistic) < 0)` / `>= 0` so exactly one returns data: avg is encoded as -1, and the quantile argument is clamped to >= 0 so avg mode raises no PromQL warning. Do not drop either query, the gates or the clamp. Percentiles come from tapir_request_duration_seconds_bucket, scraped since ops-deploy#1434 (stage from 2026-09-21, prod from 2026-09-23 ~06:00 UTC); earlier ranges have only the average. Buckets 5 ms … 60 s; histogram_quantile() interpolates inside a bucket and caps at 60 s. Log2 y-axis. Purple markers: dsp-api container restarts.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -694,7 +895,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Search"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "A_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/search.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -717,7 +941,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Resources"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "B_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/resources.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -740,7 +987,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Values"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "C_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/values.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -763,7 +1033,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Ontologies"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "D_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v2/ontologies.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -786,7 +1079,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Lists"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "E_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"(/v2/lists.*|/v2/node.*|/admin/lists.*)\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -809,7 +1125,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Admin"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "F_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/admin/.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -832,7 +1171,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Export"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "G_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/export.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -855,7 +1217,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "Import"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "H_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"/v3/projects/.*/imports.*\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -878,7 +1263,30 @@
                       "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))",
+                        "expr": "sum(rate(tapir_request_duration_seconds_sum{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) / sum(rate(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing])) and on () (vector($statistic) < 0)",
+                        "instant": false,
+                        "range": true,
+                        "queryType": "range",
+                        "legendFormat": "All (excl. filters)"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "Z_q",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(scalar(clamp_min(vector($statistic), 0)), sum by (le) (rate(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path!~\"${exclude:pipe}\",path!=\"\",phase=\"body\"}[$smoothing]))) and on () (vector($statistic) >= 0)",
                         "instant": false,
                         "range": true,
                         "queryType": "range",
@@ -945,7 +1353,7 @@
         "spec": {
           "id": 12,
           "title": "Routes ranked by total server time (range)",
-          "description": "Per route and method over the dashboard range: total server time (sum of all request durations), average duration, request count, 4xx and 5xx counts, sorted by total time. Total time is where optimisation pays off; the slowest-average routes are usually rare ones. Only routes that reported a request duration in the range appear. Click a path to open Tempo with that route's server spans slower than 1 s in the selected environment/stack. Honours Route group / Route (path) / Method / Exclude routes.",
+          "description": "Per route and method over the dashboard range: total server time (sum of all request durations), average duration, request count, 4xx and 5xx counts, sorted by total time. Total time is where optimisation pays off; the slowest-average routes are usually rare ones. Only routes that reported a request duration in the range appear. Click a path to open Tempo with that route's server spans slower than 1 s in the selected environment/stack. Honours Route group / Route (path) / Method / Exclude routes. p50/p95 are histogram_quantile over rate(_bucket[$__range]) per route and method; empty for ranges before the buckets were scraped (prod: before 2026-09-23 ~06:00 UTC).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1065,6 +1473,52 @@
                       }
                     }
                   }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "F",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.5, sum by (le, path, method) (increase(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~`${path:regex}`,phase=\"body\"}[$__range]))) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~`${path:regex}`,phase=\"body\"}[$__range])) > 0)",
+                        "instant": true,
+                        "range": false,
+                        "queryType": "instant",
+                        "format": "table"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "refId": "G",
+                    "query": {
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "histogram_quantile(0.95, sum by (le, path, method) (increase(tapir_request_duration_seconds_bucket{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~`${path:regex}`,phase=\"body\"}[$__range]))) and (sum by (path, method) (increase(tapir_request_duration_seconds_count{environment=~\"${environment:regex}\",service_name=\"DSP_svc_api\",stack=~\"${stack:regex}\",method=~\"${method:pipe}\",path=~\"${routegroup}\",path!~\"${exclude:pipe}\",path!=\"\",path=~`${path:regex}`,phase=\"body\"}[$__range])) > 0)",
+                        "instant": true,
+                        "range": false,
+                        "queryType": "instant",
+                        "format": "table"
+                      }
+                    }
+                  }
                 }
               ],
               "queryOptions": {},
@@ -1089,16 +1543,20 @@
                         "path": 1,
                         "Value #C": 2,
                         "Value #A": 3,
-                        "Value #B": 4,
-                        "Value #D": 5,
-                        "Value #E": 6
+                        "Value #F": 4,
+                        "Value #G": 5,
+                        "Value #B": 6,
+                        "Value #D": 7,
+                        "Value #E": 8
                       },
                       "renameByName": {
                         "Value #A": "Avg duration",
                         "Value #B": "Requests",
                         "Value #C": "Total time",
                         "Value #D": "4xx",
-                        "Value #E": "5xx"
+                        "Value #E": "5xx",
+                        "Value #F": "p50",
+                        "Value #G": "p95"
                       }
                     }
                   }
@@ -1152,6 +1610,64 @@
                     "matcher": {
                       "id": "byName",
                       "options": "Avg duration"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "s"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 3
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "continuous-GrYlRd"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "p50"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "s"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 3
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "continuous-GrYlRd"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "p95"
                     },
                     "properties": [
                       {
@@ -2483,215 +2999,271 @@
       }
     },
     "layout": {
-      "kind": "GridLayout",
+      "kind": "RowsLayout",
       "spec": {
-        "items": [
+        "rows": [
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-1"
-              },
-              "x": 0,
-              "y": 0,
-              "width": 8,
-              "height": 4
+              "title": "Health — $environment / $stack",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1"
+                        },
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-2"
+                        },
+                        "x": 8,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-3"
+                        },
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 4
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-4"
+                        },
+                        "x": 0,
+                        "y": 4,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-11"
+                        },
+                        "x": 0,
+                        "y": 13,
+                        "width": 24,
+                        "height": 9
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-2"
-              },
-              "x": 8,
-              "y": 0,
-              "width": 8,
-              "height": 4
+              "title": "Where the time goes",
+              "collapse": true,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-12"
+                        },
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 12
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-19"
+                        },
+                        "x": 0,
+                        "y": 12,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-20"
+                        },
+                        "x": 0,
+                        "y": 21,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-13"
+                        },
+                        "x": 0,
+                        "y": 30,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-18"
+                        },
+                        "x": 0,
+                        "y": 39,
+                        "width": 24,
+                        "height": 9
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-3"
-              },
-              "x": 16,
-              "y": 0,
-              "width": 8,
-              "height": 4
+              "title": "Route detail",
+              "collapse": true,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-5"
+                        },
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-14"
+                        },
+                        "x": 0,
+                        "y": 9,
+                        "width": 24,
+                        "height": 9
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-4"
-              },
-              "x": 0,
-              "y": 4,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-11"
-              },
-              "x": 0,
-              "y": 13,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-5"
-              },
-              "x": 0,
-              "y": 22,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-13"
-              },
-              "x": 0,
-              "y": 31,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-18"
-              },
-              "x": 0,
-              "y": 40,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-19"
-              },
-              "x": 0,
-              "y": 49,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-20"
-              },
-              "x": 0,
-              "y": 58,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-12"
-              },
-              "x": 0,
-              "y": 67,
-              "width": 24,
-              "height": 12
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-14"
-              },
-              "x": 0,
-              "y": 79,
-              "width": 24,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-15"
-              },
-              "x": 0,
-              "y": 88,
-              "width": 12,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-16"
-              },
-              "x": 12,
-              "y": 88,
-              "width": 12,
-              "height": 9
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-17"
-              },
-              "x": 0,
-              "y": 97,
-              "width": 24,
-              "height": 8
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-7"
-              },
-              "x": 0,
-              "y": 105,
-              "width": 24,
-              "height": 11
+              "title": "Triplestore and Gravsearch",
+              "collapse": true,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-15"
+                        },
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-16"
+                        },
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 9
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-17"
+                        },
+                        "x": 0,
+                        "y": 9,
+                        "width": 24,
+                        "height": 8
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-7"
+                        },
+                        "x": 0,
+                        "y": 17,
+                        "width": 24,
+                        "height": 11
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         ]
@@ -2881,6 +3453,24 @@
             "value": "15m"
           },
           "allowCustomValue": true,
+          "hide": "dontHide",
+          "includeAll": false,
+          "multi": false,
+          "options": [],
+          "skipUrlSync": false
+        }
+      },
+      {
+        "kind": "CustomVariable",
+        "spec": {
+          "name": "statistic",
+          "label": "Statistic",
+          "query": "avg : -1, p50 : 0.5, p90 : 0.9, p95 : 0.95, p99 : 0.99",
+          "current": {
+            "text": "avg",
+            "value": "-1"
+          },
+          "allowCustomValue": false,
           "hide": "dontHide",
           "includeAll": false,
           "multi": false,

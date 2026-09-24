@@ -1,0 +1,26 @@
+SELECT DISTINCT ?thing
+WHERE {
+VALUES ?thing__resTypes__2fdb3955 { <http://www.knora.org/ontology/0001/anything#BlueThing> <http://www.knora.org/ontology/0001/anything#Thing> <http://www.knora.org/ontology/0001/anything#ThingWithSeqnum> }
+?thing <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?thing__resTypes__2fdb3955 .
+MINUS {
+ ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?intVal .
+?intVal <http://www.knora.org/ontology/knora-base#valueHasInteger> ?intVal__valueHasInteger .
+FILTER(((?intVal__valueHasInteger = "123454321"^^<http://www.w3.org/2001/XMLSchema#integer>) || (?intVal__valueHasInteger = "999999999"^^<http://www.w3.org/2001/XMLSchema#integer>)))
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?intVal <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+
+}
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing
+ORDER BY ASC(?thing)
+LIMIT 25

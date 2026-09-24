@@ -13,6 +13,28 @@ The legacy project name **"Knora"** still appears in the codebase (package `org.
 
 However, **do not use "Knora" in human-readable text**: PR titles, commit messages, documentation, comments, spec files, or learning documents. Use "dsp-api" instead.
 
+## Specs
+
+dsp-api specs (PRDs, implementation plans, design docs, execution journals) live directly in `docs/specs/` as
+flat, date-prefixed files, following the same convention as SIPI. Platform-wide specs that span several repos
+stay in [`dasch-specs`](https://github.com/dasch-swiss/dasch-specs); a spec whose primary subject is dsp-api
+belongs here even when it touches another repo.
+
+- **File:** `docs/specs/YYYY-MM-DD-NN-{topic}-{type}.md`; `NN` is a 2-digit daily sequence (`01`, `02`, ...),
+  `{topic}` lowercase alphanumeric and hyphens (at most 60 chars), `{type}` one of `PRD`, `plan`, `design`,
+  `journal`. The artifacts of one piece of work share the `YYYY-MM-DD-NN-{topic}-` stem (a `-plan.md` next to
+  its `-journal.md` and `-design.md`).
+- **Assets:** supporting files (images, measurement scripts, raw results) go in a sibling
+  `docs/specs/YYYY-MM-DD-NN-{topic}-assets/` directory, referenced relatively.
+- **Frontmatter** (YAML): `title`, `date`, `author`, `status: draft | reviewed | approved | implemented`, and
+  `repositories:` listing the *other* code repos the work modifies (never dsp-api itself).
+- **Reference direction is one-way; specs are a sink.** A spec may link out to code, docs and ADRs, but nothing
+  outside `docs/specs/` may link into a spec, and a new spec should reference durable artifacts rather than
+  another spec. Flatten test: `grep -rn "docs/specs/"` over everything except `docs/specs/` returns nothing.
+  Enforcement: review.
+- `docs/specs/` is excluded from the mkdocs site (`exclude_docs` in `mkdocs.yml`); specs are repo context, not
+  published documentation. They are still tracked markdown, so `just check` lints them.
+
 ## Build System & Commands
 
 ### Core Build Tool
