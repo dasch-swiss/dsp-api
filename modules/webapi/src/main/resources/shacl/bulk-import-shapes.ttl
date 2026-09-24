@@ -12,6 +12,7 @@
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
 knora-base:Resource-Shape
+  sh:description "Adds bulk-import rules on top of the Resource-Shape in data-shapes.ttl. An import creates fresh resources on behalf of one user. So this shape pins the owner to that user and forbids any lifecycle or deletion metadata." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:attachedToUser ;
@@ -50,9 +51,7 @@ knora-base:Resource-Shape
   ] .
 
 knora-base:Value-Shape
-  # System standoff-link LinkValues attach to the built-in SystemUser by design
-  # (OntologyTransformer.emitStandoffLinkValue), so they are exempt from the on-behalf-of pin.
-  # They are identified by rdf:predicate knora-base:hasStandoffLinkTo, matching AttachedToUserNotBuiltIn-Shape.
+  sh:description "Adds bulk-import rules on top of the Value-Shape in data-shapes.ttl. It pins the owner to the importing user and forbids lifecycle, deletion, and version metadata. System standoff-link LinkValues attach to the built-in SystemUser by design and are exempt from the owner pin." ;
   sh:or (
     # The exempted node must itself be a LinkValue, not merely carry the standoff predicate.
     # The same guard is duplicated in data-shapes.ttl AttachedToUserNotBuiltIn-Shape — keep both in sync.
@@ -104,15 +103,16 @@ knora-base:Value-Shape
   ] .
 
 knora-base:TextValue-Shape
+  sh:description "Restricts imported text values. The text type controls the mapping: UnformattedText carries no mapping, FormattedText must use the DSP standard mapping." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasTextValueType ;
+    sh:description "The text type of an imported value: UnformattedText for plain text, or FormattedText for DSP standard standoff markup. Import does not accept CustomFormattedText or UndefinedTextType." ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:in ( knora-base:UnformattedText knora-base:FormattedText ) ;
     sh:message "TextValue instance must have one knora-base:hasTextValueType one of knora-base:UnformattedText knora-base:FormattedText"
   ] ;
-  # UnformattedText carries no mapping; FormattedText must use the standard mapping.
   sh:or (
     [
       sh:property [ sh:path knora-base:hasTextValueType ; sh:hasValue knora-base:UnformattedText ] ;
