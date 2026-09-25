@@ -552,7 +552,7 @@
     rdfs:label                "value has XML"@en ;
     rdfs:comment              "The canonical XML of a text value with markup, rendered from its standoff at write time so that a raw export is self-contained."@en ;
     rdfs:subPropertyOf        :valueHas ;
-    :subjectClassConstraint   :Value ;
+    :subjectClassConstraint   :TextValue ;
     :objectDatatypeConstraint xsd:string .
 
 
