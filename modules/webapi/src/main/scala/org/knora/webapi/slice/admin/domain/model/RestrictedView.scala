@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Schema
+
 import scala.util.matching.Regex
 
 import org.knora.webapi.slice.common.StringValueCompanion
@@ -19,6 +21,7 @@ object RestrictedView {
 
   final case class Watermark private (value: Boolean) extends RestrictedView with BooleanValue
   object Watermark {
+    given Schema[Watermark] = Schema.schemaForBoolean.as[Watermark]
 
     val On: Watermark  = Watermark(true)
     val Off: Watermark = Watermark(false)

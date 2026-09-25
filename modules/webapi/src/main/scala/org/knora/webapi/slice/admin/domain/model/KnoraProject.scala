@@ -175,6 +175,7 @@ object KnoraProject {
   sealed trait SelfJoin extends BooleanValue
 
   object SelfJoin {
+    given Schema[SelfJoin] = Schema.schemaForBoolean.as[SelfJoin]
 
     case object CanJoin    extends SelfJoin { val value = true  }
     case object CannotJoin extends SelfJoin { val value = false }

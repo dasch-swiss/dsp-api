@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+import sttp.tapir.Schema
 import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri
@@ -86,6 +87,8 @@ object ListProperties {
   final case class Labels private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Labels extends WithFrom[Seq[StringLiteralV2], Labels] {
+    given Schema[Labels] = summon[Schema[Seq[StringLiteralV2]]].as[Labels]
+
     def from(values: Seq[StringLiteralV2]): Either[String, Labels] =
       if values.isEmpty then Left("At least one label needs to be supplied.")
       else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid label.")
@@ -95,6 +98,8 @@ object ListProperties {
   final case class Comments private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
   object Comments extends WithFrom[Seq[StringLiteralV2], Comments] {
+    given Schema[Comments] = summon[Schema[Seq[StringLiteralV2]]].as[Comments]
+
     def from(values: Seq[StringLiteralV2]): Either[String, Comments] =
       if values.isEmpty then Left("At least one comment needs to be supplied.")
       else if values.exists(lit => hasLineBreaks(lit.value)) then Left("Invalid comment.")

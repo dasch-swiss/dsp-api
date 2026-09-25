@@ -36,7 +36,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### Value objects
 
 - `final case class X private (value: I)` extending the appropriate `*Value` base, with `object X extends  WithFrom[I, X]` or a specialized companion e.g. StringValueCompanion[X]` in case `I` is `String`.
-- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. Full pattern in `docs/development/dsp-api-value-types.md`.
+- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. A companion extending neither `StringValueCompanion` nor `IntValueCompanion` also declares a `given Schema[X]` matching the JSON codec, or the OpenAPI spec silently renders an object. Full pattern in `docs/development/dsp-api-value-types.md`.
 - Factory functions should be named `makeNew`
 
 ### IRI handling
