@@ -490,7 +490,7 @@ flowchart LR
   XMLToStandoffMapping --> hasMappingElement --> MappingElement
   XMLToStandoffMapping --> mappingHasDefaultXSLTransformation --> XSLTransformation
   TextValue --> valueHasStandoff --> StandoffTag
-  TextValue --> valueHasXml
+  TextValue --> valueHasXml --> string3
   subgraph standoffProperties
     standoffTagHasEndIndex
     standoffTagHasStartIndex

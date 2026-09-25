@@ -244,8 +244,9 @@ Markup is stored using this property:
 - `valueHasMapping` (0-1): Points to the mapping used to create the standoff markup and to convert it back to the
   original XML. See [Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
 
-- `valueHasXml` (0-1): The original XML of the formatted text, stored on write so that a raw export or backup is
-  self-contained. It is a copy of the XML the API rebuilds from the standoff on read.
+- `valueHasXml` (0-1): Holds the canonical XML of the formatted text, rendered from the standoff and written when
+  a formatted text value is created or updated, so that a raw export or backup is self-contained. It equals the
+  XML the API rebuilds from the standoff on read.
 
 A text value can have a specified language:
 
