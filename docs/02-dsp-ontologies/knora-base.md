@@ -95,6 +95,12 @@ resource.
 - `hasResourceAuthorship` (0-n): The authorship of the resource record (data side), each author has their own string
   literal. This is the data-side counterpart to the file's `hasAuthorship`.
 
+- `hasDescription` (0-n): A rich-text [TextValue](#textvalue) describing the resource. It is meant for resources of
+  project resource classes, which inherit it without declaring it in their ontology. The knora-base classes that are
+  instantiated directly (such as `Region` and `LinkObj`) inherit the cardinality as well, but it is not intended for them.
+  A class that has a cardinality on a subproperty of `hasDescription` does not accept `hasDescription` itself, because
+  that cardinality overrides the inherited one.
+
 - `seqnum` (0-1): The sequence number of the resource, if it is part of an ordered group of resources, such as the pages
   in a book.
 
@@ -671,6 +677,8 @@ However, `kb:Segment` is "abstract" and cannot be used directly in data.
 Segments have a number of optional, generic properties to add additional information:
 `kb:hasTitle` (0-1), `kb:hasDescription` (0-n), `kb:hasKeyword` (0-n),
 `kb:relatesTo`/`kb:relatesToValue` (0-n), and `kb:hasComment` (0-1).
+`kb:hasDescription` is the general description property of [resources](#resources);
+segments declare it with the same cardinality.
 
 There are two concrete subclasses of `kb:Segment` for video and audio resources.
 
