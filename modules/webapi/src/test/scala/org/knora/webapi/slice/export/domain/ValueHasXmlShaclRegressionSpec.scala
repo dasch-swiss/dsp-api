@@ -109,6 +109,9 @@ class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
       validate(textValueTtl(textValueTypeTriple(CustomFormattedText) + valueHasXmlTriple))
         .map(result => assert(result)(isRight))
     },
+    test("a FormattedText value without knora-base:valueHasXml validates clean") {
+      validate(textValueTtl(textValueTypeTriple(FormattedText))).map(result => assert(result)(isRight))
+    },
     test("an UnformattedText value carrying knora-base:valueHasXml fails validation") {
       validate(textValueTtl(textValueTypeTriple(UnformattedText) + valueHasXmlTriple))
         .map(result => assert(result)(isLeft))
@@ -121,6 +124,19 @@ class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
     },
     test("a value without hasTextValueType and without knora-base:valueHasXml validates clean") {
       validate(textValueTtl("")).map(result => assert(result)(isRight))
+    },
+    test("a formatted value with two knora-base:valueHasXml values fails (maxCount)") {
+      val twoXml =
+        s"""<$ValueIri> <${KnoraBase}valueHasXml> "<text>one</text>"^^<${Xsd}string> .
+           |<$ValueIri> <${KnoraBase}valueHasXml> "<text>two</text>"^^<${Xsd}string> .
+           |""".stripMargin
+      validate(textValueTtl(textValueTypeTriple(FormattedText) + twoXml)).map(result => assert(result)(isLeft))
+    },
+    test("a formatted value with a non-string knora-base:valueHasXml fails (datatype)") {
+      val intXml =
+        s"""<$ValueIri> <${KnoraBase}valueHasXml> "5"^^<${Xsd}integer> .
+           |""".stripMargin
+      validate(textValueTtl(textValueTypeTriple(FormattedText) + intXml)).map(result => assert(result)(isLeft))
     },
     test("a value missing a required Value predicate fails (harness sanity check)") {
       val incomplete =
