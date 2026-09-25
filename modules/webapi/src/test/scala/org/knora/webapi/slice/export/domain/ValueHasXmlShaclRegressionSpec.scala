@@ -57,6 +57,14 @@ class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
     s"""<$ValueIri> <${KnoraBase}valueHasXml> "<text>hello <strong>world</strong></text>"^^<${Xsd}string> .
        |""".stripMargin
 
+  private val FormattedText       = s"${KnoraBase}FormattedText"
+  private val CustomFormattedText = s"${KnoraBase}CustomFormattedText"
+  private val UnformattedText     = s"${KnoraBase}UnformattedText"
+
+  private def textValueTypeTriple(typeIri: String): String =
+    s"""<$ValueIri> <${KnoraBase}hasTextValueType> <$typeIri> .
+       |""".stripMargin
+
   private def readClasspathResource(path: String): Task[String] =
     ZIO.attemptBlocking {
       val is = getClass.getClassLoader.getResourceAsStream(path)
@@ -93,20 +101,35 @@ class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
     }
 
   override def spec: Spec[Any, Any] = suite("ValueHasXmlShaclRegressionSpec")(
-    test("a TextValue instance carrying knora-base:valueHasXml validates clean") {
+    test("a FormattedText value carrying knora-base:valueHasXml validates clean") {
+      validate(textValueTtl(textValueTypeTriple(FormattedText) + valueHasXmlTriple))
+        .map(result => assert(result)(isRight))
+    },
+    test("a CustomFormattedText value carrying knora-base:valueHasXml validates clean") {
+      validate(textValueTtl(textValueTypeTriple(CustomFormattedText) + valueHasXmlTriple))
+        .map(result => assert(result)(isRight))
+    },
+    test("an UnformattedText value carrying knora-base:valueHasXml fails validation") {
+      validate(textValueTtl(textValueTypeTriple(UnformattedText) + valueHasXmlTriple))
+        .map(result => assert(result)(isLeft))
+    },
+    test("a value carrying knora-base:valueHasXml with no hasTextValueType validates clean") {
       validate(textValueTtl(valueHasXmlTriple)).map(result => assert(result)(isRight))
     },
-    test("the same instance without knora-base:valueHasXml also validates clean") {
+    test("an UnformattedText value without knora-base:valueHasXml validates clean") {
+      validate(textValueTtl(textValueTypeTriple(UnformattedText))).map(result => assert(result)(isRight))
+    },
+    test("a value without hasTextValueType and without knora-base:valueHasXml validates clean") {
       validate(textValueTtl("")).map(result => assert(result)(isRight))
     },
-    test("the same instance missing a required Value predicate fails (harness sanity check)") {
+    test("a value missing a required Value predicate fails (harness sanity check)") {
       val incomplete =
         s"""<$ValueIri> <$RdfType> <${KnoraBase}TextValue> .
            |<$ValueIri> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<${Xsd}dateTime> .
            |<$ValueIri> <${KnoraBase}attachedToUser> <$UserIri> .
            |<$ValueIri> <${KnoraBase}isDeleted> "false"^^<${Xsd}boolean> .
            |<$ValueIri> <${KnoraBase}valueHasString> "value string"^^<${Xsd}string> .
-           |$valueHasXmlTriple""".stripMargin // knora-base:hasPermissions omitted on purpose
+           |""".stripMargin // knora-base:hasPermissions omitted on purpose; unformatted, no valueHasXml
       validate(incomplete).map(result => assert(result)(isLeft))
     },
   ).provideLayerShared(fixturesLayer)
