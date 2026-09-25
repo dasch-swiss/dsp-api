@@ -45,6 +45,10 @@ class SegmentE2EZSpec extends E2EZSpec {
              |    "@type": "knora-api:TextValue",
              |    "knora-api:valueAsString": "This is a test video segment."
              |  },
+             |  "knora-api:hasDescription": {
+             |    "@type": "knora-api:TextValue",
+             |    "knora-api:valueAsString": "This is a test video segment description."
+             |  },
              |  "knora-api:hasSegmentBounds": {
              |    "@type": "knora-api:IntervalValue",
              |    "knora-api:intervalValueHasStart" : {
@@ -99,6 +103,11 @@ class SegmentE2EZSpec extends E2EZSpec {
           response.`knora-api:attachedToProject`.`@id` == "http://rdfh.ch/projects/0001",
           response.`knora-api:attachedToUser`.`@id` == "http://rdfh.ch/users/root",
           response.`knora-api:hasComment`.`knora-api:valueAsString` == "This is a test video segment.",
+          response.`knora-api:hasDescription`
+            .map(_.`knora-api:valueAsString`)
+            .contains(
+              "This is a test video segment description.",
+            ),
           BigDecimal(response.`knora-api:hasSegmentBounds`.`knora-api:intervalValueHasStart`.`@value`) == 1.0,
           BigDecimal(response.`knora-api:hasSegmentBounds`.`knora-api:intervalValueHasEnd`.`@value`) == 3.0,
           response.`knora-api:isVideoSegmentOfValue`.`knora-api:linkValueHasTarget`.`@id` == "http://rdfh.ch/0001/zUelKon-SdmuL9iiHMgnGw",

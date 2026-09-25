@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v57" .
+    :ontologyVersion   "knora-base v58" .
 
 
 #################################################################
@@ -2016,6 +2016,9 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasResourceAuthorship ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasDescription ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:label      "Ressource"@de,
                     "Resource"@en,
