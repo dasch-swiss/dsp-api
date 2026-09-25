@@ -52,8 +52,9 @@ class ResourceDescriptionE2ESpec extends E2EZSpec {
       .orElse(resource.getRequiredArray(hasDescription).map(_.value.collect { case o: JsonLDObject => o }))
 
   /**
-   * Reads a single value back through the single-value endpoint, so a test sees only its own value:
-   * the endpoint returns a resource stub with just the requested value under its property.
+   * Reads a single value back through the single-value endpoint, so a test sees only its own value.
+   * A value keeps its UUID across updates while its IRI changes, so the IRI returned on creation keeps
+   * addressing the current version.
    */
   private def getDescriptionValue(resourceIri: String, valueIri: String) =
     for {
@@ -61,9 +62,38 @@ class ResourceDescriptionE2ESpec extends E2EZSpec {
                     .getJsonLdDocument(uri"/v2/values/$resourceIri/${valueUuidOf(valueIri)}", anythingUser1)
                     .flatMap(_.assert200)
                     .map(_.body)
-      descriptions <- ZIO.fromEither(descriptionsOf(resource))
-    } yield descriptions.head
+      description <-
+        ZIO.fromEither(descriptionsOf(resource).flatMap(_.headOption.toRight(s"No description in $resource")))
+      text <- ZIO.fromEither(description.getRequiredString(KA.ValueAsString))
+    } yield text
 
+  /** A `/v2/values` payload with one plain-text description; with `valueIri` it updates that value. */
+  private def descriptionRequest(
+    resourceIri: String,
+    resourceType: String,
+    text: String,
+    valueIri: Option[String] = None,
+  ): String =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "$resourceType",
+       |  "knora-api:hasDescription" : {
+       |    ${valueIri.fold("")(iri => s""""@id" : "$iri",""")}
+       |    "@type" : "knora-api:TextValue",
+       |    "knora-api:valueAsString" : "$text"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
+
+  /** Adds a plain-text description and returns the new value's IRI. */
+  private def addDescription(resourceIri: String, resourceType: String, text: String) =
+    TestApiClient
+      .postJsonLdDocument(uri"/v2/values", descriptionRequest(resourceIri, resourceType, text), anythingUser1)
+      .flatMap(_.assert200)
+      .flatMap(response => ZIO.fromEither(response.body.getRequiredString(JsonLDKeywords.ID)))
   override val e2eSpec: Spec[env, Any] = suite("ResourceDescriptionE2ESpec")(
     test("creates an anything:Thing with a rich-text description and reads it back") {
       val textValueAsXml =
@@ -97,7 +127,8 @@ class ResourceDescriptionE2ESpec extends E2EZSpec {
         resourceIri  <- ZIO.fromEither(created.body.getRequiredString(JsonLDKeywords.ID))
         resource     <- TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", anythingUser1).flatMap(_.assert200)
         descriptions <- ZIO.fromEither(descriptionsOf(resource.body))
-        xml          <- ZIO.fromEither(descriptions.head.getRequiredString(KA.TextValueAsXml))
+        description  <- ZIO.fromEither(descriptions.headOption.toRight(s"No description in $resource"))
+        xml          <- ZIO.fromEither(description.getRequiredString(KA.TextValueAsXml))
       } yield assertTrue(
         descriptions.size == 1,
         xml.contains("the description"),
@@ -105,90 +136,22 @@ class ResourceDescriptionE2ESpec extends E2EZSpec {
       )
     },
     test("adds a description to an existing thing and reads it back, then updates it") {
-      val createRequest =
-        s"""{
-           |  "@id" : "$aThingIri",
-           |  "@type" : "anything:Thing",
-           |  "knora-api:hasDescription" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "the first description"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-      def updateRequest(valueIri: String) =
-        s"""{
-           |  "@id" : "$aThingIri",
-           |  "@type" : "anything:Thing",
-           |  "knora-api:hasDescription" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "the updated description"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+      val update =
+        (valueIri: String) => descriptionRequest(aThingIri, "anything:Thing", "the updated description", Some(valueIri))
       for {
-        created   <- TestApiClient.postJsonLdDocument(uri"/v2/values", createRequest, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(created.body.getRequiredString(JsonLDKeywords.ID))
-        saved     <- getDescriptionValue(aThingIri, valueIri)
-        savedText <- ZIO.fromEither(saved.getRequiredString(KA.ValueAsString))
-
-        // knora-api:valueHasUUID stays stable across updates, even though the value's own IRI changes,
-        // so the original value IRI's UUID keeps addressing the current version through the values endpoint.
-        _ <-
-          TestApiClient.putJsonLdDocument(uri"/v2/values", updateRequest(valueIri), anythingUser1).flatMap(_.assert200)
-        savedUpdated     <- getDescriptionValue(aThingIri, valueIri)
-        savedUpdatedText <- ZIO.fromEither(savedUpdated.getRequiredString(KA.ValueAsString))
-      } yield assertTrue(
-        savedText == "the first description",
-        savedUpdatedText == "the updated description",
-      )
+        valueIri  <- addDescription(aThingIri, "anything:Thing", "the first description")
+        savedText <- getDescriptionValue(aThingIri, valueIri)
+        _         <- TestApiClient.putJsonLdDocument(uri"/v2/values", update(valueIri), anythingUser1).flatMap(_.assert200)
+        updated   <- getDescriptionValue(aThingIri, valueIri)
+      } yield assertTrue(savedText == "the first description", updated == "the updated description")
     },
     test("adds a second description to the same thing, so both come back") {
-      val firstRequest =
-        s"""{
-           |  "@id" : "$aThingIri",
-           |  "@type" : "anything:Thing",
-           |  "knora-api:hasDescription" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "description set one"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-      val secondRequest =
-        s"""{
-           |  "@id" : "$aThingIri",
-           |  "@type" : "anything:Thing",
-           |  "knora-api:hasDescription" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "description set two"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
       for {
-        first     <- TestApiClient.postJsonLdDocument(uri"/v2/values", firstRequest, anythingUser1).flatMap(_.assert200)
-        firstIri  <- ZIO.fromEither(first.body.getRequiredString(JsonLDKeywords.ID))
-        second    <- TestApiClient.postJsonLdDocument(uri"/v2/values", secondRequest, anythingUser1).flatMap(_.assert200)
-        secondIri <- ZIO.fromEither(second.body.getRequiredString(JsonLDKeywords.ID))
-
-        savedFirst      <- getDescriptionValue(aThingIri, firstIri)
-        savedFirstText  <- ZIO.fromEither(savedFirst.getRequiredString(KA.ValueAsString))
-        savedSecond     <- getDescriptionValue(aThingIri, secondIri)
-        savedSecondText <- ZIO.fromEither(savedSecond.getRequiredString(KA.ValueAsString))
-      } yield assertTrue(
-        Set(savedFirstText, savedSecondText) == Set("description set one", "description set two"),
-      )
+        firstIri   <- addDescription(aThingIri, "anything:Thing", "description set one")
+        secondIri  <- addDescription(aThingIri, "anything:Thing", "description set two")
+        firstText  <- getDescriptionValue(aThingIri, firstIri)
+        secondText <- getDescriptionValue(aThingIri, secondIri)
+      } yield assertTrue(Set(firstText, secondText) == Set("description set one", "description set two"))
     },
     test("creates an anything:Thing without a description, which reads back without hasDescription") {
       val createRequest =
@@ -233,23 +196,9 @@ class ResourceDescriptionE2ESpec extends E2EZSpec {
       } yield assertTrue(minCardinality == 0, isInherited)
     },
     test("a knora-api:Region accepts a hasDescription value") {
-      val createRequest =
-        s"""{
-           |  "@id" : "$aTestRegionIri",
-           |  "@type" : "knora-api:Region",
-           |  "knora-api:hasDescription" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "a description of the region"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
-           |  }
-           |}""".stripMargin
       for {
-        created   <- TestApiClient.postJsonLdDocument(uri"/v2/values", createRequest, anythingUser1).flatMap(_.assert200)
-        valueIri  <- ZIO.fromEither(created.body.getRequiredString(JsonLDKeywords.ID))
-        saved     <- getDescriptionValue(aTestRegionIri, valueIri)
-        savedText <- ZIO.fromEither(saved.getRequiredString(KA.ValueAsString))
+        valueIri  <- addDescription(aTestRegionIri, "knora-api:Region", "a description of the region")
+        savedText <- getDescriptionValue(aTestRegionIri, valueIri)
       } yield assertTrue(savedText == "a description of the region")
     },
   )
