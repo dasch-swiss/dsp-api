@@ -137,6 +137,7 @@ object Vocabulary {
     val valueHasLanguage: Iri              = iri(kb + "valueHasLanguage")
     val valueHasMapping: Iri               = iri(kb + "valueHasMapping")
     val valueHasMaxStandoffStartIndex: Iri = iri(kb + "valueHasMaxStandoffStartIndex")
+    val valueHasXml: Iri                   = iri(kb + "valueHasXml")
     val valueHasStandoff: Iri              = iri(kb + "valueHasStandoff")
     val hasCopyrightHolder: Iri            = iri(kb + "hasCopyrightHolder")
     val hasAuthorship: Iri                 = iri(kb + "hasAuthorship")
