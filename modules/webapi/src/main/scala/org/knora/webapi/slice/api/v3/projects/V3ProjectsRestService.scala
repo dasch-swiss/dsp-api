@@ -82,18 +82,23 @@ final class V3ProjectsRestService(
           .mapError { case ExportExistsError(t) => conflict(export_exists, t.projectIri, t.id) }
     } yield DataTaskStatusResponse.from(state)
 
+  // The three handlers below — status, delete and download — resolve the export by id alone from the server-wide
+  // task slot. Their `projectIri` is unvalidated path input, echoed into the error payload and never checked
+  // against the export, so it must stay unresolved here: re-adding an existence gate reproduces DEV-6766, where
+  // an erased project's export becomes unreachable and wedges the one global slot for every project.
   def getProjectExportStatus(
     user: User,
   )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] = for {
-    _     <- ensureSystemAdminAndProjectExists(user, projectIri)
+    _     <- auth.ensureSystemAdmin(user)
     state <-
       exportService.getExportStatus(exportId).orElseFail(notFound(export_not_found, projectIri, exportId))
   } yield DataTaskStatusResponse.from(state)
 
+  // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
   def deleteProjectExport(
     user: User,
   )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
-    _ <- ensureSystemAdminAndProjectExists(user, projectIri)
+    _ <- auth.ensureSystemAdmin(user)
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
@@ -103,6 +108,7 @@ final class V3ProjectsRestService(
   } yield ()
 
   // Download the export as a zip stream. Annotated to match the tapir endpoint (stream + media type + filename).
+  // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
   def downloadProjectExport(
     user: User,
   )(
@@ -110,7 +116,7 @@ final class V3ProjectsRestService(
     exportId: DataTaskId,
   ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
     for {
-      _                 <- ensureSystemAdminAndProjectExists(user, projectIri)
+      _                 <- auth.ensureSystemAdmin(user)
       filenameAndStream <- exportService.downloadExport(exportId).mapError {
                              case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
                              case Some(ExportFailedError(t))     => conflict(export_failed, t.projectIri, t.id)

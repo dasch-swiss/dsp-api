@@ -88,21 +88,22 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
   // get the status of an export
   val getProjectIriExportsExportId = self.base
-    .secured(oneOf(notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found)))
+    .secured(oneOf(notFoundVariant(V3ErrorCode.export_not_found)))
     .get
     .in(exportsBase / exportIdPathVar)
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Checks the status of an export. " +
-        "The response will indicate whether the export is still in progress, has completed successfully, or has failed.",
+        "The response will indicate whether the export is still in progress, has completed successfully, or has failed. " +
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
     )
 
   // delete an export
   val deleteProjectIriExportsExportId = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
+        notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress),
       ),
     )
@@ -111,14 +112,15 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Deletes an export irrevocably. " +
-        "Only exports in state failed or completed can be deleted.",
+        "Only exports in state failed or completed can be deleted. " +
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
     )
 
   // download an export
   val getProjectIriExportsExportIdDownload = self.base
     .secured(
       oneOf(
-        notFoundVariant(V3ErrorCode.project_not_found, V3ErrorCode.export_not_found),
+        notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress, V3ErrorCode.export_failed),
       ),
     )
@@ -130,7 +132,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Download an export. " +
         "An export can only be downloaded when it has completed successfully. " +
-        "If it is still in progress or has failed, the response will be 409 Conflict.",
+        "If it is still in progress or has failed, the response will be 409 Conflict. " +
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
     )
 
   // import an export
