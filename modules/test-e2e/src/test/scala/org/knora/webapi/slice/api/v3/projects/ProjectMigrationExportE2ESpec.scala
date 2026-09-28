@@ -105,6 +105,46 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
         additional("Source-Server") == apiConfig.externalHost,
       )
     },
+    test("serve and delete an export through a project IRI that does not resolve (DEV-6766)") {
+      // The export slot is server-wide and status/delete/download resolve the task by its id alone, so an
+      // unresolvable project IRI in the path must not block them. Gating them on project existence made the export
+      // of an erased project unreachable, wedging the slot for every project. A never-existing IRI reproduces the
+      // erased-project condition without mutating the shared incunabula fixture.
+      val ghostProjectIri = "http://rdfh.ch/projects/0000000000000000000000"
+      for {
+        taskStatus <- triggerExportWithCleanup()
+        exportId    = taskStatus.id
+        _          <- pollUntilCompleted(exportId).retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+
+        statusResponse <- TestApiClient.getJson[DataTaskStatusResponse](
+                            uri"/v3/projects/$ghostProjectIri/exports/${exportId.value}",
+                            rootUser,
+                          )
+        downloadedBytes <- downloadExportBytes(exportId, ghostProjectIri)
+        deleteResponse  <- deleteExportResponse(exportId, ghostProjectIri)
+
+        // The slot is empty again: the deleted task is gone, and a new export can be created.
+        statusAfterDelete <- TestApiClient.getJson[Json](
+                               uri"/v3/projects/$ghostProjectIri/exports/${exportId.value}",
+                               rootUser,
+                             )
+        reTriggered <- TestApiClient.postJson[DataTaskStatusResponse](
+                         uri"/v3/projects/$projectIri/exports?skipAssets=true",
+                         rootUser,
+                       )
+        _ <- ZIO.foreachDiscard(reTriggered.body.toOption) { s =>
+               pollUntilCompleted(s.id).retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
+                 deleteExport(s.id)
+             }
+      } yield assertTrue(
+        statusResponse.code == StatusCode.Ok,
+        statusResponse.body.map(_.id) == Right(exportId),
+        downloadedBytes.nonEmpty,
+        deleteResponse.code == StatusCode.NoContent,
+        statusAfterDelete.code == StatusCode.NotFound,
+        reTriggered.code == StatusCode.Accepted,
+      )
+    },
   )
 
   private def pollUntilCompleted(exportId: DataTaskId) =
@@ -145,18 +185,19 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
         } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
       }
 
-  private def deleteExport(exportId: DataTaskId, prjIri: String = projectIri) =
-    TestApiClient
-      .deleteJson[Json](uri"/v3/projects/$prjIri/exports/${exportId.value}", rootUser)
-      .ignore
+  private def deleteExportResponse(exportId: DataTaskId, prjIri: String) =
+    TestApiClient.deleteJson[Json](uri"/v3/projects/$prjIri/exports/${exportId.value}", rootUser)
 
-  private def downloadExportBytes(exportId: DataTaskId) =
+  private def deleteExport(exportId: DataTaskId, prjIri: String = projectIri) =
+    deleteExportResponse(exportId, prjIri).ignore
+
+  private def downloadExportBytes(exportId: DataTaskId, prjIri: String = projectIri) =
     for {
       baseUrl    <- AppConfig.knoraApi(_.externalKnoraApiBaseUrl)
       scope      <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(rootUser))
       jwt        <- ZIO.serviceWithZIO[JwtService](_.createJwt(rootUser.userIri, scope))
       be         <- HttpClientZioBackend()
-      downloadUrl = uri"$baseUrl/v3/projects/$projectIri/exports/$exportId/download"
+      downloadUrl = uri"$baseUrl/v3/projects/$prjIri/exports/$exportId/download"
       response   <- basicRequest
                     .get(downloadUrl)
                     .auth

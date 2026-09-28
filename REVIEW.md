@@ -56,6 +56,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] Stored values that fail validation on read are skipped **with a logged warning** — not a 500, not a silent drop
 - [ ] Built-in ontology changes follow the version-bump rules (`docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies); no duplicate bump for a change a stacked sibling PR already bumps for; generated ontology fixtures regenerated via `OntologyFormatsE2ESpec`, not hand-edited
 - [ ] Changes to `knora-base:hasTextValueType` go through the shared `TextValueType.hasTextValueTypeIri`, and scalar decimals through `ValuesValidator.canonicalDecimal`, so the three write paths stay in agreement — v2 create, v2 add-value, v3 bulk import. See `docs/development/dsp-api-text-value-type-parity.md`
+- [ ] SHACL: a new/changed value predicate has its constraint in the right shape file (`data-shapes.ttl` universal, or a mode layer), a self-verifying regression test, and no leak into the generated `knora-api` ontology; complex shapes carry `sh:description`. See `docs/development/dsp-api-shacl-shapes.md`
 
 ### Observability
 
