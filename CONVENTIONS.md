@@ -36,7 +36,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### Value objects
 
 - `final case class X private (value: I)` extending the appropriate `*Value` base, with `object X extends  WithFrom[I, X]` or a specialized companion e.g. StringValueCompanion[X]` in case `I` is `String`.
-- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. Full pattern in `docs/development/dsp-api-value-types.md`.
+- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. A companion extending neither `StringValueCompanion` nor `IntValueCompanion` also declares a `given Schema[X]` matching the JSON codec, or the OpenAPI spec silently renders an object. Full pattern in `docs/development/dsp-api-value-types.md`.
 - Factory functions should be named `makeNew`
 
 ### IRI handling
@@ -80,6 +80,7 @@ diffing rendered SPARQL against the old `getQueryString` output). See
 - Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/dsp-api-error-handling.md` § Reading persisted data leniently.
 - Changing `knora-base.ttl` / `knora-admin.ttl`: version-bump rules (incl. when *not* to bump, and `MigrateOnlyBuiltInGraphs` for reload-only changes) in `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies. Generated fixtures (e.g. `knoraApiOntologyWithValueObjects.jsonld`) are rewritten by `OntologyFormatsE2ESpec` — never hand-edited.
 - Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/dsp-api-sparql-queries.md`.
+- Three write paths persist `knora-base:hasTextValueType` from the shared `TextValueType.hasTextValueTypeIri`, and format decimals through `ValuesValidator.canonicalDecimal`: v2 create (`ResourcesRepoLive`), v2 add-value (`InsertValueQueryBuilder`), v3 bulk import (`OntologyTransformer`). Change the shared helper, not one site. See `docs/development/dsp-api-text-value-type-parity.md`.
 
 ### Observability
 
@@ -190,6 +191,7 @@ See `.github/pull_request_template.md`. For the recommended section structure (M
 - `docs/development/dsp-api-iri-handling.md` — universal IRI handling rules
 - `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
 - `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
+- `docs/development/dsp-api-text-value-type-parity.md` — three-write-path parity for text-value-type IRIs and scalar decimals
 - `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
 - `docs/adr/0011-cross-context-access-ports-and-adapters.md` - how contexts may depend on each other (ports, adapters, graph sovereignty)
 - `docs/adr/` — architectural decisions

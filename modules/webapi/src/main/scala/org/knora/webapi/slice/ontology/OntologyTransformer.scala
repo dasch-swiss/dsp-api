@@ -36,6 +36,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
 import scala.jdk.CollectionConverters.*
 
@@ -46,6 +47,7 @@ import org.knora.webapi.messages.Geolocation
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.CalendarDateRangeV2
 import org.knora.webapi.messages.util.CalendarNameV2
@@ -55,6 +57,7 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
@@ -216,8 +219,9 @@ final class OntologyTransformer(
                // the resolved class DOAP applies.
                val permission = payloadPermission.fold(classDoaps(resourceClass))(payloadPerms)
                // A payload creationDate is honored but re-emitted as xsd:dateTime: the create path stores
-               // it via an Instant, so the datatype the payload declared (e.g. xsd:dateTimeStamp) does
-               // not survive.
+               // it via an Instant, so the datatype the payload declared (for example xsd:dateTimeStamp)
+               // does not survive. An unparseable or offset-less value fails the import loudly, so
+               // provenance is never silently rewritten to the import-time clock.
                val payloadCreationDate = Option(r.getProperty(creationDate)).map(_.getObject)
                // Strip any payload-supplied system metadata before synthesizing, so a payload value does
                // not coexist with the synthesized one (the data graph enforces maxCount 1).
@@ -229,11 +233,23 @@ final class OntologyTransformer(
                r.addProperty(attachedToUser, userResource)
                r.addProperty(attachedToProject, projectResource)
                r.addProperty(hasPermissions, permission)
-               val creationDateValue = payloadCreationDate
-                 .filter(_.isLiteral)
-                 .flatMap(n => scala.util.Try(Instant.parse(n.asLiteral.getLexicalForm)).toOption)
-                 .map(inst => model.createTypedLiteral(inst.toString, XSDDatatype.XSDdateTime))
-                 .getOrElse(creationDateLit)
+               val creationDateValue = payloadCreationDate match {
+                 case Some(node) if node.isLiteral =>
+                   val lexical = node.asLiteral.getLexicalForm
+                   val instant =
+                     try OffsetDateTime.parse(lexical).toInstant()
+                     catch {
+                       case e: DateTimeParseException =>
+                         throw new IllegalArgumentException(
+                           s"Resource $r has a knora-base:creationDate '$lexical' that is not an offset date-time",
+                           e,
+                         )
+                     }
+                   model.createTypedLiteral(instant.toString, XSDDatatype.XSDdateTime)
+                 case Some(node) =>
+                   throw new IllegalArgumentException(s"Resource $r has a non-literal knora-base:creationDate: $node")
+                 case None => creationDateLit
+               }
                r.addProperty(creationDate, creationDateValue)
                r.addProperty(isDeleted, falseLit)
              }
@@ -343,8 +359,6 @@ final class OntologyTransformer(
     val textValueType    = KnoraBase.TextValue
     val textValueAsXml   = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
     val hasTextValueType = model.createProperty(KnoraBase.HasTextValueType)
-    val formattedText    = model.createResource(KnoraBase.FormattedText)
-    val unformattedText  = model.createResource(KnoraBase.UnformattedText)
 
     val textValues = model
       .listSubjects()
@@ -357,12 +371,11 @@ final class OntologyTransformer(
       }
       .toList
 
-    // Set hasTextValueType on every text value, matching the v2 resource-create path (ResourcesRepoLive)
-    // and the v2 add-value path (POST /v2/values, InsertValueQueryBuilder): all three write paths carry
-    // the same marker, so an imported text value and a create-path text value hold identical triples.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri; this path emits only Unformatted/FormattedText,
+    // never CustomFormattedText. See docs/development/dsp-api-text-value-type-parity.md.
     textValues.foreach { v =>
-      val valueType = if (v.hasProperty(textValueAsXml)) formattedText else unformattedText
-      v.addProperty(hasTextValueType, valueType)
+      val valueType = if (v.hasProperty(textValueAsXml)) TextValueType.FormattedText else TextValueType.UnformattedText
+      v.addProperty(hasTextValueType, model.createResource(TextValueType.hasTextValueTypeIri(valueType)))
     }
   }
 
@@ -454,14 +467,15 @@ final class OntologyTransformer(
   /**
    * Re-type the scalar value literals that arrive from the payload with a non-canonical datatype so they satisfy their
    * `knora-base:objectDatatypeConstraint`, mirroring the v2 create path's `InsertValueQueryBuilder.buildTypeSpecificPatterns`
-   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer` and `valueHasTimeStamp` a
-   * UTC `xsd:dateTime`, each with a canonical lexical form. Jena's `createTypedLiteral` stores the lexical string
-   * verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed literal fails the import,
-   * matching [[convertDateValues]]. Other scalar datatypes already match the create path today and are left untouched.
-   * Runs before [[addValueHasString]] so the derived `valueHasString` reflects the canonical form.
+   * (which re-emits every scalar from a typed model). `valueHasInteger` becomes `xsd:integer`, `valueHasTimeStamp` a UTC
+   * `xsd:dateTime`, `valueHasDecimal` and both interval bounds (`valueHasIntervalStart` / `valueHasIntervalEnd`)
+   * `xsd:decimal`, and `valueHasUri` `xsd:anyURI` — each with a canonical lexical form. Jena's `createTypedLiteral`
+   * stores the lexical string verbatim, so both the datatype IRI and the lexical form are set explicitly. A malformed
+   * numeric or timestamp literal fails the import, matching [[convertDateValues]]. Runs before [[addValueHasString]] so
+   * the derived `valueHasString` reflects the canonical form.
    *
-   * Applies to the values this pass writes. Non-canonical `valueHasInteger` / `valueHasTimeStamp` literals
-   * from prior imports stay as they are; remediating them is a separate DEV-7149 data-migration follow-up.
+   * Applies to the values this pass writes. Non-canonical literals from prior imports stay as they are; remediating
+   * them is a separate data-migration follow-up.
    */
   private def canonicalizeScalarLiterals(model: Model): Unit = {
     retypeLiterals(model, KnoraBase.ValueHasInteger)(lexical =>
@@ -470,6 +484,16 @@ final class OntologyTransformer(
     retypeLiterals(model, KnoraBase.ValueHasTimeStamp)(lexical =>
       model.createTypedLiteral(Instant.parse(lexical.trim).toString, XSDDatatype.XSDdateTime),
     )
+    retypeLiterals(model, KnoraBase.ValueHasDecimal)(lexical =>
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasIntervalStart)(lexical =>
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasIntervalEnd)(lexical =>
+      model.createTypedLiteral(ValuesValidator.canonicalDecimal(BigDecimal(lexical.trim)), XSDDatatype.XSDdecimal),
+    )
+    retypeLiterals(model, KnoraBase.ValueHasUri)(lexical => model.createTypedLiteral(lexical, XSDDatatype.XSDanyURI))
   }
 
   /** Replaces every literal object of `property` with the literal that `retype` derives from its lexical form. */

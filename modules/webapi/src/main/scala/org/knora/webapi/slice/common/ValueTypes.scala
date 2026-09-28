@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.common
 
+import sttp.tapir.Schema
 import zio.prelude.Validation
 import zio.prelude.ZValidation
 
@@ -33,7 +34,11 @@ trait WithFrom[-I, +A] {
     from(in).fold(e => throw new IllegalArgumentException(e), identity)
 }
 
-trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A]
+// The JSON codecs of value types are bare scalars. Without a companion Schema, the `sttp.tapir.generic.auto` import in
+// the endpoint files derives a `{value: ...}` object instead, and the OpenAPI spec disagrees with the wire format.
+trait StringValueCompanion[A <: StringValue] extends WithFrom[String, A] {
+  given Schema[A] = Schema.string.as[A]
+}
 object StringValueCompanion {
 
   def nonEmpty: String => Validation[String, String] =
@@ -65,4 +70,6 @@ object StringValueCompanion {
       .map(_.mkString(s"$typ ", ", ", "."))
 }
 
-trait IntValueCompanion[A <: IntValue] extends WithFrom[Int, A]
+trait IntValueCompanion[A <: IntValue] extends WithFrom[Int, A] {
+  given Schema[A] = Schema.schemaForInt.as[A]
+}

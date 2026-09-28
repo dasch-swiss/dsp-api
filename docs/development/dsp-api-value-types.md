@@ -37,13 +37,16 @@ object Shortcode extends StringValueCompanion[Shortcode] {
 
 What you get for free:
 
-| Method       | Source        | Behaviour                                                  |
-|--------------|---------------|------------------------------------------------------------|
-| `from`       | You implement | Validates and returns `Either[String, A]`                  |
-| `unsafeFrom` | `WithFrom`    | Calls `from`, throws `IllegalArgumentException` on `Left`  |
-| `toString`   | `Value[A]`    | Returns `value.toString` — the raw string                  |
+| Method       | Source                                       | Behaviour                                                 |
+|--------------|----------------------------------------------|-----------------------------------------------------------|
+| `from`       | You implement                                | Validates and returns `Either[String, A]`                 |
+| `unsafeFrom` | `WithFrom`                                   | Calls `from`, throws `IllegalArgumentException` on `Left` |
+| `toString`   | `Value[A]`                                   | Returns `value.toString` — the raw string                 |
+| `Schema[A]`  | `StringValueCompanion` / `IntValueCompanion` | Tapir schema as a bare scalar, matching the JSON codec    |
 
 The private constructor ensures every instance went through `from` (or `unsafeFrom`).
+
+A value type whose companion extends neither trait (a `BooleanValue`, a sealed trait of case objects, or a `WithFrom` over a collection) declares its own `given Schema[X]` matching its JSON codec, e.g. `Schema.schemaForBoolean.as[X]`. Without one, the `sttp.tapir.generic.auto` import in the endpoint files derives an object (`{value: ...}`, or one empty object per case) and the OpenAPI spec no longer matches the wire format; `ValueTypeSchemaSpec` fails on it.
 
 ## Extra parsed fields
 

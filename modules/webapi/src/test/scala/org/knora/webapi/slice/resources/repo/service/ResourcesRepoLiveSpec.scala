@@ -398,7 +398,7 @@ object TestData {
       creator = valueCreator,
       creationDate = valueCreationDate,
       valueHasOrder = 1,
-      valueHasString = "0.0 - 100.0",
+      valueHasString = "0 - 100",
       comment = None,
     )
 
@@ -1114,14 +1114,14 @@ class ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            <foo:hasInterval> <foo:IntervalValueIri> .
             |        <foo:IntervalValueIri> rdf:type <http://www.knora.org/ontology/knora-base#IntervalValue> ;
             |            knora-base:isDeleted false  ;
-            |            knora-base:valueHasString "0.0 - 100.0" ;
+            |            knora-base:valueHasString "0 - 100" ;
             |            knora-base:valueHasUUID "${UuidUtil.base64Encode(intervalValueDefinition.valueUUID)}" ;
             |            knora-base:attachedToUser <${valueCreator.value}> ;
             |            knora-base:hasPermissions "$valuePermissions" ;
             |            knora-base:valueHasOrder 1 ;
             |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
-            |            knora-base:valueHasIntervalStart 0.0 ;
-            |            knora-base:valueHasIntervalEnd 100.0 ;
+            |            knora-base:valueHasIntervalStart "0"^^xsd:decimal ;
+            |            knora-base:valueHasIntervalEnd "100"^^xsd:decimal ;
             |    }
             |}
             |""".stripMargin,

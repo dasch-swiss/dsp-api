@@ -1041,6 +1041,29 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
             validate(ontologyWithClass, nq, adminWithSystemUser).map(result => assertTrue(result.isRight))
           }
         },
+        test("rejects a genuine standoff-link LinkValue attached to AnonymousUser") {
+          val adminWithAnonymousUser =
+            s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |<${KnoraAdmin}AnonymousUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+               |""".stripMargin
+          val LinkVal = "http://rdfh.ch/9999/thing001/values/link001"
+          val nq      = validResourceNq +
+            s"""<$LinkVal> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}attachedToUser> <${KnoraAdmin}AnonymousUser> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasString> "$Resource1"^^<$XsdString> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+               |<$LinkVal> <$RdfSubject> <$Resource1> <$DataGraph> .
+               |<$LinkVal> <$RdfPredicate> <${KnoraBase}hasStandoffLinkTo> <$DataGraph> .
+               |<$LinkVal> <$RdfObject> <$Resource1> <$DataGraph> .
+               |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq, adminWithAnonymousUser).map(result => assertTrue(result.isLeft))
+          }
+        },
       )
     },
     bulkImportShapesSuite,
@@ -1180,6 +1203,52 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |""".stripMargin
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isLeft))
+        }
+      },
+      test("accepts a system standoff-link LinkValue attached to SystemUser") {
+        val adminWithSystemUser = adminBothUsers +
+          s"""<${KnoraAdmin}SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+             |""".stripMargin
+        val LinkVal = "http://rdfh.ch/9999/thing001/values/link001"
+        val nq      = resourceNq(OnBehalfOf) +
+          s"""<$LinkVal> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}attachedToUser> <${KnoraAdmin}SystemUser> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasString> "$Resource1"^^<$XsdString> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+             |<$LinkVal> <$RdfSubject> <$Resource1> <$DataGraph> .
+             |<$LinkVal> <$RdfPredicate> <${KnoraBase}hasStandoffLinkTo> <$DataGraph> .
+             |<$LinkVal> <$RdfObject> <$Resource1> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf))
+            .map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects a standoff-link LinkValue attached to a user other than SystemUser") {
+        val adminWithSystemUser = adminBothUsers +
+          s"""<${KnoraAdmin}SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+             |""".stripMargin
+        val LinkVal = "http://rdfh.ch/9999/thing001/values/link001"
+        val nq      = resourceNq(OnBehalfOf) +
+          s"""<$LinkVal> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}attachedToUser> <$OtherUser> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasString> "$Resource1"^^<$XsdString> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+             |<$LinkVal> <$RdfSubject> <$Resource1> <$DataGraph> .
+             |<$LinkVal> <$RdfPredicate> <${KnoraBase}hasStandoffLinkTo> <$DataGraph> .
+             |<$LinkVal> <$RdfObject> <$Resource1> <$DataGraph> .
+             |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf))
             .map(result => assertTrue(result.isLeft))
         }
       },

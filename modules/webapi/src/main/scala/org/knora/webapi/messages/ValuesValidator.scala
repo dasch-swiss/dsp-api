@@ -22,6 +22,16 @@ object ValuesValidator {
 
   def validateBigDecimal(s: String): Option[BigDecimal] = Try(BigDecimal(s)).toOption
 
+  /**
+   * The canonical `xsd:decimal` lexical form: plain notation, never an exponent, with no trailing zeros. Every write
+   * path uses this, so an imported decimal and a create-path decimal hold the same bytes. A scientific-notation payload
+   * (for example "1E2") persists as a valid `xsd:decimal` ("100"), which `xsd:decimal` does not permit in exponent form.
+   *
+   * The caller builds the `BigDecimal` with Scala's `BigDecimal(String)`, which applies `MathContext.DECIMAL128`
+   * (34 significant digits, `HALF_EVEN`). A value with more than 34 significant digits is rounded, not rejected.
+   */
+  def canonicalDecimal(value: BigDecimal): String = value.bigDecimal.stripTrailingZeros.toPlainString
+
   def validateGeometryString(s: String): Option[String] = s.fromJson[Json].map(_ => s).toOption
 
   /**

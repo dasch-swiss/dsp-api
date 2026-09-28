@@ -27,8 +27,10 @@ import scala.util.Try
 
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
@@ -131,7 +133,11 @@ final case class ResourcesRepoLive(triplestore: TriplestoreService)(implicit val
     userIri: InternalIri,
     projectIri: InternalIri,
   ): Task[Unit] =
-    triplestore.query(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
+    // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+    ZIO
+      .attempt(ResourcesRepoLive.createNewResourceQuery(dataGraphIri, resource, projectIri, userIri))
+      .orDie
+      .flatMap(query => triplestore.query(query))
 
   def findValues(id: ResourceIri): Task[Map[PropertyIri, Seq[ValueIri]]] =
     for {
@@ -361,10 +367,11 @@ object ResourcesRepoLive {
       value match
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
+        // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)
-              .has(KB.hasTextValueType, KB.UnformattedText)
+              .has(KB.hasTextValueType, iri(TextValueType.hasTextValueTypeIri(TextValueType.UnformattedText)))
               .andHasOptional(KB.valueHasLanguage, valueHasLanguage.map(literalOf)),
           )
         case v: FormattedTextValueInfo =>
@@ -372,7 +379,10 @@ object ResourcesRepoLive {
         case IntegerValueInfo(valueHasInteger) =>
           List(iri(valueIri).has(KB.valueHasInteger, literalOf(valueHasInteger)))
         case DecimalValueInfo(valueHasDecimal) =>
-          List(iri(valueIri).has(KB.valueHasDecimal, literalOfType(valueHasDecimal.toString(), XSD.DECIMAL)))
+          List(
+            iri(valueIri)
+              .has(KB.valueHasDecimal, literalOfType(ValuesValidator.canonicalDecimal(valueHasDecimal), XSD.DECIMAL)),
+          )
         case BooleanValueInfo(valueHasBoolean) =>
           List(iri(valueIri).has(KB.valueHasBoolean, literalOf(valueHasBoolean)))
         case UriValueInfo(valueHasUri) =>
@@ -390,8 +400,14 @@ object ResourcesRepoLive {
         case IntervalValueInfo(valueHasIntervalStart, valueHasIntervalEnd) =>
           List(
             iri(valueIri)
-              .has(KB.valueHasIntervalStart, literalOfType(valueHasIntervalStart.toString(), XSD.DECIMAL))
-              .andHas(KB.valueHasIntervalEnd, literalOfType(valueHasIntervalEnd.toString(), XSD.DECIMAL)),
+              .has(
+                KB.valueHasIntervalStart,
+                literalOfType(ValuesValidator.canonicalDecimal(valueHasIntervalStart), XSD.DECIMAL),
+              )
+              .andHas(
+                KB.valueHasIntervalEnd,
+                literalOfType(ValuesValidator.canonicalDecimal(valueHasIntervalEnd), XSD.DECIMAL),
+              ),
           )
         case TimeValueInfo(valueHasTimeStamp) =>
           List(iri(valueIri).has(KB.valueHasTimeStamp, literalOfType(valueHasTimeStamp.toString(), XSD.DATETIME)))
@@ -417,10 +433,12 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
-      val txtTypeIri = v.textValueType match
-        case FormattedTextValueType.StandardMapping  => KB.FormattedText
-        case FormattedTextValueType.CustomMapping(_) => KB.CustomFormattedText
+      val textValueType = v.textValueType match
+        case FormattedTextValueType.StandardMapping           => TextValueType.FormattedText
+        case FormattedTextValueType.CustomMapping(mappingIri) => TextValueType.CustomFormattedText(mappingIri)
+      val txtTypeIri   = iri(TextValueType.hasTextValueTypeIri(textValueType))
       val valuePattern =
         iri(valueIri)
           .has(KB.valueHasMapping, iri(v.mappingIri.value))

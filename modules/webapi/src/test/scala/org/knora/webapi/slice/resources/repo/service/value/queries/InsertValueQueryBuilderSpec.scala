@@ -86,6 +86,17 @@ object InsertValueQueryBuilderTestSupport {
         comment = Option.when(withComment)("Test comment"),
       )
 
+    def createTextValueWithUndefinedType: TextValueContentV2 =
+      TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some("Test text value"),
+        textValueType = TextValueType.UndefinedTextType,
+        valueHasLanguage = None,
+        standoff = Vector.empty,
+        mappingIri = None,
+        comment = None,
+      )
+
     def createIntegerValue(withComment: Boolean = false): IntegerValueContentV2 =
       IntegerValueContentV2(
         ontologySchema = ApiV2Complex,
@@ -98,6 +109,13 @@ object InsertValueQueryBuilderTestSupport {
         ontologySchema = ApiV2Complex,
         valueHasDecimal = BigDecimal("3.14159"),
         comment = Option.when(withComment)("Test decimal comment"),
+      )
+
+    def createDecimalValueScientific: DecimalValueContentV2 =
+      DecimalValueContentV2(
+        ontologySchema = ApiV2Complex,
+        valueHasDecimal = BigDecimal("1E2"),
+        comment = None,
       )
 
     def createBooleanValue(withComment: Boolean = false): BooleanValueContentV2 =
@@ -200,6 +218,29 @@ object InsertValueQueryBuilderTestSupport {
         standoff = standoffTags,
         mappingIri = Some(StandoffMappingIri.StandardMapping),
         comment = Option.when(withComment)("Test standoff comment"),
+      )
+    }
+
+    def createTextValueWithCustomMapping(withComment: Boolean = false): TextValueContentV2 = {
+      val standoffTags = Vector(
+        StandoffTagV2(
+          standoffTagClassIri = sf.toSmartIri(OntologyConstants.Standoff.StandoffBoldTag),
+          startPosition = 0,
+          endPosition = 4,
+          uuid = testValueUUID,
+          originalXMLID = None,
+          startIndex = 0,
+        ),
+      )
+
+      TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some("Custom-mapped text"),
+        textValueType = TextValueType.CustomFormattedText(InternalIri(OntologyConstants.KnoraBase.TEIMapping)),
+        valueHasLanguage = None,
+        standoff = standoffTags,
+        mappingIri = Some(StandoffMappingIri.TEIMapping),
+        comment = Option.when(withComment)("Test custom mapping comment"),
       )
     }
 
@@ -719,6 +760,24 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStandoffAndComment")
         },
+        test("with custom mapping") {
+          for {
+            testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithCustomMapping())
+            builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withCustomMapping")
+        },
+        test("with undefined text type fails loud rather than dropping the hasTextValueType triple") {
+          for {
+            exit <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithUndefinedType)).exit
+          } yield assert(exit)(
+            fails(
+              isSubtype[IllegalArgumentException](
+                hasMessage(containsString("Cannot persist knora-base:hasTextValueType")),
+              ),
+            ),
+          )
+        },
         test("with standoff link") {
           val linkUpdates = Seq(TestDataFactory.createSparqlTemplateLinkUpdate())
           for {
@@ -818,6 +877,15 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
           for {
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValue()))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "DecimalValueContentV2_withoutComment")
+        },
+        test("emits a scientific-notation decimal as a plain xsd:decimal") {
+          for {
+            builderQuery <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createDecimalValueScientific))
+          } yield assertTrue(
+            builderQuery.contains("\"100\"^^xsd:decimal"),
+            !builderQuery.contains("\"1E+2\"^^xsd:decimal"),
+          )
         },
       ),
       suite("BooleanValueContentV2")(

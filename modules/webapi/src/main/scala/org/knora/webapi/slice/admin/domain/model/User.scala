@@ -276,6 +276,7 @@ object PasswordStrength extends IntValueCompanion[PasswordStrength] {
 final case class UserStatus private (value: Boolean) extends BooleanValue
 
 object UserStatus {
+  given Schema[UserStatus] = Schema.schemaForBoolean.as[UserStatus]
 
   val Active: UserStatus   = UserStatus(true)
   val Inactive: UserStatus = UserStatus(false)
@@ -286,6 +287,7 @@ object UserStatus {
 final case class SystemAdmin private (value: Boolean) extends BooleanValue
 
 object SystemAdmin {
+  given Schema[SystemAdmin]             = Schema.schemaForBoolean.as[SystemAdmin]
   val IsSystemAdmin: SystemAdmin        = SystemAdmin(true)
   val IsNotSystemAdmin: SystemAdmin     = SystemAdmin(false)
   def from(value: Boolean): SystemAdmin = if (value) IsSystemAdmin else IsNotSystemAdmin

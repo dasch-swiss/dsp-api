@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
+import sttp.tapir.Schema
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -131,6 +132,8 @@ object GroupName extends StringValueCompanion[GroupName] {
 final case class GroupDescriptions private (value: Seq[StringLiteralV2]) extends Value[Seq[StringLiteralV2]]
 
 object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescriptions] {
+  given Schema[GroupDescriptions] = summon[Schema[Seq[StringLiteralV2]]].as[GroupDescriptions]
+
   def from(value: Seq[StringLiteralV2]): Either[String, GroupDescriptions] =
     value.toList match {
       case descriptions @ v2String :: _ if v2String.value.nonEmpty => Right(GroupDescriptions(descriptions))
@@ -149,6 +152,7 @@ object GroupDescriptions extends WithFrom[Seq[StringLiteralV2], GroupDescription
 final case class GroupStatus private (value: Boolean) extends BooleanValue
 
 object GroupStatus {
+  given Schema[GroupStatus]              = Schema.schemaForBoolean.as[GroupStatus]
   val active: GroupStatus                = GroupStatus(true)
   val inactive: GroupStatus              = GroupStatus(false)
   def from(active: Boolean): GroupStatus = GroupStatus(active)
@@ -156,6 +160,7 @@ object GroupStatus {
 
 final case class GroupSelfJoin private (value: Boolean) extends BooleanValue
 object GroupSelfJoin {
+  given Schema[GroupSelfJoin]               = Schema.schemaForBoolean.as[GroupSelfJoin]
   val enabled: GroupSelfJoin                = GroupSelfJoin(true)
   val disabled: GroupSelfJoin               = GroupSelfJoin(false)
   def from(enabled: Boolean): GroupSelfJoin = GroupSelfJoin(enabled)

@@ -41,9 +41,9 @@ knora-base:OntologyLabelSingleLine
   sh:message "Labels may not contain newlines." .
 
 
-# Validates every project ontology (owl:Ontology, excluding system ontologies)
 knora-base:OntologyShape
   a sh:NodeShape ;
+  sh:description "Validates every project ontology. The SPARQL target selects owl:Ontology nodes and excludes the built-in system ontologies (knora-*, salsah-gui, standoff)." ;
   sh:target [
     a sh:SPARQLTarget ;
     sh:prefixes knora-base:OntologyShapesPrefixes ;
@@ -82,9 +82,9 @@ knora-base:OntologyShape
     sh:message "Project ontology must have knora-base:lastModificationDate of type xsd:dateTime" ;
   ] .
 
-# Validates every project-specific subclass of knora-base:Resource
 knora-base:ResourceClassShape
   a sh:NodeShape ;
+  sh:description "Validates every project-specific resource class. The SPARQL target selects subclasses of knora-base:Resource and excludes the built-in knora ontologies." ;
   sh:target [
     a sh:SPARQLTarget ;
     sh:prefixes knora-base:OntologyShapesPrefixes ;
@@ -105,9 +105,9 @@ knora-base:ResourceClassShape
     sh:message "Resource class must have between 1 and 5 rdfs:label" ;
   ] .
 
-# Validates every project-specific subproperty of knora-base:hasValue or knora-base:hasLinkTo
 knora-base:PropertyShape
   a sh:NodeShape ;
+  sh:description "Validates every project-specific value or link property. The SPARQL target selects subproperties of knora-base:hasValue or knora-base:hasLinkTo and excludes the built-in knora ontologies." ;
   sh:target [
     a sh:SPARQLTarget ;
     sh:prefixes knora-base:OntologyShapesPrefixes ;
