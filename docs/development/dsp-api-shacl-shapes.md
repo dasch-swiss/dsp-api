@@ -21,7 +21,7 @@ knora-base version bump.
 - A complex-constraint shape carries an `sh:description`. Complex means it uses `sh:or`,
   `sh:not`, `sh:xone`, a conditional (`sh:hasValue`-keyed) constraint, or `sh:sparql`.
 - A plain shape needs no description. Plain means one `sh:path` with `sh:datatype`,
-  `sh:class`, or a cardinality.
+  `sh:class`, or a cardinality. When in doubt write a `sh:description`.
 - Document shapes with `sh:description`. Do not use `#` comments for shape documentation.
 
 ## Writing constraints
@@ -31,7 +31,7 @@ knora-base version bump.
 Prefer `sh:property`, `sh:or`, and `sh:not`. Reserve `sh:sparql` for rules that declarative
 SHACL cannot express. `data-shapes.ttl` uses no SPARQL today.
 
-### Forbid one case with sh:not
+### Forbid one case with `sh:not`
 
 To disallow a predicate for a single case, forbid the pair with `sh:not`. Do not allowlist
 the permitted cases with `sh:or`, and leave unmarked or legacy values valid. For example, an
@@ -76,7 +76,7 @@ Where a shape needs SPARQL, for example in `ontology-shapes.ttl`:
 - Project `?this`, not `$this`.
 - Declare prefixes through `sh:prefixes`. Do not write inline `PREFIX` lines.
 
-## data-shapes.ttl is not closed
+## No `sh:closed` on `data-shapes.ttl`
 
 Do not use `sh:closed` on `data-shapes.ttl` shapes. Values carry shared and inferred
 predicates, which a closed shape would reject.
