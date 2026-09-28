@@ -1,5 +1,32 @@
 # Changelog
 
+## [40.1.0](https://github.com/dasch-swiss/dsp-api/compare/v40.0.0...v40.1.0) (2026-09-28)
+
+
+### Maintenances
+
+* route text-value-type IRI through one shared mapping (DEV-7260) ([#4353](https://github.com/dasch-swiss/dsp-api/issues/4353)) ([908dfc6](https://github.com/dasch-swiss/dsp-api/commit/908dfc63e8d08017432b4cd20cf355fe201d1aeb))
+* trim tapir request metrics to cut billed series ([#4356](https://github.com/dasch-swiss/dsp-api/issues/4356)) ([0bd87fa](https://github.com/dasch-swiss/dsp-api/commit/0bd87fa2c9ac3fddba91721e0a8016daf44c10bb))
+
+
+### Documentation
+
+* add SHACL shape conventions ([#4364](https://github.com/dasch-swiss/dsp-api/issues/4364)) ([5d175ed](https://github.com/dasch-swiss/dsp-api/commit/5d175edfc85b272a45b0326690699004397ffc12))
+* **shacl:** add sh:description to complex validation shapes ([#4359](https://github.com/dasch-swiss/dsp-api/issues/4359)) ([4864e54](https://github.com/dasch-swiss/dsp-api/commit/4864e54c8a6cd4a4bacb4fa026612725fe097f3c))
+
+
+### Enhancements
+
+* **grafana:** restructure the response-duration dashboard and add request-duration percentiles ([#4355](https://github.com/dasch-swiss/dsp-api/issues/4355)) ([d7ca112](https://github.com/dasch-swiss/dsp-api/commit/d7ca1126fb8793cdf56e24b422528cbcaae07b1c))
+
+
+### Bug Fixes
+
+* canonicalize scalar literals on the import + create paths (DEV-7195, DEV-7259) ([#4352](https://github.com/dasch-swiss/dsp-api/issues/4352)) ([e30ac13](https://github.com/dasch-swiss/dsp-api/commit/e30ac137fd566133d3ef85a6ed0237b548607f34))
+* **dsp-api:** render value types as bare scalars in the OpenAPI spec (DEV-7292) ([#4360](https://github.com/dasch-swiss/dsp-api/issues/4360)) ([4823ba0](https://github.com/dasch-swiss/dsp-api/commit/4823ba04865bfb0c01fcfb1c35a71674ec3b7a16))
+* harden bulk-import parity — SystemUser exemption + creationDate (DEV-7197) ([#4351](https://github.com/dasch-swiss/dsp-api/issues/4351)) ([42f44d0](https://github.com/dasch-swiss/dsp-api/commit/42f44d0a8bf0e4587557449ca534e6bf4bdae93e))
+* resolve v3 exports by id so an erased project cannot wedge the slot (DEV-6766) ([#4357](https://github.com/dasch-swiss/dsp-api/issues/4357)) ([04838ae](https://github.com/dasch-swiss/dsp-api/commit/04838ae08bbd6c5ee88c52514dfcbd7d155b9a76))
+
 ## [40.0.0](https://github.com/dasch-swiss/dsp-api/compare/v39.0.0...v40.0.0) (2026-09-21)
 
 
