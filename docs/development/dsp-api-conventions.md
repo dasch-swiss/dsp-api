@@ -324,6 +324,12 @@ Changes to `knora-base.ttl` / `knora-admin.ttl` follow the version-bump and upgr
 rules in `docs/05-internals/development/updating-repositories.md` (§ Changing the Built-in
 Ontologies) — including when a bump is *not* needed and how test fixtures are regenerated.
 
+### SHACL shapes
+
+Validation shapes live in `modules/webapi/src/main/resources/shacl/`. Their conventions —
+file layering, `sh:description` on complex shapes, `sh:not` for single-case prohibitions,
+`sh:message` placement, and testing — are in `docs/development/dsp-api-shacl-shapes.md`.
+
 ## Import Organization
 
 ```scala

@@ -76,7 +76,9 @@ All operations are **asynchronous**. Triggering an export or import returns `202
 Poll the status endpoint until `status` is `completed` or `failed`.
 The `status` field is one of: `in_progress`, `completed`, `failed`.
 
-Only **one export task and one import task** can exist simultaneously per project. Delete the previous task before triggering a new one. Attempting to create a second returns `409 Conflict` with the existing task's `id` in the error details.
+Only **one export task and one import task** can exist at a time — the slots are server-wide, not per project. Delete the previous task before triggering a new one. Attempting to create a second returns `409 Conflict` with the existing task's `id` and the owning project's IRI in the error details.
+
+Export status, delete and download resolve the task by its `exportId` alone; the `{projectIri}` in the path is not used for the lookup and does not have to resolve to an existing project. An export therefore stays inspectable and deletable after its project has been erased, which is what keeps the export slot from getting stuck.
 
 The import endpoint requires the `{projectIri}` in the URL to match the `External-Identifier` in the BagIt `bag-info.txt`. The request body is the zip file with content type `application/zip`.
 
@@ -216,6 +218,6 @@ curl --request DELETE \
 
 - **No cross-version compatibility**: Export and import require the same `KnoraBase-Version`.
 - **Project must not exist on target**: The import fails if the project IRI or shortcode already exists.
-- **One task at a time**: Only one export and one import can exist per project. Delete the previous task before triggering a new one.
+- **One task at a time**: Only one export and one import can exist server-wide. Delete the previous task before triggering a new one.
 - **Root user references**: Projects where resources or values reference the root user cannot be imported directly. The references must be reassigned before export.
 - **Assets**: Asset export/import is handled via dsp-ingest. If dsp-ingest has no assets for the project, the export continues without them.
