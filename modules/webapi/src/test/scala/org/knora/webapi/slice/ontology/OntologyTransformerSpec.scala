@@ -1881,6 +1881,22 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
            |}]""".stripMargin
       runTransformStage2Failure(jsonLd).map(exit => assertTrue(exit.isSuccess))
     },
+    test("keeps a non-default CRS tag and derives the bare coordinates") {
+      val literal = "<http://www.opengis.net/def/crs/EPSG/0/2056> POINT(2600000 1200000)"
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testGeolocation",
+          s"${knoraApi}GeolocationValue",
+          s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "$literal" }""",
+        ),
+        expectedStage2SingleValue(
+          "testGeolocation",
+          "GeolocationValue",
+          s"""knora-base:valueHasGeolocation "$literal"""",
+          "2600000 1200000",
+        ),
+      )
+    },
   )
 
   private val intervalStage2 = suite("Stage 2 — IntervalValue")(
