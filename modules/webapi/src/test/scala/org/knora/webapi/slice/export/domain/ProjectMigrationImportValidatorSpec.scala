@@ -582,6 +582,79 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         },
       )
     },
+    suite("GeolocationValueShape (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val Value1 = "http://rdfh.ch/9999/thing001/values/val001"
+
+      val validResourceNq =
+        s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      def geolocationValueNq(geolocationTriple: String): String = validResourceNq +
+        s"""<$Value1> <$RdfType> <${KnoraBase}GeolocationValue> <$DataGraph> .
+           |<$Value1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$Value1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$Value1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$Value1> <${KnoraBase}valueHasString> "8.55 47.37"^^<$XsdString> <$DataGraph> .
+           |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin + geolocationTriple
+
+      val validGeolocationTriple =
+        s"""<$Value1> <${KnoraBase}valueHasGeolocation> "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.55 47.37)"^^<$XsdString> <$DataGraph> .
+           |""".stripMargin
+
+      suite("valid and missing properties")(
+        test("accepts geolocation value with knora-base:valueHasGeolocation") {
+          ZIO.scoped {
+            validate(ontologyWithClass, geolocationValueNq(validGeolocationTriple))
+              .map(result => assertTrue(result.isRight))
+          }
+        },
+        test("accepts geolocation value in bulk-data mode") {
+          ZIO.scoped {
+            validate(
+              ontologyWithClass,
+              geolocationValueNq(validGeolocationTriple),
+              mode = ImportMode.BulkData(UserIri.unsafeFrom("http://rdfh.ch/users/test001")),
+            ).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects geolocation value missing knora-base:valueHasGeolocation") {
+          ZIO.scoped {
+            validate(ontologyWithClass, geolocationValueNq("")).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects geolocation value with a non-string valueHasGeolocation") {
+          val wrongType =
+            s"""<$Value1> <${KnoraBase}valueHasGeolocation> "8.55"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, geolocationValueNq(wrongType)).map(result => assertTrue(result.isLeft))
+          }
+        },
+        test("rejects geolocation value with two knora-base:valueHasGeolocation triples") {
+          val twoTriples =
+            s"""<$Value1> <${KnoraBase}valueHasGeolocation> "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.55 47.37)"^^<$XsdString> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueHasGeolocation> "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(1.0 2.0)"^^<$XsdString> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, geolocationValueNq(twoTriples)).map(result => assertTrue(result.isLeft))
+          }
+        },
+      )
+    },
     suite("GeomValueShape (data)") {
       val ontologyWithClass = validOntologyNq +
         s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
