@@ -8,8 +8,11 @@ package org.knora.webapi.util.search.gravsearch
 import org.junit.runner.RunWith
 import zio.ZIO
 import zio.test.Assertion.anything
+import zio.test.Assertion.equalTo
 import zio.test.Assertion.fails
+import zio.test.Assertion.hasMessage
 import zio.test.Assertion.isSubtype
+import zio.test.Assertion.succeeds
 import zio.test.Spec
 import zio.test.TestResult
 import zio.test.ZIOSpecDefault
@@ -469,6 +472,42 @@ class GravsearchParserSpec extends ZIOSpecDefault {
       |
       |}
         """.stripMargin
+
+  private def simpleSchemaRegexQuery(regexArgs: String): String =
+    s"""
+       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+       |CONSTRUCT {
+       |    ?mainRes knora-api:isMainResource true .
+       |} WHERE {
+       |    ?mainRes a incunabula:book .
+       |    ?mainRes incunabula:title ?title .
+       |    FILTER regex(?title, $regexArgs)
+       |}
+       |""".stripMargin
+
+  private def complexSchemaRegexQuery(regexArgs: String): String =
+    s"""
+       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+       |CONSTRUCT {
+       |    ?mainRes knora-api:isMainResource true .
+       |} WHERE {
+       |    ?mainRes a incunabula:book .
+       |    ?mainRes incunabula:title ?title .
+       |    ?title knora-api:valueAsString ?titleStr .
+       |    FILTER regex(?titleStr, $regexArgs)
+       |}
+       |""".stripMargin
+
+  private def assertRejectedWith(query: String, expectedMessage: String) =
+    ZIO
+      .attempt(GravsearchParser.parseQuery(query))
+      .exit
+      .map(actual => assert(actual)(fails(isSubtype[GravsearchException](hasMessage(equalTo(expectedMessage))))))
+
+  private def assertAccepted(query: String) =
+    ZIO.attempt(GravsearchParser.parseQuery(query)).exit.map(actual => assert(actual)(succeeds(anything)))
 
   private val queryWithFilterContainingRegex: String =
     """
@@ -2270,6 +2309,35 @@ class GravsearchParserSpec extends ZIOSpecDefault {
 
       assertTrue(parsed == ParsedQueryWithFilterContainingRegex, reparsed == parsed)
     },
+    suite("validate the pattern and flags of a regex function")(
+      test("reject a pattern that is not a valid regular expression") {
+        assertRejectedWith(
+          simpleSchemaRegexQuery(""""*MAL*", "i""""),
+          """Invalid regular expression "*MAL*": Dangling meta character '*' near index 0""",
+        )
+      },
+      test("reject a pattern that is not a valid regular expression in the complex schema") {
+        assertRejectedWith(
+          complexSchemaRegexQuery(""""foo(""""),
+          """Invalid regular expression "foo(": Unclosed group near index 4""",
+        )
+      },
+      test("reject an unsupported flag") {
+        assertRejectedWith(
+          simpleSchemaRegexQuery(""""Zeit", "iz""""),
+          """Invalid regular expression flags "iz": only the flags 's', 'm', 'i', 'x' and 'q' are supported""",
+        )
+      },
+      test("accept a valid pattern with flags in the simple schema") {
+        assertAccepted(simpleSchemaRegexQuery(""""^Zeit.*[a-z]+$", "smix""""))
+      },
+      test("accept a valid pattern with flags in the complex schema") {
+        assertAccepted(complexSchemaRegexQuery(""""^Zeit.*[a-z]+$", "smix""""))
+      },
+      test("accept a pattern that is only valid as a literal with the 'q' flag") {
+        assertAccepted(simpleSchemaRegexQuery(""""*MAL*", "q""""))
+      },
+    ),
     test("accept a custom 'match' function in a FILTER") {
       val parsed   = GravsearchParser.parseQuery(QueryWithMatchFunction)
       val reparsed = GravsearchParser.parseQuery(parsed.toSparql)

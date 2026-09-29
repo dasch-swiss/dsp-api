@@ -11,6 +11,8 @@ import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.QueryParser
 import org.eclipse.rdf4j.query.parser.sparql.*
 
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
@@ -56,6 +58,36 @@ object GravsearchParser {
 
     parsedQuery.getTupleExpr.visit(visitor)
     visitor.makeConstructQuery
+  }
+
+  // The regex flags Jena accepts, with the java.util.regex flags it compiles them to.
+  private val regexFlags: Map[Char, Int] = Map(
+    's' -> Pattern.DOTALL,
+    'm' -> Pattern.MULTILINE,
+    'i' -> (Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE),
+    'x' -> Pattern.COMMENTS,
+    'q' -> Pattern.LITERAL,
+  )
+
+  /**
+   * Rejects a regex() pattern or flags that the triplestore would refuse. Fuseki compiles the pattern with
+   * java.util.regex (Jena's default regex implementation), so an invalid one otherwise surfaces as a triplestore
+   * error instead of a bad request.
+   */
+  private def validateRegex(pattern: String, flags: Option[String]): Unit = {
+    val flagChars = flags.getOrElse("")
+    flagChars.find(!regexFlags.contains(_)).foreach { _ =>
+      throw GravsearchException(
+        s"""Invalid regular expression flags "$flagChars": only the flags 's', 'm', 'i', 'x' and 'q' are supported""",
+      )
+    }
+    val mask = flagChars.map(regexFlags).foldLeft(0)(_ | _)
+    try { val _ = Pattern.compile(pattern, mask) }
+    catch {
+      case e: PatternSyntaxException =>
+        val position = if (e.getIndex >= 0) s" near index ${e.getIndex}" else ""
+        throw GravsearchException(s"""Invalid regular expression "$pattern": ${e.getDescription}$position""")
+    }
   }
 
   /**
@@ -674,6 +706,8 @@ object GravsearchParser {
               )
 
           }
+
+          validateRegex(pattern, modifier)
 
           RegexFunction(
             textExpr = textValueVar,
