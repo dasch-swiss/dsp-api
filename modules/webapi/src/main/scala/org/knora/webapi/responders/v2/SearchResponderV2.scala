@@ -564,6 +564,18 @@ final class SearchResponderV2Live(
         ZIO.fail(SearchTimeoutException())
   }
 
+  // A BadRequestException is the triplestore rejecting the user's input (e.g. invalid Lucene syntax in a matchText
+  // or matchFulltext term) and reaches the client as a 400, so it is not logged as an error and the generated
+  // prequery is left out.
+  private def logPrequeryFailure(prequerySparql: String)(error: Throwable): UIO[Unit] = error match {
+    case e: BadRequestException =>
+      ZIO.logInfo(s"Gravsearch prequery rejected by the triplestore: ${e.getMessage}")
+    case e: TriplestoreTimeoutException =>
+      ZIO.logErrorCause(s"Gravsearch timed out for prequery:\n$prequerySparql", Cause.fail(e))
+    case e =>
+      ZIO.logErrorCause(s"Gravsearch prequery failed:\n$prequerySparql", Cause.fail(e))
+  }
+
   override def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
@@ -888,7 +900,7 @@ final class SearchResponderV2Live(
         stageSpan("gravsearch.prequery.execute")(
           triplestore
             .query(Select.gravsearch(prequerySparql))
-            .logError(s"Gravsearch timed out for prequery:\n$prequerySparql"),
+            .tapError(logPrequeryFailure(prequerySparql)),
         )
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
