@@ -868,7 +868,15 @@ final class OntologyTransformer(
   /**
    * Canonicalizes every `GeolocationValue`'s `valueHasGeolocation` literal via [[Geolocation.parse]], so the bulk
    * import path stores the same CRS-tagged form the v2 create path stores, and rejects the same malformed
-   * geolocations. A value with no `valueHasGeolocation` literal is left untouched.
+   * geolocations. A value with no `valueHasGeolocation` literal is left untouched; the SHACL shape rejects that
+   * missing-property case. A value with more than one `valueHasGeolocation` literal is rejected here: this pass runs
+   * before SHACL validation, so collapsing the duplicates to one would hide the `sh:maxCount 1` violation from the
+   * later check and silently drop a value. The pass must reject the duplicate itself.
+   *
+   * Unlike [[convertGeomValues]] this pass does no rename step, because `geolocationValueAsGeolocation` has a
+   * `(ApiV2Complex, InternalSchema)` correspondence-table entry (see `OntologyConstants`), so stage 1 already renames
+   * it to `valueHasGeolocation`. A future stage-2 pass for a value type whose predicate has no such entry needs the
+   * `convertGeomValues`-style rename instead.
    */
   private def convertGeolocationValues(model: Model): Unit = {
     val rdfType             = model.createProperty(Rdf.Type)
@@ -883,17 +891,21 @@ final class OntologyTransformer(
     }
 
     geolocationValues.foreach { v =>
-      Option(v.getProperty(valueHasGeolocation))
-        .map(_.getObject)
-        .collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
-        .foreach { lexical =>
-          Geolocation.parse(lexical) match {
+      val literals = v.listProperties(valueHasGeolocation).asScala.toList.map(_.getObject).filter(_.isLiteral)
+      literals match {
+        case Nil            => ()
+        case literal :: Nil =>
+          Geolocation.parse(literal.asLiteral.getLexicalForm) match {
             case Right(geo) =>
               v.removeAll(valueHasGeolocation)
               v.addProperty(valueHasGeolocation, geo.toStoredLiteral)
             case Left(msg) => throw new IllegalArgumentException(s"GeolocationValue $v: $msg")
           }
-        }
+        case duplicates =>
+          throw new IllegalArgumentException(
+            s"GeolocationValue $v: expected exactly one valueHasGeolocation literal, but found ${duplicates.size}",
+          )
+      }
     }
   }
 

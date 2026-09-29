@@ -1783,6 +1783,46 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val expectedTwoGeolocationValues: String =
+    s"""
+       | PREFIX rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       | PREFIX rdfs:       <http://www.w3.org/2000/01/rdf-schema#>
+       | PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#>
+       | PREFIX onto:       <http://www.knora.org/ontology/9999/onto#>
+       | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       | <$resourceIri>
+       |     a                            onto:Example ;
+       |     rdfs:label                   "test" ;
+       |     onto:testGeolocation         <$valueIri> ;
+       |     onto:testGeolocation2        <$valueIri2> ;
+       |     knora-base:attachedToUser    <${ctx.attachedToUser.userIri.value}> ;
+       |     knora-base:attachedToProject <${ctx.attachedToProject.id.value}> ;
+       |     knora-base:hasPermissions    "$defaultDoap" ;
+       |     knora-base:creationDate      "$knownInstant"^^xsd:dateTime ;
+       |     knora-base:isDeleted         false .
+       |
+       | <$valueIri>
+       |     a                              knora-base:GeolocationValue ;
+       |     knora-base:valueHasGeolocation "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)" ;
+       |     knora-base:attachedToUser      <${ctx.attachedToUser.userIri.value}> ;
+       |     knora-base:hasPermissions      "$defaultDoap" ;
+       |     knora-base:valueCreationDate   "$knownInstant"^^xsd:dateTime ;
+       |     knora-base:valueHasUUID        "${valueIri.valueId}" ;
+       |     knora-base:valueHasString      "8.550 47.37" ;
+       |     knora-base:isDeleted           false .
+       |
+       | <$valueIri2>
+       |     a                              knora-base:GeolocationValue ;
+       |     knora-base:valueHasGeolocation "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(1.0 2.0)" ;
+       |     knora-base:attachedToUser      <${ctx.attachedToUser.userIri.value}> ;
+       |     knora-base:hasPermissions      "$defaultDoap" ;
+       |     knora-base:valueCreationDate   "$knownInstant"^^xsd:dateTime ;
+       |     knora-base:valueHasUUID        "${valueIri2.valueId}" ;
+       |     knora-base:valueHasString      "1.0 2.0" ;
+       |     knora-base:isDeleted           false .
+       |""".stripMargin
+
   private val geolocationStage2 = suite("Stage 2 — GeolocationValue")(
     test("a canonical literal is stored verbatim and valueHasString is the bare coordinates") {
       val literal = "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)"
@@ -1858,7 +1898,17 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
       )
       runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("outside the valid range")))
     },
-    test("transforms multiple geolocation values in one resource without failure") {
+    test("rejects a value with more than one geolocationValueAsGeolocation literal") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testGeolocation",
+        s"${knoraApi}GeolocationValue",
+        s""""${knoraApi}geolocationValueAsGeolocation": [ { "@type": "${xsd}string", "@value": "POINT(8.550 47.37)" }, { "@type": "${xsd}string", "@value": "POINT(1.0 2.0)" } ]""",
+      )
+      runTransformStage2Failure(jsonLd).map(exit =>
+        assertTrue(messageOf(exit).contains("expected exactly one valueHasGeolocation literal")),
+      )
+    },
+    test("transforms multiple geolocation values in one resource, canonicalizing each independently") {
       val jsonLd =
         s"""
            |[{
@@ -1866,12 +1916,12 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
            |    "@type": "${onto}Example",
            |    "rdfs:label": "test",
            |    "${onto}testGeolocation": {
-           |      "@id": "${ValueIri.makeNew(resourceIri)}",
+           |      "@id": "$valueIri",
            |      "@type": "${knoraApi}GeolocationValue",
            |      "${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(8.550 47.37)" }
            |    },
            |    "${onto}testGeolocation2": {
-           |      "@id": "${ValueIri.makeNew(resourceIri)}",
+           |      "@id": "$valueIri2",
            |      "@type": "${knoraApi}GeolocationValue",
            |      "${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(1.0 2.0)" }
            |    },
@@ -1879,7 +1929,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
            |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
            |    }
            |}]""".stripMargin
-      runTransformStage2Failure(jsonLd).map(exit => assertTrue(exit.isSuccess))
+      runTransformStage2(jsonLd, expectedTwoGeolocationValues)
     },
     test("keeps a non-default CRS tag and derives the bare coordinates") {
       val literal = "<http://www.opengis.net/def/crs/EPSG/0/2056> POINT(2600000 1200000)"
