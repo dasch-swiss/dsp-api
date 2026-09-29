@@ -1858,6 +1858,29 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
       )
       runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("outside the valid range")))
     },
+    test("transforms multiple geolocation values in one resource without failure") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${onto}testGeolocation": {
+           |      "@id": "${ValueIri.makeNew(resourceIri)}",
+           |      "@type": "${knoraApi}GeolocationValue",
+           |      "${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(8.550 47.37)" }
+           |    },
+           |    "${onto}testGeolocation2": {
+           |      "@id": "${ValueIri.makeNew(resourceIri)}",
+           |      "@type": "${knoraApi}GeolocationValue",
+           |      "${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(1.0 2.0)" }
+           |    },
+           |    "@context": {
+           |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+           |    }
+           |}]""".stripMargin
+      runTransformStage2Failure(jsonLd).map(exit => assertTrue(exit.isSuccess))
+    },
   )
 
   private val intervalStage2 = suite("Stage 2 — IntervalValue")(
