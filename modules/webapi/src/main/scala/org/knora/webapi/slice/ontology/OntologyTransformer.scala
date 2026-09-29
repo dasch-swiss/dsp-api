@@ -145,6 +145,7 @@ final class OntologyTransformer(
       _ <- ZIO.attempt(canonicalizeScalarLiterals(model))
       _ <- ZIO.attempt(convertLinkValues(model))
       _ <- ZIO.attempt(convertGeomValues(model))
+      _ <- ZIO.attempt(convertGeolocationValues(model))
       _ <- convertRichtextValues(model, now)
       // convertFileValues must precede addValueHasString: it emits internalFilename, from which the string
       // pass derives valueHasString. It is a real effect (it fetches file metadata from dsp-ingest).
@@ -861,6 +862,38 @@ final class OntologyTransformer(
         v.removeAll(src)
         v.addProperty(valueHasGeometry, obj)
       }
+    }
+  }
+
+  /**
+   * Canonicalizes every `GeolocationValue`'s `valueHasGeolocation` literal via [[Geolocation.parse]], so the bulk
+   * import path stores the same CRS-tagged form the v2 create path stores, and rejects the same malformed
+   * geolocations. A value with no `valueHasGeolocation` literal is left untouched.
+   */
+  private def convertGeolocationValues(model: Model): Unit = {
+    val rdfType             = model.createProperty(Rdf.Type)
+    val geolocationValue    = KnoraBase.GeolocationValue
+    val valueHasGeolocation = model.createProperty(KnoraBase.ValueHasGeolocation)
+
+    val geolocationValues = model.listSubjects().asScala.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType))
+        .map(_.getObject)
+        .exists(n => n.isURIResource && n.asResource.getURI == geolocationValue)
+    }
+
+    geolocationValues.foreach { v =>
+      Option(v.getProperty(valueHasGeolocation))
+        .map(_.getObject)
+        .collect { case n if n.isLiteral => n.asLiteral.getLexicalForm }
+        .foreach { lexical =>
+          Geolocation.parse(lexical) match {
+            case Right(geo) =>
+              v.removeAll(valueHasGeolocation)
+              v.addProperty(valueHasGeolocation, geo.toStoredLiteral)
+            case Left(msg) => throw new IllegalArgumentException(msg)
+          }
+        }
     }
   }
 
