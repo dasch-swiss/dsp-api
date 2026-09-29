@@ -1783,6 +1783,83 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private val geolocationStage2 = suite("Stage 2 — GeolocationValue")(
+    test("a canonical literal is stored verbatim and valueHasString is the bare coordinates") {
+      val literal = "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)"
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testGeolocation",
+          s"${knoraApi}GeolocationValue",
+          s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "$literal" }""",
+        ),
+        expectedStage2SingleValue(
+          "testGeolocation",
+          "GeolocationValue",
+          s"""knora-base:valueHasGeolocation "$literal"""",
+          "8.550 47.37",
+        ),
+      )
+    },
+    test("without geolocationValueAsGeolocation yields no valueHasString and no error") {
+      val jsonLd =
+        s"""
+           |[{
+           |    "@id": "$resourceIri",
+           |    "@type": "${onto}Example",
+           |    "rdfs:label": "test",
+           |    "${onto}testGeolocation": {
+           |      "@id": "$valueIri",
+           |      "@type": "${knoraApi}GeolocationValue"
+           |    },
+           |    "@context": {
+           |       "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+           |    }
+           |}]""".stripMargin
+      runTransformStage2(jsonLd, expectedStage2ValueNoString("testGeolocation", "GeolocationValue", None))
+    },
+    test("an untagged literal is stored CRS-tagged") {
+      runTransformStage2(
+        resourceWithValueJsonLd(
+          s"${onto}testGeolocation",
+          s"${knoraApi}GeolocationValue",
+          s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(8.550 47.37)" }""",
+        ),
+        expectedStage2SingleValue(
+          "testGeolocation",
+          "GeolocationValue",
+          s"""knora-base:valueHasGeolocation "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(8.550 47.37)"""",
+          "8.550 47.37",
+        ),
+      )
+    },
+    test("rejects an unsupported coordinate reference system") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testGeolocation",
+        s"${knoraApi}GeolocationValue",
+        s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT(8.55 47.37)" }""",
+      )
+      runTransformStage2Failure(jsonLd).map(exit =>
+        assertTrue(messageOf(exit).contains("Unsupported coordinate reference system")),
+      )
+    },
+    test("rejects a non-POINT geometry") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testGeolocation",
+        s"${knoraApi}GeolocationValue",
+        s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "LINESTRING(8.55 47.37, 8.56 47.38)" }""",
+      )
+      runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("only POINT is accepted")))
+    },
+    test("rejects an out-of-range coordinate") {
+      val jsonLd = resourceWithValueJsonLd(
+        s"${onto}testGeolocation",
+        s"${knoraApi}GeolocationValue",
+        s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "POINT(200 47.37)" }""",
+      )
+      runTransformStage2Failure(jsonLd).map(exit => assertTrue(messageOf(exit).contains("outside the valid range")))
+    },
+  )
+
   private val intervalStage2 = suite("Stage 2 — IntervalValue")(
     test("composes valueHasString from both bounds") {
       runTransformStage2(
@@ -2264,6 +2341,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     standoffEmissionEquivalence,
     regionPreviewStage2,
     geomStage2,
+    geolocationStage2,
     intervalStage2,
     scalarCanonicalization,
     dateValueRejections,
