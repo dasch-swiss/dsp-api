@@ -122,6 +122,7 @@ object KnoraBaseJsonModels {
       `knora-api:isVideoSegmentOfValue`: LinkValue,
       `knora-api:hasSegmentBounds`: IntervalValue,
       `knora-api:hasComment`: TextValue,
+      `knora-api:hasDescription`: Option[TextValue],
       `knora-api:attachedToProject`: InternalIri,
       `knora-api:attachedToUser`: InternalIri,
       `knora-api:hasPermissions`: String,

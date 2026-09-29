@@ -2026,6 +2026,9 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :hasResourceAuthorship ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :hasDescription ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] ;
     rdfs:label      "Ressource"@de,
                     "Resource"@en,

@@ -135,6 +135,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
   val anythingIsPartOfOtherThing: IRI      = anythingOntology + "isPartOfOtherThing"
   val anythingIsPartOfOtherThingValue: IRI = anythingOntology + "isPartOfOtherThingValue"
   val anythingHasStandoffLinkTo: IRI       = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+  val knoraApiHasDescription: IRI          = "http://api.knora.org/ontology/knora-api/v2#hasDescription"
   val anythingHasStandoffLinkToValue: IRI  = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
 
   private val validPropertyInfo: PropertyInfoContentV2 = PropertyInfoContentV2(
@@ -2192,6 +2193,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
+        knoraApiHasDescription,
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
@@ -2266,6 +2268,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
+        knoraApiHasDescription,
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
@@ -2372,6 +2375,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingIsPartOfOtherThing,
         anythingIsPartOfOtherThingValue,
         anythingHasStandoffLinkTo,
+        knoraApiHasDescription,
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
@@ -2458,6 +2462,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties = Set(
         anythingHasStandoffLinkTo,
+        knoraApiHasDescription,
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
@@ -3321,6 +3326,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                       )
         expectedProperties = Set(
                                KA.HasStandoffLinkTo.toSmartIri,
+                               knoraApiHasDescription.toSmartIri,
                                KA.HasStandoffLinkToValue.toSmartIri,
                                propertyIri,
                                propertyIri.fromLinkPropToLinkValueProp,
@@ -3411,6 +3417,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties = Set(
         KA.HasStandoffLinkTo.toSmartIri,
+        knoraApiHasDescription.toSmartIri,
         KA.HasStandoffLinkToValue.toSmartIri,
         anythingOntologyIri.makeEntityIri("hasOtherNothing"),
         anythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
@@ -3574,6 +3581,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties = Set(
         KA.HasStandoffLinkTo.toSmartIri,
+        knoraApiHasDescription.toSmartIri,
         KA.HasStandoffLinkToValue.toSmartIri,
         anythingOntologyIri.makeEntityIri("hasOtherNothing"),
         anythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
@@ -3705,6 +3713,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties = Set(
         KA.HasStandoffLinkTo.toSmartIri,
+        knoraApiHasDescription.toSmartIri,
         KA.HasStandoffLinkToValue.toSmartIri,
         anythingOntologyIri.makeEntityIri("hasEmptiness"),
       )
@@ -3777,6 +3786,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties = Set(
         KA.HasStandoffLinkTo.toSmartIri,
+        knoraApiHasDescription.toSmartIri,
         KA.HasStandoffLinkToValue.toSmartIri,
       )
 
@@ -4948,6 +4958,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
       val expectedProperties: Set[SmartIri] = Set(
         KA.HasStandoffLinkTo.toSmartIri,
+        knoraApiHasDescription.toSmartIri,
         KA.HasStandoffLinkToValue.toSmartIri,
         ExampleSharedOntologyIri.makeEntityIri("hasName"),
         propertyIri,
@@ -5030,7 +5041,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         externalOntology                         = replaceResponse.toOntologySchema(ApiV2Complex)
         readClassInfo                            = externalOntology.classes(classIri)
         (oldLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(replaceResponse)
-        expectedPropertiesAfterDeletion          = Set(KA.HasStandoffLinkTo.toSmartIri, KA.HasStandoffLinkToValue.toSmartIri)
+        expectedPropertiesAfterDeletion          =
+          Set(KA.HasStandoffLinkTo.toSmartIri, KA.HasStandoffLinkToValue.toSmartIri, knoraApiHasDescription.toSmartIri)
       } yield assertTrue(
         response.canDo.value,
         externalOntology.classes.size == 1,

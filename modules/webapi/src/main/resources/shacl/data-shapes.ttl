@@ -13,7 +13,7 @@
 knora-base:Resource-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Resource ;
-  sh:description "Validates every knora-base:Resource subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the base metadata that every resource shares, and the standoff-link reification pair." ;
+  sh:description "Validates every knora-base:Resource subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the base metadata that every resource shares, the optional description, and the standoff-link reification pair." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -66,6 +66,12 @@ knora-base:Resource-Shape
     sh:path knora-base:hasResourceAuthorship ;
     sh:datatype xsd:string ;
     sh:message "Resource instance must have knora-base:hasResourceAuthorship of type xsd:string" ;
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:hasDescription ;
+    sh:class knora-base:TextValue ;
+    sh:message "Resource instance may have any number of knora-base:hasDescription of type knora-base:TextValue" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;

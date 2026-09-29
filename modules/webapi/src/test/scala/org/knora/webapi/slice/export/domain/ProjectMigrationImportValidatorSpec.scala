@@ -358,6 +358,39 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
           }
         },
+        test("accepts resource with knora-base:hasDescription of type knora-base:TextValue") {
+          val DescriptionValue = "http://rdfh.ch/9999/thing001/values/desc001"
+          val nq               = validResourceNq +
+            s"""<$Resource1> <${KnoraBase}hasDescription> <$DescriptionValue> <$DataGraph> .
+               |<$DescriptionValue> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueHasString> "a description"^^<$XsdString> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isRight))
+          }
+        },
+        test("rejects resource with knora-base:hasDescription not of type knora-base:TextValue") {
+          val DescriptionValue = "http://rdfh.ch/9999/thing001/values/desc001"
+          val nq               = validResourceNq +
+            s"""<$Resource1> <${KnoraBase}hasDescription> <$DescriptionValue> <$DataGraph> .
+               |<$DescriptionValue> <$RdfType> <${KnoraBase}IntValue> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueHasString> "42"^^<$XsdString> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+               |<$DescriptionValue> <${KnoraBase}valueHasInteger> "42"^^<$XsdInteger> <$DataGraph> .
+               |""".stripMargin
+          ZIO.scoped {
+            validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
+          }
+        },
       )
     },
     suite("ValueShape (data)") {
