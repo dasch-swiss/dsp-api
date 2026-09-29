@@ -6,6 +6,7 @@
 package org.knora.shacl
 
 import org.apache.jena.graph.Node
+import org.apache.jena.graph.Triple
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
@@ -15,6 +16,7 @@ import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.RDFParserBuilder
 import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
+import org.apache.jena.riot.system.StreamRDFLib
 import org.apache.jena.sparql.core.Quad
 import org.topbraid.shacl.validation.ValidationEngineConfiguration
 import org.topbraid.shacl.validation.ValidationUtil
@@ -68,15 +70,34 @@ object ShaclValidator {
     for {
       rdfsModel <- rdfsModel
       // Step 1: load ontologies and validate ontology shapes
-      _            <- ZIO.foreachDiscard(graphs.ontologies)(loadIntoModel(rdfsModel, _))
-      shapesModel1 <- loadShapes(shapes.ontologyShapes)
-      _            <- validateModel(rdfsModel, shapesModel1, ShaclValidationError.OntologyValidationError(_))
+      _ <- loadAndValidateOntologies(rdfsModel, graphs.ontologies, shapes.ontologyShapes)
       // Step 2: load data and validate data shapes
-      _            <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(rdfsModel, _))
-      shapesModel2 <- loadShapes(shapes.dataShapes)
-      _            <- validateModel(rdfsModel, shapesModel2, ShaclValidationError.DataValidationError(_))
+      _           <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(rdfsModel, _))
+      shapesModel <- loadShapes(shapes.dataShapes)
+      _           <- validateModel(rdfsModel, shapesModel, ShaclValidationError.DataValidationError(_))
     } yield ()
   }
+
+  /**
+   * Validates only the ontologies against the ontology shapes. No data is loaded.
+   */
+  def validateOntologies(
+    ontologies: NonEmptyChunk[RdfData],
+    ontologyShapes: NonEmptyChunk[RdfData],
+  ): IO[ShaclValidationError, Unit] = ZIO.scoped {
+    rdfsModel.flatMap(loadAndValidateOntologies(_, ontologies, ontologyShapes))
+  }
+
+  private def loadAndValidateOntologies(
+    rdfsModel: Model,
+    ontologies: NonEmptyChunk[RdfData],
+    ontologyShapes: NonEmptyChunk[RdfData],
+  ): ZIO[Scope, ShaclValidationError, Unit] =
+    for {
+      _           <- ZIO.foreachDiscard(ontologies)(loadIntoModel(rdfsModel, _))
+      shapesModel <- loadShapes(ontologyShapes)
+      _           <- validateModel(rdfsModel, shapesModel, ShaclValidationError.OntologyValidationError(_))
+    } yield ()
 
   private def loadIntoModel(model: Model, source: RdfData): IO[ShaclValidationError, Unit] =
     source match {
@@ -85,25 +106,51 @@ object ShaclValidator {
           .attemptBlocking(RDFDataMgr.read(model, path.toUri.toString, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.NQuadFile(path) =>
-        streamNQuadsIntoModel(model, RDFParser.source(path.toUri.toString).lang(Lang.NQUADS))
+        streamNQuads(nQuadFileParser(path), model.getGraph.add)
       case RdfData.InMemoryTurtle(content, _) =>
         ZIO
           .attemptBlocking(RDFDataMgr.read(model, new StringReader(content), null, Lang.TURTLE))
           .mapError(ShaclValidationError.LoadingError(_))
       case RdfData.InMemoryNQuad(content) =>
-        streamNQuadsIntoModel(model, RDFParser.create().source(new StringReader(content)).lang(Lang.NQUADS))
+        streamNQuads(inMemoryNQuadParser(content), model.getGraph.add)
     }
 
   /**
-   * Streams NQuads directly into the model without buffering an intermediate Dataset.
+   * Parses every source with the same rules as loading for validation, but keeps no triples.
+   * Memory use does not grow with the size of the sources.
+   */
+  def checkParsable(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Unit] =
+    ZIO.foreachDiscard(sources) {
+      case RdfData.TurtleFile(path, _) =>
+        parseTurtleWithoutLoading(RDFParser.source(path.toUri.toString))
+      case RdfData.NQuadFile(path) =>
+        streamNQuads(nQuadFileParser(path), _ => ())
+      case RdfData.InMemoryTurtle(content, _) =>
+        parseTurtleWithoutLoading(RDFParser.create().source(new StringReader(content)))
+      case RdfData.InMemoryNQuad(content) =>
+        streamNQuads(inMemoryNQuadParser(content), _ => ())
+    }
+
+  private def parseTurtleWithoutLoading(parser: RDFParserBuilder): IO[ShaclValidationError, Unit] =
+    ZIO
+      .attemptBlocking(parser.lang(Lang.TURTLE).parse(StreamRDFLib.sinkNull()))
+      .mapError(ShaclValidationError.LoadingError(_))
+
+  private def nQuadFileParser(path: Path): RDFParserBuilder =
+    RDFParser.source(path.toUri.toString).lang(Lang.NQUADS)
+
+  private def inMemoryNQuadParser(content: String): RDFParserBuilder =
+    RDFParser.create().source(new StringReader(content)).lang(Lang.NQUADS)
+
+  /**
+   * Streams NQuads to `onTriple` without buffering an intermediate Dataset.
    * Validates that all quads belong to exactly one named graph and none are in the default graph.
    */
-  private def streamNQuadsIntoModel(
-    model: Model,
+  private def streamNQuads(
     parser: RDFParserBuilder,
+    onTriple: Triple => Unit,
   ): IO[ShaclValidationError, Unit] =
     ZIO.attemptBlocking {
-      val graph             = model.getGraph
       val graphNames        = scala.collection.mutable.Set.empty[Node]
       var hasDefaultTriples = false
 
@@ -114,10 +161,10 @@ object ShaclValidator {
             hasDefaultTriples = true
           } else {
             graphNames += g
-            graph.add(quad.asTriple)
+            onTriple(quad.asTriple)
           }
         }
-        override def triple(triple: org.apache.jena.graph.Triple): Unit =
+        override def triple(triple: Triple): Unit =
           hasDefaultTriples = true
       }
 
