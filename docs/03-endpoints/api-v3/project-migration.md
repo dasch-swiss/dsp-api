@@ -111,22 +111,14 @@ The import fails if:
 
 ### SHACL Validation
 
-The import validates both ontology and data files using SHACL shapes:
-
-**Ontology shapes** check that:
+The import validates the ontology files using SHACL shapes. It checks that:
 
 - Each project ontology has 1-5 `rdfs:label` values with valid language tags (`en`, `de`, `fr`, `it`, `rm`), unique per language, and single-line.
 - Each project ontology is attached to the correct project IRI and has a `lastModificationDate`.
 - Each resource class and property has 1-5 labels with valid language tags.
 
-**Data shapes** check that:
-
-- Each resource has `rdfs:label`, `isDeleted`, `attachedToUser`, `attachedToProject` (matching the import project IRI), `hasPermissions`, and `creationDate`.
-- Each value has `valueCreationDate`, `attachedToUser`, `isDeleted`.
-- Each `LinkValue` has `rdf:subject`, `rdf:predicate`, `rdf:object`, and `valueHasRefCount`.
-- Every `attachedToUser` reference points to a `knora-admin:User` node present in the admin data.
-
-SHACL validation is memory-intensive. Midsized projects (e.g. BEOL) require 3–4 GB of available RAM on the server to complete validation successfully.
+The data files (`admin.nq`, `data.nq`, `permission.nq`) are not validated against SHACL shapes.
+The import only checks that each data file is valid N-Quads and contains exactly one named graph.
 
 ### User Handling
 

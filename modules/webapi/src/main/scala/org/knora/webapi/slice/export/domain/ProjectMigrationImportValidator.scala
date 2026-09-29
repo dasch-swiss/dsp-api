@@ -56,19 +56,11 @@ final class ProjectMigrationImportValidator() {
     mode: ImportMode,
   ): Task[Unit] =
     for {
-      _       <- ZIO.unlessZIO(AppConfig.features(_.allowPlaceholder))(assertNoPlaceholderInObjectPosition(dataFiles))
-      builtIn <- ZIO.foreach(builtInOntologyResources) { case (resource, graphIri) =>
-                   readClasspathResource(resource).map(RdfData.InMemoryTurtle(_, graphIri))
-                 }
-      ontologyNq = ontologyFiles.map(p => RdfData.NQuadFile(p.toFile.toPath): RdfData)
-      dataNq     = dataFiles.map(p => RdfData.NQuadFile(p.toFile.toPath): RdfData)
-      graphs     = RdfGraphs(
-                 ontologies = NonEmptyChunk.fromChunk(builtIn ++ ontologyNq).get, // safe: builtIn is always 4 elements
-                 data = dataNq,
-               )
-      ontologyShapesTtl <- readClasspathResource("shacl/ontology-shapes.ttl")
-                             .map(_.replace(ProjectIriPlaceholder, projectIri.value))
-      dataShapesTtl <- readClasspathResource("shacl/data-shapes.ttl")
+      _              <- assertNoPlaceholderUnlessAllowed(dataFiles)
+      ontologies     <- loadOntologies(ontologyFiles)
+      ontologyShapes <- loadOntologyShapes(projectIri)
+      graphs          = RdfGraphs(ontologies, dataFiles.map(toNQuadFile))
+      dataShapesTtl  <- readClasspathResource("shacl/data-shapes.ttl")
                          .map(_.replace(ProjectIriPlaceholder, projectIri.value))
       extraDataShapes <- mode match {
                            case ImportMode.Migration =>
@@ -80,14 +72,51 @@ final class ProjectMigrationImportValidator() {
                                .map(ttl => Chunk(RdfData.InMemoryTurtle(ttl, "")))
                          }
       dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")) ++ extraDataShapes
-      shapes     = ShaclShapes(
-                 ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "")),
-                 dataShapes = dataShapes,
-               )
-      _ <- ShaclValidator
-             .validate(graphs, shapes)
+      _         <- ShaclValidator
+             .validate(graphs, ShaclShapes(ontologyShapes, dataShapes))
              .mapError(err => new RuntimeException(err.message))
     } yield ()
+
+  /**
+   * Validates the ontologies against `shacl/ontology-shapes.ttl`. The data files are only parsed (syntax and one
+   * named graph per file) and scanned for the placeholder sentinel. They are not loaded into the SHACL model and
+   * no data shapes run: over a large project the RDFS-inference expansion of the data shape targets exceeds the
+   * heap (DEV-7440).
+   */
+  def validateWithoutDataShapes(
+    ontologyFiles: NonEmptyChunk[Path],
+    dataFiles: NonEmptyChunk[Path],
+    projectIri: ProjectIri,
+  ): Task[Unit] =
+    for {
+      _              <- assertNoPlaceholderUnlessAllowed(dataFiles)
+      ontologies     <- loadOntologies(ontologyFiles)
+      ontologyShapes <- loadOntologyShapes(projectIri)
+      _              <- ShaclValidator
+             .validateOntologies(ontologies, ontologyShapes)
+             .mapError(err => new RuntimeException(err.message))
+      _ <- ShaclValidator
+             .checkParsable(dataFiles.map(toNQuadFile))
+             .mapError(err => new RuntimeException(err.message))
+    } yield ()
+
+  private def assertNoPlaceholderUnlessAllowed(dataFiles: NonEmptyChunk[Path]): Task[Unit] =
+    ZIO.unlessZIO(AppConfig.features(_.allowPlaceholder))(assertNoPlaceholderInObjectPosition(dataFiles)).unit
+
+  /** The built-in ontologies followed by the project ontologies. */
+  private def loadOntologies(ontologyFiles: NonEmptyChunk[Path]): Task[NonEmptyChunk[RdfData]] =
+    ZIO
+      .foreach(builtInOntologyResources) { case (resource, graphIri) =>
+        readClasspathResource(resource).map(RdfData.InMemoryTurtle(_, graphIri): RdfData)
+      }
+      .map(builtIn => NonEmptyChunk.fromIterable(builtIn.head, builtIn.tail) ++ ontologyFiles.map(toNQuadFile))
+
+  private def toNQuadFile(path: Path): RdfData = RdfData.NQuadFile(path.toFile.toPath)
+
+  private def loadOntologyShapes(projectIri: ProjectIri): Task[NonEmptyChunk[RdfData]] =
+    readClasspathResource("shacl/ontology-shapes.ttl")
+      .map(_.replace(ProjectIriPlaceholder, projectIri.value))
+      .map(ttl => NonEmptyChunk(RdfData.InMemoryTurtle(ttl, "")))
 
   /**
    * Streams each N-Quad file and fails on the first quad whose object is the

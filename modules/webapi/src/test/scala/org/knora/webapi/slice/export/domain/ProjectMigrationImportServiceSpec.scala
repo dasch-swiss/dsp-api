@@ -1120,66 +1120,29 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("built-in user references in data graph (caught by SHACL)")(
-      test("rejects data.nq with attachedToUser pointing at SystemUser") {
-        val dataGraph            = "http://www.knora.org/data/9999/test"
-        val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
-        val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
-        val dataNqWithSystemUser =
-          s"""<http://rdfh.ch/9999/resource001> <$RdfType> <$resourceType> <$dataGraph> .
-             |<http://rdfh.ch/9999/resource001> <$attachedToUser> <${KnoraAdminPrefix}SystemUser> <$dataGraph> .
-             |""".stripMargin
-        ZIO.scoped {
-          for {
-            env    <- makeTestEnv
-            stream <- buildBagItZip(
-                        payloadFiles = Map(
-                          "rdf/admin.nq"      -> adminNq,
-                          "rdf/data.nq"       -> dataNqWithSystemUser,
-                          "rdf/ontology-0.nq" -> ontologyNq,
-                        ),
-                      )
-            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result <- pollUntilDone(env.service, task.id)
-            _      <- cleanupImport(env, task.id)
-            // AttachedToUserNotBuiltInShape uses sh:or (to exempt standoff-link LinkValues), so the SHACL report
-            // names the shape via OrConstraintComponent, not the offending built-in-user IRI. Both built-in-user
-            // tests assert the shape name; each pins its specific user through the data.nq input above.
-          } yield assertTrue(
-            result.status == DataTaskStatus.Failed,
-            dataNqWithSystemUser.contains(s"${KnoraAdminPrefix}SystemUser"),
-            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
-          )
-        }
-      },
-      test("rejects data.nq with attachedToUser pointing at AnonymousUser") {
-        val dataGraph      = "http://www.knora.org/data/9999/test"
-        val resourceType   = "http://www.knora.org/ontology/9999/test#TestResource"
-        val attachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
-        val dataNqWithAnon =
-          s"""<http://rdfh.ch/9999/resource001> <$RdfType> <$resourceType> <$dataGraph> .
-             |<http://rdfh.ch/9999/resource001> <$attachedToUser> <${KnoraAdminPrefix}AnonymousUser> <$dataGraph> .
-             |""".stripMargin
-        ZIO.scoped {
-          for {
-            env    <- makeTestEnv
-            stream <- buildBagItZip(
-                        payloadFiles = Map(
-                          "rdf/admin.nq"      -> adminNq,
-                          "rdf/data.nq"       -> dataNqWithAnon,
-                          "rdf/ontology-0.nq" -> ontologyNq,
-                        ),
-                      )
-            task   <- env.service.importDataExport(testProjectIri, testUser, stream)
-            result <- pollUntilDone(env.service, task.id)
-            _      <- cleanupImport(env, task.id)
-          } yield assertTrue(
-            result.status == DataTaskStatus.Failed,
-            dataNqWithAnon.contains(s"${KnoraAdminPrefix}AnonymousUser"),
-            result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
-          )
-        }
-      },
-    ),
+    test("does not apply data shapes: accepts data.nq with attachedToUser pointing at SystemUser") {
+      val dataGraph            = "http://www.knora.org/data/9999/test"
+      val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
+      val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
+      val dataNqWithSystemUser =
+        s"""<http://rdfh.ch/9999/resource001> <$RdfType> <$resourceType> <$dataGraph> .
+           |<http://rdfh.ch/9999/resource001> <$attachedToUser> <${KnoraAdminPrefix}SystemUser> <$dataGraph> .
+           |""".stripMargin
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          stream <- buildBagItZip(
+                      payloadFiles = Map(
+                        "rdf/admin.nq"      -> adminNq,
+                        "rdf/data.nq"       -> dataNqWithSystemUser,
+                        "rdf/ontology-0.nq" -> ontologyNq,
+                      ),
+                    )
+          task   <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result <- pollUntilDone(env.service, task.id)
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(result.status == DataTaskStatus.Completed)
+      }
+    },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
 }
