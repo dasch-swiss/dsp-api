@@ -891,7 +891,7 @@ final class OntologyTransformer(
             case Right(geo) =>
               v.removeAll(valueHasGeolocation)
               v.addProperty(valueHasGeolocation, geo.toStoredLiteral)
-            case Left(msg) => throw new IllegalArgumentException(msg)
+            case Left(msg) => throw new IllegalArgumentException(s"GeolocationValue $v: $msg")
           }
         }
     }
