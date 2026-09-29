@@ -230,6 +230,7 @@ object OntologyConstants {
     val ValueHasMaxStandoffStartIndex: IRI = KnoraBasePrefixExpansion + "valueHasMaxStandoffStartIndex"
     val ValueHasLanguage: IRI              = KnoraBasePrefixExpansion + "valueHasLanguage"
     val ValueHasMapping: IRI               = KnoraBasePrefixExpansion + "valueHasMapping"
+    val ValueHasXml: IRI                   = KnoraBasePrefixExpansion + "valueHasXml"
     val ValueHasInteger: IRI               = KnoraBasePrefixExpansion + "valueHasInteger"
     val ValueHasDecimal: IRI               = KnoraBasePrefixExpansion + "valueHasDecimal"
     val ValueHasStandoff: IRI              = KnoraBasePrefixExpansion + "valueHasStandoff"
