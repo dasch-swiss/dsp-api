@@ -148,6 +148,7 @@ classDiagram
     integer valueHasMaxStandoffStartIndex
     string valueHasLanguage
     XSLToStandoffMApping valueHasMapping
+    string valueHasXml
   }
   class LinkValue {
     integer valueHasRefCount
@@ -421,6 +422,7 @@ flowchart BT
   valueHasMaxStandoffStartIndex ---> valueHas
   previousValue --> valueHas
   ValueHasMapping ---> valueHas
+  valueHasXml ---> valueHas
   extResAccessInfo --> valueHas
   extResId ---> valueHas
   extResProvider --> valueHas
@@ -488,6 +490,7 @@ flowchart LR
   XMLToStandoffMapping --> hasMappingElement --> MappingElement
   XMLToStandoffMapping --> mappingHasDefaultXSLTransformation --> XSLTransformation
   TextValue --> valueHasStandoff --> StandoffTag
+  TextValue --> valueHasXml --> string3
   subgraph standoffProperties
     standoffTagHasEndIndex
     standoffTagHasStartIndex

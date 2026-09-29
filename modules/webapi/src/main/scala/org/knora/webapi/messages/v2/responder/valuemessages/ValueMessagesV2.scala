@@ -1016,6 +1016,22 @@ case class TextValueContentV2(
     None
   }
 
+  /**
+   * The XML representation of the standoff markup attached to this [[TextValueContentV2]], rendered from
+   * `maybeValueHasString` and `standoff` via the same mapping used at read time. This is used
+   * only when writing a text value to the triplestore.
+   *
+   * Forcing this value CAN THROW `NotFoundException` if a standoff class in [[standoff]] is not covered by
+   * [[mapping]]. Callers must force it inside an effect wrapper.
+   */
+  lazy val computedValueHasXml: Option[String] =
+    if (standoff.isEmpty) None
+    else
+      for {
+        str <- maybeValueHasString
+        m   <- mapping
+      } yield StandoffTagUtilV2.convertStandoffTagV2ToXML(str, standoff, m)
+
   override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
   override def toJsonLDValue(

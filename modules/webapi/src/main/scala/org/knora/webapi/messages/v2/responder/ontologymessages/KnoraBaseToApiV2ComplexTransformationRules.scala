@@ -676,6 +676,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraBase.ValueHasStandoff,
     OntologyConstants.KnoraBase.ValueHasLanguage,
     OntologyConstants.KnoraBase.ValueHasMapping,
+    OntologyConstants.KnoraBase.ValueHasXml,
     OntologyConstants.KnoraBase.HasMappingElement,
     OntologyConstants.KnoraBase.MappingHasStandoffClass,
     OntologyConstants.KnoraBase.MappingHasStandoffProperty,

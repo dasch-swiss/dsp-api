@@ -631,6 +631,28 @@ knora-base:TextValue-Shape
     sh:maxCount 1 ;
     sh:datatype xsd:integer ;
     sh:message "TextValue instance may have at most one knora-base:valueHasMaxStandoffStartIndex of type xsd:integer"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasXml ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "TextValue instance may have at most one knora-base:valueHasXml of type xsd:string"
+  ] ;
+  sh:not [
+    a sh:NodeShape ;
+    sh:description "An UnformattedText value carries no markup, so it must not have knora-base:valueHasXml, which is rendered from standoff. Only FormattedText and CustomFormattedText may carry it." ;
+    sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:hasTextValueType ;
+      sh:hasValue knora-base:UnformattedText ;
+    ] ;
+    sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasXml ;
+      sh:minCount 1 ;
+    ] ;
+    sh:message "An UnformattedText TextValue instance must not carry knora-base:valueHasXml"
   ] .
 
 knora-base:TimeValue-Shape
