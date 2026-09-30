@@ -28,7 +28,8 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### API layer — three-tier split (mandatory)
 
 - `*Endpoints.scala` — Tapir endpoint definitions only. Every endpoint declares an HTTP method (`.get`, `.post`, …);
-  a method-less endpoint matches every method. `EndpointsE2ESpec` enforces this.
+  a method-less endpoint matches every method. The endpoint bases return `RequiresMethod`, so the method comes first;
+  `EndpointsE2ESpec` catches an endpoint built from tapir's raw `endpoint`, which bypasses the bases.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]`, which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.

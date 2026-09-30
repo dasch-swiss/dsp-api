@@ -18,19 +18,27 @@ import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
 import zio.*
 
 case class BaseEndpoints(authService: AuthService) {
-  val publicEndpoint: PublicEndpoint[Unit, ApiProblem, Unit, Any] = endpoint
-    .errorOut(defaultErrorOutputs)
+  val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, ApiProblem, Unit, Any]] =
+    RequiresMethod(endpoint.errorOut(defaultErrorOutputs), _.method(_))
 
-  val withUserEndpoint: ZPartialServerEndpoint[Any, Option[String], Option[Principal], Unit, ApiProblem, Unit, Any] =
-    endpoint
-      .errorOut(defaultErrorOutputs)
-      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-      .zServerSecurityLogic[Any, Option[Principal]](handleAuthOpt)
+  val withUserEndpoint
+    : RequiresMethod[ZPartialServerEndpoint[Any, Option[String], Option[Principal], Unit, ApiProblem, Unit, Any]] =
+    RequiresMethod(
+      endpoint
+        .errorOut(defaultErrorOutputs)
+        .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+        .zServerSecurityLogic[Any, Option[Principal]](handleAuthOpt),
+      _.method(_),
+    )
 
-  val secureEndpoint: ZPartialServerEndpoint[Any, String, Principal, Unit, ApiProblem, Unit, Any] = endpoint
-    .errorOut(defaultErrorOutputs)
-    .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
-    .zServerSecurityLogic[Any, Principal](handleAuth)
+  val secureEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, String, Principal, Unit, ApiProblem, Unit, Any]] =
+    RequiresMethod(
+      endpoint
+        .errorOut(defaultErrorOutputs)
+        .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
+        .zServerSecurityLogic[Any, Principal](handleAuth),
+      _.method(_),
+    )
 
   private def handleAuthOpt(token: Option[String]): IO[Nothing, Option[Principal]] =
     ZIO.foreach(token)(authService.authenticate(_)).catchAll(_ => ZIO.succeed(None: Option[Principal]))

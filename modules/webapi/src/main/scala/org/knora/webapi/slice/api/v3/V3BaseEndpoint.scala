@@ -19,6 +19,7 @@ import zio.json.JsonEncoder
 
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.api.RequiresMethod
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 
@@ -32,25 +33,35 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
     statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden].example(Forbidden("User not active."))),
   )
 
-  def public(errorOut: ErrorOut): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] =
-    endpoint.errorOut(errorOut)
+  def public(errorOut: ErrorOut): RequiresMethod[PublicEndpoint[Unit, V3ErrorInfo, Unit, Any]] =
+    RequiresMethod(endpoint.errorOut(errorOut), _.method(_))
 
-  def secured(errorOut: ErrorOut): ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any] =
-    endpoint
-      .errorOut(errorOut)
-      .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
-      .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
-      .zServerSecurityLogic(handleBearerJwt)
+  def secured(
+    errorOut: ErrorOut,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any]] =
+    RequiresMethod(
+      endpoint
+        .errorOut(errorOut)
+        .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
+        .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
+        .zServerSecurityLogic(handleBearerJwt),
+      _.method(_),
+    )
 
-  def withUser(errorOut: ErrorOut): ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any] =
-    endpoint
-      .errorOut(errorOut)
-      .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
-      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-      .zServerSecurityLogic {
-        case Some(jwt) => handleBearerJwt(jwt)
-        case _         => ZIO.succeed(AnonymousUser)
-      }
+  def withUser(
+    errorOut: ErrorOut,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any]] =
+    RequiresMethod(
+      endpoint
+        .errorOut(errorOut)
+        .errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
+        .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+        .zServerSecurityLogic {
+          case Some(jwt) => handleBearerJwt(jwt)
+          case _         => ZIO.succeed(AnonymousUser)
+        },
+      _.method(_),
+    )
 
   private def handleBearerJwt(jwt: String): IO[V3ErrorInfo, User] =
     authenticator.authenticate(jwt).mapError {
