@@ -105,7 +105,7 @@ final case class RepositoryUpdater(triplestoreService: TriplestoreService) {
    */
   private def selectPluginsForNeededUpdates(maybeRepositoryVersion: Option[Int]): Seq[PluginForKnoraBaseVersion] = {
     val repositoryVersion = maybeRepositoryVersion.getOrElse(-1)
-    val plugins           = RepositoryUpdatePlan.makePluginsForVersions.filter(_.versionNumber > repositoryVersion)
+    val plugins           = RepositoryUpdatePlan.pluginsForVersions.filter(_.versionNumber > repositoryVersion)
     if (plugins.isEmpty) { Seq(PluginForKnoraBaseVersion(KnoraBaseVersion, "", new MigrateOnlyBuiltInGraphs)) }
     else { plugins }
   }

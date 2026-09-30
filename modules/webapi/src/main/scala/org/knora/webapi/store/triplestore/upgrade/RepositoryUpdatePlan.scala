@@ -19,9 +19,9 @@ object RepositoryUpdatePlan {
   final case class PluginForKnoraBaseVersion(versionNumber: Int, name: String, plugin: UpgradePlugin)
 
   /**
-   * Constructs list of all repository update plugins in chronological order.
+   * All repository update plugins in chronological order.
    */
-  def makePluginsForVersions: Seq[PluginForKnoraBaseVersion] =
+  val pluginsForVersions: Seq[PluginForKnoraBaseVersion] =
     Seq(
       PluginForKnoraBaseVersion(versionNumber = 1, name = "PR1307", plugin = new UpgradePluginPR1307()),
       PluginForKnoraBaseVersion(versionNumber = 2, name = "PR1322", plugin = new UpgradePluginPR1322()),
