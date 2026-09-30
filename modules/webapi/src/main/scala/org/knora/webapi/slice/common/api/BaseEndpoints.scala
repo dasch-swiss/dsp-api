@@ -52,7 +52,8 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       ),
     )
 
-  val publicEndpoint: PublicEndpoint[Unit, Throwable, Unit, Any] = endpoint.errorOut(errorOutputs)
+  val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
+    RequiresMethod(endpoint.errorOut(errorOutputs), _.method(_))
 
   private type SecurityIn = (Option[String], Option[UsernamePassword])
   private val endpointWithBearerBasicAuthOptional = endpoint
@@ -60,19 +61,25 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
     .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
 
-  val securedEndpoint: ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any] =
-    endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
-      case (Some(jwtToken), _) => authenticateJwt(jwtToken)
-      case (_, Some(basic))    => authenticateBasic(basic)
-      case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
-    }
+  val securedEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(
+      endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
+        case (Some(jwtToken), _) => authenticateJwt(jwtToken)
+        case (_, Some(basic))    => authenticateBasic(basic)
+        case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
+      },
+      _.method(_),
+    )
 
-  val withUserEndpoint: ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any] =
-    endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
-      case (Some(bearer), _) => authenticateJwt(bearer)
-      case (_, Some(basic))  => authenticateBasic(basic)
-      case _                 => ZIO.succeed(AnonymousUser)
-    }
+  val withUserEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(
+      endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
+        case (Some(bearer), _) => authenticateJwt(bearer)
+        case (_, Some(basic))  => authenticateBasic(basic)
+        case _                 => ZIO.succeed(AnonymousUser)
+      },
+      _.method(_),
+    )
 
   /**
    * A narrowing of [[securedEndpoint]] that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
@@ -106,26 +113,29 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    */
   def bearerSystemAdminEndpoint(
     onRejected: BaseEndpoints.Rejection => UIO[Unit],
-  ): ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any] =
-    endpoint
-      .errorOut(errorOutputs)
-      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-      .zServerSecurityLogic {
-        case Some(jwtToken) =>
-          attributingDefect(onRejected, None)(
-            authenticateJwt(jwtToken).tapError(_ => onRejected(BaseEndpoints.Rejection.Unauthenticated)),
-          ).flatMap { user =>
-            attributingDefect(onRejected, Some(user))(
-              authorization
-                .ensureSystemAdmin(user)
-                .tapError(_ => onRejected(BaseEndpoints.Rejection.NotSystemAdmin(user)))
-                .as(user),
-            )
-          }
-        case _ =>
-          onRejected(BaseEndpoints.Rejection.Unauthenticated) *>
-            ZIO.fail(BadCredentialsException("No credentials provided."))
-      }
+  ): RequiresMethod[ZPartialServerEndpoint[Any, Option[String], User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(
+      endpoint
+        .errorOut(errorOutputs)
+        .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+        .zServerSecurityLogic {
+          case Some(jwtToken) =>
+            attributingDefect(onRejected, None)(
+              authenticateJwt(jwtToken).tapError(_ => onRejected(BaseEndpoints.Rejection.Unauthenticated)),
+            ).flatMap { user =>
+              attributingDefect(onRejected, Some(user))(
+                authorization
+                  .ensureSystemAdmin(user)
+                  .tapError(_ => onRejected(BaseEndpoints.Rejection.NotSystemAdmin(user)))
+                  .as(user),
+              )
+            }
+          case _ =>
+            onRejected(BaseEndpoints.Rejection.Unauthenticated) *>
+              ZIO.fail(BadCredentialsException("No credentials provided."))
+        },
+      _.method(_),
+    )
 
   /**
    * Attributes a defect thrown out of the security logic and turns it into a typed failure, so it is answered through

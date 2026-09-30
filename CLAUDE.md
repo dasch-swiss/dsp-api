@@ -173,8 +173,8 @@ metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp
 
 ### Adding New Endpoints
 
-1. Define endpoint in the appropriate `*Endpoints.scala`; every endpoint declares an HTTP method (`.get`, `.post`, …),
-   enforced by `EndpointsE2ESpec`
+1. Define endpoint in the appropriate `*Endpoints.scala`, starting with its HTTP method (`.get`, `.post`, …) —
+   the endpoint bases expose nothing else until one is chosen
 2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
 3. Register in the API's aggregator (`AdminApiServerEndpoints.scala` for admin)
 4. Add unit/integration tests mirroring the main structure
