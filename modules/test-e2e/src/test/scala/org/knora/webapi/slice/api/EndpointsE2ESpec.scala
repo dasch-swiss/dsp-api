@@ -6,11 +6,14 @@
 package org.knora.webapi.slice.api
 
 import org.junit.runner.RunWith
+import sttp.model.Method
 import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.slice.api.admin.StoreEndpoints
+import org.knora.webapi.slice.common.api.BaseEndpoints
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class EndpointsE2ESpec extends E2EZSpec {
@@ -24,6 +27,11 @@ class EndpointsE2ESpec extends E2EZSpec {
         val withoutMethod = all.filter(_.method.isEmpty).map(_.showShort)
         assertTrue(all.nonEmpty) &&
         (assertTrue(withoutMethod.isEmpty) ?? "declare an HTTP method on these endpoints, e.g. `.get`")
+      }
+    },
+    test("the flag-gated store reset endpoint declares POST") {
+      ZIO.serviceWith[BaseEndpoints] { baseEndpoints =>
+        assertTrue(StoreEndpoints(baseEndpoints).postStoreResetTriplestoreContent.method.contains(Method.POST))
       }
     },
   )
