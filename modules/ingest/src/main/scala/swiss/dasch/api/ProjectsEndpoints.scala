@@ -284,7 +284,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag("import/export")
     .description("Authorization: admin scope required (SystemAdmins only).")
 
-  val getImport = base.secureEndpoint
+  val postImport = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "import")
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .in(header("Content-Type", "application/zip"))
@@ -306,7 +306,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getBulkIngestMappingCsv,
       postBulkIngestUpload,
       postExport,
-      getImport,
+      postImport,
     )
 }
 
