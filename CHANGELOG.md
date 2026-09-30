@@ -1,5 +1,17 @@
 # Changelog
 
+## [40.2.1](https://github.com/dasch-swiss/dsp-api/compare/v40.2.0...v40.2.1) (2026-09-30)
+
+
+### Maintenances
+
+* bump sipi to v9.1.1 ([#4371](https://github.com/dasch-swiss/dsp-api/issues/4371)) ([7b100be](https://github.com/dasch-swiss/dsp-api/commit/7b100be9020baa42f14b5cdb89bcc2657a17b124))
+
+
+### Bug Fixes
+
+* reject an invalid regex in a Gravsearch query with 400 instead of 500 ([#4368](https://github.com/dasch-swiss/dsp-api/issues/4368)) ([0853a47](https://github.com/dasch-swiss/dsp-api/commit/0853a47c275adbb0b918f5f905fc44f9ded97360))
+
 ## [40.2.0](https://github.com/dasch-swiss/dsp-api/compare/v40.1.0...v40.2.0) (2026-09-29)
 
 
