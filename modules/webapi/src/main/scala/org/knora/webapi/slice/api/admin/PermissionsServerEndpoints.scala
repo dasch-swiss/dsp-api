@@ -37,7 +37,7 @@ final class PermissionsServerEndpoints(
     permissionsEndpoints.putPermissionsProjectIriGroup.serverLogic(restService.updatePermissionGroup),
     permissionsEndpoints.putPerrmissionsHasPermissions.serverLogic(restService.updatePermissionHasPermissions),
     permissionsEndpoints.putPermissionsProperty.serverLogic(restService.updatePermissionProperty),
-    permissionsEndpoints.putPermisssionsResourceClass.serverLogic(restService.updatePermissionResourceClass),
+    permissionsEndpoints.putPermissionsResourceClass.serverLogic(restService.updatePermissionResourceClass),
     permissionsEndpoints.deletePermission.serverLogic(restService.deletePermission),
     permissionsEndpoints.postPermissionsDoap.serverLogic(restService.createDefaultObjectAccessPermission),
   )

@@ -24,7 +24,7 @@ object MessageResponse {
 final class StoreEndpoints(baseEndpoints: BaseEndpoints) {
 
   val postStoreResetTriplestoreContent =
-    baseEndpoints.publicEndpoint
+    baseEndpoints.publicEndpoint.post
       .in("admin" / "store" / "ResetTriplestoreContent")
       .in(
         jsonBody[Option[List[RdfDataObject]]]
