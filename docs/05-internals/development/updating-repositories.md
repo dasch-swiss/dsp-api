@@ -77,7 +77,10 @@ with existing data, the following must happen:
 - A plugin must be added in the package `org.knora.webapi.store.triplestore.upgrade.plugins`,
   to transform existing repositories so that they are compatible with the code changes
   introduced in the pull request. Each new plugin must be registered
-  by adding it to the sequence returned by `RepositoryUpdatePlan.makePluginsForVersions`.
+  by adding it to the sequence returned by `RepositoryUpdatePlan.makePluginsForVersions`,
+  with a `name` unique across the plan (e.g. the ticket; asserted at startup).
+  The unique name makes two branches that bump to the same version conflict on merge or rebase,
+  instead of git silently collapsing their identical lines into one.
 
 The order of version numbers (and the plugins) must correspond to the order in which the
 pull requests are merged.
@@ -107,7 +110,7 @@ Not every change to `knora-base.ttl` / `knora-admin.ttl` needs the same treatmen
 
     ```scala
     // RepositoryUpdatePlan.makePluginsForVersions — how v51 and v52 shipped
-    PluginForKnoraBaseVersion(versionNumber = 52, plugin = new MigrateOnlyBuiltInGraphs()),
+    PluginForKnoraBaseVersion(versionNumber = 52, name = "DEV-6662", plugin = new MigrateOnlyBuiltInGraphs()),
     ```
 
 3. **Purely additive optional properties** can ride along without their own bump: they reach
