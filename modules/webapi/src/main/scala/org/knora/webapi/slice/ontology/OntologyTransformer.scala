@@ -626,9 +626,14 @@ final class OntologyTransformer(
       xml <- ZIO.attempt(requireTextValueAsXml(model, v))
       tws <-
         ZIO.attempt(StandoffTagUtilV2.convertXMLtoStandoffTagV2(xml, mapping, acceptStandoffLinksToClientIDs = false))
-      tags  <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.makeStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
-      owner <- ZIO.attempt(owningResource(model, v))
-      _     <- ZIO.attempt(emitStandoff(model, v, tws.text, tags))
+      tags        <- ZIO.foreach(tws.standoffTagV2)(tag => idSource.makeStandoffTagUuid.map(uuid => tag.copy(uuid = uuid)))
+      owner       <- ZIO.attempt(owningResource(model, v))
+      valueHasXml <- ZIO.attempt(
+                       Option.when(tags.nonEmpty)(
+                         StandoffTagUtilV2.convertStandoffTagV2ToXML(tws.text, tags, mapping.mapping),
+                       ),
+                     )
+      _ <- ZIO.attempt(emitStandoff(model, v, tws.text, tags, valueHasXml))
     } yield (owner, StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tags).toSet)
 
   private def requireTextValueAsXml(model: Model, v: Resource): String = {
@@ -661,7 +666,13 @@ final class OntologyTransformer(
     val _                   = model.removeAll(null, textValueHasMapping, null)
   }
 
-  private def emitStandoff(model: Model, v: Resource, plainText: String, tags: Seq[StandoffTagV2]): Unit = {
+  private def emitStandoff(
+    model: Model,
+    v: Resource,
+    plainText: String,
+    tags: Seq[StandoffTagV2],
+    valueHasXml: Option[String],
+  ): Unit = {
     val textValueAsXml                = model.createProperty(KnoraBase.KnoraBasePrefixExpansion + "textValueAsXml")
     val valueHasString                = model.createProperty(KnoraBase.ValueHasString)
     val valueHasMapping               = model.createProperty(KnoraBase.ValueHasMapping)
@@ -680,6 +691,7 @@ final class OntologyTransformer(
     v.removeAll(textValueAsXml)
     v.removeAll(valueHasString)
     v.addProperty(valueHasString, plainText)
+    valueHasXml.foreach(xml => v.addProperty(model.createProperty(KnoraBase.ValueHasXml), xml))
     v.addProperty(valueHasMapping, model.createResource(KnoraBase.StandardMapping))
     v.addProperty(valueHasMaxStandoffStartIndex, intLiteral(model, tags.map(_.startIndex).max))
     tags.foreach { tag =>
