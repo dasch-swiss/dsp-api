@@ -57,6 +57,7 @@ enum TypeSpecificValueInfo {
     valueHasLanguage: Option[String],
     mappingIri: StandoffMappingIri,
     maxStandoffStartIndex: Int,
+    valueHasXml: Option[String],
     standoff: Seq[StandoffTagInfo],
     textValueType: FormattedTextValueType,
   )

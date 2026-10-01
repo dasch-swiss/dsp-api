@@ -445,8 +445,8 @@ final class CreateResourceV2Handler(
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
                   val standoffTags = generateStandoffInfo(tv, newValueIri)
                   generateFormattedTextValueInfo(
+                    tv,
                     standoffTags,
-                    tv.computedMaxStandoffStartIndex,
                     textType,
                     valueHasLanguage,
                     mappingIri,
@@ -556,8 +556,8 @@ final class CreateResourceV2Handler(
       )
 
   private def generateFormattedTextValueInfo(
+    tv: TextValueContentV2,
     standoffInfo: Seq[StandoffTagInfo],
-    maxStandoffStartIndex: Option[Int],
     textType: TextValueType,
     valueHasLanguage: Option[String],
     mappingIri: StandoffMappingIri,
@@ -570,13 +570,26 @@ final class CreateResourceV2Handler(
       }
       .someOrFail(StandoffInternalException("Text type does not match mapping information"))
       .flatMap { textType =>
+        // Rendering can throw NotFoundException, which must surface as a 500 (StandoffInternalException), not a 404.
         ZIO
-          .fromOption(maxStandoffStartIndex)
-          .mapBoth(
-            _ => StandoffInternalException("Max standoff start index not computed"),
-            standoffStartIndex =>
-              FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo, textType),
-          )
+          .attempt(tv.computedValueHasXml)
+          .mapError(e => StandoffInternalException("Failed to render canonical XML for text value", e))
+          .flatMap { valueHasXml =>
+            ZIO
+              .fromOption(tv.computedMaxStandoffStartIndex)
+              .mapBoth(
+                _ => StandoffInternalException("Max standoff start index not computed"),
+                standoffStartIndex =>
+                  FormattedTextValueInfo(
+                    valueHasLanguage,
+                    mappingIri,
+                    standoffStartIndex,
+                    valueHasXml,
+                    standoffInfo,
+                    textType,
+                  ),
+              )
+          }
       }
 
   /**
