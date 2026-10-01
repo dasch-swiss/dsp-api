@@ -112,47 +112,59 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
 
   private var linkValueUUID = randomUUID
 
+  // Fixtures must be well-formed standoff: a single root tag at index 0 and parent indices on every other tag.
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
+    StandoffTagV2(
+      standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+      startPosition = 0,
+      endPosition = 11,
+      uuid = randomUUID(),
+      originalXMLID = None,
+      startIndex = 0,
+    ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
       startPosition = 0,
       endPosition = 7,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 0,
-    ),
-    StandoffTagV2(
-      standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
-      startPosition = 0,
-      endPosition = 10,
-      uuid = randomUUID(),
-      originalXMLID = None,
       startIndex = 1,
+      startParentIndex = Some(0),
     ),
   )
 
   private val sampleStandoffModified: Vector[StandoffTagV2] = Vector(
+    StandoffTagV2(
+      standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+      startPosition = 0,
+      endPosition = 11,
+      uuid = randomUUID(),
+      originalXMLID = None,
+      startIndex = 0,
+    ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
       startPosition = 1,
       endPosition = 7,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 0,
-    ),
-    StandoffTagV2(
-      standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
-      startPosition = 0,
-      endPosition = 10,
-      uuid = randomUUID(),
-      originalXMLID = None,
       startIndex = 1,
+      startParentIndex = Some(0),
     ),
   )
 
   private def sampleStandoffWithLink(
     linkedResourceIri: IRI,
+    textLength: Int = 11,
   ): Vector[StandoffTagV2] = Vector(
+    StandoffTagV2(
+      standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+      startPosition = 0,
+      endPosition = textLength,
+      uuid = randomUUID(),
+      originalXMLID = None,
+      startIndex = 0,
+    ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
       dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -160,21 +172,14 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
       endPosition = 7,
       uuid = randomUUID(),
       originalXMLID = None,
-      startIndex = 0,
+      startIndex = 1,
+      startParentIndex = Some(0),
       attributes = Vector(
         StandoffTagIriAttributeV2(
           standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
           value = linkedResourceIri,
         ),
       ),
-    ),
-    StandoffTagV2(
-      standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
-      startPosition = 0,
-      endPosition = 10,
-      uuid = randomUUID(),
-      originalXMLID = None,
-      startIndex = 1,
     ),
   )
 
@@ -1954,6 +1959,14 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
 
       val standoff = Seq(
         StandoffTagV2(
+          standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+          startPosition = 0,
+          endPosition = valueHasString.length,
+          uuid = randomUUID(),
+          originalXMLID = None,
+          startIndex = 0,
+        ),
+        StandoffTagV2(
           dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
           standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
           startPosition = 31,
@@ -1966,7 +1979,8 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
           ),
           uuid = randomUUID(),
           originalXMLID = None,
-          startIndex = 0,
+          startIndex = 1,
+          startParentIndex = Some(0),
         ),
       )
 
@@ -2028,6 +2042,14 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
 
       val standoff = Seq(
         StandoffTagV2(
+          standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+          startPosition = 0,
+          endPosition = valueHasString.length,
+          uuid = randomUUID(),
+          originalXMLID = None,
+          startIndex = 0,
+        ),
+        StandoffTagV2(
           dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
           standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
           startPosition = 30,
@@ -2040,7 +2062,8 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
           ),
           uuid = randomUUID(),
           originalXMLID = None,
-          startIndex = 0,
+          startIndex = 1,
+          startParentIndex = Some(0),
         ),
       )
 
@@ -2130,7 +2153,7 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
     },
     test("not update a text value (submitting standoff) if the linked resource is in a different project") {
       // the aThingIri resource is in the Anything project, while the zeitgloeckleinIri resource is in the Incunabula project.
-      val standoffTags = sampleStandoffWithLink(aThingIri.value)
+      val standoffTags = sampleStandoffWithLink(aThingIri.value, textLength = 7)
       val updateParams = UpdateValueContentV2(
         resourceIri = zeitgloeckleinIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
@@ -3255,7 +3278,7 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
         valueContent = TextValueContentV2(
           ontologySchema = ApiV2Complex,
           maybeValueHasString = Some("Comment 1 for UUID checking"),
-          standoff = sampleStandoffWithLink(aThingIri.value),
+          standoff = sampleStandoffWithLink(aThingIri.value, textLength = 27),
           mappingIri = Some(StandoffMappingIri.StandardMapping),
           mapping = standardMapping,
           textValueType = TextValueType.FormattedText,
@@ -3287,7 +3310,7 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
                 valueContent = TextValueContentV2(
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 2 for UUID checking"),
-                  standoff = sampleStandoffWithLink(aThingIri.value),
+                  standoff = sampleStandoffWithLink(aThingIri.value, textLength = 27),
                   mappingIri = Some(StandoffMappingIri.StandardMapping),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,
@@ -3328,7 +3351,7 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
                 valueContent = TextValueContentV2(
                   ontologySchema = ApiV2Complex,
                   maybeValueHasString = Some("Comment 3 for UUID checking"),
-                  standoff = sampleStandoffWithLink(aThingIri.value),
+                  standoff = sampleStandoffWithLink(aThingIri.value, textLength = 27),
                   mappingIri = Some(StandoffMappingIri.StandardMapping),
                   mapping = standardMapping,
                   textValueType = TextValueType.FormattedText,
