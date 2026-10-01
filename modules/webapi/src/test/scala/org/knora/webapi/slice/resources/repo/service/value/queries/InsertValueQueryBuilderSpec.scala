@@ -26,11 +26,14 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionDay
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIntegerAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagTimeAttributeV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTag
+import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTagToStandoffClass
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
@@ -281,6 +284,51 @@ object InsertValueQueryBuilderTestSupport {
         comment = Option.when(withComment)("Test standoff link comment"),
       )
     }
+
+    // A hermetic mapping covering exactly the root and bold tags used by createTextValueWithStoredXml.
+    private def xmlTag(name: String, standoffClassIri: String) =
+      XMLTag(name, XMLTagToStandoffClass(standoffClassIri, dataType = None), separatorRequired = false)
+
+    private val storedXmlMapping: MappingXMLtoStandoff =
+      MappingXMLtoStandoff(
+        namespace = Map(
+          "noNamespace" -> Map(
+            "text"   -> Map("noClass" -> xmlTag("text", OntologyConstants.Standoff.StandoffRootTag)),
+            "strong" -> Map("noClass" -> xmlTag("strong", OntologyConstants.Standoff.StandoffBoldTag)),
+          ),
+        ),
+        defaultXSLTransformation = None,
+      )
+
+    def createTextValueWithStoredXml: TextValueContentV2 =
+      TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some("zeta 42 omega"),
+        textValueType = TextValueType.FormattedText,
+        valueHasLanguage = None,
+        standoff = Vector(
+          StandoffTagV2(
+            standoffTagClassIri = sf.toSmartIri(OntologyConstants.Standoff.StandoffRootTag),
+            startPosition = 0,
+            endPosition = 13,
+            uuid = testValueUUID,
+            originalXMLID = None,
+            startIndex = 0,
+          ),
+          StandoffTagV2(
+            standoffTagClassIri = sf.toSmartIri(OntologyConstants.Standoff.StandoffBoldTag),
+            startPosition = 5,
+            endPosition = 7,
+            uuid = testValueUUID,
+            originalXMLID = None,
+            startIndex = 1,
+            startParentIndex = Some(0),
+          ),
+        ),
+        mappingIri = Some(StandoffMappingIri.StandardMapping),
+        mapping = Some(storedXmlMapping),
+        comment = None,
+      )
 
     def createSparqlTemplateLinkUpdate(
       newReferenceCount: Int = 1,
@@ -765,6 +813,51 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             testValue    <- ZIO.succeed(TestDataFactory.createTextValueWithCustomMapping())
             builderQuery <- ZIO.attempt(TestDataFactory.createBuilderQuery(testValue))
           } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withCustomMapping")
+        },
+        test("with stored XML") {
+          for {
+            builderQuery <-
+              ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithStoredXml))
+          } yield assertGolden(replaceUuidPatterns(builderQuery), "TextValueContentV2_withStoredXml")
+        },
+        test("with stored XML on the update path emits exactly one valueHasXml triple with the fixture XML") {
+          for {
+            currentValueIri <- ZIO.serviceWithZIO[IriConverter](_.asInternalIri("http://rdfh.ch/0803/861b5644b302"))
+            builderQuery    <- ZIO.attempt(
+                              TestDataFactory.createBuilderQuery(
+                                TestDataFactory.createTextValueWithStoredXml,
+                                newUuidOrCurrentIri = Right(currentValueIri),
+                              ),
+                            )
+          } yield assertTrue(
+            "knora-base:valueHasXml".r.findAllIn(builderQuery).size == 1,
+            builderQuery.contains("zeta <strong>42</strong> omega"),
+          )
+        },
+        test("valueHasXml is emitted only for the fixture with a mapping") {
+          val withoutXml = Seq(
+            TestDataFactory.createTextValue(),
+            TestDataFactory.createTextValue(withComment = true),
+            TestDataFactory.createTextValue(withLanguage = true),
+            TestDataFactory.createTextValueWithStandoff(),
+            TestDataFactory.createTextValueWithCustomMapping(),
+            TestDataFactory.createTextValueWithStandoffLink(),
+            TestDataFactory.createTextValueWithVirtualHierarchyStandoff(),
+            TestDataFactory.createTextValueWithHierarchicalStandoff(),
+            TestDataFactory.createTextValueWithXMLIDStandoff(),
+            TestDataFactory.createTextValueWithStandoffInteger(),
+            TestDataFactory.createTextValueWithStandoffTime(),
+            TestDataFactory.createTextValueWithEmptyString(),
+            TestDataFactory.createTextValueWithUnicode(),
+            TestDataFactory.createTextValueWithVeryLongString(),
+          )
+          for {
+            xmlQuery     <- ZIO.attempt(TestDataFactory.createBuilderQuery(TestDataFactory.createTextValueWithStoredXml))
+            otherQueries <- ZIO.attempt(withoutXml.map(v => TestDataFactory.createBuilderQuery(v)))
+          } yield assertTrue(
+            xmlQuery.contains("valueHasXml"),
+            otherQueries.forall(!_.contains("valueHasXml")),
+          )
         },
         test("with undefined text type fails loud rather than dropping the hasTextValueType triple") {
           for {
