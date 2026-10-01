@@ -18,6 +18,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
+import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.GoldenTest
@@ -834,7 +835,7 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             builderQuery.contains("zeta <strong>42</strong> omega"),
           )
         },
-        test("valueHasXml is emitted only for the fixture with a mapping") {
+        test("valueHasXml is not emitted for a value without standoff or without a resolved mapping") {
           val withoutXml = Seq(
             TestDataFactory.createTextValue(),
             TestDataFactory.createTextValue(withComment = true),
@@ -858,6 +859,14 @@ class InsertValueQueryBuilderSpec extends ZIOSpecDefault with GoldenTest {
             xmlQuery.contains("valueHasXml"),
             otherQueries.forall(!_.contains("valueHasXml")),
           )
+        },
+        test("with stored XML fails loud when the mapping does not cover a standoff class") {
+          val uncovered = TestDataFactory.createTextValueWithStoredXml.copy(
+            mapping = Some(MappingXMLtoStandoff(namespace = Map.empty, defaultXSLTransformation = None)),
+          )
+          for {
+            exit <- ZIO.attempt(TestDataFactory.createBuilderQuery(uncovered)).exit
+          } yield assert(exit)(fails(isSubtype[NotFoundException](anything)))
         },
         test("with undefined text type fails loud rather than dropping the hasTextValueType triple") {
           for {
