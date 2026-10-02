@@ -21,7 +21,12 @@ import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.RunState
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
 
-/** Backfills `knora-base:valueHasXml` on the existing formatted text values of one project, in paced batches. */
+/**
+ * Backfills `knora-base:valueHasXml` on the existing formatted text values of one project, in paced batches.
+ *
+ * Log lines, configuration and stop reasons are documented for operators in
+ * `docs/03-endpoints/api-admin/maintenance.md`; keep it in sync.
+ */
 final case class ValueHasXmlBackfillService(
   repo: ValueHasXmlBackfillRepo,
   renderer: ValueHasXmlRenderer,

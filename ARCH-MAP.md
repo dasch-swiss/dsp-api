@@ -647,7 +647,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `docs/development/dsp-api-sparql-queries.md`.
 - **Depends on**: webapi-common, webapi-triplestore, webapi-admin, webapi-resources, webapi-standoff,
     webapi-sipi-client (`OntologyTransformer` only), webapi-app (`AppConfig`), webapi-api (inverted),
-    sparql-builder (12 files under `slice/ontology/repo`), build-toolchain.
+    sparql-builder (23 files under `slice/ontology/repo`), build-toolchain.
 - **Used by**: webapi-app, webapi-api, webapi-admin, webapi-search, webapi-resources, webapi-export,
     webapi-standoff, webapi-common, testkit, test-it, test-e2e.
 - **Boundary rules**:
@@ -737,7 +737,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
     webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
-    cyclic), sparql-builder (14 files under `slice/resources/repo`), build-toolchain.
+    cyclic), sparql-builder (34 files under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,
     test-e2e.
@@ -1357,9 +1357,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `docs/development/dsp-api-sparql-queries.md`
 - **Depends on**: build-toolchain. No other inventory component; zero main-source deps, with RDF4J's
     `sparqlbuilder` present only as a test-scope escaping oracle.
-- **Used by**: webapi-ontology (12 files under `slice/ontology/repo`) and webapi-resources (14 files under
-    `slice/resources/repo`). Those 26 files are every main-source importer of `org.knora.sparqlbuilder`
-    today; the other slices still build queries with RDF4J `SparqlBuilder`.
+- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (34 files under
+    `slice/resources/repo`), among 92 main-source importers of `org.knora.sparqlbuilder` in total;
+    other sites still build queries with RDF4J `SparqlBuilder`.
 - **Boundary rules**:
     - New SPARQL query code uses the `sparql"..."` interpolator, not string concatenation or the legacy RDF4J
         `SparqlBuilder`; existing RDF4J sites are grandfathered until migrated - enforcement: review
