@@ -20,7 +20,11 @@ import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
-/** Loads mappings and renders the canonical XML of stored text values for the `valueHasXml` backfill. */
+/**
+ * Loads mappings and renders the canonical XML of stored text values for the `valueHasXml` backfill.
+ *
+ * A trait so the backfill service specs can stub the mapping and standoff stack.
+ */
 trait ValueHasXmlRenderer {
 
   def loadMapping(mappingIri: IRI): Task[MappingXMLtoStandoff]
@@ -44,7 +48,6 @@ final case class ValueHasXmlRendererLive(
       response <- mappingService.getMappingV2(iri)
     } yield response.mapping
 
-  /** The other writer of `valueHasXml` is the value write path; both render via `TextValueContentV2.computedValueHasXml`. */
   override def render(value: StoredTextValue, mapping: MappingXMLtoStandoff): Task[Option[String]] =
     for {
       iri  <- toMappingIri(value.mappingIri)

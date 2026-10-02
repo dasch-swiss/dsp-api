@@ -478,7 +478,9 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
         failedLeft <- candidateLeft()
       } yield assertTrue(failing.isEmpty, renderable.exists(_.nonEmpty), !onlyFailed, failedLeft)
       val cleanup = deleteFailingAndRenderableValues *> awaitBackfillIdle
-      body.ensuring(cleanup.orDie).zipWith(candidateLeft())((result, left) => result && assertTrue(!left))
+      body
+        .ensuring(cleanup.orDieWith(e => new IllegalStateException(s"backfill E2E cleanup failed: $e", e)))
+        .zipWith(candidateLeft())((result, left) => result && assertTrue(!left))
     },
   )
 }
