@@ -32,25 +32,27 @@ final case class StoredTextValue(
   standoffNodes: Map[IRI, Map[IRI, String]],
 )
 
-final case class RunState(
-  failed: Set[IRI],
-  mappings: Map[IRI, MappingXMLtoStandoff],
-  report: ValueHasXmlBackfillReport,
-  previousBatch: Set[IRI],
-  done: Boolean,
-)
-
-object RunState {
-  val zero: RunState = RunState(Set.empty, Map.empty, ValueHasXmlBackfillReport.zero, Set.empty, false)
-}
-
-enum StopReason {
-  case NoCandidates, MaxFailures, Stalled
-
-  def stoppedEarly: Boolean = this != NoCandidates
-}
-
 object ValueHasXmlBackfill {
+
+  final case class RunState(
+    failed: Set[IRI],
+    mappings: Map[IRI, MappingXMLtoStandoff],
+    report: ValueHasXmlBackfillReport,
+    previousBatch: Set[IRI],
+    stop: Option[StopReason],
+  ) {
+    def done: Boolean = stop.isDefined
+  }
+
+  object RunState {
+    val zero: RunState = RunState(Set.empty, Map.empty, ValueHasXmlBackfillReport.zero, Set.empty, None)
+  }
+
+  enum StopReason {
+    case NoCandidates, MaxFailures, Stalled
+
+    def stoppedEarly: Boolean = this != NoCandidates
+  }
 
   def groupByValue(
     statements: Map[IRI, Seq[(IRI, String)]],
@@ -82,7 +84,11 @@ object ValueHasXmlBackfill {
   ): Either[String, Map[IRI, Map[IRI, String]]] = {
     val linked = own.collect { case (KnoraBase.ValueHasStandoff, node) => node }
     if (!linked.forall(statements.contains)) Left("standoff node missing from the CONSTRUCT response")
-    else Right(linked.map(node => node -> statements(node).toMap).filterNot((_, n) => hasNegativeStartIndex(n)).toMap)
+    else {
+      val renderable = linked.map(node => node -> statements(node).toMap).filterNot((_, n) => hasNegativeStartIndex(n))
+      // An empty node set renders no XML, so the value would stay a candidate on every batch.
+      Either.cond(renderable.nonEmpty, renderable.toMap, "value has no standoff node with a start index >= 0")
+    }
   }
 
   private def objectOf(own: Seq[(IRI, String)], predicate: IRI): Option[String] =
@@ -94,10 +100,10 @@ object ValueHasXmlBackfill {
   def nextBatch(candidates: Seq[IRI], failed: Set[IRI], batchSize: Int): Seq[IRI] =
     candidates.filterNot(failed.contains).take(batchSize)
 
-  /** Check order: MaxFailures, then NoCandidates, then Stalled. */
+  /** Check order: NoCandidates, then MaxFailures, then Stalled. A run with no candidate left is complete. */
   def stopReason(state: RunState, batch: Seq[IRI], maxFailures: Int): Option[StopReason] =
-    if (state.failed.size >= maxFailures) Some(StopReason.MaxFailures)
-    else if (batch.isEmpty) Some(StopReason.NoCandidates)
-    else if (state.previousBatch.nonEmpty && batch.toSet == state.previousBatch) Some(StopReason.Stalled)
+    if (batch.isEmpty) Some(StopReason.NoCandidates)
+    else if (state.failed.size >= maxFailures) Some(StopReason.MaxFailures)
+    else if (batch.toSet == state.previousBatch) Some(StopReason.Stalled)
     else None
 }

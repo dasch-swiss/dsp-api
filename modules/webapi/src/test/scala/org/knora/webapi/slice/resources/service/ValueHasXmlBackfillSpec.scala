@@ -10,6 +10,8 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.RunState
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
@@ -66,12 +68,25 @@ class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
           KnoraBase.ValueHasString   -> "text",
           KnoraBase.ValueHasMapping  -> "mapping",
           KnoraBase.HasTextValueType -> "type",
+          KnoraBase.ValueHasStandoff -> "n1",
         ),
-      )
+      ) ++ node("n1", 0)
       assertTrue(
         ValueHasXmlBackfill.groupByValue(statements, Seq("v1"))("v1") ==
-          Right(StoredTextValue("v1", "text", "mapping", Some("type"), Map.empty)),
+          Right(
+            StoredTextValue(
+              "v1",
+              "text",
+              "mapping",
+              Some("type"),
+              Map("n1" -> Map(KnoraBase.StandoffTagHasStartIndex -> "0")),
+            ),
+          ),
       )
+    },
+    test("a value whose only standoff nodes have a negative start index is Left") {
+      val statements = value("v1", "n1") ++ node("n1", -1)
+      assertTrue(ValueHasXmlBackfill.groupByValue(statements, Seq("v1"))("v1").isLeft)
     },
   )
 
@@ -90,6 +105,12 @@ class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
     test("drops failed, keeps order and caps at batchSize") {
       assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b", "c", "d", "e"), Set("b"), 3) == Seq("a", "c", "d"))
     },
+    test("returns fewer than batchSize when fewer candidates are left") {
+      assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b"), Set.empty, 3) == Seq("a", "b"))
+    },
+    test("returns nothing when every candidate failed") {
+      assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b"), Set("a", "b"), 3).isEmpty)
+    },
   )
 
   private val stopReasonSuite = {
@@ -107,6 +128,21 @@ class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
       test("failed.size == maxFailures is MaxFailures") {
         val state = RunState.zero.copy(failed = Set("a", "b"))
         assertTrue(stop(state, Seq("c"), 2) == Some(StopReason.MaxFailures))
+      },
+      test("an empty batch is NoCandidates even when maxFailures is reached") {
+        val state = RunState.zero.copy(failed = Set("a", "b"))
+        assertTrue(stop(state, Seq.empty, 2) == Some(StopReason.NoCandidates))
+      },
+      test("failed.size above maxFailures is MaxFailures") {
+        val state = RunState.zero.copy(failed = Set("a", "b", "c"))
+        assertTrue(stop(state, Seq("d"), 2) == Some(StopReason.MaxFailures))
+      },
+      test("a batch that overlaps the previous batch only in part is None") {
+        val state = RunState.zero.copy(previousBatch = Set("a", "b"))
+        assertTrue(stop(state, Seq("a")).isEmpty, stop(state, Seq("a", "b", "c")).isEmpty)
+      },
+      test("the first batch is None") {
+        assertTrue(stop(RunState.zero, Seq("a")).isEmpty)
       },
       test("the same IRI set as the previous batch is Stalled") {
         val state = RunState.zero.copy(previousBatch = Set("a", "b"))
