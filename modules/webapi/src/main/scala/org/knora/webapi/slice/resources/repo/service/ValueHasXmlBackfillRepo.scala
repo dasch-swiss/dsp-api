@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resources.repo
+package org.knora.webapi.slice.resources.repo.service
 
 import zio.*
 
@@ -12,6 +12,7 @@ import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /** The triplestore access of the `valueHasXml` backfill. */

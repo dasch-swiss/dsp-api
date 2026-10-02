@@ -23,7 +23,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.infrastructure.OtelSetup
-import org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillRepo
+import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
@@ -54,7 +54,7 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
           Seq(
             iri -> Seq(
               KnoraBase.ValueHasString   -> "text",
-              KnoraBase.ValueHasMapping  -> mappingOf(iri),
+              KnoraBase.ValueHasMapping  -> sharedMapping,
               KnoraBase.ValueHasStandoff -> s"$iri/node",
             ),
             s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
@@ -67,7 +67,7 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
         ZIO.unless(writesNothing)(candidates.update(_.filterNot(values.map(_._1).toSet))).unit
   }
 
-  private def mappingOf(valueIri: IRI): IRI = "http://rdfh.ch/standoff/mappings/shared"
+  private val sharedMapping: IRI = "http://rdfh.ch/standoff/mappings/shared"
 
   private final class StubRenderer(
     failing: Set[IRI],
@@ -112,10 +112,14 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
   private def values(n: Int): Seq[String] = (1 to n).map(i => s"http://rdfh.ch/0001/v$i")
 
   private def awaitReleased(service: ValueHasXmlBackfillService): UIO[Unit] =
-    service.running.get.repeatUntil(_.isEmpty).unit
+    service.running.get.repeat(Schedule.recurUntil[Option[ProjectIri]](_.isEmpty) && Schedule.spaced(10.millis)).unit
+
+  /** Returns once the forked run is suspended in the batch-interval sleep of the test clock. */
+  private val awaitPacing: UIO[Unit] =
+    ZIO.yieldNow.repeatUntilZIO(_ => TestClock.sleeps.map(_.nonEmpty)).unit
 
   private def settledSelects(f: Fixture): UIO[Int] =
-    Live.live(ZIO.sleep(100.millis)) *> f.repo.calls.get.map(_.count(_ == "select"))
+    awaitPacing *> f.repo.calls.get.map(_.count(_ == "select"))
 
   private val loopSuite = suite("run")(
     suite("loop")(
@@ -181,6 +185,14 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
           !lines.exists(_.contains("select failed")),
         )
       },
+      test("no insert is issued when no value rendered") {
+        val vs = values(2)
+        for {
+          f     <- fixture(vs, failing = vs.toSet)
+          _     <- f.service.run(project)
+          calls <- f.repo.calls.get
+        } yield assertTrue(!calls.contains("insert"))
+      },
       test("a value rendered to None counts as failed") {
         val vs = values(2)
         for {
@@ -188,9 +200,10 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
           report <- f.service.run(project)
         } yield assertTrue(report.failed == 1, report.rendered == 1)
       },
-      test("the mapping is loaded once for values sharing it") {
+      test("the mapping is loaded once for values sharing it, also when a value fails to render") {
+        val vs = values(6)
         for {
-          f     <- fixture(values(6), batchSize = 3)
+          f     <- fixture(vs, batchSize = 3, failing = Set(vs(0)))
           _     <- f.service.run(project)
           loads <- f.renderer.mappingLoads.get
         } yield assertTrue(loads == 1)
@@ -210,6 +223,15 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
         _      <- fiber.join
         after  <- f.repo.calls.get.map(_.count(_ == "select"))
       } yield assertTrue(before == 1, mid == 2, third == 3, after == 4)
+    },
+    test("an interrupted run logs the partial report at WARN") {
+      for {
+        f     <- fixture(values(4), interval = java.time.Duration.ofHours(1))
+        fiber <- f.service.run(project).fork
+        _     <- awaitPacing
+        _     <- fiber.interrupt
+        lines <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning).map(_.message()))
+      } yield assertTrue(lines.exists(line => line.contains("interrupted") && line.contains("found=2")))
     },
   )
 

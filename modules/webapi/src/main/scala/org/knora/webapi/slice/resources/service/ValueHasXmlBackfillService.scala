@@ -17,7 +17,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.infrastructure.SanitizedSpan
-import org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillRepo
+import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.RunState
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
 
@@ -124,28 +124,25 @@ final case class ValueHasXmlBackfillService(
     ZIO.foldLeft(batch)(BatchOutcome(mappings, Vector.empty, Vector.empty)) { (acc, iri) =>
       grouped(iri) match {
         case Left(reason) => ZIO.logWarning(s"valueHasXml backfill: $iri failed: $reason").as(acc.withFailure(iri))
-        case Right(value) => renderValue(value, acc.mappings).foldCauseZIO(failValue(iri, acc), succeed(iri, acc))
+        case Right(value) => renderOne(iri, value, acc)
       }
     }
 
-  private def renderValue(
-    value: StoredTextValue,
-    mappings: Map[IRI, MappingXMLtoStandoff],
-  ): Task[(Map[IRI, MappingXMLtoStandoff], String)] =
-    for {
-      mapping <- mappings.get(value.mappingIri) match {
-                   case Some(cached) => ZIO.succeed(cached)
-                   case None         => renderer.loadMapping(value.mappingIri)
-                 }
-      xml  <- renderer.render(value, mapping)
-      text <- ZIO.fromOption(xml).orElseFail(NoXmlRendered())
-    } yield (mappings.updated(value.mappingIri, mapping), text)
+  /** Caches the mapping as soon as it is loaded, so a value that then fails to render does not cost a reload. */
+  private def renderOne(iri: IRI, value: StoredTextValue, acc: BatchOutcome): Task[BatchOutcome] =
+    mappingFor(value, acc.mappings).foldCauseZIO(
+      failValue(iri, acc),
+      mapping => {
+        val cached = acc.copy(mappings = acc.mappings.updated(value.mappingIri, mapping))
+        renderer
+          .render(value, mapping)
+          .someOrFail(NoXmlRendered())
+          .foldCauseZIO(failValue(iri, cached), xml => ZIO.succeed(cached.withRendered(iri, xml)))
+      },
+    )
 
-  private def succeed(
-    iri: IRI,
-    acc: BatchOutcome,
-  )(result: (Map[IRI, MappingXMLtoStandoff], String)): UIO[BatchOutcome] =
-    ZIO.succeed(acc.copy(mappings = result._1).withRendered(iri, result._2))
+  private def mappingFor(value: StoredTextValue, mappings: Map[IRI, MappingXMLtoStandoff]): Task[MappingXMLtoStandoff] =
+    mappings.get(value.mappingIri).fold(renderer.loadMapping(value.mappingIri))(ZIO.succeed(_))
 
   private def failValue(iri: IRI, acc: BatchOutcome)(cause: Cause[Throwable]): Task[BatchOutcome] =
     if (cause.isInterrupted) ZIO.refailCause(cause)
@@ -155,7 +152,7 @@ final case class ValueHasXmlBackfillService(
   private def pace(started: Long): UIO[Unit] =
     Clock.nanoTime.flatMap { now =>
       val remaining = config.batchInterval.minus(java.time.Duration.ofNanos(now - started))
-      ZIO.sleep(Duration.fromJava(remaining)).when(!remaining.isNegative && !remaining.isZero).unit
+      ZIO.sleep(Duration.fromJava(remaining)).when(remaining.compareTo(java.time.Duration.ZERO) > 0).unit
     }
 
   private def stage[A](name: String)(effect: Task[A]): Task[A] =

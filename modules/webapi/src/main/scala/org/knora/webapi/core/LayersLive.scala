@@ -43,10 +43,10 @@ import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyTransformer
 import org.knora.webapi.slice.resources.ResourcesModule
-import org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillRepo
-import org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillRepoLive
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
+import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
+import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
