@@ -6,11 +6,16 @@
 package org.knora.webapi.slice.infrastructure
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.TraceFlags
+import io.opentelemetry.api.trace.TraceState
 import org.junit.runner.RunWith
 import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.test.*
+
+import scala.jdk.CollectionConverters.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.testservices.InMemoryTracing
@@ -37,8 +42,87 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
 
   private val errorTypeKey = AttributeKey.stringKey("error.type")
 
+  private val linkedContext =
+    SpanContext.create(
+      "0af7651916cd43dd8448eb211c80319c",
+      "b7ad6b7169203331",
+      TraceFlags.getSampled,
+      TraceState.getDefault,
+    )
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("SanitizedSpan.withSpan")(
+    suite("SanitizedSpan")(withSpanSuite, withRootSpanSuite)
+
+  private val withRootSpanSuite =
+    suite("withRootSpan")(
+      test("a root span opened inside a parent span starts a new trace and carries the given span link") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- tracing.span("parent") {
+                 SanitizedSpan.withRootSpan(tracing, spanName, exitReasonKey, Seq(linkedContext))(_ => ZIO.unit)
+               }
+          spans <- InMemoryTracing.finishedSpans
+        } yield {
+          val root   = SpanAssertions.findSpan(spans, spanName)
+          val parent = SpanAssertions.findSpan(spans, "parent")
+          assertTrue(
+            root.exists(!_.getParentSpanContext.isValid),
+            root.map(_.getTraceId) != parent.map(_.getTraceId),
+            root.exists(_.getLinks.asScala.exists(_.getSpanContext == linkedContext)),
+          )
+        }).provide(InMemoryTracing.layer)
+      },
+      test("a typed failure yields the sanitized description and error.type, without an exception event") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withRootSpan(tracing, spanName, exitReasonKey, Seq(linkedContext))(_ =>
+                   ZIO.fail(new IllegalStateException(sentinel)),
+                 )
+                 .either
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalStateException") &&
+          SpanAssertions.hasAttribute(spans, spanName, errorTypeKey, "IllegalStateException") &&
+          assertTrue(
+            SpanAssertions.findSpan(spans, spanName).exists(_.getEvents.isEmpty),
+            SpanAssertions.findSpan(spans, spanName).exists(!_.toString.contains(sentinel)),
+          )).provide(InMemoryTracing.layer)
+      },
+      test("a defect is described without its message and still reaches the caller as a defect") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          exit    <- SanitizedSpan
+                    .withRootSpan(tracing, spanName, exitReasonKey, Seq(linkedContext))(_ =>
+                      ZIO.die(new IllegalStateException(sentinel)),
+                    )
+                    .exit
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: defect") &&
+          assertTrue(
+            SpanAssertions.findSpan(spans, spanName).exists(!_.toString.contains(sentinel)),
+            exit.causeOption.exists(_.dieOption.exists(_.getMessage == sentinel)),
+          )).provide(InMemoryTracing.layer)
+      },
+      test("an interrupt marks the span with the caller's exit reason") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          started <- Promise.make[Nothing, Unit]
+          fiber   <-
+            SanitizedSpan
+              .withRootSpan(tracing, spanName, exitReasonKey, Seq(linkedContext))(_ => started.succeed(()) *> ZIO.never)
+              .fork
+          _     <- started.await
+          _     <- fiber.interrupt
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted") &&
+          SpanAssertions.hasErrorStatus(spans, spanName)).provide(InMemoryTracing.layer)
+      },
+    )
+
+  private val withSpanSuite =
+    suite("withSpan")(
       test("a typed failure yields an ERROR span whose description is the class name only") {
         (for {
           tracing <- ZIO.service[Tracing]
