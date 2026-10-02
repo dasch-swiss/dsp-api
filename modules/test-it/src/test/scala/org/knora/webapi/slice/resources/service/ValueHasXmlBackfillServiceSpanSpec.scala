@@ -28,14 +28,14 @@ import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
 
 /**
- * Guards the span contract of [[ValueHasXmlBackfillService.run]]: the root and stage spans are emitted, the report is
- * attached as bounded attributes, and neither a failure message nor a value IRI reaches any span. Needs no container.
+ * Guards the span contract of [[ValueHasXmlBackfillService.run]]: the run span, the select stage and one linked root span per batch are
+ * emitted, the report is attached as bounded attributes on every exit, and neither a failure message nor a value IRI reaches any span. Needs no container.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
 
-  private val root   = "value_has_xml_backfill"
-  private val stages = Seq("select", "load", "render", "write").map(s => s"$root.$s")
+  private val root  = "value_has_xml_backfill"
+  private val batch = s"$root.batch"
 
   private val project = KnoraProject(
     ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
@@ -56,7 +56,9 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
   private final class StubRepo(
     candidates: Ref[Vector[IRI]],
     selectCount: Ref[Int],
+    loadCount: Ref[Int],
     failSelectOn: Option[Int],
+    failLoadOn: Option[Int],
     dieOnLoad: Boolean,
     blockedOnSelect: Option[Promise[Nothing, Unit]],
   ) extends ValueHasXmlBackfillRepo {
@@ -70,20 +72,23 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
       } yield c
 
     override def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]] =
-      if (dieOnLoad) ZIO.die(new IllegalStateException("secret"))
-      else
-        ZIO.succeed {
-          valueIris.flatMap { iri =>
-            Seq(
-              iri -> Seq(
-                KnoraBase.ValueHasString   -> "text",
-                KnoraBase.ValueHasMapping  -> mappingIri,
-                KnoraBase.ValueHasStandoff -> s"$iri/node",
-              ),
-              s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
-            )
-          }.toMap
-        }
+      loadCount.updateAndGet(_ + 1).flatMap { n =>
+        if (dieOnLoad) ZIO.die(new IllegalStateException("secret"))
+        else if (failLoadOn.contains(n)) ZIO.fail(new RuntimeException("secret user text"))
+        else
+          ZIO.succeed {
+            valueIris.flatMap { iri =>
+              Seq(
+                iri -> Seq(
+                  KnoraBase.ValueHasString   -> "text",
+                  KnoraBase.ValueHasMapping  -> mappingIri,
+                  KnoraBase.ValueHasStandoff -> s"$iri/node",
+                ),
+                s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
+              )
+            }.toMap
+          }
+      }
 
     override def insertXml(project: KnoraProject, values: Seq[(IRI, String)]): Task[Unit] =
       candidates.update(_.filterNot(values.map(_._1).toSet))
@@ -97,7 +102,12 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
       ZIO.some(s"<xml>${value.valueIri}</xml>")
   }
 
-  private def service(failSelectOn: Option[Int], dieOnLoad: Boolean, blockedOnSelect: Option[Promise[Nothing, Unit]]) =
+  private def service(
+    failSelectOn: Option[Int],
+    failLoadOn: Option[Int],
+    dieOnLoad: Boolean,
+    blockedOnSelect: Option[Promise[Nothing, Unit]],
+  ) =
     for {
       tracing   <- ZIO.service[zio.telemetry.opentelemetry.tracing.Tracing]
       appConfig <- AppConfig.parseConfig.map(
@@ -105,13 +115,18 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
                    )
       candidates <- Ref.make((1 to 3).map(i => s"http://rdfh.ch/0001/v$i").toVector)
       selects    <- Ref.make(0)
+      loads      <- Ref.make(0)
       running    <- Ref.make(Option.empty[ProjectIri])
-      repo        = StubRepo(candidates, selects, failSelectOn, dieOnLoad, blockedOnSelect)
+      repo        = StubRepo(candidates, selects, loads, failSelectOn, failLoadOn, dieOnLoad, blockedOnSelect)
     } yield ValueHasXmlBackfillService(repo, StubRenderer, appConfig, tracing, running)
 
-  private def runBackfill(failSelectOn: Option[Int] = None, dieOnLoad: Boolean = false) =
+  private def runBackfill(
+    failSelectOn: Option[Int] = None,
+    failLoadOn: Option[Int] = None,
+    dieOnLoad: Boolean = false,
+  ) =
     for {
-      svc   <- service(failSelectOn, dieOnLoad, None)
+      svc   <- service(failSelectOn, failLoadOn, dieOnLoad, None)
       exit  <- svc.run(project).exit
       spans <- InMemoryTracing.finishedSpans
     } yield (exit, spans)
@@ -119,7 +134,7 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
   private val runInterrupted =
     for {
       entered <- Promise.make[Nothing, Unit]
-      svc     <- service(None, dieOnLoad = false, Some(entered))
+      svc     <- service(None, None, dieOnLoad = false, Some(entered))
       fiber   <- svc.run(project).fork
       _       <- entered.await
       _       <- fiber.interrupt
@@ -130,6 +145,35 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
 
   private def exitReason(spans: Seq[SpanData], name: String): Option[String] =
     SpanAssertions.findSpan(spans, name).flatMap(span => Option(span.getAttributes.get(exitReasonKey)))
+
+  private def runCounts(spans: Seq[SpanData], found: Long, rendered: Long, failed: Long): TestResult =
+    SpanAssertions.hasAttribute(spans, root, AttributeKey.stringKey(s"$root.shortcode"), "0001") &&
+      SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.found"), found) &&
+      SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.rendered"), rendered) &&
+      SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.failed"), failed)
+
+  private def runChildren(spans: Seq[SpanData]): Seq[SpanData] =
+    SpanAssertions.findSpan(spans, root).toSeq.flatMap(r => spans.filter(_.getParentSpanId == r.getSpanId))
+
+  private def batchSpansAreLinkedRoots(spans: Seq[SpanData]): TestResult = {
+    val run     = SpanAssertions.findSpan(spans, root).get
+    val batches = spans.filter(_.getName == batch)
+    assertTrue(
+      batches.size == 2,
+      batches.forall(b => b.getTraceId != run.getTraceId && !b.getParentSpanContext.isValid),
+      batches.forall(_.getLinks.asScala.map(_.getSpanContext.getSpanId).toSeq == Seq(run.getSpanId)),
+      batches.forall(b =>
+        batchChildren(spans, b).map(_.getName).toSet == Set("load", "render", "write").map(n => s"$root.$n"),
+      ),
+      batches.map(b => b.getAttributes.get(AttributeKey.longKey(s"$root.found"))) == Seq(2L, 1L),
+      batches.forall(_.getAttributes.get(AttributeKey.stringKey(s"$root.shortcode")) == "0001"),
+      batches.forall(_.getAttributes.get(AttributeKey.longKey(s"$root.failed")) == 0L),
+      batches.map(b => b.getAttributes.get(AttributeKey.longKey(s"$root.rendered"))) == Seq(2L, 1L),
+    )
+  }
+
+  private def batchChildren(spans: Seq[SpanData], b: SpanData): Seq[SpanData] =
+    spans.filter(s => s.getParentSpanId == b.getSpanId && s.getTraceId == b.getTraceId)
 
   private def noValueIriInAttributes(spans: Seq[SpanData]): TestResult =
     assertTrue(
@@ -146,12 +190,12 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
             rootSpan.exists(_.getStatus.getStatusCode != StatusCode.ERROR),
             exitReason(spans, root).isEmpty,
           ) &&
-          SpanAssertions.hasAttribute(spans, root, AttributeKey.stringKey(s"$root.shortcode"), "0001") &&
-          SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.found"), 3L) &&
-          SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.rendered"), 3L) &&
-          SpanAssertions.hasAttribute(spans, root, AttributeKey.longKey(s"$root.failed"), 0L) &&
+          runCounts(spans, 3L, 3L, 0L) &&
           SpanAssertions.hasAttribute(spans, root, AttributeKey.booleanKey(s"$root.stopped_early"), false) &&
-          stages.map(SpanAssertions.isParentChild(spans, root, _)).reduce(_ && _) &&
+          SpanAssertions.hasAttribute(spans, root, AttributeKey.stringKey(s"$root.stop_reason"), "NoCandidates") &&
+          SpanAssertions.isParentChild(spans, root, s"$root.select") &&
+          assertTrue(runChildren(spans).map(_.getName) == Seq(s"$root.select")) &&
+          batchSpansAreLinkedRoots(spans) &&
           noValueIriInAttributes(spans)
         }
       },
@@ -175,6 +219,17 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
           noValueIriInAttributes(spans)
         }
       },
+      test("a failed load in the second batch leaves the run span with the counts of the first batch") {
+        runBackfill(failLoadOn = Some(2)).map { case (exit, spans) =>
+          assertTrue(exit.isFailure, !spans.exists(_.toString.contains("secret user text"))) &&
+          runCounts(spans, 2L, 2L, 0L) &&
+          SpanAssertions.hasAttribute(spans, root, AttributeKey.booleanKey(s"$root.stopped_early"), false) &&
+          SpanAssertions.hasNoAttributeKey(spans, root, AttributeKey.stringKey(s"$root.stop_reason")) &&
+          SpanAssertions.hasErrorStatus(spans, root) &&
+          assertTrue(spans.count(_.getName == batch) == 2) &&
+          noValueIriInAttributes(spans)
+        }
+      },
       test("a defect yields the sanitized defect status and leaks no message") {
         runBackfill(dieOnLoad = true).map { case (exit, spans) =>
           assertTrue(
@@ -186,6 +241,8 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
           SpanAssertions.hasErrorStatus(spans, root) &&
           SpanAssertions.hasStatusDescription(spans, root, s"$root: defect") &&
           SpanAssertions.hasStatusDescription(spans, s"$root.load", s"$root.load: defect") &&
+          runCounts(spans, 0L, 0L, 0L) &&
+          SpanAssertions.hasNoAttributeKey(spans, root, AttributeKey.stringKey(s"$root.stop_reason")) &&
           noValueIriInAttributes(spans)
         }
       },
@@ -196,6 +253,7 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
             exitReason(spans, s"$root.select").contains("interrupted"),
           ) &&
           SpanAssertions.hasStatusDescription(spans, root, "interrupted") &&
+          runCounts(spans, 0L, 0L, 0L) &&
           noValueIriInAttributes(spans)
         }
       },
