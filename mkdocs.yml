@@ -43,6 +43,7 @@ nav:
           - Files Endpoint: 03-endpoints/api-admin/files.md
           - Stores Endpoint: 03-endpoints/api-admin/stores.md
           - SPARQL Passthrough: 03-endpoints/api-admin/sparql-passthrough.md
+          - Maintenance Endpoint: 03-endpoints/api-admin/maintenance.md
       - API V3:
           - Project Migration Export/Import: 03-endpoints/api-v3/project-migration.md
           - Project Data Import: 03-endpoints/api-v3/project-data-import.md
