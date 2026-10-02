@@ -252,7 +252,8 @@ Markup is stored using this property:
 
 - `valueHasXml` (0-1): Holds the canonical XML of the formatted text, rendered from the standoff and written when
   a formatted text value is created or updated, so that a raw export or backup is self-contained. It equals the
-  XML the API rebuilds from the standoff on read.
+  XML the API rebuilds from the standoff on read. Values written before the API stored this property get it from the
+  [maintenance backfill](../03-endpoints/api-admin/maintenance.md#backfill-valuehasxml).
 
 A text value can have a specified language:
 

@@ -787,7 +787,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted at
         `ValuesResponderV2.scala:536`.
     - Golden SPARQL dumps under `modules/webapi/src/test/resources/org/knora/webapi/slice/resources/repo/**`
-        (52 files), single writer: the query specs that regenerate them.
+        (58 files), single writer: the query specs that regenerate them.
     - Read permissions are enforced late and in two places, `PermissionUtilADM.getUserPermissionADM` inside
         `ResourceUtilV2` and `ConstructResponseUtilV2` in webapi-common, while write paths compare
         permissions in `CreateResourceV2Handler` and `ValuesResponderV2`. There is no single chokepoint.
