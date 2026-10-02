@@ -72,6 +72,20 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           )
         }).provide(InMemoryTracing.layer)
       },
+      test("after a root span ends, the caller's span is current again") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- tracing.span("parent") {
+                 SanitizedSpan.withRootSpan(tracing, spanName, exitReasonKey, Seq(linkedContext))(_ => ZIO.unit) *>
+                   tracing.span("after")(ZIO.unit)
+               }
+          spans <- InMemoryTracing.finishedSpans
+        } yield {
+          val after  = SpanAssertions.findSpan(spans, "after")
+          val parent = SpanAssertions.findSpan(spans, "parent")
+          assertTrue(after.map(_.getParentSpanId) == parent.map(_.getSpanId))
+        }).provide(InMemoryTracing.layer)
+      },
       test("a typed failure yields the sanitized description and error.type, without an exception event") {
         (for {
           tracing <- ZIO.service[Tracing]

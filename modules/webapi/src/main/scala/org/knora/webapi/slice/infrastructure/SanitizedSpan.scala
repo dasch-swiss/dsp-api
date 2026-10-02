@@ -14,7 +14,8 @@ import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 /**
- * Opens a span whose failure status can never carry the message of the failure that produced it.
+ * Opens a span whose failure status can never carry the message of the failure that produced it: a child span
+ * ([[withSpan]]) or the root of a new trace linked to other spans ([[withRootSpan]]).
  *
  * This exists because the default behaviour leaks. zio-telemetry's failure handling does, in effect:
  *
@@ -137,7 +138,7 @@ object SanitizedSpan {
       .catchSome { case carried: SpanScopedDefect => ZIO.refailCause(carried.cause) }
 
   /**
-   * Carries a defect across the span boundary as a typed failure. Never escapes [[withSpan]]: it exists only so
+   * Carries a defect across the span boundary as a typed failure. Never escapes [[sanitized]]: it exists only so
    * zio-telemetry's `cause.failureOption` lookup finds something, and is unwrapped back into the cause it came from
    * immediately after the span has ended.
    */

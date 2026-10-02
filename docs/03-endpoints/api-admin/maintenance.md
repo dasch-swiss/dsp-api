@@ -96,8 +96,9 @@ all prefixed `value_has_xml_backfill.`:
 - `exit_reason=interrupted`, when the run is interrupted.
 
 Each batch is a separate trace: a root span `value_has_xml_backfill.batch` with a span link to the run span, and the
-stage spans `.load`, `.render` and `.write`. A batch span carries `shortcode` and the `found`, `rendered` and `failed`
-counts of that batch. Thus a trace does not grow with the size of the project.
+stage spans `.load`, `.render` and `.write`. A batch span carries `shortcode`, and the `found`, `rendered` and
+`failed` counts of that batch when the batch completes. An interrupted batch span or stage span carries
+`exit_reason=interrupted`. Thus a trace does not grow with the size of the project.
 
 A run that ends with `failed > 0` keeps the span status `UNSET`. Find such runs with the `failed` attribute or with the
 `ERROR` `finished` line, not with the span status.
