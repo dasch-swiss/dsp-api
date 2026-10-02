@@ -42,9 +42,9 @@ class ValueHasXmlBackfillQuerySemanticsSpec extends E2EZSpec {
   private val noStandoff = "http://rdfh.ch/0001/xmlbackfill/no-standoff"
   private val inGraphB   = "http://rdfh.ch/0001/xmlbackfill/in-graph-b"
   private val absent     = "http://rdfh.ch/0001/xmlbackfill/absent"
+  private val notText    = "http://rdfh.ch/0001/xmlbackfill/not-a-text-value"
 
   private def node(value: String, index: Int): String = s"$value/standoff/$index"
-  private val negativeNode                            = node(current, 2)
 
   private def standoffNode(value: String, index: Int, tag: String, startIndex: Int): String =
     s"""<${node(value, index)}> a <$standoff$tag> ;
@@ -79,6 +79,7 @@ class ValueHasXmlBackfillQuerySemanticsSpec extends E2EZSpec {
     s"""<$noStandoff> a <${kb}TextValue> ;
        |  <${kb}valueHasString> "No standoff" ;
        |  <${kb}valueHasMapping> <$mapping> .""".stripMargin,
+    s"""<$notText> a <${kb}IntValue> ; <${kb}valueHasInteger> 1 .""",
   ).mkString("\n")
 
   private def insertData(graph: String, triples: String): Update =
@@ -131,30 +132,43 @@ class ValueHasXmlBackfillQuerySemanticsSpec extends E2EZSpec {
         linked     = statements.getOrElse(current, Seq.empty).collect { case (p, n) if p == s"${kb}valueHasStandoff" => n }
       } yield assertTrue(
         statements.keySet == Set(current, historical) ++ standoffNodesOf(current) ++ standoffNodesOf(historical),
-        !statements.contains(negativeNode),
-        !linked.contains(negativeNode),
         linked.toSet == standoffNodesOf(current),
-        grouped(current).isRight,
-        grouped(historical).isRight,
         grouped(current).toOption.map(_.standoffNodes.keySet) == Some(standoffNodesOf(current)),
         grouped(historical).toOption.map(_.standoffNodes.keySet) == Some(standoffNodesOf(historical)),
       )
     },
-    test("insertXml leaves an existing valueHasXml unchanged") {
+    test("insertXml writes a mixed batch only for text values without XML") {
       for {
-        _   <- seed
-        _   <- insertXml(graphA, withXml -> "<other/>")
-        xml <- xmlOf(graphA, withXml)
-      } yield assertTrue(xml == List("<existing/>"))
+        _ <- seed
+        _ <- insertXml(
+               graphA,
+               withXml -> "<other/>",
+               current -> "<text>ok</text>",
+               notText -> "<n/>",
+               absent  -> "<a/>",
+             )
+        xmlWithXml       <- xmlOf(graphA, withXml)
+        xmlCurrent       <- xmlOf(graphA, current)
+        xmlNotText       <- xmlOf(graphA, notText)
+        absentPredicates <- triplestore(
+                              _.query(Select(s"SELECT ?p WHERE { GRAPH <$graphA> { <$absent> ?p ?o } }")),
+                            ).map(_.getCol("p"))
+        after <- candidates(graphA)
+      } yield assertTrue(
+        xmlWithXml == List("<existing/>"),
+        xmlCurrent == List("<text>ok</text>"),
+        xmlNotText.isEmpty,
+        absentPredicates.isEmpty,
+        !after.contains(current),
+      )
     },
-    test("insertXml writes nothing for a value absent from the graph") {
+    test("insertXml round-trips XML with quotes, backslashes, newlines, ampersands and non-BMP characters") {
+      val xml = "<text a=\"x\" b='y'>Tom &amp; \\Jerry\r\n\t<b>\uD834\uDD1E</b></text>"
       for {
-        _     <- seed
-        _     <- insertXml(graphA, absent -> "<text>x</text>")
-        count <- triplestore(
-                   _.query(Select(s"SELECT ?p WHERE { GRAPH <$graphA> { <$absent> ?p ?o } }")),
-                 ).map(_.getCol("p"))
-      } yield assertTrue(count.isEmpty)
+        _      <- seed
+        _      <- insertXml(graphA, current -> xml)
+        stored <- xmlOf(graphA, current)
+      } yield assertTrue(stored == List(xml))
     },
     test("queries scoped to graph A leave graph B untouched") {
       for {
@@ -164,14 +178,6 @@ class ValueHasXmlBackfillQuerySemanticsSpec extends E2EZSpec {
         xmlInB <- xmlOf(graphB, inGraphB)
         xmlInA <- xmlOf(graphA, inGraphB)
       } yield assertTrue(!found.contains(inGraphB), xmlInB.isEmpty, xmlInA.isEmpty)
-    },
-    test("insertXml writes exactly the given literal and the value stops being a candidate") {
-      for {
-        _     <- seed
-        _     <- insertXml(graphA, current -> "<text>ok</text>")
-        xml   <- xmlOf(graphA, current)
-        after <- candidates(graphA)
-      } yield assertTrue(xml == List("<text>ok</text>"), !after.contains(current))
     },
   )
 }
