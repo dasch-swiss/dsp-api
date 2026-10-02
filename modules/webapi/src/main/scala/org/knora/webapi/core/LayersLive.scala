@@ -49,6 +49,7 @@ import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 import org.knora.webapi.slice.resources.service.ValueHasXmlRenderer
 import org.knora.webapi.slice.resources.service.ValueHasXmlRendererLive
 import org.knora.webapi.slice.security.SecurityModule
@@ -103,6 +104,7 @@ object LayersLive { self =>
     State &
     Tracing &
     ValueHasXmlBackfillRepo &
+    ValueHasXmlBackfillService &
     ValueHasXmlRenderer &
     ValuesResponderV2 &
     io.opentelemetry.api.OpenTelemetry
@@ -163,6 +165,7 @@ object LayersLive { self =>
       StandoffTagUtilV2Live.layer,
       State.layer,
       ValueHasXmlBackfillRepoLive.layer,
+      ValueHasXmlBackfillService.layer,
       ValueHasXmlRendererLive.layer,
       ValuesResponderV2.layer,
     )
