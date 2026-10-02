@@ -41,6 +41,7 @@ import org.knora.webapi.slice.api.admin.service.ViewRestrictionsRestService
 import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object AdminApiModule { self =>
@@ -71,6 +72,7 @@ object AdminApiModule { self =>
       Tracing &
       TriplestoreService &
       UserService &
+      ValueHasXmlBackfillService &
       ViewRestrictionsService &
       ViewRestrictionsByPropertyService
       // format: on

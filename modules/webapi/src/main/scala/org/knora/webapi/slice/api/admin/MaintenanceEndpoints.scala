@@ -60,6 +60,15 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
       "Re-attribute all references to a user IRI within a single project's data graph. " +
         "Both user accounts remain intact. SystemAdmin only. Not idempotent: retrying after success returns 404.",
     )
+
+  val postBackfillValueHasXml = baseEndpoints.securedEndpoint.post
+    .in(maintenanceBase / "projects" / AdminPathVariables.projectShortcode / "backfill-value-has-xml")
+    .out(statusCode(StatusCode.Accepted))
+    .description(
+      "Start a background backfill of knora-base:valueHasXml for every formatted text value version in the " +
+        "project that lacks it. Skip-only and safe to re-run. SystemAdmin only. One run per API instance: " +
+        "returns 409 while one is running. Progress is reported in logs and traces only.",
+    )
 }
 
 object MaintenanceEndpoints {

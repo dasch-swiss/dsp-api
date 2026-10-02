@@ -1,0 +1,11 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+WITH <http://www.knora.org/data/0001/anything>
+INSERT { ?v knora-base:valueHasXml ?xml }
+WHERE {
+  VALUES (?v ?xml) {
+    (<http://rdfh.ch/0001/res1/values/v1> "<text a=\"x\">Tom & \"Jerry\"\n  <b>bold</b></text>")
+  }
+  ?v a knora-base:TextValue .
+  FILTER NOT EXISTS { ?v knora-base:valueHasXml ?any }
+}
