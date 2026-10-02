@@ -1,0 +1,12 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?v
+WHERE {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    ?v a knora-base:TextValue ;
+       knora-base:valueHasMapping ?m .
+    FILTER EXISTS { ?v knora-base:valueHasStandoff ?n }
+    FILTER NOT EXISTS { ?v knora-base:valueHasXml ?x }
+  }
+}
+LIMIT 50
