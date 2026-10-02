@@ -428,7 +428,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     },
     test("stored XML of mutually referencing tags equals the submitted XML") {
       // Not compared with the served XML: with several `targetHasOriginalXMLID` candidates in the graph the read
-      // query can serve the wrong target ID for an internal reference, so the submitted XML is the oracle.
+      // query can serve the wrong target ID for an internal reference, so the submitted XML is the oracle (DEV-7468).
       for {
         resource  <- createResourceWithText(mutualReferencesXml, StandoffMappingIri.StandardMapping)
         value     <- currentValueOf(resource)
