@@ -1634,6 +1634,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         GitHub Release triggers `publish-release.yml`, which builds and pushes all four images.
     - `.claude/settings.json` and `.mcp.json` configure the agent harness itself, the Metals MCP server and
         the permission lists; they affect agent behavior, not the build.
+    - `.claude/rules/comments.md` (the comment rule) is a verbatim copy from dasch-claude-plugins; change it there
+        and re-copy.
 
 ### docs
 

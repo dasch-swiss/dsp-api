@@ -31,7 +31,7 @@ For the prefix → changelog mapping and scope convention, see
 | Commit messages | Release notes readers         | User-visible changes only                                        |
 | PR description  | Reviewers + future developers | The code and the diff                                            |
 | Learnings docs  | Future engineers + Claude     | What was tried and why it failed, structured and searchable      |
-| Code comments   | Code readers                  | Invariants a reader must not break (`CONVENTIONS.md` § Comments) |
+| Code comments   | Code readers                  | Invariants a reader must not break (`.claude/rules/comments.md`) |
 
 ## PR Description Format
 
