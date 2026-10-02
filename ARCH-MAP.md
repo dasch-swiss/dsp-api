@@ -43,7 +43,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `knora-api` image.
 - **Key entities**: `Main`, `LayersLive`, `DspApiServer`, `Db`, `State`, `AppState`, `AppConfig`,
     `AppConfig.AppConfigurations`, `KnoraApi`, `Sipi`, `Triplestore`, `JwtConfig`, `DspIngestConfig`,
-    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`
+    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`,
+    `ValueHasXmlBackfillConfig`
 - **Public interface**: `Main.run`; `LayersLive.bootstrap` / `LayersLive.remainingLayer`;
     `DspApiServer.layer` / `DspApiServer.startup`; `Db.init` / `Db.initWithTestData`; `State`
     (`getAppState` / `set`); `AppConfig.layer` and the individual config case classes that other slices
@@ -716,7 +717,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ReadResourcesServiceLive`, `MetadataService`, `ResourceInfoRepo`, `ResourceInfoRepoLive`,
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
     `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
-    `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`
+    `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -765,7 +767,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - Wiring: shared inventory. `ResourcesModule.layer` registers only `MetadataService`,
         `ResourceInfoRepoLive` and `ValueContentValidator`; `ResourcesRepoLive.layer`,
         `ReadResourcesServiceLive.layer`, `ResourceUtilV2.layer`, `ResourcesResponderV2.layer`,
-        `ValuesResponderV2.layer` and `CreateResourceV2Handler.layer` are listed individually in
+        `ValuesResponderV2.layer`, `CreateResourceV2Handler.layer`, `ValueHasXmlBackfillRepoLive.layer`,
+        `ValueHasXmlBackfillService.layer` and `ValueHasXmlRendererLive.layer` are listed individually in
         `core/LayersLive.scala`.
 - **Durable state**:
     - The project data named graph in Fuseki holding resource and value triples, multi-writer with no single
@@ -777,6 +780,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ListsResponder`, `StandoffResponderV2`, `ProjectDataImportService.uploadNQuads` (webapi-export),
         `TopLeftCorrectionAction` and `ReplaceUserIriInProjectAction` (webapi-admin) and the upgrade plugins
         under `store/triplestore/upgrade/plugins/**` (webapi-triplestore).
+    - `knora-base:valueHasXml` has two writers: the value and resource write paths (`InsertValueQueryBuilder`,
+        `CreateResourceV2Handler`) and the backfill INSERT (`ValueHasXmlBackfillQuery.insertXml`). Both render
+        through `TextValueContentV2.computedValueHasXml`.
     - The in-JVM per-IRI write lock `IriLocker.runWithIriLock`, owned by webapi-common, keyed on resource
         IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted at
         `ValuesResponderV2.scala:536`.
