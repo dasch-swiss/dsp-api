@@ -67,6 +67,24 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
         <http://www.w3.org/2000/01/rdf-schema#subClassOf>
                 [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
                   <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "14"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testGeolocation>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
+                          "15"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#minCardinality>
+                          "0"^^xsd:nonNegativeInteger;
+                  <http://www.w3.org/2002/07/owl#onProperty>
+                          <http://www.knora.org/ontology/9999/onto#testGeolocationLv95>
+                ];
+        <http://www.w3.org/2000/01/rdf-schema#subClassOf>
+                [ rdf:type  <http://www.w3.org/2002/07/owl#Restriction>;
+                  <http://www.knora.org/ontology/salsah-gui#guiOrder>
                           "5"^^xsd:nonNegativeInteger;
                   <http://www.w3.org/2002/07/owl#minCardinality>
                           "0"^^xsd:nonNegativeInteger;
@@ -274,6 +292,28 @@ PREFIX xsd:         <http://www.w3.org/2001/XMLSchema#>
                 <http://www.knora.org/ontology/knora-base#GeonameValue>;
         <http://www.knora.org/ontology/salsah-gui#guiElement>
                 <http://www.knora.org/ontology/salsah-gui#Geonames> .
+
+<http://www.knora.org/ontology/9999/onto#testGeolocation>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Geolocation"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#GeolocationValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Geolocation> .
+
+<http://www.knora.org/ontology/9999/onto#testGeolocationLv95>
+        rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
+        <http://www.w3.org/2000/01/rdf-schema#label>
+                "Test Geolocation LV95"@en;
+        <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>
+                <http://www.knora.org/ontology/knora-base#hasValue>;
+        <http://www.knora.org/ontology/knora-base#objectClassConstraint>
+                <http://www.knora.org/ontology/knora-base#GeolocationValue>;
+        <http://www.knora.org/ontology/salsah-gui#guiElement>
+                <http://www.knora.org/ontology/salsah-gui#Geolocation> .
 
 <http://www.knora.org/ontology/9999/onto#testIntegerSimpleText>
         rdf:type  <http://www.w3.org/2002/07/owl#ObjectProperty>;
