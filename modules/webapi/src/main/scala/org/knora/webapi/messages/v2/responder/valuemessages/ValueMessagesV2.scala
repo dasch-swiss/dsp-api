@@ -1019,13 +1019,14 @@ case class TextValueContentV2(
   /**
    * The XML representation of the standoff markup attached to this [[TextValueContentV2]], rendered from
    * `maybeValueHasString` and `standoff` via the same mapping used at read time. This is used
-   * only when writing a text value to the triplestore.
+   * only when writing a text value to the triplestore. `None` for unformatted text, whose SHACL shape rejects
+   * `valueHasXml`.
    *
    * Forcing this value CAN THROW `NotFoundException` if a standoff class in [[standoff]] is not covered by
    * [[mapping]]. Callers must force it inside an effect wrapper.
    */
   lazy val computedValueHasXml: Option[String] =
-    if (standoff.isEmpty) None
+    if (standoff.isEmpty || textValueType == TextValueType.UnformattedText) None
     else
       for {
         str <- maybeValueHasString

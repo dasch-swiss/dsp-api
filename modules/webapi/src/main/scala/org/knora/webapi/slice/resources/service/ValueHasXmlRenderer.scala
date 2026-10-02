@@ -26,8 +26,9 @@ trait ValueHasXmlRenderer {
   def loadMapping(mappingIri: IRI): Task[MappingXMLtoStandoff]
 
   /**
-   * Renders the XML of the value, or `None` if the value has no standoff. Fails an unformatted text value: the
-   * `TextValue` SHACL shape rejects `valueHasXml` on it.
+   * Renders the XML of the value, or `None` if the value has no standoff or is unformatted text.
+   * The other writer of `valueHasXml`, the value write path, renders through the same
+   * `TextValueContentV2.computedValueHasXml`.
    */
   def render(value: StoredTextValue, mapping: MappingXMLtoStandoff): Task[Option[String]]
 }
@@ -43,11 +44,9 @@ final case class ValueHasXmlRendererLive(
       response <- mappingService.getMappingV2(iri)
     } yield response.mapping
 
+  /** The other writer of `valueHasXml` is the value write path; both render via `TextValueContentV2.computedValueHasXml`. */
   override def render(value: StoredTextValue, mapping: MappingXMLtoStandoff): Task[Option[String]] =
     for {
-      _ <- ZIO
-             .fail(InconsistentRepositoryDataException("An unformatted text value carries standoff"))
-             .when(value.textValueType.contains(KnoraBase.UnformattedText))
       iri  <- toMappingIri(value.mappingIri)
       tags <- standoffTagUtil.createStandoffTagsV2FromSelectResults(
                 value.standoffNodes,

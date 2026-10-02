@@ -75,7 +75,11 @@ object ValueHasXmlBackfillQuery {
     )
   }
 
-  /** Writes `valueHasXml` for the given values, skipping any value that already has one. */
+  /**
+   * Writes `valueHasXml` for the given values, skipping any value that already has one. The other writer of
+   * `valueHasXml` is the value write path (`InsertValueQueryBuilder`, `CreateResourceV2Handler`); both render through
+   * `TextValueContentV2.computedValueHasXml`.
+   */
   def insertXml(graph: Iri, values: Seq[(Iri, String)]): Update = {
     val rows = values.map { case (valueIri, xml) => sparql"($valueIri ${Literal.string(xml)})" }.joinLines
     Update(

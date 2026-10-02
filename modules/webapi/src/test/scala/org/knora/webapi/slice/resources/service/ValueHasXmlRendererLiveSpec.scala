@@ -93,13 +93,9 @@ class ValueHasXmlRendererLiveSpec extends ZIOSpecDefault {
         val expected = StandoffTagUtilV2.convertStandoffTagV2ToXML(text, Vector(rootTag), mapping)
         renderer(Vector(rootTag)).render(value(), mapping).map(xml => assertTrue(xml.contains(expected)))
       },
-      test("render fails an unformatted text value, which must not carry valueHasXml") {
+      test("render returns None for an unformatted text value, which must not carry valueHasXml") {
         val unformatted = value().copy(textValueType = Some(OntologyConstants.KnoraBase.UnformattedText))
-        renderer(Vector(rootTag)).render(unformatted, mapping).exit.map { exit =>
-          assertTrue(
-            exit.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[InconsistentRepositoryDataException]),
-          )
-        }
+        renderer(Vector(rootTag)).render(unformatted, mapping).map(xml => assertTrue(xml.isEmpty))
       },
       test("loadMapping returns the mapping of the service") {
         renderer(Vector.empty)
