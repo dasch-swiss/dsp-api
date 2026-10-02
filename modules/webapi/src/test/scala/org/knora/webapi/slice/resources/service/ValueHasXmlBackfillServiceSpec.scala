@@ -35,36 +35,36 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
     val calls: Ref[Vector[String]],
     selectCount: Ref[Int],
     failSelectOn: Option[Int],
-    writesNothing: Boolean,
+    failLoadOn: Option[Int],
     gate: Option[Promise[Nothing, Unit]],
   ) extends ValueHasXmlBackfillRepo {
 
-    override def selectCandidates(project: KnoraProject, limit: Int): Task[Seq[IRI]] =
+    override def selectCandidates(project: KnoraProject): Task[Seq[IRI]] =
       for {
         n <- selectCount.updateAndGet(_ + 1)
         _ <- calls.update(_ :+ "select")
         _ <- ZIO.foreachDiscard(gate)(_.await)
         _ <- ZIO.fail(new RuntimeException("select failed")).when(failSelectOn.contains(n))
         c <- candidates.get
-      } yield c.take(limit)
+      } yield c
 
     override def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]] =
-      calls.update(_ :+ "load").as {
-        valueIris.flatMap { iri =>
-          Seq(
-            iri -> Seq(
-              KnoraBase.ValueHasString   -> "text",
-              KnoraBase.ValueHasMapping  -> sharedMapping,
-              KnoraBase.ValueHasStandoff -> s"$iri/node",
-            ),
-            s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
-          )
-        }.toMap
-      }
+      for {
+        loads <- calls.updateAndGet(_ :+ "load").map(_.count(_ == "load"))
+        _     <- ZIO.fail(new RuntimeException("load failed")).when(failLoadOn.contains(loads))
+      } yield valueIris.flatMap { iri =>
+        Seq(
+          iri -> Seq(
+            KnoraBase.ValueHasString   -> "text",
+            KnoraBase.ValueHasMapping  -> sharedMapping,
+            KnoraBase.ValueHasStandoff -> s"$iri/node",
+          ),
+          s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
+        )
+      }.toMap
 
     override def insertXml(project: KnoraProject, values: Seq[(IRI, String)]): Task[Unit] =
-      calls.update(_ :+ "insert") *>
-        ZIO.unless(writesNothing)(candidates.update(_.filterNot(values.map(_._1).toSet))).unit
+      calls.update(_ :+ "insert") *> candidates.update(_.filterNot(values.map(_._1).toSet))
   }
 
   private val sharedMapping: IRI = "http://rdfh.ch/standoff/mappings/shared"
@@ -93,7 +93,7 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
     failing: Set[IRI] = Set.empty,
     returningNone: Set[IRI] = Set.empty,
     failSelectOn: Option[Int] = None,
-    writesNothing: Boolean = false,
+    failLoadOn: Option[Int] = None,
     gate: Option[Promise[Nothing, Unit]] = None,
   ): ZIO[Tracing, Nothing, Fixture] =
     for {
@@ -105,7 +105,7 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
       selects    <- Ref.make(0)
       loads      <- Ref.make(0)
       running    <- Ref.make(Option.empty[ProjectIri])
-      repo        = StubRepo(candidates, calls, selects, failSelectOn, writesNothing, gate)
+      repo        = StubRepo(candidates, calls, selects, failSelectOn, failLoadOn, gate)
       renderer    = StubRenderer(failing, returningNone, loads)
     } yield Fixture(ValueHasXmlBackfillService(repo, renderer, appConfig, tracing, running), repo, renderer)
 
@@ -118,8 +118,8 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
   private val awaitPacing: UIO[Unit] =
     ZIO.yieldNow.repeatUntilZIO(_ => TestClock.sleeps.map(_.nonEmpty)).unit
 
-  private def settledSelects(f: Fixture): UIO[Int] =
-    awaitPacing *> f.repo.calls.get.map(_.count(_ == "select"))
+  private def settledLoads(f: Fixture): UIO[Int] =
+    awaitPacing *> f.repo.calls.get.map(_.count(_ == "load"))
 
   private val loopSuite = suite("run")(
     suite("loop")(
@@ -130,13 +130,12 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
           report <- f.service.run(project)
         } yield assertTrue(report == ValueHasXmlBackfillReport(5, 4, 1, false))
       },
-      test("each select happens after the previous insert") {
+      test("the candidate SELECT runs exactly once per run, before the first load") {
         for {
-          f      <- fixture(values(6))
-          _      <- f.service.run(project)
-          calls  <- f.repo.calls.get
-          selects = calls.zipWithIndex.collect { case ("select", i) if i > 0 => calls(i - 1) }
-        } yield assertTrue(selects.nonEmpty, selects.forall(_ == "insert"))
+          f     <- fixture(values(6))
+          _     <- f.service.run(project)
+          calls <- f.repo.calls.get
+        } yield assertTrue(calls.count(_ == "select") == 1, calls.head == "select", calls.count(_ == "load") == 3)
       },
       test("reaching maxFailures sets stoppedEarly") {
         val vs = values(6)
@@ -145,15 +144,9 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
           report <- f.service.run(project)
         } yield assertTrue(report.stoppedEarly, report.failed == 2)
       },
-      test("a stalled run sets stoppedEarly") {
-        for {
-          f      <- fixture(values(3), writesNothing = true)
-          report <- f.service.run(project)
-        } yield assertTrue(report.stoppedEarly)
-      },
       test("a batch-level failure fails the run") {
         for {
-          f      <- fixture(values(6), failSelectOn = Some(2))
+          f      <- fixture(values(6), failLoadOn = Some(2))
           result <- f.service.run(project).exit
         } yield assertTrue(result.isFailure)
       },
@@ -177,12 +170,12 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
       },
       test("a batch-level failure logs the partial report and the error class, never the error message") {
         for {
-          f     <- fixture(values(4), failSelectOn = Some(2))
+          f     <- fixture(values(4), failLoadOn = Some(2))
           _     <- f.service.run(project).exit
           lines <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Error).map(_.message()))
         } yield assertTrue(
           lines.exists(line => line.contains("RuntimeException") && line.contains("found=2")),
-          !lines.exists(_.contains("select failed")),
+          !lines.exists(_.contains("load failed")),
         )
       },
       test("no insert is issued when no value rendered") {
@@ -214,15 +207,15 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
         f      <- fixture(values(6), interval = java.time.Duration.ofSeconds(1))
         fiber  <- f.service.run(project).fork
         _      <- TestClock.adjust(0.seconds)
-        before <- settledSelects(f)
+        before <- settledLoads(f)
         _      <- TestClock.adjust(1.second)
-        mid    <- settledSelects(f)
+        mid    <- settledLoads(f)
         _      <- TestClock.adjust(1.second)
-        third  <- settledSelects(f)
+        third  <- settledLoads(f)
         _      <- TestClock.adjust(1.second)
         _      <- fiber.join
-        after  <- f.repo.calls.get.map(_.count(_ == "select"))
-      } yield assertTrue(before == 1, mid == 2, third == 3, after == 4)
+        after  <- f.repo.calls.get.map(_.count(_ == "load"))
+      } yield assertTrue(before == 1, mid == 2, third == 3, after == 3)
     },
     test("an interrupted run logs the partial report at WARN") {
       for {

@@ -21,7 +21,7 @@ object ValueHasXmlBackfillQuery {
    * Selects text values that have a mapping and standoff but no `valueHasXml`. Deleted values and previous
    * versions are included.
    */
-  def selectCandidates(graph: Iri, limit: Int): Select =
+  def selectCandidates(graph: Iri): Select =
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
@@ -33,8 +33,7 @@ object ValueHasXmlBackfillQuery {
                |    FILTER EXISTS { ?v knora-base:valueHasStandoff ?n }
                |    FILTER NOT EXISTS { ?v knora-base:valueHasXml ?x }
                |  }
-               |}
-               |LIMIT ${Literal.int(limit)}""".render,
+               |}""".render,
       SparqlTimeout.Maintenance,
     )
 

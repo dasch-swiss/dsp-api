@@ -101,67 +101,32 @@ class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
     },
   )
 
-  private val nextBatchSuite = suite("nextBatch")(
-    test("drops failed, keeps order and caps at batchSize") {
-      assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b", "c", "d", "e"), Set("b"), 3) == Seq("a", "c", "d"))
-    },
-    test("returns fewer than batchSize when fewer candidates are left") {
-      assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b"), Set.empty, 3) == Seq("a", "b"))
-    },
-    test("returns nothing when every candidate failed") {
-      assertTrue(ValueHasXmlBackfill.nextBatch(Seq("a", "b"), Set("a", "b"), 3).isEmpty)
-    },
-  )
-
   private val stopReasonSuite = {
-    def stop(state: RunState, batch: Seq[String], max: Int = 5) = ValueHasXmlBackfill.stopReason(state, batch, max)
+    def stop(state: RunState, max: Int = 5)      = ValueHasXmlBackfill.stopReason(state, max)
+    def withFailed(state: RunState, failed: Int) =
+      state.copy(report = ValueHasXmlBackfillReport(failed, 0, failed, false))
     suite("stopReason")(
-      test("empty batch is NoCandidates") {
-        assertTrue(stop(RunState.zero, Seq.empty) == Some(StopReason.NoCandidates))
+      test("empty pending is NoCandidates") {
+        assertTrue(stop(RunState.of(Seq.empty)) == Some(StopReason.NoCandidates))
       },
-      test("candidates that all failed before yield NoCandidates after nextBatch") {
-        val state = RunState.zero.copy(failed = Set("a"))
-        assertTrue(
-          stop(state, ValueHasXmlBackfill.nextBatch(Seq("a"), state.failed, 10)) == Some(StopReason.NoCandidates),
-        )
+      test("pending candidates and no failure is None") {
+        assertTrue(stop(RunState.of(Seq("a"))).isEmpty)
       },
-      test("failed.size == maxFailures is MaxFailures") {
-        val state = RunState.zero.copy(failed = Set("a", "b"))
-        assertTrue(stop(state, Seq("c"), 2) == Some(StopReason.MaxFailures))
+      test("report.failed == maxFailures is MaxFailures") {
+        assertTrue(stop(withFailed(RunState.of(Seq("c")), 2), 2) == Some(StopReason.MaxFailures))
       },
-      test("an empty batch is NoCandidates even when maxFailures is reached") {
-        val state = RunState.zero.copy(failed = Set("a", "b"))
-        assertTrue(stop(state, Seq.empty, 2) == Some(StopReason.NoCandidates))
+      test("report.failed above maxFailures is MaxFailures") {
+        assertTrue(stop(withFailed(RunState.of(Seq("d")), 3), 2) == Some(StopReason.MaxFailures))
       },
-      test("failed.size above maxFailures is MaxFailures") {
-        val state = RunState.zero.copy(failed = Set("a", "b", "c"))
-        assertTrue(stop(state, Seq("d"), 2) == Some(StopReason.MaxFailures))
-      },
-      test("a batch that overlaps the previous batch only in part is None") {
-        val state = RunState.zero.copy(previousBatch = Set("a", "b"))
-        assertTrue(stop(state, Seq("a")).isEmpty, stop(state, Seq("a", "b", "c")).isEmpty)
-      },
-      test("the first batch is None") {
-        assertTrue(stop(RunState.zero, Seq("a")).isEmpty)
-      },
-      test("the same IRI set as the previous batch is Stalled") {
-        val state = RunState.zero.copy(previousBatch = Set("a", "b"))
-        assertTrue(stop(state, Seq("b", "a")) == Some(StopReason.Stalled))
-      },
-      test("a fresh batch is None") {
-        val state = RunState.zero.copy(previousBatch = Set("a"))
-        assertTrue(stop(state, Seq("b")).isEmpty)
+      test("empty pending is NoCandidates even when maxFailures is reached") {
+        assertTrue(stop(withFailed(RunState.of(Seq.empty), 2), 2) == Some(StopReason.NoCandidates))
       },
       test("stoppedEarly is false only for NoCandidates") {
-        assertTrue(
-          !StopReason.NoCandidates.stoppedEarly,
-          StopReason.MaxFailures.stoppedEarly,
-          StopReason.Stalled.stoppedEarly,
-        )
+        assertTrue(!StopReason.NoCandidates.stoppedEarly, StopReason.MaxFailures.stoppedEarly)
       },
     )
   }
 
   override def spec: Spec[Any, Any] =
-    suite("ValueHasXmlBackfill")(groupByValueSuite, reportSuite, nextBatchSuite, stopReasonSuite)
+    suite("ValueHasXmlBackfill")(groupByValueSuite, reportSuite, stopReasonSuite)
 }

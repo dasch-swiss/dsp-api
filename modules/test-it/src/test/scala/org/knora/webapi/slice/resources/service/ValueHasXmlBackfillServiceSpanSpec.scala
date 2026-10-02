@@ -61,13 +61,13 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
     blockedOnSelect: Option[Promise[Nothing, Unit]],
   ) extends ValueHasXmlBackfillRepo {
 
-    override def selectCandidates(project: KnoraProject, limit: Int): Task[Seq[IRI]] =
+    override def selectCandidates(project: KnoraProject): Task[Seq[IRI]] =
       for {
         n <- selectCount.updateAndGet(_ + 1)
         _ <- ZIO.foreachDiscard(blockedOnSelect)(_.succeed(()) *> ZIO.never)
         _ <- ZIO.fail(new RuntimeException("secret user text")).when(failSelectOn.contains(n))
         c <- candidates.get
-      } yield c.take(limit)
+      } yield c
 
     override def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]] =
       if (dieOnLoad) ZIO.die(new IllegalStateException("secret"))
@@ -156,7 +156,7 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
         }
       },
       test("a typed failure yields a sanitized ERROR status and leaks no message") {
-        runBackfill(failSelectOn = Some(2)).map { case (exit, spans) =>
+        runBackfill(failSelectOn = Some(1)).map { case (exit, spans) =>
           assertTrue(
             exit.isFailure,
             !spans.exists(_.toString.contains("secret user text")),

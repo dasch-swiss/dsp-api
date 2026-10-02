@@ -25,7 +25,7 @@ class ValueHasXmlBackfillQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   override def spec: Spec[TestEnvironment & Scope, Any] = suite("ValueHasXmlBackfillQuerySpec")(
     test("selectCandidates") {
-      val select = ValueHasXmlBackfillQuery.selectCandidates(graph, 50)
+      val select = ValueHasXmlBackfillQuery.selectCandidates(graph)
       assertTrue(select.timeout == SparqlTimeout.Maintenance) && assertGolden(select.sparql, "selectCandidates")
     },
     test("constructStandoff with one value") {

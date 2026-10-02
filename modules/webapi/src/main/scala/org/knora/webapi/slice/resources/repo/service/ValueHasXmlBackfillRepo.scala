@@ -18,8 +18,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 /** The triplestore access of the `valueHasXml` backfill. */
 trait ValueHasXmlBackfillRepo {
 
-  /** Returns up to `limit` text values of the project that still lack `valueHasXml`. */
-  def selectCandidates(project: KnoraProject, limit: Int): Task[Seq[IRI]]
+  /** Returns every text value of the project that still lacks `valueHasXml`. */
+  def selectCandidates(project: KnoraProject): Task[Seq[IRI]]
 
   /** Returns the CONSTRUCT statements (subject to predicate/object pairs) describing the given text values. */
   def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]]
@@ -30,10 +30,10 @@ trait ValueHasXmlBackfillRepo {
 
 final case class ValueHasXmlBackfillRepoLive(triplestore: TriplestoreService) extends ValueHasXmlBackfillRepo {
 
-  override def selectCandidates(project: KnoraProject, limit: Int): Task[Seq[IRI]] =
+  override def selectCandidates(project: KnoraProject): Task[Seq[IRI]] =
     for {
       graph  <- graphOf(project)
-      result <- triplestore.query(ValueHasXmlBackfillQuery.selectCandidates(graph, limit))
+      result <- triplestore.query(ValueHasXmlBackfillQuery.selectCandidates(graph))
     } yield result.getCol("v")
 
   override def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]] =

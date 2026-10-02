@@ -34,22 +34,22 @@ final case class StoredTextValue(
 
 object ValueHasXmlBackfill {
 
+  /** `pending` is the candidate snapshot that no batch has taken yet. */
   final case class RunState(
-    failed: Set[IRI],
+    pending: Seq[IRI],
     mappings: Map[IRI, MappingXMLtoStandoff],
     report: ValueHasXmlBackfillReport,
-    previousBatch: Set[IRI],
     stop: Option[StopReason],
   ) {
     def done: Boolean = stop.isDefined
   }
 
   object RunState {
-    val zero: RunState = RunState(Set.empty, Map.empty, ValueHasXmlBackfillReport.zero, Set.empty, None)
+    def of(pending: Seq[IRI]): RunState = RunState(pending, Map.empty, ValueHasXmlBackfillReport.zero, None)
   }
 
   enum StopReason {
-    case NoCandidates, MaxFailures, Stalled
+    case NoCandidates, MaxFailures
 
     def stoppedEarly: Boolean = this != NoCandidates
   }
@@ -101,13 +101,9 @@ object ValueHasXmlBackfill {
   private def hasNegativeStartIndex(node: Map[IRI, String]): Boolean =
     node.get(KnoraBase.StandoffTagHasStartIndex).flatMap(_.toIntOption).exists(_ < 0)
 
-  def nextBatch(candidates: Seq[IRI], failed: Set[IRI], batchSize: Int): Seq[IRI] =
-    candidates.filterNot(failed.contains).take(batchSize)
-
-  /** Check order: NoCandidates, then MaxFailures, then Stalled. A run with no candidate left is complete. */
-  def stopReason(state: RunState, batch: Seq[IRI], maxFailures: Int): Option[StopReason] =
-    if (batch.isEmpty) Some(StopReason.NoCandidates)
-    else if (state.failed.size >= maxFailures) Some(StopReason.MaxFailures)
-    else if (batch.toSet == state.previousBatch) Some(StopReason.Stalled)
+  /** Check order: NoCandidates, then MaxFailures. A run with no candidate left is complete. */
+  def stopReason(state: RunState, maxFailures: Int): Option[StopReason] =
+    if (state.pending.isEmpty) Some(StopReason.NoCandidates)
+    else if (state.report.failed >= maxFailures) Some(StopReason.MaxFailures)
     else None
 }

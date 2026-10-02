@@ -60,12 +60,17 @@ final case class ValueHasXmlBackfillService(
       for {
         // Written by `step` for the failure and interrupt log lines only; the loop never reads it.
         partial    <- Ref.make(ValueHasXmlBackfillReport.zero)
-        _          <- ZIO.logInfo(s"valueHasXml backfill started (batchSize=${config.batchSize})")
         finalState <- SanitizedSpan
                         .withSpan(tracing, "value_has_xml_backfill", ExitReasonKey) { span =>
-                          ZIO
-                            .iterate(RunState.zero)(!_.done)(step(project, partial))
-                            .tap(state => ZIO.succeed(setReportAttributes(span, project, state.report)))
+                          for {
+                            pending <- stage("select")(repo.selectCandidates(project))
+                            _       <-
+                              ZIO.logInfo(
+                                s"valueHasXml backfill started (batchSize=${config.batchSize}, candidates=${pending.size})",
+                              )
+                            state <- ZIO.iterate(RunState.of(pending))(!_.done)(step(project, partial))
+                            _     <- ZIO.succeed(setReportAttributes(span, project, state.report))
+                          } yield state
                         }
                         .onExit {
                           case Exit.Success(_)     => ZIO.unit
@@ -91,12 +96,10 @@ final case class ValueHasXmlBackfillService(
 
   private def step(project: KnoraProject, partial: Ref[ValueHasXmlBackfillReport])(state: RunState): Task[RunState] =
     for {
-      started    <- Clock.nanoTime
-      candidates <- stage("select")(repo.selectCandidates(project, config.batchSize + state.failed.size))
-      batch       = ValueHasXmlBackfill.nextBatch(candidates, state.failed, config.batchSize)
-      next       <- ValueHasXmlBackfill.stopReason(state, batch, config.maxFailures) match {
+      started <- Clock.nanoTime
+      next    <- ValueHasXmlBackfill.stopReason(state, config.maxFailures) match {
                 case Some(reason) => ZIO.succeed(stopped(state, reason))
-                case None         => processBatch(project, state, batch)
+                case None         => processBatch(project, state, state.pending.take(config.batchSize))
               }
       _ <- partial.set(next.report)
       _ <- ZIO.when(!next.done)(pace(started))
@@ -115,10 +118,9 @@ final case class ValueHasXmlBackfillService(
       report      = state.report + batchReport
       _          <- ZIO.logInfo(s"valueHasXml backfill progress: ${describe(report)}")
     } yield state.copy(
-      failed = state.failed ++ outcome.failed,
+      pending = state.pending.drop(batch.size),
       mappings = outcome.mappings,
       report = report,
-      previousBatch = batch.toSet,
     )
 
   private def renderAll(

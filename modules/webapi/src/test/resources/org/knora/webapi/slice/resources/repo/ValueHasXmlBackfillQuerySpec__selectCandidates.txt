@@ -9,4 +9,3 @@ WHERE {
     FILTER NOT EXISTS { ?v knora-base:valueHasXml ?x }
   }
 }
-LIMIT 50

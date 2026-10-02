@@ -96,7 +96,7 @@ class ValueHasXmlBackfillQuerySemanticsSpec extends E2EZSpec {
   private def iri(value: String): Iri = Iri.unsafeFrom(value)
 
   private def candidates(graph: String): RIO[TriplestoreService, Set[String]] =
-    triplestore(_.query(ValueHasXmlBackfillQuery.selectCandidates(iri(graph), 100))).map(_.getCol("v").toSet)
+    triplestore(_.query(ValueHasXmlBackfillQuery.selectCandidates(iri(graph)))).map(_.getCol("v").toSet)
 
   private def xmlOf(graph: String, subject: String): RIO[TriplestoreService, List[String]] =
     triplestore(
