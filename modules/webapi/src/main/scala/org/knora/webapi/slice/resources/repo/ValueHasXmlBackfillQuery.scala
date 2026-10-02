@@ -42,7 +42,8 @@ object ValueHasXmlBackfillQuery {
    * Fetches the string, mapping, text type and standoff of the given text values.
    *
    * The `valueHasStandoff` link is matched in the same pattern as the node and its start index filter, so a
-   * filtered-out node drops its link as well.
+   * filtered-out node drops its link as well. [[org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.groupByValue]]
+   * fails a value whose linked node is absent, so a link outside that pattern fails every value with a filtered node.
    */
   def constructStandoff(graph: Iri, valueIris: Seq[Iri]): Construct = {
     val values = Fragment.join(valueIris.map(_.toFragment))

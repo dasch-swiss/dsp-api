@@ -77,7 +77,11 @@ object ValueHasXmlBackfill {
       standoffNodes = nodes,
     )
 
-  /** A linked node absent from the response fails the value: rendering a subset would store incomplete XML. */
+  /**
+   * A linked node absent from the response fails the value: rendering a subset would store incomplete XML.
+   * [[org.knora.webapi.slice.resources.repo.ValueHasXmlBackfillQuery.constructStandoff]] emits a link only together
+   * with its node.
+   */
   private def standoffNodesOf(
     statements: Map[IRI, Seq[(IRI, String)]],
     own: Seq[(IRI, String)],
