@@ -118,7 +118,7 @@ class ValueHasXmlBackfillServiceSpanSpec extends ZIOSpecDefault {
       loads      <- Ref.make(0)
       running    <- Ref.make(Option.empty[ProjectIri])
       repo        = StubRepo(candidates, selects, loads, failSelectOn, failLoadOn, dieOnLoad, blockedOnSelect)
-    } yield ValueHasXmlBackfillService(repo, StubRenderer, appConfig, tracing, running)
+    } yield new ValueHasXmlBackfillService(repo, StubRenderer, appConfig, tracing, running)
 
   private def runBackfill(
     failSelectOn: Option[Int] = None,

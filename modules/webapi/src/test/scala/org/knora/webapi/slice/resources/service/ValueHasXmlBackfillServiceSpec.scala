@@ -18,56 +18,16 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.ValueHasXmlBackfillConfig
 import org.knora.webapi.core.TestAppConfig
-import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.infrastructure.OtelSetup
-import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
+import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepoInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
 
   private val project: KnoraProject = TestDataFactory.someProject
-
-  private final class StubRepo(
-    candidates: Ref[Vector[IRI]],
-    val calls: Ref[Vector[String]],
-    selectCount: Ref[Int],
-    failSelectOn: Option[Int],
-    failLoadOn: Option[Int],
-    gate: Option[Promise[Nothing, Unit]],
-  ) extends ValueHasXmlBackfillRepo {
-
-    override def selectCandidates(project: KnoraProject): Task[Seq[IRI]] =
-      for {
-        n <- selectCount.updateAndGet(_ + 1)
-        _ <- calls.update(_ :+ "select")
-        _ <- ZIO.foreachDiscard(gate)(_.await)
-        _ <- ZIO.fail(new RuntimeException("select failed")).when(failSelectOn.contains(n))
-        c <- candidates.get
-      } yield c
-
-    override def loadStandoff(project: KnoraProject, valueIris: Seq[IRI]): Task[Map[IRI, Seq[(IRI, String)]]] =
-      for {
-        loads <- calls.updateAndGet(_ :+ "load").map(_.count(_ == "load"))
-        _     <- ZIO.fail(new RuntimeException("load failed")).when(failLoadOn.contains(loads))
-      } yield valueIris.flatMap { iri =>
-        Seq(
-          iri -> Seq(
-            KnoraBase.ValueHasString   -> "text",
-            KnoraBase.ValueHasMapping  -> sharedMapping,
-            KnoraBase.ValueHasStandoff -> s"$iri/node",
-          ),
-          s"$iri/node" -> Seq(KnoraBase.StandoffTagHasStartIndex -> "0"),
-        )
-      }.toMap
-
-    override def insertXml(project: KnoraProject, values: Seq[(IRI, String)]): Task[Unit] =
-      calls.update(_ :+ "insert") *> candidates.update(_.filterNot(values.map(_._1).toSet))
-  }
-
-  private val sharedMapping: IRI = "http://rdfh.ch/standoff/mappings/shared"
 
   private final class StubRenderer(
     failing: Set[IRI],
@@ -83,7 +43,11 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
       else ZIO.some(s"<xml>${value.valueIri}</xml>")
   }
 
-  private final case class Fixture(service: ValueHasXmlBackfillService, repo: StubRepo, renderer: StubRenderer)
+  private final case class Fixture(
+    service: ValueHasXmlBackfillService,
+    repo: ValueHasXmlBackfillRepoInMemory,
+    renderer: StubRenderer,
+  )
 
   private def fixture(
     values: Seq[String],
@@ -100,14 +64,11 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
       tracing   <- ZIO.service[Tracing]
       appConfig <- read(AppConfig.config from TestAppConfig.provider()).orDie
                      .map(_.copy(valueHasXmlBackfill = ValueHasXmlBackfillConfig(batchSize, interval, maxFailures)))
-      candidates <- Ref.make(values.toVector)
-      calls      <- Ref.make(Vector.empty[String])
-      selects    <- Ref.make(0)
-      loads      <- Ref.make(0)
-      running    <- Ref.make(Option.empty[ProjectIri])
-      repo        = StubRepo(candidates, calls, selects, failSelectOn, failLoadOn, gate)
-      renderer    = StubRenderer(failing, returningNone, loads)
-    } yield Fixture(ValueHasXmlBackfillService(repo, renderer, appConfig, tracing, running), repo, renderer)
+      repo    <- ValueHasXmlBackfillRepoInMemory.make(values, failSelectOn, failLoadOn, gate)
+      loads   <- Ref.make(0)
+      running <- Ref.make(Option.empty[ProjectIri])
+      renderer = StubRenderer(failing, returningNone, loads)
+    } yield Fixture(new ValueHasXmlBackfillService(repo, renderer, appConfig, tracing, running), repo, renderer)
 
   private def values(n: Int): Seq[String] = (1 to n).map(i => s"http://rdfh.ch/0001/v$i")
 

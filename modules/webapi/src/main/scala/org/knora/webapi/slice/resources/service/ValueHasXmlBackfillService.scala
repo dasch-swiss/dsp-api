@@ -27,12 +27,12 @@ import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
  * Log lines, configuration and stop reasons are documented for operators in
  * `docs/03-endpoints/api-admin/maintenance.md`; keep it in sync.
  */
-final case class ValueHasXmlBackfillService(
+final class ValueHasXmlBackfillService private[service] (
   repo: ValueHasXmlBackfillRepo,
   renderer: ValueHasXmlRenderer,
   appConfig: AppConfig,
   tracing: Tracing,
-  running: Ref[Option[ProjectIri]],
+  private[service] val running: Ref[Option[ProjectIri]],
 ) {
   import ValueHasXmlBackfillService.*
 
@@ -223,6 +223,6 @@ object ValueHasXmlBackfillService {
         config   <- ZIO.service[AppConfig]
         tracing  <- ZIO.service[Tracing]
         running  <- Ref.make(Option.empty[ProjectIri])
-      } yield ValueHasXmlBackfillService(repo, renderer, config, tracing, running),
+      } yield new ValueHasXmlBackfillService(repo, renderer, config, tracing, running),
     )
 }
