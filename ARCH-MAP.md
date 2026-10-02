@@ -812,10 +812,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `CreateMappingResponseV2`, `GetMappingResponseV2`
 - **Public interface**: `StandoffMappingService` (`getMappingV2`, `getXSLTransformation`,
     `getStandoffEntitiesFromMappingV2`); `StandoffResponderV2.createMappingV2`; `StandoffTagUtilV2`
-    (`createStandoffTagsV2FromConstructResults`; `createStandoffTagsV2FromSelectResults` is
-    `private[standoff]`); `XMLToStandoffUtil`; `StandoffStringUtil` (`getResourceIrisFromStandoffLinkTags`,
-    `makeRandomStandoffTagIri`, `validateStandoffLinkResourceReference`); `XMLUtil.applyXSLTransformation`;
-    the message model in `StandoffMessagesV2.scala`; `XmlPatterns.nCNameRegex`.
+    (`createStandoffTagsV2FromConstructResults` for typed CONSTRUCT literals,
+    `createStandoffTagsV2FromSelectResults` for lexical node maps); `XMLToStandoffUtil`; `StandoffStringUtil`
+    (`getResourceIrisFromStandoffLinkTags`, `makeRandomStandoffTagIri`, `validateStandoffLinkResourceReference`);
+    `XMLUtil.applyXSLTransformation`; the message model in `StandoffMessagesV2.scala`; `XmlPatterns.nCNameRegex`.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/standoff/service/StandoffMappingService.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/responders/v2/StandoffResponderV2.scala`
@@ -841,8 +841,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         rather than resources owning a mapping-write API; the in-code comment records this as deliberate,
         because the alternative "would form a layer cycle through `ConstructResponseUtilV2`" - enforcement:
         docs-only.
-    - `StandoffTagUtilV2.createStandoffTagsV2FromSelectResults` is `private[standoff]`, forcing external
-        callers through `createStandoffTagsV2FromConstructResults` - enforcement: structure.
+    - Callers of `StandoffTagUtilV2.createStandoffTagsV2FromConstructResults` or
+        `createStandoffTagsV2FromSelectResults` pass all standoff nodes of one text value per call, never a
+        page of nodes or a batch of values: an internal reference resolves its target within that map -
+        enforcement: review.
     - Do not confuse this with `slice.ontology.repo.AddMappingQuery`, the v3 ontology external-IRI mapping:
         same word, unrelated durable state, owned by webapi-ontology - enforcement: docs-only.
     - HTTP entry points for standoff live in webapi-api; this component owns no routes - enforcement:
