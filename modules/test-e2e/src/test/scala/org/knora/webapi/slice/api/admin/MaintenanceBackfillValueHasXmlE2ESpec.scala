@@ -37,9 +37,7 @@ import org.knora.webapi.testservices.TestApiClient
 /**
  * End-to-end proof of `POST /admin/maintenance/projects/{shortcode}/backfill-value-has-xml`.
  *
- * The tests run in order and share the fixtures that the first test creates. The graph of project 0001 is shared
- * with other specs only through the data this spec creates, apart from the step that removes every `valueHasXml`
- * of the project, which the backfill restores.
+ * The spec removes every `valueHasXml` of project 0001 and the backfill restores it.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
@@ -105,9 +103,6 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
   )
 
   private val fixture = new AtomicReference[Fixture]()
-
-  // ---------------------------------------------------------------------------------------------------------------
-  // Resource and value creation
 
   private def textValueJson(xml: String, mapping: StandoffMappingIri, valueIri: Option[String]): Json.Obj = {
     val id = valueIri.map(iri => Chunk("@id" -> Json.Str(iri))).getOrElse(Chunk.empty)
@@ -186,9 +181,6 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     TestApiClient.postMultiPart[Json](uri"/v2/mapping", body, anythingUser1).flatMap(_.assert200).unit
   }
 
-  // ---------------------------------------------------------------------------------------------------------------
-  // Triplestore access
-
   private def ts[A](f: TriplestoreService => Task[A]): ZIO[TriplestoreService, Throwable, A] =
     ZIO.serviceWithZIO[TriplestoreService](f)
 
@@ -247,9 +239,6 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       _.results.bindings.map(row => (row.getRequired("s"), row.getRequired("p"), row.getRequired("o"))).toSet,
     )
 
-  // ---------------------------------------------------------------------------------------------------------------
-  // The backfill
-
   private def postBackfill(code: String, user: User = rootUser): RIO[TestApiClient, StatusCode] =
     TestApiClient.postJson[Json](backfillUri(code), user).map(_.code)
 
@@ -276,9 +265,6 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
   /** Runs a backfill to completion: waits for a free instance, starts a run and waits for it. */
   private def runBackfillToCompletion(except: Seq[String] = Seq.empty): RIO[TriplestoreService & TestApiClient, Unit] =
     awaitBackfillIdle *> awaitNoCandidate(except) *> awaitBackfillIdle
-
-  // ---------------------------------------------------------------------------------------------------------------
-  // Stored versus served
 
   private def servedXml(resourceIri: String, version: Option[String]): RIO[TestApiClient, String] = {
     val update = version.fold[RequestUpdate[JsonLDDocument]](identity)(addVersionQueryParam(_))
@@ -307,9 +293,6 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       storedCanon <- canonical(stored, mapping)
       servedCanon <- canonical(served, mapping)
     } yield assertTrue(stored.nonEmpty, storedCanon == servedCanon)
-
-  // ---------------------------------------------------------------------------------------------------------------
-  // Failing value
 
   private val failingValue    = "http://rdfh.ch/0001/backfill-e2e/values/failing"
   private val renderableValue = "http://rdfh.ch/0001/backfill-e2e/values/renderable"
@@ -347,7 +330,17 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       ),
     )
 
-  // ---------------------------------------------------------------------------------------------------------------
+  private val deleteFailingAndRenderableValues: RIO[TriplestoreService, Unit] =
+    ts(
+      _.query(
+        Update(
+          Seq(failingValue, renderableValue)
+            .flatMap(v => Seq(v, s"$v/standoff/0"))
+            .map(subject => s"DELETE WHERE { GRAPH <$dataGraph> { <$subject> ?p ?o } }")
+            .mkString(";\n"),
+        ),
+      ),
+    )
 
   override val e2eSpec: Spec[env, Any] = suite("POST /admin/maintenance/projects/{shortcode}/backfill-value-has-xml")(
     test("returns 403 when the authenticated user is not a SystemAdmin") {
@@ -446,7 +439,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
         inputCan  <- canonical(mutualReferencesXml, StandoffMappingIri.StandardMapping)
       } yield assertTrue(storedCan == inputCan)
     },
-    test("stored XML equals served XML for a value with more than 100 standoff tags") {
+    test("stored XML equals served XML for a value with at least 100 standoff tags") {
       val f = fixture.get
       for {
         result <- storedEqualsServed(f.manyResource, f.manyValue, StandoffMappingIri.StandardMapping)
@@ -476,7 +469,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       } yield assertTrue(second == StatusCode.Conflict, stored.isDefined)
     },
     test("a value that cannot be rendered stays without XML while all other values gain it") {
-      for {
+      val body = for {
         _          <- insertFailingAndRenderableValues
         _          <- runBackfillToCompletion(except = Seq(failingValue))
         failing    <- storedXml(failingValue)
@@ -484,6 +477,8 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
         onlyFailed <- candidateLeft(except = Seq(failingValue))
         failedLeft <- candidateLeft()
       } yield assertTrue(failing.isEmpty, renderable.exists(_.nonEmpty), !onlyFailed, failedLeft)
+      val cleanup = deleteFailingAndRenderableValues *> awaitBackfillIdle
+      body.ensuring(cleanup.orDie).zipWith(candidateLeft())((result, left) => result && assertTrue(!left))
     },
   )
 }
