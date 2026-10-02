@@ -153,7 +153,8 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
       // making the ASK check + INSERT effectively atomic under single-instance deployment.
       // Multi-instance deployments do not share this lock; a race window exists there.
       _ <- ZIO.foreach(valueHasOrder)(order => checkDuplicateOrder(resourceIri, propertyIri, order))
-      // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+      // Wrap the pure builder so textValueTypeIri's invariant throw and computedValueHasXml's NotFoundException
+      // (uncovered standoff class) become explicit defects (500), not a 404.
       _ <- ZIO
              .attempt(
                InsertValueQueryBuilder.createValueQuery(
@@ -200,7 +201,8 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
     linkUpdates: Seq[SparqlTemplateLinkUpdate],
     creationDate: Instant,
   ): Task[Unit] =
-    // Wrap the pure builder so textValueTypeIri's invariant throw becomes an explicit defect, not an implicit one.
+    // Wrap the pure builder so textValueTypeIri's invariant throw and computedValueHasXml's NotFoundException
+    // (uncovered standoff class) become explicit defects (500), not a 404.
     ZIO
       .attempt(
         InsertValueQueryBuilder.createValueQuery(

@@ -104,6 +104,7 @@ object TestData {
       valueHasLanguage = Some("en"),
       mappingIri = StandoffMappingIri.StandardMapping,
       maxStandoffStartIndex = 0,
+      valueHasXml = None,
       standoff = List(
         StandoffTagInfo(
           standoffTagClassIri = InternalIri("foo:StandoffTagClassIri"),
@@ -625,6 +626,67 @@ class ResourcesRepoLiveSpec extends ZIOSpecDefault {
             |            knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
             |            knora-base:hasTextValueType knora-base:FormattedText ;
             |            knora-base:valueHasMaxStandoffStartIndex 0 ;
+            |            knora-base:valueHasLanguage "en" ;
+            |            knora-base:valueHasStandoff <foo:StandoffTagInstanceIri> .
+            |        <foo:StandoffTagInstanceIri> rdf:type <foo:StandoffTagClassIri> ;
+            |            knora-base:standoffTagHasEndIndex 3 ;
+            |            knora-base:standoffTagHasStartParent <foo:StartParentIri> ;
+            |            knora-base:standoffTagHasEndParent <foo:EndParentIri> ;
+            |            knora-base:standoffTagHasOriginalXMLID "xml-id" ;
+            |            <foo:attributePropertyIri> <foo:standoffAttributeIri> ;
+            |            <foo:attributePropertyIri> "http://example.com"^^xsd:anyURI ;
+            |            <foo:attributePropertyIri> <foo:internalRef> ;
+            |            <foo:attributePropertyIri> "attribute value" ;
+            |            <foo:attributePropertyIri> 42 ;
+            |            <foo:attributePropertyIri> 42.42 ;
+            |            <foo:attributePropertyIri> true ;
+            |            <foo:attributePropertyIri> "1024-01-01T10:00:00.673298Z"^^xsd:dateTime ;
+            |            knora-base:standoffTagHasStartIndex 0 ;
+            |            knora-base:standoffTagHasUUID "${UuidUtil.base64Encode(standoffTagUuid)}" ;
+            |            knora-base:standoffTagHasStart 0 ;
+            |            knora-base:standoffTagHasEnd 3 .
+            |    }
+            |}
+            |""".stripMargin,
+      )
+      val result = ResourcesRepoLive.createNewResourceQuery(graphIri, resource, projectIri, userIri)
+      assertUpdateQueriesEqual(expected, result)
+    },
+    test("Create a new resource with a formatted text value carrying canonical XML") {
+      val xml     = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Delta <strong>7</strong> kappa</text>"
+      val withXml = formattedTextValueDefinition.value match
+        case v: TypeSpecificValueInfo.FormattedTextValueInfo => v.copy(valueHasXml = Some(xml))
+        case other                                           => other
+      val resource = resourceDefinition.copy(valueInfos = List(formattedTextValueDefinition.copy(value = withXml)))
+      val expected = Update(
+        s"""|
+            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |
+            |INSERT DATA {
+            |    GRAPH <${graphIri.value}> {
+            |        <${resourceIri.value}> rdf:type <${resourceClassIri.value}> ;
+            |            rdfs:label "$label" ;
+            |            knora-base:isDeleted false ;
+            |            knora-base:attachedToUser <${userIri.value}> ;
+            |            knora-base:attachedToProject <${projectIri.value}> ;
+            |            knora-base:hasPermissions "$permissions" ;
+            |            knora-base:creationDate "$creationDate"^^xsd:dateTime ;
+            |            <foo:hasFormattedTextValue> <foo:FormattedTextValueIri> .
+            |        <foo:FormattedTextValueIri> rdf:type <http://www.knora.org/ontology/knora-base#TextValue> ;
+            |            knora-base:isDeleted false  ;
+            |            knora-base:valueHasString "this is a text with formatting" ;
+            |            knora-base:valueHasUUID "${UuidUtil.base64Encode(formattedTextValueDefinition.valueUUID)}" ;
+            |            knora-base:attachedToUser <${valueCreator.value}> ;
+            |            knora-base:hasPermissions "$valuePermissions" ;
+            |            knora-base:valueHasOrder 1 ;
+            |            knora-base:valueCreationDate "$valueCreationDate"^^xsd:dateTime ;
+            |            knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+            |            knora-base:hasTextValueType knora-base:FormattedText ;
+            |            knora-base:valueHasMaxStandoffStartIndex 0 ;
+            |            knora-base:valueHasXml "<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<text>Delta <strong>7</strong> kappa</text>" ;
             |            knora-base:valueHasLanguage "en" ;
             |            knora-base:valueHasStandoff <foo:StandoffTagInstanceIri> .
             |        <foo:StandoffTagInstanceIri> rdf:type <foo:StandoffTagClassIri> ;

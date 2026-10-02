@@ -444,6 +444,7 @@ object ResourcesRepoLive {
           .has(KB.valueHasMapping, iri(v.mappingIri.value))
           .andHas(KB.hasTextValueType, txtTypeIri)
           .andHas(KB.valueHasMaxStandoffStartIndex, literalOf(v.maxStandoffStartIndex))
+          .andHasOptional(KB.valueHasXml, v.valueHasXml.map(literalOf))
           .andHasOptional(KB.valueHasLanguage, v.valueHasLanguage.map(literalOf))
       List(valuePattern) ::: v.standoff.map { standoffTagInfo =>
         valuePattern.andHas(KB.valueHasStandoff, iri(standoffTagInfo.standoffTagInstanceIri.value))

@@ -1240,6 +1240,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              | <$valueIri>
              |     a                                        knora-base:TextValue ;
              |     knora-base:valueHasString                "Text" ;
+             |     knora-base:valueHasXml                   "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text>Text</text>" ;
              |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 0 ;
@@ -1257,6 +1258,18 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              |     knora-base:standoffTagHasStartIndex 0 ;
              |     knora-base:standoffTagHasUUID       "${UuidUtil.base64Encode(new UUID(0L, 1L))}" .
              |""".stripMargin,
+      )
+    },
+    test("stores exactly one valueHasXml, rendered from the stored valueHasString and standoff") {
+      for {
+        m   <- transformStage2Model(richtextJsonLd(richtextXml("<p>text <strong>bold</strong></p>")))
+        xmls = objectsOf(m, valueIri.toString, KnoraBase.ValueHasXml)
+        text = objectsOf(m, valueIri.toString, KnoraBase.ValueHasString)
+      } yield assertTrue(
+        xmls.size == 1,
+        text.size == 1,
+        xmls.head.nonEmpty,
+        xmls.head.contains("<strong>bold</strong>"),
       )
     },
     test("resolves a standoff internal reference to the target standoff tag's node IRI") {
@@ -1304,6 +1317,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              | <$valueIri>
              |     a                                        knora-base:TextValue ;
              |     knora-base:valueHasString                "text bold${StringFormatter.INFORMATION_SEPARATOR_TWO}" ;
+             |     knora-base:valueHasXml                   "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text><p>text <strong>bold</strong></p></text>" ;
              |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 2 ;
@@ -1510,6 +1524,7 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
              | <$valueIri>
              |     a                                        knora-base:TextValue ;
              |     knora-base:valueHasString                "link" ;
+             |     knora-base:valueHasXml                   "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<text><a href=\\"$linkTarget\\" class=\\"salsah-link\\">link</a></text>" ;
              |     knora-base:valueHasMapping               <http://rdfh.ch/standoff/mappings/StandardMapping> ;
              |     knora-base:hasTextValueType              knora-base:FormattedText ;
              |     knora-base:valueHasMaxStandoffStartIndex 1 ;
