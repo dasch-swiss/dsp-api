@@ -42,6 +42,9 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           appConfig.filePermissionCache.ttl == Duration.ofMinutes(2),
           appConfig.filePermissionCache.capacity == 10000,
+          appConfig.valueHasXmlBackfill.batchSize == 50,
+          appConfig.valueHasXmlBackfill.batchInterval == Duration.ofSeconds(1),
+          appConfig.valueHasXmlBackfill.maxFailures == 1000,
           appConfig.triplestore.sparqlPassthrough.timeout == Duration.ofSeconds(120),
           appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes == 1048576,
           appConfig.triplestore.sparqlPassthrough.maxResponseBytes == 67108864,
@@ -68,6 +71,18 @@ class AppConfigSpec extends ZIOSpecDefault {
     },
     test("reject a file-permission-cache capacity below 1") {
       loadAppConfigWith("app.file-permission-cache.capacity = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a value-has-xml-backfill batch-size below 1") {
+      loadAppConfigWith("app.value-has-xml-backfill.batch-size = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a value-has-xml-backfill batch-interval that is not positive") {
+      loadAppConfigWith("app.value-has-xml-backfill.batch-interval = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a value-has-xml-backfill max-failures below 1") {
+      loadAppConfigWith("app.value-has-xml-backfill.max-failures = 0").exit
         .map(exit => assertTrue(exit.isFailure))
     },
     test("the sparql passthrough flag is off in the built-in configuration (fail-closed)") {
