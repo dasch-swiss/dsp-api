@@ -19,6 +19,7 @@ final class MaintenanceServerEndpoints(
     endpoints.postMaintenance.serverLogic(restService.executeMaintenanceAction),
     endpoints.postReplaceUserIri.serverLogic(restService.replaceUserIri),
     endpoints.postReplaceUserIriInProject.serverLogic(restService.replaceUserIriInProject),
+    endpoints.postBackfillValueHasXml.serverLogic(restService.backfillValueHasXml),
   )
 }
 object MaintenanceServerEndpoints {

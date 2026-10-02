@@ -13,17 +13,22 @@ import zio.json.JsonDecoder
 import zio.json.ast.Json
 
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 
 final case class MaintenanceRestService(
   private val securityService: AuthorizationRestService,
   private val maintenanceService: MaintenanceService,
+  private val projectService: KnoraProjectService,
+  private val valueHasXmlBackfillService: ValueHasXmlBackfillService,
 ) {
 
   def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
@@ -78,6 +83,15 @@ final case class MaintenanceRestService(
       // re-attributing references stamped under SystemUser/AnonymousUser to a real project member is a
       // valid use case. A built-in newIri is rejected downstream by the membership check.
       _ <- maintenanceService.replaceUserIriInProject(shortcode, req.oldIri, req.newIri, user)
+    } yield ()
+
+  def backfillValueHasXml(user: User)(shortcode: Shortcode): Task[Unit] =
+    for {
+      _       <- securityService.ensureSystemAdmin(user)
+      project <- projectService
+                   .findByShortcode(shortcode)
+                   .someOrFail(NotFoundException(s"Project with shortcode ${shortcode.value} not found"))
+      _ <- valueHasXmlBackfillService.start(project)
     } yield ()
 }
 
