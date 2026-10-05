@@ -15,7 +15,7 @@ import scala.io.Source
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.knoraBaseVersionFrom
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.makePluginsForVersions
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.pluginsForVersions
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class RepositoryUpdatePlanSpec extends ZIOSpecDefault {
@@ -35,7 +35,7 @@ class RepositoryUpdatePlanSpec extends ZIOSpecDefault {
       "KnoraBaseVersion, the knora-base.ttl :ontologyVersion, and the highest upgrade plugin versionNumber stay in lockstep",
     ) {
       val ttlVersion       = ontologyVersionFromTtl()
-      val maxPluginVersion = makePluginsForVersions.map(_.versionNumber).max
+      val maxPluginVersion = pluginsForVersions.map(_.versionNumber).max
       assertTrue(
         ttlVersion.contains(KnoraBaseVersion),
         maxPluginVersion == KnoraBaseVersion,

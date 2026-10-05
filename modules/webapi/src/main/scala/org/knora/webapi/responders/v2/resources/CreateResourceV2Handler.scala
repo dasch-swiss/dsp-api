@@ -444,9 +444,9 @@ final class CreateResourceV2Handler(
                   ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
                 case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
                   val standoffTags = generateStandoffInfo(tv, newValueIri)
-                  generateFormattedTextValueInfo(
+                  CreateResourceV2Handler.generateFormattedTextValueInfo(
+                    tv,
                     standoffTags,
-                    tv.computedMaxStandoffStartIndex,
                     textType,
                     valueHasLanguage,
                     mappingIri,
@@ -554,30 +554,6 @@ final class CreateResourceV2Handler(
           attributes = attributes,
         ),
       )
-
-  private def generateFormattedTextValueInfo(
-    standoffInfo: Seq[StandoffTagInfo],
-    maxStandoffStartIndex: Option[Int],
-    textType: TextValueType,
-    valueHasLanguage: Option[String],
-    mappingIri: StandoffMappingIri,
-  ): IO[StandoffInternalException, TypeSpecificValueInfo] =
-    ZIO
-      .whenCase(textType) {
-        case TextValueType.FormattedText                   => ZIO.succeed(FormattedTextValueType.StandardMapping)
-        case TextValueType.CustomFormattedText(mappingIri) =>
-          ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
-      }
-      .someOrFail(StandoffInternalException("Text type does not match mapping information"))
-      .flatMap { textType =>
-        ZIO
-          .fromOption(maxStandoffStartIndex)
-          .mapBoth(
-            _ => StandoffInternalException("Max standoff start index not computed"),
-            standoffStartIndex =>
-              FormattedTextValueInfo(valueHasLanguage, mappingIri, standoffStartIndex, standoffInfo, textType),
-          )
-      }
 
   /**
    * Given a sequence of resources to be created, gets the class IRIs of all the resources that are the targets of
@@ -894,4 +870,35 @@ final class CreateResourceV2Handler(
 
 object CreateResourceV2Handler {
   val layer = ZLayer.derive[CreateResourceV2Handler]
+
+  private[resources] def generateFormattedTextValueInfo(
+    tv: TextValueContentV2,
+    standoffInfo: Seq[StandoffTagInfo],
+    textType: TextValueType,
+    valueHasLanguage: Option[String],
+    mappingIri: StandoffMappingIri,
+  ): IO[StandoffInternalException, TypeSpecificValueInfo] =
+    for {
+      formattedTextType <- ZIO
+                             .whenCase(textType) {
+                               case TextValueType.FormattedText                   => ZIO.succeed(FormattedTextValueType.StandardMapping)
+                               case TextValueType.CustomFormattedText(mappingIri) =>
+                                 ZIO.succeed(FormattedTextValueType.CustomMapping(mappingIri))
+                             }
+                             .someOrFail(StandoffInternalException("Text type does not match mapping information"))
+      // Rendering can throw NotFoundException, which must surface as a 500 (StandoffInternalException), not a 404.
+      valueHasXml <- ZIO
+                       .attempt(tv.computedValueHasXml)
+                       .mapError(e => StandoffInternalException("Failed to render canonical XML for text value", e))
+      maxStandoffStartIndex <- ZIO
+                                 .fromOption(tv.computedMaxStandoffStartIndex)
+                                 .orElseFail(StandoffInternalException("Max standoff start index not computed"))
+    } yield FormattedTextValueInfo(
+      valueHasLanguage,
+      mappingIri,
+      maxStandoffStartIndex,
+      valueHasXml,
+      standoffInfo,
+      formattedTextType,
+    )
 }

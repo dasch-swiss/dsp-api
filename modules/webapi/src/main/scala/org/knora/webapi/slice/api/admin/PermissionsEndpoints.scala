@@ -146,7 +146,7 @@ final class PermissionsEndpoints(base: BaseEndpoints) {
     .in(jsonBody[ChangePermissionHasPermissionsApiRequestADM])
     .out(jsonBody[PermissionGetResponseADM])
 
-  val putPermisssionsResourceClass = base.securedEndpoint.put
+  val putPermissionsResourceClass = base.securedEndpoint.put
     .in(permissionsBase / permissionIri / "resourceClass")
     .description(
       "Update a DOAP's resource class. Use `PUT /admin/permissions/doap/{permissionIri}` instead. Requires SystemAdmin permissions.",

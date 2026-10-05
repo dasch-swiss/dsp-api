@@ -1205,6 +1205,31 @@ class SearchEndpointsPostGravsearchE2ESpec extends E2EZSpec {
           |""".stripMargin
       verifyQueryResultWithUser(query, "BooksWithTitleContainingZeit.jsonld", anythingUser1)
     },
+    test("reject a regex pattern that is not a valid regular expression with 400 Bad Request") {
+      // e.g. a wildcard-style "*Zeit*" typed into a search form that passes it on as a regex
+      val query =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |CONSTRUCT {
+          |   ?mainRes knora-api:isMainResource true .
+          |} WHERE {
+          |   ?mainRes a knora-api:Resource .
+          |   ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
+          |   ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+          |   <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+          |   ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+          |   FILTER regex(?propVal0, "*Zeit*", "i")
+          |}
+          |""".stripMargin
+      for {
+        response <- postGravsearchQuery(query)
+        actual   <- response.assert400
+      } yield assertTrue(
+        actual.contains("Invalid regular expression"),
+        actual.contains("*Zeit*"),
+        actual.contains("Dangling meta character '*' near index 0"),
+      )
+    },
     test("do a Gravsearch query for link objects that link to an incunabula book") {
       val query =
         """

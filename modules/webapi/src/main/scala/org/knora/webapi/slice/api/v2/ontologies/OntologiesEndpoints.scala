@@ -283,7 +283,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Create a new ontology. Requires ProjectAdmin permissions for the project.")
 
-  val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint
+  val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint.get
     .in(base / "candeleteontology" / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)

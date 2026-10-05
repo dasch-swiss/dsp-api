@@ -46,6 +46,18 @@ A startup migration deletes the orphaned `knora-admin:status` triples from exist
 User and group status are not affected.
 To erase a project, use the separate erase endpoint.
 
+### v34 to v35: Removal of the admin project export/import endpoints
+
+The following admin endpoints for project export and import have been removed:
+
+- `GET /admin/projects/export`
+- `POST /admin/projects/shortcode/{projectShortcode}/export`
+- `POST /admin/projects/shortcode/{projectShortcode}/export-await`
+- `POST /admin/projects/shortcode/{projectShortcode}/import`
+
+Use the v3 project export/import API instead,
+as described in the [project migration documentation](../03-endpoints/api-v3/project-migration.md).
+
 ## Deprecation Warnings
 
 <!---
@@ -94,17 +106,6 @@ Instead of `/v2/ontologies/canreplacecardinalities/{classIRI}`,
 use `/v2/ontologies/canreplacecardinalities/{classIRI}?propertyIri={propertyIRI}&newCardinality=[0-1|1|1-n|0-n]`.
 
 For more information, see [the api documentation](../03-endpoints/api-v2/ontology-information.md#pre-update-checks).
-
-### Admin Project Export/Import
-
-The following admin endpoints for project export and import are deprecated and will be removed in a future version:
-
-- `GET /admin/projects/export`
-- `POST /admin/projects/shortcode/{projectShortcode}/export`
-- `POST /admin/projects/shortcode/{projectShortcode}/export-await`
-- `POST /admin/projects/shortcode/{projectShortcode}/import`
-
-These endpoints are not in use and a similar functionality will be implemented the new v3 project data export/import API.
 
 ### `fileValueHasExternalUrl`
 

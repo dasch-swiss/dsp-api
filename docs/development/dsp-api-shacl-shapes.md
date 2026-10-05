@@ -10,6 +10,9 @@ network). These conventions keep the shapes readable, correctly placed, and test
 - `data-shapes.ttl` holds constraints that always apply. It loads in every validation mode.
 - `migration-shapes.ttl` and `bulk-import-shapes.ttl` layer mode-specific constraints on
   top. The two never load together. Each reopens a node shape by IRI and adds constraints.
+- The migration import endpoint validates only the ontologies at runtime. It does not load
+  `data-shapes.ttl` or `migration-shapes.ttl`. `ProjectMigrationImportValidatorSpec` still
+  tests both files through `ProjectMigrationImportValidator.validate`.
 
 Placement is a decision, not a version step. When you add or change a knora-base value
 predicate, decide where its constraint belongs. Put it in `data-shapes.ttl` when it always

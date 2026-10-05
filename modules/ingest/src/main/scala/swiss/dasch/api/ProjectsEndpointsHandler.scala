@@ -223,7 +223,7 @@ final case class ProjectsEndpointsHandler(
             ),
     )
 
-  private val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
+  private val postImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postImport
     .serverLogic(userSession =>
       (shortcode, stream) =>
         authorizationHandler.ensureAdminScope(userSession) *>
@@ -253,7 +253,7 @@ final case class ProjectsEndpointsHandler(
       postBulkIngestEndpointFinalize,
       getBulkIngestMappingCsvEndpoint,
       postExportEndpoint,
-      getImportEndpoint,
+      postImportEndpoint,
       postBulkIngestUploadEndpoint,
     )
 }

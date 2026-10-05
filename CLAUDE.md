@@ -15,17 +15,22 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ## Specs
 
-dsp-api specs (PRDs, implementation plans, design docs, execution journals) live directly in `docs/specs/` as
-flat, date-prefixed files, following the same convention as SIPI. Platform-wide specs that span several repos
-stay in [`dasch-specs`](https://github.com/dasch-swiss/dasch-specs); a spec whose primary subject is dsp-api
+dsp-api specs (project briefs, PRDs, implementation plans, design docs, execution journals) live in
+`docs/specs/`, one folder per piece of work, using the same folder and file naming as
+[`dasch-specs`](https://github.com/dasch-swiss/dasch-specs) so an artifact can move between the two unchanged.
+Platform-wide specs that span several repos stay in `dasch-specs`; a spec whose primary subject is dsp-api
 belongs here even when it touches another repo.
 
-- **File:** `docs/specs/YYYY-MM-DD-NN-{topic}-{type}.md`; `NN` is a 2-digit daily sequence (`01`, `02`, ...),
-  `{topic}` lowercase alphanumeric and hyphens (at most 60 chars), `{type}` one of `PRD`, `plan`, `design`,
-  `journal`. The artifacts of one piece of work share the `YYYY-MM-DD-NN-{topic}-` stem (a `-plan.md` next to
-  its `-journal.md` and `-design.md`).
-- **Assets:** supporting files (images, measurement scripts, raw results) go in a sibling
-  `docs/specs/YYYY-MM-DD-NN-{topic}-assets/` directory, referenced relatively.
+- **Folder:** `docs/specs/YYYY-MM-DD-{slug}/`, dated when the work starts; `{slug}` lowercase alphanumeric and
+  hyphens (at most 60 chars). All artifacts of one piece of work go in its folder.
+- **Files:** `NN` is a 2-digit sequence per folder (`01`, `02`, ...; the next free number):
+    - project brief: `00-project-brief.md` (`00` is reserved for it; at most one per folder)
+    - PRD: `NN-{topic}-PRD.md`
+    - plan: `NN-{type}-{topic}-plan.md` (`{type}` a conventional-commit type, e.g. `feat`, `fix`, `perf`)
+    - execution journal: `<plan file name without .md>-journal.md`, next to its plan
+    - design doc: `NN-{topic}-design.md`
+- **Assets:** supporting files (images, measurement scripts, raw results) go in an `assets/` subfolder of the
+  work's folder, referenced relatively.
 - **Frontmatter** (YAML): `title`, `date`, `author`, `status: draft | reviewed | approved | implemented`, and
   `repositories:` listing the *other* code repos the work modifies (never dsp-api itself).
 - **Reference direction is one-way; specs are a sink.** A spec may link out to code, docs and ADRs, but nothing
@@ -173,7 +178,8 @@ metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp
 
 ### Adding New Endpoints
 
-1. Define endpoint in the appropriate `*Endpoints.scala`
+1. Define endpoint in the appropriate `*Endpoints.scala`, starting with its HTTP method (`.get`, `.post`, …) —
+   the endpoint bases expose nothing else until one is chosen
 2. Connect endpoint definition with server logic in `*ServerEndpoints.scala`
 3. Register in the API's aggregator (`AdminApiServerEndpoints.scala` for admin)
 4. Add unit/integration tests mirroring the main structure

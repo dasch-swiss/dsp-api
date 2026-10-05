@@ -1,5 +1,30 @@
 # Changelog
 
+## [40.2.1](https://github.com/dasch-swiss/dsp-api/compare/v40.2.0...v40.2.1) (2026-09-30)
+
+
+### Maintenances
+
+* bump sipi to v9.1.1 ([#4371](https://github.com/dasch-swiss/dsp-api/issues/4371)) ([7b100be](https://github.com/dasch-swiss/dsp-api/commit/7b100be9020baa42f14b5cdb89bcc2657a17b124))
+
+
+### Bug Fixes
+
+* reject an invalid regex in a Gravsearch query with 400 instead of 500 ([#4368](https://github.com/dasch-swiss/dsp-api/issues/4368)) ([0853a47](https://github.com/dasch-swiss/dsp-api/commit/0853a47c275adbb0b918f5f905fc44f9ded97360))
+
+## [40.2.0](https://github.com/dasch-swiss/dsp-api/compare/v40.1.0...v40.2.0) (2026-09-29)
+
+
+### Enhancements
+
+* add valueHasXml predicate and canonical-XML helper (DEV-7325) ([#4363](https://github.com/dasch-swiss/dsp-api/issues/4363)) ([8d7c6bb](https://github.com/dasch-swiss/dsp-api/commit/8d7c6bbd129d5289e0d4ca50a2ff6d3e5426f461))
+* **dsp-api:** make hasDescription available on every resource ([#4362](https://github.com/dasch-swiss/dsp-api/issues/4362)) ([e948e95](https://github.com/dasch-swiss/dsp-api/commit/e948e950a46248df5fcc23c4880fffb44313a723))
+
+
+### Bug Fixes
+
+* skip data SHACL validation in migration import (DEV-7439) ([#4369](https://github.com/dasch-swiss/dsp-api/issues/4369)) ([e56433d](https://github.com/dasch-swiss/dsp-api/commit/e56433dacfdddb89ad9031688a4ce9e567911b0e))
+
 ## [40.1.0](https://github.com/dasch-swiss/dsp-api/compare/v40.0.0...v40.1.0) (2026-09-28)
 
 

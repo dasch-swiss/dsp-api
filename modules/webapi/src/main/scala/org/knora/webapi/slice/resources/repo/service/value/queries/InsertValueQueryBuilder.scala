@@ -312,9 +312,13 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
         valueIri.has(KB.valueHasMaxStandoffStartIndex, literalOf(maxIndex))
       }.toList
 
+      val xmlPattern = textValue.computedValueHasXml.map { xml =>
+        valueIri.has(KB.valueHasXml, literalOf(xml))
+      }.toList
+
       val standoffPatterns = buildStandoffPatterns(valueIri, textValue)
 
-      languagePattern ::: textValueTypePattern ::: mappingPattern ::: maxIndexPattern ::: standoffPatterns
+      languagePattern ::: textValueTypePattern ::: mappingPattern ::: maxIndexPattern ::: xmlPattern ::: standoffPatterns
     } else {
       languagePattern ::: textValueTypePattern
     }

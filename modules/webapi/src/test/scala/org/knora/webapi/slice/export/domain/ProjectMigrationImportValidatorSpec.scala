@@ -71,15 +71,34 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     allowPlaceholder: Boolean = true,
     mode: ImportMode = ImportMode.Migration,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
+    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder) { (validator, ontologyFiles, dataFiles) =>
+      validator.validate(ontologyFiles, dataFiles, testProjectIri, mode)
+    }
+
+  private def validateWithoutDataShapes(
+    ontologyNq: String,
+    dataNq: String = baselineDataNq,
+    adminNq: String = defaultAdminNq,
+    allowPlaceholder: Boolean = true,
+  ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
+    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder) { (validator, ontologyFiles, dataFiles) =>
+      validator.validateWithoutDataShapes(ontologyFiles, dataFiles, testProjectIri)
+    }
+
+  private def runValidator(ontologyNq: String, dataNq: String, adminNq: String, allowPlaceholder: Boolean)(
+    run: (
+      ProjectMigrationImportValidator,
+      NonEmptyChunk[Path],
+      NonEmptyChunk[Path],
+    ) => Task[Unit],
+  ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
     for {
       dir          <- Files.createTempDirectoryScoped(Some("shacl-test"), Seq.empty)
       ontologyFile <- writeNqFile(dir, "ontology-0.nq", ontologyNq)
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
       adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
-      validator     = new ProjectMigrationImportValidator()
       result       <-
-        validator
-          .validate(NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile), testProjectIri, mode)
+        run(new ProjectMigrationImportValidator(), NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile))
           .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
     } yield result
@@ -1175,6 +1194,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     bulkImportShapesSuite,
     migrationShapesSuite,
     placeholderGateSuite,
+    withoutDataShapesSuite,
   ) @@ TestAspect.timeout(30.seconds)
 
   private val bulkImportShapesSuite = {
@@ -1419,6 +1439,69 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |""".stripMargin
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminNq).map(result => assertTrue(result.isLeft))
+        }
+      },
+    )
+  }
+
+  private val withoutDataShapesSuite = {
+    val ontologyWithClass = validOntologyNq +
+      s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+         |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+         |""".stripMargin
+    // A resource without rdfs:label violates ResourceShape in data-shapes.ttl.
+    val resourceMissingLabelNq =
+      s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+         |""".stripMargin
+    val ontologyMissingLastModificationDate =
+      s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
+         |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
+         |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$OntologyGraph> .
+         |""".stripMargin
+
+    suite("validateWithoutDataShapes")(
+      test("accepts data that violates a data shape") {
+        ZIO.scoped {
+          for {
+            full    <- validate(ontologyWithClass, resourceMissingLabelNq)
+            ontOnly <- validateWithoutDataShapes(ontologyWithClass, resourceMissingLabelNq)
+          } yield assertTrue(full.isLeft, ontOnly.isRight)
+        }
+      },
+      test("rejects an ontology that violates an ontology shape") {
+        ZIO.scoped {
+          validateWithoutDataShapes(ontologyMissingLastModificationDate).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("Ontology check failed")))
+          }
+        }
+      },
+      test("rejects malformed data N-Quads") {
+        ZIO.scoped {
+          validateWithoutDataShapes(validOntologyNq, dataNq = "not valid { nquads } content").map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("Error loading data")))
+          }
+        }
+      },
+      test("rejects a data file with more than one named graph") {
+        val twoGraphsNq =
+          s"""<http://rdfh.ch/9999/thing001> <$RdfsLabel> "a" <$DataGraph> .
+             |<http://rdfh.ch/9999/thing002> <$RdfsLabel> "b" <http://www.knora.org/data/9999/other> .
+             |""".stripMargin
+        ZIO.scoped {
+          validateWithoutDataShapes(validOntologyNq, dataNq = twoGraphsNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("exactly one named graph")))
+          }
+        }
+      },
+      test("rejects sentinel in object position when allow-placeholder=false") {
+        ZIO.scoped {
+          validateWithoutDataShapes(validOntologyNq, dataNq = placeholderIriDataNq, allowPlaceholder = false).map {
+            result =>
+              assert(result.left.toOption.map(_.getMessage))(
+                isSome(containsString(s"placeholder sentinel '$SentinelValue' in object position")),
+              )
+          }
         }
       },
     )
