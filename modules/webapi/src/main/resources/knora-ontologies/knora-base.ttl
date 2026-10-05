@@ -20,7 +20,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v59" .
+    :ontologyVersion   "knora-base v60" .
 
 
 #################################################################
@@ -1109,12 +1109,15 @@
 
 ###  http://www.knora.org/ontology/knora-base#externalUrl
 
+# Declared as xsd:string because all stored data uses plain string literals. Storing xsd:anyURI would
+# require a migration of every existing value in the database. As an accepted compromise, the API
+# (knora-api:externalUrl) keeps xsd:anyURI through an override in the API v2 transformation rules.
 :externalUrl
     rdf:type                  owl:DatatypeProperty ;
     rdfs:label                "external URL"@en ;
     rdfs:subPropertyOf        :valueHas ;
     :subjectClassConstraint   :StillImageExternalFileValue ;
-    :objectDatatypeConstraint xsd:anyURI.
+    :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#originalMimeType

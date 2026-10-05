@@ -188,7 +188,7 @@ classDiagram
     integer dimY
   }
   class StillImageExternalFileValue {
-    anyUri externalUrl
+    string externalUrl
   }
   class TextFileValue
 

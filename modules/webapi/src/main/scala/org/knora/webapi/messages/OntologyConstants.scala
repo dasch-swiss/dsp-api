@@ -838,6 +838,7 @@ object OntologyConstants {
     val StillImageFileValueHasDimY: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
     val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
     val StillImageFileValueHasExternalUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasExternalUrl"
+    val ExternalUrl: IRI                       = KnoraApiV2PrefixExpansion + "externalUrl"
 
     val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
     val IntervalValueHasEnd: IRI   = KnoraApiV2PrefixExpansion + "intervalValueHasEnd"
@@ -964,6 +965,8 @@ object OntologyConstants {
     val HasArchiveFile: IRI     = KnoraApiV2PrefixExpansion + "hasArchiveFile"
 
     val File: IRI = KnoraApiV2PrefixExpansion + "File"
+
+    val ExternalUrl: IRI = KnoraApiV2PrefixExpansion + "externalUrl"
 
     // The set of custom datatypes defined in knora-api in the simple schema. InstanceChecker and
     // JenaNodeFactory rely on this.
