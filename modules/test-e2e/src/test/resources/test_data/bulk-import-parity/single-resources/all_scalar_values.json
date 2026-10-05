@@ -45,6 +45,28 @@
       "@value": 0
     }
   },
+  "http://0.0.0.0:3333/ontology/9999/onto/v2#testGeolocation": {
+    "@type": "http://api.knora.org/ontology/knora-api/v2#GeolocationValue",
+    "http://api.knora.org/ontology/knora-api/v2#geolocationValueAsGeolocation": {
+      "@type": "http://www.w3.org/2001/XMLSchema#string",
+      "@value": "POINT(8.550 47.37)"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
+  },
+  "http://0.0.0.0:3333/ontology/9999/onto/v2#testGeolocationLv95": {
+    "@type": "http://api.knora.org/ontology/knora-api/v2#GeolocationValue",
+    "http://api.knora.org/ontology/knora-api/v2#geolocationValueAsGeolocation": {
+      "@type": "http://www.w3.org/2001/XMLSchema#string",
+      "@value": "<http://www.opengis.net/def/crs/EPSG/0/2056> POINT(2600000 1200000)"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": {
+      "@type": "http://www.w3.org/2001/XMLSchema#integer",
+      "@value": 0
+    }
+  },
   "http://0.0.0.0:3333/ontology/9999/onto/v2#testIntegerSimpleText": {
     "@type": "http://api.knora.org/ontology/knora-api/v2#IntValue",
     "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": {

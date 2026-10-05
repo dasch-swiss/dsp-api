@@ -145,6 +145,7 @@ final class OntologyTransformer(
       _ <- ZIO.attempt(canonicalizeScalarLiterals(model))
       _ <- ZIO.attempt(convertLinkValues(model))
       _ <- ZIO.attempt(convertGeomValues(model))
+      _ <- ZIO.attempt(convertGeolocationValues(model))
       _ <- convertRichtextValues(model, now)
       // convertFileValues must precede addValueHasString: it emits internalFilename, from which the string
       // pass derives valueHasString. It is a real effect (it fetches file metadata from dsp-ingest).
@@ -872,6 +873,50 @@ final class OntologyTransformer(
       Option(v.getProperty(src)).map(_.getObject).foreach { obj =>
         v.removeAll(src)
         v.addProperty(valueHasGeometry, obj)
+      }
+    }
+  }
+
+  /**
+   * Canonicalizes every `GeolocationValue`'s `valueHasGeolocation` literal via [[Geolocation.parse]], so the bulk
+   * import path stores the same CRS-tagged form the v2 create path stores, and rejects the same malformed
+   * geolocations. A value with no `valueHasGeolocation` literal is left untouched; the SHACL shape rejects that
+   * missing-property case. A value with more than one `valueHasGeolocation` literal is rejected here: this pass runs
+   * before SHACL validation, so collapsing the duplicates to one would hide the `sh:maxCount 1` violation from the
+   * later check and silently drop a value. The pass must reject the duplicate itself.
+   *
+   * Unlike [[convertGeomValues]] this pass does no rename step, because `geolocationValueAsGeolocation` has a
+   * `(ApiV2Complex, InternalSchema)` correspondence-table entry (see `OntologyConstants`), so stage 1 already renames
+   * it to `valueHasGeolocation`. A future stage-2 pass for a value type whose predicate has no such entry needs the
+   * `convertGeomValues`-style rename instead.
+   */
+  private def convertGeolocationValues(model: Model): Unit = {
+    val rdfType             = model.createProperty(Rdf.Type)
+    val geolocationValue    = KnoraBase.GeolocationValue
+    val valueHasGeolocation = model.createProperty(KnoraBase.ValueHasGeolocation)
+
+    val geolocationValues = model.listSubjects().asScala.filter { s =>
+      asValueIri(s).isDefined &&
+      Option(s.getProperty(rdfType))
+        .map(_.getObject)
+        .exists(n => n.isURIResource && n.asResource.getURI == geolocationValue)
+    }
+
+    geolocationValues.foreach { v =>
+      val literals = v.listProperties(valueHasGeolocation).asScala.toList.map(_.getObject).filter(_.isLiteral)
+      literals match {
+        case Nil            => ()
+        case literal :: Nil =>
+          Geolocation.parse(literal.asLiteral.getLexicalForm) match {
+            case Right(geo) =>
+              v.removeAll(valueHasGeolocation)
+              v.addProperty(valueHasGeolocation, geo.toStoredLiteral)
+            case Left(msg) => throw new IllegalArgumentException(s"GeolocationValue $v: $msg")
+          }
+        case duplicates =>
+          throw new IllegalArgumentException(
+            s"GeolocationValue $v: expected exactly one valueHasGeolocation literal, but found ${duplicates.size}",
+          )
       }
     }
   }
