@@ -17,6 +17,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.slice.`export`.fair.PublicResourceViewService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
@@ -45,6 +46,7 @@ object ExportApiModule { self =>
   type Provided =
     // format: off
     ExportService &
+    PublicResourceViewService &
     ResourceFileLinks
     // format: on
 
@@ -58,5 +60,6 @@ object ExportApiModule { self =>
       (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    (FindResourcesService.layer ++ (assetInfoServiceLayer >>> ResourceFileLinks.layer)) >+> ExportService.layer
+    PublicResourceViewService.layer ++
+      ((FindResourcesService.layer ++ (assetInfoServiceLayer >>> ResourceFileLinks.layer)) >+> ExportService.layer)
 }
