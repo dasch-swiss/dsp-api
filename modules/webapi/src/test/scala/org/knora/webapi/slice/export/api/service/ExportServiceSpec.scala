@@ -571,6 +571,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       },
     ).provide(
       assetInfoServiceLayer,
+      ResourceFileLinks.layer,
       ConstructResponseUtilV2.layer,
       AppConfig.layer.map(env =>
         env.update[AppConfig](c => c.copy(dspIngest = c.dspIngest.copy(externalBaseUrl = publicIngestUrl))),
@@ -636,7 +637,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
         csvService,
         sf,
         appConfig,
-        assetInfoService,
+        ResourceFileLinks(appConfig, iriConverter, assetInfoService),
       )
 
     def mkReadStub(
@@ -836,7 +837,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sf,
               appConfig,
-              assetInfoSvc,
+              ResourceFileLinks(appConfig, iriConverter, assetInfoSvc),
             )
           exit <- exportService
                     .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -908,7 +909,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sfSvc,
               appConfig,
-              assetInfoSvc,
+              ResourceFileLinks(appConfig, iriConverter, assetInfoSvc),
             )
           bytes <- exportService
                      .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)
@@ -973,7 +974,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
               csvService,
               sfSvc,
               appConfig,
-              assetInfoSvc,
+              ResourceFileLinks(appConfig, iriConverter, assetInfoSvc),
             )
           bytes <- exportService
                      .exportResources(project, orderingTestClassIri, List.empty, user, LanguageCode.EN, false, false)

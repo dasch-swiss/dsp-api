@@ -20,6 +20,7 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
+import org.knora.webapi.slice.api.v3.export_.ResourceFileLinks
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -43,7 +44,8 @@ object ExportApiModule { self =>
 
   type Provided =
     // format: off
-    ExportService
+    ExportService &
+    ResourceFileLinks
     // format: on
 
   // Built from webapi's own config on purpose: ingest's Configuration.layer calls
@@ -56,5 +58,5 @@ object ExportApiModule { self =>
       (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    (FindResourcesService.layer ++ assetInfoServiceLayer) >+> ExportService.layer
+    (FindResourcesService.layer ++ (assetInfoServiceLayer >>> ResourceFileLinks.layer)) >+> ExportService.layer
 }

@@ -8,11 +8,6 @@ package org.knora.webapi.slice.api.v3.export_
 import cats.*
 import cats.implicits.*
 import com.github.tototoshi.csv.CSVFormat
-import swiss.dasch.domain.AssetId as IngestAssetId
-import swiss.dasch.domain.AssetInfo
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
 import zio.*
 import zio.ZLayer
 import zio.stream.ZStream
@@ -80,7 +75,7 @@ final case class ExportService(
   private val csvService: CsvService,
   private val sf: StringFormatter,
   private val appConfig: AppConfig,
-  private val assetInfoService: AssetInfoService,
+  private val resourceFileLinks: ResourceFileLinks,
 ) {
   private given StringFormatter                = sf
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
@@ -95,9 +90,6 @@ final case class ExportService(
   private val DataLicenseHeader     = "Data License"
   private val CopyrightHolderHeader = "Copyright Holder"
   private val AuthorshipHeader      = "Authorship"
-
-  // the sidecar only ever stores SHA-256, so this is a constant rather than a field
-  private val ChecksumAlgorithm = "SHA-256"
 
   def exportResourcesOai(
     project: KnoraProject,
@@ -115,7 +107,7 @@ final case class ExportService(
                          withDeleted = false,
                          skipRetrievalChecks = true,
                        )
-      descriptionProp <- findDescriptionProperty(project)
+      descriptionProp <- resourceFileLinks.findDescriptionProperty(project)
 
       records <- ZIO.foreach(readResources.resources.toList) { r =>
                    val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
@@ -144,48 +136,11 @@ final case class ExportService(
   }
 
   // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
-  // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
-      fc.fileValue.internalFilename.takeWhile(_ != '.')
-    }) { assetId =>
-      findAssetInfo(project, assetId).map { info =>
-        FileLink(
-          // never falls back to the derivative's internalMimeType: the url serves the original
-          mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-          url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
-          checksum = info.map(_.original.checksum.value),
-          checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
-          fileName = info.map(_.originalFilename.value),
-          fileSize = info.flatMap(_.original.size.map(_.value)),
-          // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
-          dateCreated = Some(r.creationDate.toString),
-        )
-      }
+    r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 => fc } match {
+      case Some(fc) => resourceFileLinks.fileLinkOf(project, fc, r.creationDate)
+      case None     => ZIO.none
     }
-
-  // Never fails: without the shared asset dir every asset is missing a sidecar, and failing there would
-  // make the endpoint unusable. A malformed sidecar is logged and treated the same way.
-  private def findAssetInfo(project: KnoraProject, assetId: String): UIO[Option[AssetInfo]] =
-    ZIO
-      .fromEither(for {
-        id        <- IngestAssetId.from(assetId)
-        shortcode <- IngestProjectShortcode.from(project.shortcode.value)
-      } yield AssetRef(id, shortcode))
-      .mapError(new IllegalArgumentException(_))
-      .flatMap(assetInfoService.findByAssetRef)
-      .catchAll(e => ZIO.logWarning(s"Could not read the sidecar of asset $assetId: ${e.getMessage}").as(None))
-
-  private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
-    (project.shortcode.value.toUpperCase() match {
-      case "0803" => Some("http://www.knora.org/ontology/0803/incunabula#description")
-      case "081C" => Some("http://www.knora.org/ontology/081C/hdm#hasDescription")
-      case "0868" => Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription")
-      case "1612" => Some("http://www.knora.org/ontology/1612/Data#TextShort")
-      case _      => None
-    }).map {
-      iriConverter.asInternalSmartIri(_).map(Some(_))
-    }.getOrElse(ZIO.none)
 
   private def typeOfDataOf(r: ReadResourceV2): Option[String] =
     r.values.values.flatten.map(_.valueContent).collectFirst {
