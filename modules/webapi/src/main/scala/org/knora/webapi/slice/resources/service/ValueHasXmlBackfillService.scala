@@ -5,224 +5,96 @@
 
 package org.knora.webapi.slice.resources.service
 
-import io.opentelemetry.api.trace.Span
 import zio.*
-import zio.telemetry.opentelemetry.tracing.Tracing
 
 import dsp.errors.ConflictException
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.ValueHasXmlBackfillConfig
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.infrastructure.SanitizedSpan
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
-import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.RunState
-import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
 
 /**
  * Backfills `knora-base:valueHasXml` on the existing formatted text values of one project, in paced batches.
  *
- * Log lines, configuration and stop reasons are documented for operators in
- * `docs/03-endpoints/api-admin/maintenance.md`; keep it in sync.
+ * Log lines are documented for operators in `docs/03-endpoints/api-admin/maintenance.md`; keep it in sync.
  */
 final class ValueHasXmlBackfillService private[service] (
   repo: ValueHasXmlBackfillRepo,
   renderer: ValueHasXmlRenderer,
-  appConfig: AppConfig,
-  tracing: Tracing,
-  private[service] val running: Ref[Option[ProjectIri]],
+  private[service] val running: Ref[Boolean],
+  batchSize: Int,
+  batchInterval: Duration,
 ) {
-  import ValueHasXmlBackfillService.*
-
-  private val config: ValueHasXmlBackfillConfig = appConfig.valueHasXmlBackfill
 
   /** Starts a run in the background; fails if a run is already active on this instance. */
-  def start(project: KnoraProject): IO[ConflictException, Unit] = startFiber(project).unit
-
-  private[service] def startFiber(project: KnoraProject): IO[ConflictException, Fiber[Nothing, Unit]] =
-    ZIO.uninterruptibleMask { restore =>
-      running
-        .modify(held => if (held.isEmpty) (None, Some(project.id)) else (held, held))
-        .flatMap {
-          case Some(held) =>
-            ZIO.fail(ConflictException(s"A valueHasXml backfill is already running on this instance (${held.value})"))
-          case None =>
-            // `run` has logged its own outcome by the time it ends, so the cause is dropped here.
-            restore(run(project).unit).catchAllCause(_ => ZIO.unit).ensuring(running.set(None)).forkDaemon
-        }
+  def start(project: KnoraProject): IO[ConflictException, Unit] =
+    running.getAndSet(true).flatMap { busy =>
+      if (busy) ZIO.fail(ConflictException("A valueHasXml backfill is already running on this instance"))
+      // `run` logs its own failure, so the cause is dropped here.
+      else run(project).catchAllCause(_ => ZIO.unit).ensuring(running.set(false)).forkDaemon.unit
     }
 
-  /** Runs the backfill of the project to completion and returns what it did. */
-  def run(project: KnoraProject): Task[ValueHasXmlBackfillReport] =
+  /** Runs the backfill of the project to completion and returns its counts. */
+  def run(project: KnoraProject): Task[ValueHasXmlBackfillCounts] =
     ZIO.logAnnotate("shortcode", project.shortcode.value) {
-      for {
-        // Written by `step` for the abnormal-end log line and the run span counts; the loop never reads it.
-        partial    <- Ref.make(ValueHasXmlBackfillReport.zero)
-        finalState <- SanitizedSpan
-                        .withSpan(tracing, SpanName, ExitReasonKey) { span =>
-                          (for {
-                            _       <- ZIO.succeed(setShortcode(span, project))
-                            pending <- stage("select")(repo.selectCandidates(project))
-                            _       <-
-                              ZIO.logInfo(
-                                s"valueHasXml backfill started (batchSize=${config.batchSize}, candidates=${pending.size})",
-                              )
-                            state <- ZIO.iterate(RunState.of(pending))(!_.done)(step(project, partial, span))
-                          } yield state)
-                            .onExit(exit => partial.get.map(report => setRunAttributes(span, report, stopOf(exit))))
-                        }
-                        .onExit {
-                          case Exit.Success(_)     => ZIO.unit
-                          case Exit.Failure(cause) => logAbnormalEnd(partial, cause)
-                        }
-        _ <- logOutcome(finalState)
-      } yield finalState.report
-    }
-
-  private def logAbnormalEnd(partial: Ref[ValueHasXmlBackfillReport], cause: Cause[Throwable]): UIO[Unit] =
-    partial.get.flatMap { report =>
-      if (cause.isInterrupted) ZIO.logWarning(s"valueHasXml backfill interrupted: ${describe(report)}")
-      else
-        ZIO.logError(
-          s"valueHasXml backfill failed with ${cause.squash.getClass.getName}: ${describe(report)}",
-        )
-    }
-
-  private def logOutcome(state: RunState): UIO[Unit] = {
-    val line = s"valueHasXml backfill finished: ${describe(state.report)} stop=${state.stop.fold("none")(_.toString)}"
-    if (state.report.failed > 0) ZIO.logError(line) else ZIO.logInfo(line)
-  }
-
-  private def step(project: KnoraProject, partial: Ref[ValueHasXmlBackfillReport], runSpan: Span)(
-    state: RunState,
-  ): Task[RunState] =
-    for {
-      started <- Clock.nanoTime
-      next    <- ValueHasXmlBackfill.stopReason(state, config.maxFailures) match {
-                case Some(reason) => ZIO.succeed(stopped(state, reason))
-                case None         => processBatch(project, state, state.pending.take(config.batchSize), runSpan)
-              }
-      _ <- partial.set(next.report)
-      _ <- ZIO.when(!next.done)(pace(started))
-    } yield next
-
-  private def stopped(state: RunState, reason: StopReason): RunState =
-    state.copy(stop = Some(reason), report = state.report.copy(stoppedEarly = reason.stoppedEarly))
-
-  /** Each batch is its own trace, linked to the run span, so a large run does not accumulate in one trace. */
-  private def processBatch(project: KnoraProject, state: RunState, batch: Seq[IRI], runSpan: Span): Task[RunState] =
-    SanitizedSpan.withRootSpan(tracing, s"$SpanName.batch", ExitReasonKey, Seq(runSpan.getSpanContext)) { span =>
-      for {
-        _          <- ZIO.succeed(setShortcode(span, project))
-        statements <- stage("load")(repo.loadStandoff(project, batch))
-        grouped     = ValueHasXmlBackfill.groupByValue(statements, batch)
-        outcome    <- stage("render")(renderAll(batch, grouped, state.mappings))
-        _          <- stage("write")(ZIO.unless(outcome.rendered.isEmpty)(repo.insertXml(project, outcome.rendered)))
-        batchReport = ValueHasXmlBackfillReport(batch.size, outcome.rendered.size, outcome.failed.size, false)
-        _          <- ZIO.succeed(setCounts(span, batchReport))
-        report      = state.report + batchReport
-        _          <- ZIO.logInfo(s"valueHasXml backfill progress: ${describe(report)}")
-      } yield state.copy(
-        pending = state.pending.drop(batch.size),
-        mappings = outcome.mappings,
-        report = report,
-      )
-    }
-
-  private def renderAll(
-    batch: Seq[IRI],
-    grouped: Map[IRI, Either[String, StoredTextValue]],
-    mappings: Map[IRI, MappingXMLtoStandoff],
-  ): Task[BatchOutcome] =
-    ZIO.foldLeft(batch)(BatchOutcome(mappings, Vector.empty, Vector.empty)) { (acc, iri) =>
-      grouped(iri) match {
-        case Left(reason) => ZIO.logWarning(s"valueHasXml backfill: $iri failed: $reason").as(acc.withFailure(iri))
-        case Right(value) => renderOne(iri, value, acc)
+      (for {
+        candidates <- repo.selectCandidates(project)
+        _          <- ZIO.logInfo(s"valueHasXml backfill started (candidates=${candidates.size})")
+        batches     = candidates.grouped(batchSize).toSeq.zipWithIndex
+        counts     <- ZIO.foldLeft(batches)(ValueHasXmlBackfillCounts.zero) { case (total, (batch, index)) =>
+                    for {
+                      _    <- ZIO.sleep(batchInterval).when(index > 0)
+                      done <- processBatch(project, batch)
+                      sum   = total + done
+                      _    <- ZIO.logInfo(s"valueHasXml backfill progress: ${sum.describe}")
+                    } yield sum
+                  }
+        line = s"valueHasXml backfill finished: ${counts.describe}"
+        _   <- if (counts.failed > 0) ZIO.logError(line) else ZIO.logInfo(line)
+      } yield counts).tapErrorCause { cause =>
+        // The error class only: standoff and mapping errors can repeat user text.
+        ZIO.logError(s"valueHasXml backfill failed with ${cause.squash.getClass.getName}")
       }
     }
 
-  /** Caches the mapping as soon as it is loaded, so a value that then fails to render does not cost a reload. */
-  private def renderOne(iri: IRI, value: StoredTextValue, acc: BatchOutcome): Task[BatchOutcome] =
-    mappingFor(value, acc.mappings).foldCauseZIO(
-      failValue(iri, acc),
-      mapping => {
-        val cached = acc.copy(mappings = acc.mappings.updated(value.mappingIri, mapping))
+  private def processBatch(project: KnoraProject, batch: Seq[IRI]): Task[ValueHasXmlBackfillCounts] =
+    for {
+      statements <- repo.loadStandoff(project, batch)
+      grouped     = ValueHasXmlBackfill.groupByValue(statements, batch)
+      rendered   <- ZIO.foreach(batch)(iri => renderOne(iri, grouped(iri))).map(_.flatten)
+      _          <- ZIO.unless(rendered.isEmpty)(repo.insertXml(project, rendered))
+    } yield ValueHasXmlBackfillCounts(batch.size, rendered.size, batch.size - rendered.size)
+
+  /** A value that fails is logged and skipped; it stays a candidate for the next run. */
+  private def renderOne(iri: IRI, value: Either[String, StoredTextValue]): Task[Option[(IRI, String)]] =
+    value match {
+      case Left(reason) => logFailure(iri, reason)
+      case Right(text)  =>
         renderer
-          .render(value, mapping)
-          .someOrFail(NoXmlRendered())
-          .foldCauseZIO(failValue(iri, cached), xml => ZIO.succeed(cached.withRendered(iri, xml)))
-      },
-    )
-
-  private def mappingFor(value: StoredTextValue, mappings: Map[IRI, MappingXMLtoStandoff]): Task[MappingXMLtoStandoff] =
-    mappings.get(value.mappingIri).fold(renderer.loadMapping(value.mappingIri))(ZIO.succeed(_))
-
-  private def failValue(iri: IRI, acc: BatchOutcome)(cause: Cause[Throwable]): Task[BatchOutcome] =
-    if (cause.isInterrupted) ZIO.refailCause(cause)
-    else
-      ZIO.logWarning(s"valueHasXml backfill: $iri failed: ${cause.squash.getClass.getName}").as(acc.withFailure(iri))
-
-  private def pace(started: Long): UIO[Unit] =
-    Clock.nanoTime.flatMap { now =>
-      val remaining = config.batchInterval.minus(java.time.Duration.ofNanos(now - started))
-      ZIO.sleep(Duration.fromJava(remaining)).when(remaining.compareTo(java.time.Duration.ZERO) > 0).unit
+          .render(text)
+          // A value whose standoff renders no XML would remain a candidate forever, so it counts as failed.
+          .flatMap(ZIO.fromOption(_).orElseFail(new IllegalStateException("no XML rendered")))
+          .map(xml => Some(iri -> xml))
+          .catchAllCause { cause =>
+            if (cause.isInterrupted) ZIO.refailCause(cause)
+            else logFailure(iri, cause.squash.getClass.getName)
+          }
     }
 
-  private def stage[A](name: String)(effect: Task[A]): Task[A] =
-    SanitizedSpan.withSpan(tracing, s"$SpanName.$name", ExitReasonKey)(_ => effect)
-
-  private def stopOf(exit: Exit[Throwable, RunState]): Option[StopReason] = exit match {
-    case Exit.Success(state) => state.stop
-    case Exit.Failure(_)     => None
-  }
-
-  private def setShortcode(span: Span, project: KnoraProject): Unit = {
-    val _ = span.setAttribute(s"$SpanName.shortcode", project.shortcode.value)
-  }
-
-  private def setCounts(span: Span, report: ValueHasXmlBackfillReport): Unit = {
-    val _ = span.setAttribute(s"$SpanName.found", report.found.toLong)
-    val _ = span.setAttribute(s"$SpanName.rendered", report.rendered.toLong)
-    val _ = span.setAttribute(s"$SpanName.failed", report.failed.toLong)
-  }
-
-  private def setRunAttributes(span: Span, report: ValueHasXmlBackfillReport, stop: Option[StopReason]): Unit = {
-    setCounts(span, report)
-    val _ = span.setAttribute(s"$SpanName.stopped_early", report.stoppedEarly)
-    stop.foreach(reason => span.setAttribute(s"$SpanName.stop_reason", reason.toString))
-  }
+  private def logFailure(iri: IRI, reason: String): UIO[None.type] =
+    ZIO.logWarning(s"valueHasXml backfill: $iri failed: $reason").as(None)
 }
 
 object ValueHasXmlBackfillService {
 
-  private val SpanName      = "value_has_xml_backfill"
-  private val ExitReasonKey = s"$SpanName.exit_reason"
+  private val BatchSize: Int          = 50
+  private val BatchInterval: Duration = 1.second
 
-  /** A value whose standoff renders no XML would remain a candidate forever, so it counts as failed. */
-  private final case class NoXmlRendered() extends RuntimeException
-
-  private final case class BatchOutcome(
-    mappings: Map[IRI, MappingXMLtoStandoff],
-    rendered: Vector[(IRI, String)],
-    failed: Vector[IRI],
-  ) {
-    def withRendered(iri: IRI, xml: String): BatchOutcome = copy(rendered = rendered :+ (iri -> xml))
-    def withFailure(iri: IRI): BatchOutcome               = copy(failed = failed :+ iri)
-  }
-
-  private def describe(report: ValueHasXmlBackfillReport): String =
-    s"found=${report.found} rendered=${report.rendered} failed=${report.failed} stoppedEarly=${report.stoppedEarly}"
-
-  val layer: URLayer[ValueHasXmlBackfillRepo & ValueHasXmlRenderer & AppConfig & Tracing, ValueHasXmlBackfillService] =
+  val layer: URLayer[ValueHasXmlBackfillRepo & ValueHasXmlRenderer, ValueHasXmlBackfillService] =
     ZLayer.fromZIO(
       for {
         repo     <- ZIO.service[ValueHasXmlBackfillRepo]
         renderer <- ZIO.service[ValueHasXmlRenderer]
-        config   <- ZIO.service[AppConfig]
-        tracing  <- ZIO.service[Tracing]
-        running  <- Ref.make(Option.empty[ProjectIri])
-      } yield new ValueHasXmlBackfillService(repo, renderer, config, tracing, running),
+        running  <- Ref.make(false)
+      } yield new ValueHasXmlBackfillService(repo, renderer, running, BatchSize, BatchInterval),
     )
 }

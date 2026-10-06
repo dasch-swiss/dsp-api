@@ -22,10 +22,6 @@ and how to add new instrumentation.
   was interrupted. The attribute set is deliberately bounded: the SPARQL text goes to the (truncated)
   log entry, never onto the span. See
   [SPARQL passthrough](../03-endpoints/api-admin/sparql-passthrough.md).
-- **valueHasXml backfill** — the maintenance backfill emits a `value_has_xml_backfill` run span with a
-  `select` stage span, and one `value_has_xml_backfill.batch` root span per batch, linked to the run span,
-  with `load`, `render` and `write` stage spans (`SanitizedSpan.withSpan` and `withRootSpan`). The exit
-  reason is on `value_has_xml_backfill.exit_reason`. See [Maintenance](../03-endpoints/api-admin/maintenance.md).
 
 ## Where to look
 

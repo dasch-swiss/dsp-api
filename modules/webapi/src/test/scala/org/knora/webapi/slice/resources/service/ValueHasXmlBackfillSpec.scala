@@ -10,8 +10,6 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
-import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.RunState
-import org.knora.webapi.slice.resources.service.ValueHasXmlBackfill.StopReason
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
@@ -90,43 +88,21 @@ class ValueHasXmlBackfillSpec extends ZIOSpecDefault {
     },
   )
 
-  private val reportSuite = suite("ValueHasXmlBackfillReport")(
-    test("zero is the identity") {
-      val r = ValueHasXmlBackfillReport(1, 2, 3, true)
-      assertTrue(r + ValueHasXmlBackfillReport.zero == r, ValueHasXmlBackfillReport.zero + r == r)
+  private val countsSuite = suite("ValueHasXmlBackfillCounts")(
+    test("zero is the identity of +") {
+      val c = ValueHasXmlBackfillCounts(1, 2, 3)
+      assertTrue(c + ValueHasXmlBackfillCounts.zero == c, ValueHasXmlBackfillCounts.zero + c == c)
     },
-    test("+ sums counts and ors stoppedEarly") {
-      val sum = ValueHasXmlBackfillReport(1, 2, 3, false) + ValueHasXmlBackfillReport(4, 5, 6, true)
-      assertTrue(sum == ValueHasXmlBackfillReport(5, 7, 9, true))
+    test("+ sums the counts") {
+      assertTrue(
+        ValueHasXmlBackfillCounts(1, 2, 3) + ValueHasXmlBackfillCounts(4, 5, 6) == ValueHasXmlBackfillCounts(5, 7, 9),
+      )
+    },
+    test("describe lists the counts") {
+      assertTrue(ValueHasXmlBackfillCounts(1, 2, 3).describe == "found=1 rendered=2 failed=3")
     },
   )
 
-  private val stopReasonSuite = {
-    def stop(state: RunState, max: Int = 5)      = ValueHasXmlBackfill.stopReason(state, max)
-    def withFailed(state: RunState, failed: Int) =
-      state.copy(report = ValueHasXmlBackfillReport(failed, 0, failed, false))
-    suite("stopReason")(
-      test("empty pending is NoCandidates") {
-        assertTrue(stop(RunState.of(Seq.empty)) == Some(StopReason.NoCandidates))
-      },
-      test("pending candidates and no failure is None") {
-        assertTrue(stop(RunState.of(Seq("a"))).isEmpty)
-      },
-      test("report.failed == maxFailures is MaxFailures") {
-        assertTrue(stop(withFailed(RunState.of(Seq("c")), 2), 2) == Some(StopReason.MaxFailures))
-      },
-      test("report.failed above maxFailures is MaxFailures") {
-        assertTrue(stop(withFailed(RunState.of(Seq("d")), 3), 2) == Some(StopReason.MaxFailures))
-      },
-      test("empty pending is NoCandidates even when maxFailures is reached") {
-        assertTrue(stop(withFailed(RunState.of(Seq.empty), 2), 2) == Some(StopReason.NoCandidates))
-      },
-      test("stoppedEarly is false only for NoCandidates") {
-        assertTrue(!StopReason.NoCandidates.stoppedEarly, StopReason.MaxFailures.stoppedEarly)
-      },
-    )
-  }
-
   override def spec: Spec[Any, Any] =
-    suite("ValueHasXmlBackfill")(groupByValueSuite, reportSuite, stopReasonSuite)
+    suite("ValueHasXmlBackfill")(groupByValueSuite, countsSuite)
 }

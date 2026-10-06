@@ -25,8 +25,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 | No project has this shortcode | `404` |
 | A backfill already runs on this API instance, for any project | `409` |
 
-The response does not wait for the run. There is no status endpoint: the progress and the result go to the log and to
-the trace.
+The response does not wait for the run. There is no status endpoint: the progress and the result go to the log.
 
 ### Safety
 
@@ -37,21 +36,12 @@ the trace.
 - An API instance runs one backfill at a time. Two instances can run at the same time without risk, because each
   INSERT is conditional.
 
-### Configuration
+### How a run works
 
-The run selects all candidate values of the project one time. Then it processes them in batches: for each batch, it
-loads the standoff, renders the XML and writes it. The next batch starts no earlier than one `batch-interval` after the
-start of the previous batch.
-
-| Key under `app.value-has-xml-backfill` | Environment variable | Default |
-| --- | --- | --- |
-| `batch-size`: values per batch | `KNORA_WEBAPI_VALUE_HAS_XML_BACKFILL_BATCH_SIZE` | `50` |
-| `batch-interval`: minimum gap between batch starts | `KNORA_WEBAPI_VALUE_HAS_XML_BACKFILL_BATCH_INTERVAL` | `1 second` |
-| `max-failures`: failed values at which the run stops | `KNORA_WEBAPI_VALUE_HAS_XML_BACKFILL_MAX_FAILURES` | `1000` |
-
-The candidate query scans the project data graph one time per run. The run keeps the candidate IRIs in memory, about
-100 bytes for each IRI. If the candidate query fails with a timeout, increase `app.triplestore.maintenance-timeout`
-(default `120 seconds`).
+The run selects all candidate values of the project one time and keeps their IRIs in memory, about 100 bytes for each
+IRI. Then it processes them in batches of 50: for each batch, it loads the standoff, renders the XML and writes it. The
+run pauses for one second between batches. If the candidate query fails with a timeout, increase
+`app.triplestore.maintenance-timeout` (default `120 seconds`).
 
 ### Log lines
 
@@ -60,48 +50,24 @@ Every line carries the annotation `shortcode`. The counts are cumulative: `found
 
 | Level | Line |
 | --- | --- |
-| `INFO` | `valueHasXml backfill started (batchSize=50, candidates=1234)`, after the candidate query |
-| `INFO` | `valueHasXml backfill progress: found=50 rendered=49 failed=1 stoppedEarly=false`, one per batch |
+| `INFO` | `valueHasXml backfill started (candidates=1234)`, after the candidate query |
+| `INFO` | `valueHasXml backfill progress: found=50 rendered=49 failed=1`, one per batch |
 | `WARN` | `valueHasXml backfill: <value IRI> failed: <error class or reason>`, one per failed value |
-| `INFO` | `valueHasXml backfill finished: found=… rendered=… failed=0 stoppedEarly=false stop=NoCandidates` |
+| `INFO` | `valueHasXml backfill finished: found=… rendered=… failed=0` |
 | `ERROR` | The same `finished` line when `failed > 0` |
-| `ERROR` | `valueHasXml backfill failed with <error class>: <partial counts>`, when a triplestore call fails |
-| `WARN` | `valueHasXml backfill interrupted: <partial counts>` |
-
-When the candidate query fails, the `failed with` line is the only line of the run.
+| `ERROR` | `valueHasXml backfill failed with <error class>`, when a triplestore call fails or the run is interrupted |
 
 The log lines never contain text, XML or error messages, because standoff and mapping errors can repeat user text.
 
 ### When a run ends
 
-- `stop=NoCandidates`, `failed=0`: the project is complete. A second run reports `found=0`.
-- `stop=NoCandidates`, `failed > 0`: every other value has its XML. Look at the `WARN` lines for the failed values. A
-  second run reports `found` equal to this `failed`.
-- `stop=MaxFailures` (`stoppedEarly=true`): too many values failed. Find the cause in the `WARN` lines, then run
-  again.
-- `failed with …`: a triplestore call failed, for example a timeout. Run again when the triplestore is healthy.
+- `finished` with `failed=0`: the project is complete. A second run reports `found=0`.
+- `finished` with `failed > 0`: every other value has its XML. Look at the `WARN` lines for the failed values. A second
+  run reports `found` equal to this `failed`.
+- `failed with …`: a triplestore call failed, for example a timeout. The last `progress` line shows the partial
+  counts. Run again when the triplestore is healthy.
 - `409`, or the API restarted during a run: wait until the running backfill ends, or start it again after the
-  restart. A restart stops a run without the `interrupted` line.
-
-### Trace
-
-The run is one span `value_has_xml_backfill`, with one child span `value_has_xml_backfill.select` for the candidate
-query. Its parent is the HTTP span of the `POST`, which ends before the run. The run span carries these attributes,
-all prefixed `value_has_xml_backfill.`:
-
-- `shortcode`, from the start of the run.
-- `found`, `rendered`, `failed` and `stopped_early`, on every end of the run. After a failure or an interruption, they
-  are the partial counts.
-- `stop_reason` (`NoCandidates` or `MaxFailures`), when the run ends normally.
-- `exit_reason=interrupted`, when the run is interrupted.
-
-Each batch is a separate trace: a root span `value_has_xml_backfill.batch` with a span link to the run span, and the
-stage spans `.load`, `.render` and `.write`. A batch span carries `shortcode`, and the `found`, `rendered` and
-`failed` counts of that batch when the batch completes. An interrupted batch span or stage span carries
-`exit_reason=interrupted`. Thus a trace does not grow with the size of the project.
-
-A run that ends with `failed > 0` keeps the span status `UNSET`. Find such runs with the `failed` attribute or with the
-`ERROR` `finished` line, not with the span status.
+  restart. A restart stops a run without a log line.
 
 ### Re-run after a renderer change
 

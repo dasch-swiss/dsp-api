@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.infrastructure
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import zio.*
@@ -14,8 +13,7 @@ import zio.telemetry.opentelemetry.tracing.StatusMapper
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 /**
- * Opens a span whose failure status can never carry the message of the failure that produced it: a child span
- * ([[withSpan]]) or the root of a new trace linked to other spans ([[withRootSpan]]).
+ * Opens a span whose failure status can never carry the message of the failure that produced it.
  *
  * This exists because the default behaviour leaks. zio-telemetry's failure handling does, in effect:
  *
@@ -75,70 +73,46 @@ object SanitizedSpan {
   def withSpan[R, A](tracing: Tracing, name: String, exitReasonKey: String)(
     f: Span => ZIO[R, Throwable, A],
   ): ZIO[R, Throwable, A] =
-    sanitized[R, A](tracing, name, exitReasonKey)(body =>
-      tracing.span[R, Throwable, Throwable, A, A](name, SpanKind.INTERNAL, statusMapper = unsetOnFailure)(body),
-    )(f)
-
-  /**
-   * Like [[withSpan]], but starts a new trace instead of a child span, whose span links point at `links`. For
-   * long-running jobs whose work must not accumulate in one trace: each unit of work gets its own trace, linked back to
-   * the span of the run that spawned it.
-   */
-  def withRootSpan[R, A](tracing: Tracing, name: String, exitReasonKey: String, links: Seq[SpanContext])(
-    f: Span => ZIO[R, Throwable, A],
-  ): ZIO[R, Throwable, A] =
-    sanitized[R, A](tracing, name, exitReasonKey)(body =>
-      tracing.root[R, Throwable, Throwable, A, A](
-        name,
-        SpanKind.INTERNAL,
-        statusMapper = unsetOnFailure,
-        links = links,
-      )(body),
-    )(f)
-
-  /** The sanitizing logic shared by [[withSpan]] and [[withRootSpan]]; `openSpan` is the only part that differs. */
-  private def sanitized[R, A](tracing: Tracing, name: String, exitReasonKey: String)(
-    openSpan: ZIO[R, Throwable, A] => ZIO[R, Throwable, A],
-  )(f: Span => ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
-    openSpan {
-      tracing.getCurrentSpanUnsafe.flatMap { span =>
-        f(span)
-          .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
-          .onExit {
-            case Exit.Failure(cause) if cause.isInterrupted =>
-              ZIO.succeed {
-                val _ = span.setAttribute(exitReasonKey, "interrupted")
-                val _ = span.setStatus(StatusCode.ERROR, "interrupted")
-              }
-            case _ => ZIO.unit
-          }
-          // Last inside the span, so the two writes above still see the defect as a defect and describe it as one.
-          // From here on it travels as a typed failure purely so `unsetOnFailure` applies to it; see the object
-          // documentation. The whole `Cause` is carried rather than just the `Throwable`, so that restoring it
-          // below reproduces the original failure exactly -- handing on the throwable alone replaced the ZIO fiber
-          // trace of the original die with the trace at this line, which is the one thing a defect is debugged by.
-          //
-          // The condition is "no typed failure *and* a defect", not a bare `cause.isDie`, which is tree-wide: on a
-          // composite `Cause.Then(Fail(e), Die(t))` the library's `cause.failureOption` already finds the `Fail`,
-          // so the mapper applies and there is nothing to carry. Both spellings end at `UNSET` there, so this is
-          // the invariant made explicit rather than a behaviour change: carry exactly the causes the mapper cannot
-          // see. A pure interrupt is excluded by the `isDie` half and keeps the library's own description, as
-          // above; a defect that an interrupt tore down alongside it is still carried, which is what keeps the
-          // defect's message off the span in that shape too.
-          .foldCauseZIO(
-            cause =>
-              if (cause.failureOption.isEmpty && cause.isDie) ZIO.fail(new SpanScopedDefect(cause))
-              else ZIO.refailCause(cause),
-            ZIO.succeed(_),
-          )
+    tracing
+      .span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
+        tracing.getCurrentSpanUnsafe.flatMap { span =>
+          f(span)
+            .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+            .onExit {
+              case Exit.Failure(cause) if cause.isInterrupted =>
+                ZIO.succeed {
+                  val _ = span.setAttribute(exitReasonKey, "interrupted")
+                  val _ = span.setStatus(StatusCode.ERROR, "interrupted")
+                }
+              case _ => ZIO.unit
+            }
+            // Last inside the span, so the two writes above still see the defect as a defect and describe it as one.
+            // From here on it travels as a typed failure purely so `unsetOnFailure` applies to it; see the object
+            // documentation. The whole `Cause` is carried rather than just the `Throwable`, so that restoring it
+            // below reproduces the original failure exactly -- handing on the throwable alone replaced the ZIO fiber
+            // trace of the original die with the trace at this line, which is the one thing a defect is debugged by.
+            //
+            // The condition is "no typed failure *and* a defect", not a bare `cause.isDie`, which is tree-wide: on a
+            // composite `Cause.Then(Fail(e), Die(t))` the library's `cause.failureOption` already finds the `Fail`,
+            // so the mapper applies and there is nothing to carry. Both spellings end at `UNSET` there, so this is
+            // the invariant made explicit rather than a behaviour change: carry exactly the causes the mapper cannot
+            // see. A pure interrupt is excluded by the `isDie` half and keeps the library's own description, as
+            // above; a defect that an interrupt tore down alongside it is still carried, which is what keeps the
+            // defect's message off the span in that shape too.
+            .foldCauseZIO(
+              cause =>
+                if (cause.failureOption.isEmpty && cause.isDie) ZIO.fail(new SpanScopedDefect(cause))
+                else ZIO.refailCause(cause),
+              ZIO.succeed(_),
+            )
+        }
       }
-    }
       // Outside the span, and therefore after the library's status setter and span-end have run: the original cause
       // is refailed, so nothing downstream can tell it was ever anything else.
       .catchSome { case carried: SpanScopedDefect => ZIO.refailCause(carried.cause) }
 
   /**
-   * Carries a defect across the span boundary as a typed failure. Never escapes [[sanitized]]: it exists only so
+   * Carries a defect across the span boundary as a typed failure. Never escapes [[withSpan]]: it exists only so
    * zio-telemetry's `cause.failureOption` lookup finds something, and is unwrapped back into the cause it came from
    * immediately after the span has ended.
    */

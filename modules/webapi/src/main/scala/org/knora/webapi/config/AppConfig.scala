@@ -33,7 +33,6 @@ final case class AppConfig(
   dspIngest: DspIngestConfig,
   features: Features,
   `export`: ExportConfig,
-  valueHasXmlBackfill: ValueHasXmlBackfillConfig,
   filePermissionCache: FilePermissionCacheConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
@@ -49,19 +48,6 @@ final case class AppConfig(
 final case class ExportConfig(
   batchSize: Int,
   parallelism: Int,
-)
-
-/**
- * Tuning knobs for the `valueHasXml` backfill.
- *
- * `batchSize` is the number of values processed per batch; `batchInterval` is the minimum gap between batch starts,
- * which bounds the request rate on the triplestore; `maxFailures` is the number of failed values at which a run stops
- * early. Validated at load: all three must be positive.
- */
-final case class ValueHasXmlBackfillConfig(
-  batchSize: Int,
-  batchInterval: Duration,
-  maxFailures: Int,
 )
 
 /**
@@ -302,11 +288,6 @@ object AppConfig {
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
     )
     .validate("app.file-permission-cache.capacity must be >= 1")(_.filePermissionCache.capacity >= 1)
-    .validate("app.value-has-xml-backfill.batch-size must be >= 1")(_.valueHasXmlBackfill.batchSize >= 1)
-    .validate("app.value-has-xml-backfill.batch-interval must be positive")(
-      _.valueHasXmlBackfill.batchInterval.compareTo(Duration.ZERO) > 0,
-    )
-    .validate("app.value-has-xml-backfill.max-failures must be >= 1")(_.valueHasXmlBackfill.maxFailures >= 1)
     // Whole seconds, not merely positive: the value is sent to the store as its per-request execution timeout in
     // seconds, so every use goes through `toSeconds`. A sub-second value is env-injectable
     // (KNORA_WEBAPI_SPARQL_PASSTHROUGH_TIMEOUT=500 millis) and would truncate to `timeout=0` on the wire -- silently

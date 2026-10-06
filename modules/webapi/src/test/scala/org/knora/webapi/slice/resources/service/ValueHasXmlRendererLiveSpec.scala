@@ -87,23 +87,18 @@ class ValueHasXmlRendererLiveSpec extends ZIOSpecDefault {
   override def spec: Spec[Any, Any] =
     suite("ValueHasXmlRendererLive")(
       test("render returns None for a value without standoff tags") {
-        renderer(Vector.empty).render(value(), mapping).map(xml => assertTrue(xml.isEmpty))
+        renderer(Vector.empty).render(value()).map(xml => assertTrue(xml.isEmpty))
       },
       test("render returns the XML of a value covered by the mapping") {
         val expected = StandoffTagUtilV2.convertStandoffTagV2ToXML(text, Vector(rootTag), mapping)
-        renderer(Vector(rootTag)).render(value(), mapping).map(xml => assertTrue(xml.contains(expected)))
+        renderer(Vector(rootTag)).render(value()).map(xml => assertTrue(xml.contains(expected)))
       },
       test("render returns None for an unformatted text value, which must not carry valueHasXml") {
         val unformatted = value().copy(textValueType = Some(OntologyConstants.KnoraBase.UnformattedText))
-        renderer(Vector(rootTag)).render(unformatted, mapping).map(xml => assertTrue(xml.isEmpty))
+        renderer(Vector(rootTag)).render(unformatted).map(xml => assertTrue(xml.isEmpty))
       },
-      test("loadMapping returns the mapping of the service") {
-        renderer(Vector.empty)
-          .loadMapping(OntologyConstants.KnoraBase.StandardMapping)
-          .map(loaded => assertTrue(loaded == mapping))
-      },
-      test("loadMapping fails with InconsistentRepositoryDataException for a malformed mapping IRI") {
-        renderer(Vector.empty).loadMapping("not-a-mapping-iri").exit.map { exit =>
+      test("render fails with InconsistentRepositoryDataException for a malformed mapping IRI") {
+        renderer(Vector(rootTag)).render(value("not-a-mapping-iri")).exit.map { exit =>
           assertTrue(
             exit.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[InconsistentRepositoryDataException]),
           )

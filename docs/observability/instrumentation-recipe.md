@@ -70,8 +70,8 @@ protected final def stageSpan[A](name: String)(effect: Task[A]): Task[A] =
   SearchResponderV2.stageSpan(tracing, name)(effect)
 ```
 
-The vertical's **root** span is opened with the same helper. Open the root, then open each stage inside
-it; FiberRef-carried context makes them children automatically.
+The **root** span is opened with the same helper — there is no separate root helper. Open the root,
+then open each stage inside it; FiberRef-carried context makes them children automatically.
 
 ## 3. Name the spans
 
@@ -255,14 +255,6 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
     to the **log** at ERROR with its raw message and stacktrace. Sanitizing the span does not sanitize
     that line.
 
-### Long-running jobs
-
-A job that processes many units of work, such as a maintenance backfill in batches, must not hold all of
-its spans in one trace. Open the run span with `withSpan`, then open each unit with
-`SanitizedSpan.withRootSpan(tracing, name, exitReasonKey, Seq(runSpan.getSpanContext))`. Each unit starts its
-own trace, with a span link to the run span, and has the same sanitizing guarantees as `withSpan`. The
-valueHasXml backfill (`ValueHasXmlBackfillService`) is the reference.
-
 ## Checklist for a new vertical
 
 - [ ] `tracing` is an abstract member of the trait; `Tracing` added to the module `Dependencies`.
@@ -272,7 +264,6 @@ valueHasXml backfill (`ValueHasXmlBackfillService`) is the reference.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
 - [ ] Raw payload captured as an **event** on the root span, before the first stage — never an attribute, never inside `stageSpan`; `db.query.text` for query text.
 - [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
-- [ ] Per-unit work of a long-running job: `SanitizedSpan.withRootSpan`, linked to the run span.
 - [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message), and one
       asserting a **defect** yields `"<stage>: defect"` — the two go through different mechanisms.
 - [ ] A test asserting the payload event carries the exact submitted text, on both the success and the parse-failure path.

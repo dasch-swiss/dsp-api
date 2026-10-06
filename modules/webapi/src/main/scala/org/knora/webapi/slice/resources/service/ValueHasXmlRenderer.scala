@@ -13,7 +13,6 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueType
 import org.knora.webapi.slice.common.StandoffMappingIri
@@ -21,20 +20,18 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 /**
- * Loads mappings and renders the canonical XML of stored text values for the `valueHasXml` backfill.
+ * Renders the canonical XML of stored text values for the `valueHasXml` backfill.
  *
  * A trait so the backfill service specs can stub the mapping and standoff stack.
  */
 trait ValueHasXmlRenderer {
-
-  def loadMapping(mappingIri: IRI): Task[MappingXMLtoStandoff]
 
   /**
    * Renders the XML of the value, or `None` if the value has no standoff or is unformatted text.
    * The other writer of `valueHasXml`, the value write path, renders through the same
    * `TextValueContentV2.computedValueHasXml`.
    */
-  def render(value: StoredTextValue, mapping: MappingXMLtoStandoff): Task[Option[String]]
+  def render(value: StoredTextValue): Task[Option[String]]
 }
 
 final case class ValueHasXmlRendererLive(
@@ -42,16 +39,12 @@ final case class ValueHasXmlRendererLive(
   standoffTagUtil: StandoffTagUtilV2,
 ) extends ValueHasXmlRenderer {
 
-  override def loadMapping(mappingIri: IRI): Task[MappingXMLtoStandoff] =
+  /** `StandoffMappingService` caches the mapping, so values that share it load it once. */
+  override def render(value: StoredTextValue): Task[Option[String]] =
     for {
-      iri      <- toMappingIri(mappingIri)
-      response <- mappingService.getMappingV2(iri)
-    } yield response.mapping
-
-  override def render(value: StoredTextValue, mapping: MappingXMLtoStandoff): Task[Option[String]] =
-    for {
-      iri  <- toMappingIri(value.mappingIri)
-      tags <- standoffTagUtil.createStandoffTagsV2FromSelectResults(
+      iri     <- toMappingIri(value.mappingIri)
+      mapping <- mappingService.getMappingV2(iri).map(_.mapping)
+      tags    <- standoffTagUtil.createStandoffTagsV2FromSelectResults(
                 value.standoffNodes,
                 KnoraSystemInstances.Users.SystemUser,
               )

@@ -43,8 +43,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `knora-api` image.
 - **Key entities**: `Main`, `LayersLive`, `DspApiServer`, `Db`, `State`, `AppState`, `AppConfig`,
     `AppConfig.AppConfigurations`, `KnoraApi`, `Sipi`, `Triplestore`, `JwtConfig`, `DspIngestConfig`,
-    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`,
-    `ValueHasXmlBackfillConfig`
+    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`
 - **Public interface**: `Main.run`; `LayersLive.bootstrap` / `LayersLive.remainingLayer`;
     `DspApiServer.layer` / `DspApiServer.startup`; `Db.init` / `Db.initWithTestData`; `State`
     (`getAppState` / `set`); `AppConfig.layer` and the individual config case classes that other slices
@@ -353,8 +352,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `TracingHttpClient`, `InfrastructureModule`
 - **Public interface**: `JwtService` (`createJwt`, `createJwtForDspIngest`, `parseToken`,
     `extractUserIriFromToken`); `InvalidTokenCache` (`put` / `contains`); `CacheManager` (`createCache`,
-    `clearAll`) and `EhCache[K,V]`; `Scope` / `ScopeValue`; `CsvService`; `SanitizedSpan.withSpan` (child span) and
-    `SanitizedSpan.withRootSpan` (new trace linked to a parent span, for long-running jobs);
+    `clearAll`) and `EhCache[K,V]`; `Scope` / `ScopeValue`; `CsvService`; the `SanitizedSpan` helpers;
     `TracingHttpClient.layer`; `MetricsServer.make` / `MetricsServerEnv`; `InfrastructureModule.layer` /
     `.Provided` / `.Dependencies`.
 - **Local-context kit**:
@@ -374,8 +372,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `AdminDomainModule`, `EntityCache`, `ViewRestrictionsRepo`), webapi-api (`CacheManager` in
     `AdminApiModule` and `StoreRestService`, `CsvService` in `MetadataServerEndpoints` /
     `MetadataRestService`), webapi-standoff (`CacheManager` in `StandoffMappingService`), webapi-export
-    (`CsvService`), webapi-search (`SanitizedSpan` in `SearchResponderV2`), webapi-resources
-    (`SanitizedSpan` in `ValueHasXmlBackfillService`), webapi-api (`SanitizedSpan` in
+    (`CsvService`), webapi-search (`SanitizedSpan` in `SearchResponderV2`), webapi-api (`SanitizedSpan` in
     `SparqlPassthroughRestService`), webapi-triplestore and
     webapi-sipi-client (`TracingHttpClient`), webapi-app (`SanitizedSpan`, `OtelSetup`, `MetricsServer`),
     testkit, test-it, test-e2e.
@@ -387,8 +384,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `InfrastructureModule.Provided`. They are layer factories, not shared singletons, so
         `InfrastructureModule` is not the complete public surface of this slice - enforcement: docs-only.
     - Span status and description sanitization for user-supplied-text code paths goes through `SanitizedSpan`
-        per `docs/observability/instrumentation-recipe.md`; the per-unit work of a long-running job uses
-        `withRootSpan` linked to the run span, so that no trace grows with the job - enforcement: review.
+        per `docs/observability/instrumentation-recipe.md` - enforcement: review.
     - No reach-ins observed: nothing outside `slice/infrastructure/**` imports an internal `*Live` or private
         constructor.
     - Wiring: shared inventory. New services are added to `InfrastructureModule.Provided` / `.layer`, which is
@@ -740,8 +736,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `responders/v2/ValuesResponderV2.scala` and `responders/v2/resources/CreateResourceV2Handler.scala`,
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
-    webapi-triplestore, webapi-sipi-client, webapi-infrastructure (`SanitizedSpan`), webapi-app
-    (`config.AppConfig` only), webapi-api (inverted and
+    webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
     cyclic), sparql-builder (34 files under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,

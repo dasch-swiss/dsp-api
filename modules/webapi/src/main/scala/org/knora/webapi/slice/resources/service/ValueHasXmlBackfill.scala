@@ -7,20 +7,17 @@ package org.knora.webapi.slice.resources.service
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 
-final case class ValueHasXmlBackfillReport(found: Int, rendered: Int, failed: Int, stoppedEarly: Boolean) {
-  def +(other: ValueHasXmlBackfillReport): ValueHasXmlBackfillReport =
-    ValueHasXmlBackfillReport(
-      found + other.found,
-      rendered + other.rendered,
-      failed + other.failed,
-      stoppedEarly || other.stoppedEarly,
-    )
+/** Cumulative counts of a backfill run: values processed, values written, values that could not be rendered. */
+final case class ValueHasXmlBackfillCounts(found: Int, rendered: Int, failed: Int) {
+  def +(other: ValueHasXmlBackfillCounts): ValueHasXmlBackfillCounts =
+    ValueHasXmlBackfillCounts(found + other.found, rendered + other.rendered, failed + other.failed)
+
+  def describe: String = s"found=$found rendered=$rendered failed=$failed"
 }
 
-object ValueHasXmlBackfillReport {
-  val zero: ValueHasXmlBackfillReport = ValueHasXmlBackfillReport(0, 0, 0, false)
+object ValueHasXmlBackfillCounts {
+  val zero: ValueHasXmlBackfillCounts = ValueHasXmlBackfillCounts(0, 0, 0)
 }
 
 /** One formatted text value with its standoff nodes as lexical maps (predicate IRI to object string). */
@@ -33,26 +30,6 @@ final case class StoredTextValue(
 )
 
 object ValueHasXmlBackfill {
-
-  /** `pending` is the candidate snapshot that no batch has taken yet. */
-  final case class RunState(
-    pending: Seq[IRI],
-    mappings: Map[IRI, MappingXMLtoStandoff],
-    report: ValueHasXmlBackfillReport,
-    stop: Option[StopReason],
-  ) {
-    def done: Boolean = stop.isDefined
-  }
-
-  object RunState {
-    def of(pending: Seq[IRI]): RunState = RunState(pending, Map.empty, ValueHasXmlBackfillReport.zero, None)
-  }
-
-  enum StopReason {
-    case NoCandidates, MaxFailures
-
-    def stoppedEarly: Boolean = this != NoCandidates
-  }
 
   def groupByValue(
     statements: Map[IRI, Seq[(IRI, String)]],
@@ -100,10 +77,4 @@ object ValueHasXmlBackfill {
 
   private def hasNegativeStartIndex(node: Map[IRI, String]): Boolean =
     node.get(KnoraBase.StandoffTagHasStartIndex).flatMap(_.toIntOption).exists(_ < 0)
-
-  /** Check order: NoCandidates, then MaxFailures. A run with no candidate left is complete. */
-  def stopReason(state: RunState, maxFailures: Int): Option[StopReason] =
-    if (state.pending.isEmpty) Some(StopReason.NoCandidates)
-    else if (state.report.failed >= maxFailures) Some(StopReason.MaxFailures)
-    else None
 }

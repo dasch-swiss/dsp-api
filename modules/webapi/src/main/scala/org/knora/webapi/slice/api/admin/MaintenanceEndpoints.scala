@@ -67,7 +67,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Start a background backfill of knora-base:valueHasXml for every formatted text value version in the " +
         "project that lacks it. Skip-only and safe to re-run. SystemAdmin only. One run per API instance: " +
-        "returns 409 while one is running. Progress is reported in logs and traces only.",
+        "returns 409 while one is running. Progress is reported in the logs only.",
     )
 }
 
