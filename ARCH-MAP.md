@@ -372,7 +372,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `AdminDomainModule`, `EntityCache`, `ViewRestrictionsRepo`), webapi-api (`CacheManager` in
     `AdminApiModule` and `StoreRestService`, `CsvService` in `MetadataServerEndpoints` /
     `MetadataRestService`), webapi-standoff (`CacheManager` in `StandoffMappingService`), webapi-export
-    (`CsvService`), webapi-search (`SanitizedSpan` in `SearchResponderV2`), webapi-triplestore and
+    (`CsvService`), webapi-search (`SanitizedSpan` in `SearchResponderV2`), webapi-api (`SanitizedSpan` in
+    `SparqlPassthroughRestService`), webapi-triplestore and
     webapi-sipi-client (`TracingHttpClient`), webapi-app (`SanitizedSpan`, `OtelSetup`, `MetricsServer`),
     testkit, test-it, test-e2e.
 - **Boundary rules**:
@@ -646,7 +647,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `docs/development/dsp-api-sparql-queries.md`.
 - **Depends on**: webapi-common, webapi-triplestore, webapi-admin, webapi-resources, webapi-standoff,
     webapi-sipi-client (`OntologyTransformer` only), webapi-app (`AppConfig`), webapi-api (inverted),
-    sparql-builder (12 files under `slice/ontology/repo`), build-toolchain.
+    sparql-builder (23 files under `slice/ontology/repo`), build-toolchain.
 - **Used by**: webapi-app, webapi-api, webapi-admin, webapi-search, webapi-resources, webapi-export,
     webapi-standoff, webapi-common, testkit, test-it, test-e2e.
 - **Boundary rules**:
@@ -716,7 +717,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ReadResourcesServiceLive`, `MetadataService`, `ResourceInfoRepo`, `ResourceInfoRepoLive`,
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
     `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
-    `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`
+    `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -735,7 +737,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
     webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
-    cyclic), sparql-builder (14 files under `slice/resources/repo`), build-toolchain.
+    cyclic), sparql-builder (34 files under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,
     test-e2e.
@@ -765,7 +767,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - Wiring: shared inventory. `ResourcesModule.layer` registers only `MetadataService`,
         `ResourceInfoRepoLive` and `ValueContentValidator`; `ResourcesRepoLive.layer`,
         `ReadResourcesServiceLive.layer`, `ResourceUtilV2.layer`, `ResourcesResponderV2.layer`,
-        `ValuesResponderV2.layer` and `CreateResourceV2Handler.layer` are listed individually in
+        `ValuesResponderV2.layer`, `CreateResourceV2Handler.layer`, `ValueHasXmlBackfillRepoLive.layer`,
+        `ValueHasXmlBackfillService.layer` and `ValueHasXmlRendererLive.layer` are listed individually in
         `core/LayersLive.scala`.
 - **Durable state**:
     - The project data named graph in Fuseki holding resource and value triples, multi-writer with no single
@@ -777,11 +780,14 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ListsResponder`, `StandoffResponderV2`, `ProjectDataImportService.uploadNQuads` (webapi-export),
         `TopLeftCorrectionAction` and `ReplaceUserIriInProjectAction` (webapi-admin) and the upgrade plugins
         under `store/triplestore/upgrade/plugins/**` (webapi-triplestore).
+    - `knora-base:valueHasXml` has two writers: the value and resource write paths (`InsertValueQueryBuilder`,
+        `CreateResourceV2Handler`) and the backfill INSERT (`ValueHasXmlBackfillQuery.insertXml`). Both render
+        through `TextValueContentV2.computedValueHasXml`.
     - The in-JVM per-IRI write lock `IriLocker.runWithIriLock`, owned by webapi-common, keyed on resource
         IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted at
         `ValuesResponderV2.scala:536`.
     - Golden SPARQL dumps under `modules/webapi/src/test/resources/org/knora/webapi/slice/resources/repo/**`
-        (52 files), single writer: the query specs that regenerate them.
+        (58 files), single writer: the query specs that regenerate them.
     - Read permissions are enforced late and in two places, `PermissionUtilADM.getUserPermissionADM` inside
         `ResourceUtilV2` and `ConstructResponseUtilV2` in webapi-common, while write paths compare
         permissions in `CreateResourceV2Handler` and `ValuesResponderV2`. There is no single chokepoint.
@@ -812,10 +818,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `CreateMappingResponseV2`, `GetMappingResponseV2`
 - **Public interface**: `StandoffMappingService` (`getMappingV2`, `getXSLTransformation`,
     `getStandoffEntitiesFromMappingV2`); `StandoffResponderV2.createMappingV2`; `StandoffTagUtilV2`
-    (`createStandoffTagsV2FromConstructResults`; `createStandoffTagsV2FromSelectResults` is
-    `private[standoff]`); `XMLToStandoffUtil`; `StandoffStringUtil` (`getResourceIrisFromStandoffLinkTags`,
-    `makeRandomStandoffTagIri`, `validateStandoffLinkResourceReference`); `XMLUtil.applyXSLTransformation`;
-    the message model in `StandoffMessagesV2.scala`; `XmlPatterns.nCNameRegex`.
+    (`createStandoffTagsV2FromConstructResults` for typed CONSTRUCT literals,
+    `createStandoffTagsV2FromSelectResults` for lexical node maps); `XMLToStandoffUtil`; `StandoffStringUtil`
+    (`getResourceIrisFromStandoffLinkTags`, `makeRandomStandoffTagIri`, `validateStandoffLinkResourceReference`);
+    `XMLUtil.applyXSLTransformation`; the message model in `StandoffMessagesV2.scala`; `XmlPatterns.nCNameRegex`.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/standoff/service/StandoffMappingService.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/responders/v2/StandoffResponderV2.scala`
@@ -841,8 +847,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         rather than resources owning a mapping-write API; the in-code comment records this as deliberate,
         because the alternative "would form a layer cycle through `ConstructResponseUtilV2`" - enforcement:
         docs-only.
-    - `StandoffTagUtilV2.createStandoffTagsV2FromSelectResults` is `private[standoff]`, forcing external
-        callers through `createStandoffTagsV2FromConstructResults` - enforcement: structure.
+    - Callers of `StandoffTagUtilV2.createStandoffTagsV2FromConstructResults` or
+        `createStandoffTagsV2FromSelectResults` pass all standoff nodes of one text value per call, never a
+        page of nodes or a batch of values: an internal reference resolves its target within that map -
+        enforcement: review.
     - Do not confuse this with `slice.ontology.repo.AddMappingQuery`, the v3 ontology external-IRI mapping:
         same word, unrelated durable state, owned by webapi-ontology - enforcement: docs-only.
     - HTTP entry points for standoff live in webapi-api; this component owns no routes - enforcement:
@@ -1349,9 +1357,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `docs/development/dsp-api-sparql-queries.md`
 - **Depends on**: build-toolchain. No other inventory component; zero main-source deps, with RDF4J's
     `sparqlbuilder` present only as a test-scope escaping oracle.
-- **Used by**: webapi-ontology (12 files under `slice/ontology/repo`) and webapi-resources (14 files under
-    `slice/resources/repo`). Those 26 files are every main-source importer of `org.knora.sparqlbuilder`
-    today; the other slices still build queries with RDF4J `SparqlBuilder`.
+- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (34 files under
+    `slice/resources/repo`), among 92 main-source importers of `org.knora.sparqlbuilder` in total;
+    other sites still build queries with RDF4J `SparqlBuilder`.
 - **Boundary rules**:
     - New SPARQL query code uses the `sparql"..."` interpolator, not string concatenation or the legacy RDF4J
         `SparqlBuilder`; existing RDF4J sites are grandfathered until migrated - enforcement: review

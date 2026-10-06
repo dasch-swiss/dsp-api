@@ -1,0 +1,23 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT {
+  ?v knora-base:valueHasString ?str .
+  ?v knora-base:valueHasMapping ?m .
+  ?v knora-base:hasTextValueType ?t .
+  ?v knora-base:valueHasStandoff ?n .
+  ?n ?p ?o .
+}
+WHERE {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    VALUES ?v { <http://rdfh.ch/0001/res1/values/v1> }
+    ?v knora-base:valueHasString ?str ;
+       knora-base:valueHasMapping ?m .
+    OPTIONAL { ?v knora-base:hasTextValueType ?t }
+    OPTIONAL {
+      ?v knora-base:valueHasStandoff ?n .
+      ?n knora-base:standoffTagHasStartIndex ?startIndex .
+      FILTER(?startIndex >= 0)
+      ?n ?p ?o .
+    }
+  }
+}

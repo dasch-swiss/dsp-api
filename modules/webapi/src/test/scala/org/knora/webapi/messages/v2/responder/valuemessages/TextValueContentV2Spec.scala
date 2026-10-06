@@ -55,11 +55,12 @@ class TextValueContentV2Spec extends ZIOSpecDefault {
   private def textValue(
     standoff: Seq[StandoffTagV2] = testStandoff,
     mapping: Option[MappingXMLtoStandoff] = Some(testMapping),
+    textValueType: TextValueType = TextValueType.FormattedText,
   ): TextValueContentV2 =
     TextValueContentV2(
       ontologySchema = ApiV2Complex,
       maybeValueHasString = Some(testText),
-      textValueType = TextValueType.FormattedText,
+      textValueType = textValueType,
       standoff = standoff,
       mapping = mapping,
     )
@@ -72,6 +73,9 @@ class TextValueContentV2Spec extends ZIOSpecDefault {
       },
       test("returns None for a value with standoff but no mapping") {
         assertTrue(textValue(mapping = None).computedValueHasXml == None)
+      },
+      test("returns None for an unformatted text value even when it carries standoff and a mapping") {
+        assertTrue(textValue(textValueType = TextValueType.UnformattedText).computedValueHasXml == None)
       },
       test("returns None for a value with empty standoff") {
         assertTrue(textValue(standoff = Vector.empty).computedValueHasXml == None)

@@ -38,6 +38,7 @@ trait StandoffTagUtilV2 {
 
   /**
    * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
+   * Use [[createStandoffTagsV2FromSelectResults]] for nodes held as lexical strings.
    *
    * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
    * @return a sequence of [[StandoffTagV2]] objects.
@@ -49,11 +50,15 @@ trait StandoffTagUtilV2 {
 
   /**
    * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL SELECT query.
+   * Use [[createStandoffTagsV2FromConstructResults]] for nodes held as typed literals.
+   *
+   * The map must hold every standoff node of one text value: an internal reference resolves its target
+   * node within this map.
    *
    * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
    * @return a sequence of [[StandoffTagV2]] objects.
    */
-  private[standoff] def createStandoffTagsV2FromSelectResults(
+  def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
     requestingUser: User,
   ): Task[Vector[StandoffTagV2]]

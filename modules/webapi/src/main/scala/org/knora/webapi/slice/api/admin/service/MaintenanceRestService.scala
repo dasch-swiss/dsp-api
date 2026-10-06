@@ -15,22 +15,28 @@ import zio.json.ast.Json
 import dsp.errors.BadRequestException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.backfillValueHasXmlAction
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 
 final case class MaintenanceRestService(
   private val securityService: AuthorizationRestService,
   private val maintenanceService: MaintenanceService,
+  private val projectService: KnoraProjectService,
+  private val valueHasXmlBackfillService: ValueHasXmlBackfillService,
 ) {
 
   def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
-        case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)
-        case _                  => ZIO.fail(BadRequestException(s"Unknown action $action"))
+        case `fixTopLeftAction`          => executeTopLeftAction(jsonMaybe)
+        case `backfillValueHasXmlAction` => backfillValueHasXml
+        case _                           => ZIO.fail(BadRequestException(s"Unknown action $action"))
       }
     }
 
@@ -79,12 +85,16 @@ final case class MaintenanceRestService(
       // valid use case. A built-in newIri is rejected downstream by the membership check.
       _ <- maintenanceService.replaceUserIriInProject(shortcode, req.oldIri, req.newIri, user)
     } yield ()
+
+  private def backfillValueHasXml: Task[Unit] =
+    projectService.findAll().flatMap(valueHasXmlBackfillService.start)
 }
 
 object MaintenanceRestService {
   val layer = ZLayer.derive[MaintenanceRestService]
 
-  val fixTopLeftAction = "fix-top-left"
+  val fixTopLeftAction          = "fix-top-left"
+  val backfillValueHasXmlAction = "backfill-value-has-xml"
 
-  val allActions: List[String] = List(fixTopLeftAction)
+  val allActions: List[String] = List(fixTopLeftAction, backfillValueHasXmlAction)
 }

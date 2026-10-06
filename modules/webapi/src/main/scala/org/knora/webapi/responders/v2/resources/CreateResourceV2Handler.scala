@@ -887,6 +887,7 @@ object CreateResourceV2Handler {
                              }
                              .someOrFail(StandoffInternalException("Text type does not match mapping information"))
       // Rendering can throw NotFoundException, which must surface as a 500 (StandoffInternalException), not a 404.
+      // The valueHasXml backfill (`ValueHasXmlBackfillQuery.insertXml`) is the other writer and renders the same way.
       valueHasXml <- ZIO
                        .attempt(tv.computedValueHasXml)
                        .mapError(e => StandoffInternalException("Failed to render canonical XML for text value", e))
