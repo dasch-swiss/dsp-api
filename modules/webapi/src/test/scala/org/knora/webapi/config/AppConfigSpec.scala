@@ -7,6 +7,7 @@ package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
 import org.junit.runner.RunWith
+import zio.Exit
 import zio.ZIO
 import zio.config.*
 import zio.config.typesafe.TypesafeConfigProvider
@@ -81,18 +82,27 @@ class AppConfigSpec extends ZIOSpecDefault {
       ).orDie
         .map(c => assertTrue(c.dspApp.url == "https://app.dasch.swiss", c.dspApp.internalUrl == "http://app"))
     },
-    test("reject a dsp-app url with a trailing slash") {
-      loadAppConfigWith("app.dsp-app.url = \"https://app.dasch.swiss/\"").exit.map(e => assertTrue(e.isFailure))
+    test("accept a dsp-app url with a port, an IPv6 host, an uppercase scheme or an underscore host") {
+      for {
+        a <- loadAppConfigWith(
+               "app.dsp-app.url = \"http://host:8080\"\napp.dsp-app.internal-url = \"http://DSP_svc_app\"",
+             ).orDie
+        b <- loadAppConfigWith("app.dsp-app.url = \"http://[::1]:8080\"").orDie
+        c <- loadAppConfigWith("app.dsp-app.url = \"HTTP://app\"").orDie
+      } yield assertTrue(
+        a.dspApp.url == "http://host:8080",
+        a.dspApp.internalUrl == "http://DSP_svc_app",
+        b.dspApp.url == "http://[::1]:8080",
+        c.dspApp.url == "HTTP://app",
+      )
     },
-    test("reject a dsp-app url with a path") {
-      loadAppConfigWith("app.dsp-app.url = \"https://app.dasch.swiss/x\"").exit.map(e => assertTrue(e.isFailure))
-    },
-    test("reject a relative dsp-app url") {
-      loadAppConfigWith("app.dsp-app.url = \"app.dasch.swiss\"").exit.map(e => assertTrue(e.isFailure))
-    },
-    test("reject a relative dsp-app internal-url") {
-      loadAppConfigWith("app.dsp-app.internal-url = \"app\"").exit.map(e => assertTrue(e.isFailure))
-    },
+    rejected("a dsp-app url with a trailing slash", "app.dsp-app.url", "https://app.dasch.swiss/"),
+    rejected("a dsp-app url with a path", "app.dsp-app.url", "https://app.dasch.swiss/x"),
+    rejected("a dsp-app url with a query", "app.dsp-app.url", "https://app.dasch.swiss?x=1"),
+    rejected("a dsp-app url with userinfo", "app.dsp-app.url", "https://user@app.dasch.swiss"),
+    rejected("a relative dsp-app url", "app.dsp-app.url", "app.dasch.swiss"),
+    rejected("a relative dsp-app internal-url", "app.dsp-app.internal-url", "app"),
+    rejected("a dsp-app internal-url with a trailing slash", "app.dsp-app.internal-url", "http://app/"),
     test("reject a dsp-app shell-cache-ttl that is not positive") {
       loadAppConfigWith("app.dsp-app.shell-cache-ttl = 0 seconds").exit.map(e => assertTrue(e.isFailure))
     },
@@ -160,6 +170,14 @@ class AppConfigSpec extends ZIOSpecDefault {
         .map(exit => assertTrue(exit.isFailure))
     },
   )
+
+  private def rejected(what: String, key: String, value: String) =
+    test(s"reject $what") {
+      loadAppConfigWith(s"$key = \"$value\"").exit.map {
+        case Exit.Failure(cause) => assertTrue(cause.prettyPrint.contains(key))
+        case _                   => assertTrue(false)
+      }
+    }
 
   // Loads the full application.conf, overriding the given HOCON keys, so a validation failure isolates to the override.
   private def loadAppConfigWith(overrides: String) =

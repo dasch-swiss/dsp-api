@@ -293,12 +293,8 @@ object AppConfig {
     .validate("app.triplestore.view-restrictions-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
       c.triplestore.viewRestrictionsTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
     )
-    .validate("app.dsp-app.url must be empty or an absolute http(s) origin without path, query or trailing slash")(c =>
-      isEmptyOrOrigin(c.dspApp.url),
-    )
-    .validate(
-      "app.dsp-app.internal-url must be empty or an absolute http(s) origin without path, query or trailing slash",
-    )(c => isEmptyOrOrigin(c.dspApp.internalUrl))
+    .validate(originMessage("app.dsp-app.url"))(c => isEmptyOrOrigin(c.dspApp.url))
+    .validate(originMessage("app.dsp-app.internal-url"))(c => isEmptyOrOrigin(c.dspApp.internalUrl))
     .validate("app.dsp-app.shell-cache-ttl must be positive")(_.dspApp.shellCacheTtl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(
@@ -339,10 +335,14 @@ object AppConfig {
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,
     )
 
+  private def originMessage(key: String): String =
+    s"$key must be empty or an absolute http(s) origin without path, query or trailing slash"
+
   private def isEmptyOrOrigin(value: String): Boolean =
     value.isEmpty || Try(new URI(value)).toOption.exists { uri =>
-      Option(uri.getScheme).exists(sc => sc == "http" || sc == "https") &&
-      Option(uri.getHost).exists(_.nonEmpty) &&
+      // getHost is null for hostnames with underscores (Docker Swarm service names), so fall back to the authority.
+      Option(uri.getScheme).exists(sc => sc.equalsIgnoreCase("http") || sc.equalsIgnoreCase("https")) &&
+      Option(uri.getHost).orElse(Option(uri.getAuthority)).exists(_.nonEmpty) &&
       uri.getRawPath.isEmpty && uri.getRawQuery == null && uri.getRawFragment == null && uri.getRawUserInfo == null
     }
 
