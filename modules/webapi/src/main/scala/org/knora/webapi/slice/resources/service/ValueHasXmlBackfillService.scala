@@ -13,7 +13,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 
 /**
- * Backfills `knora-base:valueHasXml` on the existing formatted text values of one project, in paced batches.
+ * Backfills `knora-base:valueHasXml` on the existing formatted text values of a list of projects, one project at a
+ * time, in paced batches.
  *
  * Log lines are documented for operators in `docs/03-endpoints/api-admin/maintenance.md`; keep it in sync.
  */
@@ -25,13 +26,25 @@ final class ValueHasXmlBackfillService private[service] (
   batchInterval: Duration,
 ) {
 
-  /** Starts a run in the background; fails if a run is already active on this instance. */
-  def start(project: KnoraProject): IO[ConflictException, Unit] =
+  /** Starts a run over the projects in the background; fails if a run is already active on this instance. */
+  def start(projects: Seq[KnoraProject]): IO[ConflictException, Unit] =
     running.getAndSet(true).flatMap { busy =>
       if (busy) ZIO.fail(ConflictException("A valueHasXml backfill is already running on this instance"))
-      // `run` logs its own failure, so the cause is dropped here.
-      else run(project).catchAllCause(_ => ZIO.unit).ensuring(running.set(false)).forkDaemon.unit
+      else runAll(projects).ensuring(running.set(false)).forkDaemon.unit
     }
+
+  /** Runs the backfill of each project in sequence; a project whose run fails does not stop the next one. */
+  def runAll(projects: Seq[KnoraProject]): UIO[ValueHasXmlBackfillSummary] =
+    for {
+      summary <- ZIO.foldLeft(projects)(ValueHasXmlBackfillSummary.zero) { (total, project) =>
+                   // `run` logs its own failure, so the error is dropped here. An interruption is not caught.
+                   run(project)
+                     .fold(_ => ValueHasXmlBackfillSummary.failed, ValueHasXmlBackfillSummary.succeeded)
+                     .map(total + _)
+                 }
+      line = s"valueHasXml backfill of all projects finished: ${summary.describe}"
+      _   <- if (summary.hasFailures) ZIO.logError(line) else ZIO.logInfo(line)
+    } yield summary
 
   /** Runs the backfill of the project to completion and returns its counts. */
   def run(project: KnoraProject): Task[ValueHasXmlBackfillCounts] =

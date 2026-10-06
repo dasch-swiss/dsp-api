@@ -20,6 +20,7 @@ import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepoInMe
 class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
 
   private val project: KnoraProject = TestDataFactory.someProject
+  private val other: KnoraProject   = project.copy(shortcode = KnoraProject.Shortcode.unsafeFrom("0002"))
 
   private final class StubRenderer(failing: Set[IRI], returningNone: Set[IRI]) extends ValueHasXmlRenderer {
     override def render(value: StoredTextValue): Task[Option[String]] =
@@ -138,22 +139,58 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
     },
   )
 
+  private val runAllSuite = suite("runAll")(
+    test("runs every project in sequence and sums the counts") {
+      for {
+        f       <- fixture(values(3))
+        summary <- f.service.runAll(Seq(project, other))
+        calls   <- f.repo.calls.get
+      } yield assertTrue(
+        summary == ValueHasXmlBackfillSummary(2, 0, ValueHasXmlBackfillCounts(3, 3, 0)),
+        calls.count(_ == "select") == 2,
+      )
+    },
+    test("a failed project does not stop the next project") {
+      for {
+        f       <- fixture(values(3), failSelectOn = Some(1))
+        summary <- f.service.runAll(Seq(project, other))
+      } yield assertTrue(summary == ValueHasXmlBackfillSummary(2, 1, ValueHasXmlBackfillCounts(3, 3, 0)))
+    },
+    test("the summary line is ERROR when a project failed") {
+      for {
+        f     <- fixture(values(1), failSelectOn = Some(1))
+        _     <- f.service.runAll(Seq(project, other))
+        lines <- ZTestLogger.logOutput.map(_.filter(_.message().contains("of all projects finished")))
+      } yield assertTrue(
+        lines.map(_.logLevel) == Chunk(LogLevel.Error),
+        lines.head.message().contains("projects=2 projectsFailed=1 found=1 rendered=1 failed=0"),
+      )
+    },
+    test("the summary line is INFO when every project succeeded") {
+      for {
+        f     <- fixture(values(1))
+        _     <- f.service.runAll(Seq(project, other))
+        lines <- ZTestLogger.logOutput.map(_.filter(_.message().contains("of all projects finished")))
+      } yield assertTrue(lines.map(_.logLevel) == Chunk(LogLevel.Info))
+    },
+  ) @@ TestAspect.withLiveClock
+
   private val startSuite = suite("start")(
     test("a second start conflicts while one runs and succeeds after it ended") {
       for {
         gate   <- Promise.make[Nothing, Unit]
         f      <- fixture(values(2), gate = Some(gate))
-        _      <- f.service.start(project)
-        second <- f.service.start(project).either
+        _      <- f.service.start(Seq(project))
+        second <- f.service.start(Seq(project)).either
         _      <- gate.succeed(())
         _      <- awaitReleased(f.service)
-        third  <- f.service.start(project).either
+        third  <- f.service.start(Seq(project)).either
       } yield assertTrue(second.left.exists(_.isInstanceOf[ConflictException]), third.isRight)
     },
     test("the guard is released after a failed run") {
       for {
         f    <- fixture(values(2), failSelectOn = Some(1))
-        _    <- f.service.start(project)
+        _    <- f.service.start(Seq(project))
         _    <- awaitReleased(f.service)
         held <- f.service.running.get
       } yield assertTrue(!held)
@@ -161,5 +198,5 @@ class ValueHasXmlBackfillServiceSpec extends ZIOSpecDefault {
   ) @@ TestAspect.withLiveClock @@ TestAspect.timeout(30.seconds)
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("ValueHasXmlBackfillService")(runSuite, startSuite)
+    suite("ValueHasXmlBackfillService")(runSuite, runAllSuite, startSuite)
 }

@@ -35,14 +35,13 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
 /**
- * End-to-end proof of `POST /admin/maintenance/projects/{shortcode}/backfill-value-has-xml`.
+ * End-to-end proof of `POST /admin/maintenance/backfill-value-has-xml`.
  *
  * The spec removes every `valueHasXml` of project 0001 and the backfill restores it.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
 
-  private val shortcode    = "0001"
   private val projectIri   = "http://rdfh.ch/projects/0001"
   private val dataGraph    = "http://www.knora.org/data/0001/anything"
   private val anythingOnto = "http://0.0.0.0:3333/ontology/0001/anything/v2#"
@@ -54,7 +53,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
 
   private val pollSchedule = Schedule.spaced(500.millis) && Schedule.recurs(120)
 
-  private def backfillUri(code: String) = uri"/admin/maintenance/projects/$code/backfill-value-has-xml"
+  private val backfillUri = uri"/admin/maintenance/backfill-value-has-xml"
 
   private val plainXml =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -239,8 +238,8 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       _.results.bindings.map(row => (row.getRequired("s"), row.getRequired("p"), row.getRequired("o"))).toSet,
     )
 
-  private def postBackfill(code: String, user: User = rootUser): RIO[TestApiClient, StatusCode] =
-    TestApiClient.postJson[Json](backfillUri(code), user).map(_.code)
+  private def postBackfill(user: User = rootUser): RIO[TestApiClient, StatusCode] =
+    TestApiClient.postJson[Json](backfillUri, user).map(_.code)
 
   private final case class StillRunning() extends RuntimeException("a backfill is still running")
 
@@ -249,7 +248,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
    * only selects and ends, and it changes no triple.
    */
   private val awaitBackfillIdle: RIO[TestApiClient, Unit] =
-    postBackfill(shortcode).flatMap {
+    postBackfill().flatMap {
       case StatusCode.Accepted => ZIO.unit
       case StatusCode.Conflict => ZIO.fail(StillRunning())
       case other               => ZIO.die(new IllegalStateException(s"unexpected status $other"))
@@ -342,12 +341,9 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       ),
     )
 
-  override val e2eSpec: Spec[env, Any] = suite("POST /admin/maintenance/projects/{shortcode}/backfill-value-has-xml")(
+  override val e2eSpec: Spec[env, Any] = suite("POST /admin/maintenance/backfill-value-has-xml")(
     test("returns 403 when the authenticated user is not a SystemAdmin") {
-      postBackfill(shortcode, normalUser).map(code => assertTrue(code == StatusCode.Forbidden))
-    },
-    test("returns 404 when the project shortcode is unknown") {
-      postBackfill("9999").map(code => assertTrue(code == StatusCode.NotFound))
+      postBackfill(normalUser).map(code => assertTrue(code == StatusCode.Forbidden))
     },
     test("set up formatted values of every kind and remove all stored XML of the project") {
       for {
@@ -396,7 +392,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     },
     test("starts the backfill with 202 and gives every candidate its XML") {
       for {
-        code <- postBackfill(shortcode)
+        code <- postBackfill()
         _    <- awaitNoCandidate()
         _    <- awaitBackfillIdle
       } yield assertTrue(code == StatusCode.Accepted)
@@ -462,7 +458,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       for {
         _      <- removeStoredXml(f.customValue)
         _      <- awaitBackfillIdle
-        second <- postBackfill(shortcode)
+        second <- postBackfill()
         _      <- awaitNoCandidate()
         _      <- awaitBackfillIdle
         stored <- storedXml(f.customValue)

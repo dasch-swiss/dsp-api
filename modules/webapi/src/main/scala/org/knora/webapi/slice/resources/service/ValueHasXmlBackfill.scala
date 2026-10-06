@@ -20,6 +20,25 @@ object ValueHasXmlBackfillCounts {
   val zero: ValueHasXmlBackfillCounts = ValueHasXmlBackfillCounts(0, 0, 0)
 }
 
+/** Totals of a run over several projects: projects processed, projects whose run failed, summed value counts. */
+final case class ValueHasXmlBackfillSummary(projects: Int, projectsFailed: Int, counts: ValueHasXmlBackfillCounts) {
+  def +(other: ValueHasXmlBackfillSummary): ValueHasXmlBackfillSummary =
+    ValueHasXmlBackfillSummary(projects + other.projects, projectsFailed + other.projectsFailed, counts + other.counts)
+
+  def hasFailures: Boolean = projectsFailed > 0 || counts.failed > 0
+
+  def describe: String = s"projects=$projects projectsFailed=$projectsFailed ${counts.describe}"
+}
+
+object ValueHasXmlBackfillSummary {
+  val zero: ValueHasXmlBackfillSummary = ValueHasXmlBackfillSummary(0, 0, ValueHasXmlBackfillCounts.zero)
+
+  def succeeded(counts: ValueHasXmlBackfillCounts): ValueHasXmlBackfillSummary =
+    ValueHasXmlBackfillSummary(1, 0, counts)
+
+  val failed: ValueHasXmlBackfillSummary = ValueHasXmlBackfillSummary(1, 1, ValueHasXmlBackfillCounts.zero)
+}
+
 /** One formatted text value with its standoff nodes as lexical maps (predicate IRI to object string). */
 final case class StoredTextValue(
   valueIri: IRI,

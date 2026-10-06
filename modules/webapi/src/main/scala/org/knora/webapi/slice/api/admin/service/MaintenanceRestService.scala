@@ -13,13 +13,13 @@ import zio.json.JsonDecoder
 import zio.json.ast.Json
 
 import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.backfillValueHasXmlAction
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
@@ -34,8 +34,9 @@ final case class MaintenanceRestService(
   def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
     securityService.ensureSystemAdmin(user) *> {
       action match {
-        case `fixTopLeftAction` => executeTopLeftAction(jsonMaybe)
-        case _                  => ZIO.fail(BadRequestException(s"Unknown action $action"))
+        case `fixTopLeftAction`          => executeTopLeftAction(jsonMaybe)
+        case `backfillValueHasXmlAction` => backfillValueHasXml
+        case _                           => ZIO.fail(BadRequestException(s"Unknown action $action"))
       }
     }
 
@@ -85,20 +86,15 @@ final case class MaintenanceRestService(
       _ <- maintenanceService.replaceUserIriInProject(shortcode, req.oldIri, req.newIri, user)
     } yield ()
 
-  def backfillValueHasXml(user: User)(shortcode: Shortcode): Task[Unit] =
-    for {
-      _       <- securityService.ensureSystemAdmin(user)
-      project <- projectService
-                   .findByShortcode(shortcode)
-                   .someOrFail(NotFoundException(s"Project with shortcode ${shortcode.value} not found"))
-      _ <- valueHasXmlBackfillService.start(project)
-    } yield ()
+  private def backfillValueHasXml: Task[Unit] =
+    projectService.findAll().flatMap(valueHasXmlBackfillService.start)
 }
 
 object MaintenanceRestService {
   val layer = ZLayer.derive[MaintenanceRestService]
 
-  val fixTopLeftAction = "fix-top-left"
+  val fixTopLeftAction          = "fix-top-left"
+  val backfillValueHasXmlAction = "backfill-value-has-xml"
 
-  val allActions: List[String] = List(fixTopLeftAction)
+  val allActions: List[String] = List(fixTopLeftAction, backfillValueHasXmlAction)
 }
