@@ -23,6 +23,9 @@ A number of core settings is additionally configurable through system environmen
 | app.dsp-ingest.audience                                   | KNORA_WEBAPI_DSP_INGEST_AUDIENCE                       | <http://localhost:3340>                           |
 | app.dsp-ingest.base-url                                   | KNORA_WEBAPI_DSP_INGEST_BASE_URL                       | <http://localhost:3340>                           |
 | app.dsp-ingest.external-base-url                          | KNORA_WEBAPI_DSP_INGEST_EXTERNAL_BASE_URL              | falls back to base-url                            |
+| app.dsp-app.url                                           | KNORA_WEBAPI_DSP_APP_URL                               | empty: FAIR resource metadata is off              |
+| app.dsp-app.internal-url                                  | KNORA_WEBAPI_DSP_APP_INTERNAL_URL                      | empty                                             |
+| app.dsp-app.shell-cache-ttl                               | KNORA_WEBAPI_DSP_APP_SHELL_CACHE_TTL                   | 60 seconds                                        |
 | app.allow-reload-over-http                                | KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP                    | false                                             |
 | app.allow-sparql-passthrough                              | KNORA_WEBAPI_ALLOW_SPARQL_PASSTHROUGH                  | false                                             |
 | app.triplestore.sparql-passthrough.timeout                | KNORA_WEBAPI_SPARQL_PASSTHROUGH_TIMEOUT                | 120 seconds                                       |
