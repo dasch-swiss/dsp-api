@@ -70,6 +70,32 @@ class AppConfigSpec extends ZIOSpecDefault {
       loadAppConfigWith("app.file-permission-cache.capacity = 0").exit
         .map(exit => assertTrue(exit.isFailure))
     },
+    test("dsp-app defaults to an empty url and internal-url and a 60 second shell cache ttl") {
+      loadAppConfigWith("").orDie.map(c =>
+        assertTrue(c.dspApp.url.isEmpty, c.dspApp.internalUrl.isEmpty, c.dspApp.shellCacheTtl == Duration.ofSeconds(60)),
+      )
+    },
+    test("accept a valid dsp-app url and internal-url") {
+      loadAppConfigWith(
+        "app.dsp-app.url = \"https://app.dasch.swiss\"\napp.dsp-app.internal-url = \"http://app\"",
+      ).orDie
+        .map(c => assertTrue(c.dspApp.url == "https://app.dasch.swiss", c.dspApp.internalUrl == "http://app"))
+    },
+    test("reject a dsp-app url with a trailing slash") {
+      loadAppConfigWith("app.dsp-app.url = \"https://app.dasch.swiss/\"").exit.map(e => assertTrue(e.isFailure))
+    },
+    test("reject a dsp-app url with a path") {
+      loadAppConfigWith("app.dsp-app.url = \"https://app.dasch.swiss/x\"").exit.map(e => assertTrue(e.isFailure))
+    },
+    test("reject a relative dsp-app url") {
+      loadAppConfigWith("app.dsp-app.url = \"app.dasch.swiss\"").exit.map(e => assertTrue(e.isFailure))
+    },
+    test("reject a relative dsp-app internal-url") {
+      loadAppConfigWith("app.dsp-app.internal-url = \"app\"").exit.map(e => assertTrue(e.isFailure))
+    },
+    test("reject a dsp-app shell-cache-ttl that is not positive") {
+      loadAppConfigWith("app.dsp-app.shell-cache-ttl = 0 seconds").exit.map(e => assertTrue(e.isFailure))
+    },
     test("the sparql passthrough flag is off in the built-in configuration (fail-closed)") {
       // REQ-3.2: a deployment that omits the env override must leave the route absent.
       loadAppConfigWith("").orDie.map(config => assertTrue(!config.allowSparqlPassthrough))

@@ -11,7 +11,9 @@ import zio.config.*
 import zio.config.magnolia.*
 import zio.config.typesafe.*
 
+import java.net.URI
 import java.time.Duration
+import scala.util.Try
 
 /**
  * Represents the configuration as defined in application.conf.
@@ -31,6 +33,7 @@ final case class AppConfig(
   instrumentationServerConfig: InstrumentationServerConfig,
   jwt: JwtConfig,
   dspIngest: DspIngestConfig,
+  dspApp: DspAppConfig,
   features: Features,
   `export`: ExportConfig,
   filePermissionCache: FilePermissionCacheConfig,
@@ -79,6 +82,13 @@ final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[
  *                        same directory dsp-ingest is configured with (`STORAGE_ASSET_DIR`).
  */
 final case class DspIngestConfig(baseUrl: String, externalBaseUrl: String, audience: String, assetDir: String)
+
+/**
+ * @param url           dsp-app's public origin (e.g. `https://app.dasch.swiss`); empty disables FAIR resource metadata.
+ * @param internalUrl   dsp-app as reached from dsp-api's network (e.g. `http://app`).
+ * @param shellCacheTtl how long the fetched dsp-app HTML shell is cached.
+ */
+final case class DspAppConfig(url: String, internalUrl: String, shellCacheTtl: Duration)
 
 final case class KnoraApi(
   internalHost: String,
@@ -256,8 +266,8 @@ final case class Features(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
-    GraphRoute & Resources & JwtConfig
+  type AppConfigurations = AppConfig & DspIngestConfig & DspAppConfig & InstrumentationServerConfig & KnoraApi & Sipi &
+    Triplestore & GraphRoute & Resources & JwtConfig
 
   val config: Config[AppConfig] = deriveConfig[AppConfig]
     .mapKey(toKebabCase)
@@ -283,6 +293,13 @@ object AppConfig {
     .validate("app.triplestore.view-restrictions-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
       c.triplestore.viewRestrictionsTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
     )
+    .validate("app.dsp-app.url must be empty or an absolute http(s) origin without path, query or trailing slash")(c =>
+      isEmptyOrOrigin(c.dspApp.url),
+    )
+    .validate(
+      "app.dsp-app.internal-url must be empty or an absolute http(s) origin without path, query or trailing slash",
+    )(c => isEmptyOrOrigin(c.dspApp.internalUrl))
+    .validate("app.dsp-app.shell-cache-ttl must be positive")(_.dspApp.shellCacheTtl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(
       _.filePermissionCache.ttl.compareTo(Duration.ofMinutes(10)) <= 0,
@@ -322,6 +339,13 @@ object AppConfig {
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,
     )
 
+  private def isEmptyOrOrigin(value: String): Boolean =
+    value.isEmpty || Try(new URI(value)).toOption.exists { uri =>
+      Option(uri.getScheme).exists(sc => sc == "http" || sc == "https") &&
+      Option(uri.getHost).exists(_.nonEmpty) &&
+      uri.getRawPath.isEmpty && uri.getRawQuery == null && uri.getRawFragment == null && uri.getRawUserInfo == null
+    }
+
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
   def knoraApi[A](f: KnoraApi => A): UIO[A] = ZIO.config(config.map(_.knoraApi)).map(f).orDie
@@ -329,7 +353,12 @@ object AppConfig {
   private val provider: ConfigProvider =
     TypesafeConfigProvider.fromTypesafeConfig(ConfigFactory.load().getConfig("app").resolve)
 
-  lazy val parseConfig: UIO[AppConfig] = read(config from provider).tap(logFeaturesEnabled).orDie
+  lazy val parseConfig: UIO[AppConfig] = read(config from provider)
+    .tap(logFeaturesEnabled)
+    .tap(c =>
+      ZIO.logWarning("app.dsp-app.url is not set: FAIR resource metadata is disabled").when(c.dspApp.url.isEmpty),
+    )
+    .orDie
 
   val layer: ULayer[AppConfigurations] =
     Runtime.setConfigProvider(provider) >>>
@@ -353,6 +382,7 @@ object AppConfig {
       appConfigLayer.project(_.knoraApi) ++
       appConfigLayer.project(_.sipi) ++
       appConfigLayer.project(_.dspIngest) ++
+      appConfigLayer.project(_.dspApp) ++
       appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project(_.instrumentationServerConfig) ++
       appConfigLayer.project(_.jwt) ++
