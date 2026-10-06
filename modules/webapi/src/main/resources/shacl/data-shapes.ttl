@@ -509,6 +509,18 @@ knora-base:DecimalValue-Shape
     sh:message "DecimalValue instance must have one knora-base:valueHasDecimal of type xsd:decimal"
   ] .
 
+knora-base:GeolocationValue-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:GeolocationValue ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasGeolocation ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "GeolocationValue instance must have one knora-base:valueHasGeolocation of type xsd:string"
+  ] .
+
 knora-base:GeomValue-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:GeomValue ;

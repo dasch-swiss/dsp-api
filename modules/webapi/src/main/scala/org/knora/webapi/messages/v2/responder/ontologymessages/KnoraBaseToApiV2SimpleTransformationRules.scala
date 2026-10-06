@@ -57,6 +57,11 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     .withRdfLabelEn("version ARK URL")
     .withRdfCommentEn("Provides the ARK URL of a particular version of a resource.")
 
+  // Overrides the definition derived from knora-base, see ExternalUrl in KnoraBaseToApiV2ComplexTransformationRules.
+  private val ExternalUrl = makeOwlDatatypeProperty(KnoraApiV2Simple.ExternalUrl, XSD.ANYURI)
+    .withSubjectType(KnoraApiV2Simple.File)
+    .withRdfLabelEn("external URL")
+
   private val ResourceProperty = makeRdfProperty(KnoraApiV2Simple.ResourceProperty)
     .withSubjectType(KnoraApiV2Simple.Resource)
     .withSubPropertyOf(OntologyConstants.KnoraApiV2Simple.ResourceProperty)
@@ -305,6 +310,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     Error,
     ArkUrl,
     VersionArkUrl,
+    ExternalUrl,
     HasValue,
     ResourceProperty,
     SubjectType,

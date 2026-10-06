@@ -1,5 +1,30 @@
 # Changelog
 
+## [40.3.0](https://github.com/dasch-swiss/dsp-api/compare/v40.2.1...v40.3.0) (2026-10-05)
+
+
+### Maintenances
+
+* give each repository update plan entry a unique name ([#4376](https://github.com/dasch-swiss/dsp-api/issues/4376)) ([40cbbbb](https://github.com/dasch-swiss/dsp-api/commit/40cbbbba1a5dcad264080f67b89c297d8ca4d27d))
+* require an HTTP method on every endpoint at compile time (DEV-6839) ([#4374](https://github.com/dasch-swiss/dsp-api/issues/4374)) ([2447a66](https://github.com/dasch-swiss/dsp-api/commit/2447a6603c262aa7c20acf52f412eb2ed7361cbe))
+
+
+### Documentation
+
+* organise dsp-api specs in per-work folders ([#4377](https://github.com/dasch-swiss/dsp-api/issues/4377)) ([619cc34](https://github.com/dasch-swiss/dsp-api/commit/619cc343723163dc6f700346eaae76ff4ee30d9a))
+
+
+### Enhancements
+
+* **dsp-api:** validate and canonicalize GeolocationValue on bulk import ([#4367](https://github.com/dasch-swiss/dsp-api/issues/4367)) ([a4271d2](https://github.com/dasch-swiss/dsp-api/commit/a4271d239f6008ac94b9a16d4a54ebbb75b7599e))
+* store canonical XML on write for formatted text values (DEV-7326) ([#4379](https://github.com/dasch-swiss/dsp-api/issues/4379)) ([e9838a6](https://github.com/dasch-swiss/dsp-api/commit/e9838a60b7d551acbb27c1e15dd2fefaeae3b0f3))
+
+
+### Bug Fixes
+
+* bump knora-base to v59 so existing repositories load hasDescription ([#4375](https://github.com/dasch-swiss/dsp-api/issues/4375)) ([5c30888](https://github.com/dasch-swiss/dsp-api/commit/5c30888901b157b975b17d94bc9b1bcf67e7fc7b))
+* restrict method-less endpoints to their HTTP method (DEV-6839) ([#4372](https://github.com/dasch-swiss/dsp-api/issues/4372)) ([ca93276](https://github.com/dasch-swiss/dsp-api/commit/ca93276ed5592ff671adce8a62f2f0d665e3672f))
+
 ## [40.2.1](https://github.com/dasch-swiss/dsp-api/compare/v40.2.0...v40.2.1) (2026-09-30)
 
 

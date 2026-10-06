@@ -448,6 +448,15 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       .withRdfLabelEn("External Url to the image")
       .withRdfCommentEn("External Url to the image")
 
+  // knora-base declares externalUrl as xsd:string because all stored data uses plain string literals.
+  // Storing xsd:anyURI would require a migration of every existing value in the database. As an accepted
+  // compromise, the API keeps xsd:anyURI, and this definition overrides the one derived from knora-base.
+  private val ExternalUrl =
+    makeOwlDatatypeProperty(KA.ExternalUrl, XSD.ANYURI)
+      .withSubPropertyOf(KA.ValueHas)
+      .withSubjectType(KA.StillImageExternalFileValue)
+      .withRdfLabelEn("external URL")
+
   // Runtime (computed-on-read) fields of a region preview value. They are declared here as knora-api-only
   // properties (never stored in knora-base), so a read instance validates against the served ontology.
   private val HasPreviewUrl = makeOwlDatatypeProperty(KA.HasPreviewUrl, XSD.ANYURI)
@@ -801,6 +810,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     DateValueHasStartYear,
     DecimalValueAsDecimal,
     Error,
+    ExternalUrl,
     FileValueAsUrl,
     FileValueHasFilename,
     GeometryValueAsGeometry,

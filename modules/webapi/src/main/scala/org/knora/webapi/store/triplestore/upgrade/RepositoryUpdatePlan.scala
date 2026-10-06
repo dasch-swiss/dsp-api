@@ -48,6 +48,7 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 57, name = "DEV-7285", plugin = new MigrateOnlyBuiltInGraphs()),
       PluginForKnoraBaseVersion(versionNumber = 58, name = "DEV-7325", plugin = new MigrateOnlyBuiltInGraphs()),
       PluginForKnoraBaseVersion(versionNumber = 59, name = "PR4375", plugin = new MigrateOnlyBuiltInGraphs()),
+      PluginForKnoraBaseVersion(versionNumber = 60, name = "DEV-7299", plugin = new MigrateOnlyBuiltInGraphs()),
     ).ensuring(p => p.map(_.name).distinct.size == p.size, "plan entry names must be unique")
 
   /**
