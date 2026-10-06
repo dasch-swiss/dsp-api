@@ -40,6 +40,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.slice.`export`.fair.ResourceFileLinks
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

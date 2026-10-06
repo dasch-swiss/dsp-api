@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.api.v3.export_
+package org.knora.webapi.slice.`export`.fair
 
 import swiss.dasch.domain.AssetId as IngestAssetId
 import swiss.dasch.domain.AssetInfo
@@ -36,21 +36,19 @@ final case class ResourceFileLinks(
     project: KnoraProject,
     fileValue: FileValueContentV2,
     resourceCreationDate: Instant,
-  ): UIO[Option[FileLink]] = {
+  ): UIO[FileLink] = {
     val assetId = fileValue.fileValue.internalFilename.takeWhile(_ != '.')
     findAssetInfo(project, assetId).map { info =>
-      Some(
-        FileLink(
-          // never falls back to the derivative's internalMimeType: the url serves the original
-          mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-          url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
-          checksum = info.map(_.original.checksum.value),
-          checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
-          fileName = info.map(_.originalFilename.value),
-          fileSize = info.flatMap(_.original.size.map(_.value)),
-          // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
-          dateCreated = Some(resourceCreationDate.toString),
-        ),
+      FileLink(
+        // never falls back to the derivative's internalMimeType: the url serves the original
+        mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
+        url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
+        checksum = info.map(_.original.checksum.value),
+        checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
+        fileName = info.map(_.originalFilename.value),
+        fileSize = info.flatMap(_.original.size.map(_.value)),
+        // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
+        dateCreated = Some(resourceCreationDate.toString),
       )
     }
   }
