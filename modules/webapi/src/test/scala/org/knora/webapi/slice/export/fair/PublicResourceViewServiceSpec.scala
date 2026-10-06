@@ -162,6 +162,11 @@ class PublicResourceViewServiceSpec extends ZIOSpecDefault {
     case PublicResourceResult.NotPublic => None
   }
 
+  private def openFileOf(r: PublicResourceResult): Option[ReadValueV2] = r match {
+    case PublicResourceResult.Public(v) => v.openFile
+    case PublicResourceResult.NotPublic => None
+  }
+
   val spec: Spec[Any, Any] = suite("PublicResourceViewService")(
     test("resource and file value viewable: FullOpen with the file value, read as the anonymous user") {
       val file = fileValue(ObjectAccess.View)
@@ -170,7 +175,7 @@ class PublicResourceViewServiceSpec extends ZIOSpecDefault {
           accessOf(res).contains(AccessLevel.FullOpen),
           res match {
             case PublicResourceResult.Public(v) =>
-              v.fileValue.contains(file) && v.project == TestDataFactory.someProjectADM
+              v.openFile.contains(file) && v.project == TestDataFactory.someProjectADM
             case _ => false
           },
           users == Seq(KnoraSystemInstances.Users.AnonymousUser),
@@ -192,13 +197,28 @@ class PublicResourceViewServiceSpec extends ZIOSpecDefault {
         case (res, _) => assertTrue(accessOf(res).contains(AccessLevel.Restricted))
       }
     },
-    test("more than one file value yields no file value") {
+    test("two restricted-view file values on a viewable resource: Restricted, no open file") {
+      val files = Seq(fileValue(ObjectAccess.RestrictedView, 1), fileValue(ObjectAccess.RestrictedView, 2))
+      run(ZIO.succeed(Seq(resource(ObjectAccess.View, files)))).map { case (res, _) =>
+        assertTrue(accessOf(res).contains(AccessLevel.Restricted), openFileOf(res).isEmpty)
+      }
+    },
+    test("two viewable file values: FullOpen, no open file") {
       val files = Seq(fileValue(ObjectAccess.View, 1), fileValue(ObjectAccess.View, 2))
       run(ZIO.succeed(Seq(resource(ObjectAccess.View, files)))).map { case (res, _) =>
-        assertTrue(res match {
-          case PublicResourceResult.Public(v) => v.fileValue.isEmpty
-          case _                              => false
-        })
+        assertTrue(accessOf(res).contains(AccessLevel.FullOpen), openFileOf(res).isEmpty)
+      }
+    },
+    test("one restricted-view file value: Restricted, no open file") {
+      val files = Seq(fileValue(ObjectAccess.RestrictedView))
+      run(ZIO.succeed(Seq(resource(ObjectAccess.View, files)))).map { case (res, _) =>
+        assertTrue(accessOf(res).contains(AccessLevel.Restricted), openFileOf(res).isEmpty)
+      }
+    },
+    test("one viewable file value on a viewable resource: FullOpen with the open file") {
+      val file = fileValue(ObjectAccess.View)
+      run(ZIO.succeed(Seq(resource(ObjectAccess.View, Seq(file))))).map { case (res, _) =>
+        assertTrue(accessOf(res).contains(AccessLevel.FullOpen), openFileOf(res).contains(file))
       }
     },
     test("ForbiddenException is NotPublic") {
@@ -212,19 +232,19 @@ class PublicResourceViewServiceSpec extends ZIOSpecDefault {
       }
     },
     test("any other failure propagates") {
-      run(ZIO.fail(new RuntimeException("triplestore down"))).exit.map(exit => assertTrue(exit.isFailure))
+      val failure = new RuntimeException("triplestore down")
+      run(ZIO.fail(failure)).exit.map(exit => assertTrue(exit == Exit.fail(failure)))
     },
     test("a deleted resource is NotPublic") {
-      val deleted = resource(
-        ObjectAccess.View,
-        classIri = sf.toSmartIri(KnoraBase.DeletedResource),
-        deletionInfo = Some(DeletionInfo(created.plusSeconds(10), None)),
-      )
+      val deleted = resource(ObjectAccess.View, deletionInfo = Some(DeletionInfo(created.plusSeconds(10), None)))
       run(ZIO.succeed(Seq(deleted))).map { case (res, _) => assertTrue(res == PublicResourceResult.NotPublic) }
     },
     test("a resource deleted later is NotPublic even when read at an older version") {
       val deletedLater = resource(ObjectAccess.View, deletionInfo = Some(DeletionInfo(created.plusSeconds(10), None)))
-      run(ZIO.succeed(Seq(deletedLater))).map { case (res, _) => assertTrue(res == PublicResourceResult.NotPublic) }
+      val older        = VersionDate.fromInstant(created.plusSeconds(5))
+      run(ZIO.succeed(Seq(deletedLater)), Some(older)).map { case (res, _) =>
+        assertTrue(res == PublicResourceResult.NotPublic)
+      }
     },
     test("a version date before the creation date is NotPublic") {
       val before = VersionDate.fromInstant(created.minusSeconds(60))

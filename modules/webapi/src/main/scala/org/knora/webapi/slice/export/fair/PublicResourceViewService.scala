@@ -28,7 +28,7 @@ final case class PublicResourceView(
   resource: ReadResourceV2,
   project: Project,
   accessLevel: AccessLevel,
-  fileValue: Option[ReadValueV2],
+  openFile: Option[ReadValueV2],
 )
 
 enum PublicResourceResult {
@@ -58,13 +58,14 @@ final case class PublicResourceViewService(private val readResources: ReadResour
       .flatMap {
         case None           => ZIO.succeed(PublicResourceResult.NotPublic)
         case Some(resource) =>
+          val files = PublicResourceViewService.fileValues(resource)
           ZIO
-            .when(PublicResourceViewService.fileValues(resource).size > 1)(
+            .when(files.size > 1)(
               ZIO.logWarning(
                 s"Resource ${resource.resourceIri.value} has more than one file value; publishing no file metadata",
               ),
             )
-            .as(PublicResourceViewService.classify(resource, ref.version))
+            .as(PublicResourceViewService.classify(resource, files, ref.version))
       }
 }
 
@@ -77,21 +78,23 @@ object PublicResourceViewService {
 
   private[fair] def classify(
     resource: ReadResourceV2,
+    files: Seq[ReadValueV2],
     version: Option[VersionDate],
   ): PublicResourceResult = {
     // Deleted now means not public, even when an older version is asked for.
     val beforeCreation = version.exists(_.value.isBefore(resource.creationDate))
     if (resource.deletionInfo.isDefined || beforeCreation) PublicResourceResult.NotPublic
     else {
-      // More than one file value: fail closed, the builder must not pick one.
-      val fileValue = fileValues(resource) match {
-        case Seq(single) => Some(single)
-        case _           => None
-      }
-      val levels      = resource.userPermission +: fileValue.map(_.userPermission).toSeq
+      // Every file value counts: a restricted one makes the whole view Restricted, however many there are.
+      val levels      = resource.userPermission +: files.map(_.userPermission)
       val accessLevel =
         if (levels.forall(_ >= ObjectAccess.View)) AccessLevel.FullOpen else AccessLevel.Restricted
-      PublicResourceResult.Public(PublicResourceView(resource, resource.projectADM, accessLevel, fileValue))
+      // Fail closed: a restricted view never exposes a file value, and with several the builder must not pick one.
+      val openFile = files match {
+        case Seq(single) if accessLevel == AccessLevel.FullOpen => Some(single)
+        case _                                                  => None
+      }
+      PublicResourceResult.Public(PublicResourceView(resource, resource.projectADM, accessLevel, openFile))
     }
   }
 }
