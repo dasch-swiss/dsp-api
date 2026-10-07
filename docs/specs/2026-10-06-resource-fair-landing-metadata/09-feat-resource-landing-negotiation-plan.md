@@ -26,7 +26,7 @@ when `Accept` prefers one, and `Vary: Accept` on every landing response.
 - [ ] `303` to the matching representation URL, absolute from `externalKnoraApiBaseUrl`, carrying `?version=`
     through, with `Cache-Control: no-cache`, on `GET` and `HEAD`
 - [ ] `Vary: Accept` on every landing response (`200` and `303`, `GET` and `HEAD`)
-- [ ] No `303` for `NotPublic` resources or while `app.dsp-app.url` is empty: the plain shell, as for a browser
+- [ ] No `303` for resources that are not public or while `app.dsp-app.url` is empty: the plain shell, as for a browser
 - [ ] Unit tests: the negotiation decision table, ported case for case from `shared-fair`'s tests
 - [ ] E2E: a `303` with the right absolute `Location` for each candidate, on `GET` and `HEAD`, and `Vary` on every
     response

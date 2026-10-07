@@ -60,3 +60,9 @@ table and ARCH-MAP updated.
 Deferred to S3: the access-table cases against real incunabula data (unit tests have no triplestore). Deferred to
 S4: the dsp-app settings for the local docker-compose stack. S2 carries the rule that the builder reads only
 allow-listed facts and file details only from `openFile`.
+
+**Changed after review with the owner (2026-10-07):** `PublicResourceViewService` was removed again. Its
+public/not-public outcome only repackaged the existing read's Forbidden/NotFound, and its file decision duplicated
+`AssetAccess.from`, the existing single policy for what a caller may receive of an asset. S2's builder reads as
+anonymous itself and asks `AssetPermissionsResponder.getAssetAccess(AnonymousUser)` before advertising a file; the
+cases and tests the service had move to S2.

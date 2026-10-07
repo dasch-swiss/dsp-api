@@ -22,15 +22,23 @@ them.
 
 ### Phase 1: The resource graph and the representation writers
 
-- [ ] Add `ResourceFairGraph` and its builder from the public view, reading only the allow-listed facts of the
+- [ ] Read the resource through `ReadResourcesService.getResourcesWithDeletedResource` as
+    `KnoraSystemInstances.Users.AnonymousUser` (whatever the request carries, never `skipRetrievalChecks`); only
+    `ForbiddenException` / `NotFoundException`, a deleted resource, and a version before creation mean "publish
+    nothing" — every other failure propagates
+- [ ] Add `ResourceFairGraph` and its builder from that read, reading only the allow-listed facts of the
     field-mapping table (never serialising `values` wholesale: they can carry restricted file details and, via
     region previews read as the system user, facts about images anonymous cannot see): root `license`
     and `copyrightHolder` from the project's `dataLicense` / `dataCopyrightHolder`, creators from
     `resourceAuthorship` else the project's `defaultDataAuthorship`
 - [ ] Derive `generalType` from the single file value's class only, never from a text value
 - [ ] In the builder, omit every file-derived fact when the resource has more than one file value
-- [ ] In the builder, take file details only from the view's `openFile`, which S1 sets only for a single Full Open
-    file value; emit no `DataDownload` for an external IIIF file value
+- [ ] Advertise a file only for a single file value whose `AssetPermissionsResponder.getAssetAccess(AnonymousUser)`
+    grants the original (the existing `AssetAccess.from` policy); emit no `DataDownload` for an external IIIF file
+    value; the access level counts the resource and every file value
+- [ ] Tests (moved from S1): forbidden/not found/deleted/before-creation publish nothing; a triplestore failure
+    propagates; the requesting user is anonymous even with credentials; `RV` file → restricted, no download; two
+    file values, any `RV` → restricted, none advertised; two `V` file values → full open, none advertised
 - [ ] Add the schema.org JSON-LD writer (zio-json AST) with `identifier`, `license`, `distribution` (carrying the
     file value's own license) and `prov:wasAttributedTo` in the DPE shapes; repeated properties always arrays
 - [ ] Add the Turtle writer by parsing the emitted JSON-LD with Jena, with the `@context` inlined so no remote

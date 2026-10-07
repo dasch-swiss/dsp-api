@@ -26,7 +26,7 @@ Part of the [plan](01-feat-resource-fair-landing-metadata-plan.md); design in
     serve the plain shell
 - [ ] Emit the `Link` header (cite-as, type, describedby ×3, license, author) on `GET` and `HEAD`
 - [ ] Contribute the `<link>` mirror to the head, from the same list as the header
-- [ ] Emit neither for `NotPublic` resources, when graph building fails, or while `app.dsp-app.url` is empty
+- [ ] Emit neither for resources that are not public, when graph building fails, or while `app.dsp-app.url` is empty
 - [ ] Unit test: header and `<link>` elements parse to the same set for every incunabula fixture resource
 - [ ] Unit test: `cite-as` exactly once; `license` 0 or 1 and only the project's; `author` only for ORCID URIs
 - [ ] E2E: `Link` header present and identical on `GET` and `HEAD` for an open and an `RV` resource; absent for a

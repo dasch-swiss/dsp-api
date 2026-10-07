@@ -65,7 +65,7 @@ implementation so tests need no app container.
    takes a `versionDate`) with `KnoraSystemInstances.Users.AnonymousUser`, whatever credentials the request
    carries. Never with `skipRetrievalChecks = true`, which is what `ExportService.exportResourcesOai` uses and
    which turns hidden resources into a log line. A deleted resource comes back as a `DeletedResource` with no
-   values; it maps to `NotPublic`. Only `ForbiddenException` and `NotFoundException` map to `NotPublic`; any other
+   values; it maps to not public. Only `ForbiddenException` and `NotFoundException` map to not public; any other
    failure (e.g. a triplestore timeout) propagates, so it is never cached as "not public".
 3. **Build one graph.** `ResourceFairGraph` holds the resolved facts once. Every output is a projection of it,
    mirroring `shared-fair`'s `RecordGraph`.
@@ -139,19 +139,22 @@ CR/LF never reach a header. Each representation answers `Link: <page>; rel="desc
 
 ## Access
 
-Levels come from the anonymous user's permission (`V` or higher is "view"; `RV` is restricted view):
+Nothing here is a new policy. Visibility is the existing read's (`ForbiddenException` / `NotFoundException` for
+the anonymous user); whether the file may be advertised is the existing asset policy, `AssetAccess.from`, asked
+through `AssetPermissionsResponder.getAssetAccess(AnonymousUser)(internalFilename)`, the same decision Sipi and
+dsp-ingest enforce when the file is downloaded. The metadata only reports them:
 
 | Anonymous gets | Access level | File advertised |
 | --- | --- | --- |
-| resource ≥ `V`, and its file value ≥ `V` or no file value | Full Open Access (`c_abf2`) | yes |
-| resource `RV`, or file value `RV` | Open Access with Restrictions (`c_16ec`) | no |
-| resource not returned (no permission), missing, or deleted | `NotPublic` | no metadata, no links at all |
+| resource ≥ `V`, and no file value or `AssetAccess.original == Grant` | Full Open Access (`c_abf2`) | yes |
+| resource `RV`, or the file's original is withheld | Open Access with Restrictions (`c_16ec`) | no |
+| the read fails Forbidden / NotFound, or the resource is deleted or younger than `?version=` | not public | no metadata, no links at all |
 
 A file value anonymous cannot see is not returned by the read, so it cannot be told apart from no file value;
 the level then comes from the resource and the file values that are returned. `Metadata only Access` is never
-emitted, because the read cannot establish it. An `RV` file value is returned with its full file details, so the
-public view exposes a file (`openFile`) only for a single file value at Full Open; with several file values the
-level still counts every one of them, and no file is exposed.
+emitted, because the read cannot establish it. An `RV` file value is returned with its full file details, so file
+details are taken only once `AssetAccess` grants the original; with several file values none is advertised, and
+the level still counts every one of them.
 
 Only values the anonymous read returns can feed the graph, and only the allow-listed facts of the field mapping:
 the read's `values` are never serialised wholesale. A version read (`?version=`) applies the permissions recorded

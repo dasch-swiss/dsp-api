@@ -35,6 +35,7 @@ status: complete
 | 3 | complete | b629e7291 | `ResourceLandingRef` parses shortcode/id/version into a `ResourceIri` + `VersionDate` | none |
 | 5 | complete | 36722316c | `PublicResourceViewService`: anonymous read, NotPublic mapping (any deletion, before creation, forbidden/not found), FullOpen/Restricted, >1 file value → no file | none |
 | 6 | complete | 2cb0058f0, b39fd5080, 86fa0e3dc, 172773468, 88d092da9 | review fixes: access level counts every file value (critical), URL validation, tests, `ResourceFileLinks` → `fair`, config docs, ARCH-MAP | none |
+| 7 | complete | (this push) | `PublicResourceViewService` removed after owner review: it repackaged the read's Forbidden/NotFound and duplicated `AssetAccess.from`; its rules and tests move to S2 | none |
 
 ## Deferrals
 
@@ -44,6 +45,8 @@ status: complete
 
 ## Side findings
 
+- Before adding a policy, grep for an existing one: `AssetAccess.from` (`slice/admin/domain/model/AssetAccess.scala`)
+  is the single policy for what a caller may receive of an asset; S1 first re-derived it.
 - dsp-repository's `just fair-check` sets a scratch `DOCKER_CONFIG`, which drops the active Docker context; with a
   non-default context (Docker Desktop's `~/.docker/run/docker.sock`) it fails with "Cannot connect to the Docker
   daemon" unless `DOCKER_HOST` is exported.

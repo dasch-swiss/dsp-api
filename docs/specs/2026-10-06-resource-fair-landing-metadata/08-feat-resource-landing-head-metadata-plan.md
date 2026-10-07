@@ -26,7 +26,7 @@ JSON-LD block and Dublin Core meta in the served head.
     it; on timeout or graph failure serve the plain shell
 - [ ] Contribute one `<script type="application/ld+json">` (the S2 JSON-LD, with unicode-escaped `<>&`) and the DC
     meta to the head
-- [ ] Contribute nothing for `NotPublic` resources, when graph building fails, or while `app.dsp-app.url` is empty
+- [ ] Contribute nothing for resources that are not public, when graph building fails, or while `app.dsp-app.url` is empty
 - [ ] Agreement test: the embedded block equals the S2 JSON-LD for the same resource and version; DC meta agrees
     with it on ARK, title, license and creators
 - [ ] Shape test: the embedded block's `identifier` and `license` still match DPE's shapes after unicode-escaping
