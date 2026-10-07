@@ -65,4 +65,5 @@ allow-listed facts and file details only from `openFile`.
 public/not-public outcome only repackaged the existing read's Forbidden/NotFound, and its file decision duplicated
 `AssetAccess.from`, the existing single policy for what a caller may receive of an asset. S2's builder reads as
 anonymous itself and asks `AssetPermissionsResponder.getAssetAccess(AnonymousUser)` before advertising a file; the
-cases and tests the service had move to S2.
+cases and tests the service had move to S2. The `ResourceFileLinks` extraction was reverted too (no caller yet,
+and it bundled the description lookup, which is dropped); S2 extracts only the download link, next to its caller.

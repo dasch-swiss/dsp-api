@@ -26,6 +26,9 @@ them.
     `KnoraSystemInstances.Users.AnonymousUser` (whatever the request carries, never `skipRetrievalChecks`); only
     `ForbiddenException` / `NotFoundException`, a deleted resource, and a version before creation mean "publish
     nothing" — every other failure propagates
+- [ ] Extract the dsp-ingest download link and sidecar lookup (`fileLinkOf`, `findAssetInfo`) out of
+    `ExportService` into a small helper both use, built for a given file value, with `ExportService` output
+    unchanged
 - [ ] Add `ResourceFairGraph` and its builder from that read, reading only the allow-listed facts of the
     field-mapping table (never serialising `values` wholesale: they can carry restricted file details and, via
     region previews read as the system user, facts about images anonymous cannot see): root `license`

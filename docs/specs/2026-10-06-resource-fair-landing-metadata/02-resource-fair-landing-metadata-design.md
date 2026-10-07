@@ -83,7 +83,6 @@ Source → graph, reviewed against `shared-fair` `record_datacite.rs` / `record_
 | `ark` / `cite-as` | `StringFormatter.resourceIriToArkUrl(iri, version)` | versioned when `?version` |
 | `pageUrl` | `app.dsp-app.url` + `/resource/{shortcode}/{resourceId}` | absolute |
 | `title` | `ReadResourceV2.label` | |
-| `description` | project description property (today `ExportService.findDescriptionProperty`, a per-project map) | extract and reuse; omit when absent |
 | `creators` | `resourceAuthorship`, else the project's `defaultDataAuthorship` | data-side authorship per PRD v4; file-value authorship is asset-side and never used here. `DaSCH` → Organization, else Person; DataCite-only fallback `DaSCH` as DPE does |
 | `orcids` | an authorship string that *is* an ORCID URI | no ORCID field exists; nothing is parsed out of free text |
 | `dateCreated` / `dateModified` | `creationDate` / `lastModificationDate` | `publicationYear` = creation year |
@@ -94,6 +93,9 @@ Source → graph, reviewed against `shared-fair` `record_datacite.rs` / `record_
 | `file` (DataDownload) | dsp-ingest original URL + sidecar (as `ExportService.fileLinkOf`) | **only when Full Open**; never for external IIIF. Carries the file value's own `license` and `copyrightHolder` |
 | `isPartOf` | project ARK (`ark:/72163/1/{shortcode}`): the DPE project page | |
 | `additionalType` | resource class IRI | recorded fact |
+
+No `description`: dsp-api has no generic description property, and `ExportService.findDescriptionProperty` is a
+hardcoded map for four projects. A generic `kb:hasDescription` is separate work; until then the key is omitted.
 
 ### File-value edge cases
 

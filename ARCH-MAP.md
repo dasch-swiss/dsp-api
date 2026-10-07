@@ -990,10 +990,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
     `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
     `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`,
-    `ResourceFileLinks`, `ResourceLandingRef`
+    `ResourceLandingRef`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
-    `ExportService & ResourceFileLinks`; the value types `DataTaskId`,
+    `ExportService`; the value types `DataTaskId`,
     `DataTaskStatus`, `CurrentDataTask`; the task error types
     `ExportExistsError`, `ExportInProgressError`, `ExportFailedError`, `ImportExistsError`,
     `ImportInProgressError`.
