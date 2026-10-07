@@ -1425,6 +1425,18 @@ class StringFormatter private (
     )
 
   /**
+   * Generates the ARK URL of a project, as the ARK resolver sends it to the project page.
+   *
+   * @param shortcode the project's shortcode.
+   */
+  def projectIriToArkUrl(shortcode: Shortcode): String =
+    (arkResolver, arkAssignedNumber) match {
+      case (Some(resolver), Some(assignedNumber)) =>
+        s"$resolver/ark:/$assignedNumber/$ArkVersion/${shortcode.value}"
+      case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
+    }
+
+  /**
    * Generates an ARK URL for a value.
    *
    * @param valueIri       the value IRI.

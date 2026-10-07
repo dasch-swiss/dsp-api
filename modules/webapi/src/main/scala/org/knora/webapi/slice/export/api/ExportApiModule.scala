@@ -16,9 +16,12 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.responders.admin.AssetPermissionsResponder
 import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.`export`.fair.AssetDownloadLinks
+import org.knora.webapi.slice.`export`.fair.ResourceFairGraphBuilder
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
 import org.knora.webapi.slice.common.service.IriConverter
@@ -31,10 +34,12 @@ object ExportApiModule { self =>
   type Dependencies =
     // format: off
     AppConfig &
+    AssetPermissionsResponder &
     ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
     KnoraProjectService &
+    LegalInfoService &
     ListsResponder &
     OntologyRepo &
     ReadResourcesService &
@@ -45,7 +50,8 @@ object ExportApiModule { self =>
   type Provided =
     // format: off
     AssetDownloadLinks &
-    ExportService
+    ExportService &
+    ResourceFairGraphBuilder
     // format: on
 
   // Built from webapi's own config on purpose: ingest's Configuration.layer calls
@@ -58,5 +64,6 @@ object ExportApiModule { self =>
       (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    (FindResourcesService.layer ++ (assetInfoServiceLayer >>> AssetDownloadLinks.layer)) >+> ExportService.layer
+    (FindResourcesService.layer ++ (assetInfoServiceLayer >>> AssetDownloadLinks.layer)) >+>
+      (ExportService.layer ++ ResourceFairGraphBuilder.layer)
 }
