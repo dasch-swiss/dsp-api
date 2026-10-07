@@ -982,16 +982,19 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/test/resources/org/knora/webapi/slice/export/**`
 - **Purpose**: Hosts the Project Migration bounded context: whole-project export to a BagIt zip, migration
     import of such a zip, and JSON-LD data-graph import, each an asynchronous task with filesystem-persisted
-    state. It also straddles Resources and Values and Assets through the v3 resource CSV and OAI exporter,
-    and reads Identity and Access plus Permission policy data straight out of the admin graphs.
+    state. It also straddles Resources and Values and Assets through the v3 resource CSV and OAI exporter
+    and through `slice/export/fair`, the anonymous read behind FAIR resource landing pages (DEV-7420), and
+    reads Identity and Access plus Permission policy data straight out of the admin graphs.
 - **Key entities**: `ProjectMigrationExportService`, `ProjectMigrationImportService`,
     `ProjectMigrationImportValidator`, `ProjectDataImportService`, `ProjectMigrationStorageService`,
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
     `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
-    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`
+    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`,
+    `ResourceFileLinks`, `PublicResourceViewService`, `PublicResourceView`, `AccessLevel`, `ResourceLandingRef`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
-    `ExportService`; the value types `DataTaskId`, `DataTaskStatus`, `CurrentDataTask`; the task error types
+    `ExportService & ResourceFileLinks & PublicResourceViewService`; the value types `DataTaskId`,
+    `DataTaskStatus`, `CurrentDataTask`; the task error types
     `ExportExistsError`, `ExportInProgressError`, `ExportFailedError`, `ImportExistsError`,
     `ImportInProgressError`.
 - **Local-context kit**:
@@ -1019,10 +1022,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `AdminDataQuery.buildWithReferencedUsers` (a raw `s"""..."""` CONSTRUCT),
         `ProjectDataGraphExistsQuery.build` and the three `FindResourcesService` query builders.
     - A slice's Scala package matches its directory - enforcement: docs-only. Currently violated by
-        `slice/export/api/**`, whose three files declare `package org.knora.webapi.slice.api.v3.export_`.
+        `slice/export/api/**`, whose three files declare `package org.knora.webapi.slice.api.v3.export_`;
+        `slice/export/fair/**` follows the rule (`package org.knora.webapi.slice.\`export\`.fair`).
     - webapi-export must not import webapi-api - enforcement: docs-only. Currently violated by `ExportService`
-        importing `slice.api.v3.export.{FileLink, LegalInfo, MetadataRecord}` and `Models.scala` importing
-        `slice.api.admin.Codecs`, while webapi-api imports webapi-export back, forming a cycle.
+        importing `slice.api.v3.export.{FileLink, LegalInfo, MetadataRecord}`, `Models.scala` importing
+        `slice.api.admin.Codecs`, and `slice/export/fair` importing `slice.api.v2.VersionDate`,
+        `slice.api.admin.model.Project` and `FileLink`, while webapi-api imports webapi-export back, forming a
+        cycle.
     - Outside callers use `ExportModule.Provided`, not the slice's task-state internals - enforcement:
         docs-only. Currently violated by `V3ProjectsEndpoints` and `V3ProjectsRestService` importing
         `CurrentDataTask`, `DataTaskId`, `DataTaskStatus` and the raw error case classes, and by
