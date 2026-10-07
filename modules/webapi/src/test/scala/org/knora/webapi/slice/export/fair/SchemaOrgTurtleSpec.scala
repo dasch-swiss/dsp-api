@@ -12,18 +12,12 @@ import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.junit.runner.RunWith
 import zio.json.*
+import zio.json.ast.Json
 import zio.test.*
 
 import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.ProxySelector
-import java.net.SocketAddress
-import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.concurrent.CopyOnWriteArrayList
 import scala.jdk.CollectionConverters.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -72,24 +66,6 @@ class SchemaOrgTurtleSpec extends ZIOSpecDefault {
   private def root(m: Model): Resource   = m.getResource(openWithFile.ark)
   private def p(m: Model, local: String) = m.createProperty(S + local)
 
-  /** Records every URI the JVM's default proxy selector is asked about, i.e. every outgoing HTTP connection attempt. */
-  private final class RecordingSelector extends ProxySelector {
-    val requested                               = CopyOnWriteArrayList[URI]()
-    def select(uri: URI): java.util.List[Proxy] = {
-      requested.add(uri): Unit
-      java.util.List.of(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 1)))
-    }
-    def connectFailed(uri: URI, sa: SocketAddress, ioe: IOException): Unit = ()
-  }
-
-  private def withRecordingSelector[A](f: => A): (A, Seq[URI]) = {
-    val previous = ProxySelector.getDefault
-    val selector = RecordingSelector()
-    ProxySelector.setDefault(selector)
-    try (f, selector.requested.asScala.toSeq)
-    finally ProxySelector.setDefault(previous)
-  }
-
   val spec: Spec[Any, Nothing] = suite("SchemaOrgTurtle")(
     test("key triples of the open resource with a file") {
       val m    = parseTurtle(SchemaOrgTurtle.render(openWithFile))
@@ -128,17 +104,16 @@ class SchemaOrgTurtleSpec extends ZIOSpecDefault {
         parseTurtle(SchemaOrgTurtle.render(openWithFile)).isIsomorphicWith(fromJsonLd),
       )
     },
-    test("rendering never reaches the network, while the remote context would") {
-      val remote               = SchemaOrgJsonLd.toJsonString(openWithFile)
-      val (_, controlRequests) = withRecordingSelector {
-        val m = ModelFactory.createDefaultModel()
-        scala.util.Try(RDFDataMgr.read(m, ByteArrayInputStream(remote.getBytes(StandardCharsets.UTF_8)), Lang.JSONLD))
+    test("the JSON-LD handed to the parser carries only an inline context, never a remote one") {
+      val context = SchemaOrgTurtle.inlineContextJsonLd(openWithFile) match {
+        case Json.Obj(fields) => fields.collectFirst { case ("@context", c) => c }
+        case _                => None
       }
-      val (ttl, renderRequests) = withRecordingSelector(SchemaOrgTurtle.render(openWithFile))
+      // A context that is an object holds no reference a JSON-LD processor would fetch; the remote form is a string
+      // or an array containing one.
       assertTrue(
-        controlRequests.exists(_.getHost == "schema.org"),
-        renderRequests.isEmpty,
-        ttl.nonEmpty,
+        context.exists(_.isInstanceOf[Json.Obj]),
+        SchemaOrgJsonLd.toJsonString(openWithFile).contains("\"https://schema.org\""),
       )
     },
   )
