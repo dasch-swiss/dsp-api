@@ -8,11 +8,6 @@ package org.knora.webapi.slice.api.v3.export_
 import cats.*
 import cats.implicits.*
 import com.github.tototoshi.csv.CSVFormat
-import swiss.dasch.domain.AssetId as IngestAssetId
-import swiss.dasch.domain.AssetInfo
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
 import zio.*
 import zio.ZLayer
 import zio.stream.ZStream
@@ -45,11 +40,11 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
+import org.knora.webapi.slice.`export`.fair.AssetDownloadLinks
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.api.v3.`export`.FileLink
 import org.knora.webapi.slice.api.v3.`export`.LegalInfo
 import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.api.v3.export_.ExportService.Internals.*
@@ -80,7 +75,7 @@ final case class ExportService(
   private val csvService: CsvService,
   private val sf: StringFormatter,
   private val appConfig: AppConfig,
-  private val assetInfoService: AssetInfoService,
+  private val assetDownloadLinks: AssetDownloadLinks,
 ) {
   private given StringFormatter                = sf
   private val footnoteTagIri: SmartIri         = OntologyConstants.Standoff.StandoffFootnoteTag.toSmartIri
@@ -95,9 +90,6 @@ final case class ExportService(
   private val DataLicenseHeader     = "Data License"
   private val CopyrightHolderHeader = "Copyright Holder"
   private val AuthorshipHeader      = "Authorship"
-
-  // the sidecar only ever stores SHA-256, so this is a constant rather than a field
-  private val ChecksumAlgorithm = "SHA-256"
 
   def exportResourcesOai(
     project: KnoraProject,
@@ -118,8 +110,11 @@ final case class ExportService(
       descriptionProp <- findDescriptionProperty(project)
 
       records <- ZIO.foreach(readResources.resources.toList) { r =>
-                   val description = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
-                   fileLinkOf(project, r).map { file =>
+                   val description    = descriptionProp.flatMap(r.values.get(_).flatMap(_.headOption))
+                   val firstFileValue = r.values.values.flatten.map(_.valueContent).collectFirst {
+                     case fc: FileValueContentV2 => fc
+                   }
+                   ZIO.foreach(firstFileValue)(fv => assetDownloadLinks.linkOf(project, fv, r.creationDate)).map { file =>
                      MetadataRecord(
                        id = r.resourceIri.toString,
                        pid = sf.resourceIriToArkUrl(r.resourceIri),
@@ -142,39 +137,6 @@ final case class ExportService(
                  }
     } yield records.toJsonPretty
   }
-
-  // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
-  // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
-  private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
-      fc.fileValue.internalFilename.takeWhile(_ != '.')
-    }) { assetId =>
-      findAssetInfo(project, assetId).map { info =>
-        FileLink(
-          // never falls back to the derivative's internalMimeType: the url serves the original
-          mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-          url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
-          checksum = info.map(_.original.checksum.value),
-          checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
-          fileName = info.map(_.originalFilename.value),
-          fileSize = info.flatMap(_.original.size.map(_.value)),
-          // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
-          dateCreated = Some(r.creationDate.toString),
-        )
-      }
-    }
-
-  // Never fails: without the shared asset dir every asset is missing a sidecar, and failing there would
-  // make the endpoint unusable. A malformed sidecar is logged and treated the same way.
-  private def findAssetInfo(project: KnoraProject, assetId: String): UIO[Option[AssetInfo]] =
-    ZIO
-      .fromEither(for {
-        id        <- IngestAssetId.from(assetId)
-        shortcode <- IngestProjectShortcode.from(project.shortcode.value)
-      } yield AssetRef(id, shortcode))
-      .mapError(new IllegalArgumentException(_))
-      .flatMap(assetInfoService.findByAssetRef)
-      .catchAll(e => ZIO.logWarning(s"Could not read the sidecar of asset $assetId: ${e.getMessage}").as(None))
 
   private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
     (project.shortcode.value.toUpperCase() match {
