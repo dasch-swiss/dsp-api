@@ -17,10 +17,10 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.slice.`export`.fair.ResourceFileLinks
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
+import org.knora.webapi.slice.api.v3.export_.ResourceFileLinks
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo

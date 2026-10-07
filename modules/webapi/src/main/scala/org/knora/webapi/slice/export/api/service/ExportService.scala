@@ -40,7 +40,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContent
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
-import org.knora.webapi.slice.`export`.fair.ResourceFileLinks
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.License
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
@@ -138,9 +137,10 @@ final case class ExportService(
 
   // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 => fc })(fc =>
-      resourceFileLinks.fileLinkOf(project, fc, r.creationDate),
-    )
+    r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 => fc } match {
+      case Some(fc) => resourceFileLinks.fileLinkOf(project, fc, r.creationDate)
+      case None     => ZIO.none
+    }
 
   private def typeOfDataOf(r: ReadResourceV2): Option[String] =
     r.values.values.flatten.map(_.valueContent).collectFirst {
