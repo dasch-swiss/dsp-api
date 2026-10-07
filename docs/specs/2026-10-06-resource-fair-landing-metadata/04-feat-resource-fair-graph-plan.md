@@ -22,12 +22,15 @@ them.
 
 ### Phase 1: The resource graph and the representation writers
 
-- [ ] Add `ResourceFairGraph` and its builder from the public view, per the field-mapping table: root `license`
+- [ ] Add `ResourceFairGraph` and its builder from the public view, reading only the allow-listed facts of the
+    field-mapping table (never serialising `values` wholesale: they can carry restricted file details and, via
+    region previews read as the system user, facts about images anonymous cannot see): root `license`
     and `copyrightHolder` from the project's `dataLicense` / `dataCopyrightHolder`, creators from
     `resourceAuthorship` else the project's `defaultDataAuthorship`
 - [ ] Derive `generalType` from the single file value's class only, never from a text value
 - [ ] In the builder, omit every file-derived fact when the resource has more than one file value
-- [ ] In the builder, emit no `DataDownload` for an external IIIF file value or a file that is not Full Open
+- [ ] In the builder, take file details only from the view's `openFile`, which S1 sets only for a single Full Open
+    file value; emit no `DataDownload` for an external IIIF file value
 - [ ] Add the schema.org JSON-LD writer (zio-json AST) with `identifier`, `license`, `distribution` (carrying the
     file value's own license) and `prov:wasAttributedTo` in the DPE shapes; repeated properties always arrays
 - [ ] Add the Turtle writer by parsing the emitted JSON-LD with Jena, with the `@context` inlined so no remote

@@ -28,6 +28,8 @@ Part of the [plan](01-feat-resource-fair-landing-metadata-plan.md); design in
     for any resource while `app.dsp-app.url` is empty
 - [ ] Wire the endpoints in `*ServerEndpoints` and register them in `ApiV3ServerEndpoints` and `ApiV3Module`
 - [ ] E2E: an open resource returns `200`, the correct media type, the `describes` link and `no-cache`
+- [ ] E2E (from S1): against real incunabula data, `http://rdfh.ch/0803/0f4b2ce2a6d7` is full open with a download
+    and `http://rdfh.ch/0803/00014b43f902` is restricted with none; a version before creation is `404`
 - [ ] E2E: a versioned request carries the versioned ARK, and a field changed between two versions shows that
     version's value
 - [ ] E2E: invisible, missing and deleted resources all return an identical `404` body

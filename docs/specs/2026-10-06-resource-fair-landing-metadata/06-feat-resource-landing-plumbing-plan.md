@@ -64,6 +64,8 @@ fallback in production before S5–S7 depend on it. Three PRs, one per repositor
 
 ### ops-deploy
 
+- [ ] (from S1) Set `KNORA_WEBAPI_DSP_APP_URL` and `KNORA_WEBAPI_DSP_APP_INTERNAL_URL` for the local stack in
+    dsp-api's `docker-compose.yml`, so FAIR metadata is on locally
 - [ ] Set `DSP_API_UPSTREAM=http://api:3333` on the `app` service and `KNORA_WEBAPI_DSP_APP_INTERNAL_URL=http://app`
     on the `api` service in `roles/dsp-deploy/templates/docker-compose-svc.yml.j2`
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts

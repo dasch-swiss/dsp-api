@@ -140,8 +140,10 @@ shell itself. See the design's Edge section.
 
 ## Success Metrics
 
-- F-UJI 3.5.0 baseline (S1): 0803 resource *to record*; 0868 resource *to record* (expected ≈ 3/24, the bare
-  shell).
+- F-UJI 3.5.0 baseline (S1, 2026-10-06, image `sha256:3cde9d30bc14…`, against production):
+    - 0803 resource `https://ark.dasch.swiss/ark:/72163/1/0803/lklK7rVuVOmpBZYWrF8o=gh`: **3 of 24**
+    - 0868 resource with a CSV file `https://ark.dasch.swiss/ark:/72163/1/0868/0sKCU=ILTt=rl0IpTYQ0mwP`: **3 of 24**
+    - Both pass only `F1-01D`, `F1-02D` and `A1-02M`; every other metric fails on the bare shell.
 - After each of S5, S6 and S7: F-UJI for the same two ARKs, with the metrics that moved attributed to that
   slice. Target: toward the DPE project page's 16–21/24, with every unearned point explained in the results
   table.

@@ -148,9 +148,14 @@ Levels come from the anonymous user's permission (`V` or higher is "view"; `RV` 
 | resource not returned (no permission), missing, or deleted | `NotPublic` | no metadata, no links at all |
 
 A file value anonymous cannot see is not returned by the read, so it cannot be told apart from no file value;
-the level then comes from the resource alone. `Metadata only Access` is never emitted, because the read cannot
-establish it. An `RV` file value is returned with its full file details, so the rule "no file URL unless Full
-Open" is enforced in the builder, not by the read. Only values the anonymous read returns can feed the graph.
+the level then comes from the resource and the file values that are returned. `Metadata only Access` is never
+emitted, because the read cannot establish it. An `RV` file value is returned with its full file details, so the
+public view exposes a file (`openFile`) only for a single file value at Full Open; with several file values the
+level still counts every one of them, and no file is exposed.
+
+Only values the anonymous read returns can feed the graph, and only the allow-listed facts of the field mapping:
+the read's `values` are never serialised wholesale. A version read (`?version=`) applies the permissions recorded
+for that version, exactly as `/v2/resources?version=` does for the anonymous user.
 
 ## Edge
 
