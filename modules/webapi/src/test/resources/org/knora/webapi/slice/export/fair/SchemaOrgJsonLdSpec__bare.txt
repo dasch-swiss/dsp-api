@@ -1,0 +1,40 @@
+{
+  "@context" : [
+    "https://schema.org",
+    {
+      "prov" : "http://www.w3.org/ns/prov#"
+    }
+  ],
+  "@type" : "Dataset",
+  "@id" : "https://ark.dasch.swiss/ark:/72163/1/0868/abc123",
+  "identifier" : [
+    {
+      "@type" : "PropertyValue",
+      "propertyID" : "ARK",
+      "value" : "https://ark.dasch.swiss/ark:/72163/1/0868/abc123"
+    },
+    "https://app.dasch.swiss/resource/0868/abc123"
+  ],
+  "name" : "Table 1",
+  "additionalType" : "http://api.dasch.swiss/ontology/0868/example/v2#Table",
+  "isAccessibleForFree" : true,
+  "conditionsOfAccess" : "Full Open Access",
+  "dateCreated" : "2024-03-01T10:15:30Z",
+  "publisher" : {
+    "@id" : "https://dasch.swiss",
+    "@type" : "Organization",
+    "name" : "DaSCH",
+    "url" : "https://dasch.swiss"
+  },
+  "prov:wasAttributedTo" : [
+    {
+      "@id" : "https://dasch.swiss"
+    }
+  ],
+  "url" : "https://app.dasch.swiss/resource/0868/abc123",
+  "isPartOf" : {
+    "@id" : "https://ark.dasch.swiss/ark:/72163/1/0868",
+    "@type" : "Dataset",
+    "name" : "Example project"
+  }
+}
