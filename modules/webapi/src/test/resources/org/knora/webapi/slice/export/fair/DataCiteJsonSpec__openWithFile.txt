@@ -1,0 +1,65 @@
+{
+  "identifiers" : [
+    {
+      "identifier" : "https://ark.dasch.swiss/ark:/72163/1/0868/abc123",
+      "identifierType" : "ARK"
+    }
+  ],
+  "types" : {
+    "resourceType" : "Dataset",
+    "resourceTypeGeneral" : "Dataset"
+  },
+  "creators" : [
+    {
+      "name" : "Jane Doe",
+      "nameType" : "Personal",
+      "nameIdentifiers" : [
+        {
+          "nameIdentifier" : "https://orcid.org/0000-0002-1825-0097",
+          "nameIdentifierScheme" : "ORCID",
+          "schemeUri" : "https://orcid.org"
+        }
+      ]
+    },
+    {
+      "name" : "Example Institute",
+      "nameType" : "Organizational"
+    }
+  ],
+  "titles" : [
+    {
+      "title" : "Table 1"
+    }
+  ],
+  "publisher" : "DaSCH",
+  "publicationYear" : "2024",
+  "dates" : [
+    {
+      "date" : "2024-03-01T10:15:30Z",
+      "dateType" : "Created"
+    },
+    {
+      "date" : "2025-01-02T03:04:05Z",
+      "dateType" : "Updated"
+    }
+  ],
+  "relatedIdentifiers" : [
+    {
+      "relatedIdentifier" : "https://ark.dasch.swiss/ark:/72163/1/0868",
+      "relatedIdentifierType" : "ARK",
+      "relationType" : "IsPartOf"
+    }
+  ],
+  "rightsList" : [
+    {
+      "rights" : "Creative Commons Attribution 4.0 International",
+      "rightsUri" : "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier" : "CC-BY-4.0",
+      "rightsIdentifierScheme" : "SPDX"
+    }
+  ],
+  "formats" : [
+    "text/csv"
+  ],
+  "schemaVersion" : "http://datacite.org/schema/kernel-4"
+}

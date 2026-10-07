@@ -1,0 +1,39 @@
+{
+  "identifiers" : [
+    {
+      "identifier" : "https://ark.dasch.swiss/ark:/72163/1/0868/abc123",
+      "identifierType" : "ARK"
+    }
+  ],
+  "types" : {
+    "resourceType" : "Dataset",
+    "resourceTypeGeneral" : "Dataset"
+  },
+  "creators" : [
+    {
+      "name" : "DaSCH",
+      "nameType" : "Organizational"
+    }
+  ],
+  "titles" : [
+    {
+      "title" : "Table 1"
+    }
+  ],
+  "publisher" : "DaSCH",
+  "publicationYear" : "2024",
+  "dates" : [
+    {
+      "date" : "2024-03-01T10:15:30Z",
+      "dateType" : "Created"
+    }
+  ],
+  "relatedIdentifiers" : [
+    {
+      "relatedIdentifier" : "https://ark.dasch.swiss/ark:/72163/1/0868",
+      "relatedIdentifierType" : "ARK",
+      "relationType" : "IsPartOf"
+    }
+  ],
+  "schemaVersion" : "http://datacite.org/schema/kernel-4"
+}

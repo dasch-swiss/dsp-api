@@ -154,6 +154,7 @@ scala_junit_test(
         "@maven//:dev_zio_zio_cache_3",
         "@maven//:dev_zio_zio_json_3",
         "@maven//:dev_zio_zio_test_3",
+        "@maven//:com_networknt_json_schema_validator",
         "@maven//:org_wiremock_wiremock",
     ],
 )
