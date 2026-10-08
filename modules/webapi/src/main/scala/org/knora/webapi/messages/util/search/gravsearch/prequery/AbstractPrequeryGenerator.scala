@@ -1911,10 +1911,7 @@ abstract class AbstractPrequeryGenerator(
       StatementPattern(
         subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
         pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = XsdLiteral(
-          value = queryString,
-          datatype = OntologyConstants.Xsd.String.toSmartIri,
-        ),
+        obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
       ),
     )
 

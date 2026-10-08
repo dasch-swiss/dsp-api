@@ -3,7 +3,7 @@ WHERE {
 VALUES ?document__resTypes__63704284 { <http://www.knora.org/ontology/0801/beol#basicLetter> <http://www.knora.org/ontology/0801/beol#letter> <http://www.knora.org/ontology/0801/beol#manuscript> <http://www.knora.org/ontology/0801/beol#writtenSource> }
 ?document <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?document__resTypes__63704284 .
 OPTIONAL {
-?familyName <http://jena.apache.org/text#query> "Bernoulli"^^<http://www.w3.org/2001/XMLSchema#string> .
+?familyName <http://jena.apache.org/text#query> ("Bernoulli" 1000000) .
 ?document <http://www.knora.org/ontology/0801/beol#hasRecipient> ?recipient .
 ?recipient <http://www.knora.org/ontology/0801/beol#hasFamilyName> ?familyName .
 ?document <http://www.knora.org/ontology/0801/beol#hasRecipientValue> ?document__httpwwwknoraorgontology0801beolhasRecipient__recipient__LinkValue .

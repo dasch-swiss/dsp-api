@@ -3,7 +3,7 @@ WHERE {
 ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int__valueHasInteger .
 {
-?richtext <http://jena.apache.org/text#query> "test"^^<http://www.w3.org/2001/XMLSchema#string> .
+?richtext <http://jena.apache.org/text#query> ("test" 1000000) .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .
 ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 ?thing <http://www.knora.org/ontology/0001/anything#hasRichtext> ?richtext .
@@ -17,7 +17,7 @@ FILTER NOT EXISTS {
 
 }
 } UNION {
-?text <http://jena.apache.org/text#query> "test"^^<http://www.w3.org/2001/XMLSchema#string> .
+?text <http://jena.apache.org/text#query> ("test" 1000000) .
 ?int <http://www.knora.org/ontology/knora-base#valueHasInteger> "3"^^<http://www.w3.org/2001/XMLSchema#integer> .
 ?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int .
 ?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
