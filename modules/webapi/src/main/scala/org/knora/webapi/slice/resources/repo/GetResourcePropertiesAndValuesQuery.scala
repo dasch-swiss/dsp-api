@@ -184,7 +184,7 @@ object GetResourcePropertiesAndValuesQuery {
                      |    ?standoffNode ?standoffProperty ?standoffValue ;
                      |      knora-base:standoffTagHasStartIndex ?startIndex .
                      |    OPTIONAL {
-                     |      ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                     |      ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
                      |      ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
                      |    }
                      |    FILTER(?startIndex >= 0)
@@ -366,7 +366,7 @@ object GetResourcePropertiesAndValuesQuery {
                      |    ?standoffNode ?standoffProperty ?standoffValue ;
                      |      knora-base:standoffTagHasStartIndex ?startIndex .
                      |    OPTIONAL {
-                     |      ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                     |      ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
                      |      ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
                      |    }
                      |    FILTER(?startIndex >= 0)

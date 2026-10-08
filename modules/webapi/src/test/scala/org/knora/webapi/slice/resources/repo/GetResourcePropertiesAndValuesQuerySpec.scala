@@ -313,7 +313,7 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
        |FILTER ( ( ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#valueHasStandoff> && ?valueObjectProperty != <http://www.knora.org/ontology/knora-base#hasPermissions> ) ) } UNION { ?valueObject <http://www.knora.org/ontology/knora-base#valueHasStandoff> ?standoffNode .
        |?standoffNode ?standoffProperty ?standoffValue ;
        |    <http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex> ?startIndex .
-       |OPTIONAL { ?standoffTag <http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference> ?targetStandoffTag .
+       |OPTIONAL { ?standoffNode <http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference> ?targetStandoffTag .
        |?targetStandoffTag <http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID> ?targetOriginalXMLID . }
        |FILTER ( ?startIndex >= 0 ) } } UNION { ?valueObject a <http://www.knora.org/ontology/knora-base#LinkValue> ;
        |    <http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate> ?resourceLinkProperty ;
