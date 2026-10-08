@@ -19,7 +19,7 @@ status: complete
 ## Chunk queue
 
 | id | files | depends_on | checkboxes | acceptance | context | replaces |
-|----|-------|------------|------------|------------|---------|----------|
+| --- | --- | --- | --- | --- | --- | --- |
 | 1 | `StandoffInternalReferenceQuerySpec.scala` (new), `GetResourcePropertiesAndValuesQuery.scala`, `SearchResultResourcesQuery.scala`, `GetResourcePropertiesAndValuesQuerySpec.scala`, `SearchResultResourcesQuerySpec.scala` | — | regression spec, three OPTIONAL fixes, two rendering strings | new spec fails before the fix, all three query specs pass after it | `GetResourcePropertiesAndValuesQuery.scala:186-189,368-371`, `SearchResultResourcesQuery.scala:88-91`, fixture pattern `ResourcesRepoLiveSpec.scala:1429` | — |
 | 2 | `MaintenanceBackfillValueHasXmlE2ESpec.scala` | 1 | E2E mutual-reference stored-equals-served | E2E spec passes | `MaintenanceBackfillValueHasXmlE2ESpec.scala:425-437` | — |
 | 3 | — | 1, 2 | `just test-unit`, `just fmt`, `just check` | all green | — | — |
@@ -27,7 +27,7 @@ status: complete
 ## Chunks
 
 | id | status | commit(s) | summary | blocker |
-|----|--------|-----------|---------|---------|
+| --- | --- | --- | --- | --- |
 | 1 | complete | 8355ee920 | Regression spec (fails before fix with all IDs per tag), `?standoffNode` binding at three query sites, two rendering strings | none |
 | 2 | complete | b4a310379 | E2E mutual-reference test also compares stored with served XML; workaround comment removed | none |
 | 3 | complete | — | `just test-unit` green, E2E spec 59/59 green, `just fmt` and `just check` clean | none |
