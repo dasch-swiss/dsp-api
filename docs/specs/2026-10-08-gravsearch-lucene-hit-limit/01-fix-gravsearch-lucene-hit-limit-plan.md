@@ -3,7 +3,7 @@ title: "fix: pass an explicit Lucene hit limit in Gravsearch matchText / matchLa
 type: fix
 date: 2026-10-08
 author: "Balduin Landolt"
-status: draft
+status: implemented
 repository: /Users/balduinlandolt/Documents/GitHub/dasch-swiss/dsp-api/.claude/worktrees/DEV-6824
 repositories: []
 linear: DEV-6824

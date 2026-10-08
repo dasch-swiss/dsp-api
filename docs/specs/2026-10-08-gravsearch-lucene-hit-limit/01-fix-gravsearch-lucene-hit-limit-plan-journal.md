@@ -12,7 +12,7 @@ problem: >
 symptoms:
   - "Advanced search label 'matches' ir14* on 0105 DrawingPublic returns 1,954 (prod) / 0 (stage) of 3,031"
   - "Results change after a Lucene reindex"
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-fix-gravsearch-lucene-hit-limit-plan
@@ -21,7 +21,7 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | c05431ceb | worktree-DEV-6824 | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4386> |
+| dsp-api | c05431ceb | worktree-DEV-6824 | squash | shipped | <https://github.com/dasch-swiss/dsp-api/pull/4386> |
 
 ## Phases
 
@@ -67,6 +67,7 @@ status: in-progress
 | 2.6 | dsp-api | complete | — (verification at c409de4c7) | grep: one unlimited text:query emission (matchFulltextLuceneStatement, TODO(DEV-7489)); webapi 2303 green; test-it + test_gravsearch_span green; test-e2e 981 green; just check green. Docker targets run via bazel test with --test_env=DOCKER_HOST --test_env=TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock (colima; bare `just test-it` cannot find Docker here) | none |
 | 2.7 | dsp-api | complete | 4f3772bd7 | review fix (round 1): escape helper moved from LuceneQueryArgs to neutral SparqlStringLiteral (simplicity/dune/consistency); LuceneQueryArgs KDoc names the matchFulltext exception (DEV-7489); standoff TODO + golden test name state regex semantics unchanged (scala-zio); docs give the 1,000,000 limit instead of "not capped" (consistency) | none |
 | 2.8 | dsp-api | complete | 7bec9e099 | review fix (round 2, simplicity re-review): the two matchTextInStandoff regex TODOs folded into one constraint comment; comment-only, compiled + just check green; cap reached | none |
+| 2.9 | dsp-api | complete | a686aaa30 | final-review fix: HONEST-TIMEOUT comment scoped to fulltext search-tier (Gravsearch prequery/count/main translated in SearchRestService); SparqlStringLiteral object Scaladoc; query-language.md prefixed names, hit limit vs escaping scope separated (matchFulltext still capped, DEV-7489). Targeted webapi tests + just check green | none |
 
 ## Deferrals
 
@@ -74,6 +75,15 @@ status: in-progress
 - `scope` Gravsearch generator still renders other user strings into SPARQL unescaped (phase 2 security review): `XsdLiteral.toSparql` (SparqlQuery.scala, every user literal via GravsearchParser.scala:259) and user `regex(?x, "pattern")` via `RegexFunction.toSparql`; a `"` breaks out of the prequery literal (prequery result manipulation; main query re-applies permissions). Fix centrally in the two `toSparql`s with `SparqlStringLiteral.escape`, then drop the call-site escapes. Beyond this plan's three text functions.
 - `scope` matchTextInStandoff regex step (phase 2 scala-zio review): terms are split on spaces and used as raw regexes, so a Lucene phrase keeps its quotes and matches nothing, and `c\d` is a digit class; before this phase such terms were a 500. Pre-existing TODO; now documented in query-language.md. Needs regex-quoting / phrase handling.
 - Dune DUNE-001 (phase 2): matchFulltext's text:query object is still an `XsdLiteral`, structurally indistinguishable from a forgotten limit; make the exception typed (e.g. `LuceneQueryArgs` with an optional limit rendering byte-identically) when DEV-7489 lands. DUNE-004: no static guard that every `text#query` in main sources passes a limit.
+
+- Final review (2026-10-08), not fixed: the 503 rule ("an endpoint carrying `searchTimeoutVariant` must translate
+  the timeout") is held by comments and two specs, not structurally; a future Gravsearch endpoint could advertise or
+  miss the 503 (dune). Hardening idea: one shared combinator plus a spec enumerating variant-carrying endpoints.
+- Final review, pre-existing, follow-up ticket material: `XsdLiteral(nodeLabel, …)` in the list-node label comparison
+  (`AbstractPrequeryGenerator.scala` ~930) renders a user-supplied literal unescaped — same class as the `XsdLiteral`
+  deferral above, but a concrete user-controlled sink (security).
+- Final review, pre-existing: `logPrequeryFailure` logs the full prequery SPARQL (with user terms) at ERROR and Lucene
+  parse messages (may echo raw CR/LF) at INFO; now also on the count path (observability, security).
 
 ## Side findings
 
@@ -85,3 +95,32 @@ status: in-progress
 - Phase 2 review, not taken (suggestions): drop the explicit `LuceneQueryArgs` case in `SparqlTransformer.escapeEntityForVariable` (the plan asked for it); merge the `XsdLiteral | LuceneQueryArgs` cases in `unitKey`; the `matchLabel` E2E compares against `/v2/search` (fulltext), a loose baseline but a sound never-500 guard; `GravsearchInferencePipelineTestSupport.entityKind` renders a `LuceneQueryArgs` object as `other` (no shape golden contains a text:query statement today); PrequeryPatternOrdering Scaladoc (:52, :261, :294) mentions only IriRef/XsdLiteral as bound terms; the escaping sentence appears in both the matchText and matchFulltext doc sections.
 - Local Docker-backed tests on colima need `--test_env=DOCKER_HOST --test_env=TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`; bare `just test-it` / `just test-e2e` fail with "Could not find a valid Docker environment".
 - Phase 2 re-review suggestions, not taken: a direct `SparqlStringLiteralSpec` (escape is covered via `LuceneQueryArgsSpec`); the numbers 1,000,000 / 10,000 in query-language.md duplicate `luceneHitLimit` and Jena's default; a pointer to `SparqlStringLiteral.escape` on `XsdLiteral` / `RegexFunction` until the `scope` deferral lands.
+
+## Closeout
+
+- root_cause: Jena's `text:query` without an explicit limit silently caps the Lucene lookup at 10,000 hits
+  (`TextIndexLucene.MAX_N`); for wildcard terms the surviving hits are in index doc order, so selective Gravsearch
+  filters (class, project) could drop most real matches — the 0105 `ir14*` label search returned 0 / 1,954 of 3,031.
+  DEV-6823 had fixed `/v2/search` and search-by-label, but Gravsearch's prequery generator rendered the term as a plain
+  `XsdLiteral` and the internal SPARQL AST could not express the `("term" limit)` list object. The same plain
+  `XsdLiteral` rendering also left matchText / matchLabel terms unescaped.
+- investigation: Stage measurements (read-only, real prod terms from two weeks of Tempo traces) showed the limit is
+  cheap for the matchText / matchLabel prequery shape (`ir14*`: 0.86 s at any limit; broad classless worst case 19 s)
+  but makes matchFulltext's broad multi-word searches 8–30x slower (up to 115 s), since its per-hit OPTIONAL value /
+  list-node branches and `subClassOf*` walks scale with hits. About 20 % of prod matchFulltext requests are truncated
+  today, mostly multi-word OR terms; intermediate limits (20k–50k) fix only 16–31 % of them at linear cost. A
+  hand-applied DEV-6864 REWRITE made matchFulltext 2–5x faster with identical results, but rewrite + limit still costs
+  13–26 s for the broadest terms. Decision: limit matchText / matchTextInStandoff / matchLabel now; matchFulltext moves
+  to DEV-7489. Measurements: `02-gravsearch-lucene-limit-measurements-design.md`.
+- solution: New AST entity `LuceneQueryArgs` renders `("<escaped term>" <limit>)`; `lucenePattern` passes
+  `OntologyConstants.Fuseki.luceneHitLimit`; `PrequeryPatternOrdering` counts it as a restricted term so prequery order
+  is unchanged; escaping lives in a shared `SparqlStringLiteral.escape` used by `LuceneQueryArgs`, matchFulltext and the
+  matchTextInStandoff regex FILTERs (matchFulltext stays byte-identical and unlimited, `TODO(DEV-7489)`). Gravsearch
+  timeouts on the four `/v2/searchextended` endpoints are translated in `SearchRestService` to
+  `SearchTimeoutException` (503, Gravsearch-specific hedged message); the count prequery now logs its SPARQL on failure.
+  Docs say which text functions are capped and no longer claim a 504.
+- prevention: Prequery goldens pin the limit for every text function (incl. simple schema, standoff, a label count and
+  an escaped term); `LuceneQueryArgsSpec` pins rendering and escaping; E2E specs assert unbalanced quotes never 500 and
+  phrases / LF work; `SearchRestServiceSpec` and `SearchEndpointsSpec` pin the 503 to exactly the Gravsearch endpoints.
+  Pattern: before raising a Lucene limit, measure the per-hit cost of the query shape on stage with real terms — the
+  limit is safe only where post-Lucene work is cheap per hit.
