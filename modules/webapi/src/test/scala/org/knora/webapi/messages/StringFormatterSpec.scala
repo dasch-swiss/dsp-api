@@ -739,7 +739,7 @@ class StringFormatterSpec extends ZIOSpecDefault {
       assertTrue(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622098Z")
     },
     test("generate an ARK URL for a project") {
-      val arkUrl = stringFormatter.projectIriToArkUrl(Shortcode.unsafeFrom("0001"))
+      val arkUrl = stringFormatter.projectArkUrl(Shortcode.unsafeFrom("0001"))
       assertTrue(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001")
     },
     test("generate an ARK URL for a resource IRI with a timestamp without a fractional part") {

@@ -20,6 +20,7 @@ import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.Rendering
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
@@ -56,6 +57,9 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
   private val ccBy     = License.BUILT_IN.find(_.id == LicenseIri.CC_BY_4_0).get
   private val ccBySa   = License.BUILT_IN.find(_.id == LicenseIri.CC_BY_SA_4_0).get
   private val licenses = Map(ccBy.id -> ccBy, ccBySa.id -> ccBySa)
+
+  private val bySaFact = LicenseFact(ccBySa.uri.toString, "CC BY-SA 4.0", Some("CC-BY-SA-4.0"))
+  private val byFact   = LicenseFact(ccBy.uri.toString, "CC BY 4.0", Some("CC-BY-4.0"))
 
   private val grant    = AssetAccess.from(Some(ObjectAccess.View), MediaKind.RasterStillImage, None)
   private val withhold = AssetAccess.from(Some(ObjectAccess.RestrictedView), MediaKind.Document, None)
@@ -128,6 +132,8 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
     users: Ref[List[User]],
     access: Task[AssetAccess] = ZIO.succeed(grant),
     project: KnoraProject = project,
+    carriesFile: Boolean = true,
+    findLicenseResult: LicenseIri => Task[Option[License]] = id => ZIO.succeed(licenses.get(id)),
   ) extends FairGraphSources {
     def readResource(
       iri: ResourceIri,
@@ -140,8 +146,9 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
         ZIO.dieMessage("unexpected schema or options"),
       ) *> read
     def findProject(id: ProjectIri): Task[Option[KnoraProject]]                        = ZIO.some(project)
-    def findLicense(id: LicenseIri, sc: KnoraProject.Shortcode): Task[Option[License]] = ZIO.succeed(licenses.get(id))
+    def findLicense(id: LicenseIri, sc: KnoraProject.Shortcode): Task[Option[License]] = findLicenseResult(id)
     def assetAccess(user: User, filename: InternalFilename): Task[AssetAccess]         = access
+    def canCarryFile(resourceClassIri: SmartIri): Task[Boolean]                        = ZIO.succeed(carriesFile)
     def fileLink(p: KnoraProject, fv: FileValueContentV2, d: Instant): UIO[FileLink]   = ZIO.succeed(link)
   }
 
@@ -151,20 +158,32 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
     url: String = appUrl,
     access: Task[AssetAccess] = ZIO.succeed(grant),
     project: KnoraProject = project,
+    carriesFile: Boolean = true,
+    findLicenseResult: LicenseIri => Task[Option[License]] = id => ZIO.succeed(licenses.get(id)),
   ) =
     for {
       users  <- Ref.make(List.empty[User])
       config <- ZIO.serviceWith[AppConfig](c => c.copy(dspApp = c.dspApp.copy(url = url)))
-      graph  <- ResourceFairGraphBuilder(config, Stub(read, users, access, project), sf).build(ref)
-      seen   <- users.get
+      graph  <- ResourceFairGraphBuilder(config, Stub(read, users, access, project, carriesFile, findLicenseResult), sf)
+                 .build(ref)
+      seen <- users.get
     } yield (graph, seen)
 
   private def graphOf(
     rs: ReadResourceV2,
     access: Task[AssetAccess] = ZIO.succeed(grant),
     project: KnoraProject = project,
+    carriesFile: Boolean = true,
+    findLicenseResult: LicenseIri => Task[Option[License]] = id => ZIO.succeed(licenses.get(id)),
   ) =
-    build(ZIO.succeed(seq(rs)), access = access, project = project).map(_._1.get)
+    build(
+      ZIO.succeed(seq(rs)),
+      access = access,
+      project = project,
+      carriesFile = carriesFile,
+      findLicenseResult = findLicenseResult,
+    )
+      .map(_._1.get)
 
   private val deletion = DeletionInfo(modified, None)
 
@@ -209,21 +228,29 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
           assertTrue(
             g.accessLevel == AccessLevel.FullOpen,
             g.file == Some(
-              FileFacts(link.url, Some("a.tif"), Some("image/tiff"), Some(42L), Some(ccBySa.uri.toString)),
+              FileFacts(link.url, Some("a.tif"), Some("image/tiff"), Some(42L), Some(bySaFact)),
             ),
             g.generalType == "Image",
           )
         }
       },
-      test("Withhold: no file") {
+      test("Withhold on a representation: no file, restricted") {
         graphOf(resource(values = Seq(ObjectAccess.View -> stillImage)), access = ZIO.succeed(withhold)).map { g =>
-          assertTrue(g.accessLevel == AccessLevel.FullOpen, g.file.isEmpty)
+          assertTrue(g.accessLevel == AccessLevel.Restricted, g.file.isEmpty)
         }
       },
-      test("failing asset decision: no file, graph still built") {
+      test("failing asset decision: no file, restricted, graph still built") {
         graphOf(resource(values = Seq(ObjectAccess.View -> stillImage)), access = ZIO.fail(new Exception("x"))).map {
-          g => assertTrue(g.file.isEmpty, g.title == "A label")
+          g => assertTrue(g.file.isEmpty, g.accessLevel == AccessLevel.Restricted, g.title == "A label")
         }
+      },
+      test("representation whose file is hidden: restricted") {
+        graphOf(resource()).map(g => assertTrue(g.accessLevel == AccessLevel.Restricted, g.file.isEmpty))
+      },
+      test("non-representation resource without a file: full open") {
+        graphOf(resource(), carriesFile = false).map(g =>
+          assertTrue(g.accessLevel == AccessLevel.FullOpen, g.file.isEmpty),
+        )
       },
       test("RV file: restricted, no file") {
         graphOf(resource(values = Seq(ObjectAccess.RestrictedView -> stillImage))).map { g =>
@@ -235,16 +262,22 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
           assertTrue(g.accessLevel == AccessLevel.Restricted, g.file.isEmpty)
         }
       },
-      test("two V files: full open, no file, Dataset") {
+      test("two V files: restricted, no file, Dataset") {
         val other = AudioFileValueContentV2(ApiV2Complex, fileValue)
         graphOf(resource(values = Seq(ObjectAccess.View -> stillImage, ObjectAccess.View -> other))).map { g =>
-          assertTrue(g.accessLevel == AccessLevel.FullOpen, g.file.isEmpty, g.generalType == "Dataset")
+          assertTrue(g.accessLevel == AccessLevel.Restricted, g.file.isEmpty, g.generalType == "Dataset")
         }
       },
       test("two files, one RV: restricted, no file") {
         val other = AudioFileValueContentV2(ApiV2Complex, fileValue)
         graphOf(resource(values = Seq(ObjectAccess.View -> stillImage, ObjectAccess.RestrictedView -> other))).map { g =>
           assertTrue(g.accessLevel == AccessLevel.Restricted, g.file.isEmpty)
+        }
+      },
+      test("a versioned ref never describes a file") {
+        val v = ref.copy(version = Some(VersionDate.fromInstant(Instant.parse("2020-06-04T08:56:22Z"))))
+        build(ZIO.succeed(seq(resource(values = Seq(ObjectAccess.View -> stillImage)))), v).map { case (g, _) =>
+          assertTrue(g.get.file.isEmpty, g.get.accessLevel == AccessLevel.Restricted)
         }
       },
       test("external IIIF file: no file, Image") {
@@ -254,7 +287,7 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
           IiifImageRequestUrl.from("https://iiif.example.org/a/b/c/d/e/f.jpg").toOption.get,
         )
         graphOf(resource(values = Seq(ObjectAccess.View -> external))).map { g =>
-          assertTrue(g.file.isEmpty, g.generalType == "Image")
+          assertTrue(g.file.isEmpty, g.generalType == "Image", g.accessLevel == AccessLevel.Restricted)
         }
       },
       test("text value without a file: Dataset") {
@@ -268,28 +301,43 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
       test("resource authorship wins over the project default") {
         val p = project.copy(defaultDataAuthorship = List(Authorship.unsafeFrom("Project Person")))
         graphOf(resource(authorship = Seq(Authorship.unsafeFrom("Ada"))), project = p).map { g =>
-          assertTrue(g.creators == Seq(Creator("Ada", CreatorKind.Person, None)))
+          assertTrue(g.creators == Seq(Creator("Ada", None, None)))
         }
       },
       test("falls back to the project default; DaSCH is an organization") {
         val p = project.copy(defaultDataAuthorship = List(Authorship.unsafeFrom("DaSCH")))
         graphOf(resource(), project = p).map { g =>
-          assertTrue(g.creators == Seq(Creator("DaSCH", CreatorKind.Organization, None)))
+          assertTrue(g.creators == Seq(Creator("DaSCH", Some(CreatorKind.Organization), None)))
         }
       },
       test("an ORCID URI sets orcid; free text containing one does not") {
         val orcid = "https://orcid.org/0000-0002-1825-009X"
         val rs    = resource(authorship = Seq(Authorship.unsafeFrom(orcid), Authorship.unsafeFrom(s"Ada ($orcid)")))
         graphOf(rs).map { g =>
-          assertTrue(g.creators.map(_.orcid) == Seq(Some(orcid), None))
+          assertTrue(
+            g.creators.map(_.orcid) == Seq(Some(orcid), None),
+            g.creators.map(_.kind) == Seq(Some(CreatorKind.Person), None),
+          )
         }
       },
     ),
     suite("license and copyright")(
       test("the project's data license is on the graph, not the file's") {
         graphOf(resource(values = Seq(ObjectAccess.View -> stillImage))).map { g =>
-          assertTrue(g.license == Some(ccBy.uri.toString), g.file.flatMap(_.license) == Some(ccBySa.uri.toString))
+          assertTrue(g.license == Some(byFact), g.file.flatMap(_.license) == Some(bySaFact))
         }
+      },
+      test("a failing file-license lookup is logged and treated as no license") {
+        val failing =
+          (id: LicenseIri) => if (id == ccBySa.id) ZIO.fail(new Exception("db down")) else ZIO.succeed(licenses.get(id))
+        graphOf(resource(values = Seq(ObjectAccess.View -> stillImage)), findLicenseResult = failing).map { g =>
+          assertTrue(g.file.exists(_.license.isEmpty), g.license == Some(byFact), g.accessLevel == AccessLevel.FullOpen)
+        }
+      },
+      test("a failing project-license lookup is logged and treated as no license") {
+        graphOf(resource(), findLicenseResult = _ => ZIO.fail(new Exception("db down"))).map(g =>
+          assertTrue(g.license.isEmpty),
+        )
       },
       test("none when the project has no data license") {
         graphOf(resource(), project = project.copy(dataLicense = None)).map(g => assertTrue(g.license.isEmpty))
@@ -305,7 +353,8 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
         build(ZIO.succeed(seq(resource())), ref.copy(version = Some(v))).map { case (g, _) =>
           val graph = g.get
           assertTrue(
-            graph.ark == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20200604T085622Z",
+            graph.ark == sf.resourceIriToArkUrl(resourceIri, Some(v.value)),
+            graph.ark.endsWith(".20200604T085622Z"),
             graph.pageUrl == s"$appUrl/resource/0001/cmfk1DMHRBiR4-_6HXpEFA",
           )
         }
@@ -313,8 +362,7 @@ class ResourceFairGraphBuilderSpec extends ZIOSpecDefault {
       test("project facts") {
         graphOf(resource()).map { g =>
           assertTrue(
-            g.projectArk == "http://0.0.0.0:3336/ark:/72163/1/0001",
-            g.projectShortcode == "0001",
+            g.projectArk == sf.projectArkUrl(project.shortcode),
             g.projectName == "shortname",
             g.resourceClassIri == "http://api.knora.org/ontology/knora-api/v2#Resource",
           )

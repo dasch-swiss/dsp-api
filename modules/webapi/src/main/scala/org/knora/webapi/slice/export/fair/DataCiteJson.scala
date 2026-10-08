@@ -21,34 +21,9 @@ object DataCiteJson {
   private val SchemaVersion = "http://datacite.org/schema/kernel-4"
   private val OrcidScheme   = "https://orcid.org"
 
-  // The CC licenses DaSCH offers, keyed by their license URI.
-  private val knownLicenses: Map[String, (String, String)] = Map(
-    "https://creativecommons.org/licenses/by/4.0/"    -> ("CC-BY-4.0", "Creative Commons Attribution 4.0 International"),
-    "https://creativecommons.org/licenses/by-sa/4.0/" -> (
-      "CC-BY-SA-4.0",
-      "Creative Commons Attribution-ShareAlike 4.0 International",
-    ),
-    "https://creativecommons.org/licenses/by-nc/4.0/" -> (
-      "CC-BY-NC-4.0",
-      "Creative Commons Attribution-NonCommercial 4.0 International",
-    ),
-    "https://creativecommons.org/licenses/by-nc-sa/4.0/" -> (
-      "CC-BY-NC-SA-4.0",
-      "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International",
-    ),
-    "https://creativecommons.org/licenses/by-nd/4.0/" -> (
-      "CC-BY-ND-4.0",
-      "Creative Commons Attribution-NoDerivatives 4.0 International",
-    ),
-    "https://creativecommons.org/licenses/by-nc-nd/4.0/" -> (
-      "CC-BY-NC-ND-4.0",
-      "Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International",
-    ),
-    "https://creativecommons.org/publicdomain/zero/1.0/" -> ("CC0-1.0", "Creative Commons Public Domain Dedication"),
-  )
-
   def toJsonString(g: ResourceFairGraph): String = render(g).toJsonPretty
 
+  // DataCite 4.3 requires `resourceType` as well as `resourceTypeGeneral`.
   def render(g: ResourceFairGraph): Json = {
     val fields: Seq[Option[(String, Json)]] = Seq(
       Some("identifiers"     -> Json.Arr(obj("identifier" -> str(g.ark), "identifierType" -> str("ARK")))),
@@ -87,29 +62,26 @@ object DataCiteJson {
 
   // DataCite requires at least one creator; DaSCH stands in when none is recorded.
   private def creators(g: ResourceFairGraph): Seq[Creator] =
-    if (g.creators.isEmpty) Seq(Creator(Publisher, CreatorKind.Organization, None)) else g.creators
+    if (g.creators.isEmpty) Seq(Creator(Publisher, Some(CreatorKind.Organization), None)) else g.creators
 
   private def creator(c: Creator): Json = {
-    val nameType = c.kind match {
-      case CreatorKind.Person       => "Personal"
-      case CreatorKind.Organization => "Organizational"
+    val nameType = c.kind.map {
+      case CreatorKind.Person       => "nameType" -> str("Personal")
+      case CreatorKind.Organization => "nameType" -> str("Organizational")
     }
     val identifiers = c.orcid.map { o =>
       "nameIdentifiers" -> Json.Arr(
         obj("nameIdentifier" -> str(o), "nameIdentifierScheme" -> str("ORCID"), "schemeUri" -> str(OrcidScheme)),
       )
     }
-    Json.Obj(Chunk.from(Seq("name" -> str(c.name), "nameType" -> str(nameType)) ++ identifiers))
+    Json.Obj(Chunk.from(Seq("name" -> str(c.name)) ++ nameType ++ identifiers))
   }
 
-  private def rights(licenseUri: String): Json = knownLicenses.get(licenseUri) match {
-    case Some((spdx, label)) =>
-      obj(
-        "rights"                 -> str(label),
-        "rightsUri"              -> str(licenseUri),
-        "rightsIdentifier"       -> str(spdx),
-        "rightsIdentifierScheme" -> str("SPDX"),
-      )
-    case None => obj("rights" -> str(licenseUri), "rightsUri" -> str(licenseUri))
-  }
+  private def rights(l: LicenseFact): Json =
+    Json.Obj(
+      Chunk.from(
+        Seq("rights" -> str(l.label), "rightsUri" -> str(l.uri)) ++
+          l.spdxId.toSeq.flatMap(id => Seq("rightsIdentifier" -> str(id), "rightsIdentifierScheme" -> str("SPDX"))),
+      ),
+    )
 }

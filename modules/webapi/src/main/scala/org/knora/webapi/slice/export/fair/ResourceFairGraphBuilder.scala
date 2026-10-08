@@ -16,6 +16,7 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.Rendering
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
@@ -42,10 +43,16 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v3.`export`.FileLink
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
-/** The effectful reads the builder needs, narrowed so tests need no triplestore. */
+/**
+ * The effectful reads the builder needs. Kept as one narrow trait because the real services (project, legal info,
+ * asset permissions, ontology) have no in-memory test doubles that fit one unit spec.
+ */
 trait FairGraphSources {
   def readResource(
     resourceIri: ResourceIri,
@@ -61,6 +68,9 @@ trait FairGraphSources {
 
   def assetAccess(user: User, filename: InternalFilename): Task[AssetAccess]
 
+  /** Whether instances of the class can carry a file value, i.e. it is a subclass of a representation class. */
+  def canCarryFile(resourceClassIri: SmartIri): Task[Boolean]
+
   def fileLink(project: KnoraProject, fileValue: FileValueContentV2, resourceCreationDate: Instant): UIO[FileLink]
 }
 
@@ -69,6 +79,7 @@ final case class FairGraphSourcesLive(
   projects: KnoraProjectService,
   legalInfo: LegalInfoService,
   assetPermissions: AssetPermissionsResponder,
+  ontologyRepo: OntologyRepo,
   assetDownloadLinks: AssetDownloadLinks,
 ) extends FairGraphSources {
 
@@ -95,6 +106,13 @@ final case class FairGraphSourcesLive(
   def assetAccess(user: User, filename: InternalFilename): Task[AssetAccess] =
     assetPermissions.getAssetAccess(user)(filename)
 
+  def canCarryFile(resourceClassIri: SmartIri): Task[Boolean] =
+    ZIO
+      .fromEither(ResourceClassIri.from(resourceClassIri))
+      .mapError(new IllegalArgumentException(_))
+      .flatMap(ontologyRepo.findRepresentationClass)
+      .map(_ != RepresentationClass.WithoutRepresentation)
+
   def fileLink(project: KnoraProject, fileValue: FileValueContentV2, resourceCreationDate: Instant): UIO[FileLink] =
     assetDownloadLinks.linkOf(project, fileValue, resourceCreationDate)
 }
@@ -105,6 +123,7 @@ final case class FairGraphInputs(
   resource: ReadResourceV2,
   project: KnoraProject,
   projectLicense: Option[License],
+  canCarryFile: Boolean,
   grantedFile: Option[GrantedFile],
 )
 
@@ -138,19 +157,46 @@ final case class ResourceFairGraphBuilder(appConfig: AppConfig, sources: FairGra
       project <- sources
                    .findProject(resource.projectADM.id)
                    .someOrFail(InconsistentRepositoryDataException(s"No project for resource ${ref.resourceIri}"))
-      projectLicense <- ZIO.foreach(project.dataLicense)(sources.findLicense(_, project.shortcode)).map(_.flatten)
-      granted        <- grantedFile(project, resource)
-    } yield FairGraphInputs(ref, resource, project, projectLicense, granted)
+      projectLicense <- findLicense(project.dataLicense, project, resource)
+      canCarry       <-
+        sources
+          .canCarryFile(resource.resourceClassIri)
+          .catchAll(e =>
+            ZIO.logWarning(s"Could not tell whether ${resource.resourceIri} can carry a file: ${e.getMessage}") *>
+              ZIO.succeed(true),
+          )
+      granted <- grantedFile(ref, project, resource)
+    } yield FairGraphInputs(ref, resource, project, projectLicense, canCarry, granted)
 
-  private def grantedFile(project: KnoraProject, resource: ReadResourceV2): Task[Option[GrantedFile]] = {
+  // A failing lookup publishes the graph without that license.
+  private def findLicense(
+    id: Option[LicenseIri],
+    project: KnoraProject,
+    resource: ReadResourceV2,
+  ): UIO[Option[License]] =
+    ZIO
+      .foreach(id)(sources.findLicense(_, project.shortcode))
+      .map(_.flatten)
+      .catchAll(e =>
+        ZIO.logWarning(s"Could not look up the license of ${resource.resourceIri}: ${e.getMessage}").as(None),
+      )
+
+  // The asset decision exists only for the current state, so a versioned reference never describes a file.
+  private def grantedFile(
+    ref: ResourceLandingRef,
+    project: KnoraProject,
+    resource: ReadResourceV2,
+  ): Task[Option[GrantedFile]] = {
     val files = ResourceFairGraphBuilder.fileValues(resource)
-    if (files.size > 1)
+    if (ref.version.isDefined) ZIO.none
+    else if (files.size > 1)
       ZIO.logWarning(s"Resource ${resource.resourceIri} has ${files.size} file values; no file is advertised") *>
         ZIO.none
     else
       files.headOption match {
-        case Some((_, content))
-            if ResourceFairGraphBuilder.accessLevel(resource) == AccessLevel.FullOpen &&
+        case Some((value, content))
+            if resource.userPermission >= Permission.ObjectAccess.View &&
+              value.userPermission >= Permission.ObjectAccess.View &&
               !content.isInstanceOf[StillImageExternalFileValueContentV2] =>
           advertise(project, resource, content)
         case _ => ZIO.none
@@ -175,8 +221,7 @@ final case class ResourceFairGraphBuilder(appConfig: AppConfig, sources: FairGra
         case true  =>
           for {
             link    <- sources.fileLink(project, content, resource.creationDate)
-            license <-
-              ZIO.foreach(content.fileValue.licenseIri)(sources.findLicense(_, project.shortcode)).map(_.flatten)
+            license <- findLicense(content.fileValue.licenseIri, project, resource)
           } yield Some(GrantedFile(link, license))
       }
   }
@@ -190,21 +235,20 @@ final case class ResourceFairGraphBuilder(appConfig: AppConfig, sources: FairGra
       creators = ResourceFairGraphBuilder.creators(r.resourceAuthorship, in.project.defaultDataAuthorship),
       dateCreated = r.creationDate,
       dateModified = r.lastModificationDate,
-      license = in.projectLicense.map(_.uri.toString),
+      license = in.projectLicense.map(ResourceFairGraphBuilder.licenseFact),
       copyrightHolder = in.project.dataCopyrightHolder.map(_.value),
       generalType = ResourceFairGraphBuilder.generalType(r),
-      accessLevel = ResourceFairGraphBuilder.accessLevel(r),
+      accessLevel = ResourceFairGraphBuilder.accessLevel(r, in.canCarryFile, in.grantedFile.isDefined),
       file = in.grantedFile.map { g =>
         FileFacts(
           contentUrl = g.link.url,
           name = g.link.fileName,
           encodingFormat = g.link.mimeType,
           contentSize = g.link.fileSize,
-          license = g.license.map(_.uri.toString),
+          license = g.license.map(ResourceFairGraphBuilder.licenseFact),
         )
       },
-      projectArk = sf.projectIriToArkUrl(in.project.shortcode),
-      projectShortcode = in.project.shortcode.value,
+      projectArk = sf.projectArkUrl(in.project.shortcode),
       projectName = in.project.longname.map(_.value).getOrElse(in.project.shortname.value),
       resourceClassIri = r.resourceClassIri.toString,
     )
@@ -215,7 +259,7 @@ object ResourceFairGraphBuilder {
 
   val layer: URLayer[
     AppConfig & StringFormatter & ReadResourcesService & KnoraProjectService & LegalInfoService &
-      AssetPermissionsResponder & AssetDownloadLinks,
+      AssetPermissionsResponder & OntologyRepo & AssetDownloadLinks,
     ResourceFairGraphBuilder,
   ] =
     ZLayer.derive[FairGraphSourcesLive].project[FairGraphSources](identity) >>> ZLayer.derive[ResourceFairGraphBuilder]
@@ -238,12 +282,15 @@ object ResourceFairGraphBuilder {
       )
       .toSeq
 
-  private[fair] def accessLevel(r: ReadResourceV2): AccessLevel =
-    if (
-      r.userPermission >= Permission.ObjectAccess.View &&
-      fileValues(r).forall(_._1.userPermission >= Permission.ObjectAccess.View)
-    ) AccessLevel.FullOpen
+  /**
+   * Full open only when the anonymous user may see the resource and either its single file's original is granted
+   * or its class cannot carry a file at all; anything undecided is restricted.
+   */
+  private[fair] def accessLevel(r: ReadResourceV2, canCarryFile: Boolean, originalGranted: Boolean): AccessLevel =
+    if (r.userPermission >= Permission.ObjectAccess.View && (originalGranted || !canCarryFile)) AccessLevel.FullOpen
     else AccessLevel.Restricted
+
+  private[fair] def licenseFact(l: License): LicenseFact = LicenseFact(l.uri.toString, l.labelEn, License.spdxId(l.id))
 
   private[fair] def generalType(r: ReadResourceV2): String =
     fileValues(r) match {
@@ -260,11 +307,12 @@ object ResourceFairGraphBuilder {
 
   private[fair] def creators(fromResource: Seq[Authorship], fromProject: Seq[Authorship]): Seq[Creator] =
     (if (fromResource.nonEmpty) fromResource else fromProject).map { a =>
-      val name = a.value
-      Creator(
-        name = name,
-        kind = if (name == "DaSCH") CreatorKind.Organization else CreatorKind.Person,
-        orcid = Some(name).filter(OrcidUri.matches),
-      )
+      val name  = a.value
+      val orcid = Some(name).filter(OrcidUri.matches)
+      // An ORCID identifies a person; free text says nothing about the kind.
+      val kind =
+        if (name == "DaSCH") Some(CreatorKind.Organization)
+        else orcid.map(_ => CreatorKind.Person)
+      Creator(name = name, kind = kind, orcid = orcid)
     }
 }

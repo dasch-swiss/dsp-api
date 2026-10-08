@@ -247,6 +247,18 @@ object License {
     ),
   )
 
+  /** The SPDX identifier of a built-in license that has one; `None` for every other license. */
+  def spdxId(id: LicenseIri): Option[String] = id match {
+    case CC_BY_4_0       => Some("CC-BY-4.0")
+    case CC_BY_SA_4_0    => Some("CC-BY-SA-4.0")
+    case CC_BY_NC_4_0    => Some("CC-BY-NC-4.0")
+    case CC_BY_NC_SA_4_0 => Some("CC-BY-NC-SA-4.0")
+    case CC_BY_ND_4_0    => Some("CC-BY-ND-4.0")
+    case CC_BY_NC_ND_4_0 => Some("CC-BY-NC-ND-4.0")
+    case CC_0_1_0        => Some("CC0-1.0")
+    case _               => None
+  }
+
   def from(id: LicenseIri, uri: URI, labelEn: String, isRecommended: IsDaschRecommended): Either[String, License] = {
     val labelValidation = Validation
       .validate(nonEmpty(labelEn), maxLength(255)(labelEn), noLineBreaks(labelEn))

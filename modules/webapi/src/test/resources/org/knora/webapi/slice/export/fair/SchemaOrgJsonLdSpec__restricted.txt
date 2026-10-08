@@ -31,7 +31,6 @@
       "name" : "Jane Doe"
     },
     {
-      "@type" : "Person",
       "name" : "John Roe"
     }
   ],

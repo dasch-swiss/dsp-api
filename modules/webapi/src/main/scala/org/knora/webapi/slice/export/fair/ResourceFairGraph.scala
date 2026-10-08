@@ -11,7 +11,11 @@ enum CreatorKind {
   case Person, Organization
 }
 
-final case class Creator(name: String, kind: CreatorKind, orcid: Option[String])
+/** `kind` is `None` when nothing in the source says whether the creator is a person or an organization. */
+final case class Creator(name: String, kind: Option[CreatorKind], orcid: Option[String])
+
+/** A license as published: `spdxId` is present only for licenses that have an SPDX identifier. */
+final case class LicenseFact(uri: String, label: String, spdxId: Option[String])
 
 enum AccessLevel {
   case FullOpen, Restricted
@@ -23,7 +27,7 @@ final case class FileFacts(
   name: Option[String],
   encodingFormat: Option[String],
   contentSize: Option[Long],
-  license: Option[String],
+  license: Option[LicenseFact],
 )
 
 /**
@@ -37,13 +41,12 @@ final case class ResourceFairGraph(
   creators: Seq[Creator],
   dateCreated: Instant,
   dateModified: Option[Instant],
-  license: Option[String],
+  license: Option[LicenseFact],
   copyrightHolder: Option[String],
   generalType: String,
   accessLevel: AccessLevel,
   file: Option[FileFacts],
   projectArk: String,
-  projectShortcode: String,
   projectName: String,
   resourceClassIri: String,
 )

@@ -128,7 +128,25 @@ class LegalInfoModelSpec extends ZIOSpecDefault {
     },
   )
 
+  private val spdxSuite = suite("License.spdxId")(
+    test("maps the CC licenses explicitly") {
+      assertTrue(
+        License.spdxId(LicenseIri.CC_BY_4_0) == Some("CC-BY-4.0"),
+        License.spdxId(LicenseIri.CC_BY_NC_SA_4_0) == Some("CC-BY-NC-SA-4.0"),
+        License.spdxId(LicenseIri.CC_0_1_0) == Some("CC0-1.0"),
+      )
+    },
+    test("is None for licenses without an SPDX identifier") {
+      assertTrue(
+        License.spdxId(LicenseIri.CC_PDM_1_0).isEmpty,
+        License.spdxId(LicenseIri.UNKNOWN).isEmpty,
+        License.spdxId(LicenseIri.BORIS).isEmpty,
+      )
+    },
+  )
+
   val spec: Spec[Any, Nothing] = suite("Copyright And Licenses Model")(
+    spdxSuite,
     authorshipSuite,
     licenseIriSuite,
     licenseSuite,

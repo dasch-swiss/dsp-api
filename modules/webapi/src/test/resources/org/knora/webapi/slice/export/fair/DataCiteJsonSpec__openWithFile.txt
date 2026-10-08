@@ -22,8 +22,7 @@
       ]
     },
     {
-      "name" : "Example Institute",
-      "nameType" : "Organizational"
+      "name" : "John Roe"
     }
   ],
   "titles" : [
@@ -52,7 +51,7 @@
   ],
   "rightsList" : [
     {
-      "rights" : "Creative Commons Attribution 4.0 International",
+      "rights" : "CC BY 4.0",
       "rightsUri" : "https://creativecommons.org/licenses/by/4.0/",
       "rightsIdentifier" : "CC-BY-4.0",
       "rightsIdentifierScheme" : "SPDX"

@@ -31,7 +31,7 @@ object SchemaOrgJsonLd {
       ),
       Some("name"           -> Json.Str(g.title)),
       Some("additionalType" -> Json.Str(g.resourceClassIri)),
-      g.license.map("license" -> licenseNode(_)),
+      g.license.map(l => "license" -> licenseNode(l.uri)),
       Some("isAccessibleForFree" -> Json.Bool(g.accessLevel == AccessLevel.FullOpen)),
       Some("conditionsOfAccess"  -> Json.Str(conditionsOfAccess(g.accessLevel))),
       Some("dateCreated"         -> Json.Str(g.dateCreated.toString)),
@@ -74,12 +74,12 @@ object SchemaOrgJsonLd {
   }
 
   private def agentNode(c: Creator): Json = {
-    val kind = c.kind match {
-      case CreatorKind.Person       => "Person"
-      case CreatorKind.Organization => "Organization"
+    val id   = c.orcid.map("@id" -> Json.Str(_))
+    val kind = c.kind.map {
+      case CreatorKind.Person       => "@type" -> Json.Str("Person")
+      case CreatorKind.Organization => "@type" -> Json.Str("Organization")
     }
-    val id = c.orcid.map("@id" -> Json.Str(_))
-    Json.Obj(Chunk.from(id.toSeq ++ Seq("@type" -> Json.Str(kind), "name" -> Json.Str(c.name))))
+    Json.Obj(Chunk.from(id.toSeq ++ kind.toSeq :+ ("name" -> Json.Str(c.name))))
   }
 
   // References only: a creator without an ORCID has no node to point at.
@@ -93,7 +93,7 @@ object SchemaOrgJsonLd {
       f.name.map("name" -> Json.Str(_)),
       f.encodingFormat.map("encodingFormat" -> Json.Str(_)),
       f.contentSize.map(s => "contentSize" -> Json.Num(BigDecimal(s).bigDecimal)),
-      f.license.map("license" -> licenseNode(_)),
+      f.license.map(l => "license" -> licenseNode(l.uri)),
     )
     Json.Obj(Chunk.from(fields.flatten))
   }

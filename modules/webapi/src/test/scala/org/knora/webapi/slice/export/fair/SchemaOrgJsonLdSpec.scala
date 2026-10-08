@@ -10,59 +10,13 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
-import java.time.Instant
-
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class SchemaOrgJsonLdSpec extends ZIOSpecDefault with GoldenTest {
 
-  private val orcid = "https://orcid.org/0000-0002-1825-0097"
-
-  private val openWithFile = ResourceFairGraph(
-    ark = "https://ark.dasch.swiss/ark:/72163/1/0868/abc123",
-    pageUrl = "https://app.dasch.swiss/resource/0868/abc123",
-    title = "Table 1",
-    creators = Seq(
-      Creator("Jane Doe", CreatorKind.Person, Some(orcid)),
-      Creator("John Roe", CreatorKind.Person, None),
-    ),
-    dateCreated = Instant.parse("2024-03-01T10:15:30Z"),
-    dateModified = Some(Instant.parse("2025-01-02T03:04:05Z")),
-    license = Some("https://creativecommons.org/licenses/by/4.0/"),
-    copyrightHolder = Some("University of Basel"),
-    generalType = "Dataset",
-    accessLevel = AccessLevel.FullOpen,
-    file = Some(
-      FileFacts(
-        "https://ingest.dasch.swiss/projects/0868/assets/xyz/original",
-        Some("table1.csv"),
-        Some("text/csv"),
-        Some(1234L),
-        Some("https://creativecommons.org/publicdomain/zero/1.0/"),
-      ),
-    ),
-    projectArk = "https://ark.dasch.swiss/ark:/72163/1/0868",
-    projectShortcode = "0868",
-    projectName = "Example project",
-    resourceClassIri = "http://api.dasch.swiss/ontology/0868/example/v2#Table",
-  )
-
-  private val restricted = openWithFile.copy(accessLevel = AccessLevel.Restricted, file = None)
-
-  private val versioned = openWithFile.copy(
-    ark = "https://ark.dasch.swiss/ark:/72163/1/0868/abc123.20240301T101530Z",
-    file = None,
-  )
-
-  private val bare = openWithFile.copy(
-    creators = Seq.empty,
-    license = None,
-    copyrightHolder = None,
-    dateModified = None,
-    file = None,
-  )
+  import FairGraphFixtures.*
 
   private def obj(j: Json, key: String): Option[Json] = j.asObject.flatMap(_.get(key))
   private def arr(j: Option[Json]): Option[Seq[Json]] = j.flatMap(_.asArray).map(_.toSeq)
@@ -110,7 +64,7 @@ class SchemaOrgJsonLdSpec extends ZIOSpecDefault with GoldenTest {
         )
       },
       test("a single creator is still an array") {
-        val g = openWithFile.copy(creators = Seq(Creator("Jane Doe", CreatorKind.Person, Some(orcid))))
+        val g = openWithFile.copy(creators = Seq(Creator("Jane Doe", Some(CreatorKind.Person), Some(orcid))))
         assertTrue(arr(obj(SchemaOrgJsonLd.render(g), "creator")).map(_.size) == Some(1))
       },
       test("access properties follow the access level") {
@@ -120,9 +74,16 @@ class SchemaOrgJsonLdSpec extends ZIOSpecDefault with GoldenTest {
           obj(r, "conditionsOfAccess") == Some(Json.Str("Open Access with Restrictions")),
         )
       },
-      test("output parses as JSON and contains no null") {
-        val outputs = Seq(openWithFile, restricted, versioned, bare).map(SchemaOrgJsonLd.toJsonString)
-        assertTrue(outputs.forall(o => o.fromJson[Json].isRight && !o.contains("null")))
+      test("an unknown creator kind has no @type, a known one has") {
+        val creators = arr(obj(SchemaOrgJsonLd.render(openWithFile), "creator")).getOrElse(Seq.empty)
+        assertTrue(
+          creators.flatMap(obj(_, "@type")) == Seq(Json.Str("Person")),
+          creators.flatMap(obj(_, "name")) == Seq(Json.Str("Jane Doe"), Json.Str("John Roe")),
+        )
+      },
+      test("output parses as JSON and contains no Json.Null") {
+        val outputs = Seq(openWithFile, restricted, versioned, bare).map(SchemaOrgJsonLd.toJsonString(_).fromJson[Json])
+        assertTrue(outputs.forall(_.exists(j => !containsNull(j))))
       },
     ),
   )

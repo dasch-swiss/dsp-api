@@ -13,7 +13,6 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
-import java.time.Instant
 import scala.jdk.CollectionConverters.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -22,44 +21,7 @@ import org.knora.webapi.GoldenTest
 @RunWith(classOf[DspZTestJUnitRunner])
 class DataCiteJsonSpec extends ZIOSpecDefault with GoldenTest {
 
-  private val orcid = "https://orcid.org/0000-0002-1825-0097"
-
-  private val openWithFile = ResourceFairGraph(
-    ark = "https://ark.dasch.swiss/ark:/72163/1/0868/abc123",
-    pageUrl = "https://app.dasch.swiss/resource/0868/abc123",
-    title = "Table 1",
-    creators = Seq(
-      Creator("Jane Doe", CreatorKind.Person, Some(orcid)),
-      Creator("Example Institute", CreatorKind.Organization, None),
-    ),
-    dateCreated = Instant.parse("2024-03-01T10:15:30Z"),
-    dateModified = Some(Instant.parse("2025-01-02T03:04:05Z")),
-    license = Some("https://creativecommons.org/licenses/by/4.0/"),
-    copyrightHolder = Some("University of Basel"),
-    generalType = "Dataset",
-    accessLevel = AccessLevel.FullOpen,
-    file = Some(
-      FileFacts(
-        "https://ingest.dasch.swiss/projects/0868/assets/xyz/original",
-        Some("table1.csv"),
-        Some("text/csv"),
-        Some(1234L),
-        Some("https://creativecommons.org/publicdomain/zero/1.0/"),
-      ),
-    ),
-    projectArk = "https://ark.dasch.swiss/ark:/72163/1/0868",
-    projectShortcode = "0868",
-    projectName = "Example project",
-    resourceClassIri = "http://api.dasch.swiss/ontology/0868/example/v2#Table",
-  )
-
-  private val bare = openWithFile.copy(
-    creators = Seq.empty,
-    license = None,
-    copyrightHolder = None,
-    dateModified = None,
-    file = None,
-  )
+  import FairGraphFixtures.*
 
   // The vendored schema is draft-07 but carries draft-04's `id`, which the validator rejects; the line is dropped, nothing else.
   private val schema = {
@@ -89,7 +51,7 @@ class DataCiteJsonSpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(
           field(j, "identifiers").flatMap(_.asArray).flatMap(_.headOption) ==
             Some(Json.Obj("identifier" -> Json.Str(openWithFile.ark), "identifierType" -> Json.Str("ARK"))),
-          creators.flatMap(field(_, "nameType")) == Seq(Json.Str("Personal"), Json.Str("Organizational")),
+          creators.flatMap(field(_, "nameType")) == Seq(Json.Str("Personal")),
           creators.headOption
             .flatMap(field(_, "nameIdentifiers"))
             .flatMap(_.asArray)
@@ -107,20 +69,23 @@ class DataCiteJsonSpec extends ZIOSpecDefault with GoldenTest {
       test("rightsList comes from the license only") {
         val with_ = field(DataCiteJson.render(openWithFile), "rightsList").flatMap(_.asArray).flatMap(_.headOption)
         assertTrue(
+          with_.flatMap(field(_, "rights")) == Some(Json.Str("CC BY 4.0")),
           with_.flatMap(field(_, "rightsIdentifier")) == Some(Json.Str("CC-BY-4.0")),
           with_.flatMap(field(_, "rightsIdentifierScheme")) == Some(Json.Str("SPDX")),
           with_.flatMap(field(_, "rightsUri")) == Some(Json.Str("https://creativecommons.org/licenses/by/4.0/")),
           field(DataCiteJson.render(bare), "rightsList").isEmpty,
         )
       },
-      test("an unrecognised license carries no SPDX identifier") {
-        val uri = "https://example.org/license"
-        val r   = field(DataCiteJson.render(openWithFile.copy(license = Some(uri))), "rightsList")
+      test("a license without an SPDX id carries label and uri only") {
+        val l = LicenseFact("https://example.org/license", "Example License", None)
+        val r = field(DataCiteJson.render(openWithFile.copy(license = Some(l))), "rightsList")
           .flatMap(_.asArray)
           .flatMap(_.headOption)
         assertTrue(
-          r.flatMap(field(_, "rightsUri")) == Some(Json.Str(uri)),
+          r.flatMap(field(_, "rights")) == Some(Json.Str("Example License")),
+          r.flatMap(field(_, "rightsUri")) == Some(Json.Str(l.uri)),
           r.flatMap(field(_, "rightsIdentifier")).isEmpty,
+          r.flatMap(field(_, "rightsIdentifierScheme")).isEmpty,
         )
       },
       test("formats only with an advertised file") {
@@ -137,11 +102,13 @@ class DataCiteJsonSpec extends ZIOSpecDefault with GoldenTest {
             Some(Json.Str("IsPartOf")),
         )
       },
-      test("output contains no null") {
-        assertTrue(
-          !DataCiteJson.toJsonString(openWithFile).contains("null"),
-          !DataCiteJson.toJsonString(bare).contains("null"),
-        )
+      test("an unknown creator kind has no nameType") {
+        val creators =
+          field(DataCiteJson.render(openWithFile.copy(creators = Seq(Creator("X", None, None)))), "creators")
+        assertTrue(creators == Some(Json.Arr(Json.Obj("name" -> Json.Str("X")))))
+      },
+      test("output contains no Json.Null") {
+        assertTrue(!containsNull(DataCiteJson.render(openWithFile)), !containsNull(DataCiteJson.render(bare)))
       },
     ),
     suite("DataCite 4.3 JSON schema")(
