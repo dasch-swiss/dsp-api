@@ -279,7 +279,7 @@ class MatchFulltextE2ESpec extends E2EZSpec {
       test("escapes an embedded newline in a search term without producing invalid SPARQL (D7)") {
         // Unlike a raw `"` or `\`, an embedded LF is not itself invalid Lucene syntax (Lucene treats
         // it as whitespace), so this must succeed with 200 - a SPARQL-level failure here would mean
-        // escapeForSparqlLiteral let a raw LF reach the generated string literal, which SPARQL's
+        // LuceneQueryArgs.escape let a raw LF reach the generated string literal, which SPARQL's
         // STRING_LITERAL_QUOTE grammar disallows unescaped, exactly as it disallows a raw `"` or `\`.
         val query =
           """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
