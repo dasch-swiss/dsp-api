@@ -810,7 +810,12 @@ final class SearchResponderV2Live(
 
       _ <- recordPrequeryOnRoot(countSparql)
 
-      countResponse <- stageSpan("gravsearch.prequery.execute")(triplestore.query(Select.gravsearch(countSparql)))
+      countResponse <-
+        stageSpan("gravsearch.prequery.execute")(
+          triplestore
+            .query(Select.gravsearch(countSparql))
+            .tapError(logPrequeryFailure(countSparql)),
+        )
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
