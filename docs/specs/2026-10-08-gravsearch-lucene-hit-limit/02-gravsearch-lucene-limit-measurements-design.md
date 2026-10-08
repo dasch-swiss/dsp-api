@@ -116,3 +116,27 @@ Its prequery runs two OPTIONAL branches per Lucene hit: the value branch, with a
 `subClassOf*` to `Resource` for every candidate. `/v2/search` had the same cost structure until DEV-6864's
 REWRITE replaced the walks with `creationDate` / `valueCreationDate` probes (count/der 82 s → 13 s). Porting that
 rewrite is DEV-7489's first candidate.
+
+## The DEV-6864 rewrite applied to `matchFulltext`, by hand
+
+A prequery with DEV-6864's substitutions (`assets/gen_matchfulltext_prequery_rewrite.py`):
+
+- resource-ness via `creationDate` instead of `rdf:type` + `subClassOf*`;
+- value-ness via `valueCreationDate` plus direct-type `FILTER NOT EXISTS` on `LinkValue` / `ListValue`;
+- no `subPropertyOf* hasValue` walk;
+- the Lucene lookup in an inner `SELECT DISTINCT`.
+
+Count query, single runs (raw: `assets/timings-matchfulltext-rewrite.txt`):
+
+| term | resources (cap / limit) | current shape: cap → limit | rewrite: cap → limit |
+| --- | --- | --- | --- |
+| `fortuna de ostia`, LIMC `Monument` | 657 / 18,370 | 3.8 s → 115 s | 2.1 s → 24 s |
+| `fortuna de ostia` | 11,195 / 183,306 | 3.7 s → 97 s | 1.0 s → 18 s |
+| `chthonic false door greek tomb` | 8,020 / 165,739 | 3.9 s → 87 s | 1.5 s → 26 s |
+| `Ariane a naxos` | 34,134 / 105,933 | 11 s → 51 s | 2.8 s → 13 s |
+| `athena` (under the cap) | 2,879 / 2,879 | 1.4 s → 1.4 s | 0.6 s → 0.5 s |
+
+The rewrite returns identical result counts in every case, so it is a pure speedup: 2–4× at today's cap, and
+4–5× against the current shape with the limit. With the limit, the broadest terms still take 13–26 s, where they
+take 1–11 s today with the cap. Rewrite plus limit is therefore not free for broad multi-word searches; DEV-7489
+has to decide between that latency, AND semantics for multi-word terms, or both.

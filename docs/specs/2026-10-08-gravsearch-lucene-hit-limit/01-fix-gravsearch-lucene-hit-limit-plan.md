@@ -156,31 +156,31 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
 
 ### Phase 1: Gravsearch timeouts become a 503
 
-- [ ] `SearchTimeoutException.scala`: add a Gravsearch-specific hedged message next to `defaultMessage`
-- [ ] `SearchTimeoutException.scala`: rewrite the class doc. It covers the fulltext and Gravsearch endpoints, and
+- [x] `SearchTimeoutException.scala`: add a Gravsearch-specific hedged message next to `defaultMessage`
+- [x] `SearchTimeoutException.scala`: rewrite the class doc. It covers the fulltext and Gravsearch endpoints, and
       the link points to `org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException`, not
       `dsp.errors…`.
-- [ ] `SearchRestService.gravsearch`: translate `TriplestoreTimeoutException` to
+- [x] `SearchRestService.gravsearch`: translate `TriplestoreTimeoutException` to
       `SearchTimeoutException(gravsearchMessage)`
-- [ ] `SearchRestService.gravsearchCount`: same translation
-- [ ] `SearchResponderV2.scala:813`: add `tapError(logPrequeryFailure(countSparql))` to the Gravsearch count
+- [x] `SearchRestService.gravsearchCount`: same translation
+- [x] `SearchResponderV2.scala:813`: add `tapError(logPrequeryFailure(countSparql))` to the Gravsearch count
       execute, inside the `stageSpan`
-- [ ] `SearchEndpoints.scala`: `errorOutVariantsPrepend(searchTimeoutVariant)` on `postGravsearch`
-- [ ] `SearchEndpoints.scala`: the same on `getGravsearch`
-- [ ] `SearchEndpoints.scala`: the same on `postGravsearchCount`
-- [ ] `SearchEndpoints.scala`: the same on `getGravsearchCount`
-- [ ] `SearchEndpoints.scala:69-72`: update the comment ("only to the two fulltext endpoints")
-- [ ] `SearchEndpointsSpec.scala:62-65`: change the test so all four Gravsearch endpoints advertise a 503, while
+- [x] `SearchEndpoints.scala`: `errorOutVariantsPrepend(searchTimeoutVariant)` on `postGravsearch`
+- [x] `SearchEndpoints.scala`: the same on `getGravsearch`
+- [x] `SearchEndpoints.scala`: the same on `postGravsearchCount`
+- [x] `SearchEndpoints.scala`: the same on `getGravsearchCount`
+- [x] `SearchEndpoints.scala:69-72`: update the comment ("only to the two fulltext endpoints")
+- [x] `SearchEndpointsSpec.scala:62-65`: change the test so all four Gravsearch endpoints advertise a 503, while
       search-by-label, incoming links, still images and regions do not
-- [ ] Unit test (a spec for `SearchRestService` with a stub `SearchResponderV2`, or the existing one): a
+- [x] Unit test (a spec for `SearchRestService` with a stub `SearchResponderV2`, or the existing one): a
       `TriplestoreTimeoutException` from `gravsearchV2` yields `SearchTimeoutException` with the Gravsearch message
-- [ ] Unit test: the same for `gravsearchCountV2`
-- [ ] `docs/03-endpoints/api-v2/query-language.md:71`: replace the "504 Gateway Timeout" claim with the 503 and
+- [x] Unit test: the same for `gravsearchCountV2`
+- [x] `docs/03-endpoints/api-v2/query-language.md:71`: replace the "504 Gateway Timeout" claim with the 503 and
       its message
-- [ ] Grep `/Users/balduinlandolt/Documents/GitHub/dasch-swiss/dsp-app` for `searchextended`. Confirm the calls go
+- [x] Grep `/Users/balduinlandolt/Documents/GitHub/dasch-swiss/dsp-app` for `searchextended`. Confirm the calls go
       through dsp-js, not the generated OpenAPI client. If any use the generated client, stop and escalate.
-- [ ] `bazel test //modules/webapi:test` passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `bazel test //modules/webapi:test` passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: Lucene hit limit and term escaping for matchText, matchTextInStandoff and matchLabel
 

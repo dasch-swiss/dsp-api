@@ -1,0 +1,30 @@
+SELECT DISTINCT ?mainRes
+WHERE {
+{
+SELECT DISTINCT ?match WHERE { ?match <http://jena.apache.org/text#query> ("fortuna de ostia" 1000000) . }
+}
+OPTIONAL {
+?match <http://www.knora.org/ontology/knora-base#valueCreationDate> ?valueCreationDate .
+FILTER NOT EXISTS { ?match <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> . }
+FILTER NOT EXISTS { ?match <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListValue> . }
+?containingRes ?prop ?match .
+FILTER NOT EXISTS { ?match <http://www.knora.org/ontology/knora-base#isDeleted> true . }
+}
+OPTIONAL {
+?match <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> .
+?match <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?subNode .
+?listVal <http://www.knora.org/ontology/knora-base#valueHasListNode> ?subNode .
+?resWithListVal ?pred ?listVal .
+FILTER NOT EXISTS { ?match <http://www.knora.org/ontology/knora-base#isDeleted> true . }
+}
+BIND(COALESCE(?containingRes, ?resWithListVal, ?match) AS ?mainRes)
+?mainRes <http://www.knora.org/ontology/knora-base#creationDate> ?resourceCreationDate .
+?mainRes <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/BRwvcfLLT72IN-fXzQkrdQ> .
+?mainRes <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+VALUES ?mainRes__resTypes { <http://www.knora.org/ontology/080E/LIMC#Monument> }
+?mainRes <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?mainRes__resTypes .
+FILTER NOT EXISTS { ?mainRes <http://www.knora.org/ontology/knora-base#isDeleted> true . }
+}
+GROUP BY ?mainRes ?label
+ORDER BY ASC(?label) ASC(?mainRes)
+LIMIT 25
