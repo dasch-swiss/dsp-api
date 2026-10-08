@@ -2,7 +2,7 @@
 title: "fix: Bind the internal-reference lookup to the value's own standoff tag"
 date: 2026-10-08
 author: Nora Ammann
-status: reviewed
+status: implemented
 linear: DEV-7468
 ---
 
@@ -55,35 +55,35 @@ No other main-code query has this defect. The CONSTRUCT templates (`GetResourceP
 
 TDD order: the behavior test first, then the fix, then the rendering tests.
 
-- [ ] Add a failing spec `StandoffInternalReferenceQuerySpec` in `modules/webapi/src/test/scala/org/knora/webapi/slice/resources/repo/`. Annotate it with `@RunWith(classOf[DspZTestJUnitRunner])`, or Bazel skips it silently. Provide `TriplestoreServiceInMemory.emptyLayer` and `StringFormatter.test`. No `BUILD.bazel` change is necessary (the test target globs `*Spec`).
-- [ ] Write an inline TriG fixture and load it through `TestTripleStore.setDatasetFromTriG` (pattern: `ResourcesRepoLiveSpec.scala:1429`). Contents:
+- [x] Add a failing spec `StandoffInternalReferenceQuerySpec` in `modules/webapi/src/test/scala/org/knora/webapi/slice/resources/repo/`. Annotate it with `@RunWith(classOf[DspZTestJUnitRunner])`, or Bazel skips it silently. Provide `TriplestoreServiceInMemory.emptyLayer` and `StringFormatter.test`. No `BUILD.bazel` change is necessary (the test target globs `*Spec`).
+- [x] Write an inline TriG fixture and load it through `TestTripleStore.setDatasetFromTriG` (pattern: `ResourcesRepoLiveSpec.scala:1429`). Contents:
     - Resource 1 of a subclass of `knora-base:Resource`, with `attachedToProject`, `attachedToUser`, `hasPermissions`, `creationDate`, `rdfs:label` and `isDeleted false`.
     - Value A on resource 1: one tag with `standoffTagHasOriginalXMLID "link_id"`, one tag that refers to it, and one tag without a reference.
     - Value B on resource 1: two tags that refer to each other (`_note1`, `_ref-note1`).
     - Resource 2 with a value that has an unrelated internal reference, so the store holds candidates outside resource 1.
     - On each value: `rdf:type`, `hasPermissions`, `valueHasUUID`, `valueCreationDate`, `valueHasStandoff`. Attach the values through a subproperty of `knora-base:hasValue`, with the `rdfs:subPropertyOf` triple.
     - On each tag: `rdf:type`, `standoffTagHasStartIndex` (0 or more), `standoffTagHasEndIndex`.
-- [ ] Test the current-values shape: run `GetResourcePropertiesAndValuesQuery.build(Seq(resource1), preview = false, withDeleted = false, queryStandoff = true)` through `TriplestoreService.query(Construct)`. Assert on the CONSTRUCT model, not on parsed responses. Each referring tag has exactly the set `{ID of its own target}` as `targetHasOriginalXMLID`. The tag without a reference has none.
-- [ ] Test the versioned shape with the same assertions (`maybeVersionDate` after all `valueCreationDate` and `creationDate` values).
-- [ ] Test `SearchResultResourcesQuery.build(Seq(resource1), queryStandoff = true)` with the same assertions.
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*StandoffInternalReferenceQuerySpec.*'`. Confirm that the three tests fail because tags carry more than one ID.
-- [ ] Fix the current-values OPTIONAL in `GetResourcePropertiesAndValuesQuery.scala`.
-- [ ] Fix the versioned-values OPTIONAL in `GetResourcePropertiesAndValuesQuery.scala`.
-- [ ] Fix the OPTIONAL in `SearchResultResourcesQuery.scala`.
-- [ ] Update `expectedStandoff` in `GetResourcePropertiesAndValuesQuerySpec.scala:316`. Do not touch other `standoffTag` occurrences (`standoffTagFilter`, `standoffTagHas…` predicates).
-- [ ] Update the expected string in `SearchResultResourcesQuerySpec.scala:128`.
-- [ ] In the mutual-reference test of `MaintenanceBackfillValueHasXmlE2ESpec.scala` (`:425-437`), add `storedEqualsServed(resource, value, StandoffMappingIri.StandardMapping)` after the backfill. Keep the stored-against-submitted assertion. Remove the DEV-7468 comment (`:426-427`).
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*(StandoffInternalReferenceQuery|GetResourcePropertiesAndValuesQuery|SearchResultResourcesQuery)Spec.*'`. All tests pass.
-- [ ] Run `just test-unit`. All tests pass.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*MaintenanceBackfillValueHasXmlE2ESpec.*'`. All tests pass.
-- [ ] Run `just fmt`, then `just check`. No findings.
-- [ ] Commit as `fix(dsp-api): ...` with a body. Do not use "Knora" in the message.
+- [x] Test the current-values shape: run `GetResourcePropertiesAndValuesQuery.build(Seq(resource1), preview = false, withDeleted = false, queryStandoff = true)` through `TriplestoreService.query(Construct)`. Assert on the CONSTRUCT model, not on parsed responses. Each referring tag has exactly the set `{ID of its own target}` as `targetHasOriginalXMLID`. The tag without a reference has none.
+- [x] Test the versioned shape with the same assertions (`maybeVersionDate` after all `valueCreationDate` and `creationDate` values).
+- [x] Test `SearchResultResourcesQuery.build(Seq(resource1), queryStandoff = true)` with the same assertions.
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*StandoffInternalReferenceQuerySpec.*'`. Confirm that the three tests fail because tags carry more than one ID.
+- [x] Fix the current-values OPTIONAL in `GetResourcePropertiesAndValuesQuery.scala`.
+- [x] Fix the versioned-values OPTIONAL in `GetResourcePropertiesAndValuesQuery.scala`.
+- [x] Fix the OPTIONAL in `SearchResultResourcesQuery.scala`.
+- [x] Update `expectedStandoff` in `GetResourcePropertiesAndValuesQuerySpec.scala:316`. Do not touch other `standoffTag` occurrences (`standoffTagFilter`, `standoffTagHas…` predicates).
+- [x] Update the expected string in `SearchResultResourcesQuerySpec.scala:128`.
+- [x] In the mutual-reference test of `MaintenanceBackfillValueHasXmlE2ESpec.scala` (`:425-437`), add `storedEqualsServed(resource, value, StandoffMappingIri.StandardMapping)` after the backfill. Keep the stored-against-submitted assertion. Remove the DEV-7468 comment (`:426-427`).
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*(StandoffInternalReferenceQuery|GetResourcePropertiesAndValuesQuery|SearchResultResourcesQuery)Spec.*'`. All tests pass.
+- [x] Run `just test-unit`. All tests pass.
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*MaintenanceBackfillValueHasXmlE2ESpec.*'`. All tests pass.
+- [x] Run `just fmt`, then `just check`. No findings.
+- [x] Commit as `fix(dsp-api): ...` with a body. Do not use "Knora" in the message.
 
 ## Acceptance Criteria
 
-- [ ] In the CONSTRUCT result of the three query shapes, each referring tag has exactly one `targetHasOriginalXMLID`: the ID of its own target.
-- [ ] Tags without an internal reference have no `targetHasOriginalXMLID`.
-- [ ] The served `textValueAsXml` of the single-reference and the mutual-reference values in the E2E spec equals the stored `valueHasXml`.
+- [x] In the CONSTRUCT result of the three query shapes, each referring tag has exactly one `targetHasOriginalXMLID`: the ID of its own target.
+- [x] Tags without an internal reference have no `targetHasOriginalXMLID`.
+- [x] The served `textValueAsXml` of the single-reference and the mutual-reference values in the E2E spec equals the stored `valueHasXml`.
 
 ## Alternative Approaches Considered
 
