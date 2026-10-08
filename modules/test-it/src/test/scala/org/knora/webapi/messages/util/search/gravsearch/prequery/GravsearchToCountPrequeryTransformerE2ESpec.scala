@@ -55,6 +55,16 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
       |    FILTER knora-api:matchFulltext(?mainRes, "Zeitglöcklein")
       |}""".stripMargin
 
+  val queryMatchLabel: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |} WHERE {
+      |    ?book rdf:type incunabula:book .
+      |    FILTER knora-api:matchLabel(?book, "Zeitglöck*")
+      |}""".stripMargin
+
   val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
     """
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -108,6 +118,10 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
     test("generate the fulltext-index-anchored matchFulltext expansion for a classless count query") {
       transformQueryWithInference(queryClasslessMatchFulltext)
         .map(actual => assertGolden(actual.toSparql, "classlessMatchFulltext"))
+    },
+    test("pass the Lucene hit limit for a matchLabel count query") {
+      transformQueryWithInference(queryMatchLabel)
+        .map(actual => assertGolden(actual.toSparql, "matchLabel"))
     },
     test("transform an input query with a decimal as an optional sort criterion and a filter") {
       transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterionAndFilter)

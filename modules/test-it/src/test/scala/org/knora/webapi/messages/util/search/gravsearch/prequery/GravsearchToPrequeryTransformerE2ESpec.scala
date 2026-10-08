@@ -621,6 +621,65 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    }
       |}""".stripMargin
 
+  val queryMatchTextSimple: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER knora-api:matchText(?text, "Zeitglöcklein")
+      |}""".stripMargin
+
+  val queryMatchTextComplex: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER knora-api:matchText(?text, "Zeitglöcklein")
+      |}""".stripMargin
+
+  // The Gravsearch literal holds `a "b" c\d`; the prequery must re-escape it for its own SPARQL literal.
+  val queryMatchTextEscaped: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER knora-api:matchText(?text, "a \"b\" c\\d")
+      |}""".stripMargin
+
+  val queryMatchLabel: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |} WHERE {
+      |    ?book rdf:type incunabula:book .
+      |    FILTER knora-api:matchLabel(?book, "Zeitglöck*")
+      |}""".stripMargin
+
+  val queryMatchTextInStandoff: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |    ?thing anything:hasRichtext ?text .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasRichtext ?text .
+      |    ?text knora-api:textValueHasStandoff ?standoffTag .
+      |    ?standoffTag a standoff:StandoffItalicTag .
+      |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
+      |}""".stripMargin
+
   val queryLinkTargetAnchor: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -853,6 +912,26 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     test("generate the matchFulltext expansion when the FILTER is inside a UNION block") {
       transformQueryWithInference(queryMatchFulltextInUnion)
         .map(actual => assertGolden(actual.toSparql, "matchFulltextInUnion"))
+    },
+    test("pass the Lucene hit limit for matchText in the simple schema") {
+      transformQueryWithInference(queryMatchTextSimple)
+        .map(actual => assertGolden(actual.toSparql, "matchText"))
+    },
+    test("pass the Lucene hit limit for matchText in the complex schema") {
+      transformQueryWithInference(queryMatchTextComplex)
+        .map(actual => assertGolden(actual.toSparql, "matchText"))
+    },
+    test("escape a quote and a backslash in a matchText term") {
+      transformQueryWithInference(queryMatchTextEscaped)
+        .map(actual => assertGolden(actual.toSparql, "matchTextEscaped"))
+    },
+    test("pass the Lucene hit limit for matchLabel") {
+      transformQueryWithInference(queryMatchLabel)
+        .map(actual => assertGolden(actual.toSparql, "matchLabel"))
+    },
+    test("pass the Lucene hit limit for matchTextInStandoff") {
+      transformQueryWithInference(queryMatchTextInStandoff)
+        .map(actual => assertGolden(actual.toSparql, "matchTextInStandoff"))
     },
     test("transform a query anchored on a list-node value") {
       transformQueryWithInference(GravsearchInferencePipelineTestSupport.queryListNodeAnchor)
