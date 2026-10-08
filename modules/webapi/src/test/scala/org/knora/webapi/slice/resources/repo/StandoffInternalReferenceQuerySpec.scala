@@ -28,14 +28,16 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
 
   private val kb              = "http://www.knora.org/ontology/knora-base#"
   private val targetXmlIdProp = s"${kb}targetHasOriginalXMLID"
+  private val startIndexProp  = s"${kb}standoffTagHasStartIndex"
+  private val tagPrefix       = "http://rdfh.ch/0001/tag-"
   private val resource1       = "http://rdfh.ch/0001/resource1"
 
   private def tag(id: String, xmlId: Option[String], refersTo: Option[String]): String =
-    s"""<http://rdfh.ch/0001/tag-$id> a ex:Tag ;
+    s"""<$tagPrefix$id> a ex:Tag ;
        |  knora-base:standoffTagHasStartIndex 0 ;
        |  knora-base:standoffTagHasEndIndex 1
        |  ${xmlId.fold("")(x => s""" ; knora-base:standoffTagHasOriginalXMLID "$x" """)}
-       |  ${refersTo.fold("")(r => s" ; knora-base:standoffTagHasInternalReference <http://rdfh.ch/0001/tag-$r> ")} .
+       |  ${refersTo.fold("")(r => s" ; knora-base:standoffTagHasInternalReference <$tagPrefix$r> ")} .
        |""".stripMargin
 
   private def textValue(id: String, tagIds: List[String]): String =
@@ -44,10 +46,10 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
        |  knora-base:valueHasUUID "uuid-$id" ;
        |  knora-base:valueCreationDate "2020-01-01T00:00:00Z"^^xsd:dateTime ;
        |  knora-base:valueHasString "text" ;
-       |  knora-base:valueHasStandoff ${tagIds.map(t => s"<http://rdfh.ch/0001/tag-$t>").mkString(", ")} .
+       |  knora-base:valueHasStandoff ${tagIds.map(t => s"<$tagPrefix$t>").mkString(", ")} .
        |""".stripMargin
 
-  private def resource(id: String, valueId: String): String =
+  private def resource(id: String, valueIds: List[String]): String =
     s"""<http://rdfh.ch/0001/$id> a ex:Thing ;
        |  knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
        |  knora-base:attachedToUser <http://rdfh.ch/users/user> ;
@@ -55,12 +57,11 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
        |  knora-base:creationDate "2020-01-01T00:00:00Z"^^xsd:dateTime ;
        |  rdfs:label "$id" ;
        |  knora-base:isDeleted false ;
-       |  ex:hasText <http://rdfh.ch/0001/value-$valueId> .
+       |  ex:hasText ${valueIds.map(v => s"<http://rdfh.ch/0001/value-$v>").mkString(", ")} .
        |""".stripMargin
 
   private val fixture =
-    s"""@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+    s"""@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
        |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
        |@prefix knora-base: <$kb> .
        |@prefix ex: <http://example.org/ontology#> .
@@ -68,34 +69,40 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
        |<http://example.org/graph> {
        |  ex:Thing rdfs:subClassOf knora-base:Resource .
        |  ex:hasText rdfs:subPropertyOf knora-base:hasValue .
-       |  ${resource("resource1", "A")}
-       |  ${resource("resource2", "C")}
+       |  ${resource("resource1", List("A", "B"))}
+       |  ${resource("resource2", List("C"))}
        |  ${textValue("A", List("A1", "A2", "A3"))}
        |  ${textValue("B", List("B1", "B2"))}
        |  ${textValue("C", List("C1", "C2"))}
-       |  <http://rdfh.ch/0001/resource1> ex:hasText <http://rdfh.ch/0001/value-B> .
        |  ${tag("A1", Some("link_id"), None)}
        |  ${tag("A2", None, Some("A1"))}
        |  ${tag("A3", None, None)}
        |  ${tag("B1", Some("_ref-note1"), Some("B2"))}
        |  ${tag("B2", Some("_note1"), Some("B1"))}
-       |  ${tag("C1", Some("other_target"), None)}
+       |  ${tag("C1", Some("other_target"), None)} # decoys: an unbound reference lookup leaks these into resource1
        |  ${tag("C2", None, Some("C1"))}
        |}
        |""".stripMargin
 
-  private def targetXmlIdsByTag(construct: Construct): ZIO[TestTripleStore, Throwable, Map[String, Set[String]]] =
+  /** Maps every standoff tag the query returns to the `targetHasOriginalXMLID` values it carries. */
+  private def targetXmlIdsByReturnedTag(
+    construct: Construct,
+  ): ZIO[TestTripleStore, Throwable, Map[String, Set[String]]] =
     for {
       _      <- TestTripleStore.setDatasetFromTriG(fixture)
       turtle <- ZIO.serviceWithZIO[TestTripleStore](_.queryRdf(construct))
       model   = ModelFactory.createDefaultModel().read(new StringReader(turtle), null, "TURTLE")
       prop    = model.createProperty(targetXmlIdProp)
-    } yield expected.keys.map { id =>
-      val subject = model.createResource(s"http://rdfh.ch/0001/tag-$id")
-      id -> model.listObjectsOfProperty(subject, prop).asScala.map(_.asLiteral().getString).toSet
-    }.toMap
+    } yield model
+      .listSubjectsWithProperty(model.createProperty(startIndexProp))
+      .asScala
+      .map(tag =>
+        tag.getURI
+          .stripPrefix(tagPrefix) -> model.listObjectsOfProperty(tag, prop).asScala.map(_.asLiteral().getString).toSet,
+      )
+      .toMap
 
-  private val expected = Map(
+  private val expectedTargetXmlIds = Map(
     "A1" -> Set.empty[String],
     "A2" -> Set("link_id"),
     "A3" -> Set.empty[String],
@@ -104,7 +111,7 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
   )
 
   private def assertOwnTargetsOnly(construct: Construct) =
-    targetXmlIdsByTag(construct).map(actual => assertTrue(actual == expected))
+    targetXmlIdsByReturnedTag(construct).map(actual => assertTrue(actual == expectedTargetXmlIds))
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("StandoffInternalReferenceQuerySpec")(
