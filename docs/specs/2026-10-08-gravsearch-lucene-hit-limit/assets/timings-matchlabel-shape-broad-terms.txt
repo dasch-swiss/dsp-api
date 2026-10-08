@@ -1,0 +1,7 @@
+lbl_chthonic_false_door_greek_tomb_classless_unlim.rq run1 0.46s rows=1 first=267
+lbl_chthonic_false_door_greek_tomb_classless_lim.rq run1 4.87s rows=1 first=304
+lbl_chthonic_false_door_greek_tomb_limc_lim.rq run1 4.56s rows=1 first=127
+lbl_fortuna_de_ostia_classless_unlim.rq run1 0.57s rows=1 first=555
+lbl_fortuna_de_ostia_classless_lim.rq run1 19.17s rows=1 first=63604
+lbl_fortuna_de_ostia_limc_lim.rq run1 3.58s rows=1 first=2695
+DONE
