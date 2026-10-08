@@ -243,7 +243,7 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val luceneOuterBound: Set[QueryVariable] = Set(luceneOuterBoundVar)
   private val connectedPlainStmt                   = StatementPattern(luceneOuterBoundVar, genericPropIri, n)
   private val unconnectedLuceneStmt                =
-    StatementPattern(luceneUnboundVar, luceneQueryIri, XsdLiteral("test", OntologyConstants.Xsd.String.toSmartIri))
+    StatementPattern(luceneUnboundVar, luceneQueryIri, LuceneQueryArgs("test", OntologyConstants.Fuseki.luceneHitLimit))
   private val luceneLeadsUnconnectedInput: Seq[QueryPattern]      = Seq(connectedPlainStmt, unconnectedLuceneStmt)
   private val unconnectedLuceneGroup                              = GroupPattern(Seq(unconnectedLuceneStmt))
   private val luceneGroupLeadsUnconnectedInput: Seq[QueryPattern] = Seq(connectedPlainStmt, unconnectedLuceneGroup)

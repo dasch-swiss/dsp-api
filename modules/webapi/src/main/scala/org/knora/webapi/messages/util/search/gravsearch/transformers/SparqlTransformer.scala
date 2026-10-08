@@ -29,7 +29,9 @@ object SparqlTransformer {
       case QueryVariable(varName)       => varName
       case IriRef(iriLiteral, _)        => iriLiteral.toOntologySchema(InternalSchema).toString
       case XsdLiteral(stringLiteral, _) => stringLiteral
-      case _                            => throw GravsearchException(s"A unique variable name could not be made for ${entity.toSparql}")
+      case _: LuceneQueryArgs           =>
+        throw GravsearchException(s"A text:query object cannot name a variable: ${entity.toSparql}")
+      case _ => throw GravsearchException(s"A unique variable name could not be made for ${entity.toSparql}")
     }
 
     entityStr
