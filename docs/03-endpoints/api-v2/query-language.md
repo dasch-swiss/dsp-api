@@ -404,7 +404,7 @@ This function can only be used as the top-level expression in a `FILTER`.
 
 `matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an explicit
 hit limit to the full-text index, so a broad or wildcard term finds every match rather
-than a silently truncated subset. A `matchText` or `matchLabel` search term containing
+than a silently truncated subset. In every text function, a search term containing
 `"`, `\`, or a newline is escaped before it is passed to the index; otherwise the term
 reaches Lucene as-is, so an unbalanced `"` or `\` is a Lucene syntax error (400).
 
