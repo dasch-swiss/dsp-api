@@ -33,8 +33,8 @@ route carry the metadata the DPE project page carries:
 - If dsp-api fails, nginx serves the plain shell.
 
 The PRD owns the *what*; where this plan and the PRD disagree, the PRD wins.
-dsp-api is the primary repository and its PR carries Phases 1–5. dsp-app's PR
-carries Phase 6.
+dsp-api is the primary repository and its PR carries Phases 1–5 and 7. dsp-app's
+PR carries Phase 6. Phase 7 runs last because it needs both repositories' changes.
 
 ## Goal graph
 
@@ -43,7 +43,7 @@ any point reaches one of the two top goals, **G0** or **G6**. The graph is
 acyclic.
 
 ```
-G0 ─► G1..G4 (PRD) ─► PG1..PG6 (plan goals) ─► S1..S6 (phase subgoals)
+G0 ─► G1..G4 (PRD) ─► PG1..PG6 (plan goals) ─► S1..S7 (phase subgoals)
                                                 ├─► TD1..TD19 (decisions) ─► deliverables
                                                 ├─► deliverables
                                                 └─► P, L, C, N, H, A, R, M, F (supporting points)
@@ -71,7 +71,7 @@ cannot carry a tag. Its parent is that phase's subgoal.
 | PG3 | ↑G1 | JSON-LD and DataCite JSON are served at their own URLs on the API host. The landing route reaches them by the one `303`, and every landing response carries `Vary: Accept` | REQ-3.1–3.6 |
 | PG4 | ↑G2 | Every fact comes from the anonymous view. A missing, deleted or not-visible resource yields nothing, and a file is advertised only under V or higher | REQ-4.1–4.5 |
 | PG5 | ↑G4 | A person always gets the deployed dsp-app shell, unchanged except for the added `<head>` content, also when dsp-api fails or lacks the route | REQ-5.1–5.2 |
-| PG6 | ↑G3 | The F-UJI score of resource pages of 0868 and 0803 is measured before and after on the same DEV targets and recorded, and FAIR Champion is run | REQ-6.1 |
+| PG6 | ↑G3 | The F-UJI score of resource pages of 0868 and 0803 is measured before and after on the same DEV targets and recorded, and FAIR Champion is run. Before ship, a local run on one stack shows it rising | REQ-6.1 |
 
 ### Phase subgoals
 
@@ -83,6 +83,7 @@ cannot carry a tag. Its parent is that phase's subgoal.
 | S4 | ↑PG1, PG2, PG3, PG4, PG5 | 4 | HTTP endpoints serve the landing response and the two representations from the facts, writers and link set |
 | S5 | ↑PG6 | 5 | The baseline is measured and recorded |
 | S6 | ↑PG5, PG1, PG2, PG3 | 6 | dsp-app's nginx forwards the route to dsp-api and falls back to its own shell |
+| S7 | ↑PG6 | 7 | A local F-UJI run of the same page, before and after the change, shows the score rising |
 
 ## Problem Statement / Motivation
 
@@ -580,6 +581,37 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
 - [ ] 6.4 ↑S6: Run `./scripts/nginx-smoke-test.sh`; every assertion passes
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
+#### Phase 7: Score rise confirmed locally
+
+Subgoal **S7** ↑PG6.
+
+F-UJI fetches the URL it is given, and `just fair-check` starts its container
+with `--add-host=host.docker.internal:host-gateway`, so it reaches services
+published on the host. DPE measured local pages this way
+(`machine-readable-metadata.md`, "Against a local server"). Both runs use one
+stack and one URL; only `DSP_API_UPSTREAM` differs, so the baseline is today's
+plain shell (N4). Nothing in this phase changes the compose file: the overrides
+live in a compose override file under `.claude/tmp/`.
+
+A local score is a direction, not a DEV or production figure:
+
+- `F1-02D` fails, because the emitted ARK points at the local resolver
+  (`KNORA_WEBAPI_ARK_RESOLVER_URL`), which nothing serves;
+- `KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=host.docker.internal` drops the port
+  from external ontology IRIs (`externalOntologyIriHostAndPort`), so
+  `additionalType` does not resolve;
+- the test data's licences and authorship decide which licence and creator
+  metrics can move.
+
+### dsp-api
+
+- [ ] 7.1 ↑S7: Build the dsp-api image from this branch with `just docker-build-dsp-api-image`, and the dsp-app image from the Phase 6 smoke-test build context (real `Dockerfile` and `nginx/`, stub shell) under a local tag. Start the stack with `just stack-init-test` plus a compose override file in `.claude/tmp/` that sets the `app` image to that tag, and on `api` sets `KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=host.docker.internal`, C1 `http://host.docker.internal:4200` and C2 `http://app:4200/index.html`
+- [ ] 7.2 ↑S7: Baseline: with `DSP_API_UPSTREAM` empty on `app`, from a dsp-repository checkout run `just fair-check http://host.docker.internal:4200/resource/0803/0b03b0a6e6be`; keep the total and per-metric results
+- [ ] 7.3 ↑S7: After: recreate `app` with `DSP_API_UPSTREAM=http://api:3333` and run `just fair-check http://host.docker.internal:4200/resource/0803/0b03b0a6e6be <baseline total + 1>`; it exits zero, and no metric scores lower than in 7.2
+- [ ] 7.4 ↑S7: Record both runs in the results table of `docs/03-endpoints/fair-landing-pages.md`, target kind "local page URL", with the three local limitations above
+- [ ] 7.5 ↑S7: Run `just check` and `just docs-build`; both pass
+- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+
 ## Human Actions
 
 | Id | Parent | Action | Who | When | Why not the agent |
@@ -593,6 +625,7 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
 - [ ] A2 ↑PG3: DataCite JSON validates against the vendored schema in tests
 - [ ] A3 ↑PG4: The not-visible cases cannot be told apart on either route
 - [ ] A4 ↑PG6: The baseline is recorded, and the after-run (H2) is recorded against the same targets with assessor version and target kind
+- [ ] A5 ↑PG6: The local after-run (7.3) scores above the local baseline (7.2), and no metric falls
 
 ## Dependencies & Risks
 
@@ -613,6 +646,9 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
   DEV pages. The metrics expected to move are the metadata, identifier, licence
   and Signposting ones that moved the DPE project page. `F1-02D` is recorded as
   a residual on DEV.
+- **M2** ↑PG6: Local baseline (7.2) versus local after-run (7.3), metric by
+  metric, for `http://rdfh.ch/0803/0b03b0a6e6be`. The total must rise; `F1-02D`
+  fails in both.
 
 ## References
 
