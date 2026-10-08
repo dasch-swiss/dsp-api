@@ -403,10 +403,14 @@ Note that Lucene's default operator is a logical OR when submitting several sear
 This function can only be used as the top-level expression in a `FILTER`.
 
 `matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an explicit
-hit limit to the full-text index, so a broad or wildcard term finds every match rather
-than a silently truncated subset. In every text function, a search term containing
-`"`, `\`, or a newline is escaped before it is passed to the index; otherwise the term
-reaches Lucene as-is, so an unbalanced `"` or `\` is a Lucene syntax error (400).
+hit limit of 1,000,000 to the full-text index instead of inheriting its silent default of
+10,000, so a broad or wildcard term is not truncated to an arbitrary subset.
+
+In every text function, a search term containing `"`, `\`, or a newline is escaped before
+it is passed to the index; otherwise the term reaches Lucene as-is, so an unbalanced `"`
+or `\` is a Lucene syntax error (400). `matchTextInStandoff` also matches each
+space-separated term as a regular expression against the tag's text, so Lucene syntax
+such as a quoted phrase is not supported there.
 
 For example, to search for titles that contain the words 'Zeitglöcklein' and
 'Lebens':
@@ -719,7 +723,7 @@ two do not necessarily return the same result set on large data: `matchFulltext`
 inherits Jena's silent ~10,000-hit Lucene cap, whereas `/v2/search` passes an explicit
 hit limit and returns the full set (DEV-7489). For a term below the cap the results match.
 `matchFulltext` is the only Gravsearch text function with this cap: `matchText`,
-`matchLabel` and `matchTextInStandoff` are not capped.
+`matchLabel` and `matchTextInStandoff` pass the same explicit limit as `/v2/search`.
 
 The first argument is a variable representing a resource (main or linked). The
 second argument is a string literal containing the search terms, with the same

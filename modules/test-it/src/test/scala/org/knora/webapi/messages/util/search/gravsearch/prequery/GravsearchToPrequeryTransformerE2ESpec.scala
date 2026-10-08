@@ -949,7 +949,7 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       transformQueryWithInference(queryMatchTextInStandoff)
         .map(actual => assertGolden(actual.toSparql, "matchTextInStandoff"))
     },
-    test("escape a quote and a backslash in a matchTextInStandoff term, in its Lucene and regex literals") {
+    test("keep the SPARQL valid for a quote and a backslash in a matchTextInStandoff term") {
       transformQueryWithInference(queryMatchTextInStandoffEscaped)
         .map(actual => assertGolden(actual.toSparql, "matchTextInStandoffEscaped"))
     },

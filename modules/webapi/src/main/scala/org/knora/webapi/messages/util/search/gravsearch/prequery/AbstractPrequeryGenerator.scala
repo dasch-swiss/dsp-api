@@ -1773,7 +1773,8 @@ abstract class AbstractPrequeryGenerator(
     // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
     // standoff tag contains the term:
     // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
-    // TODO: handle the differences between regex syntax and Lucene syntax.
+    // TODO: handle the differences between regex syntax and Lucene syntax. Escaping only keeps the SPARQL
+    // literal valid: each term is still read as a regex, and the quotes of a Lucene phrase stay in it.
     val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { (term: String) =>
       FilterPattern(
         expression = RegexFunction(
@@ -1790,7 +1791,7 @@ abstract class AbstractPrequeryGenerator(
               rightArg = startVariable,
             ),
           ),
-          pattern = LuceneQueryArgs.escape(term), // TODO: Ignore Lucene operators
+          pattern = SparqlStringLiteral.escape(term), // TODO: Ignore Lucene operators
           modifier = Some("i"),
         ),
       )
@@ -2096,7 +2097,7 @@ abstract class AbstractPrequeryGenerator(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = XsdLiteral(
-        value = LuceneQueryArgs.escape(searchTerm),
+        value = SparqlStringLiteral.escape(searchTerm),
         datatype = OntologyConstants.Xsd.String.toSmartIri,
       ),
     )
