@@ -150,11 +150,11 @@ scala_junit_test(
         ":export_spec_fixtures",  # ExportServiceSpec .ttl at the webapi/src/test/resources/... key
         "//modules/test-runner",
         "//test_data:fixtures",  # RDF fixtures on the classpath (see test_data/BUILD.bazel)
+        "@maven//:com_networknt_json_schema_validator",
         "@maven//:dev_zio_zio_3",
         "@maven//:dev_zio_zio_cache_3",
         "@maven//:dev_zio_zio_json_3",
         "@maven//:dev_zio_zio_test_3",
-        "@maven//:com_networknt_json_schema_validator",
         "@maven//:org_wiremock_wiremock",
     ],
 )

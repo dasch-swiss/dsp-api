@@ -229,6 +229,7 @@ maven.install(
         "net.datafaker:datafaker:2.7.0",
         "org.testcontainers:testcontainers:2.0.5",
         "org.wiremock:wiremock:3.13.2",
+        "com.networknt:json-schema-validator:1.5.9",
         # JUnit 4: compile-time dep of //modules/test-runner (DspZTestJUnitRunner
         # implements org.junit.runner.Runner). scala_junit_test targets get JUnit
         # implicitly, but the runner library needs it explicitly.
