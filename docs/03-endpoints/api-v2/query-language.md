@@ -402,13 +402,16 @@ Note that Lucene's default operator is a logical OR when submitting several sear
 
 This function can only be used as the top-level expression in a `FILTER`.
 
-`matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an explicit
-hit limit of 1,000,000 to the full-text index instead of inheriting its silent default of
-10,000, so a broad or wildcard term is not truncated to an arbitrary subset.
+`knora-api:matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an
+explicit hit limit of 1,000,000 to the full-text index instead of inheriting its silent
+default of 10,000, so a broad or wildcard term is not truncated to an arbitrary subset.
+`knora-api:matchFulltext` does not pass this limit and still inherits the 10,000-hit default (DEV-7489).
 
-In every text function, a search term containing `"`, `\`, or a newline is escaped before
-it is passed to the index; otherwise the term reaches Lucene as-is, so an unbalanced `"`
-or `\` is a Lucene syntax error (400). `matchTextInStandoff` also matches each
+In all four full-text functions (`knora-api:matchText`, `knora-api:matchLabel`,
+`knora-api:matchTextInStandoff` and `knora-api:matchFulltext`), a search term containing
+`"`, `\`, or a newline is escaped before it is passed to the index; otherwise the term
+reaches Lucene as-is, so an unbalanced `"` or `\` is a Lucene syntax error (400).
+`knora-api:matchTextInStandoff` also matches each
 space-separated term as a regular expression against the tag's text, so Lucene syntax
 such as a quoted phrase is not supported there.
 

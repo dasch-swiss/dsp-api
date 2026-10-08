@@ -139,6 +139,10 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
   override def getVariables: Set[QueryVariable] = Set.empty
 }
 
+/**
+ * The shared escape for user text embedded in a generated SPARQL string literal. Callers that build an
+ * [[XsdLiteral]] or a [[RegexFunction]] pattern from user input must apply it; [[LuceneQueryArgs]] applies it itself.
+ */
 object SparqlStringLiteral {
 
   /**
