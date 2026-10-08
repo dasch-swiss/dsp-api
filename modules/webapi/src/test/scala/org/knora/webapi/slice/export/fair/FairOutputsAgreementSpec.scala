@@ -5,12 +5,12 @@
 
 package org.knora.webapi.slice.`export`.fair
 
-import FairGraphFixtures.*
 import org.junit.runner.RunWith
 import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.`export`.fair.FairGraphFixtures.*
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class FairOutputsAgreementSpec extends ZIOSpecDefault {
