@@ -158,6 +158,11 @@ Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it. N
 *do* pass a large limit, the fan-out is governed by what the index actually returns — which is not
 what the predicate argument suggests (Fact 10).
 
+Every `text:query` emission passes `OntologyConstants.Fuseki.luceneHitLimit` — `/v2/search`,
+search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff` and
+`matchLabel` — except Gravsearch's `matchFulltext`, which still inherits the cap: with the
+limit its prequery's per-hit work makes broad terms too slow (DEV-7489).
+
 ## Fact 10 — `text:query`'s predicate argument does not narrow the search
 
 The entity map maps all three indexed predicates to the **same** Lucene field (`text`), and

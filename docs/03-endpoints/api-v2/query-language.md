@@ -402,6 +402,12 @@ Note that Lucene's default operator is a logical OR when submitting several sear
 
 This function can only be used as the top-level expression in a `FILTER`.
 
+`matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an explicit
+hit limit to the full-text index, so a broad or wildcard term finds every match rather
+than a silently truncated subset. A `matchText` or `matchLabel` search term containing
+`"`, `\`, or a newline is escaped before it is passed to the index; otherwise the term
+reaches Lucene as-is, so an unbalanced `"` or `\` is a Lucene syntax error (400).
+
 For example, to search for titles that contain the words 'Zeitglöcklein' and
 'Lebens':
 
@@ -711,7 +717,9 @@ structured criteria in one query.
 `matchFulltext` covers the same fields as the `GET /v2/search/{term}` endpoint, but the
 two do not necessarily return the same result set on large data: `matchFulltext` still
 inherits Jena's silent ~10,000-hit Lucene cap, whereas `/v2/search` passes an explicit
-hit limit and returns the full set (DEV-6824). For a term below the cap the results match.
+hit limit and returns the full set (DEV-7489). For a term below the cap the results match.
+`matchFulltext` is the only Gravsearch text function with this cap: `matchText`,
+`matchLabel` and `matchTextInStandoff` are not capped.
 
 The first argument is a variable representing a resource (main or linked). The
 second argument is a string literal containing the search terms, with the same
@@ -732,10 +740,9 @@ subtlety on the list path: a resource can still match via a *deleted* list value
 long as the list node that value points to is itself not deleted — for the list path
 the deletion check is on the matched list node, not on the intervening list value.
 
-A search term containing `"`, `\`, or a newline is safely escaped before being passed to
-the full-text index. As with `knora-api:matchText`, the search term is otherwise passed
-through to Lucene as-is, including its default result-count limit for very high-hit
-terms — the same limitation the fulltext endpoint has.
+As with `knora-api:matchText`, a search term containing `"`, `\`, or a newline is safely
+escaped before being passed to the full-text index, and is otherwise passed through to
+Lucene as-is.
 
 ### Filtering on Resource IRIs
 
