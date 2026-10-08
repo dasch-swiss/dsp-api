@@ -1790,7 +1790,7 @@ abstract class AbstractPrequeryGenerator(
               rightArg = startVariable,
             ),
           ),
-          pattern = term, // TODO: Ignore Lucene operators
+          pattern = LuceneQueryArgs.escape(term), // TODO: Ignore Lucene operators
           modifier = Some("i"),
         ),
       )

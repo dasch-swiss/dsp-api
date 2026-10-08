@@ -680,6 +680,22 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "interesting text")
       |}""".stripMargin
 
+  // Each space-separated term also lands in a regex FILTER literal, which must be escaped like the Lucene term.
+  val queryMatchTextInStandoffEscaped: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |    ?thing anything:hasRichtext ?text .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasRichtext ?text .
+      |    ?text knora-api:textValueHasStandoff ?standoffTag .
+      |    ?standoffTag a standoff:StandoffItalicTag .
+      |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "\"interesting text\" c\\d")
+      |}""".stripMargin
+
   val queryLinkTargetAnchor: String =
     """
       |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -932,6 +948,10 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     test("pass the Lucene hit limit for matchTextInStandoff") {
       transformQueryWithInference(queryMatchTextInStandoff)
         .map(actual => assertGolden(actual.toSparql, "matchTextInStandoff"))
+    },
+    test("escape a quote and a backslash in a matchTextInStandoff term, in its Lucene and regex literals") {
+      transformQueryWithInference(queryMatchTextInStandoffEscaped)
+        .map(actual => assertGolden(actual.toSparql, "matchTextInStandoffEscaped"))
     },
     test("transform a query anchored on a list-node value") {
       transformQueryWithInference(GravsearchInferencePipelineTestSupport.queryListNodeAnchor)
