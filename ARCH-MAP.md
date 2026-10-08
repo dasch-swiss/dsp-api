@@ -990,10 +990,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
     `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
     `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`,
-    `ResourceLandingRef`
+    `ResourceLandingRef`, `ResourceFairGraph`, `ResourceFairGraphBuilder`, `AssetDownloadLinks`,
+    `SchemaOrgJsonLd`, `SchemaOrgTurtle`, `DataCiteJson`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
-    `ExportService`; the value types `DataTaskId`,
+    `ExportService & AssetDownloadLinks & ResourceFairGraphBuilder`; the value types `DataTaskId`,
     `DataTaskStatus`, `CurrentDataTask`; the task error types
     `ExportExistsError`, `ExportInProgressError`, `ExportFailedError`, `ImportExistsError`,
     `ImportInProgressError`.
@@ -1011,7 +1012,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-admin, webapi-ontology, webapi-triplestore, webapi-resources, webapi-standoff,
     webapi-common, webapi-infrastructure, webapi-app (`AppConfig`), webapi-api (inverted and cyclic), bagit,
     shacl-validator, ingest (in-process for `swiss.dasch.domain.AssetInfoService`, remote-owned for
-    `DspIngestClient`), build-toolchain.
+    `DspIngestClient`), build-toolchain. `slice/export/fair` also reads webapi-admin's legacy
+    `responders/admin/AssetPermissionsResponder` (the asset-access policy) and `LegalInfoService`.
 - **Used by**: webapi-api, webapi-app, testkit, test-it, test-e2e.
 - **Boundary rules**:
     - Reads of admin and permission data go through webapi-admin services, not raw SPARQL against
@@ -1097,7 +1099,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     testkit (`DspIngestTestContainer`), test-it, test-e2e.
 - **Boundary rules**:
     - Cross-process consumers use the HTTP surface. Currently violated by
-        `slice/export/api/ExportApiModule.scala` and `slice/export/api/service/ExportService.scala`, which
+        `slice/export/api/ExportApiModule.scala` and `slice/export/fair/AssetDownloadLinks.scala`, which
         `import swiss.dasch.domain.{AssetInfoService, AssetInfoServiceLive, StorageServiceLive,
         MimeTypeGuesser}` and instantiate them as ZIO layers reading the shared asset directory on disk,
         bypassing both the HTTP boundary and `DspIngestClient`. Enabled by `modules/webapi/BUILD.bazel`

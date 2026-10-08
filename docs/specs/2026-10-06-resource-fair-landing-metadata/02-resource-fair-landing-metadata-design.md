@@ -83,14 +83,14 @@ Source → graph, reviewed against `shared-fair` `record_datacite.rs` / `record_
 | `ark` / `cite-as` | `StringFormatter.resourceIriToArkUrl(iri, version)` | versioned when `?version` |
 | `pageUrl` | `app.dsp-app.url` + `/resource/{shortcode}/{resourceId}` | absolute |
 | `title` | `ReadResourceV2.label` | |
-| `creators` | `resourceAuthorship`, else the project's `defaultDataAuthorship` | data-side authorship per PRD v4; file-value authorship is asset-side and never used here. `DaSCH` → Organization, else Person; DataCite-only fallback `DaSCH` as DPE does |
+| `creators` | `resourceAuthorship`, else the project's `defaultDataAuthorship` | data-side authorship per PRD v4; file-value authorship is asset-side and never used here. `DaSCH` → Organization, an ORCID-identified creator → Person, otherwise no type (never guessed); DataCite-only fallback `DaSCH` as DPE does |
 | `orcids` | an authorship string that *is* an ORCID URI | no ORCID field exists; nothing is parsed out of free text |
 | `dateCreated` / `dateModified` | `creationDate` / `lastModificationDate` | `publicationYear` = creation year |
-| `license` | project `dataLicense` → `License.uri` | none when unset |
+| `license` | project `dataLicense` → the `License` model (uri, label, explicit SPDX id) | none when unset; no second license table |
 | `copyrightHolder` | project `dataCopyrightHolder` | none when unset |
 | `generalType` | the single file value's class only | Image / Audiovisual / Sound / Text, else `Dataset`. Not `ExportService.typeOfDataOf` as is: it maps any `TextValueContentV2` to Text |
 | `accessLevel` | anonymous `userPermission` on the resource and its file value | see Access |
-| `file` (DataDownload) | dsp-ingest original URL + sidecar (as `ExportService.fileLinkOf`) | **only when Full Open**; never for external IIIF. Carries the file value's own `license` and `copyrightHolder` |
+| `file` (DataDownload) | dsp-ingest original URL + sidecar (`AssetDownloadLinks`) | **only when Full Open** and `AssetAccess` grants the original; never for external IIIF; never for a versioned request. Carries the file value's own `license` |
 | `isPartOf` | project ARK (`ark:/72163/1/{shortcode}`): the DPE project page | |
 | `additionalType` | resource class IRI | recorded fact |
 
@@ -105,9 +105,9 @@ The file-derived facts (`file`, `generalType`) come from exactly one file value:
   invariant, and `collectFirst` over a `Map` is order-dependent. The builder fails closed: it logs and omits every
   file-derived fact.
 - **External IIIF (`StillImageExternalFileValueContentV2`):** its `internalFilename` is a placeholder, so
-  `fileLinkOf` as written would build an invented dsp-ingest URL. No `DataDownload` is emitted; `generalType`
+  the download link would be an invented dsp-ingest URL. No `DataDownload` is emitted; `generalType`
   (Image) still applies.
-- **The sidecar read** (`fileLinkOf`) goes through dsp-ingest's `AssetInfoService` in-process, as the OAI
+- **The sidecar read** (`AssetDownloadLinks`) goes through dsp-ingest's `AssetInfoService` in-process, as the OAI
   export does today; ARCH-MAP records that import as outside ingest's HTTP-only interface. Keeping the code in
   webapi-export reuses that edge and adds no new one.
 
@@ -125,7 +125,7 @@ Following the DPE contract:
   URL as a bare string.
 - `license`: `{"@id": <uri>}`, never a string; key absent when none.
 - `creator` / `prov:wasAttributedTo` (DaSCH + creators with an ORCID), `publisher` DaSCH, `isPartOf` the project,
-  `includedInDataCatalog` as DPE emits it.
+  `includedInDataCatalog` deferred (no catalog URL configured in dsp-api).
 - `distribution`: one `DataDownload` at the root (`contentUrl`, `name`, `encodingFormat`, `contentSize`, the
   file's own `license`), each field omitted when the source lacks it, never guessed.
 - `isAccessibleForFree` / `conditionsOfAccess` / `DC.accessRights` (COAR) from the access level.
@@ -148,13 +148,14 @@ dsp-ingest enforce when the file is downloaded. The metadata only reports them:
 
 | Anonymous gets | Access level | File advertised |
 | --- | --- | --- |
-| resource ≥ `V`, and no file value or `AssetAccess.original == Grant` | Full Open Access (`c_abf2`) | yes |
-| resource `RV`, or the file's original is withheld | Open Access with Restrictions (`c_16ec`) | no |
+| resource ≥ `V`, and either its class carries no file or its single visible file's original is granted | Full Open Access (`c_abf2`) | yes, unless `?version=` |
+| resource `RV`, a file value `RV`, the original withheld, or a file-carrying class with no visible file | Open Access with Restrictions (`c_16ec`) | no |
 | the read fails Forbidden / NotFound, or the resource is deleted or younger than `?version=` | not public | no metadata, no links at all |
 
-A file value anonymous cannot see is not returned by the read, so it cannot be told apart from no file value;
-the level then comes from the resource and the file values that are returned. `Metadata only Access` is never
-emitted, because the read cannot establish it. An `RV` file value is returned with its full file details, so file
+A file value anonymous cannot see is not returned by the read, so it cannot be told apart from no file value.
+A resource whose class carries a file (a `knora-base:Representation`) but shows none is therefore Restricted,
+never Full Open. `Metadata only Access` is never emitted, because the read cannot establish it. An `RV` file
+value is returned with its full file details, so file
 details are taken only once `AssetAccess` grants the original; with several file values none is advertised, and
 the level still counts every one of them.
 
