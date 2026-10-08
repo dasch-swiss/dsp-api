@@ -68,7 +68,9 @@ HTTP POST to http://host/v2/searchextended/count
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.
 
-If a gravsearch query times out, a `504 Gateway Timeout` will be returned.
+If a Gravsearch query or count query times out, a `503 Service Unavailable` is returned, with a JSON body
+whose `message` reads: "This search could not be completed in time; it may be too broad. Try narrowing it,
+for example with a more specific search term or an additional restriction."
 
 ## Gravsearch and API Schemas
 
