@@ -184,52 +184,54 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
 
 ### Phase 2: Lucene hit limit and term escaping for matchText, matchTextInStandoff and matchLabel
 
-- [ ] `SparqlQuery.scala`: add `LuceneQueryArgs(term: String, limit: Int) extends Entity`, rendering
+- [x] `SparqlQuery.scala`: add `LuceneQueryArgs(term: String, limit: Int) extends Entity`, rendering
       `("<escaped>" <limit>)`
-- [ ] Move `escapeForSparqlLiteral` unchanged from `AbstractPrequeryGenerator` (`:2050-2060`) into
+- [x] Move `escapeForSparqlLiteral` unchanged from `AbstractPrequeryGenerator` (`:2050-2060`) into
       `LuceneQueryArgs`' companion as `escape`, and update its doc comment ("tracked separately" no longer holds)
-- [ ] `AbstractPrequeryGenerator.matchFulltextLuceneStatement` (`:2104-2112`): call `LuceneQueryArgs.escape`. The
+- [x] `AbstractPrequeryGenerator.matchFulltextLuceneStatement` (`:2104-2112`): call `LuceneQueryArgs.escape`. The
       object stays an `XsdLiteral` with no limit, with a `TODO(DEV-7489)` comment.
-- [ ] `AbstractPrequeryGenerator.lucenePattern` (`:1909-1919`): object becomes
+- [x] `AbstractPrequeryGenerator.lucenePattern` (`:1909-1919`): object becomes
       `LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit)`
-- [ ] `PrequeryPatternOrdering.scala:333-340` (`unitKey`): count a `LuceneQueryArgs` object as restricted
-- [ ] `SparqlTransformer.escapeEntityForVariable` (`:27-33`): explicit `LuceneQueryArgs` case that throws a clear
+- [x] `PrequeryPatternOrdering.scala:333-340` (`unitKey`): count a `LuceneQueryArgs` object as restricted
+- [x] `SparqlTransformer.escapeEntityForVariable` (`:27-33`): explicit `LuceneQueryArgs` case that throws a clear
       `GravsearchException` message
-- [ ] `PrequeryPatternOrderingSpec.scala` (`:231`, `:246`): if these hand-made lucene statements model
+- [x] `PrequeryPatternOrderingSpec.scala` (`:231`, `:246`): if these hand-made lucene statements model
       `matchText`, build them with `LuceneQueryArgs`; expectations stay unchanged
-- [ ] Unit spec for `LuceneQueryArgs.toSparql`: a plain term, with the limit rendered
-- [ ] Unit spec for `LuceneQueryArgs.toSparql`: terms containing `"`, `\`, LF and CR are escaped
-- [ ] Regenerate the existing prequery and count-prequery goldens:
+- [x] Unit spec for `LuceneQueryArgs.toSparql`: a plain term, with the limit rendered
+- [x] Unit spec for `LuceneQueryArgs.toSparql`: terms containing `"`, `\`, LF and CR are escaped
+- [x] Regenerate the existing prequery and count-prequery goldens:
       `bazel test //modules/test-it:test --test_filter='.*GravsearchTo.*PrequeryTransformerE2ESpec.*' --test_env=GOLDEN_REWRITE=1`,
       then rerun without the env var
-- [ ] Check the golden diff: exactly 3 lines in 2 files change, each only in the `text:query` object, and no line
+- [x] Check the golden diff: exactly 3 lines in 2 files change, each only in the `text:query` object, and no line
       moves. The files are `GravsearchToPrequeryTransformerE2ESpec__optional` (1 line) and `__reorderWithUnion`
       (2 lines). The `matchFulltext` goldens must not change.
-- [ ] New golden case in `GravsearchToPrequeryTransformerE2ESpec`: `matchText` in the simple schema
-- [ ] New golden case: `matchLabel`
-- [ ] New golden case: `matchTextInStandoff`
-- [ ] New golden case in `GravsearchToCountPrequeryTransformerE2ESpec`: `matchLabel` count
-- [ ] New golden case: `matchText` with a term containing `"` and `\`, showing the escaped rendering
-- [ ] E2E: Gravsearch `matchText` and `matchLabel` with an unbalanced `"` / `\` in the term give the same status
+- [x] New golden case in `GravsearchToPrequeryTransformerE2ESpec`: `matchText` in the simple schema
+- [x] New golden case: `matchLabel`
+- [x] New golden case: `matchTextInStandoff`
+- [x] New golden case in `GravsearchToCountPrequeryTransformerE2ESpec`: `matchLabel` count
+- [x] New golden case: `matchText` with a term containing `"` and `\`, showing the escaped rendering
+- [x] `matchTextInStandoff`: escape each term in its regex FILTER literals too (found during execution), pinned by a
+      `matchTextInStandoffEscaped` golden
+- [x] E2E: Gravsearch `matchText` and `matchLabel` with an unbalanced `"` / `\` in the term give the same status
       as `/v2/search` for that term, and never 500. Mirror `MatchFulltextE2ESpec.scala:256-278`, next to the
       existing matchText E2E coverage; find that with grep first.
-- [ ] E2E: Gravsearch `matchText` with a balanced phrase (`"\"foo bar\""`) returns 200
-- [ ] E2E: Gravsearch `matchText` with an embedded LF returns 200
-- [ ] `MatchFulltextE2ESpec.scala:282`: update the comment that names `escapeForSparqlLiteral`
-- [ ] `docs/03-endpoints/api-v2/query-language.md:708-712`: keep the `matchFulltext` cap caveat, but replace the
+- [x] E2E: Gravsearch `matchText` with a balanced phrase (`"\"foo bar\""`) returns 200
+- [x] E2E: Gravsearch `matchText` with an embedded LF returns 200
+- [x] `MatchFulltextE2ESpec.scala:282`: update the comment that names `escapeForSparqlLiteral`
+- [x] `docs/03-endpoints/api-v2/query-language.md:708-712`: keep the `matchFulltext` cap caveat, but replace the
       DEV-6824 reference with DEV-7489, and state that `matchText` / `matchLabel` /
       `matchTextInStandoff` are not capped
-- [ ] `docs/03-endpoints/api-v2/query-language.md` (escaping notes around `:467-476` and `:733`): state that all
+- [x] `docs/03-endpoints/api-v2/query-language.md` (escaping notes around `:467-476` and `:733`): state that all
       text functions escape the term
-- [ ] `docs/development/dsp-api-fuseki-query-execution.md` Fact 9 (`:153-159`): list which `text:query`
+- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 9 (`:153-159`): list which `text:query`
       emissions pass `luceneHitLimit`, and name `matchFulltext` as the remaining capped one (DEV-7489)
-- [ ] Grep `jena.apache.org/text#query` and `luceneQueryPredicate` across `modules/*/src/main`. Exactly one
+- [x] Grep `jena.apache.org/text#query` and `luceneQueryPredicate` across `modules/*/src/main`. Exactly one
       emission (`matchFulltextLuceneStatement`) passes no limit, and it carries the `TODO(DEV-7489)` comment.
-- [ ] `bazel test //modules/webapi:test` passes
-- [ ] `just test-it` passes (needs Docker)
-- [ ] `just test-e2e` passes, including `MatchFulltextE2ESpec` (needs Docker)
-- [ ] `just check` passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `bazel test //modules/webapi:test` passes
+- [x] `just test-it` passes (needs Docker)
+- [x] `just test-e2e` passes, including `MatchFulltextE2ESpec` (needs Docker)
+- [x] `just check` passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
