@@ -82,7 +82,8 @@ final class SearchRestService(
   } yield response
 
   // Translated here, not in the responder, so the responder's other Gravsearch callers keep the store-layer
-  // exception. Every method serving an endpoint that carries SearchEndpoints.searchTimeoutVariant must apply it.
+  // exception. Every Gravsearch method here must apply it; the fulltext methods must not, as SearchResponderV2
+  // already translates their timeouts with the fulltext message.
   private val translateGravsearchTimeout: PartialFunction[Throwable, Task[Nothing]] = {
     case _: TriplestoreTimeoutException => ZIO.fail(SearchTimeoutException(SearchTimeoutException.gravsearchMessage))
   }
