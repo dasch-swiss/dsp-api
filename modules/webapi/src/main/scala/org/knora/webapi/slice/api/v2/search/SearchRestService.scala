@@ -81,8 +81,8 @@ final class SearchRestService(
     response <- renderer.render(searchResult, opts)
   } yield response
 
-  // Only the /v2/searchextended endpoints advertise the 503 this maps to; the responder's other Gravsearch callers
-  // (incoming links, still images, regions, resource and value reads) keep the store-layer exception.
+  // Translated here, not in the responder, so the responder's other Gravsearch callers keep the store-layer
+  // exception. Every method serving an endpoint that carries SearchEndpoints.searchTimeoutVariant must apply it.
   private val translateGravsearchTimeout: PartialFunction[Throwable, Task[Nothing]] = {
     case _: TriplestoreTimeoutException => ZIO.fail(SearchTimeoutException(SearchTimeoutException.gravsearchMessage))
   }

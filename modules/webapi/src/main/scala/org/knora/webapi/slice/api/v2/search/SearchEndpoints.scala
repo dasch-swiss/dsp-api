@@ -69,7 +69,8 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   // A fulltext or Gravsearch search that exceeds its triplestore timeout returns 503 with a legible, hedged body
   // rather than the shared catch-all's bare 500 (DEV-6864). Prepended so it is matched before the catch-all, and
   // attached only to the fulltext and /v2/searchextended endpoints below -- never to the shared
-  // BaseEndpoints.errorOutputs, which would advertise 503 on every path in the bot-synced OpenAPI.
+  // BaseEndpoints.errorOutputs, which would advertise 503 on every path in the bot-synced OpenAPI. The variant only
+  // matches if the handler translates the timeout: SearchRestService for Gravsearch, SearchResponderV2 for fulltext.
   private val searchTimeoutVariant =
     oneOfVariant[SearchTimeoutException](
       statusCode(StatusCode.ServiceUnavailable).and(jsonBody[SearchTimeoutException]),
