@@ -422,18 +422,17 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
       val f = fixture.get
       storedEqualsServed(f.internalResource, f.internalValue, StandoffMappingIri.StandardMapping)
     },
-    test("stored XML of mutually referencing tags equals the submitted XML") {
-      // Not compared with the served XML: with several `targetHasOriginalXMLID` candidates in the graph the read
-      // query can serve the wrong target ID for an internal reference, so the submitted XML is the oracle (DEV-7468).
+    test("stored XML of mutually referencing tags equals the submitted XML and the served XML") {
       for {
-        resource  <- createResourceWithText(mutualReferencesXml, StandoffMappingIri.StandardMapping)
-        value     <- currentValueOf(resource)
-        _         <- removeStoredXml(value)
-        _         <- runBackfillToCompletion()
-        stored    <- storedXml(value).someOrFail(new RuntimeException("no valueHasXml"))
-        storedCan <- canonical(stored, StandoffMappingIri.StandardMapping)
-        inputCan  <- canonical(mutualReferencesXml, StandoffMappingIri.StandardMapping)
-      } yield assertTrue(storedCan == inputCan)
+        resource       <- createResourceWithText(mutualReferencesXml, StandoffMappingIri.StandardMapping)
+        value          <- currentValueOf(resource)
+        _              <- removeStoredXml(value)
+        _              <- runBackfillToCompletion()
+        stored         <- storedXml(value).someOrFail(new RuntimeException("no valueHasXml"))
+        storedCan      <- canonical(stored, StandoffMappingIri.StandardMapping)
+        inputCan       <- canonical(mutualReferencesXml, StandoffMappingIri.StandardMapping)
+        storedEqServed <- storedEqualsServed(resource, value, StandoffMappingIri.StandardMapping)
+      } yield assertTrue(storedCan == inputCan) && storedEqServed
     },
     test("stored XML equals served XML for a value with at least 100 standoff tags") {
       val f = fixture.get
