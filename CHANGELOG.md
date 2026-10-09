@@ -1,5 +1,25 @@
 # Changelog
 
+## [40.4.0](https://github.com/dasch-swiss/dsp-api/compare/v40.3.0...v40.4.0) (2026-10-09)
+
+
+### Enhancements
+
+* backfill the canonical XML on existing formatted text values (DEV-7458) ([#4380](https://github.com/dasch-swiss/dsp-api/issues/4380)) ([dc9e159](https://github.com/dasch-swiss/dsp-api/commit/dc9e159cc23c9d441b143f29d558cf9d9b594181))
+
+
+### Bug Fixes
+
+* declare knora-base externalUrl as xsd:string to match stored data (DEV-7299) ([#4381](https://github.com/dasch-swiss/dsp-api/issues/4381)) ([458c79d](https://github.com/dasch-swiss/dsp-api/commit/458c79da1fc4859b851300a3d17ad90d91557a98))
+* **gravsearch:** escape user literals and regex patterns in generated SPARQL (DEV-7493) ([#4387](https://github.com/dasch-swiss/dsp-api/issues/4387)) ([c58ef20](https://github.com/dasch-swiss/dsp-api/commit/c58ef200287f668af0d3f3b472ed0ec422f0fb2f))
+* **gravsearch:** pass an explicit Lucene hit limit in matchText and matchLabel (DEV-6824) ([#4386](https://github.com/dasch-swiss/dsp-api/issues/4386)) ([f6ddfa4](https://github.com/dasch-swiss/dsp-api/commit/f6ddfa4e98d4a2b22c3ac4db4b6530cf8f710728))
+* serve the correct internal-reference target ID in textValueAsXml (DEV-7468) ([#4384](https://github.com/dasch-swiss/dsp-api/issues/4384)) ([c05431c](https://github.com/dasch-swiss/dsp-api/commit/c05431ceb1c8ab90ea786ce4b02bb6b1c719e023))
+
+
+### Performance Improvements
+
+* **gravsearch:** port the fulltext-search rewrite to the matchFulltext prequery (DEV-7491) ([#4389](https://github.com/dasch-swiss/dsp-api/issues/4389)) ([c06f4c4](https://github.com/dasch-swiss/dsp-api/commit/c06f4c4e62eb1f518af26f13f97b4c571ce334f9))
+
 ## [40.3.0](https://github.com/dasch-swiss/dsp-api/compare/v40.2.1...v40.3.0) (2026-10-05)
 
 
