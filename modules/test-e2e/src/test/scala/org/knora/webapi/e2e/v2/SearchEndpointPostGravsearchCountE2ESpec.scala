@@ -507,7 +507,53 @@ class SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
           .map(response => assertTrue(response.code.code == 200))
       },
     ),
+    suite("Escaping user literals and regex patterns")(
+      // The parser SPARQL-unescapes literal values and regex patterns, and rendering the prequery escapes them
+      // again; without that, a quote or backslash broke the generated SPARQL (a 500) or changed its structure.
+      test("a FILTER string literal with a quote and a backslash matches nothing instead of failing") {
+        verifySearchCountResult(textFilterCountQuery("""FILTER(?text = "foo\"bar\\baz")"""), 0)
+      },
+      test("a FILTER string literal cannot inject SPARQL") {
+        // Unescaped, this rendered as `(?text = "x") || true || (""^^xsd:string)` and matched every Thing with a text.
+        verifySearchCountResult(textFilterCountQuery("""FILTER(?text = "x\") || true || (\"")"""), 0)
+      },
+      test("a list node label with a quote and a backslash matches nothing instead of failing") {
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |CONSTRUCT {
+            |    ?mainRes knora-api:isMainResource true .
+            |} WHERE {
+            |    ?mainRes anything:hasListItem ?propVal0 .
+            |    FILTER(?propVal0 = "Tree \"list\\ node 02"^^knora-api:ListNode)
+            |}""".stripMargin
+        verifySearchCountResult(query, 0)
+      },
+      test("a regex escape reaches the triplestore intact") {
+        def count(filter: String) = for {
+          response <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", textFilterCountQuery(filter))
+          jsonLd   <- response.assert200
+          count    <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+        } yield count
+        for {
+          escaped <- count("""FILTER regex(?text, "\\s")""")
+          classed <- count("""FILTER regex(?text, "[ \t\n\r]")""")
+        } yield assertTrue(classed > 0, escaped == classed)
+      },
+    ),
   )
+
+  /** A count query over `anything:Thing`s whose `anything:hasText` value `?text` passes `filter`. */
+  private def textFilterCountQuery(filter: String): String =
+    s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+       |CONSTRUCT {
+       |    ?thing knora-api:isMainResource true .
+       |} WHERE {
+       |    ?thing a anything:Thing .
+       |    ?thing anything:hasText ?text .
+       |    $filter
+       |}""".stripMargin
 
   /** A count query matching `anything:hasText` against `sparqlLiteralTerm`, written as escaped in a SPARQL literal. */
   private def matchTextCountQuery(sparqlLiteralTerm: String): String =

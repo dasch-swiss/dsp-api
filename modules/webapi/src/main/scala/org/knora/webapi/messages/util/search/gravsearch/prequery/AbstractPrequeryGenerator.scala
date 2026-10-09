@@ -1773,8 +1773,7 @@ abstract class AbstractPrequeryGenerator(
     // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
     // standoff tag contains the term:
     // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
-    // TODO: each term is read as a regex, not as Lucene syntax (a phrase's quotes stay in the pattern);
-    // escaping only keeps the SPARQL literal valid.
+    // TODO: each term is read as a regex, not as Lucene syntax (a phrase's quotes stay in the pattern).
     val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { (term: String) =>
       FilterPattern(
         expression = RegexFunction(
@@ -1791,7 +1790,7 @@ abstract class AbstractPrequeryGenerator(
               rightArg = startVariable,
             ),
           ),
-          pattern = SparqlStringLiteral.escape(term),
+          pattern = term,
           modifier = Some("i"),
         ),
       )
@@ -2088,16 +2087,13 @@ abstract class AbstractPrequeryGenerator(
   private def matchFulltextIsNotDeleted(subj: Entity): FilterNotExistsPattern =
     SparqlTransformer.notDeletedFilter(subj)
 
-  /**
-   * The term is escaped because [[XsdLiteral.toSparql]] concatenates its value without escaping.
-   * TODO(DEV-7489): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits.
-   */
+  /** TODO(DEV-7489): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits. */
   private def matchFulltextLuceneStatement(matchVar: QueryVariable, searchTerm: String): StatementPattern =
     StatementPattern(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = XsdLiteral(
-        value = SparqlStringLiteral.escape(searchTerm),
+        value = searchTerm,
         datatype = OntologyConstants.Xsd.String.toSmartIri,
       ),
     )

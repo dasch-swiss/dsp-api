@@ -105,7 +105,7 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
 /**
  * Represents a literal value with an XSD type.
  *
- * @param value    the literal value.
+ * @param value    the raw (SPARQL-unescaped) literal value; rendering escapes it.
  * @param datatype the value's XSD type IRI.
  */
 case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
@@ -119,7 +119,7 @@ case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
       datatype
     }
 
-    "\"" + value + "\"^^" + transformedDatatype.toSparql
+    "\"" + SparqlStringLiteral.escape(value) + "\"^^" + transformedDatatype.toSparql
   }
 
   override def getVariables: Set[QueryVariable] = Set.empty
@@ -140,8 +140,8 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
 }
 
 /**
- * The shared escape for user text embedded in a generated SPARQL string literal. Callers that build an
- * [[XsdLiteral]] or a [[RegexFunction]] pattern from user input must apply it; [[LuceneQueryArgs]] applies it itself.
+ * The shared escape for text embedded in a generated SPARQL string literal. [[XsdLiteral]], [[RegexFunction]]
+ * and [[LuceneQueryArgs]] apply it when rendering, so the AST always holds raw values and callers never pre-escape.
  */
 object SparqlStringLiteral {
 
@@ -317,16 +317,19 @@ case class ArithmeticExpression(leftArg: Expression, operator: ArithmeticOperato
  * Represents a regex function in a query (in a FILTER).
  *
  * @param textExpr the expression representing the text value or string literal to be checked against the provided pattern.
- * @param pattern  the REGEX pattern to be used.
- * @param modifier the modifier to be used.
+ * @param pattern  the raw (SPARQL-unescaped) REGEX pattern; rendering escapes it.
+ * @param modifier the raw REGEX flags, if any; rendering escapes them.
  */
 case class RegexFunction(textExpr: Expression, pattern: String, modifier: Option[String]) extends Expression {
-  override def toSparql: String = modifier match {
-    case Some(modifierStr) =>
-      s"""regex(${textExpr.toSparql}, "$pattern", "$modifierStr")"""
+  override def toSparql: String = {
+    val escapedPattern = SparqlStringLiteral.escape(pattern)
+    modifier match {
+      case Some(modifierStr) =>
+        s"""regex(${textExpr.toSparql}, "$escapedPattern", "${SparqlStringLiteral.escape(modifierStr)}")"""
 
-    case None =>
-      s"""regex(${textExpr.toSparql}, "$pattern")"""
+      case None =>
+        s"""regex(${textExpr.toSparql}, "$escapedPattern")"""
+    }
   }
 
   override def getVariables: Set[QueryVariable] = textExpr.getVariables
