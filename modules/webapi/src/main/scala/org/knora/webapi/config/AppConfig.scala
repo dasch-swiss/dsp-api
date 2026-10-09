@@ -11,7 +11,11 @@ import zio.config.*
 import zio.config.magnolia.*
 import zio.config.typesafe.*
 
+import java.net.URI
 import java.time.Duration
+import scala.util.Try
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * Represents the configuration as defined in application.conf.
@@ -34,6 +38,7 @@ final case class AppConfig(
   features: Features,
   `export`: ExportConfig,
   filePermissionCache: FilePermissionCacheConfig,
+  fair: FairConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -49,6 +54,21 @@ final case class ExportConfig(
   batchSize: Int,
   parallelism: Int,
 )
+
+/**
+ * Settings for the FAIR metadata served with resource landing pages.
+ */
+final case class FairConfig(
+  appExternalBaseUrl: String,
+  appShellUrl: String,
+  dpeOaiBaseUrl: String,
+  dpeOaiShortcodes: String,
+) {
+
+  /** The OAI shortcodes, uppercased; empty when none are configured. */
+  val oaiShortcodes: Set[Shortcode] =
+    dpeOaiShortcodes.split(',').map(_.trim).filter(_.nonEmpty).flatMap(Shortcode.from(_).toOption).toSet
+}
 
 /**
  * Tuning knobs for the short-lived asset-permission cache on the IIIF tile-serving path (DEV-6806).
@@ -257,7 +277,7 @@ final case class Features(
 
 object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
-    GraphRoute & Resources & JwtConfig
+    GraphRoute & Resources & JwtConfig & FairConfig
 
   val config: Config[AppConfig] = deriveConfig[AppConfig]
     .mapKey(toKebabCase)
@@ -321,6 +341,18 @@ object AppConfig {
     .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,
     )
+    .validate("app.fair.app-external-base-url must be an absolute http(s) URL")(c =>
+      isAbsoluteHttpUrl(c.fair.appExternalBaseUrl),
+    )
+    .validate("app.fair.dpe-oai-shortcodes must be a comma-separated list of 4-hex-digit shortcodes")(c =>
+      c.fair.dpeOaiShortcodes.split(',').map(_.trim).filter(_.nonEmpty).forall(Shortcode.from(_).isRight),
+    )
+
+  private def isAbsoluteHttpUrl(value: String): Boolean =
+    Try(URI.create(value)).toOption.exists(u =>
+      Option(u.getScheme).exists(s => s.equalsIgnoreCase("http") || s.equalsIgnoreCase("https")) &&
+        Option(u.getHost).exists(_.nonEmpty),
+    )
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie
   def features[A](f: Features => A): UIO[A] = ZIO.config(config.map(_.features)).map(f).orDie
@@ -357,5 +389,6 @@ object AppConfig {
       appConfigLayer.project(_.instrumentationServerConfig) ++
       appConfigLayer.project(_.jwt) ++
       appConfigLayer.project(_.v2.graphRoute) ++
-      appConfigLayer.project(_.v2.resources)
+      appConfigLayer.project(_.v2.resources) ++
+      appConfigLayer.project(_.fair)
 }
