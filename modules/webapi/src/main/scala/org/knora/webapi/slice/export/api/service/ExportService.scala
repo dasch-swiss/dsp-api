@@ -31,17 +31,12 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoA
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
-import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeolocationValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.LinkValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.RegionPreviewValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.admin.ListsResponder
@@ -62,6 +57,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.domain.RecordRules
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.util.WithAsIs
 
@@ -146,14 +142,14 @@ final case class ExportService(
   // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
   // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(r.values.values.flatten.map(_.valueContent).collectFirst { case fc: FileValueContentV2 =>
-      fc.fileValue.internalFilename.takeWhile(_ != '.')
+    ZIO.foreach(RecordRules.selectFileValue(r).map(_.valueContent).collect { case fc: FileValueContentV2 =>
+      RecordRules.assetIdOf(fc)
     }) { assetId =>
       findAssetInfo(project, assetId).map { info =>
         FileLink(
           // never falls back to the derivative's internalMimeType: the url serves the original
           mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-          url = s"${appConfig.dspIngest.externalBaseUrl}/projects/${project.shortcode.value}/assets/$assetId/original",
+          url = RecordRules.originalFileUrl(appConfig.dspIngest.externalBaseUrl, project.shortcode, assetId),
           checksum = info.map(_.original.checksum.value),
           checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
           fileName = info.map(_.originalFilename.value),
@@ -177,24 +173,12 @@ final case class ExportService(
       .catchAll(e => ZIO.logWarning(s"Could not read the sidecar of asset $assetId: ${e.getMessage}").as(None))
 
   private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
-    (project.shortcode.value.toUpperCase() match {
-      case "0803" => Some("http://www.knora.org/ontology/0803/incunabula#description")
-      case "081C" => Some("http://www.knora.org/ontology/081C/hdm#hasDescription")
-      case "0868" => Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription")
-      case "1612" => Some("http://www.knora.org/ontology/1612/Data#TextShort")
-      case _      => None
-    }).map {
-      iriConverter.asInternalSmartIri(_).map(Some(_))
-    }.getOrElse(ZIO.none)
+    RecordRules
+      .descriptionPropertyIri(project.shortcode)
+      .map(iriConverter.asInternalSmartIri(_).map(Some(_)))
+      .getOrElse(ZIO.none)
 
-  private def typeOfDataOf(r: ReadResourceV2): Option[String] =
-    r.values.values.flatten.map(_.valueContent).collectFirst {
-      case _: StillImageFileValueContentV2 | _: StillImageExternalFileValueContentV2 => "Image"
-      case _: MovingImageFileValueContentV2                                          => "Audiovisual"
-      case _: AudioFileValueContentV2                                                => "Sound"
-      case _: TextFileValueContentV2                                                 => "Text"
-      case _: TextValueContentV2                                                     => "Text"
-    }
+  private def typeOfDataOf(r: ReadResourceV2): Option[String] = RecordRules.typeOfDataOf(r)
 
   def exportResources(
     project: KnoraProject,
