@@ -128,7 +128,7 @@ case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
 /**
  * The object of a Jena `text:query` statement: `("term" limit)`. Every Gravsearch `text:query` object is
  * one of these, because without the limit Jena silently caps the lookup at 10,000 hits; the one exception
- * is `matchFulltext` (DEV-7489).
+ * is `matchFulltext` (DEV-7492).
  *
  * @param term  the raw (SPARQL-unescaped) Lucene query string; rendering escapes it.
  * @param limit the maximum number of Lucene hits.
@@ -517,15 +517,28 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
  * (both [[org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchQueryOptimisation]]
  * optimizations, the [[org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer]]
  * inference pass, and [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]])
- * treats a `GroupPattern` as an opaque leaf and passes it through unchanged; only
- * [[QueryTraverser]] and [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]]
- * need an explicit case for it (their matches are otherwise exhaustive). Used to emit hand-proven SPARQL
+ * treats a `GroupPattern` as an opaque leaf and passes it through unchanged. [[QueryTraverser]],
+ * [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]] and `PrequeryPatternOrdering`
+ * match on it explicitly (the first two exhaustively), as they do for [[SubSelectPattern]]; a new opaque pattern needs
+ * a case in each. Used to emit hand-proven SPARQL
  * shapes whose interior must survive unmodified, e.g. the `matchFulltext` function's expansion.
  *
  * @param patterns the patterns contained in the group, rendered verbatim in document order.
  */
 case class GroupPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   override def toSparql: String = "{\n" + patterns.map(_.toSparql).mkString + "}\n"
+}
+
+/**
+ * A subquery `{ SELECT DISTINCT ?variable WHERE { ... } }`. Like [[GroupPattern]] it is opaque to every pass, and by
+ * convention it is only emitted inside a [[GroupPattern]], e.g. to deduplicate the `matchFulltext` Lucene hits before they are joined.
+ *
+ * @param variable the single projected variable.
+ * @param patterns the subquery's WHERE patterns, rendered verbatim in document order.
+ */
+case class SubSelectPattern(variable: QueryVariable, patterns: Seq[QueryPattern]) extends QueryPattern {
+  override def toSparql: String =
+    s"{\nSELECT DISTINCT ${variable.toSparql} WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n}\n"
 }
 
 /**

@@ -160,8 +160,9 @@ what the predicate argument suggests (Fact 10).
 
 Every `text:query` emission passes `OntologyConstants.Fuseki.luceneHitLimit` — `/v2/search`,
 search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff` and
-`matchLabel` — except Gravsearch's `matchFulltext`, which still inherits the cap: with the
-limit its prequery's per-hit work makes broad terms too slow (DEV-7489).
+`matchLabel` — except Gravsearch's `matchFulltext`, which still inherits the cap: even with
+the DEV-7491 prequery rewrite, the full limit makes broad multi-word terms several times slower
+than today (DEV-7492).
 
 ## Fact 10 — `text:query`'s predicate argument does not narrow the search
 

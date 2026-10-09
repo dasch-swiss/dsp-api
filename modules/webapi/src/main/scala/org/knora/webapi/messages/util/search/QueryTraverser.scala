@@ -140,7 +140,8 @@ final class QueryTraverser()(implicit stringFormatter: StringFormatter) {
                                case bindPattern: BindPattern => ZIO.succeed(Seq(bindPattern))
 
                                // Opaque: rendered verbatim, never optimised or inference-expanded.
-                               case groupPattern: GroupPattern => ZIO.succeed(Seq(groupPattern))
+                               case groupPattern: GroupPattern  => ZIO.succeed(Seq(groupPattern))
+                               case subSelect: SubSelectPattern => ZIO.succeed(Seq(subSelect))
                              }
     } yield transformedPatterns.flatten
 
