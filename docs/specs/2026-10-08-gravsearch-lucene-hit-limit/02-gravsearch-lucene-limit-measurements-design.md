@@ -19,14 +19,15 @@ stays capped until its prequery is made cheaper per hit (DEV-7489).
 
 - **Instrument:** stage (`db.stage.dasch.swiss`, a prod mirror), read-only via `dsp vre sparql query -s stage
   --timeout 120`. Stage is a shared box, so treat absolute values as ±50 %. The ratios are the robust part.
-- **Runs:** cases under 30 s were run three times and are reported as the median; slower cases ran once. The raw
-  outputs are in `assets/timings-*.txt`. A line labelled `run2` twice is runs 2 and 3.
+- **Runs:** cases under 30 s were run three times and are reported as the median; slower cases ran once.
+- **Raw material:** the queries, raw timing outputs and prequery generator scripts are not checked in; they are
+  attached to DEV-7489 in Linear.
 - **Traffic sample:** a random 1,200 of the ~6,600 Gravsearch traces from the last 14 days whose prequery
   contains `text:query`, taken from Tempo (`gravsearch.prequery` / `gravsearch.query` events). Prod traffic makes
   up about 1,060 of them.
 - **Prequeries:** Tempo truncates the recorded prequery at 2,048 characters, so long `matchFulltext` prequeries
-  were rebuilt from the generator's fixed shape (`assets/gen_matchfulltext_prequery.py`) and the recorded
-  Gravsearch. The `matchLabel` count prequery is complete in the trace. All queries are in `assets/queries/`.
+  were rebuilt from the generator's fixed shape and the recorded Gravsearch. The `matchLabel` count prequery is
+  complete in the trace.
 - **Census:** for each of the 798 distinct prod `matchFulltext` terms in the sample, the limited Lucene hit count
   on stage. Only aggregates are recorded here, since the terms are users' searches.
 
@@ -119,14 +120,14 @@ rewrite is DEV-7489's first candidate.
 
 ## The DEV-6864 rewrite applied to `matchFulltext`, by hand
 
-A prequery with DEV-6864's substitutions (`assets/gen_matchfulltext_prequery_rewrite.py`):
+A prequery with DEV-6864's substitutions:
 
 - resource-ness via `creationDate` instead of `rdf:type` + `subClassOf*`;
 - value-ness via `valueCreationDate` plus direct-type `FILTER NOT EXISTS` on `LinkValue` / `ListValue`;
 - no `subPropertyOf* hasValue` walk;
 - the Lucene lookup in an inner `SELECT DISTINCT`.
 
-Count query, single runs (raw: `assets/timings-matchfulltext-rewrite.txt`):
+Count query, single runs:
 
 | term | resources (cap / limit) | current shape: cap → limit | rewrite: cap → limit |
 | --- | --- | --- | --- |
