@@ -33,11 +33,16 @@ final case class FairResource(
   file: Option[FairFileValue],
 )
 
+/**
+ * `originalUrl` is the ingest `/original` URL of a stored file, computed by the adapter; None for an external IIIF
+ * image.
+ */
 final case class FairFileValue(
   kind: FairFileKind,
   userPermission: Permission.ObjectAccess,
   typeOfData: Option[String],
   assetId: Option[String],
+  originalUrl: Option[String],
   licenseIri: Option[String],
   authorship: List[String],
 )
