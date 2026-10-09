@@ -6,16 +6,25 @@
 package org.knora.webapi.slice.resources.service
 
 import org.junit.runner.RunWith
+import zio.*
 import zio.test.*
 
 import java.time.Instant
 import java.util.UUID
 
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.InternalSchema
+import org.knora.webapi.Rendering
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -24,10 +33,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.admin.model.Project
+import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.fair.ports.FairFileKind
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
@@ -100,7 +112,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
     licenseIri = Some(LicenseIri.CC_BY_4_0),
   )
 
-  val spec = suite("FairResourcesLive.toFairResource")(
+  private val toFairResourceSuite = suite("toFairResource")(
     test("takes the description and the stored file from a resource with a text and a still image value") {
       val r = resource(
         descriptionKey -> text("A book"),
@@ -149,4 +161,119 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       assertTrue(fair.file.isEmpty, fair.description.isEmpty)
     },
   )
+
+  private final case class ReadCall(
+    iris: Seq[ResourceIri],
+    requestingUser: User,
+    withDeleted: Boolean,
+    skipRetrievalChecks: Boolean,
+  )
+
+  // Only readResourcesSequence is used by FairResourcesLive.
+  private final class StubReadResources(
+    result: Task[ReadResourcesSequenceV2],
+    calls: Ref[List[ReadCall]],
+  ) extends ReadResourcesService {
+    def readResourcesSequence(
+      resourceIris: Seq[ResourceIri],
+      propertyIri: Option[SmartIri],
+      valueUuid: Option[UUID],
+      preview: Boolean,
+      targetSchema: ApiV2Schema,
+      requestingUser: User,
+      withDeleted: Boolean,
+      queryStandoff: Boolean,
+      skipRetrievalChecks: Boolean,
+      standoffTagFilter: Option[SmartIri],
+    ): Task[ReadResourcesSequenceV2] =
+      calls.update(ReadCall(resourceIris, requestingUser, withDeleted, skipRetrievalChecks) :: _) *> result
+
+    def readResourcesSequencePar(
+      resourceIris: Seq[ResourceIri],
+      propertyIri: Option[SmartIri],
+      valueUuid: Option[UUID],
+      preview: Boolean,
+      targetSchema: ApiV2Schema,
+      requestingUser: User,
+      withDeleted: Boolean,
+      queryStandoff: Boolean,
+      skipRetrievalChecks: Boolean,
+      standoffTagFilter: Option[SmartIri],
+    ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)
+
+    def getResources(
+      resourceIris: Seq[ResourceIri],
+      propertyIri: Option[SmartIri],
+      targetSchema: ApiV2Schema,
+      schemaOptions: Set[Rendering],
+      requestingUser: User,
+    ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)
+
+    def getResourcesWithDeletedResource(
+      resourceIris: Seq[ResourceIri],
+      propertyIri: Option[SmartIri],
+      valueUuid: Option[UUID],
+      versionDate: Option[VersionDate],
+      withDeleted: Boolean,
+      showDeletedValues: Boolean,
+      targetSchema: ApiV2Schema,
+      schemaOptions: Set[Rendering],
+      requestingUser: User,
+    ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)
+
+    def getResourcePreviewWithDeletedResource(
+      resourceIris: Seq[ResourceIri],
+      withDeleted: Boolean,
+      targetSchema: ApiV2Schema,
+      requestingUser: User,
+    ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)
+
+    def getResourcePreview(
+      resourceIris: Seq[ResourceIri],
+      withDeleted: Boolean,
+      targetSchema: ApiV2Schema,
+      requestingUser: User,
+    ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)
+  }
+
+  private def readAsAnonymous(result: Task[ReadResourcesSequenceV2]) =
+    for {
+      calls <- Ref.make(List.empty[ReadCall])
+      live   = FairResourcesLive(
+               new StubReadResources(result, calls),
+               IriConverter(sf),
+               DspIngestConfig("http://ingest", ingest, "audience", "/opt/images"),
+             )
+      iri   = ResourceIri.unsafeFrom("http://rdfh.ch/0803/res")
+      out  <- live.readAsAnonymous(iri).exit
+      seen <- calls.get
+    } yield (out, seen, iri)
+
+  private val readAsAnonymousSuite = suite("readAsAnonymous")(
+    test("answers None for a NotFoundException") {
+      readAsAnonymous(ZIO.fail(NotFoundException("missing"))).map { case (out, _, _) =>
+        assertTrue(out == Exit.succeed(None))
+      }
+    },
+    test("answers None for a ForbiddenException") {
+      readAsAnonymous(ZIO.fail(ForbiddenException("hidden"))).map { case (out, _, _) =>
+        assertTrue(out == Exit.succeed(None))
+      }
+    },
+    test("keeps every other failure a failure") {
+      val boom = new RuntimeException("boom")
+      readAsAnonymous(ZIO.fail(boom)).map { case (out, _, _) => assertTrue(out == Exit.fail(boom)) }
+    },
+    test("reads the resource as the anonymous user, without deleted resources and with retrieval checks") {
+      readAsAnonymous(ZIO.succeed(ReadResourcesSequenceV2(Seq(resource()), Set.empty, false))).map {
+        case (out, seen, iri) =>
+          assertTrue(
+            out.isSuccess,
+            seen == List(ReadCall(Seq(iri), KnoraSystemInstances.Users.AnonymousUser, false, false)),
+          )
+      }
+    },
+  )
+
+  val spec = suite("FairResourcesLive")(toFairResourceSuite, readAsAnonymousSuite)
 }

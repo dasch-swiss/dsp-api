@@ -18,18 +18,23 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
- * Pure rules for turning a resource into a metadata record, shared by every producer of such records.
+ * Pure rules for deriving resource metadata (file, type of data, description), shared by every producer of it.
  */
-object RecordRules {
+object ResourceMetadataRules {
 
   /**
    * The first file value of the resource, if it has one. A resource has at most one file value.
    */
-  def selectFileValue(r: ReadResourceV2): Option[ReadValueV2] =
-    r.values.values.flatten.find(_.valueContent.isInstanceOf[FileValueContentV2])
+  def selectFileValue(r: ReadResourceV2): Option[(ReadValueV2, FileValueContentV2)] =
+    r.values.values.flatten.flatMap { v =>
+      v.valueContent match {
+        case fc: FileValueContentV2 => Some((v, fc))
+        case _                      => None
+      }
+    }.headOption
 
   /**
-   * The label for the kind of data a single value content holds, if it is one that identifies a record's type.
+   * The label for the kind of data a single value content holds, if it is one that identifies a resource's type.
    */
   def typeOfData(content: ValueContentV2): Option[String] = content match {
     case _: StillImageFileValueContentV2 | _: StillImageExternalFileValueContentV2 => Some("Image")
@@ -61,7 +66,7 @@ object RecordRules {
    * The IRI of the property holding a project's resource description, for projects that have one configured.
    */
   def descriptionPropertyIri(shortcode: Shortcode): Option[String] =
-    shortcode.value.toUpperCase match {
+    shortcode.value match {
       case "0803" => Some("http://www.knora.org/ontology/0803/incunabula#description")
       case "081C" => Some("http://www.knora.org/ontology/081C/hdm#hasDescription")
       case "0868" => Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription")

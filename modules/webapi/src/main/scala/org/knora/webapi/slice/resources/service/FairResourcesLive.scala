@@ -13,7 +13,6 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -22,7 +21,7 @@ import org.knora.webapi.slice.fair.ports.FairFileKind
 import org.knora.webapi.slice.fair.ports.FairFileValue
 import org.knora.webapi.slice.fair.ports.FairResource
 import org.knora.webapi.slice.fair.ports.FairResources
-import org.knora.webapi.slice.resources.domain.RecordRules
+import org.knora.webapi.slice.resources.domain.ResourceMetadataRules
 
 /**
  * Reads a resource as the anonymous user for the FAIR landing pages.
@@ -37,7 +36,7 @@ final case class FairResourcesLive(
   override def readAsAnonymous(iri: ResourceIri): Task[Option[FairResource]] =
     for {
       descriptionProperty <- ZIO
-                               .foreach(RecordRules.descriptionPropertyIri(iri.shortcode))(
+                               .foreach(ResourceMetadataRules.descriptionPropertyIri(iri.shortcode))(
                                  iriConverter.asPropertyIri(_).mapError(new IllegalArgumentException(_)),
                                )
       read <- readResources
@@ -78,24 +77,19 @@ object FairResourcesLive {
     )
 
   private def toFairFileValue(r: ReadResourceV2, ingestExternalBaseUrl: String): Option[FairFileValue] =
-    RecordRules.selectFileValue(r).flatMap { value =>
-      value.valueContent match {
-        case fc: FileValueContentV2 =>
-          val external = fc.isInstanceOf[StillImageExternalFileValueContentV2]
-          val assetId  = Option.unless(external)(RecordRules.assetIdOf(fc))
-          Some(
-            FairFileValue(
-              kind = if (external) FairFileKind.ExternalIiif else FairFileKind.Stored,
-              userPermission = value.userPermission,
-              typeOfData = RecordRules.typeOfData(fc),
-              assetId = assetId,
-              originalUrl = assetId.map(RecordRules.originalFileUrl(ingestExternalBaseUrl, r.resourceIri.shortcode, _)),
-              licenseIri = fc.fileValue.licenseIri.map(_.value),
-              authorship = fc.fileValue.authorship.toList.flatten.map(_.value),
-            ),
-          )
-        case _ => None
-      }
+    ResourceMetadataRules.selectFileValue(r).map { case (value, fc) =>
+      val external = fc.isInstanceOf[StillImageExternalFileValueContentV2]
+      val assetId  = Option.unless(external)(ResourceMetadataRules.assetIdOf(fc))
+      FairFileValue(
+        kind = if (external) FairFileKind.ExternalIiif else FairFileKind.Stored,
+        userPermission = value.userPermission,
+        typeOfData = ResourceMetadataRules.typeOfData(fc),
+        assetId = assetId,
+        originalUrl =
+          assetId.map(ResourceMetadataRules.originalFileUrl(ingestExternalBaseUrl, r.resourceIri.shortcode, _)),
+        licenseIri = fc.fileValue.licenseIri.map(_.value),
+        authorship = fc.fileValue.authorship.toList.flatten.map(_.value),
+      )
     }
 
   val layer = ZLayer.derive[FairResourcesLive]

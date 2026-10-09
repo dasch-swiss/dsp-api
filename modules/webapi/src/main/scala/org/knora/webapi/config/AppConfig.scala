@@ -15,8 +15,6 @@ import java.net.URI
 import java.time.Duration
 import scala.util.Try
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-
 /**
  * Represents the configuration as defined in application.conf.
  */
@@ -63,12 +61,7 @@ final case class FairConfig(
   appShellUrl: String,
   dpeOaiBaseUrl: String,
   dpeOaiShortcodes: String,
-) {
-
-  /** The OAI shortcodes, uppercased; empty when none are configured. */
-  val oaiShortcodes: Set[Shortcode] =
-    dpeOaiShortcodes.split(',').map(_.trim).filter(_.nonEmpty).flatMap(Shortcode.from(_).toOption).toSet
-}
+)
 
 /**
  * Tuning knobs for the short-lived asset-permission cache on the IIIF tile-serving path (DEV-6806).
@@ -344,14 +337,17 @@ object AppConfig {
     .validate("app.fair.app-external-base-url must be an absolute http(s) URL")(c =>
       isAbsoluteHttpUrl(c.fair.appExternalBaseUrl),
     )
+    .validate("app.fair.app-shell-url must be an absolute http(s) URL")(c => isAbsoluteHttpUrl(c.fair.appShellUrl))
+    .validate("app.fair.dpe-oai-base-url must be an absolute http(s) URL")(c => isAbsoluteHttpUrl(c.fair.dpeOaiBaseUrl))
     .validate("app.fair.dpe-oai-shortcodes must be a comma-separated list of 4-hex-digit shortcodes")(c =>
-      c.fair.dpeOaiShortcodes.split(',').map(_.trim).filter(_.nonEmpty).forall(Shortcode.from(_).isRight),
+      c.fair.dpeOaiShortcodes.split(',').map(_.trim).filter(_.nonEmpty).forall(_.matches("^[0-9A-Fa-f]{4}$")),
     )
 
+  // Not URI.getHost: it is null for hosts containing `_`, such as Docker service names.
   private def isAbsoluteHttpUrl(value: String): Boolean =
     Try(URI.create(value)).toOption.exists(u =>
       Option(u.getScheme).exists(s => s.equalsIgnoreCase("http") || s.equalsIgnoreCase("https")) &&
-        Option(u.getHost).exists(_.nonEmpty),
+        Option(u.getRawAuthority).exists(_.nonEmpty),
     )
 
   def config[A](f: AppConfig => A): UIO[A]  = ZIO.config(config).map(f).orDie

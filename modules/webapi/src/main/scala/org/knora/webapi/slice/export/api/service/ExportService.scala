@@ -31,7 +31,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoA
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagStringAttributeV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeolocationValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.GeonameValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.HierarchicalListValueContentV2
@@ -57,7 +56,7 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.resources.domain.RecordRules
+import org.knora.webapi.slice.resources.domain.ResourceMetadataRules
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.util.WithAsIs
 
@@ -129,7 +128,7 @@ final case class ExportService(
                        dateCreated = Some(r.creationDate.toString),
                        dateModified = r.lastModificationDate.map(_.toString),
                        datePublished = Some(r.creationDate.toString),
-                       typeOfData = typeOfDataOf(r),
+                       typeOfData = ResourceMetadataRules.typeOfDataOf(r),
                        size = None,
                        keywords = List.empty,
                        file = file,
@@ -139,25 +138,25 @@ final case class ExportService(
     } yield records.toJsonPretty
   }
 
-  // A resource has at most one file value, so we expose the first one found (mirrors `typeOfDataOf`).
+  // A resource has at most one file value, so we expose the first one found.
   // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
-    ZIO.foreach(RecordRules.selectFileValue(r).map(_.valueContent).collect { case fc: FileValueContentV2 =>
-      RecordRules.assetIdOf(fc)
-    }) { assetId =>
-      findAssetInfo(project, assetId).map { info =>
-        FileLink(
-          // never falls back to the derivative's internalMimeType: the url serves the original
-          mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-          url = RecordRules.originalFileUrl(appConfig.dspIngest.externalBaseUrl, project.shortcode, assetId),
-          checksum = info.map(_.original.checksum.value),
-          checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
-          fileName = info.map(_.originalFilename.value),
-          fileSize = info.flatMap(_.original.size.map(_.value)),
-          // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
-          dateCreated = Some(r.creationDate.toString),
-        )
-      }
+    ZIO.foreach(ResourceMetadataRules.selectFileValue(r).map { case (_, fc) => ResourceMetadataRules.assetIdOf(fc) }) {
+      assetId =>
+        findAssetInfo(project, assetId).map { info =>
+          FileLink(
+            // never falls back to the derivative's internalMimeType: the url serves the original
+            mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
+            url =
+              ResourceMetadataRules.originalFileUrl(appConfig.dspIngest.externalBaseUrl, project.shortcode, assetId),
+            checksum = info.map(_.original.checksum.value),
+            checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
+            fileName = info.map(_.originalFilename.value),
+            fileSize = info.flatMap(_.original.size.map(_.value)),
+            // the resource's date: there is no per-asset timestamp in the sidecar or in ingest's DB
+            dateCreated = Some(r.creationDate.toString),
+          )
+        }
     }
 
   // Never fails: without the shared asset dir every asset is missing a sidecar, and failing there would
@@ -173,12 +172,10 @@ final case class ExportService(
       .catchAll(e => ZIO.logWarning(s"Could not read the sidecar of asset $assetId: ${e.getMessage}").as(None))
 
   private def findDescriptionProperty(project: KnoraProject): Task[Option[SmartIri]] =
-    RecordRules
+    ResourceMetadataRules
       .descriptionPropertyIri(project.shortcode)
       .map(iriConverter.asInternalSmartIri(_).map(Some(_)))
       .getOrElse(ZIO.none)
-
-  private def typeOfDataOf(r: ReadResourceV2): Option[String] = RecordRules.typeOfDataOf(r)
 
   def exportResources(
     project: KnoraProject,

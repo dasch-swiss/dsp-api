@@ -28,7 +28,7 @@ import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class RecordRulesSpec extends ZIOSpecDefault {
+class ResourceMetadataRulesSpec extends ZIOSpecDefault {
 
   private given sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
@@ -86,67 +86,69 @@ class RecordRulesSpec extends ZIOSpecDefault {
     )
   }
 
-  val spec = suite("RecordRules")(
+  val spec = suite("ResourceMetadataRules")(
     suite("descriptionPropertyIri")(
       test("returns the configured property for known projects, matching the shortcode case-insensitively") {
         assertTrue(
-          RecordRules.descriptionPropertyIri(Shortcode.unsafeFrom("0803")) ==
+          ResourceMetadataRules.descriptionPropertyIri(Shortcode.unsafeFrom("0803")) ==
             Some("http://www.knora.org/ontology/0803/incunabula#description"),
-          RecordRules.descriptionPropertyIri(Shortcode.unsafeFrom("081c")) ==
+          ResourceMetadataRules.descriptionPropertyIri(Shortcode.unsafeFrom("081c")) ==
             Some("http://www.knora.org/ontology/081C/hdm#hasDescription"),
-          RecordRules.descriptionPropertyIri(Shortcode.unsafeFrom("0868")) ==
+          ResourceMetadataRules.descriptionPropertyIri(Shortcode.unsafeFrom("0868")) ==
             Some("http://www.knora.org/ontology/0868/SolarEclipses#hasDescription"),
-          RecordRules.descriptionPropertyIri(Shortcode.unsafeFrom("1612")) ==
+          ResourceMetadataRules.descriptionPropertyIri(Shortcode.unsafeFrom("1612")) ==
             Some("http://www.knora.org/ontology/1612/Data#TextShort"),
         )
       },
       test("returns None for an unknown project") {
-        assertTrue(RecordRules.descriptionPropertyIri(Shortcode.unsafeFrom("0001")).isEmpty)
+        assertTrue(ResourceMetadataRules.descriptionPropertyIri(Shortcode.unsafeFrom("0001")).isEmpty)
       },
     ),
     suite("typeOfData")(
       test("maps each content type to its label") {
         val fv = fileValue("x.bin")
         assertTrue(
-          RecordRules.typeOfData(stillImage) == Some("Image"),
-          RecordRules.typeOfData(
+          ResourceMetadataRules.typeOfData(stillImage) == Some("Image"),
+          ResourceMetadataRules.typeOfData(
             StillImageExternalFileValueContentV2(
               InternalSchema,
               fv,
               IiifImageRequestUrl.unsafeFrom("https://iiif.example.org/image.jp2/full/max/0/default.jpg"),
             ),
           ) == Some("Image"),
-          RecordRules.typeOfData(MovingImageFileValueContentV2(InternalSchema, fv)) == Some("Audiovisual"),
-          RecordRules.typeOfData(AudioFileValueContentV2(InternalSchema, fv)) == Some("Sound"),
-          RecordRules.typeOfData(TextFileValueContentV2(InternalSchema, fv)) == Some("Text"),
-          RecordRules.typeOfData(textContent) == Some("Text"),
-          RecordRules.typeOfData(IntegerValueContentV2(InternalSchema, 1)) == None,
+          ResourceMetadataRules.typeOfData(MovingImageFileValueContentV2(InternalSchema, fv)) == Some("Audiovisual"),
+          ResourceMetadataRules.typeOfData(AudioFileValueContentV2(InternalSchema, fv)) == Some("Sound"),
+          ResourceMetadataRules.typeOfData(TextFileValueContentV2(InternalSchema, fv)) == Some("Text"),
+          ResourceMetadataRules.typeOfData(textContent) == Some("Text"),
+          ResourceMetadataRules.typeOfData(IntegerValueContentV2(InternalSchema, 1)) == None,
         )
       },
       test("typeOfDataOf takes the first mapped value of the resource") {
         assertTrue(
-          RecordRules.typeOfDataOf(resource(IntegerValueContentV2(InternalSchema, 1), stillImage)) == Some("Image"),
-          RecordRules.typeOfDataOf(resource(IntegerValueContentV2(InternalSchema, 1))) == None,
+          ResourceMetadataRules.typeOfDataOf(resource(IntegerValueContentV2(InternalSchema, 1), stillImage)) == Some(
+            "Image",
+          ),
+          ResourceMetadataRules.typeOfDataOf(resource(IntegerValueContentV2(InternalSchema, 1))) == None,
         )
       },
     ),
     suite("selectFileValue")(
       test("skips non-file values and returns the file value itself") {
         val r      = resource(textContent, stillImage)
-        val chosen = RecordRules.selectFileValue(r)
-        assertTrue(chosen.map(_.valueContent) == Some(stillImage), chosen.exists(_.valueIri.value.endsWith("/v1")))
+        val chosen = ResourceMetadataRules.selectFileValue(r)
+        assertTrue(chosen.map(_._2) == Some(stillImage), chosen.exists(_._1.valueIri.value.endsWith("/v1")))
       },
       test("returns None when the resource has no file value") {
-        assertTrue(RecordRules.selectFileValue(resource(textContent)).isEmpty)
+        assertTrue(ResourceMetadataRules.selectFileValue(resource(textContent)).isEmpty)
       },
     ),
     suite("assetId and url")(
       test("assetIdOf drops the filename extension") {
-        assertTrue(RecordRules.assetIdOf(stillImage) == "AbC123")
+        assertTrue(ResourceMetadataRules.assetIdOf(stillImage) == "AbC123")
       },
       test("originalFileUrl addresses the ingest original endpoint") {
         assertTrue(
-          RecordRules.originalFileUrl("https://ingest.example.org", Shortcode.unsafeFrom("0803"), "AbC123") ==
+          ResourceMetadataRules.originalFileUrl("https://ingest.example.org", Shortcode.unsafeFrom("0803"), "AbC123") ==
             "https://ingest.example.org/projects/0803/assets/AbC123/original",
         )
       },
