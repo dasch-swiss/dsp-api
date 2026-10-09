@@ -25,6 +25,7 @@ import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.QueryVariable
 import org.knora.webapi.messages.util.search.SelectQuery
 import org.knora.webapi.messages.util.search.StatementPattern
+import org.knora.webapi.messages.util.search.SubSelectPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.XsdLiteral
@@ -160,6 +161,7 @@ object GravsearchInferencePipelineTestSupport {
       case _: UnionPattern                   => "UNION"
       case _: MinusPattern                   => "MINUS"
       case _: GroupPattern                   => "GROUP"
+      case _: SubSelectPattern               => "SUBSELECT"
     }
 
     query.whereClause.patterns.map(patternSummary).mkString("\n")

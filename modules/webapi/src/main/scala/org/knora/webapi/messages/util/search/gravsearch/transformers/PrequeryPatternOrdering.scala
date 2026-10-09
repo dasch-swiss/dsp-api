@@ -155,6 +155,7 @@ object PrequeryPatternOrdering {
           case v: ValuesPattern            => acc.copy(values = acc.values :+ v)
           case s: StatementPattern         => acc.copy(units = acc.units :+ s)
           case g: GroupPattern             => acc.copy(units = acc.units :+ g)
+          case sub: SubSelectPattern       => acc.copy(units = acc.units :+ sub)
           case blk: OptionalPattern        => acc.copy(blocks = acc.blocks :+ blk)
           case blk: UnionPattern           => acc.copy(blocks = acc.blocks :+ blk)
           case blk: MinusPattern           => acc.copy(blocks = acc.blocks :+ blk)
@@ -174,6 +175,7 @@ object PrequeryPatternOrdering {
     case m: MinusPattern                   => m.patterns.flatMap(vars).toSet
     case fne: FilterNotExistsPattern       => fne.patterns.flatMap(vars).toSet
     case g: GroupPattern                   => g.patterns.flatMap(vars).toSet
+    case sub: SubSelectPattern             => Set(sub.variable) // only the projection is visible outside
   }
 
   /** `Some(subj)` iff `u` is an `rdf:type` statement with variable subject `subj`; see the object's Scaladoc. */
@@ -208,6 +210,7 @@ object PrequeryPatternOrdering {
   private def containsLucene(g: GroupPattern): Boolean = g.patterns.exists {
     case StatementPattern(_, pred, _) => isLuceneQueryPredicate(pred)
     case inner: GroupPattern          => containsLucene(inner)
+    case sub: SubSelectPattern        => containsLucene(GroupPattern(sub.patterns))
     case _                            => false
   }
 
@@ -247,9 +250,10 @@ object PrequeryPatternOrdering {
     }
 
   private def tierNum(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): Int = u match {
-    case g: GroupPattern     => if (containsLucene(g)) 1 else 7
-    case s: StatementPattern => statementTier(s, valuesByVar)
-    case _                   => 7
+    case g: GroupPattern       => if (containsLucene(g)) 1 else 7
+    case sub: SubSelectPattern => if (containsLucene(GroupPattern(sub.patterns))) 1 else 7
+    case s: StatementPattern   => statementTier(s, valuesByVar)
+    case _                     => 7
   }
 
   /** True iff `v` has a non-empty attached `VALUES`, restricting it independently of the greedy loop's `bound` set. */

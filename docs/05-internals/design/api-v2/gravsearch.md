@@ -487,10 +487,14 @@ rule is pinned only by `PrequeryPatternOrderingSpec`, not by any golden file.
 gives the same result set as the `GET /v2/search/{term}` fulltext endpoint, expressed as a Gravsearch function.
 Its handler, `AbstractPrequeryGenerator.handleMatchFulltextFunction`, replaces the `FILTER` with a hand-proven
 SPARQL shape that mirrors the WHERE core of `SearchFulltextQuery` (the fulltext endpoint's own query builder):
-a Lucene hit anchors the match, two `OPTIONAL` blocks resolve it to a containing resource — either the resource
-that owns the matched value (a text value or a value comment), or the resource that references a matched list
-node (including sub-nodes) via a list value — and a `BIND(COALESCE(...))` picks whichever resolved, falling back
-to the match itself for a direct label hit.
+a Lucene hit (deduplicated in an inner `SELECT DISTINCT`) anchors the match, two `OPTIONAL` blocks resolve it to
+a containing resource — either the resource that owns the matched value (a text value or a value comment), or the
+resource that references a matched list node (including sub-nodes) via a list value — and a `BIND(COALESCE(...))`
+picks whichever resolved, falling back to the match itself for a direct label hit.
+
+Like `SearchFulltextQuery`, the expansion asserts resource-ness and value-ness by the presence of
+`knora-base:creationDate` / `knora-base:valueCreationDate` rather than by walking `rdfs:subClassOf*` once per
+Lucene hit; `SearchFulltextQuery`'s source comment explains why these substitutions are exact.
 
 ### Why the Expansion Needs an Opaque Group
 
@@ -500,19 +504,19 @@ it goes through the passes described above:
 1. **The optimizer passes hoist or reorder statements independently of scoping.** `PrequeryPatternOrdering`
    hoists `BindPattern`s to the front of a block unconditionally, which would place `BIND(COALESCE(...))`
    above the `OPTIONAL` blocks it depends on, leaving it referencing unbound variables. Its greedy
-   connectivity rule (above) would also place the trailing `?resourceVar a ?resClass` check before the `BIND`
-   that introduces `?resourceVar`, which is illegal SPARQL scoping.
-2. **The inference pass rejects `rdf:type` statements with a variable object.** `OntologyInferencer.transformStatementInWhere`
-   throws `GravsearchException` when the object of `rdf:type` is a variable rather than an IRI (see
-   [Inference](#inference), above) — but the expansion's value-type check (`?match a ?valType`) and its final
-   resource-class check (`?resourceVar a ?resClass`) both need exactly that shape, because the type isn't known
-   in advance.
+   connectivity rule (above) would also place the trailing `?resourceVar knora-base:creationDate ?date` check
+   before the `BIND` that introduces `?resourceVar`, which is illegal SPARQL scoping.
+2. **The inference pass rewrites what it sees.** `OntologyInferencer.transformStatementInWhere` expands
+   predicates and types into `VALUES` blocks and rejects an `rdf:type` statement with a variable object (see
+   [Inference](#inference), above); the expansion's statements are already in their final form and must reach
+   the triplestore exactly as `SearchFulltextQuery` proves them.
 
 Both problems disappear if nothing after the handler ever looks inside the expansion. `GroupPattern` (in
 `SparqlQuery.scala`) is a `QueryPattern` that exists for exactly this: it renders its contents verbatim inside
 `{ ... }`, and every pass that matches on `QueryPattern` either has a wildcard fallback that returns it
 unchanged, or (for the two passes that match exhaustively — `QueryTraverser.transformWherePatterns` and
-`GravsearchTypeInspectionUtil.transformPattern`) has an explicit case added that does the same. The
+`GravsearchTypeInspectionUtil.transformPattern`) has an explicit case added that does the same. The inner
+`SELECT DISTINCT` is a `SubSelectPattern`, opaque in the same way and only ever emitted inside the group. The
 `OntologyInferencer`, `GravsearchQueryOptimisation`, and `InferenceOptimizationService` passes never see a
 `GroupPattern`'s interior at all, so the handler can emit the same statement shapes `SearchFulltextQuery` already
 proves correct, unmodified.

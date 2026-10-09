@@ -2047,16 +2047,20 @@ abstract class AbstractPrequeryGenerator(
 
   /**
    * Builds the fulltext-index-anchored expansion for `matchFulltext`, mirroring the WHERE core of
-   * [[org.knora.webapi.slice.search.repo.SearchFulltextQuery]]: a Lucene hit anchors the match, and
-   * two OPTIONAL blocks resolve it to a containing resource — either the resource that owns the
-   * matched value (a text value or a value comment; the match may also be the resource itself via its
-   * label, handled by the final COALESCE fallback), or the resource that references the matched list
-   * node (including sub-nodes) via a list value. COALESCE picks whichever resolved.
+   * [[org.knora.webapi.slice.search.repo.SearchFulltextQuery]]: a deduplicated Lucene hit anchors the match, and
+   * two OPTIONAL blocks resolve it to a containing resource — either the resource that owns the matched value (a
+   * text value or a value comment; the match may also be the resource itself via its label, handled by the final
+   * COALESCE fallback), or the resource that references the matched list node (including sub-nodes) via a list
+   * value. COALESCE picks whichever resolved.
    *
-   * The whole block is wrapped in an opaque [[GroupPattern]] so it survives unmodified: the group's
-   * `rdf:type ?var` statements (a variable object) would otherwise be rejected by the inference pass,
-   * and its `BIND` would otherwise be hoisted above the `OPTIONAL`s it depends on by the optimizer
-   * passes. See docs/05-internals/design/api-v2/gravsearch.md for the full rationale.
+   * Resource-ness and value-ness are probed with `knora-base:creationDate` / `knora-base:valueCreationDate`
+   * instead of walking `rdfs:subClassOf*` per Lucene hit, exactly as `SearchFulltextQuery` does (DEV-6864; see the
+   * comment there for why the substitutions are exact). On stage this made the prequery 2-4x faster with identical
+   * results (DEV-7491).
+   *
+   * The whole block is wrapped in an opaque [[GroupPattern]] so it survives unmodified: its `BIND` would otherwise
+   * be hoisted above the `OPTIONAL`s it depends on by the optimizer passes. See
+   * docs/05-internals/design/api-v2/gravsearch.md for the full rationale.
    *
    * @param resourceVar the user's resource variable, bound by the group's closing `BIND`.
    * @param searchTerm  the raw (unescaped) Lucene query string, exactly as passed to `matchFulltext`.
@@ -2074,11 +2078,12 @@ abstract class AbstractPrequeryGenerator(
 
     GroupPattern(
       Seq(
-        matchFulltextLuceneStatement(matchVar, searchTerm),
+        matchFulltextLuceneLookup(matchVar, searchTerm),
         matchFulltextValueBranch(matchVar, containingResVar),
         matchFulltextListBranch(matchVar, resWithListValVar),
         bindResource,
-      ) ++ matchFulltextResourceClassCheck(resourceVar),
+        matchFulltextIsResource(resourceVar),
+      ),
     )
   }
 
@@ -2087,50 +2092,40 @@ abstract class AbstractPrequeryGenerator(
   private def matchFulltextIsNotDeleted(subj: Entity): FilterNotExistsPattern =
     SparqlTransformer.notDeletedFilter(subj)
 
-  /** TODO(DEV-7489): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits. */
-  private def matchFulltextLuceneStatement(matchVar: QueryVariable, searchTerm: String): StatementPattern =
-    StatementPattern(
-      subj = matchVar,
-      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-      obj = XsdLiteral(
-        value = searchTerm,
-        datatype = OntologyConstants.Xsd.String.toSmartIri,
+  /**
+   * The Lucene lookup, deduplicated so that a subject matching through several literals is joined only once.
+   * TODO(DEV-7492): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits.
+   */
+  private def matchFulltextLuceneLookup(matchVar: QueryVariable, searchTerm: String): SubSelectPattern =
+    SubSelectPattern(
+      matchVar,
+      Seq(
+        StatementPattern(
+          subj = matchVar,
+          pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+          obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
+        ),
       ),
     )
 
   /** A text value or value comment containing the match, and the resource that owns it. */
   private def matchFulltextValueBranch(matchVar: QueryVariable, containingResVar: QueryVariable): OptionalPattern = {
-    val valTypeVar = matchFulltextVar("valType")
-    val propVar    = matchFulltextVar("prop")
+    def notOfDirectType(typeIri: String) = FilterNotExistsPattern(
+      Seq(StatementPattern(matchVar, IriRef(OntologyConstants.Rdf.Type.toSmartIri), IriRef(typeIri.toSmartIri))),
+    )
 
     OptionalPattern(
       Seq(
-        StatementPattern(subj = matchVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = valTypeVar),
         StatementPattern(
-          subj = valTypeVar,
-          pred = IriRef(OntologyConstants.Rdfs.SubClassOf.toSmartIri, propertyPathOperator = Some('*')),
-          obj = IriRef(OntologyConstants.KnoraBase.Value.toSmartIri),
+          subj = matchVar,
+          pred = IriRef(OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri),
+          obj = matchFulltextVar("valueCreationDate"),
         ),
-        FilterPattern(
-          AndExpression(
-            CompareExpression(
-              valTypeVar,
-              CompareExpressionOperator.NOT_EQUALS,
-              IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri),
-            ),
-            CompareExpression(
-              valTypeVar,
-              CompareExpressionOperator.NOT_EQUALS,
-              IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri),
-            ),
-          ),
-        ),
-        StatementPattern(subj = containingResVar, pred = propVar, obj = matchVar),
-        StatementPattern(
-          subj = propVar,
-          pred = IriRef(OntologyConstants.Rdfs.SubPropertyOf.toSmartIri, propertyPathOperator = Some('*')),
-          obj = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-        ),
+        notOfDirectType(OntologyConstants.KnoraBase.LinkValue),
+        notOfDirectType(OntologyConstants.KnoraBase.ListValue),
+        // No `?prop rdfs:subPropertyOf* knora-base:hasValue`: the subjects it excluded (previousValue links,
+        // standoff references) have no creationDate, so matchFulltextIsResource already drops them.
+        StatementPattern(subj = containingResVar, pred = matchFulltextVar("prop"), obj = matchVar),
         matchFulltextIsNotDeleted(matchVar),
       ),
     )
@@ -2165,18 +2160,13 @@ abstract class AbstractPrequeryGenerator(
     )
   }
 
-  private def matchFulltextResourceClassCheck(resourceVar: QueryVariable): Seq[StatementPattern] = {
-    val resClassVar = matchFulltextVar("resClass")
-
-    Seq(
-      StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = resClassVar),
-      StatementPattern(
-        subj = resClassVar,
-        pred = IriRef(OntologyConstants.Rdfs.SubClassOf.toSmartIri, propertyPathOperator = Some('*')),
-        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
-      ),
+  /** Every resource, and nothing else, has a `knora-base:creationDate`. */
+  private def matchFulltextIsResource(resourceVar: QueryVariable): StatementPattern =
+    StatementPattern(
+      subj = resourceVar,
+      pred = IriRef(OntologyConstants.KnoraBase.CreationDate.toSmartIri),
+      obj = matchFulltextVar("resourceCreationDate"),
     )
-  }
 
   /**
    * Handles the function `knora-api:StandoffLink`.

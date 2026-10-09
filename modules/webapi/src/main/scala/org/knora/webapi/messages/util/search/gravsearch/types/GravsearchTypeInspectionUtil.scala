@@ -253,6 +253,7 @@ object GravsearchTypeInspectionUtil {
         if (mustBeAnnotationStatement(statementPattern)) Seq.empty[QueryPattern]
         else Seq(statementPattern)
       // Opaque: cannot contain a type annotation, and never appears before function expansion anyway.
-      case groupPattern: GroupPattern => Seq(groupPattern)
+      case groupPattern: GroupPattern  => Seq(groupPattern)
+      case subSelect: SubSelectPattern => Seq(subSelect)
     }
 }
