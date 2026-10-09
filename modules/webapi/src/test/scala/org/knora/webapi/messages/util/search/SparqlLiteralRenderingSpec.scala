@@ -28,6 +28,18 @@ class SparqlLiteralRenderingSpec extends ZIOSpecDefault {
   private val textVar   = QueryVariable("text")
 
   override def spec: Spec[TestEnvironment, Any] = suite("SPARQL literal rendering")(
+    suite("SparqlStringLiteral.escape")(
+      test("leaves the empty string empty") {
+        assertTrue(SparqlStringLiteral.escape("") == "")
+      },
+      test("escapes a trailing backslash, so it cannot swallow the closing quote") {
+        assertTrue(SparqlStringLiteral.escape("abc\\") == """abc\\""")
+      },
+      test("escapes an already-escaped-looking input as raw characters") {
+        // A backslash followed by a quote or an `n` is two raw characters, not an escape sequence.
+        assertTrue(SparqlStringLiteral.escape("\\\"") == """\\\"""", SparqlStringLiteral.escape("\\n") == """\\n""")
+      },
+    ),
     suite("XsdLiteral.toSparql")(
       test("renders a plain value unchanged") {
         assertTrue(XsdLiteral("Tiere", xsdString).toSparql == "\"Tiere\"^^<http://www.w3.org/2001/XMLSchema#string>")
