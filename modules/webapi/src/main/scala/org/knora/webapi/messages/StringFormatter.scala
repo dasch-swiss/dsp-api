@@ -1382,10 +1382,7 @@ class StringFormatter private (
       idWithCheckDigit.replace('-', '=')
     }
 
-    val (resolver: String, assignedNumber: Int) = (arkResolver, arkAssignedNumber) match {
-      case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
-      case _                                                             => throw AssertionException(s"StringFormatter has not been initialised with system settings")
-    }
+    val (resolver, assignedNumber) = arkResolverAndNumber
 
     // Calculate a check digit for the resource ID.
     val resourceIDWithCheckDigit: String = addCheckDigitAndEscape(resourceID)
@@ -1407,6 +1404,23 @@ class StringFormatter private (
       case None =>
         arkUrlWithoutTimestamp
     }
+  }
+
+  /** The ARK resolver and the assigned number; fails when the formatter has not been initialised. */
+  private def arkResolverAndNumber: (String, Int) = (arkResolver, arkAssignedNumber) match {
+    case (Some(definedHost), Some(definedAssignedNumber)) => (definedHost, definedAssignedNumber)
+    case _                                                => throw AssertionException(s"StringFormatter has not been initialised with system settings")
+  }
+
+  /**
+   * Generates the ARK URL of a project.
+   *
+   * @param shortcode the project's shortcode.
+   * @return the ARK URL identifying the project.
+   */
+  def projectArkUrl(shortcode: Shortcode): String = {
+    val (resolver, assignedNumber) = arkResolverAndNumber
+    s"$resolver/ark:/$assignedNumber/$ArkVersion/${shortcode.value}"
   }
 
   /**
