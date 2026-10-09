@@ -25,11 +25,15 @@ object WriterFacts {
     case _                                                      => "Dataset"
   }
 
-  /** Empty for [[CreatorSource.ProjectOrganisation]], whose single name is an organisation. */
-  def personCreators(facts: ResourceFacts): List[String] = facts.creators.source match {
-    case CreatorSource.Authorship | CreatorSource.ProjectDefault => facts.creators.names
-    case CreatorSource.ProjectOrganisation                       => List.empty
+  /** The DataCite nameType of the creators: [[CreatorSource.ProjectOrganisation]]'s single name is an organisation. */
+  def nameType(source: CreatorSource): String = source match {
+    case CreatorSource.Authorship | CreatorSource.ProjectDefault => "Personal"
+    case CreatorSource.ProjectOrganisation                       => "Organizational"
   }
+
+  /** Empty when the creators are an organisation. */
+  def personCreators(facts: ResourceFacts): List[String] =
+    if (nameType(facts.creators.source) == "Personal") facts.creators.names else List.empty
 
   /** The UTC year of creation. */
   def publicationYear(facts: ResourceFacts): String =

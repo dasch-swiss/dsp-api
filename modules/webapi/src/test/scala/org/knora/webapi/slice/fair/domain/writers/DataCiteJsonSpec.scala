@@ -95,8 +95,10 @@ class DataCiteJsonSpec extends ZIOSpecDefault {
     )
   }
 
-  private def violations(f: ResourceFacts): List[String] =
-    schema.validate(new ObjectMapper().readTree(render(f).toJson)).asScala.map(_.getMessage).toList
+  private def violationsOf(json: Json): List[String] =
+    schema.validate(new ObjectMapper().readTree(json.toJson)).asScala.map(_.getMessage).toList
+
+  private def violations(f: ResourceFacts): List[String] = violationsOf(render(f))
 
   private val baseKeys = List(
     "identifiers",
@@ -232,6 +234,36 @@ class DataCiteJsonSpec extends ZIOSpecDefault {
     test("a resource with a file validates against the DataCite 4.3 schema") {
       val v = violations(base)
       assertTrue(v.isEmpty) ?? v.mkString("; ")
+    },
+    test("the schema rejects an unknown top-level key") {
+      val doc = render(base) match {
+        case Json.Obj(fs) => Json.Obj(fs :+ ("bogusKey" -> str("x")))
+        case other        => other
+      }
+      assertTrue(violationsOf(doc).nonEmpty)
+    },
+    test("the schema rejects an unknown resourceTypeGeneral") {
+      val doc = render(base) match {
+        case Json.Obj(fs) =>
+          Json.Obj(fs.map {
+            case ("types", _) => "types" -> o("resourceType" -> str("Thing"), "resourceTypeGeneral" -> str("Bogus"))
+            case other        => other
+          })
+        case other => other
+      }
+      assertTrue(violationsOf(doc).nonEmpty)
+    },
+    test("the publication year is four digits and every date is an ISO-8601 instant") {
+      val year  = get(render(base), "publicationYear").collect { case Json.Str(s) => s }.getOrElse("")
+      val dates = get(render(base), "dates").toList.flatMap {
+        case Json.Arr(items) => items.toList.flatMap(get(_, "date")).collect { case Json.Str(s) => s }
+        case _               => Nil
+      }
+      assertTrue(
+        year.matches("^\\d{4}$"),
+        dates.nonEmpty,
+        dates.forall(d => scala.util.Try(Instant.parse(d)).isSuccess),
+      )
     },
     test("a resource without a file validates against the DataCite 4.3 schema") {
       val v = violations(base.copy(file = None))

@@ -8,7 +8,6 @@ package org.knora.webapi.slice.fair.domain.writers
 import zio.Chunk
 import zio.json.ast.Json
 
-import org.knora.webapi.slice.fair.domain.CreatorSource
 import org.knora.webapi.slice.fair.domain.ResourceFacts
 import org.knora.webapi.slice.fair.domain.ResourceLicence
 import org.knora.webapi.slice.fair.domain.writers.WriterFacts.*
@@ -46,11 +45,8 @@ object DataCiteJson {
     obj(field("resourceType", str(facts.classLabel)), field("resourceTypeGeneral", str(generalType(facts))))
 
   private def creators(facts: ResourceFacts): Json = {
-    val nameType = facts.creators.source match {
-      case CreatorSource.Authorship | CreatorSource.ProjectDefault => "Personal"
-      case CreatorSource.ProjectOrganisation                       => "Organizational"
-    }
-    Json.Arr(Chunk.from(facts.creators.names.map(n => typed("name", n, "nameType", nameType))))
+    val kind = nameType(facts.creators.source)
+    Json.Arr(Chunk.from(facts.creators.names.map(n => typed("name", n, "nameType", kind))))
   }
 
   private def dates(facts: ResourceFacts): Json = {

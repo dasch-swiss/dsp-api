@@ -72,7 +72,10 @@ object FairResourcesLive {
       creationDate = r.creationDate,
       lastModificationDate = r.lastModificationDate,
       authorship = r.resourceAuthorship.map(_.value).toList,
-      description = descriptionProperty.flatMap(p => r.findValues(p).headOption).map(_.valueContent.valueHasString),
+      description = descriptionProperty
+        .flatMap(p => r.findValues(p).headOption)
+        .map(_.valueContent.valueHasString)
+        .filter(_.trim.nonEmpty),
       file = toFairFileValue(r, ingestExternalBaseUrl),
     )
 

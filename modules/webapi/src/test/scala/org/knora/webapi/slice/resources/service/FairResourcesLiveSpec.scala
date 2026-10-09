@@ -156,6 +156,14 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
         file.typeOfData == Some("Image"),
       )
     },
+    test("a blank description is no description") {
+      val fair = FairResourcesLive.toFairResource(
+        resource(descriptionKey -> text("  \n ")),
+        Some(descriptionProperty),
+        ingest,
+      )
+      assertTrue(fair.description.isEmpty)
+    },
     test("has no file and no description when the resource has neither") {
       val fair = FairResourcesLive.toFairResource(resource(otherKey -> text("x")), Some(descriptionProperty), ingest)
       assertTrue(fair.file.isEmpty, fair.description.isEmpty)

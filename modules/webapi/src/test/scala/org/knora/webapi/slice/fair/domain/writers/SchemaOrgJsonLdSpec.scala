@@ -7,6 +7,7 @@ package org.knora.webapi.slice.fair.domain.writers
 
 import org.junit.runner.RunWith
 import zio.Chunk
+import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
@@ -172,6 +173,7 @@ class SchemaOrgJsonLdSpec extends ZIOSpecDefault {
       assertTrue(
         keys(dist) == List("@type", "contentUrl", "name", "encodingFormat", "contentSize", "license"),
         get(dist, "contentSize").contains(Json.Num(42L)),
+        render(base).toJson.contains("\"contentSize\":42"),
         get(dist, "contentUrl").contains(Json.Str(file.contentUrl)),
       )
     },
