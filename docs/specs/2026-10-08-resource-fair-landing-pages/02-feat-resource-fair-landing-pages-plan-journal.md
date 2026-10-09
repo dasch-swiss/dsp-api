@@ -27,7 +27,8 @@ status: in-progress
 | phase | status | phase_base | review_fix_rounds |
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@5f4f820d8 | 1 |
-| 2 | pending | — | 0 |
+| 2 | reviewed | dsp-api@e1cfdaae8 | 1 |
+| 3 | in-progress | dsp-api@HEAD3 | 0 |
 
 ## Chunk queue
 
@@ -40,6 +41,10 @@ status: in-progress
 | 1.5 | dsp-api | — | 1.1-1.4 | "1.17 just check + just test" | both green | — | — |
 | 1.3a | dsp-api | slice/fair/domain/{ResourceFacts,FactsInputs}.scala, ports/FairResources.scala (originalUrl), test ResourceFactsSpec | 1.1 | "1.6"-"1.11", "1.13"-"1.15" | pure derive green on the rule matrix | plan TD2, TD6-TD11 | 1.3 |
 | 1.3b | dsp-api | slice/fair/domain/service/ResourceFactsBuilder.scala, StringFormatter project ARK, test ports/*InMemory.scala, ResourceFactsBuilderSpec | 1.3a | "1.4", "1.5", "1.12", "1.16" | builder gathers inputs via ports; malformed/missing -> None; port failure stays failure | plan TD3-TD5 | 1.3 |
+| 2.1 | dsp-api | slice/fair/domain/writers/{SchemaOrgJsonLd,ScriptSafeJson}.scala + specs | — | "2.1", "2.2", "2.6 (JSON-LD)", "2.9" | JSON-LD key order and shapes; script-safe output property-tested | scratchpad phase2-writer-mapping.md; schema_org.rs | — |
+| 2.2 | dsp-api | slice/fair/domain/writers/{DublinCoreMeta,Html}.scala + specs | 2.1 | "2.3", "2.6 (DC: description cut)", "2.9 (attributes)" | tag order, 1000-code-point cut, attribute escaping | dublin_core_meta.rs, record_dublin_core.rs | — |
+| 2.3 | dsp-api | slice/fair/domain/writers/DataCiteJson.scala, MODULE.bazel, maven_install.json, modules/webapi/BUILD.bazel, test schema resource + specs | 2.2 | "2.4", "2.5", "2.7" | DataCite JSON validates against the vendored draft-07 schema | record_datacite.rs, datacite_json.rs | — |
+| 2.4 | dsp-api | WritersAgreementSpec | 2.3 | "2.8", "2.10" | writers agree; just check + just test green | — | — |
 
 ## Chunks
 
@@ -53,6 +58,12 @@ status: in-progress
 | 1.R1 | dsp-api | complete | 9df941c2c | review fix: FairClassLabels -> FairClasses with requiresFile; a file-requiring resource with no file in the anonymous view is restricted; vacuous builder tests removed; gather parallel | none |
 | 1.R2 | dsp-api | complete | 93d74a7e1 | review fix: FairResourcesLive error-channel tests (stub read service); FairConfig raw strings, three URLs validated (underscore hosts accepted), AppConfigSpec cases; RecordRules -> ResourceMetadataRules, typed selectFileValue | none |
 | 1.5 | dsp-api | complete | — | just check + just test green after review fixes (spec markdown fixed in the phase's spec-state commit) | none |
+| 2.1 | dsp-api | complete | 3cea9612e | SchemaOrgJsonLd (ordered keys, record adaptation), ScriptSafeJson (<,>,&,U+2028/9 escapes, property-tested), WriterFacts shared helpers | none |
+| 2.2 | dsp-api | complete | e0c67a1b4 | DublinCoreMeta (ordered DC.* tags, 1000-code-point description cut), Html attribute escaping; emoji-cut mutation caught | none |
+| 2.3 | dsp-api | complete | 5ca5d762f | DataCiteJson (kernel order, no empties, schemaVersion last); networknt json-schema-validator 1.5.9 test dep; vendored schema validated as draft-07 for file / no-file / org-fallback | none |
+| 2.4 | dsp-api | complete | 021cddf2f | WritersAgreementSpec: title, identifier, creators, licence, type, dates agree across the three writers over five variants | none |
+| 2.R1 | dsp-api | complete | 47495bc1c | review fix: schema negative controls + year/date format checks; WriterFacts.nameType; blank description -> None; serialised contentSize pinned | none |
+| 2.5 | dsp-api | complete | — | just check + just test green after review fixes | none |
 
 ## Deferrals
 
@@ -69,3 +80,5 @@ status: in-progress
 - Chunk 1.3 split into 1.3a (pure derive + ResourceFactsSpec) and 1.3b (ResourceFactsBuilder, InMemory doubles, builder spec, project ARK helper).
 - ExportService's OAI description lookup uses `r.values.get(internalSmartIri)` against a complex-schema read; it may never match (out of scope here; FairResourcesLive uses `findValues(PropertyIri)`). Worth checking in the export follow-up (plan 5.3).
 - Phase 1 outcome: all items ticked; deferred to Phase 3: OAI shortcode parsing (3.2); deferred to Phase 4: hidden-file authorship HTTP test (4.11), ARCH-MAP/CONTEXT update (4.19). Review: 5 reviewers, one fix round (hidden-file access level, error-channel tests, config validation, naming).
+- DataCite `sizes`: DPE's record writer deliberately omits them (they describe the bitstream; docs/src/dpe/oai-pmh.md). This work emits `sizes` because the PRD's File row asks for DataCite formats/sizes; the size is only published when the file is visible at V. The DataCite writer also omits `rightsList` without a licence where DPE falls back to the access-rights text (plan TD8).
+- Phase 2 outcome: all items ticked; deferred: none. Review: 4 reviewers (dune skipped: pure code inside the fair slice), one fix round.

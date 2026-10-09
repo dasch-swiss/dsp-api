@@ -421,7 +421,7 @@ Subgoal **S2** ↑PG1, PG3.
 
 ### dsp-api
 
-- [ ] 2.1 ↑S2: JSON-LD writer, built as a zio-json `Json.Obj` from an ordered field list (not `merge`, which reorders). Keys in this order, with no key for an unrecorded fact:
+- [x] 2.1 ↑S2: JSON-LD writer, built as a zio-json `Json.Obj` from an ordered field list (not `merge`, which reorders). Keys in this order, with no key for an unrecorded fact:
     - `@context` `["https://schema.org", {"prov": "http://www.w3.org/ns/prov#"}]`;
     - `@type` `Dataset`;
     - `@id` the ARK;
@@ -435,12 +435,12 @@ Subgoal **S2** ↑PG1, PG3.
     - `prov:wasAttributedTo` (`{"@id": "https://dasch.swiss"}`);
     - `url`, `isPartOf`, `additionalType`;
     - `distribution` (one `DataDownload`: `contentUrl`, then `name`, `encodingFormat`, `contentSize` as a number and `license`, each when recorded)
-- [ ] 2.2 ↑TD17: Script-safe JSON serialiser: `<`, `>` and `&` become JSON escapes `\u003c`, `\u003e` and `\u0026`, and U+2028 and U+2029 become `\u2028` and `\u2029`
-- [ ] 2.3 ↑S2: Dublin Core meta writer. Tags `DC.title`, `DC.creator`, `DC.publisher`, `DC.identifier`, `DC.type`, `DC.date`, `DC.description`, `DC.format`, `DC.relation`, `DC.rights`, `DC.accessRights`:
+- [x] 2.2 ↑TD17: Script-safe JSON serialiser: `<`, `>` and `&` become JSON escapes `\u003c`, `\u003e` and `\u0026`, and U+2028 and U+2029 become `\u2028` and `\u2029`
+- [x] 2.3 ↑S2: Dublin Core meta writer. Tags `DC.title`, `DC.creator`, `DC.publisher`, `DC.identifier`, `DC.type`, `DC.date`, `DC.description`, `DC.format`, `DC.relation`, `DC.rights`, `DC.accessRights`:
     - `DC.description` cut to 1000 characters (code points, not bytes), with `…` appended only when cut;
     - `DC.accessRights` as the COAR URI;
     - creators raw, as in `record_dublin_core.rs`
-- [ ] 2.4 ↑S2: DataCite JSON writer, following `record_datacite.rs` and `datacite_json.rs`:
+- [x] 2.4 ↑S2: DataCite JSON writer, following `record_datacite.rs` and `datacite_json.rs`:
     - kernel key order (identifiers, types, creators, titles, publisher, publicationYear, descriptions, dates, relatedIdentifiers, rightsList, formats, sizes), with `schemaVersion` `http://datacite.org/schema/kernel-4` last;
     - ARK identifier;
     - `types` per TD11;
@@ -452,13 +452,13 @@ Subgoal **S2** ↑PG1, PG3.
     - `rightsList` per TD8;
     - `formats` and `sizes`;
     - nothing empty emitted: no `null`, no `[]`, no `{}`
-- [ ] 2.5 ↑S2: Add `com.networknt:json-schema-validator` (already resolved as `1.5.9`, transitively through wiremock) as a direct test dependency: coordinate in `MODULE.bazel`'s `maven.install`, re-pin with `bazel run @unpinned_maven//:pin`, and add it to the test `deps` in `modules/webapi/BUILD.bazel`. Vendor dsp-repository's `shared/fair/testdata/schemas/datacite-4.3-schema.json` as a test resource, with a note of its origin (DataCite commit `2ade77951cf2`, patched by `download-schemas.sh`: enums widened to 4.6, `uniqueItems` removed). Validate as draft-04 with format validation off, as DPE does
-- [ ] 2.6 ↑S2: Unit tests mirroring `shared-fair` where a rule is shared: identifier shape, licence as a node, no placeholder, constant publisher, key order, access properties, file shape, description cut, `isPartOf` as the project ARK, `additionalType` as the class IRI
-- [ ] 2.7 ↑S2: Unit test: the DataCite JSON validates for a file-carrying resource, a resource without a file, and a resource whose creator falls back to the project
-- [ ] 2.8 ↑S2: Unit test: the three writers agree on title, identifier, creators, licence, type and dates for the same facts
-- [ ] 2.9 ↑TD17: Unit test: hostile text in the label and description cannot leave the `<script>` or an attribute: `</script>`, `<!--`, quotes, newlines, U+2028, non-ASCII. Plus a property test: for any string, the script-safe output contains none of the five characters and decodes back to the input
-- [ ] 2.10 ↑S2: Run `just check` and `just test`; both pass
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] 2.5 ↑S2: Add `com.networknt:json-schema-validator` (already resolved as `1.5.9`, transitively through wiremock) as a direct test dependency: coordinate in `MODULE.bazel`'s `maven.install`, re-pin with `bazel run @unpinned_maven//:pin`, and add it to the test `deps` in `modules/webapi/BUILD.bazel`. Vendor dsp-repository's `shared/fair/testdata/schemas/datacite-4.3-schema.json` as a test resource, with a note of its origin (DataCite commit `2ade77951cf2`, patched by `download-schemas.sh`: enums widened to 4.6, `uniqueItems` removed). Validate with format validation off, as DPE does (the schema declares draft-07; its draft-04-style `id` keyword is registered as a non-validating keyword)
+- [x] 2.6 ↑S2: Unit tests mirroring `shared-fair` where a rule is shared: identifier shape, licence as a node, no placeholder, constant publisher, key order, access properties, file shape, description cut, `isPartOf` as the project ARK, `additionalType` as the class IRI
+- [x] 2.7 ↑S2: Unit test: the DataCite JSON validates for a file-carrying resource, a resource without a file, and a resource whose creator falls back to the project
+- [x] 2.8 ↑S2: Unit test: the three writers agree on title, identifier, creators, licence, type and dates for the same facts
+- [x] 2.9 ↑TD17: Unit test: hostile text in the label and description cannot leave the `<script>` or an attribute: `</script>`, `<!--`, quotes, newlines, U+2028, non-ASCII. Plus a property test: for any string, the script-safe output contains none of the five characters and decodes back to the input
+- [x] 2.10 ↑S2: Run `just check` and `just test`; both pass
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 3: Signposting and the Accept decision
 
