@@ -1773,7 +1773,8 @@ abstract class AbstractPrequeryGenerator(
     // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
     // standoff tag contains the term:
     // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
-    // TODO: handle the differences between regex syntax and Lucene syntax.
+    // TODO: each term is read as a regex, not as Lucene syntax (a phrase's quotes stay in the pattern);
+    // escaping only keeps the SPARQL literal valid.
     val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { (term: String) =>
       FilterPattern(
         expression = RegexFunction(
@@ -1790,7 +1791,7 @@ abstract class AbstractPrequeryGenerator(
               rightArg = startVariable,
             ),
           ),
-          pattern = term, // TODO: Ignore Lucene operators
+          pattern = SparqlStringLiteral.escape(term),
           modifier = Some("i"),
         ),
       )
@@ -1911,10 +1912,7 @@ abstract class AbstractPrequeryGenerator(
       StatementPattern(
         subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
         pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = XsdLiteral(
-          value = queryString,
-          datatype = OntologyConstants.Xsd.String.toSmartIri,
-        ),
+        obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
       ),
     )
 
@@ -2049,17 +2047,6 @@ abstract class AbstractPrequeryGenerator(
   }
 
   /**
-   * Escapes a string for safe embedding in a SPARQL string literal: a raw `"`, `\`, LF, or CR in the
-   * search term would otherwise break out of the literal (SPARQL's `STRING_LITERAL_QUOTE` grammar
-   * disallows all four unescaped), since [[XsdLiteral.toSparql]] concatenates its value without
-   * escaping. The backslash must be escaped first, or the backslashes this method inserts for the
-   * other characters would themselves be re-escaped. The same pre-existing gap affects
-   * `matchText`/`matchLabel`; tracked separately (fixing it here only protects `matchFulltext`).
-   */
-  private def escapeForSparqlLiteral(s: String): String =
-    s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
-
-  /**
    * Builds the fulltext-index-anchored expansion for `matchFulltext`, mirroring the WHERE core of
    * [[org.knora.webapi.slice.search.repo.SearchFulltextQuery]]: a Lucene hit anchors the match, and
    * two OPTIONAL blocks resolve it to a containing resource — either the resource that owns the
@@ -2101,12 +2088,16 @@ abstract class AbstractPrequeryGenerator(
   private def matchFulltextIsNotDeleted(subj: Entity): FilterNotExistsPattern =
     SparqlTransformer.notDeletedFilter(subj)
 
+  /**
+   * The term is escaped because [[XsdLiteral.toSparql]] concatenates its value without escaping.
+   * TODO(DEV-7489): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits.
+   */
   private def matchFulltextLuceneStatement(matchVar: QueryVariable, searchTerm: String): StatementPattern =
     StatementPattern(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = XsdLiteral(
-        value = escapeForSparqlLiteral(searchTerm),
+        value = SparqlStringLiteral.escape(searchTerm),
         datatype = OntologyConstants.Xsd.String.toSmartIri,
       ),
     )

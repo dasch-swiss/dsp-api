@@ -126,6 +126,34 @@ case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
 }
 
 /**
+ * The object of a Jena `text:query` statement: `("term" limit)`. Every Gravsearch `text:query` object is
+ * one of these, because without the limit Jena silently caps the lookup at 10,000 hits; the one exception
+ * is `matchFulltext` (DEV-7489).
+ *
+ * @param term  the raw (SPARQL-unescaped) Lucene query string; rendering escapes it.
+ * @param limit the maximum number of Lucene hits.
+ */
+final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
+  override def toSparql: String = s"(\"${SparqlStringLiteral.escape(term)}\" $limit)"
+
+  override def getVariables: Set[QueryVariable] = Set.empty
+}
+
+/**
+ * The shared escape for user text embedded in a generated SPARQL string literal. Callers that build an
+ * [[XsdLiteral]] or a [[RegexFunction]] pattern from user input must apply it; [[LuceneQueryArgs]] applies it itself.
+ */
+object SparqlStringLiteral {
+
+  /**
+   * Escapes `\`, `"`, LF and CR so that `s` can be embedded in a double-quoted SPARQL string literal.
+   * The backslash must be replaced first, or the backslashes inserted for the others would be re-escaped.
+   */
+  def escape(s: String): String =
+    s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
+}
+
+/**
  * Represents a statement pattern or block pattern in a query.
  */
 sealed trait QueryPattern extends SparqlGenerator

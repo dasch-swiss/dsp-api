@@ -468,5 +468,56 @@ class SearchEndpointPostGravsearchCountE2ESpec extends E2EZSpec {
         verifySearchCountResult(query, 50, Some(anythingUser1))
       },
     ),
+    suite("Escaping the term of matchText and matchLabel")(
+      // The term is escaped before it is embedded in the generated SPARQL literal. A raw unbalanced
+      // quote or backslash is still invalid Lucene syntax, so Jena rejects it with the same status as
+      // /v2/search does for that term; it must never break the SPARQL itself (a 500).
+      test("matchText with an unbalanced quote and a backslash gets the same status as /v2/search, never 500") {
+        val rawTerm = "foo\"bar\\baz" // as understood after SPARQL unescaping: foo"bar\baz
+        val query   = matchTextCountQuery("""foo\"bar\\baz""")
+        for {
+          oldResponse <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$rawTerm")
+          newResponse <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
+        } yield assertTrue(oldResponse.code.code == newResponse.code.code, newResponse.code.code != 500)
+      },
+      test("matchLabel with an unbalanced quote and a backslash gets the same status as /v2/search, never 500") {
+        val rawTerm = "foo\"bar\\baz"
+        val query   =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |CONSTRUCT {
+            |    ?thing knora-api:isMainResource true .
+            |} WHERE {
+            |    ?thing a anything:Thing .
+            |    FILTER knora-api:matchLabel(?thing, "foo\"bar\\baz")
+            |}""".stripMargin
+        for {
+          oldResponse <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$rawTerm")
+          newResponse <- TestApiClient.postJsonLdDocument(uri"/v2/searchextended/count", query)
+        } yield assertTrue(oldResponse.code.code == newResponse.code.code, newResponse.code.code != 500)
+      },
+      test("matchText with a balanced Lucene phrase returns 200") {
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/searchextended/count", matchTextCountQuery("""\"foo bar\""""))
+          .map(response => assertTrue(response.code.code == 200))
+      },
+      test("matchText with an embedded LF returns 200") {
+        TestApiClient
+          .postJsonLdDocument(uri"/v2/searchextended/count", matchTextCountQuery("""foo\nbar"""))
+          .map(response => assertTrue(response.code.code == 200))
+      },
+    ),
   )
+
+  /** A count query matching `anything:hasText` against `sparqlLiteralTerm`, written as escaped in a SPARQL literal. */
+  private def matchTextCountQuery(sparqlLiteralTerm: String): String =
+    s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+       |CONSTRUCT {
+       |    ?thing knora-api:isMainResource true .
+       |} WHERE {
+       |    ?thing a anything:Thing .
+       |    ?thing anything:hasText ?text .
+       |    FILTER knora-api:matchText(?text, "$sparqlLiteralTerm")
+       |}""".stripMargin
 }

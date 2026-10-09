@@ -335,6 +335,7 @@ object PrequeryPatternOrdering {
         val restricted = terms.count {
           case _: IriRef                                              => true
           case _: XsdLiteral                                          => true
+          case _: LuceneQueryArgs                                     => true
           case v: QueryVariable if isValuesRestricted(v, valuesByVar) => true
           case _                                                      => false
         }

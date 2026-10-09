@@ -128,7 +128,9 @@ trait SearchResponderV2 {
    * @param query            a Gravsearch query provided by the client.
    * @param schemaAndOptions the target API schema and its options submitted with the request.
    * @param user             the client making the request.
-   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found. A triplestore timeout
+   *         fails with the untranslated `TriplestoreTimeoutException`; an HTTP endpoint that wants a 503 translates
+   *         it itself, as `SearchRestService` does.
    */
   def gravsearchV2(
     query: ConstructQuery,
@@ -157,7 +159,8 @@ trait SearchResponderV2 {
    *
    * @param query a Gravsearch query provided by the client.
    * @param user  the client making the request.
-   * @return a [[ResourceCountV2]] representing the number of resources that have been found.
+   * @return a [[ResourceCountV2]] representing the number of resources that have been found. A triplestore timeout
+   *         fails with the untranslated `TriplestoreTimeoutException`, as for `gravsearchV2`.
    */
   def gravsearchCountV2(query: ConstructQuery, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2]
   def gravsearchCountV2(query: IRI, user: User, limitToProject: Option[ProjectIri]): Task[ResourceCountV2] =
@@ -553,9 +556,10 @@ final class SearchResponderV2Live(
    */
   // HONEST-TIMEOUT (DEV-6864): a triplestore timeout on the fulltext prequery/count reaches the client as a bare
   // 500 via BaseEndpoints' catch-all. Translate it into a search-specific 503 with a hedged message so the residue
-  // that LITERAL-LENGTH and PROBE do not catch fails legibly. Applied where SearchFulltextQuery.build's queries
-  // run — the search-tier queries — not the 120s Gravsearch main query, whose input is already bounded by the
-  // prequery.
+  // that LITERAL-LENGTH and PROBE do not catch fails legibly. This translation covers only the fulltext
+  // search-tier queries, where SearchFulltextQuery.build's queries run. Gravsearch timeouts (prequery, count and
+  // main query) are translated in SearchRestService instead, because gravsearchV2 and gravsearchCountV2 have
+  // internal callers that must keep the store-layer exception.
   private def translateSearchTimeout(searchValue: String): PartialFunction[Throwable, Task[Nothing]] = {
     // Only TriplestoreTimeoutException matches, so a query the breadth guard interrupts (a fast refusal winning
     // the race) never triggers this — the interruption propagates as such and is not logged as a failure.
@@ -810,7 +814,12 @@ final class SearchResponderV2Live(
 
       _ <- recordPrequeryOnRoot(countSparql)
 
-      countResponse <- stageSpan("gravsearch.prequery.execute")(triplestore.query(Select.gravsearch(countSparql)))
+      countResponse <-
+        stageSpan("gravsearch.prequery.execute")(
+          triplestore
+            .query(Select.gravsearch(countSparql))
+            .tapError(logPrequeryFailure(countSparql)),
+        )
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO

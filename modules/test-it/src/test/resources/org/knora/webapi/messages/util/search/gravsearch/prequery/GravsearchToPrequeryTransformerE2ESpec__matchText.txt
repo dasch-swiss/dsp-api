@@ -1,0 +1,16 @@
+SELECT DISTINCT ?thing
+WHERE {
+?text <http://jena.apache.org/text#query> ("Zeitglöcklein" 1000000) .
+?thing <http://www.knora.org/ontology/0001/anything#hasText> ?text .
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing
+ORDER BY ASC(?thing)
+LIMIT 25

@@ -21,6 +21,8 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.search.SearchTimeoutException
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 final class SearchRestService(
   searchResponderV2: SearchResponderV2,
@@ -63,8 +65,10 @@ final class SearchRestService(
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] =
     for {
-      searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user, limitToProject)
-      response     <- renderer.render(searchResult, opts)
+      searchResult <- searchResponderV2
+                        .gravsearchV2(query, opts.schemaRendering, user, limitToProject)
+                        .catchSome(translateGravsearchTimeout)
+      response <- renderer.render(searchResult, opts)
     } yield response
 
   def gravsearchCount(user: User)(
@@ -72,9 +76,17 @@ final class SearchRestService(
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
   ): Task[(RenderedResponse, MediaType)] = for {
-    searchResult <- searchResponderV2.gravsearchCountV2(query, user, limitToProject)
-    response     <- renderer.render(searchResult, opts)
+    searchResult <-
+      searchResponderV2.gravsearchCountV2(query, user, limitToProject).catchSome(translateGravsearchTimeout)
+    response <- renderer.render(searchResult, opts)
   } yield response
+
+  // Translated here, not in the responder, so the responder's other Gravsearch callers keep the store-layer
+  // exception. Every Gravsearch method here must apply it; the fulltext methods must not, as SearchResponderV2
+  // already translates their timeouts with the fulltext message.
+  private val translateGravsearchTimeout: PartialFunction[Throwable, Task[Nothing]] = {
+    case _: TriplestoreTimeoutException => ZIO.fail(SearchTimeoutException(SearchTimeoutException.gravsearchMessage))
+  }
 
   def searchIncomingLinks(user: User)(
     resourceIri: InputIri,

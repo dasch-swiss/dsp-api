@@ -46,12 +46,24 @@ class SearchEndpointsSpec extends ZIOSpecDefault {
   // Tapir's `.show` renders each endpoint's error outputs, including the fixed status codes of its oneOf variants.
   private val fullTextSearch      = endpoints.getFullTextSearch.endpoint.show
   private val fullTextSearchCount = endpoints.getFullTextSearchCount.endpoint.show
-  private val searchByLabel       = endpoints.getSearchByLabel.endpoint.show
-  private val gravsearch          = endpoints.getGravsearch.endpoint.show
+  private val gravsearchEndpoints = List(
+    endpoints.postGravsearch,
+    endpoints.getGravsearch,
+    endpoints.postGravsearchCount,
+    endpoints.getGravsearchCount,
+  ).map(_.endpoint.show)
+  private val otherSearchEndpoints = List(
+    endpoints.getSearchByLabel,
+    endpoints.getSearchByLabelCount,
+    endpoints.getSearchIncomingLinks,
+    endpoints.getSearchStillImageRepresentations,
+    endpoints.getSearchStillImageRepresentationsCount,
+    endpoints.getSearchIncomingRegions,
+  ).map(_.endpoint.show)
 
-  // The two fulltext routes translate a triplestore timeout into a 503, attached via
+  // The fulltext and Gravsearch routes translate a triplestore timeout into a 503, attached via
   // errorOutVariantsPrepend on those endpoints only. These tests are the regression net for that being scoped to
-  // the fulltext routes and for the prepend not dropping the shared client-error variants.
+  // those routes and for the prepend not dropping the shared client-error variants.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchEndpoints HONEST-TIMEOUT contract (DEV-6864)")(
     test("the fulltext search and count endpoints advertise a 503") {
       assertTrue(
@@ -59,17 +71,18 @@ class SearchEndpointsSpec extends ZIOSpecDefault {
         fullTextSearchCount.contains("503"),
       )
     },
-    test("the 503 is attached only to the fulltext endpoints, not search-by-label or gravsearch") {
-      assertTrue(
-        !searchByLabel.contains("503"),
-        !gravsearch.contains("503"),
-      )
+    test("the four Gravsearch endpoints advertise a 503") {
+      assertTrue(gravsearchEndpoints.forall(_.contains("503")))
     },
-    test("the fulltext endpoints keep their documented client-error variants (nothing dropped by prepending)") {
+    test("the 503 is not attached to the other search endpoints") {
+      assertTrue(otherSearchEndpoints.forall(!_.contains("503")))
+    },
+    test("the timeout-mapped endpoints keep their documented client-error variants (nothing dropped by prepending)") {
       assertTrue(
         fullTextSearch.contains("400"),
         fullTextSearch.contains("404"),
         fullTextSearchCount.contains("400"),
+        gravsearchEndpoints.forall(_.contains("400")),
       )
     },
   )
