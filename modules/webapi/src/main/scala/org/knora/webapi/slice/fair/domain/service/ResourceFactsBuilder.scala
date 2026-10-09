@@ -20,7 +20,7 @@ import org.knora.webapi.slice.fair.ports.*
 final class ResourceFactsBuilder(
   resources: FairResources,
   projects: FairProjects,
-  classLabels: FairClassLabels,
+  classes: FairClasses,
   assets: FairAssets,
   config: FairConfig,
   sf: StringFormatter,
@@ -54,16 +54,16 @@ final class ResourceFactsBuilder(
       project <- projects
                    .findByShortcode(iri.shortcode)
                    .someOrFail(new IllegalStateException(s"Resource ${iri.value} exists but its project does not"))
-      fileLicence    <- lookupLicence(resource.file.flatMap(_.licenseIri))
-      projectLicence <- lookupLicence(project.dataLicenseIri)
-      labels         <- classLabels.labels(resource.classIri)
-      sidecar        <- findSidecar(iri, resource)
+      (fileLicence, projectLicence, fairClass, sidecar) <- lookupLicence(resource.file.flatMap(_.licenseIri))
+                                                             .zipPar(lookupLicence(project.dataLicenseIri))
+                                                             .zipPar(classes.describe(resource.classIri))
+                                                             .zipPar(findSidecar(iri, resource))
     } yield FactsInputs(
       resource = resource,
       project = project,
       fileLicence = fileLicence,
       projectLicence = projectLicence,
-      classLabels = labels,
+      fairClass = fairClass,
       sidecar = sidecar,
       ark = sf.resourceIriToArkUrl(iri),
       projectArk = sf.projectArkUrl(iri.shortcode),
@@ -90,7 +90,7 @@ final class ResourceFactsBuilder(
 
 object ResourceFactsBuilder {
   val layer: URLayer[
-    FairResources & FairProjects & FairClassLabels & FairAssets & FairConfig & StringFormatter,
+    FairResources & FairProjects & FairClasses & FairAssets & FairConfig & StringFormatter,
     ResourceFactsBuilder,
   ] = ZLayer.derive[ResourceFactsBuilder]
 }

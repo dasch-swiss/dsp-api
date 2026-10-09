@@ -56,7 +56,7 @@ class ResourceFactsSpec extends ZIOSpecDefault {
     project = project,
     fileLicence = LicenceLookup.NotRecorded,
     projectLicence = LicenceLookup.NotRecorded,
-    classLabels = Map("en" -> "Thing"),
+    fairClass = FairClass(Map("en" -> "Thing"), requiresFile = false),
     sidecar = None,
     ark = "https://ark.example.org/ark:/72163/1/0803/0b03b0a6e6bX",
     projectArk = "https://ark.example.org/ark:/72163/1/0803",
@@ -136,7 +136,15 @@ class ResourceFactsSpec extends ZIOSpecDefault {
             ),
         )
       },
-      test("a resource without a file has full access and no type of data") {
+      test("a V resource of a file-requiring class with no file in the view is not fully open") {
+        val facts = ResourceFacts.derive(base.copy(fairClass = FairClass(Map.empty, requiresFile = true)))
+        assertTrue(
+          facts.map(_.accessLevel).contains(AccessLevel.OpenAccessWithRestrictions),
+          facts.exists(_.file.isEmpty),
+          facts.exists(_.typeOfData.isEmpty),
+        )
+      },
+      test("a V resource of a class that does not require a file has full access and no type of data") {
         val facts = ResourceFacts.derive(base)
         assertTrue(
           facts.map(_.accessLevel).contains(AccessLevel.FullOpenAccess),
@@ -237,15 +245,15 @@ class ResourceFactsSpec extends ZIOSpecDefault {
     ),
     suite("class label")(
       test("prefers en") {
-        val in = base.copy(classLabels = Map("de" -> "Ding", "en" -> "Thing"))
+        val in = base.copy(fairClass = FairClass(Map("de" -> "Ding", "en" -> "Thing"), requiresFile = false))
         assertTrue(ResourceFacts.derive(in).map(_.classLabel).contains("Thing"))
       },
       test("uses the smallest language tag without en") {
-        val in = base.copy(classLabels = Map("fr" -> "Chose", "de" -> "Ding"))
+        val in = base.copy(fairClass = FairClass(Map("fr" -> "Chose", "de" -> "Ding"), requiresFile = false))
         assertTrue(ResourceFacts.derive(in).map(_.classLabel).contains("Ding"))
       },
       test("falls back to the class IRI") {
-        val in = base.copy(classLabels = Map.empty)
+        val in = base.copy(fairClass = FairClass(Map.empty, requiresFile = false))
         assertTrue(ResourceFacts.derive(in).map(_.classLabel).contains(resource.classIri))
       },
     ),

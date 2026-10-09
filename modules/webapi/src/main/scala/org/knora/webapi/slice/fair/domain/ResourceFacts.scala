@@ -58,7 +58,7 @@ final case class FactsInputs(
   project: FairProject,
   fileLicence: LicenceLookup,
   projectLicence: LicenceLookup,
-  classLabels: Map[String, String],
+  fairClass: FairClass,
   sidecar: Option[FairAsset],
   ark: String,
   projectArk: String,
@@ -98,7 +98,7 @@ object ResourceFacts {
       classIri = r.classIri,
       classLabel = classLabel(in),
       file = fileFacts(in),
-      accessLevel = accessLevel(r),
+      accessLevel = accessLevel(in),
       projectArk = in.projectArk,
       shortcode = r.iri.shortcode,
     )
@@ -108,10 +108,10 @@ object ResourceFacts {
     s"${in.appExternalBaseUrl.stripSuffix("/")}/resource/${in.resource.iri.shortcode.value}/${in.resource.iri.resourceId.value}"
 
   private def classLabel(in: FactsInputs): String =
-    in.classLabels
+    in.fairClass.labels
       .get("en")
       .filter(_.nonEmpty)
-      .orElse(in.classLabels.minByOption(_._1).map(_._2))
+      .orElse(in.fairClass.labels.minByOption(_._1).map(_._2))
       .getOrElse(in.resource.classIri)
 
   private def fileFacts(in: FactsInputs): Option[FileFacts] =
@@ -122,10 +122,15 @@ object ResourceFacts {
         FileFacts(url, in.sidecar.flatMap(_.mimeType), in.sidecar.flatMap(_.fileName), in.sidecar.flatMap(_.size)),
       )
 
-  private def accessLevel(r: FairResource): AccessLevel =
-    if (r.userPermission >= ObjectAccess.View && r.file.forall(_.userPermission >= ObjectAccess.View))
-      AccessLevel.FullOpenAccess
+  private def accessLevel(in: FactsInputs): AccessLevel = {
+    val r          = in.resource
+    val fileAllows = r.file match {
+      case Some(f) => f.userPermission >= ObjectAccess.View
+      case None    => !in.fairClass.requiresFile
+    }
+    if (r.userPermission >= ObjectAccess.View && fileAllows) AccessLevel.FullOpenAccess
     else AccessLevel.OpenAccessWithRestrictions
+  }
 
   private def creators(in: FactsInputs): Creators = {
     val fromAuthorship = (in.resource.authorship ++ in.resource.file.toList.flatMap(_.authorship)).distinct

@@ -72,7 +72,7 @@ class ResourceFactsBuilderSpec extends ZIOSpecDefault {
         ResourceFactsBuilder(
           resources,
           projects,
-          FairClassLabelsInMemory(Map(resource.classIri -> Map("en" -> label))),
+          FairClassesInMemory(Map(resource.classIri -> FairClass(Map("en" -> label), requiresFile = false))),
           assets,
           config,
           sf,
@@ -99,19 +99,7 @@ class ResourceFactsBuilderSpec extends ZIOSpecDefault {
 
   val spec = suite("ResourceFactsBuilder")(
     suite("absent")(
-      test("returns None for a missing resource") {
-        for {
-          resources <- FairResourcesInMemory.make()
-          result    <- runPlain(resources)
-        } yield assertTrue(result.isEmpty)
-      },
-      test("returns None for a deleted resource, which the port reports as absent") {
-        for {
-          resources <- FairResourcesInMemory.make()
-          result    <- runPlain(resources)
-        } yield assertTrue(result.isEmpty)
-      },
-      test("returns None for a forbidden resource, which the port reports as absent") {
+      test("returns None for an absent resource") {
         for {
           resources <- FairResourcesInMemory.make()
           result    <- runPlain(resources)
