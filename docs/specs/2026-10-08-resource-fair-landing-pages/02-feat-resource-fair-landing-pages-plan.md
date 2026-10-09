@@ -14,6 +14,8 @@ prd: 01-resource-fair-landing-pages-PRD.md
 linear: DEV-7420
 ---
 
+<!-- markdownlint-disable MD001 MD024 -->
+
 # feat: FAIR metadata and Signposting on the resource pages ARKs resolve to
 
 ## Overview
@@ -56,16 +58,16 @@ cannot carry a tag. Its parent is that phase's subgoal.
 ### Top goals and PRD goals (from `01-resource-fair-landing-pages-PRD.md`)
 
 - **G0**: Every page a DaSCH resource or value ARK resolves to is FAIR-assessable by machine.
-  - **G1** ↑G0: Machines read metadata and Signposting without JavaScript.
-  - **G2** ↑G0: Nothing beyond the anonymous view is published.
-  - **G3** ↑G0: The F-UJI score of a resource ARK rises measurably.
-  - **G4** ↑G0: A person's page is unchanged.
+    - **G1** ↑G0: Machines read metadata and Signposting without JavaScript.
+    - **G2** ↑G0: Nothing beyond the anonymous view is published.
+    - **G3** ↑G0: The F-UJI score of a resource ARK rises measurably.
+    - **G4** ↑G0: A person's page is unchanged.
 - **G6**: The changes are maintainable within each repository's conventions.
 
 ### Plan goals
 
 | Id | Parent | Plan goal | Requirements |
-|----|--------|-----------|--------------|
+| --- | --- | --- | --- |
 | PG1 | ↑G1 | A visible resource's landing response embeds one JSON-LD graph, Dublin Core `<meta>` tags and `<link>` elements in the served `<head>` | REQ-1.1–1.6 |
 | PG2 | ↑G1 | A visible resource's landing response carries the Signposting `Link` header, identical on `GET` and `HEAD` | REQ-2.1–2.6 |
 | PG3 | ↑G1 | JSON-LD and DataCite JSON are served at their own URLs on the API host. The landing route reaches them by the one `303`, and every landing response carries `Vary: Accept` | REQ-3.1–3.6 |
@@ -76,7 +78,7 @@ cannot carry a tag. Its parent is that phase's subgoal.
 ### Phase subgoals
 
 | Id | Parent | Phase | Subgoal |
-|----|--------|-------|---------|
+| --- | --- | --- | --- |
 | S1 | ↑PG1, PG3, PG4 | 1 | One builder turns a route's shortcode and resource id into the resource's facts under the anonymous view, or into nothing |
 | S2 | ↑PG1, PG3 | 2 | Pure writers render the facts as schema.org JSON-LD, Dublin Core meta tags and DataCite JSON that agree with each other |
 | S3 | ↑PG2, PG3 | 3 | Pure functions produce the Signposting link set, its RFC 8288 serialisation and the `Accept` decision |
@@ -121,8 +123,8 @@ api.<host>/fair/resources/{sc}/{id}/metadata.datacite.json   → application/vnd
 ### Slice layout
 
 - **L1** ↑S1, G6: `slice/fair/ports/` holds one ADR-0011 port per foreign
-  context the builder reads: resources and values, projects (legal defaults,
-  custom licences, longname), ontology (class label) and assets (the sidecar).
+  context the builder reads: resources and values, projects (legal defaults and
+  longname), ontology (class label) and assets (the sidecar).
   Each port is a trait returning fair's own boundary DTOs, never
   `ReadResourceV2`. Its `<Port>Live` adapter lives in the provider's `repo` or
   `domain/service` package, and its `<Port>InMemory` double in fair's tests.
@@ -186,30 +188,32 @@ Deliverables that implement a decision have that decision as their parent.
   `http://purl.org/coar/access_right/c_16ec`.
 - **TD8** ↑S1: **Licence.** The chain is the file's `licenseIri`, then the
   project's `dataLicense`, then none.
-  - `PLACEHOLDER` counts as none and falls through. It is the only value that
+    - `PLACEHOLDER` counts as none and falls through. It is the only value that
     falls through.
-  - `UNKNOWN`, `AI_GENERATED` and `PUBLIC_DOMAIN` give the label only, in
+    - `UNKNOWN`, `AI_GENERATED` and `PUBLIC_DOMAIN` give the label only, in
     DataCite `rights`. They emit no schema.org `license` and no `license` link,
     and do not fall back.
-  - A licence IRI is resolved against the built-in licence constants
-    (`License.BUILT_IN`) and the project's custom licences, never against the
-    project's enabled list. One that resolves to neither yields no licence and
-    does not fall back.
-  - The chain yields at most one licence, so the `license` link appears exactly
+    - A licence IRI is resolved against the built-in licence constants
+    (`License.BUILT_IN`) only, never against the project's enabled list. One
+    that does not resolve yields no licence and does not fall back. dsp-api
+    stores no per-project custom licences (`LicenseRepo` holds only
+    `License.BUILT_IN`), so the PRD's custom-licence row has nothing to read;
+    decided at execution intake (2026-10-08).
+    - The chain yields at most one licence, so the `license` link appears exactly
     when it yields a licence with a URI.
-  - SPDX `rightsIdentifier` and its label come only from an explicit table of
+    - SPDX `rightsIdentifier` and its label come only from an explicit table of
     the Creative Commons entries, as DPE's id-to-label table.
 - **TD9** ↑S1: **Creators.** The chain is `resourceAuthorship` plus the visible
   file value's authorship, deduplicated in first-seen order. Failing that, the
   project's `defaultDataAuthorship`. Failing that, the project as an
   organisation (its `longname`, else its `shortname`, `nameType`
   `Organizational`), in DataCite only.
-  - `attachedToUser` is never used.
-  - There is no `author` link, and `prov:wasAttributedTo` names DaSCH only.
-  - The project's legal defaults are part of the public
+    - `attachedToUser` is never used.
+    - There is no `author` link, and `prov:wasAttributedTo` names DaSCH only.
+    - The project's legal defaults are part of the public
     `/admin/projects/shortcode/…` response (`publicEndpoint`), so using them
     stays within G2.
-  - The fallback is rendered into the metadata only; nothing is stored on the
+    - The fallback is rendered into the metadata only; nothing is stored on the
     resource. This keeps the legal-metadata PRD (v4, 2026-06-19) decision that
     the project default is "display-only; the default is not asserted on the
     resource".
@@ -218,10 +222,10 @@ Deliverables that implement a decision have that decision as their parent.
   anonymous view and taken as the value's string form. Other projects get none.
 - **TD11** ↑S1: **Type.** `typeOfData` as the export derives it from the
   selected file value, and `Dataset` when there is none.
-  - DataCite `resourceType` names the RDF class: its `rdfs:label` in English,
+    - DataCite `resourceType` names the RDF class: its `rdfs:label` in English,
     else the label with the lexicographically first language tag, else the
     class IRI.
-  - schema.org `additionalType` is the class IRI in the complex schema.
+    - schema.org `additionalType` is the class IRI in the complex schema.
 - **TD12** ↑S3: **Negotiation** is a port of `shared-fair`'s `negotiate`
   decision table (deliverable 3.5). A redirect is a `303` with `Location` set to
   the absolute representation URL on the API host. `Accept` is read as
@@ -258,12 +262,12 @@ Deliverables that implement a decision have that decision as their parent.
   with fair's own error type, not `BaseEndpoints.publicEndpoint`, whose shared
   error outputs serialise exception messages.
 - **TD17** ↑S2, S3: **Escaping.**
-  - JSON-LD goes into the page only through a script-safe serialiser, a
+    - JSON-LD goes into the page only through a script-safe serialiser, a
     post-pass over zio-json's output (which escapes none of these).
-  - Attributes are HTML-escaped.
-  - `Link` hrefs come only from IRIs and ARKs, and are percent-encoded for
+    - Attributes are HTML-escaped.
+    - `Link` hrefs come only from IRIs and ARKs, and are percent-encoded for
     `<>";,` and space at serialisation only, as DPE's `signposting.rs`.
-  - A header value the HTTP layer would reject is detected with
+    - A header value the HTTP layer would reject is detected with
     `sttp.model.Header.safeApply` in the rest service and dropped with a
     warning, and the page is still served.
 - **TD18** ↑S3: **OAI links** for configured shortcodes:
@@ -281,7 +285,7 @@ A `FairConfig` section in `AppConfig`, projected in `projectAppConfigurations`
 so services depend on `FairConfig` alone.
 
 | Id | Parent | Key | Env | Example (prod) |
-|----|--------|-----|-----|----------------|
+| --- | --- | --- | --- | --- |
 | C1 | ↑TD2 | `fair.app-external-base-url` | `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL` | `https://app.dasch.swiss` |
 | C2 | ↑TD14 | `fair.app-shell-url` | `KNORA_WEBAPI_FAIR_APP_SHELL_URL` | `http://app/index.html` (dsp-app listens on 80 in ops-deploy; `http://app:4200/index.html` in the local `docker-compose.yml`) |
 | C3 | ↑TD18 | `fair.dpe-oai-base-url` | `KNORA_WEBAPI_FAIR_DPE_OAI_BASE_URL` | `https://repository.dasch.swiss/dpe/oai` |
@@ -318,14 +322,14 @@ so services depend on `FairConfig` alone.
   decoded, normalised URI, and the id class excludes `.`, `/` and `%`, so
   captures are always safe.
 - **N2** ↑S6: Proxy settings:
-  - `proxy_connect_timeout`, `proxy_send_timeout` and `proxy_read_timeout`
+    - `proxy_connect_timeout`, `proxy_send_timeout` and `proxy_read_timeout`
     of 2 s;
-  - `proxy_set_header Accept-Encoding ""`, `Cookie ""` and
+    - `proxy_set_header Accept-Encoding ""`, `Cookie ""` and
     `Authorization ""`, so no credential reaches dsp-api;
-  - `proxy_redirect off`;
-  - `proxy_intercept_errors on` with
+    - `proxy_redirect off`;
+    - `proxy_intercept_errors on` with
     `error_page 400 401 403 404 405 406 408 413 418 429 500 502 503 504 = @shell`;
-  - `include /etc/nginx/security-headers.conf`, so proxied answers keep the
+    - `include /etc/nginx/security-headers.conf`, so proxied answers keep the
     security headers.
 
   The landing route never answers `404` by design, so a `404` can only mean
@@ -347,14 +351,14 @@ so services depend on `FairConfig` alone.
 ### Repository conventions
 
 - **K1** ↑G6: dsp-api `CONVENTIONS.md` binds every phase:
-  - `final class` services with `ZLayer.derive`;
-  - the `*Endpoints` / `*ServerEndpoints` / `*RestService` split;
-  - per-endpoint error variants, never the shared `errorOutputs`;
-  - ASCII-only production code (the `…` of the description cut is written as
+    - `final class` services with `ZLayer.derive`;
+    - the `*Endpoints` / `*ServerEndpoints` / `*RestService` split;
+    - per-endpoint error variants, never the shared `errorOutputs`;
+    - ASCII-only production code (the `…` of the description cut is written as
     a Unicode escape), methods of at most 50 lines, SPDX headers;
-  - no REQ ids or plan references in comments;
-  - no "Knora" in human-readable text;
-  - specs as `@RunWith(classOf[DspZTestJUnitRunner]) class XSpec extends ZIOSpecDefault`,
+    - no REQ ids or plan references in comments;
+    - no "Knora" in human-readable text;
+    - specs as `@RunWith(classOf[DspZTestJUnitRunner]) class XSpec extends ZIOSpecDefault`,
     as the existing specs are.
 - **K2** ↑G6: Commit messages: dsp-api `feat: <subject> (DEV-7420)`; dsp-app
   per its PR-title check, `feat(nginx): <subject> (DEV-7420)`.
@@ -374,42 +378,42 @@ carry item-count assertions that break unrelated specs.
 
 ### dsp-api
 
-- [ ] 1.1 ↑G6: Read `ARCH-MAP.md` and `docs/contexts/*/CONTEXT.md`. Create the `fair` slice per L1–L3, with the four ports of L1 and their `Live` adapters and `InMemory` doubles
-- [ ] 1.2 ↑TD6, TD10, TD11: Extract the pure parts of `ExportService`'s `typeOfDataOf`, `findDescriptionProperty` and `fileLinkOf` into a pure object that both `ExportService` and `ResourceFacts.derive` use. File selection returns the `ReadValueV2`. The sidecar lookup (`findAssetInfo`) is not shared: fair reads it through its assets port. `ExportServiceSpec` and its golden output stay unchanged
-- [ ] 1.3 ↑S1: Define `ResourceFacts`: canonical IRI, ARK, page URL, title, description, creators with their source, licence, dates, type of data, class IRI and label, optional file, access level, project ARK and shortcode
-- [ ] 1.4 ↑TD3, TD4: Identifier parsing: case-insensitive shortcode; a malformed id gives absent
-- [ ] 1.5 ↑TD5: Anonymous read through the resources port and the visibility rule
-- [ ] 1.6 ↑TD2: Canonical page URL and ARK from the resolved IRI (C1, C5)
-- [ ] 1.7 ↑TD6: File rule
-- [ ] 1.8 ↑TD7: Access-level rule
-- [ ] 1.9 ↑TD8: Licence chain, with built-in and custom-licence lookup
-- [ ] 1.10 ↑TD9: Creator chain
-- [ ] 1.11 ↑TD10, TD11: Title, description, dates and type
-- [ ] 1.12 ↑TD4, TD5: Unit tests: missing, deleted, forbidden (no permission) and malformed all yield nothing; an infrastructure failure of the read stays a failure
-- [ ] 1.13 ↑TD6, TD7: Unit tests:
-  - an RV-only resource is visible, with the restricted level;
-  - a V resource with an RV-only file has no file, the restricted level, and a type still taken from the file;
-  - V with a V file has the file and Full Open Access;
-  - no file means Full Open Access;
-  - a resource with a text value and a still-image file value takes its type and file from the file value;
-  - an external IIIF still image gives type `Image` and no file
-- [ ] 1.14 ↑TD8: Unit tests for the licence matrix:
-  - file built-in;
-  - file `PLACEHOLDER`, with and without a project licence;
-  - `UNKNOWN`, `AI_GENERATED`, `PUBLIC_DOMAIN`, each with a project licence that is not used;
-  - a custom licence of the project;
-  - a file licence IRI that resolves to nothing, with a project licence that is not used;
-  - no licence
-- [ ] 1.15 ↑TD9: Unit tests for the creator chain:
-  - resource authorship;
-  - file authorship;
-  - deduplication;
-  - a hidden file's authorship is ignored;
-  - the project default;
-  - the project as organisation, by longname and by shortname
-- [ ] 1.16 ↑TD2, TD3: Unit test: a lowercase request shortcode yields the canonical page URL and ARK
-- [ ] 1.17 ↑S1: Run `just check` and `just test`; both pass
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] 1.1 ↑G6: Read `ARCH-MAP.md` and `docs/contexts/*/CONTEXT.md`. Create the `fair` slice per L1–L3, with the four ports of L1 and their `Live` adapters and `InMemory` doubles
+- [x] 1.2 ↑TD6, TD10, TD11: Extract the pure parts of `ExportService`'s `typeOfDataOf`, `findDescriptionProperty` and `fileLinkOf` into a pure object that both `ExportService` and `ResourceFacts.derive` use. File selection returns the `ReadValueV2`. The sidecar lookup (`findAssetInfo`) is not shared: fair reads it through its assets port. `ExportServiceSpec` and its golden output stay unchanged
+- [x] 1.3 ↑S1: Define `ResourceFacts`: canonical IRI, ARK, page URL, title, description, creators with their source, licence, dates, type of data, class IRI and label, optional file, access level, project ARK and shortcode
+- [x] 1.4 ↑TD3, TD4: Identifier parsing: case-insensitive shortcode; a malformed id gives absent
+- [x] 1.5 ↑TD5: Anonymous read through the resources port and the visibility rule
+- [x] 1.6 ↑TD2: Canonical page URL and ARK from the resolved IRI (C1, C5)
+- [x] 1.7 ↑TD6: File rule
+- [x] 1.8 ↑TD7: Access-level rule
+- [x] 1.9 ↑TD8: Licence chain, with built-in licence lookup
+- [x] 1.10 ↑TD9: Creator chain
+- [x] 1.11 ↑TD10, TD11: Title, description, dates and type
+- [x] 1.12 ↑TD4, TD5: Unit tests: missing, deleted, forbidden (no permission) and malformed all yield nothing; an infrastructure failure of the read stays a failure
+- [x] 1.13 ↑TD6, TD7: Unit tests:
+    - an RV-only resource is visible, with the restricted level;
+    - a V resource with an RV-only file has no file, the restricted level, and a type still taken from the file;
+    - V with a V file has the file and Full Open Access;
+    - no file means Full Open Access;
+    - a resource with a text value and a still-image file value takes its type and file from the file value;
+    - an external IIIF still image gives type `Image` and no file
+- [x] 1.14 ↑TD8: Unit tests for the licence matrix:
+    - file built-in;
+    - file `PLACEHOLDER`, with and without a project licence;
+    - `UNKNOWN`, `AI_GENERATED`, `PUBLIC_DOMAIN`, each with a project licence that is not used;
+    - a licence IRI that is not built in (the shape of a custom licence) yields no licence;
+    - a file licence IRI that resolves to nothing, with a project licence that is not used;
+    - no licence
+- [x] 1.15 ↑TD9: Unit tests for the creator chain:
+    - resource authorship;
+    - file authorship;
+    - deduplication;
+    - an RV-only file's authorship is still credited (it is in the anonymous view; a file absent from that view is covered in 4.11);
+    - the project default;
+    - the project as organisation, by longname and by shortname
+- [x] 1.16 ↑TD2, TD3: Unit test: a lowercase request shortcode yields the canonical page URL and ARK
+- [x] 1.17 ↑S1: Run `just check` and `just test`; both pass
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: Writers: JSON-LD, Dublin Core meta, DataCite JSON
 
@@ -418,36 +422,36 @@ Subgoal **S2** ↑PG1, PG3.
 ### dsp-api
 
 - [ ] 2.1 ↑S2: JSON-LD writer, built as a zio-json `Json.Obj` from an ordered field list (not `merge`, which reorders). Keys in this order, with no key for an unrecorded fact:
-  - `@context` `["https://schema.org", {"prov": "http://www.w3.org/ns/prov#"}]`;
-  - `@type` `Dataset`;
-  - `@id` the ARK;
-  - `identifier`: the ARK as a `PropertyValue` with `propertyID: "ARK"`, then the page URL;
-  - `name`, `description`;
-  - `license` as `{"@id"}`;
-  - `isAccessibleForFree`, `conditionsOfAccess`;
-  - `datePublished`, `dateCreated`, `dateModified`;
-  - `creator`;
-  - `publisher` (`{"@id": "https://dasch.swiss", "@type": "Organization", "name": "DaSCH", "url": "https://dasch.swiss"}`);
-  - `prov:wasAttributedTo` (`{"@id": "https://dasch.swiss"}`);
-  - `url`, `isPartOf`, `additionalType`;
-  - `distribution` (one `DataDownload`: `contentUrl`, then `name`, `encodingFormat`, `contentSize` as a number and `license`, each when recorded)
+    - `@context` `["https://schema.org", {"prov": "http://www.w3.org/ns/prov#"}]`;
+    - `@type` `Dataset`;
+    - `@id` the ARK;
+    - `identifier`: the ARK as a `PropertyValue` with `propertyID: "ARK"`, then the page URL;
+    - `name`, `description`;
+    - `license` as `{"@id"}`;
+    - `isAccessibleForFree`, `conditionsOfAccess`;
+    - `datePublished`, `dateCreated`, `dateModified`;
+    - `creator`;
+    - `publisher` (`{"@id": "https://dasch.swiss", "@type": "Organization", "name": "DaSCH", "url": "https://dasch.swiss"}`);
+    - `prov:wasAttributedTo` (`{"@id": "https://dasch.swiss"}`);
+    - `url`, `isPartOf`, `additionalType`;
+    - `distribution` (one `DataDownload`: `contentUrl`, then `name`, `encodingFormat`, `contentSize` as a number and `license`, each when recorded)
 - [ ] 2.2 ↑TD17: Script-safe JSON serialiser: `<`, `>` and `&` become JSON escapes `\u003c`, `\u003e` and `\u0026`, and U+2028 and U+2029 become `\u2028` and `\u2029`
 - [ ] 2.3 ↑S2: Dublin Core meta writer. Tags `DC.title`, `DC.creator`, `DC.publisher`, `DC.identifier`, `DC.type`, `DC.date`, `DC.description`, `DC.format`, `DC.relation`, `DC.rights`, `DC.accessRights`:
-  - `DC.description` cut to 1000 characters (code points, not bytes), with `…` appended only when cut;
-  - `DC.accessRights` as the COAR URI;
-  - creators raw, as in `record_dublin_core.rs`
+    - `DC.description` cut to 1000 characters (code points, not bytes), with `…` appended only when cut;
+    - `DC.accessRights` as the COAR URI;
+    - creators raw, as in `record_dublin_core.rs`
 - [ ] 2.4 ↑S2: DataCite JSON writer, following `record_datacite.rs` and `datacite_json.rs`:
-  - kernel key order (identifiers, types, creators, titles, publisher, publicationYear, descriptions, dates, relatedIdentifiers, rightsList, formats, sizes), with `schemaVersion` `http://datacite.org/schema/kernel-4` last;
-  - ARK identifier;
-  - `types` per TD11;
-  - creators with fallback and `nameType`;
-  - titles, publisher, `publicationYear` as a string;
-  - dates Created, Updated, Available;
-  - Abstract;
-  - `IsPartOf` the project ARK;
-  - `rightsList` per TD8;
-  - `formats` and `sizes`;
-  - nothing empty emitted: no `null`, no `[]`, no `{}`
+    - kernel key order (identifiers, types, creators, titles, publisher, publicationYear, descriptions, dates, relatedIdentifiers, rightsList, formats, sizes), with `schemaVersion` `http://datacite.org/schema/kernel-4` last;
+    - ARK identifier;
+    - `types` per TD11;
+    - creators with fallback and `nameType`;
+    - titles, publisher, `publicationYear` as a string;
+    - dates Created, Updated, Available;
+    - Abstract;
+    - `IsPartOf` the project ARK;
+    - `rightsList` per TD8;
+    - `formats` and `sizes`;
+    - nothing empty emitted: no `null`, no `[]`, no `{}`
 - [ ] 2.5 ↑S2: Add `com.networknt:json-schema-validator` (already resolved as `1.5.9`, transitively through wiremock) as a direct test dependency: coordinate in `MODULE.bazel`'s `maven.install`, re-pin with `bazel run @unpinned_maven//:pin`, and add it to the test `deps` in `modules/webapi/BUILD.bazel`. Vendor dsp-repository's `shared/fair/testdata/schemas/datacite-4.3-schema.json` as a test resource, with a note of its origin (DataCite commit `2ade77951cf2`, patched by `download-schemas.sh`: enums widened to 4.6, `uniqueItems` removed). Validate as draft-04 with format validation off, as DPE does
 - [ ] 2.6 ↑S2: Unit tests mirroring `shared-fair` where a rule is shared: identifier shape, licence as a node, no placeholder, constant publisher, key order, access properties, file shape, description cut, `isPartOf` as the project ARK, `additionalType` as the class IRI
 - [ ] 2.7 ↑S2: Unit test: the DataCite JSON validates for a file-carrying resource, a resource without a file, and a resource whose creator falls back to the project
@@ -463,33 +467,33 @@ Subgoal **S3** ↑PG2, PG3.
 ### dsp-api
 
 - [ ] 3.1 ↑S3: Link set, in this order:
-  - `cite-as` the ARK, exactly once;
-  - `type` `https://schema.org/Dataset` and `https://schema.org/AboutPage`;
-  - one typed `describedby` per representation;
-  - `license` only when the licence chain yields a licence with a URI;
-  - no `author`
-- [ ] 3.2 ↑TD18: The two OAI `describedby` links for listed shortcodes, after the representations, built from the canonical ARK id (C3, C4)
-- [ ] 3.3 ↑TD17: RFC 8288 serialisation (`<href>; rel="x"`, plus `; type="mt"` when typed, joined with `, `) with percent-encoded hrefs, CR/LF left to the HTTP layer, and `<link>` elements rendered from the same set with the raw href
+    - `cite-as` the ARK, exactly once;
+    - `type` `https://schema.org/Dataset` and `https://schema.org/AboutPage`;
+    - one typed `describedby` per representation;
+    - `license` only when the licence chain yields a licence with a URI;
+    - no `author`
+- [ ] 3.2 ↑TD18: The two OAI `describedby` links for listed shortcodes, after the representations, built from the canonical ARK id (C3, C4). Parse C4 into a set of shortcodes in the fair slice (split on `,`, trim, drop empties, uppercase), with its unit test; `FairConfig` keeps the raw string
+- [ ] 3.3 ↑TD17: RFC 8288 serialisation (`<href>; rel="x"`, plus `; type="mt"` when typed, joined with `,`) with percent-encoded hrefs, CR/LF left to the HTTP layer, and `<link>` elements rendered from the same set with the raw href
 - [ ] 3.4 ↑S3: Representation link set: `<page>; rel="describes"`
 - [ ] 3.5 ↑TD12: Port of `negotiate::decide`:
-  - a header over 2048 UTF-8 bytes counts as absent (measure bytes, not `String.length`);
-  - at most the first 20 raw comma-separated entries are read, empty and invalid ones included;
-  - `q` is read per parameter whose untrimmed name is `q`; a repeated `q` is read to the last; a `q` that does not parse as Rust's `f64` would, or falls outside 0..1, drops that entry only;
-  - HTML quality is the maximum over `text/html`, `text/*` and `*/*`, starting from 0;
-  - only exact, ASCII case-insensitive candidate matches;
-  - a candidate needs a strictly greater `q` than HTML, so a tie goes to HTML;
-  - between candidates at equal `q`, header order decides;
-  - no answer from `Accept` is ever a 4xx
+    - a header over 2048 UTF-8 bytes counts as absent (measure bytes, not `String.length`);
+    - at most the first 20 raw comma-separated entries are read, empty and invalid ones included;
+    - `q` is read per parameter whose untrimmed name is `q`; a repeated `q` is read to the last; a `q` that does not parse as Rust's `f64` would, or falls outside 0..1, drops that entry only;
+    - HTML quality is the maximum over `text/html`, `text/*` and `*/*`, starting from 0;
+    - only exact, ASCII case-insensitive candidate matches;
+    - a candidate needs a strictly greater `q` than HTML, so a tie goes to HTML;
+    - between candidates at equal `q`, header order decides;
+    - no answer from `Accept` is ever a 4xx
 - [ ] 3.6 ↑TD12: Unit tests mirroring `negotiate.rs`'s 21 tests, one for one, with `Accept: */*` among them
 - [ ] 3.7 ↑S3: Unit tests mirroring `signposting.rs`, leaving out its project-only `author` cases:
-  - the header string;
-  - field syntax cannot forge a second link;
-  - a newline is left to the HTTP layer;
-  - describedby media types;
-  - licence cardinality;
-  - a representation describes its page;
-  - the `<link>` elements carry the same relations as the header;
-  - OAI links only for listed shortcodes, matching a literal identifier copied from dsp-repository's `docs/src/dpe/oai-pmh.md`
+    - the header string;
+    - field syntax cannot forge a second link;
+    - a newline is left to the HTTP layer;
+    - describedby media types;
+    - licence cardinality;
+    - a representation describes its page;
+    - the `<link>` elements carry the same relations as the header;
+    - OAI links only for listed shortcodes, matching a literal identifier copied from dsp-repository's `docs/src/dpe/oai-pmh.md`
 - [ ] 3.8 ↑S3: Run `just check` and `just test`; both pass
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
@@ -505,7 +509,7 @@ The shell is a stub string through the shell provider's interface.
 
 ### dsp-api
 
-- [ ] 4.1 ↑TD2, TD14, TD18: Add `FairConfig` (C1–C4, C6, C7) to `AppConfig`, `projectAppConfigurations` and `application.conf`, each key with its `${?ENV}` override
+- [x] 4.1 ↑TD2, TD14, TD18: Add `FairConfig` (C1–C4, C6, C7) to `AppConfig`, `projectAppConfigurations` and `application.conf`, each key with its `${?ENV}` override
 - [ ] 4.2 ↑TD16: The fair endpoint base per TD16, with fair's error type: not visible maps to an empty `404 text/plain`, shell unavailable to `502`, anything else to `500` (`503` is not used)
 - [ ] 4.3 ↑TD14: Shell provider: a layer built with `ZLayer.scoped` around the zio-cache, following `AssetPermissionsCache.makeCache`
 - [ ] 4.4 ↑TD1: Landing `GET`. A visible resource gets the `303` or the shell with the head block (DC meta, `<link>`s, one JSON-LD `<script>`) and the `Link` header. Anything else gets the unchanged shell. A rejected `Link` or `Location` value drops the header with a warning
@@ -515,23 +519,25 @@ The shell is a stub string through the shell provider's interface.
 - [ ] 4.8 ↑TD13: Add `NegotiatesOwnAccept` and set it on the new endpoints. Every other endpoint negotiates exactly as before, the interceptor's existing tests stay unchanged, and the passthrough audit and `Connection: close` paths still key on `routeMarker` alone
 - [ ] 4.9 ↑S4: Module wiring: `FairApiModule` in `ApiModule.Dependencies` and `ApiModule.layer`, a `FairServerEndpoints` parameter in `Endpoints`, and the ports' `Live` adapters and the shell provider in `LayersLive`
 - [ ] 4.10 ↑TD12, TD15: In-memory HTTP tests:
-  - the negotiation table of `machine-readable-metadata.md` end to end, with "unknown shortcode" read as "resource not visible";
-  - `Vary: Accept` and `Cache-Control: no-store` on 200 and 303, for GET and HEAD;
-  - HEAD carries the same `Link`, `Vary`, `Cache-Control`, `Content-Type` and `Location` as GET;
-  - exactly one JSON-LD script and one `cite-as`;
-  - the page carries the `DC.*` tags, `DC.accessRights` among them, and `<link>` elements matching the `Link` header;
-  - for a visible resource, the body minus the spliced block equals the shell;
-  - for `Accept` absent, `*/*` and `text/html`, the bodies are byte-identical
+    - the negotiation table of `machine-readable-metadata.md` end to end, with "unknown shortcode" read as "resource not visible";
+    - `Vary: Accept` and `Cache-Control: no-store` on 200 and 303, for GET and HEAD;
+    - HEAD carries the same `Link`, `Vary`, `Cache-Control`, `Content-Type` and `Location` as GET;
+    - exactly one JSON-LD script and one `cite-as`;
+    - the page carries the `DC.*` tags, `DC.accessRights` among them, and `<link>` elements matching the `Link` header;
+    - for a visible resource, the body minus the spliced block equals the shell;
+    - for `Accept` absent, `*/*` and `text/html`, the bodies are byte-identical
 - [ ] 4.11 ↑S4, TD4, TD5, TD6: In-memory HTTP tests:
-  - a not-visible landing answer is byte-identical to the shell and has no `Link`;
-  - the four not-visible representation answers are identical in status, headers and body;
-  - a V resource whose file value is RV-only: no file in the JSON-LD `distribution`, the DataCite `formats` and `sizes`, `DC.format` or the HTML
+    - a not-visible landing answer is byte-identical to the shell and has no `Link`;
+    - the four not-visible representation answers are identical in status, headers and body;
+    - a V resource whose file value is RV-only: no file in the JSON-LD `distribution`, the DataCite `formats` and `sizes`, `DC.format` or the HTML
+    - a resource whose file value anonymous cannot see at all: that file's authorship and licence appear nowhere (moved from 1.15)
 - [ ] 4.12 ↑TD16: In-memory HTTP tests: an admin token yields the same bytes as anonymous on a visible resource, and a logged-in user's token yields the unchanged shell on a resource anonymous cannot see
 - [ ] 4.13 ↑TD14: In-memory HTTP tests: a shell failure gives `502` for HTML, a `303` is still served while the shell fails, and the representations do not depend on the shell
 - [ ] 4.14 ↑S4: In-memory HTTP tests: the `.jsonld` body equals the graph embedded in the page; the DataCite answer is `200 application/vnd.datacite.datacite+json`; both representations carry `Link: <page>; rel="describes"`
 - [ ] 4.15 ↑S4: In-memory HTTP test: `?version=` and `?highlightValue=` change nothing, also with the `highlightValue` of a value anonymous cannot see
 - [ ] 4.16 ↑S4: E2E test with the shared datasets: `http://rdfh.ch/0803/0b03b0a6e6be` (resource and still-image file at least V for anonymous), `http://rdfh.ch/0803/00014b43f902` (RV-only page), `http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA` (deleted) and a missing id
 - [ ] 4.17 ↑TD14: Set the C1–C4 variables for the local stack on the `api` service in `docker-compose.yml`, with C2 `http://app:4200/index.html`
+- [ ] 4.19 ↑G6: Update `ARCH-MAP.md` and the CONTEXT files for the `fair` slice (`/dune:dune-map update`): a `webapi-fair` component with its four ports and their adapters as the first ADR-0011 port example, `ResourceMetadataRules` in webapi-resources, `FairConfig` in webapi-app, `projectArkUrl` in webapi-common, and the two named boundary exceptions (export reading `slice.resources.domain` for the shared metadata rules; `FairAssetsLive` as a second in-process sidecar reader beside `ExportService`)
 - [ ] 4.18 ↑S4: Run `just check`, `just test` and `just test-e2e`; all pass
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
@@ -547,13 +553,13 @@ both times.
 ### dsp-api
 
 - [ ] 5.1 ↑G6: Documentation page `docs/03-endpoints/fair-landing-pages.md`, with a `mkdocs.yml` nav entry under "DSP-API Endpoints". It describes:
-  - routes;
-  - the facts and their rules (TD2–TD11);
-  - the negotiation and Signposting tables;
-  - configuration;
-  - that `?version=` pages describe the current state;
-  - the disagreement with DPE's OAI records;
-  - a results table with columns date, assessor, version, image digest, target kind (page URL or ARK), target and per-metric result
+    - routes;
+    - the facts and their rules (TD2–TD11);
+    - the negotiation and Signposting tables;
+    - configuration;
+    - that `?version=` pages describe the current state;
+    - the disagreement with DPE's OAI records;
+    - a results table with columns date, assessor, version, image digest, target kind (page URL or ARK), target and per-metric result
 - [ ] 5.2 ↑S5: Baseline: from a dsp-repository checkout (no change there), run `just fair-check <url>` (F-UJI 3.5.0, pinned by digest) against two DEV landing page URLs: `/resource/0803/<id>` of a resource anonymous can see at V, and `/resource/0868/<id>` of a resource whose file records a MIME type and is visible at V. Record both runs, with the two URLs, in the table
 - [ ] 5.3 ↑TD18: Create the Linear follow-up issue: the OAI export hard-codes access rights, licence and authorship, so the records TD18 links contradict the page until it is fixed. Relate it to DEV-7420 and DEV-7336
 - [ ] 5.4 ↑S5: Run `just check` and `just docs-build`; both pass
@@ -568,14 +574,14 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
 - [ ] 6.1 ↑N1, N2, N3, N4: `nginx/default.conf.template`: the resolver lines, the landing location as the first regex location, and the `@shell` fallback
 - [ ] 6.2 ↑N4: `Dockerfile`: `ENV DSP_API_UPSTREAM=""` beside `ENV NGINX_PORT`
 - [ ] 6.3 ↑S6: `scripts/nginx-smoke-test.sh`, with a Makefile target `nginx-smoke-test`. It builds the image from a temporary context holding the real `Dockerfile` and `nginx/`, a stub `dist/apps/dsp-app/index.html` and `config/` (no Angular build), and runs it on a Docker network against a stub upstream (a Python `http.server` script). The upstream answers, in turn:
-  - `200` with `Link` and `Vary`;
-  - `303` with `Location`;
-  - `404`;
-  - `406`;
-  - `500`;
-  - a response slower than 3 s;
-  - no listener;
-  - an empty `DSP_API_UPSTREAM`.
+    - `200` with `Link` and `Vary`;
+    - `303` with `Location`;
+    - `404`;
+    - `406`;
+    - `500`;
+    - a response slower than 3 s;
+    - no listener;
+    - an empty `DSP_API_UPSTREAM`.
 
   It asserts the passthroughs with the security headers, the fallback (`200`, the shell, `Vary: Accept`, `Cache-Control: no-store`, the security headers) in every other case, HEAD parity, that a `POST` is not forwarded, and that `/resource/0803/..%2F..%2Fx` and `/resource/0803/abc.json` are never forwarded
 - [ ] 6.4 ↑S6: Run `./scripts/nginx-smoke-test.sh`; every assertion passes
@@ -615,7 +621,7 @@ A local score is a direction, not a DEV or production figure:
 ## Human Actions
 
 | Id | Parent | Action | Who | When | Why not the agent |
-|----|--------|--------|-----|------|-------------------|
+| --- | --- | --- | --- | --- | --- |
 | H1 | ↑S4, S6 | In ops-deploy, per environment, set `DSP_API_UPSTREAM=http://api:3333` on the `app` service (`docker-compose-svc.yml.j2`) and C1–C4 on the `api` service | DevOps | after ship | Deployment configuration and its rollout are the operators' decision |
 | H2 | ↑PG6 | After DEV runs both, run `just fair-check` against the two DEV page URLs of 5.2 and FAIR Champion by hand, then add the rows to the results table | Owner | after ship | Needs the deployed environment; FAIR Champion is run by hand |
 
@@ -630,7 +636,7 @@ A local score is a direction, not a DEV or production figure:
 ## Dependencies & Risks
 
 | Id | Parent | Risk | Likelihood | Impact | Mitigation |
-|----|--------|------|-----------|--------|------------|
+| --- | --- | --- | --- | --- | --- |
 | R1 | ↑TD14 | A cached shell outlives a dsp-app deploy, so its hashed bundles 404 | M | M | 10 s TTL |
 | R2 | ↑PG5 | A cold resource read exceeds nginx's 2 s timeout, so a harvester sees the plain shell for that request | M | L | Measured in H2; the fallback is by design |
 | R3 | ↑PG6 | The page and the representations sit on different hosts, which an assessor may weigh | M | L | Measured in H2 |
@@ -660,31 +666,31 @@ A local score is a direction, not a DEV or production figure:
   and `areas/access/dpe/server/src/metadata.rs`.
 - **F4** ↑TD11: *DaSCH Metadata 2.0 → DataCite 4.6 / OAI-PMH Mapping* v1.1, §2.3.
 - **F5** ↑S1: dsp-api code anchors, under `modules/webapi/src/main/scala/org/knora/webapi/`:
-  - `slice/export/api/service/ExportService.scala:102-197` (`exportResourcesOai` and its helpers);
-  - `slice/api/v3/export/MetadataRecord.scala:47-78`;
-  - `slice/resources/service/ReadResourcesServiceLive.scala:39-50`;
-  - `slice/admin/domain/model/Permission.scala:13-46`;
-  - `slice/admin/domain/model/LegalInfoModel.scala:90-269`;
-  - `slice/admin/domain/model/KnoraProject.scala:43-45`;
-  - `messages/StringFormatter.scala:1419-1425`;
-  - `responders/admin/AssetPermissionsCache.scala:76-110`.
+    - `slice/export/api/service/ExportService.scala:102-197` (`exportResourcesOai` and its helpers);
+    - `slice/api/v3/export/MetadataRecord.scala:47-78`;
+    - `slice/resources/service/ReadResourcesServiceLive.scala:39-50`;
+    - `slice/admin/domain/model/Permission.scala:13-46`;
+    - `slice/admin/domain/model/LegalInfoModel.scala:90-269`;
+    - `slice/admin/domain/model/KnoraProject.scala:43-45`;
+    - `messages/StringFormatter.scala:1419-1425`;
+    - `responders/admin/AssetPermissionsCache.scala:76-110`.
 - **F6** ↑S4: dsp-api code anchors, under the same root unless noted:
-  - `core/DspApiServer.scala:206-238`;
-  - `slice/api/admin/SparqlPassthroughEndpoints.scala:91-146`;
-  - `slice/common/api/BaseEndpoints.scala:28-82`;
-  - `slice/common/api/RequiresMethod.scala:16-22`;
-  - `slice/api/v3/V3BaseEndpoint.scala:35-60`;
-  - `slice/api/ApiModule.scala:15-29`, `slice/api/Endpoints.scala:17-31`;
-  - `slice/infrastructure/TracingHttpClient.scala:17-30`;
-  - `modules/webapi/src/test/scala/org/knora/webapi/core/SparqlPassthroughInterceptorSpec.scala:49-113`.
+    - `core/DspApiServer.scala:206-238`;
+    - `slice/api/admin/SparqlPassthroughEndpoints.scala:91-146`;
+    - `slice/common/api/BaseEndpoints.scala:28-82`;
+    - `slice/common/api/RequiresMethod.scala:16-22`;
+    - `slice/api/v3/V3BaseEndpoint.scala:35-60`;
+    - `slice/api/ApiModule.scala:15-29`, `slice/api/Endpoints.scala:17-31`;
+    - `slice/infrastructure/TracingHttpClient.scala:17-30`;
+    - `modules/webapi/src/test/scala/org/knora/webapi/core/SparqlPassthroughInterceptorSpec.scala:49-113`.
 - **F7** ↑S4: Learnings (dasch-specs):
-  - `best-practices/shared-tapir-error-envelope-leaks-exception-messages.md`;
-  - `design-decisions/security-logic-authenticates-body-buffering-precedes-it.md`;
-  - `logic-errors/sipi-cache-auto-creation-head-request-empty-response.md`.
+    - `best-practices/shared-tapir-error-envelope-leaks-exception-messages.md`;
+    - `design-decisions/security-logic-authenticates-body-buffering-precedes-it.md`;
+    - `logic-errors/sipi-cache-auto-creation-head-request-empty-response.md`.
 - **F8** ↑S1: Learnings (dasch-specs):
-  - `logic-errors/resource-query-templates-enumerate-predicates.md`;
-  - `best-practices/scala3-zio2-coding-mistakes-to-avoid.md`;
-  - `best-practices/test-fixture-isolation-shared-data-scope.md`.
+    - `logic-errors/resource-query-templates-enumerate-predicates.md`;
+    - `best-practices/scala3-zio2-coding-mistakes-to-avoid.md`;
+    - `best-practices/test-fixture-isolation-shared-data-scope.md`.
 - **F9** ↑S6: dsp-app `nginx/default.conf.template`, `nginx/nginx-security-headers.conf`,
   `Dockerfile`; ops-deploy `docker-compose-svc.yml.j2` (the `app` and `api`
   services on one network).

@@ -1,0 +1,71 @@
+---
+plan: docs/specs/2026-10-08-resource-fair-landing-pages/02-feat-resource-fair-landing-pages-plan.md
+target_repo: /Users/raitisveinbahs/work/2-dsp-api
+base_commit: 5f4f820d8
+branch: feature/dev-7420-resource-landing-pages
+started: 2026-10-08
+problem: >
+  Resource and value ARKs resolve to dsp-app's /resource/{project}/{resource},
+  a client-rendered SPA shell that is identical for every route and Accept and
+  carries no machine-readable metadata, so F-UJI and harvesters find nothing on
+  it. dsp-api must serve that route (forwarded by dsp-app's nginx) as the shell
+  with schema.org JSON-LD, Dublin Core meta and Signposting spliced in, plus
+  JSON-LD and DataCite representations, all built under the anonymous view.
+status: in-progress
+---
+
+# Execution Journal: 02-feat-resource-fair-landing-pages-plan
+
+## Repos
+
+| repo | base_commit | branch | merge_strategy | status | pr |
+| --- | --- | --- | --- | --- | --- |
+| dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | in-progress | — |
+
+## Phases
+
+| phase | status | phase_base | review_fix_rounds |
+| --- | --- | --- | --- |
+| 1 | reviewed | dsp-api@5f4f820d8 | 1 |
+| 2 | pending | — | 0 |
+
+## Chunk queue
+
+| id | repo | files | depends_on | checkboxes | acceptance | context | replaces |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1.1 | dsp-api | slice/fair/ports/*.scala, slice/fair/domain/ResourceFacts.scala (model only), config/AppConfig.scala, application.conf | — | "1.1 (ports + DTOs)", "1.3 ResourceFacts", "4.1 FairConfig" (pulled forward: 1.6 needs C1) | webapi compiles; four port traits with fair-owned DTOs; FairConfig projected with C1-C4 defaults and startup validation | ADR-0011 decisions 2,6,7; AppConfig.scala:19-37,259,262-323,351-360 | — |
+| 1.2 | dsp-api | slice/export/api/service/ExportService.scala, new pure object in slice/resources/domain, unit spec | — | "1.2 extract pure ExportService parts" | ExportServiceSpec + golden unchanged and green; file selection returns ReadValueV2 over file values only | ExportService.scala:146-197 | — |
+| 1.3 | dsp-api | (split, see 1.3a/1.3b) slice/fair/domain/ResourceFacts.scala (derive), slice/fair/domain/service/ResourceFactsBuilder.scala, test: slice/fair/ports/*InMemory.scala, ResourceFactsSpec, ResourceFactsBuilderSpec | 1.1 | "1.4"-"1.16" (rules + unit tests, tests first) | all rule tests green; derive is pure | plan TD2-TD11 | — |
+| 1.4 | dsp-api | `<Port>Live` adapters in slice/resources, slice/admin, slice/ontology, assets provider packages | 1.1, 1.2 | "1.1 (Live adapters)" | adapters compile; anonymous read with withDeleted=false, skipRetrievalChecks=false, NotFound/Forbidden -> None | ReadResourcesServiceLive.scala:39-50; ResourceMessagesV2.scala:909-923 | — |
+| 1.5 | dsp-api | — | 1.1-1.4 | "1.17 just check + just test" | both green | — | — |
+| 1.3a | dsp-api | slice/fair/domain/{ResourceFacts,FactsInputs}.scala, ports/FairResources.scala (originalUrl), test ResourceFactsSpec | 1.1 | "1.6"-"1.11", "1.13"-"1.15" | pure derive green on the rule matrix | plan TD2, TD6-TD11 | 1.3 |
+| 1.3b | dsp-api | slice/fair/domain/service/ResourceFactsBuilder.scala, StringFormatter project ARK, test ports/*InMemory.scala, ResourceFactsBuilderSpec | 1.3a | "1.4", "1.5", "1.12", "1.16" | builder gathers inputs via ports; malformed/missing -> None; port failure stays failure | plan TD3-TD5 | 1.3 |
+
+## Chunks
+
+| id | repo | status | commit(s) | summary | blocker |
+| --- | --- | --- | --- | --- | --- |
+| 1.1 | dsp-api | complete | 22e84f763 | fair ports (resources, projects, class labels, assets) with fair-owned DTOs, ResourceFacts model, FairConfig (4.1 pulled forward) | none |
+| 1.2 | dsp-api | complete | c5fad015d | RecordRules (selectFileValue over file values only, typeOfData, description table, original URL) shared by ExportService; golden unchanged | none |
+| 1.3a | dsp-api | complete | 5a33bf972 | pure ResourceFacts.derive (page URL, file, access, licence chain, creators, class label) + 26-case spec; unresolved-licence mutation caught | none |
+| 1.3b | dsp-api | complete | 070bc4461 | ResourceFactsBuilder (parse uppercased shortcode, gather via ports, derive), StringFormatter.projectArkUrl, four InMemory doubles, builder spec | none |
+| 1.4 | dsp-api | complete | 98ae402f3 | FairResourcesLive (anonymous read, withDeleted=false, NotFound/Forbidden -> None), FairProjectsLive (BUILT_IN licence mapping), FairClassLabelsLive, FairAssetsLive; pure-mapping specs | none |
+| 1.R1 | dsp-api | complete | 9df941c2c | review fix: FairClassLabels -> FairClasses with requiresFile; a file-requiring resource with no file in the anonymous view is restricted; vacuous builder tests removed; gather parallel | none |
+| 1.R2 | dsp-api | complete | 93d74a7e1 | review fix: FairResourcesLive error-channel tests (stub read service); FairConfig raw strings, three URLs validated (underscore hosts accepted), AppConfigSpec cases; RecordRules -> ResourceMetadataRules, typed selectFileValue | none |
+| 1.5 | dsp-api | complete | — | just check + just test green after review fixes (spec markdown fixed in the phase's spec-state commit) | none |
+
+## Deferrals
+
+- Phase 1 review: ARCH-MAP/CONTEXT update -> new 4.19. OAI shortcode-list parsing moved out of `FairConfig` (config must not import `Shortcode`) -> 3.2.
+- 1.15 "a hidden file's authorship is ignored" -> 4.11 (needs the resources adapter; a hidden file never reaches derive).
+- Session scope set at intake: phases 1-4 (dsp-api only). dsp-app (Phase 6) gets a fresh branch cut from origin/main when that phase starts, not the existing `feature/dev-7420-resource-landing-proxy`.
+
+## Side findings
+
+- The vendored DataCite schema (`shared/fair/testdata/schemas/datacite-4.3-schema.json`) declares draft-07, not draft-04 as plan item 2.5 says; validate as draft-07 with format validation off. DPE validates only project-level DataCite JSON against it, never record-level output.
+- Plan L1 vs 1.2: L1 forbids ports returning `ReadResourceV2`, so the extracted export helpers are shared by `ExportService` and fair's resources adapter (`FairResourcesLive`), not called by `ResourceFacts.derive` directly. Licence special cases reach fair through the projects port as a lookup result.
+- dsp-api has no per-project custom licences; TD8, 1.9 and 1.14 amended at intake (user decision: built-in only).
+- Interpretation of TD5/TD9/1.15: a file value in the anonymous view (>= RV) supplies type, licence and authorship; it is advertised as a DataDownload only at >= V. A "hidden" file is one absent from the anonymous view, which the resources adapter guarantees (tested over HTTP in Phase 4).
+- Chunk 1.3 split into 1.3a (pure derive + ResourceFactsSpec) and 1.3b (ResourceFactsBuilder, InMemory doubles, builder spec, project ARK helper).
+- ExportService's OAI description lookup uses `r.values.get(internalSmartIri)` against a complex-schema read; it may never match (out of scope here; FairResourcesLive uses `findValues(PropertyIri)`). Worth checking in the export follow-up (plan 5.3).
+- Phase 1 outcome: all items ticked; deferred to Phase 3: OAI shortcode parsing (3.2); deferred to Phase 4: hidden-file authorship HTTP test (4.11), ARCH-MAP/CONTEXT update (4.19). Review: 5 reviewers, one fix round (hidden-file access level, error-channel tests, config validation, naming).

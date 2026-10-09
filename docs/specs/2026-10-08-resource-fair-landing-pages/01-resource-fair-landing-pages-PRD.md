@@ -38,7 +38,7 @@ per-resource `MetadataRecord` — the contract DPE's record mappings consume.
 In precedence order. Where a source is followed, this PRD does not restate it.
 
 | # | Source | Governs | How closely |
-|---|--------|---------|-------------|
+| --- | --- | --- | --- |
 | 1 | dsp-repository `docs/adr/0005-fair-landing-pages-in-the-access-area.md` | The obligations of a landing page: embedded metadata, Signposting, representation URLs, the one negotiation step, nothing invented | Fully, except the deviations this PRD names (representations on the API host; see Open Questions) |
 | 2 | dsp-repository `docs/src/dpe/machine-readable-metadata.md` | Field shapes: `identifier` (ARK `PropertyValue` plus page URL), `license` as an `{"@id"}` node, `prov:wasAttributedTo`, `DataDownload`, the COAR access-level table, the Signposting table, the negotiation table | Closely, adapted from a project to a resource |
 | 3 | dsp-repository `shared/fair/src/record_datacite.rs`, `record_dublin_core.rs` | The DataCite and Dublin Core field mapping for a record | Closely; parity is by contract, not by shared code (dsp-api is Scala) |
@@ -101,7 +101,7 @@ emits nothing.
 ### What the metadata says
 
 | Fact | Source | Notes |
-|------|--------|-------|
+| --- | --- | --- |
 | Identifier, `cite-as` | the resource's ARK (`arkUrl`), unversioned | Plus the page URL in `identifier`, as on the project page |
 | Title | `rdfs:label` | |
 | Description | the per-project description property the export uses (0803, 081C, 0868, 1612) | No generic property. Inconsistent across projects; accepted as the current state |
