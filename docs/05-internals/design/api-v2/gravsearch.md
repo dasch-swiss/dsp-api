@@ -507,9 +507,8 @@ it goes through the passes described above:
    connectivity rule (above) would also place the trailing `?resourceVar knora-base:creationDate ?date` check
    before the `BIND` that introduces `?resourceVar`, which is illegal SPARQL scoping.
 2. **The inference pass rewrites what it sees.** `OntologyInferencer.transformStatementInWhere` expands
-   predicates and types into `VALUES` blocks and rejects an `rdf:type` statement with a variable object (see
-   [Inference](#inference), above); the expansion's statements are already in their final form and must reach
-   the triplestore exactly as `SearchFulltextQuery` proves them.
+   predicates and types into `VALUES` blocks (see [Inference](#inference), above); the expansion's statements are
+   already in their final form and must reach the triplestore exactly as `SearchFulltextQuery` proves them.
 
 Both problems disappear if nothing after the handler ever looks inside the expansion. `GroupPattern` (in
 `SparqlQuery.scala`) is a `QueryPattern` that exists for exactly this: it renders its contents verbatim inside

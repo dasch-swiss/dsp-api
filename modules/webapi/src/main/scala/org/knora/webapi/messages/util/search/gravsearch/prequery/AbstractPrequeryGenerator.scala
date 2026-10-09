@@ -2055,8 +2055,11 @@ abstract class AbstractPrequeryGenerator(
    *
    * Resource-ness and value-ness are probed with `knora-base:creationDate` / `knora-base:valueCreationDate`
    * instead of walking `rdfs:subClassOf*` per Lucene hit, exactly as `SearchFulltextQuery` does (DEV-6864; see the
-   * comment there for why the substitutions are exact). On stage this made the prequery 2-4x faster with identical
+   * comment there for why the substitutions are exact). On stage this made the prequery 3-12x faster with identical
    * results (DEV-7491).
+   *
+   * TODO(DEV-6850): the creationDate / valueCreationDate probes are a stopgap, shared with `SearchFulltextQuery` and
+   * `SearchQueries.selectCountByLabel`; replace all three with DEV-6850's shared resource / value guard.
    *
    * The whole block is wrapped in an opaque [[GroupPattern]] so it survives unmodified: its `BIND` would otherwise
    * be hoisted above the `OPTIONAL`s it depends on by the optimizer passes. See

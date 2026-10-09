@@ -22,8 +22,8 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * Fact 7 (a large `VALUES` table poisons join order unless it drives the scan).
  *
  * Tier table (lower is better):
- *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] containing one directly or in a nested
- *     [[GroupPattern]]; a `text:query` inside an `OPTIONAL`/`UNION`/`MINUS` within the group is not found.
+ *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] or [[SubSelectPattern]] containing one directly
+ *     or in a nested group or subquery; a `text:query` inside an `OPTIONAL`/`UNION`/`MINUS` within it is not found.
  *     T1 pre-empts the connectivity rule: a T1 unit leads its block whether or not it is connected to the
  *     already-bound variables.
  *   - T2 Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object,
@@ -109,7 +109,7 @@ object PrequeryPatternOrdering {
    * Reorders `patterns` for connectivity-aware evaluation. `outerBound` is the set of variables already
    * bound by an enclosing scope; it exists for the internal per-block recursion
    * (`OPTIONAL`/`UNION`/`MINUS`/`FILTER NOT EXISTS`) and for tests - production has a single call site, which
-   * passes one argument. A [[GroupPattern]] is an opaque leaf and is never recursed into. Preserves the size
+   * passes one argument. A [[GroupPattern]] or [[SubSelectPattern]] is an opaque leaf and is never recursed into. Preserves the size
    * of the input.
    */
   def order(patterns: Seq[QueryPattern], outerBound: Set[QueryVariable] = Set.empty): Seq[QueryPattern] =
@@ -207,10 +207,10 @@ object PrequeryPatternOrdering {
     case _              => false
   }
 
-  private def containsLucene(g: GroupPattern): Boolean = g.patterns.exists {
+  private def containsLucene(patterns: Seq[QueryPattern]): Boolean = patterns.exists {
     case StatementPattern(_, pred, _) => isLuceneQueryPredicate(pred)
-    case inner: GroupPattern          => containsLucene(inner)
-    case sub: SubSelectPattern        => containsLucene(GroupPattern(sub.patterns))
+    case inner: GroupPattern          => containsLucene(inner.patterns)
+    case sub: SubSelectPattern        => containsLucene(sub.patterns)
     case _                            => false
   }
 
@@ -250,8 +250,8 @@ object PrequeryPatternOrdering {
     }
 
   private def tierNum(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): Int = u match {
-    case g: GroupPattern       => if (containsLucene(g)) 1 else 7
-    case sub: SubSelectPattern => if (containsLucene(GroupPattern(sub.patterns))) 1 else 7
+    case g: GroupPattern       => if (containsLucene(g.patterns)) 1 else 7
+    case sub: SubSelectPattern => if (containsLucene(sub.patterns)) 1 else 7
     case s: StatementPattern   => statementTier(s, valuesByVar)
     case _                     => 7
   }

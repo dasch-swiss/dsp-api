@@ -98,7 +98,8 @@ object SearchFulltextQuery {
   // TODO(DEV-6850): the creationDate / valueCreationDate probes are a stopgap. They mean "when was this made", not
   // "this is a resource / value"; DEV-6850 materialises the entailed `a knora-base:Resource` / `a knora-base:Value`
   // and introduces one shared guard for all the sites that ask this question. Replace these probes with that guard
-  // when it lands. See also SearchQueries.selectCountByLabel, which carries the same stopgap.
+  // when it lands. See also SearchQueries.selectCountByLabel and AbstractPrequeryGenerator.matchFulltextExpansion,
+  // which carry the same stopgap.
   /*
    * The optional project and resource-class restrictions below are written out here rather than shared with
    * SearchQueries.selectCountByLabel (D6): the two queries are separate and a shared helper would couple them,

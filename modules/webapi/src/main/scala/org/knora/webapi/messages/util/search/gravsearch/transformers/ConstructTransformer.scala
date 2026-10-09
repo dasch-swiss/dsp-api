@@ -32,7 +32,7 @@ final case class ConstructTransformer(
 
   /**
    * The main-query (CONSTRUCT) path deliberately has no pattern-ordering pass: no `BindPattern`, no Lucene
-   * `text:query` statement and no `GroupPattern` can reach it, because those are introduced only by the
+   * `text:query` statement and no `GroupPattern` / `SubSelectPattern` can reach it, because those are introduced only by the
    * prequery generator. Ordering for the prequery lives in `PrequeryPatternOrdering`.
    */
   private def optimizeAndTransformPatterns(

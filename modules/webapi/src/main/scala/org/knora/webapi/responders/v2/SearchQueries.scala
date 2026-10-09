@@ -40,7 +40,8 @@ object SearchQueries {
    *
    * TODO(DEV-6850): this is a stopgap. `creationDate` means "when was this made", not "this is a resource"; DEV-6850
    * materialises the entailed `?resource a knora-base:Resource` and introduces one shared guard for all ~21 sites that ask
-   * this question. Replace the pattern here with that guard when it lands.
+   * this question. Replace the pattern here with that guard when it lands. See also SearchFulltextQuery and
+   * AbstractPrequeryGenerator.matchFulltextExpansion, which carry the same stopgap.
    */
   def selectCountByLabel(
     luceneQuery: FusekiLucenceQuery,
