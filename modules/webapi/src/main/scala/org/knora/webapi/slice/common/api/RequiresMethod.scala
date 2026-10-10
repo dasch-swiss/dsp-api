@@ -19,4 +19,5 @@ final class RequiresMethod[E](base: E, withMethod: (E, Method) => E) {
   def put: E    = withMethod(base, Method.PUT)
   def delete: E = withMethod(base, Method.DELETE)
   def patch: E  = withMethod(base, Method.PATCH)
+  def head: E   = withMethod(base, Method.HEAD)
 }
