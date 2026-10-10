@@ -13,8 +13,10 @@ import zio.telemetry.opentelemetry.tracing.Tracing
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.FairConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.Resources
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.config.Triplestore
@@ -42,11 +44,13 @@ import org.knora.webapi.slice.ontology.DoapResolverLive
 import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyTransformer
+import org.knora.webapi.slice.ontology.domain.service.FairClassesLive
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepoLive
+import org.knora.webapi.slice.resources.service.FairResourcesLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
@@ -56,6 +60,7 @@ import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceLive
 import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.FairAssetsLive
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.Logger
@@ -115,7 +120,7 @@ object LayersLive { self =>
     sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer,
   ): URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
-      AppConfig & DspIngestConfig & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
+      AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
@@ -134,7 +139,12 @@ object LayersLive { self =>
       DoapResolverLive.layer,
       DspIngestClientLive.layer,
       ExportModule.layer,
+      ExportApiModule.assetInfoServiceLayer,
       ExportApiModule.layer,
+      FairAssetsLive.layer,
+      FairClassesLive.layer,
+      FairProjectsLive.layer,
+      FairResourcesLive.layer,
       IdSourceLive.layer,
       InfrastructureModule.layer,
       IriService.layer,

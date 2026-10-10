@@ -49,7 +49,7 @@ object ExportApiModule { self =>
   // Built from webapi's own config on purpose: ingest's Configuration.layer calls
   // ConfigFactory.defaultApplication(), which on a shared classpath reads webapi's application.conf.
   // tempDir is unused for reads.
-  private val assetInfoServiceLayer: URLayer[AppConfig, AssetInfoService] =
+  private[webapi] val assetInfoServiceLayer: URLayer[AppConfig, AssetInfoService] =
     ZLayer
       .service[AppConfig]
       .project(c => StorageConfig(assetDir = c.dspIngest.assetDir, tempDir = c.dspIngest.assetDir)) >>>
