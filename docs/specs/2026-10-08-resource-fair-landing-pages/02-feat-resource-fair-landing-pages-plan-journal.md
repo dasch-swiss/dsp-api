@@ -28,7 +28,8 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@5f4f820d8 | 1 |
 | 2 | reviewed | dsp-api@e1cfdaae8 | 1 |
-| 3 | in-progress | dsp-api@HEAD3 | 0 |
+| 3 | reviewed | dsp-api@e8a6b8cfa | 1 |
+| 4 | in-progress | dsp-api@HEAD4 | 0 |
 
 ## Chunk queue
 
@@ -64,6 +65,10 @@ status: in-progress
 | 2.4 | dsp-api | complete | 021cddf2f | WritersAgreementSpec: title, identifier, creators, licence, type, dates agree across the three writers over five variants | none |
 | 2.R1 | dsp-api | complete | 47495bc1c | review fix: schema negative controls + year/date format checks; WriterFacts.nameType; blank description -> None; serialised contentSize pinned | none |
 | 2.5 | dsp-api | complete | — | just check + just test green after review fixes | none |
+| 3.1 | dsp-api | complete | 95630dd1c | Negotiation.decide port (byte limit, 20 raw entries, Rust f64 q syntax, ASCII-only case folding); 22 Rust tests mirrored + 3 port-specific | none |
+| 3.2 | dsp-api | complete | 7e6db5295 | Signposting (landing/representation link sets, RFC 8288 header with href delimiter encoding, link elements), FairUrls, OaiShortcodes (moved from FairConfig); OAI id matches oai-pmh.md literal | none |
+| 3.R1 | dsp-api | complete | 5e535753a | review fix: Unicode whitespace as \u escapes (ASCII-only), port pointer comment, non-vacuous long-s case-fold test (equalsIgnoreCase folds it: verified in jshell), OAI identifier encoded with the urlencoding crate's unreserved set | worker's bazel runs wedged the server; session killed its own clients, restarted the server and verified |
+| 3.3 | dsp-api | complete | — | just check + just test green after review fixes | none |
 
 ## Deferrals
 
@@ -82,3 +87,6 @@ status: in-progress
 - Phase 1 outcome: all items ticked; deferred to Phase 3: OAI shortcode parsing (3.2); deferred to Phase 4: hidden-file authorship HTTP test (4.11), ARCH-MAP/CONTEXT update (4.19). Review: 5 reviewers, one fix round (hidden-file access level, error-channel tests, config validation, naming).
 - DataCite `sizes`: DPE's record writer deliberately omits them (they describe the bitstream; docs/src/dpe/oai-pmh.md). This work emits `sizes` because the PRD's File row asks for DataCite formats/sizes; the size is only published when the file is visible at V. The DataCite writer also omits `rightsList` without a licence where DPE falls back to the access-rights text (plan TD8).
 - Phase 2 outcome: all items ticked; deferred: none. Review: 4 reviewers (dune skipped: pure code inside the fair slice), one fix round.
+- `just test` once hit the //modules/webapi:test Bazel timeout (762 s) with all 2491 tests OK and a 13-minute gap in the log between unrelated suites; an immediate re-run passed in 26.5 s. Treated as a machine stall, not a code failure.
+- The ASCII-only production-code rule is not enforced by `just check`; Negotiation.scala carried literal Unicode whitespace until the Phase 3 review caught it.
+- Phase 3 outcome: all items ticked; deferred: none. Review: 3 reviewers, one fix round. Phase 4 must drop a `Link`/`Location` value the HTTP layer rejects (CR/LF) with a warning, and join repeated `Accept` headers before the 2048-byte check.

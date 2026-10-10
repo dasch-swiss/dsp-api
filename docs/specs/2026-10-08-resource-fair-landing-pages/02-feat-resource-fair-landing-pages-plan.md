@@ -466,16 +466,16 @@ Subgoal **S3** ↑PG2, PG3.
 
 ### dsp-api
 
-- [ ] 3.1 ↑S3: Link set, in this order:
+- [x] 3.1 ↑S3: Link set, in this order:
     - `cite-as` the ARK, exactly once;
     - `type` `https://schema.org/Dataset` and `https://schema.org/AboutPage`;
     - one typed `describedby` per representation;
     - `license` only when the licence chain yields a licence with a URI;
     - no `author`
-- [ ] 3.2 ↑TD18: The two OAI `describedby` links for listed shortcodes, after the representations, built from the canonical ARK id (C3, C4). Parse C4 into a set of shortcodes in the fair slice (split on `,`, trim, drop empties, uppercase), with its unit test; `FairConfig` keeps the raw string
-- [ ] 3.3 ↑TD17: RFC 8288 serialisation (`<href>; rel="x"`, plus `; type="mt"` when typed, joined with `,`) with percent-encoded hrefs, CR/LF left to the HTTP layer, and `<link>` elements rendered from the same set with the raw href
-- [ ] 3.4 ↑S3: Representation link set: `<page>; rel="describes"`
-- [ ] 3.5 ↑TD12: Port of `negotiate::decide`:
+- [x] 3.2 ↑TD18: The two OAI `describedby` links for listed shortcodes, after the representations, built from the canonical ARK id (C3, C4). Parse C4 into a set of shortcodes in the fair slice (split on `,`, trim, drop empties, uppercase), with its unit test; `FairConfig` keeps the raw string
+- [x] 3.3 ↑TD17: RFC 8288 serialisation (`<href>; rel="x"`, plus `; type="mt"` when typed, joined with `,`) with percent-encoded hrefs, CR/LF left to the HTTP layer, and `<link>` elements rendered from the same set with the raw href
+- [x] 3.4 ↑S3: Representation link set: `<page>; rel="describes"`
+- [x] 3.5 ↑TD12: Port of `negotiate::decide`:
     - a header over 2048 UTF-8 bytes counts as absent (measure bytes, not `String.length`);
     - at most the first 20 raw comma-separated entries are read, empty and invalid ones included;
     - `q` is read per parameter whose untrimmed name is `q`; a repeated `q` is read to the last; a `q` that does not parse as Rust's `f64` would, or falls outside 0..1, drops that entry only;
@@ -484,8 +484,8 @@ Subgoal **S3** ↑PG2, PG3.
     - a candidate needs a strictly greater `q` than HTML, so a tie goes to HTML;
     - between candidates at equal `q`, header order decides;
     - no answer from `Accept` is ever a 4xx
-- [ ] 3.6 ↑TD12: Unit tests mirroring `negotiate.rs`'s 21 tests, one for one, with `Accept: */*` among them
-- [ ] 3.7 ↑S3: Unit tests mirroring `signposting.rs`, leaving out its project-only `author` cases:
+- [x] 3.6 ↑TD12: Unit tests mirroring `negotiate.rs`'s 21 tests, one for one, with `Accept: */*` among them
+- [x] 3.7 ↑S3: Unit tests mirroring `signposting.rs`, leaving out its project-only `author` cases:
     - the header string;
     - field syntax cannot forge a second link;
     - a newline is left to the HTTP layer;
@@ -494,8 +494,8 @@ Subgoal **S3** ↑PG2, PG3.
     - a representation describes its page;
     - the `<link>` elements carry the same relations as the header;
     - OAI links only for listed shortcodes, matching a literal identifier copied from dsp-repository's `docs/src/dpe/oai-pmh.md`
-- [ ] 3.8 ↑S3: Run `just check` and `just test`; both pass
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] 3.8 ↑S3: Run `just check` and `just test`; both pass
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 4: Endpoints
 
