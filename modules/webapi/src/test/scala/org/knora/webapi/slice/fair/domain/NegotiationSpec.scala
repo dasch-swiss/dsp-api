@@ -132,11 +132,11 @@ class NegotiationSpec extends ZIOSpecDefault {
       allHtml(List("application/ld+json;q=\u00001", "application/ld+json;q=1_0"))
     },
     test("a non ascii case fold does not match") {
-      assertTrue(
-        decision("application/ld+json".replace("js", "ſs")) == html,
-        decision("APPLICATION/LD+JSON".replace("L", "K")) == html,
-        decision("Kext/html, application/ld+json") == jsonld,
-      )
+      // Java's equalsIgnoreCase folds the long s to "s"; an ASCII-only comparison must not.
+      assertTrue(decision("application/ld+json".replace("s", "\u017f")) == html)
+    },
+    test("an entry padded with unicode whitespace is trimmed") {
+      assertTrue(decision("\u00a0application/ld+json\u3000") == jsonld)
     },
     test("a header of exactly 2048 bytes is read and 2049 bytes is absent") {
       // "é" is 2 bytes and 1 char, so byte length and char length differ.

@@ -34,6 +34,7 @@ enum Decision {
  *  - At most 20 raw entries are read, and a header longer than 2048 bytes counts as absent.
  */
 object Negotiation {
+  // Port of dsp-repository shared/fair/src/negotiate.rs `decide`; keep in step with it (its edge cases are deliberate).
 
   private val MaxRanges      = 20
   private val MaxHeaderBytes = 2048
@@ -84,9 +85,9 @@ object Negotiation {
 
   // Unicode White_Space, as Rust's str::trim uses; Java's String.trim only strips control characters.
   private def isSpace(c: Char): Boolean =
-    (c >= '\t' && c <= '\r') || c == ' ' || c == '\u0085' || c == ' ' || c == ' ' ||
-      (c >= ' ' && c <= ' ') || c == ' ' || c == ' ' || c == ' ' || c == ' ' ||
-      c == '　'
+    (c >= '\t' && c <= '\r') || c == ' ' || c == '\u0085' || c == '\u00a0' || c == '\u1680' ||
+      (c >= '\u2000' && c <= '\u200a') || c == '\u2028' || c == '\u2029' || c == '\u202f' || c == '\u205f' ||
+      c == '\u3000'
 
   private def trim(s: String): String = s.dropWhile(isSpace).reverse.dropWhile(isSpace).reverse
 

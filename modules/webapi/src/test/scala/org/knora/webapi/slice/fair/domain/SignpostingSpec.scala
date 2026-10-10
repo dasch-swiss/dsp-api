@@ -125,6 +125,13 @@ class SignpostingSpec extends ZIOSpecDefault {
         oai.forall(_.href.startsWith(s"$oaiBase?verb=GetRecord&identifier=oai%3Adasch.swiss%3Aark%3A%2F72163")),
       )
     },
+    test("the OAI identifier is percent-encoded like the Rust urlencoding crate") {
+      val oai = links(facts.copy(ark = "https://ark.example.test/ark:/1/a~b*c d"), oaiCodes)
+        .filter(_.mediaType.contains("application/xml"))
+      assertTrue(
+        oai.forall(_.href.contains("identifier=oai%3Adasch.swiss%3Aark%3A%2F1%2Fa~b%2Ac%20d&")),
+      )
+    },
     test("the full link order") {
       assertTrue(
         links(withLicence, oaiCodes).map(_.rel) ==

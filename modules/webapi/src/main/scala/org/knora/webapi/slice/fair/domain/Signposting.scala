@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.fair.domain
 
-import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -55,10 +54,23 @@ object Signposting {
       s"""<link rel="${Html.escapeAttribute(l.rel)}" href="${Html.escapeAttribute(l.href)}"$tpe>"""
     }
 
+  // The identifier must equal the DPE OAI server's record identifier: "oai:dasch.swiss:" + the ARK from "ark:/".
   private def oaiRecordUrl(oaiBaseUrl: String, ark: String, prefix: String): String = {
     val i          = ark.indexOf("ark:/")
     val identifier = "oai:dasch.swiss:" + (if (i >= 0) ark.substring(i) else ark)
-    s"$oaiBaseUrl?verb=GetRecord&identifier=${URLEncoder.encode(identifier, StandardCharsets.UTF_8)}&metadataPrefix=$prefix"
+    s"$oaiBaseUrl?verb=GetRecord&identifier=${percentEncode(identifier)}&metadataPrefix=$prefix"
+  }
+
+  // Matches the Rust `urlencoding` crate: unreserved bytes (A-Z a-z 0-9 - _ . ~) stay, every other UTF-8 byte is %XX.
+  private def percentEncode(s: String): String = {
+    val sb = new StringBuilder
+    s.getBytes(StandardCharsets.UTF_8).foreach { b =>
+      val c = (b & 0xff).toChar
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || "-_.~".indexOf(c) >= 0)
+        sb.append(c)
+      else sb.append('%').append(f"${b & 0xff}%02X")
+    }
+    sb.toString
   }
 
   private def fieldValue(l: Link): String = {
