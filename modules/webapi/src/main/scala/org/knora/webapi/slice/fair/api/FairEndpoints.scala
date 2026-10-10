@@ -57,11 +57,6 @@ object FairEndpoints {
   private val acceptIn = header[List[String]](HeaderNames.Accept)
     .description("Repeated header lines are combined into one comma-separated value.")
 
-  // The Content-Type comes from the headers output and only from there: tapir adds the body codec's own media type
-  // only when the output carries no Content-Type header.
-  private val withBody: EndpointOutput[FairResponse] =
-    statusCode.and(headers).and(optionalBody).mapTo[FairResponse]
-
   // A missing body writes nothing at all, so a 303 or 502 gets no Content-Type from the codec either.
   private val optionalBody: EndpointOutput[Option[String]] = oneOf[Option[String]](
     oneOfVariantValueMatcher(stringBody.map(Mapping.from[String, Option[String]](Some(_))(_.getOrElse("")))) {
@@ -71,6 +66,11 @@ object FairEndpoints {
       true
     },
   )
+
+  // The Content-Type comes from the headers output and only from there: tapir adds the body codec's own media type
+  // only when the output carries no Content-Type header.
+  private val withBody: EndpointOutput[FairResponse] =
+    statusCode.and(headers).and(optionalBody).mapTo[FairResponse]
 
   private val withoutBody: EndpointOutput[FairResponse] =
     statusCode
