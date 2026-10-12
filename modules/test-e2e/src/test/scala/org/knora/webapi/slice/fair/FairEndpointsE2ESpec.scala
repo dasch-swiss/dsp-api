@@ -74,7 +74,7 @@ class FairEndpointsE2ESpec extends E2EZSpec {
   private def landing(id: String, accept: Option[String] = None, followRedirects: Boolean = true) =
     ZIO.serviceWithZIO[TestApiClient](
       _.getAsString(
-        uri"/fair/resources/${id.split('/').toList}",
+        uri"/internal/landing-pages/resources/${id.split('/').toList}",
         r => accept.fold(r)(a => r.header("Accept", a)).followRedirects(followRedirects),
       ),
     )

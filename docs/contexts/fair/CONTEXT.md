@@ -5,7 +5,7 @@ Part of the dsp-api context map; see [the root index](../../../CONTEXT.md). This
 that module's root directory (see [`MODULARIZATION-PLAN.md`](../../../MODULARIZATION-PLAN.md)).
 
 FAIR owns the machine-readable description of a public Resource served at the landing route its ARK
-resolves to (`/fair/resources/{shortcode}/{id}`): schema.org JSON-LD, DataCite JSON, Dublin Core meta
+resolves to: schema.org JSON-LD, DataCite JSON, Dublin Core meta
 tags and Signposting links. It exists because these descriptions are derived facts for outside readers,
 not Resource data, and they are built only from what an anonymous visitor may see.
 
@@ -21,7 +21,8 @@ not Resource data, and they are built only from what an anonymous visitor may se
 ## Language
 
 **Landing page**:
-The page a Resource's ARK resolves to, answered at `/fair/resources/{shortcode}/{id}`: the dsp-app
+The page a Resource's ARK resolves to, answered by dsp-api at `/internal/landing-pages/resources/{shortcode}/{id}`, which dsp-app's
+server forwards to: the dsp-app
 shell with metadata added, or a redirect to a Representation.
 _Avoid_: Resource page, permalink
 

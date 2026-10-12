@@ -171,9 +171,10 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
     (accept.map(a => Header.Custom("Accept", a)) ::: extra)
       .foldLeft(Request(method = method, url = url(path)))(_.addHeader(_))
 
-  private def landingPath(id: String)                                 = s"/fair/resources/081C/$id"
-  private def jsonLdPath(id: String)                                  = s"${landingPath(id)}/metadata.jsonld"
-  private def dataCitePath(id: String)                                = s"${landingPath(id)}/metadata.datacite.json"
+  private def landingPath(id: String)                                 = s"/internal/landing-pages/resources/081C/$id"
+  private def resourcePath(id: String)                                = s"/fair/resources/081C/$id"
+  private def jsonLdPath(id: String)                                  = s"${resourcePath(id)}/metadata.jsonld"
+  private def dataCitePath(id: String)                                = s"${resourcePath(id)}/metadata.datacite.json"
   private def get(h: Harness, p: String, accept: List[String] = Nil)  = h.run(request(HttpMethod.GET, p, accept, Nil))
   private def head(h: Harness, p: String, accept: List[String] = Nil) = h.run(request(HttpMethod.HEAD, p, accept, Nil))
 

@@ -1097,8 +1097,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/test/scala/org/knora/webapi/slice/fair/**`
     - `modules/webapi/src/test/resources/org/knora/webapi/slice/fair/**`
 - **Purpose**: FAIR metadata and Signposting for the resource landing route that ARKs resolve to:
-    `GET` and `HEAD /fair/resources/{shortcode}/{resourceId}`, plus the schema.org JSON-LD
-    (`metadata.jsonld`) and DataCite (`metadata.datacite.json`) representations. The landing route answers
+    `GET` and `HEAD /internal/landing-pages/resources/{shortcode}/{resourceId}` (called by dsp-app's server),
+    plus the public schema.org JSON-LD and DataCite representations at
+    `/fair/resources/{shortcode}/{resourceId}/metadata.jsonld` and `.../metadata.datacite.json`. The landing route answers
     the dsp-app shell with a metadata block added, or a `303` to a representation the `Accept` header asks
     for. Every fact is built under the anonymous view.
 - **Key entities**: `FairApiModule`, `FairEndpoints`, `FairServerEndpoints`, `FairRestService`,

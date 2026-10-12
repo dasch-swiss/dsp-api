@@ -15,22 +15,25 @@ import org.knora.webapi.slice.common.api.OwnAcceptNegotiation
 import org.knora.webapi.slice.common.api.RequiresMethod
 
 /**
- * The public FAIR landing-page routes. None of them has a security input, and each answers any `Accept` header itself.
+ * The FAIR landing-page routes: the landing route, called by dsp-app's server rather than by clients, and the two public
+ * representations. None of them has a security input, and each answers any `Accept` header itself.
  */
 final class FairEndpoints {
   import FairEndpoints.*
 
-  private val resource = "fair" / "resources" / path[String]("shortcode") / path[String]("resourceId")
+  private def resourceIn = path[String]("shortcode") / path[String]("resourceId")
+  private val landing    = "internal" / "landing-pages" / "resources" / resourceIn
+  private val resource   = "fair" / "resources" / resourceIn
 
   val getLanding = landingBase.get
-    .in(resource)
+    .in(landing)
     .in(acceptIn)
     .out(withBody)
     .tag(Tag)
     .description("The landing page of a public resource, or a 303 to a representation the `Accept` header asks for.")
 
   val headLanding = landingBase.head
-    .in(resource)
+    .in(landing)
     .in(acceptIn)
     .out(withoutBody)
     .tag(Tag)
