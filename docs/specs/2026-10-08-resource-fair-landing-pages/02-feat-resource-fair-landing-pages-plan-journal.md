@@ -29,7 +29,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@5f4f820d8 | 1 |
 | 2 | reviewed | dsp-api@e1cfdaae8 | 1 |
 | 3 | reviewed | dsp-api@e8a6b8cfa | 1 |
-| 4 | in-progress | dsp-api@HEAD4 | 0 |
+| 4 | reviewed | dsp-api@698c62e76 | 1 |
 
 ## Chunk queue
 
@@ -46,6 +46,12 @@ status: in-progress
 | 2.2 | dsp-api | slice/fair/domain/writers/{DublinCoreMeta,Html}.scala + specs | 2.1 | "2.3", "2.6 (DC: description cut)", "2.9 (attributes)" | tag order, 1000-code-point cut, attribute escaping | dublin_core_meta.rs, record_dublin_core.rs | — |
 | 2.3 | dsp-api | slice/fair/domain/writers/DataCiteJson.scala, MODULE.bazel, maven_install.json, modules/webapi/BUILD.bazel, test schema resource + specs | 2.2 | "2.4", "2.5", "2.7" | DataCite JSON validates against the vendored draft-07 schema | record_datacite.rs, datacite_json.rs | — |
 | 2.4 | dsp-api | WritersAgreementSpec | 2.3 | "2.8", "2.10" | writers agree; just check + just test green | — | — |
+| 4.1 | dsp-api | slice/common/api/{NegotiatesOwnAccept,RequiresMethod}.scala, core/DspApiServer.scala + spec | — | "4.8", "4.6 (RequiresMethod.head)" | attribute exempts from 406; existing interceptor tests unchanged | scratchpad phase4-design.md | — |
+| 4.2 | dsp-api | slice/fair/domain/service/AppShell*.scala + spec | 4.1 | "4.3" | cached shell fetch, 10 s / 2 s TTLs, never fails | phase4-design.md | — |
+| 4.3 | dsp-api | slice/fair/api/FairRestService.scala, FairError + spec | 4.2 | "4.2", "4.4", "4.5" | landing/representation answers per design | phase4-design.md | — |
+| 4.4 | dsp-api | slice/fair/api/{FairEndpoints,FairServerEndpoints,FairApiModule}.scala, ApiModule, Endpoints, LayersLive, ExportApiModule + core in-memory HTTP spec | 4.3 | "4.6", "4.7", "4.9", "4.10"-"4.15" | routes served end to end in memory | phase4-design.md | — |
+| 4.5 | dsp-api | modules/test-e2e FairEndpointsE2ESpec, docker-compose.yml | 4.4 | "4.16", "4.17", "4.18" | E2E green; gate green | — | — |
+| 4.6 | dsp-api | ARCH-MAP.md, CONTEXT files (session runs /dune:dune-map) | 4.5 | "4.19" | map lists webapi-fair | — | — |
 
 ## Chunks
 
@@ -69,9 +75,19 @@ status: in-progress
 | 3.2 | dsp-api | complete | 7e6db5295 | Signposting (landing/representation link sets, RFC 8288 header with href delimiter encoding, link elements), FairUrls, OaiShortcodes (moved from FairConfig); OAI id matches oai-pmh.md literal | none |
 | 3.R1 | dsp-api | complete | 5e535753a | review fix: Unicode whitespace as \u escapes (ASCII-only), port pointer comment, non-vacuous long-s case-fold test (equalsIgnoreCase folds it: verified in jshell), OAI identifier encoded with the urlencoding crate's unreserved set | worker's bazel runs wedged the server; session killed its own clients, restarted the server and verified |
 | 3.3 | dsp-api | complete | — | just check + just test green after review fixes | none |
+| 4.1 | dsp-api | complete | 41411adf9 | NegotiatesOwnAccept attribute exempts an endpoint from the early 406 (passthrough audit / Connection: close still key on routeMarker); RequiresMethod.head | none |
+| 4.2 | dsp-api | complete | ac01cf876 | AppShell / AppShellLive: capacity-1 zio-cache (Some 10 s, None 2 s), 500 ms read / 1 s overall timeout, Accept-Encoding identity, 200 + </head> only | none |
+| 4.3 | dsp-api | complete | ea13efc5c | FairRestService: landing (303 / spliced shell / unchanged shell / 502, Vary + Cache-Control always, safeApply guards), JSON-LD and DataCite representations, identical empty 404 | none |
+| 4.4a | dsp-api | complete | 4fb0108ec | FairEndpoints (GET/HEAD landing, JSON-LD, DataCite; no security input; NegotiatesOwnAccept), FairServerEndpoints, FairApiModule; adapters + shared AssetInfoService layer wired in LayersLive; ApiModule/Endpoints | none |
+| 4.4b | dsp-api | complete | e13f5d3c7, 8460c4285 | FairEndpointsHttpSpec (23 wire-level tests for 4.10-4.15); fixed val initialisation order in FairEndpoints (body output was null -> MatchError on every body route) | none |
+| 4.5 | dsp-api | complete | 2d052df45, afdfc63dd | FairEndpointsE2ESpec (7 tests; stub shell on localhost:18742; plan's three resources verified in test data, no substitutions) and docker-compose KNORA_WEBAPI_FAIR_* | E2E needed port 3333: user approved stopping container dsp-api-api-1 (left stopped) |
+| 4.R | dsp-api | complete | 6027a6612, f6da61675 | review fixes: one NegotiatesOwnAccept exemption (passthrough carries it), FairInternalError case object, no-</head> shell -> 502, defects -> typed 500 with landing headers, nosniff on representations, AppShellLive moved to fair/infrastructure (no redirects, 1 MiB cap), single AssetInfoServiceLayer; HTTP suites named by behaviour, E2E stub lifecycle | none |
+| 4.6 | dsp-api | complete | 534576fb7 | scoped ARCH-MAP update (webapi-fair + touched entries), docs/contexts/fair/CONTEXT.md, root index | user chose scoped update; schema-1 migration / full re-map left for a follow-up |
+| 4.7 | dsp-api | complete | — | just check + just test green; just test-e2e 967/971 with two ValuesEndpointsE2ESpec reorder tests (PUT /v2/values/order) answering 500 in the full suite only; that spec alone passes 107/107 on the same commit | flaky in full-suite context, unrelated to fair (previous full run lost Fuseki in the same spec) |
 
 ## Deferrals
 
+- ARCH-MAP.md schema-1 -> 2 migration and re-mapping of the 22 components already stale from unrelated main changes: follow-up PR (user decision at 4.19).
 - Phase 1 review: ARCH-MAP/CONTEXT update -> new 4.19. OAI shortcode-list parsing moved out of `FairConfig` (config must not import `Shortcode`) -> 3.2.
 - 1.15 "a hidden file's authorship is ignored" -> 4.11 (needs the resources adapter; a hidden file never reaches derive).
 - Session scope set at intake: phases 1-4 (dsp-api only). dsp-app (Phase 6) gets a fresh branch cut from origin/main when that phase starts, not the existing `feature/dev-7420-resource-landing-proxy`.
@@ -90,3 +106,7 @@ status: in-progress
 - `just test` once hit the //modules/webapi:test Bazel timeout (762 s) with all 2491 tests OK and a 13-minute gap in the log between unrelated suites; an immediate re-run passed in 26.5 s. Treated as a machine stall, not a code failure.
 - The ASCII-only production-code rule is not enforced by `just check`; Negotiation.scala carried literal Unicode whitespace until the Phase 3 review caught it.
 - Phase 3 outcome: all items ticked; deferred: none. Review: 3 reviewers, one fix round. Phase 4 must drop a `Link`/`Location` value the HTTP layer rejects (CR/LF) with a warning, and join repeated `Accept` headers before the 2048-byte check.
+- Plan 4.2 error type: implemented as a uniform `FairResponse(status, headers, body)` for 200/303/404/502 so every landing answer carries Vary/Cache-Control and HEAD reuses GET's answer; only infrastructure failures are a typed error (empty 500). Statuses and bodies are as 4.2 specifies.
+- `KnoraApi.externalKnoraApiBaseUrl` keeps a non-80 port, so with external port 443 representation URLs read `https://host:443/...`; this is the existing behaviour for every API URL dsp-api emits, not new here.
+- Phase 4 outcome: all items ticked; deferred: ARCH-MAP schema migration (follow-up). Review: 6 reviewers, one fix round. `ValuesEndpointsE2ESpec` reorder tests are flaky in the full E2E suite (500 / lost triplestore) but pass in isolation.
+- Spec id convention adopted (user, 2026-10-12): an id is written `#<id>` once at its origin and bare elsewhere; applied to the plan and PRD.

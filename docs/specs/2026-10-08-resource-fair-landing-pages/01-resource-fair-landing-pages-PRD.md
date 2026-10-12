@@ -50,18 +50,18 @@ In precedence order. Where a source is followed, this PRD does not restate it.
 Each goal has a stable ID; user stories and the implementation plan cite them.
 G0 and G6 are the two top goals; every other goal, here and in the plan, descends from one of them.
 
-- **G0** — Every page a DaSCH resource or value ARK resolves to is
+- **#G0** — Every page a DaSCH resource or value ARK resolves to is
   FAIR-assessable by machine, as the project page already is.
 
-- **G1** (↑G0) — A machine following any resource or value ARK reads standards-shaped
+- **#G1** (↑G0) — A machine following any resource or value ARK reads standards-shaped
   metadata and Signposting from the response, without executing JavaScript.
   (US-1, US-2, US-3)
-- **G2** (↑G0) — Nothing is published beyond what an anonymous user may already see.
+- **#G2** (↑G0) — Nothing is published beyond what an anonymous user may already see.
   (US-4)
-- **G3** (↑G0) — The F-UJI score of a resource ARK rises measurably from its baseline,
+- **#G3** (↑G0) — The F-UJI score of a resource ARK rises measurably from its baseline,
   for resources of 0868 and 0803. (US-6)
-- **G4** (↑G0) — A person's experience of the page is unchanged. (US-5)
-- **G6** — The changes are maintainable within each repository's conventions.
+- **#G4** (↑G0) — A person's experience of the page is unchanged. (US-5)
+- **#G6** — The changes are maintainable within each repository's conventions.
 
 ## Core Features
 

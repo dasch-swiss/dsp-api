@@ -44,6 +44,10 @@ Every point of this plan has a parent, written `↑<id>`. Following parents from
 any point reaches one of the two top goals, **G0** or **G6**. The graph is
 acyclic.
 
+An id is written `#<id>` exactly once, where it is defined, and bare everywhere
+else. Searching `#TD5` finds the origin; searching `\<TD5\>` (vim `*`) finds the
+origin and every reference.
+
 ```
 G0 ─► G1..G4 (PRD) ─► PG1..PG6 (plan goals) ─► S1..S7 (phase subgoals)
                                                 ├─► TD1..TD19 (decisions) ─► deliverables
@@ -57,35 +61,35 @@ cannot carry a tag. Its parent is that phase's subgoal.
 
 ### Top goals and PRD goals (from `01-resource-fair-landing-pages-PRD.md`)
 
-- **G0**: Every page a DaSCH resource or value ARK resolves to is FAIR-assessable by machine.
-    - **G1** ↑G0: Machines read metadata and Signposting without JavaScript.
-    - **G2** ↑G0: Nothing beyond the anonymous view is published.
-    - **G3** ↑G0: The F-UJI score of a resource ARK rises measurably.
-    - **G4** ↑G0: A person's page is unchanged.
-- **G6**: The changes are maintainable within each repository's conventions.
+- **#G0**: Every page a DaSCH resource or value ARK resolves to is FAIR-assessable by machine.
+    - **#G1** ↑G0: Machines read metadata and Signposting without JavaScript.
+    - **#G2** ↑G0: Nothing beyond the anonymous view is published.
+    - **#G3** ↑G0: The F-UJI score of a resource ARK rises measurably.
+    - **#G4** ↑G0: A person's page is unchanged.
+- **#G6**: The changes are maintainable within each repository's conventions.
 
 ### Plan goals
 
 | Id | Parent | Plan goal | Requirements |
 | --- | --- | --- | --- |
-| PG1 | ↑G1 | A visible resource's landing response embeds one JSON-LD graph, Dublin Core `<meta>` tags and `<link>` elements in the served `<head>` | REQ-1.1–1.6 |
-| PG2 | ↑G1 | A visible resource's landing response carries the Signposting `Link` header, identical on `GET` and `HEAD` | REQ-2.1–2.6 |
-| PG3 | ↑G1 | JSON-LD and DataCite JSON are served at their own URLs on the API host. The landing route reaches them by the one `303`, and every landing response carries `Vary: Accept` | REQ-3.1–3.6 |
-| PG4 | ↑G2 | Every fact comes from the anonymous view. A missing, deleted or not-visible resource yields nothing, and a file is advertised only under V or higher | REQ-4.1–4.5 |
-| PG5 | ↑G4 | A person always gets the deployed dsp-app shell, unchanged except for the added `<head>` content, also when dsp-api fails or lacks the route | REQ-5.1–5.2 |
-| PG6 | ↑G3 | The F-UJI score of resource pages of 0868 and 0803 is measured before and after on the same DEV targets and recorded, and FAIR Champion is run. Before ship, a local run on one stack shows it rising | REQ-6.1 |
+| #PG1 | ↑G1 | A visible resource's landing response embeds one JSON-LD graph, Dublin Core `<meta>` tags and `<link>` elements in the served `<head>` | REQ-1.1–1.6 |
+| #PG2 | ↑G1 | A visible resource's landing response carries the Signposting `Link` header, identical on `GET` and `HEAD` | REQ-2.1–2.6 |
+| #PG3 | ↑G1 | JSON-LD and DataCite JSON are served at their own URLs on the API host. The landing route reaches them by the one `303`, and every landing response carries `Vary: Accept` | REQ-3.1–3.6 |
+| #PG4 | ↑G2 | Every fact comes from the anonymous view. A missing, deleted or not-visible resource yields nothing, and a file is advertised only under V or higher | REQ-4.1–4.5 |
+| #PG5 | ↑G4 | A person always gets the deployed dsp-app shell, unchanged except for the added `<head>` content, also when dsp-api fails or lacks the route | REQ-5.1–5.2 |
+| #PG6 | ↑G3 | The F-UJI score of resource pages of 0868 and 0803 is measured before and after on the same DEV targets and recorded, and FAIR Champion is run. Before ship, a local run on one stack shows it rising | REQ-6.1 |
 
 ### Phase subgoals
 
 | Id | Parent | Phase | Subgoal |
 | --- | --- | --- | --- |
-| S1 | ↑PG1, PG3, PG4 | 1 | One builder turns a route's shortcode and resource id into the resource's facts under the anonymous view, or into nothing |
-| S2 | ↑PG1, PG3 | 2 | Pure writers render the facts as schema.org JSON-LD, Dublin Core meta tags and DataCite JSON that agree with each other |
-| S3 | ↑PG2, PG3 | 3 | Pure functions produce the Signposting link set, its RFC 8288 serialisation and the `Accept` decision |
-| S4 | ↑PG1, PG2, PG3, PG4, PG5 | 4 | HTTP endpoints serve the landing response and the two representations from the facts, writers and link set |
-| S5 | ↑PG6 | 5 | The baseline is measured and recorded |
-| S6 | ↑PG5, PG1, PG2, PG3 | 6 | dsp-app's nginx forwards the route to dsp-api and falls back to its own shell |
-| S7 | ↑PG6 | 7 | A local F-UJI run of the same page, before and after the change, shows the score rising |
+| #S1 | ↑PG1, PG3, PG4 | 1 | One builder turns a route's shortcode and resource id into the resource's facts under the anonymous view, or into nothing |
+| #S2 | ↑PG1, PG3 | 2 | Pure writers render the facts as schema.org JSON-LD, Dublin Core meta tags and DataCite JSON that agree with each other |
+| #S3 | ↑PG2, PG3 | 3 | Pure functions produce the Signposting link set, its RFC 8288 serialisation and the `Accept` decision |
+| #S4 | ↑PG1, PG2, PG3, PG4, PG5 | 4 | HTTP endpoints serve the landing response and the two representations from the facts, writers and link set |
+| #S5 | ↑PG6 | 5 | The baseline is measured and recorded |
+| #S6 | ↑PG5, PG1, PG2, PG3 | 6 | dsp-app's nginx forwards the route to dsp-api and falls back to its own shell |
+| #S7 | ↑PG6 | 7 | A local F-UJI run of the same page, before and after the change, shows the score rising |
 
 ## Problem Statement / Motivation
 
@@ -110,33 +114,33 @@ api.<host>/fair/resources/{sc}/{id}/metadata.jsonld          → application/ld+
 api.<host>/fair/resources/{sc}/{id}/metadata.datacite.json   → application/vnd.datacite.datacite+json  (S4)
 ```
 
-- **P1** ↑S1, S2, S3, S4: dsp-api gets a new `fair` slice. Parity with DPE is
+- **#P1** ↑S1, S2, S3, S4: dsp-api gets a new `fair` slice. Parity with DPE is
   by contract. The shapes are those of `machine-readable-metadata.md` and
   `shared-fair`, re-implemented in Scala. `shared-fair` has no record-level
   JSON-LD, link-set or meta writer (every exported writer there takes a
   project), so the resource writers adapt the project writers' shapes and the
   record DataCite and Dublin Core mappings.
-- **P2** ↑S6: dsp-app changes only its nginx configuration and `Dockerfile`.
-- **P3** ↑S4, S6: Deployment needs two sets of environment variables in
+- **#P2** ↑S6: dsp-app changes only its nginx configuration and `Dockerfile`.
+- **#P3** ↑S4, S6: Deployment needs two sets of environment variables in
   ops-deploy, set after ship (H1).
 
 ### Slice layout
 
-- **L1** ↑S1, G6: `slice/fair/ports/` holds one ADR-0011 port per foreign
+- **#L1** ↑S1, G6: `slice/fair/ports/` holds one ADR-0011 port per foreign
   context the builder reads: resources and values, projects (legal defaults and
   longname), ontology (class label) and assets (the sidecar).
   Each port is a trait returning fair's own boundary DTOs, never
   `ReadResourceV2`. Its `<Port>Live` adapter lives in the provider's `repo` or
   `domain/service` package, and its `<Port>InMemory` double in fair's tests.
   These are the first ports in dsp-api; there is no existing one to copy.
-- **L2** ↑S1, S2, S3: `slice/fair/domain/` holds `ResourceFacts` and pure
+- **#L2** ↑S1, S2, S3: `slice/fair/domain/` holds `ResourceFacts` and pure
   objects with no layer: a `ResourceFacts.derive(inputs): Option[ResourceFacts]`
   carrying the visibility, file, access, licence and creator rules, and the
   writers, link set and negotiation. The effectful
   `slice/fair/domain/service/ResourceFactsBuilder` (a `final class` with
   `ZLayer.derive`) only gathers inputs through the ports and calls `derive`, so
   the rule tests of Phase 1 are plain value tests.
-- **L3** ↑S4: `slice/fair/api/` holds `FairEndpoints`, `FairServerEndpoints`
+- **#L3** ↑S4: `slice/fair/api/` holds `FairEndpoints`, `FairServerEndpoints`
   and `FairRestService`, and a `FairApiModule` with `Dependencies` and
   `Provided` as `ExportApiModule` has.
 
@@ -145,27 +149,27 @@ api.<host>/fair/resources/{sc}/{id}/metadata.datacite.json   → application/vnd
 Each decision sits within the PRD and has a subgoal or plan goal as its parent.
 Deliverables that implement a decision have that decision as their parent.
 
-- **TD1** ↑S4: **Route paths.** The landing route is `GET`/`HEAD`
+- **#TD1** ↑S4: **Route paths.** The landing route is `GET`/`HEAD`
   `/fair/resources/{shortcode}/{resourceId}`, with the query string ignored
   (tapir ignores undeclared query parameters). The representations are
   `…/{resourceId}/metadata.jsonld` and `…/metadata.datacite.json`. The new
   prefix is needed because `/v2/resources/{iris…}` captures the rest of the
   path; nothing captures `/fair/`. Path segments are read as `path[String]` and
   parsed in the service, so a malformed id never becomes a tapir decode failure.
-- **TD2** ↑S1: **Canonical identifiers only.** Every emitted URL is built from
+- **#TD2** ↑S1: **Canonical identifiers only.** Every emitted URL is built from
   the resolved resource's IRI and the configured base URLs, never from the
   request path or the `Host` header (which is `api:3333` behind nginx). That
   covers the page URL, the representation URLs, `cite-as`, `Location` and the
   OAI links. The page URL is
   `{appExternalBaseUrl}/resource/{canonical shortcode}/{canonical id}`.
-- **TD3** ↑S1: **Shortcode case.** The route's shortcode is matched
+- **#TD3** ↑S1: **Shortcode case.** The route's shortcode is matched
   case-insensitively (uppercased before the IRI is built), as DPE does.
   `ResourceIri.from` keeps the original casing in `.value`, so the IRI is always
   built from the uppercased shortcode, never compared to a request-cased one.
-- **TD4** ↑S1: **Malformed ids** are treated as missing. The landing route
+- **#TD4** ↑S1: **Malformed ids** are treated as missing. The landing route
   returns the unchanged shell, and the representations return the same empty
   `404 text/plain`. Never a `400`.
-- **TD5** ↑S1: **Visible** means the resource is present in a read as
+- **#TD5** ↑S1: **Visible** means the resource is present in a read as
   `AnonymousUser` with `withDeleted = false` (the default is `true`, so it is
   passed explicitly), and its `userPermission` is at least RV. The read uses
   `skipRetrievalChecks = false` and collapses `NotFoundException` and
@@ -173,7 +177,7 @@ Deliverables that implement a decision have that decision as their parent.
   without the error log `skipRetrievalChecks = true` writes for every miss. Any
   other failure stays a failure (TD14), never absent. Every fact is taken from
   the anonymous view as returned; a value anonymous cannot see is absent.
-- **TD6** ↑S1: **File.** A resource has at most one file value. The selection
+- **#TD6** ↑S1: **File.** A resource has at most one file value. The selection
   keeps the `ReadValueV2`, not only its content, and considers file values
   only. It is advertised only when that value's anonymous `userPermission` is
   at least V. Its facts come from the export's `FileLink` rules: the ingest
@@ -181,12 +185,12 @@ Deliverables that implement a decision have that decision as their parent.
   only when recorded. An external IIIF still image
   (`StillImageExternalFileValueContentV2`) sets the type but yields no
   `DataDownload`.
-- **TD7** ↑S1: **Access level.** Full Open Access when the resource is at least
+- **#TD7** ↑S1: **Access level.** Full Open Access when the resource is at least
   V and either there is no file or the file is at least V. Otherwise Open
   Access with Restrictions. The COAR URIs are DPE's:
   `http://purl.org/coar/access_right/c_abf2` and
   `http://purl.org/coar/access_right/c_16ec`.
-- **TD8** ↑S1: **Licence.** The chain is the file's `licenseIri`, then the
+- **#TD8** ↑S1: **Licence.** The chain is the file's `licenseIri`, then the
   project's `dataLicense`, then none.
     - `PLACEHOLDER` counts as none and falls through. It is the only value that
     falls through.
@@ -203,7 +207,7 @@ Deliverables that implement a decision have that decision as their parent.
     when it yields a licence with a URI.
     - SPDX `rightsIdentifier` and its label come only from an explicit table of
     the Creative Commons entries, as DPE's id-to-label table.
-- **TD9** ↑S1: **Creators.** The chain is `resourceAuthorship` plus the visible
+- **#TD9** ↑S1: **Creators.** The chain is `resourceAuthorship` plus the visible
   file value's authorship, deduplicated in first-seen order. Failing that, the
   project's `defaultDataAuthorship`. Failing that, the project as an
   organisation (its `longname`, else its `shortname`, `nameType`
@@ -217,31 +221,32 @@ Deliverables that implement a decision have that decision as their parent.
     resource. This keeps the legal-metadata PRD (v4, 2026-06-19) decision that
     the project default is "display-only; the default is not asserted on the
     resource".
-- **TD10** ↑S1: **Description.** The export's per-project property (0803, 081C,
+- **#TD10** ↑S1: **Description.** The export's per-project property (0803, 081C,
   0868, 1612; a hard-coded table in `findDescriptionProperty`), read from the
   anonymous view and taken as the value's string form. Other projects get none.
-- **TD11** ↑S1: **Type.** `typeOfData` as the export derives it from the
+- **#TD11** ↑S1: **Type.** `typeOfData` as the export derives it from the
   selected file value, and `Dataset` when there is none.
     - DataCite `resourceType` names the RDF class: its `rdfs:label` in English,
     else the label with the lexicographically first language tag, else the
     class IRI.
     - schema.org `additionalType` is the class IRI in the complex schema.
-- **TD12** ↑S3: **Negotiation** is a port of `shared-fair`'s `negotiate`
+- **#TD12** ↑S3: **Negotiation** is a port of `shared-fair`'s `negotiate`
   decision table (deliverable 3.5). A redirect is a `303` with `Location` set to
   the absolute representation URL on the API host. `Accept` is read as
   `header[List[String]]` and the lines joined with `,`, because a repeated
   header would otherwise be a `400`.
-- **TD13** ↑S4: **406 check.** dsp-api's `PassthroughAwareNotAcceptableInterceptor`
+- **#TD13** ↑S4: **406 check.** dsp-api's `PassthroughAwareNotAcceptableInterceptor`
   answers an empty `406` before endpoint code runs when `Accept` matches none
-  of an endpoint's declared media types. The three new endpoints must decide
-  for themselves: the landing route by negotiation, and a representation by
-  always answering its own type. So they carry a new opt-in attribute,
-  `NegotiatesOwnAccept` (an `AttributeKey` on a dedicated case object in
-  `slice/common/api`), and `leavesNegotiationToTheStore` exempts an endpoint
-  that carries either it or the SPARQL `routeMarker`. The SPARQL `routeMarker`
-  is not reused, because it also switches on the passthrough audit log and
-  `Connection: close`.
-- **TD14** ↑S4: **Shell.** It is fetched only when the answer is HTML, that is
+  of an endpoint's declared media types. The four new endpoints (landing GET
+  and HEAD, two representations) must decide for themselves: the landing route
+  by negotiation, and a representation by always answering its own type. So
+  they carry a new opt-in attribute, `NegotiatesOwnAccept` (an `AttributeKey`
+  on a dedicated case object in `slice/common/api`), and the interceptor
+  exempts exactly the endpoints carrying it; the SPARQL passthrough endpoint
+  carries it too, so there is one exemption mechanism. The SPARQL `routeMarker`
+  is not reused for this, because it also switches on the passthrough audit log
+  and `Connection: close`, which still key on it alone.
+- **#TD14** ↑S4: **Shell.** It is fetched only when the answer is HTML, that is
   after negotiation, so a `303` never depends on it. It is fetched from
   `{appShellUrl}`, an internal URL ending in `/index.html`, through the existing
   `TracingHttpClient` (sttp client4), with `Accept-Encoding: identity`, a
@@ -251,17 +256,17 @@ Deliverables that implement a decision have that decision as their parent.
   block is spliced before the first `</head>`. A shell failure on an HTML
   answer gives `502`, and nginx then serves its own shell. The 10 s TTL bounds
   R1.
-- **TD15** ↑S4: **Landing headers** on every answer: `Vary: Accept` and
+- **#TD15** ↑S4: **Landing headers** on every answer: `Vary: Accept` and
   `Cache-Control: no-store`; the HTML answers carry
   `Content-Type: text/html; charset=UTF-8` (as `htmlBodyUtf8` sets it).
   Representations carry `Link: <page>; rel="describes"`.
-- **TD16** ↑S4: **Credentials are ignored.** The endpoints are built on a base
+- **#TD16** ↑S4: **Credentials are ignored.** The endpoints are built on a base
   with no security input at all, so they cannot read a token, and a request
   with an admin token gets the same bytes as an anonymous one. The base follows
   `V3BaseEndpoint.public`: `RequiresMethod(endpoint.errorOut(fairErrors), …)`
   with fair's own error type, not `BaseEndpoints.publicEndpoint`, whose shared
   error outputs serialise exception messages.
-- **TD17** ↑S2, S3: **Escaping.**
+- **#TD17** ↑S2, S3: **Escaping.**
     - JSON-LD goes into the page only through a script-safe serialiser, a
     post-pass over zio-json's output (which escapes none of these).
     - Attributes are HTML-escaped.
@@ -270,12 +275,12 @@ Deliverables that implement a decision have that decision as their parent.
     - A header value the HTTP layer would reject is detected with
     `sttp.model.Header.safeApply` in the rest service and dropped with a
     warning, and the page is still served.
-- **TD18** ↑S3: **OAI links** for configured shortcodes:
+- **#TD18** ↑S3: **OAI links** for configured shortcodes:
   `{dpeOaiBaseUrl}?verb=GetRecord&identifier=oai:dasch.swiss:ark:/72163/1/{sc}/{arkId}&metadataPrefix=oai_datacite`
   and the same with `oai_dc`, typed `application/xml`. They are never a `303`
   target. The records they point to carry the export's hard-coded facts until
   a follow-up fixes the export (5.3).
-- **TD19** ↑PG5: **No caching of landing answers.** `Cache-Control: no-store` on
+- **#TD19** ↑PG5: **No caching of landing answers.** `Cache-Control: no-store` on
   every landing answer, matching dsp-app's `index.html`, so no cache replays a
   `303` to a person. DPE sends none; this is the one header that differs.
 
@@ -286,24 +291,24 @@ so services depend on `FairConfig` alone.
 
 | Id | Parent | Key | Env | Example (prod) |
 | --- | --- | --- | --- | --- |
-| C1 | ↑TD2 | `fair.app-external-base-url` | `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL` | `https://app.dasch.swiss` |
-| C2 | ↑TD14 | `fair.app-shell-url` | `KNORA_WEBAPI_FAIR_APP_SHELL_URL` | `http://app/index.html` (dsp-app listens on 80 in ops-deploy; `http://app:4200/index.html` in the local `docker-compose.yml`) |
-| C3 | ↑TD18 | `fair.dpe-oai-base-url` | `KNORA_WEBAPI_FAIR_DPE_OAI_BASE_URL` | `https://repository.dasch.swiss/dpe/oai` |
-| C4 | ↑TD18 | `fair.dpe-oai-shortcodes` | `KNORA_WEBAPI_FAIR_DPE_OAI_SHORTCODES` | `0803,081C,0868` |
+| #C1 | ↑TD2 | `fair.app-external-base-url` | `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL` | `https://app.dasch.swiss` |
+| #C2 | ↑TD14 | `fair.app-shell-url` | `KNORA_WEBAPI_FAIR_APP_SHELL_URL` | `http://app/index.html` (dsp-app listens on 80 in ops-deploy; `http://app:4200/index.html` in the local `docker-compose.yml`) |
+| #C3 | ↑TD18 | `fair.dpe-oai-base-url` | `KNORA_WEBAPI_FAIR_DPE_OAI_BASE_URL` | `https://repository.dasch.swiss/dpe/oai` |
+| #C4 | ↑TD18 | `fair.dpe-oai-shortcodes` | `KNORA_WEBAPI_FAIR_DPE_OAI_SHORTCODES` | `0803,081C,0868` |
 
-- **C5** ↑TD1, TD2: Representation URLs use the existing
+- **#C5** ↑TD1, TD2: Representation URLs use the existing
   `KnoraApi.externalKnoraApiBaseUrl`, and `cite-as` uses
   `StringFormatter.resourceIriToArkUrl` with no timestamp (unversioned).
-- **C6** ↑TD18: C4 arrives from the environment as one string. It is modelled
+- **#C6** ↑TD18: C4 arrives from the environment as one string. It is modelled
   as a `String`, split on `,`, uppercased into a set and validated, and defaults
   to empty, so no OAI link is emitted until H1 sets it.
-- **C7** ↑TD2, TD14: C1 and C2 have local defaults in `application.conf`.
+- **#C7** ↑TD2, TD14: C1 and C2 have local defaults in `application.conf`.
   Startup validation fails when C1 is not an absolute `http(s)` URL. A wrong C2
   only makes HTML answers `502`, which nginx turns into the plain shell.
 
 ### dsp-app nginx
 
-- **N1** ↑S6: A top-level regex location, placed as the first regex location
+- **#N1** ↑S6: A top-level regex location, placed as the first regex location
   in `nginx/default.conf.template` (regex locations match in order, and the
   existing unanchored `~ /index.html|.*\.json$` would otherwise catch some ids).
   It is not a `^~ /resource/` prefix: that would stop the server-level regex
@@ -321,7 +326,7 @@ so services depend on `FairConfig` alone.
   under `/resource/` keeps today's SPA behaviour. Location matching runs on the
   decoded, normalised URI, and the id class excludes `.`, `/` and `%`, so
   captures are always safe.
-- **N2** ↑S6: Proxy settings:
+- **#N2** ↑S6: Proxy settings:
     - `proxy_connect_timeout`, `proxy_send_timeout` and `proxy_read_timeout`
     of 2 s;
     - `proxy_set_header Accept-Encoding ""`, `Cookie ""` and
@@ -338,19 +343,19 @@ so services depend on `FairConfig` alone.
   itself (connect refused, timeouts, an unresolvable name) go through the same
   `error_page`. `303` and 2xx responses pass through with their `Link`, `Vary`
   and `Location`.
-- **N3** ↑S6: `@shell` (a server-level named location) serves
+- **#N3** ↑S6: `@shell` (a server-level named location) serves
   `try_files /index.html =500` from `root /public`, with
   `add_header Vary Accept always`, `add_header Cache-Control 'no-store' always`
   and its own `include` of the security headers, since it inherits no
   `add_header`. The `=` in `error_page` makes its status `200`.
-- **N4** ↑S6: When `DSP_API_UPSTREAM` is empty,
+- **#N4** ↑S6: When `DSP_API_UPSTREAM` is empty,
   `if ($dsp_api_upstream = "") { return 418; }` sends the request to `@shell`
   through the `418` entry, so a deployment without the variable (Cloud Run PR
   previews, `nx serve`) behaves as today.
 
 ### Repository conventions
 
-- **K1** ↑G6: dsp-api `CONVENTIONS.md` binds every phase:
+- **#K1** ↑G6: dsp-api `CONVENTIONS.md` binds every phase:
     - `final class` services with `ZLayer.derive`;
     - the `*Endpoints` / `*ServerEndpoints` / `*RestService` split;
     - per-endpoint error variants, never the shared `errorOutputs`;
@@ -360,9 +365,9 @@ so services depend on `FairConfig` alone.
     - no "Knora" in human-readable text;
     - specs as `@RunWith(classOf[DspZTestJUnitRunner]) class XSpec extends ZIOSpecDefault`,
     as the existing specs are.
-- **K2** ↑G6: Commit messages: dsp-api `feat: <subject> (DEV-7420)`; dsp-app
+- **#K2** ↑G6: Commit messages: dsp-api `feat: <subject> (DEV-7420)`; dsp-app
   per its PR-title check, `feat(nginx): <subject> (DEV-7420)`.
-- **K3** ↑G6: Within each phase, the test items are written before the
+- **#K3** ↑G6: Within each phase, the test items are written before the
   implementation items they cover; the items are listed by topic.
 
 ## Implementation Phases
@@ -510,15 +515,15 @@ The shell is a stub string through the shell provider's interface.
 ### dsp-api
 
 - [x] 4.1 ↑TD2, TD14, TD18: Add `FairConfig` (C1–C4, C6, C7) to `AppConfig`, `projectAppConfigurations` and `application.conf`, each key with its `${?ENV}` override
-- [ ] 4.2 ↑TD16: The fair endpoint base per TD16, with fair's error type: not visible maps to an empty `404 text/plain`, shell unavailable to `502`, anything else to `500` (`503` is not used)
-- [ ] 4.3 ↑TD14: Shell provider: a layer built with `ZLayer.scoped` around the zio-cache, following `AssetPermissionsCache.makeCache`
-- [ ] 4.4 ↑TD1: Landing `GET`. A visible resource gets the `303` or the shell with the head block (DC meta, `<link>`s, one JSON-LD `<script>`) and the `Link` header. Anything else gets the unchanged shell. A rejected `Link` or `Location` value drops the header with a warning
-- [ ] 4.5 ↑TD15, TD19: Landing headers on every answer
-- [ ] 4.6 ↑TD1: Landing `HEAD`, a second endpoint on the same path sharing the rest service method, with the same headers as `GET` and no body. Add `def head` to `RequiresMethod`, since tapir answers an undeclared `HEAD` with `404`
-- [ ] 4.7 ↑TD1, TD4: Representation endpoints with their media types (a private `CodecFormat` each, as `V3ProjectsEndpoints` does) and the `describes` link. Missing, deleted, not visible and malformed all get the same empty `404 text/plain`
-- [ ] 4.8 ↑TD13: Add `NegotiatesOwnAccept` and set it on the new endpoints. Every other endpoint negotiates exactly as before, the interceptor's existing tests stay unchanged, and the passthrough audit and `Connection: close` paths still key on `routeMarker` alone
-- [ ] 4.9 ↑S4: Module wiring: `FairApiModule` in `ApiModule.Dependencies` and `ApiModule.layer`, a `FairServerEndpoints` parameter in `Endpoints`, and the ports' `Live` adapters and the shell provider in `LayersLive`
-- [ ] 4.10 ↑TD12, TD15: In-memory HTTP tests:
+- [x] 4.2 ↑TD16: The fair endpoint base per TD16, with fair's error type: not visible maps to an empty `404 text/plain`, shell unavailable to `502`, anything else to `500` (`503` is not used)
+- [x] 4.3 ↑TD14: Shell provider: a layer built with `ZLayer.scoped` around the zio-cache, following `AssetPermissionsCache.makeCache`
+- [x] 4.4 ↑TD1: Landing `GET`. A visible resource gets the `303` or the shell with the head block (DC meta, `<link>`s, one JSON-LD `<script>`) and the `Link` header. Anything else gets the unchanged shell. A rejected `Link` or `Location` value drops the header with a warning
+- [x] 4.5 ↑TD15, TD19: Landing headers on every answer
+- [x] 4.6 ↑TD1: Landing `HEAD`, a second endpoint on the same path sharing the rest service method, with the same headers as `GET` and no body. Add `def head` to `RequiresMethod`, since tapir answers an undeclared `HEAD` with `404`
+- [x] 4.7 ↑TD1, TD4: Representation endpoints with their media types (a private `CodecFormat` each, as `V3ProjectsEndpoints` does) and the `describes` link. Missing, deleted, not visible and malformed all get the same empty `404 text/plain`
+- [x] 4.8 ↑TD13: Add `NegotiatesOwnAccept` and set it on the new endpoints. Every other endpoint negotiates exactly as before, the interceptor's existing tests stay unchanged, and the passthrough audit and `Connection: close` paths still key on `routeMarker` alone
+- [x] 4.9 ↑S4: Module wiring: `FairApiModule` in `ApiModule.Dependencies` and `ApiModule.layer`, a `FairServerEndpoints` parameter in `Endpoints`, and the ports' `Live` adapters and the shell provider in `LayersLive`
+- [x] 4.10 ↑TD12, TD15: In-memory HTTP tests:
     - the negotiation table of `machine-readable-metadata.md` end to end, with "unknown shortcode" read as "resource not visible";
     - `Vary: Accept` and `Cache-Control: no-store` on 200 and 303, for GET and HEAD;
     - HEAD carries the same `Link`, `Vary`, `Cache-Control`, `Content-Type` and `Location` as GET;
@@ -526,20 +531,20 @@ The shell is a stub string through the shell provider's interface.
     - the page carries the `DC.*` tags, `DC.accessRights` among them, and `<link>` elements matching the `Link` header;
     - for a visible resource, the body minus the spliced block equals the shell;
     - for `Accept` absent, `*/*` and `text/html`, the bodies are byte-identical
-- [ ] 4.11 ↑S4, TD4, TD5, TD6: In-memory HTTP tests:
+- [x] 4.11 ↑S4, TD4, TD5, TD6: In-memory HTTP tests:
     - a not-visible landing answer is byte-identical to the shell and has no `Link`;
     - the four not-visible representation answers are identical in status, headers and body;
     - a V resource whose file value is RV-only: no file in the JSON-LD `distribution`, the DataCite `formats` and `sizes`, `DC.format` or the HTML
     - a resource whose file value anonymous cannot see at all: that file's authorship and licence appear nowhere (moved from 1.15)
-- [ ] 4.12 ↑TD16: In-memory HTTP tests: an admin token yields the same bytes as anonymous on a visible resource, and a logged-in user's token yields the unchanged shell on a resource anonymous cannot see
-- [ ] 4.13 ↑TD14: In-memory HTTP tests: a shell failure gives `502` for HTML, a `303` is still served while the shell fails, and the representations do not depend on the shell
-- [ ] 4.14 ↑S4: In-memory HTTP tests: the `.jsonld` body equals the graph embedded in the page; the DataCite answer is `200 application/vnd.datacite.datacite+json`; both representations carry `Link: <page>; rel="describes"`
-- [ ] 4.15 ↑S4: In-memory HTTP test: `?version=` and `?highlightValue=` change nothing, also with the `highlightValue` of a value anonymous cannot see
-- [ ] 4.16 ↑S4: E2E test with the shared datasets: `http://rdfh.ch/0803/0b03b0a6e6be` (resource and still-image file at least V for anonymous), `http://rdfh.ch/0803/00014b43f902` (RV-only page), `http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA` (deleted) and a missing id
-- [ ] 4.17 ↑TD14: Set the C1–C4 variables for the local stack on the `api` service in `docker-compose.yml`, with C2 `http://app:4200/index.html`
-- [ ] 4.19 ↑G6: Update `ARCH-MAP.md` and the CONTEXT files for the `fair` slice (`/dune:dune-map update`): a `webapi-fair` component with its four ports and their adapters as the first ADR-0011 port example, `ResourceMetadataRules` in webapi-resources, `FairConfig` in webapi-app, `projectArkUrl` in webapi-common, and the two named boundary exceptions (export reading `slice.resources.domain` for the shared metadata rules; `FairAssetsLive` as a second in-process sidecar reader beside `ExportService`)
-- [ ] 4.18 ↑S4: Run `just check`, `just test` and `just test-e2e`; all pass
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] 4.12 ↑TD16: In-memory HTTP tests: an admin token yields the same bytes as anonymous on a visible resource, and a logged-in user's token yields the unchanged shell on a resource anonymous cannot see
+- [x] 4.13 ↑TD14: In-memory HTTP tests: a shell failure gives `502` for HTML, a `303` is still served while the shell fails, and the representations do not depend on the shell
+- [x] 4.14 ↑S4: In-memory HTTP tests: the `.jsonld` body equals the graph embedded in the page; the DataCite answer is `200 application/vnd.datacite.datacite+json`; both representations carry `Link: <page>; rel="describes"`
+- [x] 4.15 ↑S4: In-memory HTTP test: `?version=` and `?highlightValue=` change nothing, also with the `highlightValue` of a value anonymous cannot see
+- [x] 4.16 ↑S4: E2E test with the shared datasets: `http://rdfh.ch/0803/0b03b0a6e6be` (resource and still-image file at least V for anonymous), `http://rdfh.ch/0803/00014b43f902` (RV-only page), `http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA` (deleted) and a missing id
+- [x] 4.17 ↑TD14: Set the C1–C4 variables for the local stack on the `api` service in `docker-compose.yml`, with C2 `http://app:4200/index.html`
+- [x] 4.19 ↑G6: Update `ARCH-MAP.md` and the CONTEXT files for the `fair` slice (`/dune:dune-map update`): a `webapi-fair` component with its four ports and their adapters as the first ADR-0011 port example, `ResourceMetadataRules` in webapi-resources, `FairConfig` in webapi-app, `projectArkUrl` in webapi-common, and the two named boundary exceptions (export reading `slice.resources.domain` for the shared metadata rules; `FairAssetsLive` as a second in-process sidecar reader beside `ExportService`)
+- [x] 4.18 ↑S4: Run `just check`, `just test` and `just test-e2e`; all pass
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 5: Baseline measured and recorded
 
@@ -622,50 +627,50 @@ A local score is a direction, not a DEV or production figure:
 
 | Id | Parent | Action | Who | When | Why not the agent |
 | --- | --- | --- | --- | --- | --- |
-| H1 | ↑S4, S6 | In ops-deploy, per environment, set `DSP_API_UPSTREAM=http://api:3333` on the `app` service (`docker-compose-svc.yml.j2`) and C1–C4 on the `api` service | DevOps | after ship | Deployment configuration and its rollout are the operators' decision |
-| H2 | ↑PG6 | After DEV runs both, run `just fair-check` against the two DEV page URLs of 5.2 and FAIR Champion by hand, then add the rows to the results table | Owner | after ship | Needs the deployed environment; FAIR Champion is run by hand |
+| #H1 | ↑S4, S6 | In ops-deploy, per environment, set `DSP_API_UPSTREAM=http://api:3333` on the `app` service (`docker-compose-svc.yml.j2`) and C1–C4 on the `api` service | DevOps | after ship | Deployment configuration and its rollout are the operators' decision |
+| #H2 | ↑PG6 | After DEV runs both, run `just fair-check` against the two DEV page URLs of 5.2 and FAIR Champion by hand, then add the rows to the results table | Owner | after ship | Needs the deployed environment; FAIR Champion is run by hand |
 
 ## Acceptance Criteria
 
-- [ ] A1 ↑PG1, PG2, PG3, PG4, PG5: Every PRD requirement from REQ-1.1 to REQ-5.2 is covered by a named test in dsp-api or the dsp-app smoke test; REQ-6.1 is covered by A4
-- [ ] A2 ↑PG3: DataCite JSON validates against the vendored schema in tests
-- [ ] A3 ↑PG4: The not-visible cases cannot be told apart on either route
-- [ ] A4 ↑PG6: The baseline is recorded, and the after-run (H2) is recorded against the same targets with assessor version and target kind
-- [ ] A5 ↑PG6: The local after-run (7.3) scores above the local baseline (7.2), and no metric falls
+- [ ] #A1 ↑PG1, PG2, PG3, PG4, PG5: Every PRD requirement from REQ-1.1 to REQ-5.2 is covered by a named test in dsp-api or the dsp-app smoke test; REQ-6.1 is covered by A4
+- [ ] #A2 ↑PG3: DataCite JSON validates against the vendored schema in tests
+- [ ] #A3 ↑PG4: The not-visible cases cannot be told apart on either route
+- [ ] #A4 ↑PG6: The baseline is recorded, and the after-run (H2) is recorded against the same targets with assessor version and target kind
+- [ ] #A5 ↑PG6: The local after-run (7.3) scores above the local baseline (7.2), and no metric falls
 
 ## Dependencies & Risks
 
 | Id | Parent | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- | --- | --- |
-| R1 | ↑TD14 | A cached shell outlives a dsp-app deploy, so its hashed bundles 404 | M | M | 10 s TTL |
-| R2 | ↑PG5 | A cold resource read exceeds nginx's 2 s timeout, so a harvester sees the plain shell for that request | M | L | Measured in H2; the fallback is by design |
-| R3 | ↑PG6 | The page and the representations sit on different hosts, which an assessor may weigh | M | L | Measured in H2 |
-| R4 | ↑PG4 | A restricted fact leaks through some path | L | H | One builder; byte-identity tests (4.11); credentials tests (4.12); `Cookie` and `Authorization` cleared by nginx |
-| R5 | ↑TD17 | Header injection from recorded data | L | H | Hrefs only from IRIs and ARKs, percent-encoded; hostile-text tests (2.9, 3.7) |
-| R6 | ↑N1 | nginx forwards a crafted path | L | M | Strict path regex on the normalised URI; traversal case in 6.3 |
-| R7 | ↑TD14 | The splice breaks the SPA | L | H | Splice only before the first `</head>`; any failure gives `502` and nginx's own shell |
-| R8 | ↑N1 | Another service on the shared ops-deploy network is aliased `api`, so the name resolves to it | L | M | Same exposure ingest already has with `DSP_API_URL=http://api:3333`; the fallback limits the harm to the plain shell |
+| #R1 | ↑TD14 | A cached shell outlives a dsp-app deploy, so its hashed bundles 404 | M | M | 10 s TTL |
+| #R2 | ↑PG5 | A cold resource read exceeds nginx's 2 s timeout, so a harvester sees the plain shell for that request | M | L | Measured in H2; the fallback is by design |
+| #R3 | ↑PG6 | The page and the representations sit on different hosts, which an assessor may weigh | M | L | Measured in H2 |
+| #R4 | ↑PG4 | A restricted fact leaks through some path | L | H | One builder; byte-identity tests (4.11); credentials tests (4.12); `Cookie` and `Authorization` cleared by nginx |
+| #R5 | ↑TD17 | Header injection from recorded data | L | H | Hrefs only from IRIs and ARKs, percent-encoded; hostile-text tests (2.9, 3.7) |
+| #R6 | ↑N1 | nginx forwards a crafted path | L | M | Strict path regex on the normalised URI; traversal case in 6.3 |
+| #R7 | ↑TD14 | The splice breaks the SPA | L | H | Splice only before the first `</head>`; any failure gives `502` and nginx's own shell |
+| #R8 | ↑N1 | Another service on the shared ops-deploy network is aliased `api`, so the name resolves to it | L | M | Same exposure ingest already has with `DSP_API_URL=http://api:3333`; the fallback limits the harm to the plain shell |
 
 ## Success Metrics
 
-- **M1** ↑PG6: Baseline (5.2) versus after-run (H2), metric by metric, for both
+- **#M1** ↑PG6: Baseline (5.2) versus after-run (H2), metric by metric, for both
   DEV pages. The metrics expected to move are the metadata, identifier, licence
   and Signposting ones that moved the DPE project page. `F1-02D` is recorded as
   a residual on DEV.
-- **M2** ↑PG6: Local baseline (7.2) versus local after-run (7.3), metric by
+- **#M2** ↑PG6: Local baseline (7.2) versus local after-run (7.3), metric by
   metric, for `http://rdfh.ch/0803/0b03b0a6e6be`. The total must rise; `F1-02D`
   fails in both.
 
 ## References
 
-- **F1** ↑S1–S6: the PRD, `01-resource-fair-landing-pages-PRD.md`.
-- **F2** ↑S2, S3: dsp-repository `docs/adr/0005-fair-landing-pages-in-the-access-area.md`,
+- **#F1** ↑S1–S6: the PRD, `01-resource-fair-landing-pages-PRD.md`.
+- **#F2** ↑S2, S3: dsp-repository `docs/adr/0005-fair-landing-pages-in-the-access-area.md`,
   `docs/src/dpe/machine-readable-metadata.md` (Signposting table, negotiation
   table, results ledger) and `docs/src/dpe/oai-pmh.md`.
-- **F3** ↑S2, S3: dsp-repository `shared/fair/src/{negotiate,signposting,schema_org,dublin_core_meta,datacite_json,record_datacite,record_dublin_core,helpers,graph}.rs`
+- **#F3** ↑S2, S3: dsp-repository `shared/fair/src/{negotiate,signposting,schema_org,dublin_core_meta,datacite_json,record_datacite,record_dublin_core,helpers,graph}.rs`
   and `areas/access/dpe/server/src/metadata.rs`.
-- **F4** ↑TD11: *DaSCH Metadata 2.0 → DataCite 4.6 / OAI-PMH Mapping* v1.1, §2.3.
-- **F5** ↑S1: dsp-api code anchors, under `modules/webapi/src/main/scala/org/knora/webapi/`:
+- **#F4** ↑TD11: *DaSCH Metadata 2.0 → DataCite 4.6 / OAI-PMH Mapping* v1.1, §2.3.
+- **#F5** ↑S1: dsp-api code anchors, under `modules/webapi/src/main/scala/org/knora/webapi/`:
     - `slice/export/api/service/ExportService.scala:102-197` (`exportResourcesOai` and its helpers);
     - `slice/api/v3/export/MetadataRecord.scala:47-78`;
     - `slice/resources/service/ReadResourcesServiceLive.scala:39-50`;
@@ -674,7 +679,7 @@ A local score is a direction, not a DEV or production figure:
     - `slice/admin/domain/model/KnoraProject.scala:43-45`;
     - `messages/StringFormatter.scala:1419-1425`;
     - `responders/admin/AssetPermissionsCache.scala:76-110`.
-- **F6** ↑S4: dsp-api code anchors, under the same root unless noted:
+- **#F6** ↑S4: dsp-api code anchors, under the same root unless noted:
     - `core/DspApiServer.scala:206-238`;
     - `slice/api/admin/SparqlPassthroughEndpoints.scala:91-146`;
     - `slice/common/api/BaseEndpoints.scala:28-82`;
@@ -683,14 +688,14 @@ A local score is a direction, not a DEV or production figure:
     - `slice/api/ApiModule.scala:15-29`, `slice/api/Endpoints.scala:17-31`;
     - `slice/infrastructure/TracingHttpClient.scala:17-30`;
     - `modules/webapi/src/test/scala/org/knora/webapi/core/SparqlPassthroughInterceptorSpec.scala:49-113`.
-- **F7** ↑S4: Learnings (dasch-specs):
+- **#F7** ↑S4: Learnings (dasch-specs):
     - `best-practices/shared-tapir-error-envelope-leaks-exception-messages.md`;
     - `design-decisions/security-logic-authenticates-body-buffering-precedes-it.md`;
     - `logic-errors/sipi-cache-auto-creation-head-request-empty-response.md`.
-- **F8** ↑S1: Learnings (dasch-specs):
+- **#F8** ↑S1: Learnings (dasch-specs):
     - `logic-errors/resource-query-templates-enumerate-predicates.md`;
     - `best-practices/scala3-zio2-coding-mistakes-to-avoid.md`;
     - `best-practices/test-fixture-isolation-shared-data-scope.md`.
-- **F9** ↑S6: dsp-app `nginx/default.conf.template`, `nginx/nginx-security-headers.conf`,
+- **#F9** ↑S6: dsp-app `nginx/default.conf.template`, `nginx/nginx-security-headers.conf`,
   `Dockerfile`; ops-deploy `docker-compose-svc.yml.j2` (the `app` and `api`
   services on one network).
