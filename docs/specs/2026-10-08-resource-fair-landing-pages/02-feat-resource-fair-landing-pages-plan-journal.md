@@ -20,7 +20,7 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | in-progress | https://github.com/dasch-swiss/dsp-api/pull/4385 |
+| dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4385> |
 
 ## Phases
 
