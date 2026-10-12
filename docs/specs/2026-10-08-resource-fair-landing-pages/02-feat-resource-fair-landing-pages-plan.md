@@ -295,7 +295,7 @@ so services depend on `FairConfig` alone.
 | Id | Parent | Key | Env | Example (prod) |
 | --- | --- | --- | --- | --- |
 | #C1 | ↑TD2 | `fair.app-external-base-url` | `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL` | `https://app.dasch.swiss` |
-| #C2 | ↑TD14 | `fair.app-shell-url` | `KNORA_WEBAPI_FAIR_APP_SHELL_URL` | `http://app/index.html` (dsp-app listens on 80 in ops-deploy; `http://app:4200/index.html` in the local `docker-compose.yml`) |
+| #C2 | ↑TD14 | `fair.app-shell-url` | `KNORA_WEBAPI_FAIR_APP_SHELL_URL` | `http://app/index.html` (dsp-app listens on 80 in ops-deploy; `http://host.docker.internal:4200/index.html` in the local `docker-compose.yml`, reaching either the `app` service or a dsp-app dev server on the host) |
 | #C3 | ↑TD18 | `fair.dpe-oai-base-url` | `KNORA_WEBAPI_FAIR_DPE_OAI_BASE_URL` | `https://repository.dasch.swiss/dpe/oai` |
 | #C4 | ↑TD18 | `fair.dpe-oai-shortcodes` | `KNORA_WEBAPI_FAIR_DPE_OAI_SHORTCODES` | `0803,081C,0868` |
 
@@ -544,7 +544,7 @@ The shell is a stub string through the shell provider's interface.
 - [x] 4.14 ↑S4: In-memory HTTP tests: the `.jsonld` body equals the graph embedded in the page; the DataCite answer is `200 application/vnd.datacite.datacite+json`; both representations carry `Link: <page>; rel="describes"`
 - [x] 4.15 ↑S4: In-memory HTTP test: `?version=` and `?highlightValue=` change nothing, also with the `highlightValue` of a value anonymous cannot see
 - [x] 4.16 ↑S4: E2E test with the shared datasets: `http://rdfh.ch/0803/0b03b0a6e6be` (resource and still-image file at least V for anonymous), `http://rdfh.ch/0803/00014b43f902` (RV-only page), `http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA` (deleted) and a missing id
-- [x] 4.17 ↑TD14: Set the C1–C4 variables for the local stack on the `api` service in `docker-compose.yml`, with C2 `http://app:4200/index.html`
+- [x] 4.17 ↑TD14: Set the C1–C4 variables for the local stack on the `api` service in `docker-compose.yml`, with C2 `http://host.docker.internal:4200/index.html` (port 4200 on the host, so the `app` service and a dsp-app dev server listening on 0.0.0.0 both work)
 - [x] 4.19 ↑G6: Update `ARCH-MAP.md` and the CONTEXT files for the `fair` slice (`/dune:dune-map update`): a `webapi-fair` component with its four ports and their adapters as the first ADR-0011 port example, `ResourceMetadataRules` in webapi-resources, `FairConfig` in webapi-app, `projectArkUrl` in webapi-common, and the two named boundary exceptions (export reading `slice.resources.domain` for the shared metadata rules; `FairAssetsLive` as a second in-process sidecar reader beside `ExportService`)
 - [x] 4.18 ↑S4: Run `just check`, `just test` and `just test-e2e`; all pass
 - [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
