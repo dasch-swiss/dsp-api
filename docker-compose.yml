@@ -175,7 +175,8 @@ services:
       # must always equal ingest's STORAGE_ASSET_DIR
       - KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images
       - KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL=http://localhost:4200
-      - KNORA_WEBAPI_FAIR_APP_SHELL_URL=http://app:4200/index.html
+      # Port 4200 on the host: the `app` service or a dsp-app dev server, which must listen on 0.0.0.0 to be reachable.
+      - KNORA_WEBAPI_FAIR_APP_SHELL_URL=http://host.docker.internal:4200/index.html
       - KNORA_WEBAPI_FAIR_DPE_OAI_BASE_URL=https://repository.dasch.swiss/dpe/oai
       - KNORA_WEBAPI_FAIR_DPE_OAI_SHORTCODES=0803,081C,0868
       - DSP_API_LOG_LEVEL=INFO
