@@ -5,13 +5,8 @@
 
 package org.knora.webapi.slice.`export`.api
 
-import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetInfoServiceLive
-import swiss.dasch.domain.MimeTypeGuesser
-import swiss.dasch.domain.StorageServiceLive
 import zio.URLayer
-import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
@@ -30,6 +25,7 @@ object ExportApiModule { self =>
   type Dependencies =
     // format: off
     AppConfig &
+    AssetInfoService &
     ConstructResponseUtilV2 &
     CsvService &
     IriConverter &
@@ -46,15 +42,6 @@ object ExportApiModule { self =>
     ExportService
     // format: on
 
-  // Built from webapi's own config on purpose: ingest's Configuration.layer calls
-  // ConfigFactory.defaultApplication(), which on a shared classpath reads webapi's application.conf.
-  // tempDir is unused for reads.
-  private[webapi] val assetInfoServiceLayer: URLayer[AppConfig, AssetInfoService] =
-    ZLayer
-      .service[AppConfig]
-      .project(c => StorageConfig(assetDir = c.dspIngest.assetDir, tempDir = c.dspIngest.assetDir)) >>>
-      (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
-
   val layer: URLayer[self.Dependencies, self.Provided] =
-    (FindResourcesService.layer ++ assetInfoServiceLayer) >+> ExportService.layer
+    FindResourcesService.layer >+> ExportService.layer
 }

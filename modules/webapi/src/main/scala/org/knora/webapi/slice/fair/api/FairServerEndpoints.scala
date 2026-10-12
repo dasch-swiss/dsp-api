@@ -11,7 +11,7 @@ import zio.*
 /** Wires the FAIR endpoints to [[FairRestService]]; HEAD is the landing answer without its body. */
 final class FairServerEndpoints(endpoints: FairEndpoints, rest: FairRestService) {
 
-  private val all: List[ZServerEndpoint[Any, Any]] = List(
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getLanding.zServerLogic { case (shortcode, id, accept) => rest.landing(shortcode, id, accept) },
     endpoints.headLanding.zServerLogic { case (shortcode, id, accept) =>
       rest.landing(shortcode, id, accept).map(_.copy(body = None))
@@ -19,8 +19,6 @@ final class FairServerEndpoints(endpoints: FairEndpoints, rest: FairRestService)
     endpoints.getJsonLd.zServerLogic { case (shortcode, id) => rest.jsonLd(shortcode, id) },
     endpoints.getDataCite.zServerLogic { case (shortcode, id) => rest.dataCite(shortcode, id) },
   )
-
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = all.map(_.tag("FAIR"))
 }
 
 object FairServerEndpoints {

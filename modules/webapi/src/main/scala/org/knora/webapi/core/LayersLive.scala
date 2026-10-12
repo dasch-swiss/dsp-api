@@ -60,6 +60,7 @@ import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceLive
 import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.AssetInfoServiceLayer
 import org.knora.webapi.store.iiif.impl.FairAssetsLive
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -126,6 +127,7 @@ object LayersLive { self =>
       // ZLayer.Debug.mermaid,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
+      AssetInfoServiceLayer.layer,
       AssetPermissionsCache.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
@@ -139,7 +141,6 @@ object LayersLive { self =>
       DoapResolverLive.layer,
       DspIngestClientLive.layer,
       ExportModule.layer,
-      ExportApiModule.assetInfoServiceLayer,
       ExportApiModule.layer,
       FairAssetsLive.layer,
       FairClassesLive.layer,

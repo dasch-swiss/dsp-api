@@ -80,22 +80,15 @@ object FairEndpoints {
       }(r => (r.status, r.headers)))
 
   // Never carries the cause; it is logged where it happens.
-  private def internalError(constantHeaders: EndpointOutput[Unit]) =
-    oneOfVariant[FairInternalError](
-      StatusCode.InternalServerError,
-      constantHeaders.map(
-        Mapping.from[Unit, FairInternalError](_ => FairInternalError(new RuntimeException("FAIR")))(_ => ()),
-      ),
-    )
+  private def internalError(constantHeaders: EndpointOutput[Unit]): EndpointOutput[FairInternalError.type] =
+    statusCode(StatusCode.InternalServerError)
+      .and(constantHeaders)
+      .map(Mapping.from[Unit, FairInternalError.type](_ => FairInternalError)(_ => ()))
 
   private val landingBase =
     RequiresMethod(
       endpoint
-        .errorOut(
-          oneOf[FairInternalError](
-            internalError(header(HeaderNames.Vary, "Accept").and(header(HeaderNames.CacheControl, "no-store"))),
-          ),
-        )
+        .errorOut(internalError(header(HeaderNames.Vary, "Accept").and(header(HeaderNames.CacheControl, "no-store"))))
         .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation),
       _.method(_),
     )
@@ -103,7 +96,7 @@ object FairEndpoints {
   private val representationBase =
     RequiresMethod(
       endpoint
-        .errorOut(oneOf[FairInternalError](internalError(emptyOutput)))
+        .errorOut(internalError(emptyOutput))
         .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation),
       _.method(_),
     )

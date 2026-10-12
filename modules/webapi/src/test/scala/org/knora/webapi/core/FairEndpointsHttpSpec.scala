@@ -30,8 +30,8 @@ import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.fair.api.FairEndpoints
 import org.knora.webapi.slice.fair.api.FairRestService
 import org.knora.webapi.slice.fair.api.FairServerEndpoints
-import org.knora.webapi.slice.fair.domain.service.AppShell
 import org.knora.webapi.slice.fair.domain.service.ResourceFactsBuilder
+import org.knora.webapi.slice.fair.infrastructure.AppShell
 import org.knora.webapi.slice.fair.ports.*
 
 /**

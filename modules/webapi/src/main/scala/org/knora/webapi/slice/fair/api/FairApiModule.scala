@@ -11,14 +11,14 @@ import zio.telemetry.opentelemetry.tracing.Tracing
 import org.knora.webapi.config.FairConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.fair.domain.service.AppShellLive
 import org.knora.webapi.slice.fair.domain.service.ResourceFactsBuilder
+import org.knora.webapi.slice.fair.infrastructure.AppShellLive
 import org.knora.webapi.slice.fair.ports.FairAssets
 import org.knora.webapi.slice.fair.ports.FairClasses
 import org.knora.webapi.slice.fair.ports.FairProjects
 import org.knora.webapi.slice.fair.ports.FairResources
 
-/** The four port adapters are provided from outside, in `LayersLive`. */
+/** The port adapters in `Dependencies` are provided in `LayersLive`. */
 object FairApiModule {
   type Dependencies =
     // format: off

@@ -20,8 +20,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.fair.domain.service.AppShell
 import org.knora.webapi.slice.fair.domain.service.ResourceFactsBuilder
+import org.knora.webapi.slice.fair.infrastructure.AppShell
 import org.knora.webapi.slice.fair.ports.*
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -72,7 +72,7 @@ class FairRestServiceSpec extends ZIOSpecDefault {
     } yield (FairRestService(builder, CountingShell(shell, calls), fairConfig, api), calls)
 
   private def withService[A](shell: Option[String] = Some(shellHtml), present: Boolean = true)(
-    f: (FairRestService, Ref[Int]) => ZIO[Any, FairInternalError, A],
+    f: (FairRestService, Ref[Int]) => ZIO[Any, FairInternalError.type, A],
   ): ZIO[Any, Throwable, A] =
     (for {
       resources <- if (present) FairResourcesInMemory.make(resource) else FairResourcesInMemory.make()
@@ -155,6 +155,18 @@ class FairRestServiceSpec extends ZIOSpecDefault {
           }
         }
       },
+      test("a shell without </head> answers 502 for a visible resource") {
+        withService(Some("<html><body>app</body></html>")) { (s, _) =>
+          s.landing("081C", id, Nil).map { r =>
+            assertTrue(
+              r.status == StatusCode.BadGateway,
+              r.body.isEmpty,
+              header(r, HeaderNames.Vary) == List("Accept"),
+              header(r, HeaderNames.CacheControl) == List("no-store"),
+            )
+          }
+        }
+      },
     ),
     suite("landing, redirect")(
       test("Accept application/ld+json redirects to the JSON-LD URL without consulting the shell") {
@@ -216,6 +228,7 @@ class FairRestServiceSpec extends ZIOSpecDefault {
           } yield assertTrue(
             r.status == StatusCode.Ok,
             header(r, HeaderNames.ContentType) == List("application/ld+json"),
+            header(r, "X-Content-Type-Options") == List("nosniff"),
             header(r, HeaderNames.Link).exists(_.contains("rel=\"describes\"")),
             r.body.exists(_.startsWith("{")),
             n == 0,
@@ -259,8 +272,8 @@ class FairRestServiceSpec extends ZIOSpecDefault {
           landing   <- sc._1.landing("081C", id, Nil).either
           json      <- sc._1.jsonLd("081C", id).either
         } yield assertTrue(
-          landing.left.exists(_.isInstanceOf[FairInternalError]),
-          json.left.exists(_.isInstanceOf[FairInternalError]),
+          landing.left.exists(_ == FairInternalError),
+          json.left.exists(_ == FairInternalError),
         )).provide(StringFormatter.test)
       },
     ),

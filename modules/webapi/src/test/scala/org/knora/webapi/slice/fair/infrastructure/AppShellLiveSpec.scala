@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.fair.domain.service
+package org.knora.webapi.slice.fair.infrastructure
 
 import org.junit.runner.RunWith
 import zio.*
@@ -54,6 +54,10 @@ class AppShellLiveSpec extends ZIOSpecDefault {
       },
       test("200 without </head> is rejected") {
         assertTrue(AppShellLive.accept(200, "<html></html>").isEmpty)
+      },
+      test("a body over 1 MiB is rejected") {
+        val big = html + "x" * (1024 * 1024)
+        assertTrue(AppShellLive.accept(200, big).isEmpty)
       },
       test("404 is rejected") {
         assertTrue(AppShellLive.accept(404, html).isEmpty)

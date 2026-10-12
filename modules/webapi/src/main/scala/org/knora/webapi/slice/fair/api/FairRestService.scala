@@ -21,19 +21,19 @@ import org.knora.webapi.slice.fair.domain.Negotiation
 import org.knora.webapi.slice.fair.domain.OaiShortcodes
 import org.knora.webapi.slice.fair.domain.ResourceFacts
 import org.knora.webapi.slice.fair.domain.Signposting
-import org.knora.webapi.slice.fair.domain.service.AppShell
 import org.knora.webapi.slice.fair.domain.service.ResourceFactsBuilder
 import org.knora.webapi.slice.fair.domain.writers.DataCiteJson
 import org.knora.webapi.slice.fair.domain.writers.DublinCoreMeta
 import org.knora.webapi.slice.fair.domain.writers.Html
 import org.knora.webapi.slice.fair.domain.writers.SchemaOrgJsonLd
 import org.knora.webapi.slice.fair.domain.writers.ScriptSafeJson
+import org.knora.webapi.slice.fair.infrastructure.AppShell
 
 /** What the endpoint layer sends: status, headers and an optional body. */
 final case class FairResponse(status: StatusCode, headers: List[Header], body: Option[String])
 
 /** An infrastructure failure. It never carries a message for the client; the cause is logged where it happens. */
-final case class FairInternalError(cause: Throwable)
+case object FairInternalError
 
 final class FairRestService(
   builder: ResourceFactsBuilder,
@@ -43,25 +43,35 @@ final class FairRestService(
 ) {
   import FairRestService.*
 
+  private val oaiShortcodes = OaiShortcodes.parse(fair.dpeOaiShortcodes)
+
   /** The landing answer for GET and HEAD: a 303 to a representation, or the shell (with the head block when visible). */
-  def landing(shortcode: String, resourceId: String, accept: List[String]): IO[FairInternalError, FairResponse] =
-    for {
-      facts    <- buildFacts(shortcode, resourceId)
-      redirect <- facts.fold(ZIO.none)(f => redirectFor(f, accept))
-      response <- redirect.fold(htmlAnswer(facts))(ZIO.succeed(_))
-    } yield response
+  def landing(shortcode: String, resourceId: String, accept: List[String]): IO[FairInternalError.type, FairResponse] =
+    guarded {
+      for {
+        facts    <- buildFacts(shortcode, resourceId)
+        redirect <- facts.fold(ZIO.none)(f => redirectFor(f, accept))
+        response <- redirect.fold(htmlAnswer(facts))(ZIO.succeed(_))
+      } yield response
+    }
 
-  def jsonLd(shortcode: String, resourceId: String): IO[FairInternalError, FairResponse] =
-    representation(shortcode, resourceId, FairUrls.JsonLd, SchemaOrgJsonLd.render)
+  def jsonLd(shortcode: String, resourceId: String): IO[FairInternalError.type, FairResponse] =
+    guarded(representation(shortcode, resourceId, FairUrls.JsonLd, SchemaOrgJsonLd.render))
 
-  def dataCite(shortcode: String, resourceId: String): IO[FairInternalError, FairResponse] =
-    representation(shortcode, resourceId, FairUrls.DataCite, DataCiteJson.render)
+  def dataCite(shortcode: String, resourceId: String): IO[FairInternalError.type, FairResponse] =
+    guarded(representation(shortcode, resourceId, FairUrls.DataCite, DataCiteJson.render))
 
-  private def buildFacts(shortcode: String, resourceId: String): IO[FairInternalError, Option[ResourceFacts]] =
+  /** The rendering is pure code; a defect in it is logged and answered like any other internal failure. */
+  private def guarded[A](effect: IO[FairInternalError.type, A]): IO[FairInternalError.type, A] =
+    effect.catchAllDefect(t =>
+      ZIO.logErrorCause("FAIR landing: unexpected failure", Cause.die(t)) *> ZIO.fail(FairInternalError),
+    )
+
+  private def buildFacts(shortcode: String, resourceId: String): IO[FairInternalError.type, Option[ResourceFacts]] =
     builder
       .build(shortcode, resourceId)
-      .tapErrorCause(c => ZIO.logErrorCause(s"FAIR landing: building the resource facts failed", c))
-      .mapError(FairInternalError(_))
+      .tapErrorCause(c => ZIO.logErrorCause("FAIR landing: building the resource facts failed", c))
+      .orElseFail(FairInternalError)
 
   private def redirectFor(facts: ResourceFacts, accept: List[String]): UIO[Option[FairResponse]] = {
     val candidates = FairUrls.representations(api.externalKnoraApiBaseUrl, facts)
@@ -77,26 +87,19 @@ final class FairRestService(
     }
   }
 
-  private def htmlAnswer(facts: Option[ResourceFacts]): IO[FairInternalError, FairResponse] =
+  private def htmlAnswer(facts: Option[ResourceFacts]): IO[FairInternalError.type, FairResponse] =
     shell.get.flatMap {
-      case None =>
-        ZIO
-          .logWarning("FAIR landing: the page shell is unavailable")
-          .as(
-            FairResponse(StatusCode.BadGateway, landingHeaders, None),
-          )
+      case None       => ZIO.succeed(unavailable)
       case Some(html) =>
         val htmlType = Header(HeaderNames.ContentType, HtmlContentType)
         facts match {
           case None    => ZIO.succeed(FairResponse(StatusCode.Ok, htmlType :: landingHeaders, Some(html)))
           case Some(f) =>
             val links = landingLinks(f)
-            linkHeader(Signposting.header(links)).map { link =>
-              FairResponse(
-                StatusCode.Ok,
-                htmlType :: link.toList ::: landingHeaders,
-                Some(splice(html, headBlock(f, links))),
-              )
+            splice(html, headBlock(f, links)).fold(ZIO.succeed(unavailable)) { page =>
+              linkHeader(Signposting.header(links)).map { link =>
+                FairResponse(StatusCode.Ok, htmlType :: link.toList ::: landingHeaders, Some(page))
+              }
             }
         }
     }
@@ -106,7 +109,7 @@ final class FairRestService(
       facts,
       FairUrls.representations(api.externalKnoraApiBaseUrl, facts),
       fair.dpeOaiBaseUrl,
-      OaiShortcodes.parse(fair.dpeOaiShortcodes),
+      oaiShortcodes,
     )
 
   private def representation(
@@ -114,14 +117,14 @@ final class FairRestService(
     resourceId: String,
     mediaType: String,
     render: ResourceFacts => Json,
-  ): IO[FairInternalError, FairResponse] =
+  ): IO[FairInternalError.type, FairResponse] =
     buildFacts(shortcode, resourceId).flatMap {
       case None        => ZIO.succeed(NotVisible)
       case Some(facts) =>
         linkHeader(Signposting.header(Signposting.representationLinks(facts.pageUrl))).map { link =>
           FairResponse(
             StatusCode.Ok,
-            Header(HeaderNames.ContentType, mediaType) :: link.toList,
+            Header(HeaderNames.ContentType, mediaType) :: noSniff :: link.toList,
             Some(render(facts).toJson),
           )
         }
@@ -145,6 +148,11 @@ object FairRestService {
   private val landingHeaders: List[Header] =
     List(Header(HeaderNames.Vary, "Accept"), Header(HeaderNames.CacheControl, "no-store"))
 
+  private val noSniff: Header = Header("X-Content-Type-Options", "nosniff")
+
+  /** A shell that cannot be fetched or cannot take the head block: nginx then serves its own shell. */
+  private val unavailable: FairResponse = FairResponse(StatusCode.BadGateway, landingHeaders, None)
+
   /** The same answer for a missing, deleted, invisible or malformed resource. */
   private val NotVisible: FairResponse =
     FairResponse(StatusCode.NotFound, List(Header(HeaderNames.ContentType, "text/plain")), None)
@@ -157,9 +165,9 @@ object FairRestService {
       .mkString("", "\n", "\n")
   }
 
-  /** Inserts the block immediately before the first `</head>`. */
-  private def splice(shell: String, block: String): String = {
+  /** Inserts the block immediately before the first `</head>`; None when the shell has none. */
+  private def splice(shell: String, block: String): Option[String] = {
     val at = shell.indexOf(HeadClose)
-    if (at < 0) shell else shell.substring(0, at) + block + shell.substring(at)
+    Option.when(at >= 0)(shell.substring(0, at) + block + shell.substring(at))
   }
 }
