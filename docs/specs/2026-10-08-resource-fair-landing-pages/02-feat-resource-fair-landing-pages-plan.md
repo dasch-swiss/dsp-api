@@ -102,7 +102,7 @@ every route and every `Accept`, and it scores near the bottom.
 ```
 ARK resolver ──302──► app.<host>/resource/{sc}/{id}?…
                          │ dsp-app nginx, location for the route                       (S6)
-                         ├─ proxy (GET/HEAD) ──► dsp-api /fair/resources/{sc}/{id}?…   (S4)
+                         ├─ proxy (GET/HEAD) ──► dsp-api /internal/landing-pages/resources/{sc}/{id}?…   (S4)
                          │                        ├─ facts: anonymous read              (S1)
                          │                        ├─ visible, Accept prefers a representation: 303 + Vary (S3)
                          │                        ├─ shell: <app internal>/index.html   (TD14)
@@ -150,11 +150,14 @@ Each decision sits within the PRD and has a subgoal or plan goal as its parent.
 Deliverables that implement a decision have that decision as their parent.
 
 - **#TD1** ↑S4: **Route paths.** The landing route is `GET`/`HEAD`
-  `/fair/resources/{shortcode}/{resourceId}`, with the query string ignored
-  (tapir ignores undeclared query parameters). The representations are
-  `…/{resourceId}/metadata.jsonld` and `…/metadata.datacite.json`. The new
-  prefix is needed because `/v2/resources/{iris…}` captures the rest of the
-  path; nothing captures `/fair/`. Path segments are read as `path[String]` and
+  `/internal/landing-pages/resources/{shortcode}/{resourceId}`, with the query
+  string ignored (tapir ignores undeclared query parameters); `/internal/` marks
+  it as called by dsp-app's server, not by clients. The public representations
+  are `/fair/resources/{shortcode}/{resourceId}/metadata.jsonld` and
+  `…/metadata.datacite.json`. New prefixes are needed because
+  `/v2/resources/{iris…}` captures the rest of the path; nothing captures
+  `/internal/` or `/fair/`. Path changed from `/fair/resources/…` for the
+  landing route at execution (user decision, 2026-10-12). Path segments are read as `path[String]` and
   parsed in the service, so a malformed id never becomes a tapir decode failure.
 - **#TD2** ↑S1: **Canonical identifiers only.** Every emitted URL is built from
   the resolved resource's IRI and the configured base URLs, never from the
@@ -317,7 +320,7 @@ so services depend on `FairConfig` alone.
   method check's regex `if` overwrites `$1`/`$2`:
   `location ~ "^/resource/(?<landing_shortcode>[0-9A-Fa-f]{4})/(?<landing_id>[A-Za-z0-9_=-]+)/?$"`.
   It proxies `GET`/`HEAD` to
-  `$dsp_api_upstream/fair/resources/$landing_shortcode/$landing_id$is_args$args`.
+  `$dsp_api_upstream/internal/landing-pages/resources/$landing_shortcode/$landing_id$is_args$args`.
   Other methods get `405`. The upstream is a variable,
   `set $dsp_api_upstream "${DSP_API_UPSTREAM}"`, filled by the image's envsubst
   of `/etc/nginx/templates`. A variable `proxy_pass` needs
