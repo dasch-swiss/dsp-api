@@ -43,7 +43,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `knora-api` image.
 - **Key entities**: `Main`, `LayersLive`, `DspApiServer`, `Db`, `State`, `AppState`, `AppConfig`,
     `AppConfig.AppConfigurations`, `KnoraApi`, `Sipi`, `Triplestore`, `JwtConfig`, `DspIngestConfig`,
-    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`
+    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`, `FairConfig`
 - **Public interface**: `Main.run`; `LayersLive.bootstrap` / `LayersLive.remainingLayer`;
     `DspApiServer.layer` / `DspApiServer.startup`; `Db.init` / `Db.initWithTestData`; `State`
     (`getAppState` / `set`); `AppConfig.layer` and the individual config case classes that other slices
@@ -58,11 +58,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/BUILD.bazel`
 - **Depends on**: webapi-api, webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore,
     webapi-sipi-client, webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search,
-    webapi-export (all in-process ZLayer composition); ingest (remote-owned, `DspIngestClient` config lives
+    webapi-export, webapi-fair (all in-process ZLayer composition); ingest (remote-owned, `DspIngestClient` config lives
     here); sipi, fuseki (remote-owned, `docker-compose.yml` dev stack); build-toolchain.
 - **Used by**: webapi-api, webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore,
-    webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, testkit,
-    test-it, test-e2e. About 60 main-source files import `org.knora.webapi.config`, 40 of them under
+    webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, webapi-fair,
+    testkit, test-it, test-e2e. About 60 main-source files import `org.knora.webapi.config`, 40 of them under
     `slice/`; the store adapter for the media server is the one slice importing none of it.
 - **Boundary rules**:
     - New service layers are registered in `LayersLive.Environment` / `LayersLive.remainingLayer`, not wired
@@ -73,6 +73,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `AppConfig.config`'s `.validate(...)` chain, not in consuming slices - enforcement: review.
     - `docker-compose.yml` and `app-config.dev.json` are dev-stack wiring only; production deployment lives
         in ops-deploy - enforcement: docs-only.
+    - `FairConfig` (`app.fair.*`, env `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL`, `_APP_SHELL_URL`,
+        `_DPE_OAI_BASE_URL`, `_DPE_OAI_SHORTCODES`) is validated in `AppConfig.config`'s `.validate(...)`
+        chain and projected in `AppConfigurations`; `LayersLive` wires `FairResourcesLive`,
+        `FairProjectsLive`, `FairClassesLive`, `FairAssetsLive` and `AssetInfoServiceLayer` - enforcement:
+        review.
+    - `DspApiServer` skips the server's `406` check for endpoints marked `NegotiatesOwnAccept`
+        (`negotiatesItsOwnAccept`), the SPARQL passthrough and the fair routes - enforcement: review.
     - Wiring: shared inventory. `LayersLive.scala` is the one file every slice's `*Module.layer` is added to,
         and `AppConfig.AppConfigurations` is the one place a new config section is projected. `Main.bootstrap`
         composes `LayersLive.bootstrap >+> ApiModule.layer`, so `ApiModule` (webapi-api) is a second adjacent
@@ -95,7 +102,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `ApiModule`, `Endpoints`, `AdminApiModule`, `AdminApiServerEndpoints`, `ApiV2Module`,
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
-    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `Codecs`
+    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `Codecs`, `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
     `UserRestService`, exposed for the integration tests); `SparqlPassthroughEndpoints.isPassthroughRoute` /
@@ -115,8 +122,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         when the change touches v2 or v3 rather than admin.
 - **Depends on**: webapi-common (`BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`,
     `IriConverter`, `KnoraIris`, `dsp.errors.*`), webapi-admin, webapi-ontology, webapi-resources,
-    webapi-search, webapi-standoff, webapi-export, webapi-security (`Authenticator`), webapi-infrastructure
-    (`CacheManager`, `CsvService`), webapi-triplestore (`TriplestoreService`, `Sparql*` errors), webapi-app
+    webapi-search, webapi-standoff, webapi-export, webapi-fair (`FairApiModule`, `FairServerEndpoints`),
+    webapi-security (`Authenticator`), webapi-infrastructure (`CacheManager`, `CsvService`), webapi-triplestore (`TriplestoreService`, `Sparql*` errors), webapi-app
     (`AppConfig`), build-toolchain.
 - **Used by**: webapi-app, webapi-infrastructure (`DocsServer` builds the OpenAPI and Swagger UI from
     `Endpoints.serverEndpoints`), webapi-admin (inverted), webapi-ontology (inverted), webapi-resources
@@ -152,6 +159,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `slice.resources.repo.service.ResourcesRepo` and `ValueRepo`,
         and by `v2/ontologies/*` plus `v3/ontology/*` (`slice.ontology.repo.service.OntologyCache`,
         `slice.ontology.repo.{AddMappingQuery, RemoveMappingQuery, MappingPredicate}`).
+    - `FairApiModule.layer` is composed in `ApiModule` and `FairServerEndpoints` is listed in `Endpoints`. The
+        fair endpoints are public and built on raw `endpoint` plus `RequiresMethod`, not `BaseEndpoints`,
+        so none carries a security input or the shared `errorOutputs` - enforcement: review.
     - `POST /admin/sparql/query` is the only surface forwarding a client-supplied SPARQL string unparsed; no
         other endpoint may accept raw SPARQL - enforcement: review (`CONVENTIONS.md` line 69).
     - No `unsafeFrom` and no `.die` on IRI conversion in a RestService; a malformed client IRI is a 400 -
@@ -206,7 +216,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ValueIri`, `StandoffMappingIri`, `IriConverter`, `InternalIri`, `Value`, `StringValue`, `WithFrom`,
     `LanguageCode`, `BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`, `Vocabulary`,
     `PredicateObjectMapper`, `Repository`, `CrudRepository`, `IriLocker`, `IriService`,
-    `KnoraSystemInstances`, `PermissionUtilADM`, `JsonLDUtil`, `RdfFormatUtil`, `SparqlSelectResult`,
+    `KnoraSystemInstances`, `PermissionUtilADM`, `NegotiatesOwnAccept`, `OwnAcceptNegotiation`,
+    `RequiresMethod`, `JsonLDUtil`, `RdfFormatUtil`, `SparqlSelectResult`,
     `ModelOps`, `ResourceOps`, `StatementOps`, `ConstructResponseUtilV2`, `ApiComplexV2JsonLdRequestParser`,
     `QueryBuilderHelper`, `SalsahGui`, `UuidUtil`, `BadRequestException`, `NotFoundException`,
     `ForbiddenException`
@@ -231,8 +242,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     webapi-standoff (upward), webapi-security (upward), webapi-triplestore (upward), webapi-sipi-client
     (upward), webapi-api (inverted), webapi-app (`config.AppConfig`, `config.Sipi`), build-toolchain.
 - **Used by**: webapi-app, webapi-api, webapi-admin, webapi-ontology, webapi-resources, webapi-standoff,
-    webapi-search, webapi-export, webapi-infrastructure, webapi-triplestore, testkit, test-it, test-e2e.
-    The authentication slice and the store adapter for the media server are the two whose main sources
+    webapi-search, webapi-export, webapi-fair, webapi-infrastructure, webapi-triplestore, testkit, test-it,
+    test-e2e. The authentication slice and the store adapter for the media server are the two whose main sources
     import none of it. Import counts: `SmartIri` 195 files, `dsp.errors` 190,
     `StringFormatter` 184, `OntologyConstants` 144, `KnoraIris` 121, `dsp.valueobjects` 81, `Vocabulary` 67,
     `InternalIri` 66, `IriConverter` 63, `LanguageCode` 61.
@@ -265,6 +276,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         variant serializes the exception `message` verbatim on unauthenticated routes. Declare variants on the
         producing endpoint with `errorOutVariantsPrepend` - enforcement: review (`CONVENTIONS.md` line 52,
         `REVIEW.md` line 36).
+    - `NegotiatesOwnAccept` marks an endpoint that decides its own answer to any `Accept` header; the server
+        then skips its `406` check for it. `RequiresMethod` (with `.head` alongside `.get`) pins an endpoint's
+        HTTP method. `StringFormatter.projectArkUrl` builds a project's ARK URL - enforcement: review.
     - Never call `unsafeFrom` in responders or RestServices, and never `.die` on an IRI conversion failure -
         enforcement: review (`docs/development/dsp-api-iri-handling.md`).
     - New value types extend `Value[A]` with a `WithFrom` or `StringValueCompanion` companion rather than a
@@ -374,7 +388,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `MetadataRestService`), webapi-standoff (`CacheManager` in `StandoffMappingService`), webapi-export
     (`CsvService`), webapi-search (`SanitizedSpan` in `SearchResponderV2`), webapi-api (`SanitizedSpan` in
     `SparqlPassthroughRestService`), webapi-triplestore and
-    webapi-sipi-client (`TracingHttpClient`), webapi-app (`SanitizedSpan`, `OtelSetup`, `MetricsServer`),
+    webapi-sipi-client and webapi-fair (`TracingHttpClient`), webapi-app (`SanitizedSpan`, `OtelSetup`, `MetricsServer`),
     testkit, test-it, test-e2e.
 - **Boundary rules**:
     - New per-slice caches are created via `CacheManager.createCache`, not by instantiating Ehcache directly -
@@ -468,7 +482,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     standoff mapping and XSLT lookups. It does no asset ingest, export or erase; that is `DspIngestClient` in
     webapi-admin.
 - **Key entities**: `SipiService`, `SipiServiceLive`, `SipiServiceMock`, `SipiMockMethodName`,
-    `SipiException`, `FileMetadataSipiResponse`, `SipiUtil`, `getSipiErrorMessage`
+    `SipiException`, `FileMetadataSipiResponse`, `SipiUtil`, `getSipiErrorMessage`, `AssetInfoServiceLayer`,
+    `FairAssetsLive`
 - **Public interface**: the `SipiService` trait (`getFileMetadataFromDspIngest(shortcode, assetId)`,
     `getTextFileRequest(fileUrl, senderName)`); `FileMetadataSipiResponse`; `SipiServiceMock` as the test
     double (`setReturnValue`, `assertNoInteraction`); `SipiUtil.getSipiErrorMessage`.
@@ -482,12 +497,14 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala`
 - **Depends on**: webapi-admin (`DspIngestClient`, `KnoraProject.Shortcode`,
     `MaintenanceRequests.AssetId`), webapi-infrastructure (`TracingHttpClient`), webapi-api (inverted, the
-    three `store/iiif` files import `slice.api.*`), sipi (remote-owned), ingest (remote-owned, transitively
-    through `DspIngestClient`), build-toolchain.
+    three `store/iiif` files import `slice.api.*`), webapi-fair (the `FairAssets` port), sipi (remote-owned),
+    ingest (remote-owned, transitively through `DspIngestClient`; in-process for `AssetInfoServiceLayer`,
+    which builds `swiss.dasch.domain.AssetInfoService`), build-toolchain.
 - **Used by**: webapi-resources (`ResourcesResponderV2`, `ResourceUtilV2`), webapi-common
     (`ApiComplexV2JsonLdRequestParser`, `ConstructResponseUtilV2`), webapi-ontology (`OntologyTransformer`),
     webapi-standoff (`StandoffMappingService`), webapi-app, testkit, test-it, test-e2e. No responder or
-    slice calls Sipi's HTTP API outside this component.
+    slice calls Sipi's HTTP API outside this component. `AssetInfoServiceLayer` is consumed by
+    webapi-export and webapi-fair (through `FairAssetsLive`).
 - **Boundary rules**:
     - Only `SipiServiceLive` and `SipiServiceMock` implement `SipiService`; other callers depend on the
         trait - enforcement: review (no sealed or private constraint in code).
@@ -497,8 +514,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         structural test and main separation for its mock - enforcement: docs-only.
     - `getTextFileRequest` is documented as internal, not for arbitrary external URLs - enforcement:
         docs-only (a method comment, no runtime check).
+    - `AssetInfoServiceLayer.layer` is the single construction of the ingest sidecar reader
+        (`AssetInfoService`), shared by webapi-export and `FairAssetsLive`; no consumer builds its own -
+        enforcement: review. `FairAssetsLive` implements the `FairAssets` port of webapi-fair.
     - Wiring: shared inventory. `SipiServiceLive.layer` is the sole `SipiService` binding, registered once in
-        `core/LayersLive.scala`.
+        `core/LayersLive.scala`, which also registers `AssetInfoServiceLayer.layer` and `FairAssetsLive.layer`.
 - **Durable state**: none owned. This component is stateless; durable asset bytes and metadata live in Sipi's
     file store and are fetched fresh through `DspIngestClient`, which is the only reader and writer of asset
     info. `SipiServiceLive` only reads.
@@ -526,7 +546,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `KnoraUserService`, `UserService`, `ProjectService`, `ProjectEraseService`, `ProjectExportService`,
     `AdministrativePermissionRepo`, `DefaultObjectAccessPermissionRepo`, `PermissionIri`, `RestrictedView`,
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
-    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`
+    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
@@ -549,12 +569,15 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-common, webapi-triplestore, webapi-infrastructure, webapi-ontology, webapi-app
     (`config.AppConfig`, `DspIngestConfig`), webapi-api (inverted: the domain imports
     `slice.api.admin.model.Project`, `UserDto`, `Codecs`, `PagedResponse`), webapi-resources (reach-in:
-    `ListsResponder` imports 13 query classes from `slice.resources.repo`), ingest (remote-owned via
-    `DspIngestClient`), build-toolchain.
+    `ListsResponder` imports 13 query classes from `slice.resources.repo`), webapi-fair (`FairProjectsLive`
+    implements the `FairProjects` port), ingest (remote-owned via `DspIngestClient`), build-toolchain.
 - **Used by**: webapi-api, webapi-resources, webapi-export, webapi-ontology, webapi-search, webapi-security,
     webapi-standoff, webapi-common, webapi-triplestore, webapi-sipi-client, webapi-infrastructure,
-    webapi-app, sipi (remote-owned, the Lua scripts call `GET /admin/files/*`), testkit, test-it, test-e2e.
+    webapi-fair (the `Shortcode` and `Permission` types), webapi-app, sipi (remote-owned, the Lua scripts
+    call `GET /admin/files/*`), testkit, test-it, test-e2e.
 - **Boundary rules**:
+    - `FairProjectsLive` (`slice/admin/domain/service`) implements the `FairProjects` port declared by
+        webapi-fair and is wired only in `core/LayersLive.scala` - enforcement: review.
     - Outside callers depend on `AdminModule.layer` and the repo traits, never on `slice.admin.repo.**` -
         enforcement: review. Currently violated in main code by `responders/admin/PermissionsResponder.scala`
         line 46 (`DefaultObjectAccessPermissionRepoLive`) and
@@ -622,7 +645,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `OntologyRepo`, `OntologyRepoLive`, `OntologyCacheHelpers`, `OntologyTriplestoreHelpers`,
     `CardinalityService`, `CardinalityHandler`, `OntologyHelpers`, `OntologyResponderV2`,
     `OntologyTransformer`, `StandoffEntityInfoService`, `PredicateRepository`, `IdSource`, `Cardinality`,
-    `OntologyName`, `RepresentationClass`, `ReadOntologyV2`, `ReadClassInfoV2`, `ReadPropertyInfoV2`,
+    `OntologyName`, `RepresentationClass`, `FairClassesLive`, `ReadOntologyV2`, `ReadClassInfoV2`, `ReadPropertyInfoV2`,
     `ClassInfoContentV2`, `PropertyInfoContentV2`, `OwlCardinality`,
     `KnoraBaseToApiV2ComplexTransformationRules`, `KnoraBaseToApiV2SimpleTransformationRules`,
     `ListGetResponseV2`, `NodeGetResponseV2`
@@ -647,10 +670,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `docs/development/dsp-api-sparql-queries.md`.
 - **Depends on**: webapi-common, webapi-triplestore, webapi-admin, webapi-resources, webapi-standoff,
     webapi-sipi-client (`OntologyTransformer` only), webapi-app (`AppConfig`), webapi-api (inverted),
-    sparql-builder (23 files under `slice/ontology/repo`), build-toolchain.
+    webapi-fair (`FairClassesLive` implements the `FairClasses` port), sparql-builder (23 files under
+    `slice/ontology/repo`), build-toolchain.
 - **Used by**: webapi-app, webapi-api, webapi-admin, webapi-search, webapi-resources, webapi-export,
     webapi-standoff, webapi-common, testkit, test-it, test-e2e.
 - **Boundary rules**:
+    - `FairClassesLive` (`slice/ontology/domain/service`) implements the `FairClasses` port declared by
+        webapi-fair and is wired only in `core/LayersLive.scala` - enforcement: review.
     - Outside callers use `OntologyRepo`, `OntologyCache` or `OntologyCacheHelpers`, never
         `slice.ontology.repo.*Query` classes - enforcement: docs-only. Currently violated by
         `responders/IriService.scala` in webapi-common (`CheckIriExistsQuery`, `IsClassUsedInDataQuery`,
@@ -718,7 +744,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
     `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
     `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
-    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `ResourceMetadataRules`, `FairResourcesLive`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -737,11 +763,17 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
     webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
-    cyclic), sparql-builder (34 files under `slice/resources/repo`), build-toolchain.
+    cyclic), webapi-fair (`FairResourcesLive` implements the `FairResources` port), sparql-builder (34 files
+    under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,
-    test-e2e.
+    test-e2e. webapi-fair reads resources at runtime through the `FairResources` port and imports nothing
+    from here.
 - **Boundary rules**:
+    - `FairResourcesLive` (`slice/resources/service`) implements the `FairResources` port declared by
+        webapi-fair and is wired only in `core/LayersLive.scala`. `ResourceMetadataRules`
+        (`slice/resources/domain`) holds the pure file-value selection and type-of-data rules shared by
+        `FairResourcesLive` and webapi-export's `ExportService` - enforcement: review.
     - Outside callers use `ReadResourcesService`, `ResourcesRepo`, `ValueRepo`, `MetadataService` and
         `ResourceInfoRepo`, not the query classes under `slice/resources/repo` - enforcement: docs-only.
         Currently violated by `ListsResponder` (12 list-node queries), `StandoffResponderV2` and
@@ -1030,6 +1062,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         directly.
     - Bulk N-Quads upload into project, ontology, admin and permission graphs is confined to this component -
         enforcement: docs-only.
+    - Named exception: `ExportService` imports `slice.resources.domain.ResourceMetadataRules` (shared pure
+        metadata rules) from webapi-resources - enforcement:
+        review.
+    - `ExportApiModule` takes `AssetInfoService` from the environment; the single construction is
+        `AssetInfoServiceLayer` in webapi-sipi-client, shared with webapi-fair - enforcement: review.
     - Wiring: shared inventory. A new service is registered in `ExportModule.scala` or
         `ExportApiModule.scala`, surfaced through `core/LayersLive.scala` and consumed via `ApiV3Module.scala`.
 - **Durable state**:
@@ -1052,6 +1089,70 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `ProjectMigrationImportValidator` loads `knora-ontologies/*.ttl` and `shacl/{ontology,data}-shapes.ttl`
         from the classpath; those resources are owned by webapi-ontology, so the coupling is invisible to
         import-based dependency analysis.
+
+### webapi-fair
+
+- **Paths**:
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/**`
+    - `modules/webapi/src/test/scala/org/knora/webapi/slice/fair/**`
+    - `modules/webapi/src/test/resources/org/knora/webapi/slice/fair/**`
+- **Purpose**: FAIR metadata and Signposting for the resource landing route that ARKs resolve to:
+    `GET` and `HEAD /fair/resources/{shortcode}/{resourceId}`, plus the schema.org JSON-LD
+    (`metadata.jsonld`) and DataCite (`metadata.datacite.json`) representations. The landing route answers
+    the dsp-app shell with a metadata block added, or a `303` to a representation the `Accept` header asks
+    for. Every fact is built under the anonymous view.
+- **Key entities**: `FairApiModule`, `FairEndpoints`, `FairServerEndpoints`, `FairRestService`,
+    `ResourceFacts`, `ResourceFactsBuilder`, `FactsInputs`, `LicenceLookup`, `AccessLevel`, `Negotiation`,
+    `Signposting`, `FairUrls`, `OaiShortcodes`, `SchemaOrgJsonLd`, `DublinCoreMeta`, `DataCiteJson`,
+    `ScriptSafeJson`, `Html`, `AppShell`, `AppShellLive`, and the ports `FairResources`, `FairProjects`,
+    `FairClasses`, `FairAssets`
+- **Public interface**: `FairApiModule.layer`, requiring `FairApiModule.Dependencies` (the four ports,
+    `FairConfig`, `KnoraApi`, `StringFormatter`, `Tracing`) and providing `FairServerEndpoints`, whose
+    `serverEndpoints` list `Endpoints` composes; the four port traits with their value types
+    (`FairResource`, `FairFileValue`, `FairProject`, `FairLicence`, `FairClass`, `FairAsset`), which the
+    providers implement.
+- **Local-context kit**:
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/api/FairRestService.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/api/FairEndpoints.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/domain/ResourceFacts.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/domain/service/ResourceFactsBuilder.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/ports/FairResources.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/fair/infrastructure/AppShellLive.scala`
+    - `docs/adr/0011-cross-context-access-ports-and-adapters.md`
+    - Sufficiency gap: `domain/Negotiation.scala`, `domain/Signposting.scala` and `domain/writers/*` are
+        needed for any change to a response header or a representation field.
+- **Depends on**: webapi-common (`ResourceIri`, `StringFormatter`, `RequiresMethod`, `NegotiatesOwnAccept`),
+    webapi-admin (the `Shortcode` and `Permission.ObjectAccess` types only, from `slice.admin.domain.model`),
+    webapi-app (`FairConfig`, `KnoraApi`), webapi-infrastructure (`TracingHttpClient`), build-toolchain.
+    The project, resource, class and asset data are reached at runtime only through the ports, with no
+    compile-time import of the providers.
+- **Used by**: webapi-app, webapi-api, and the four port providers (compile-time, each implements a port):
+    webapi-resources (`FairResourcesLive`), webapi-admin (`FairProjectsLive`), webapi-ontology
+    (`FairClassesLive`), webapi-sipi-client (`FairAssetsLive`); test-e2e (`FairEndpointsE2ESpec`).
+- **Boundary rules**:
+    - `api` and `domain` import no other context, only shared-kernel types (`Shortcode`, `Permission`,
+        `ResourceIri`) - enforcement: review. `Shortcode` and `Permission` are currently defined under
+        `slice.admin.domain.model`.
+    - Ports are consumer-defined in `slice/fair/ports`; each adapter `<Port>Live` lives in its provider
+        (`FairProjectsLive` in `slice/admin/domain/service`, `FairClassesLive` in
+        `slice/ontology/domain/service`, `FairResourcesLive` in `slice/resources/service`, `FairAssetsLive`
+        in `store/iiif/impl`) and is wired only in `core/LayersLive.scala`
+        ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) - enforcement: review.
+    - Every fact comes from the anonymous view: a missing, deleted or not-visible resource yields the
+        unchanged shell, or an identical empty `404` on the representation routes, never a distinguishable
+        error - enforcement: static-analysis (`FairRestServiceSpec`, `FairEndpointsHttpSpec` and
+        `WritersAgreementSpec` pin it; nothing in the compiler does).
+    - Fair endpoints carry no security input. They are built on raw `endpoint` plus `RequiresMethod`, not
+        `BaseEndpoints`, and are marked `NegotiatesOwnAccept` - enforcement: review.
+    - Production code under `slice/fair` is ASCII-only - enforcement: review.
+    - Wiring: shared inventory. `FairApiModule.layer` is added to `ApiModule`'s composition and
+        `FairApiModule.Dependencies` to its environment; the four port adapters, `AssetInfoServiceLayer` and
+        the `fair` config projection are listed in `core/LayersLive.scala`.
+- **Durable state**: none stored. `AppShellLive` holds one process-local cache entry for the dsp-app
+    `index.html`, kept 10 s on success and 2 s when the shell is unavailable, single writer, so each API
+    replica fetches the shell independently. Test fixtures under
+    `modules/webapi/src/test/resources/org/knora/webapi/slice/fair/domain/writers/` hold the DataCite 4.3
+    JSON schema.
 
 ### ingest
 
@@ -1088,7 +1189,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `SipiClientLive` and `CommandExecutorLive`; the image also bundles Sipi's `runtime_fs` layer),
     build-toolchain.
 - **Used by**: webapi-admin (remote-owned, the correct path, `DspIngestClient` over HTTP via sttp),
-    webapi-export (in-process reach-in), webapi-sipi-client (remote-owned, transitively), webapi-app,
+    webapi-export (in-process reach-in), webapi-sipi-client (remote-owned, transitively; in-process through
+    `AssetInfoServiceLayer`), webapi-app,
     testkit (`DspIngestTestContainer`), test-it, test-e2e.
 - **Boundary rules**:
     - Cross-process consumers use the HTTP surface. Currently violated by
@@ -1835,7 +1937,8 @@ Enforcement: docs-only.
 Target direction, consumer to dependency: libraries (bagit, jwt, shacl-validator, sparql-builder) sit at the
 bottom; webapi-common depends on them; the platform slices (webapi-infrastructure, webapi-triplestore,
 webapi-sipi-client, webapi-security) depend on webapi-common; the domain slices (webapi-admin,
-webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export) depend on the platform;
+webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, webapi-fair) depend on the
+platform;
 webapi-api depends on the domain; webapi-app depends on webapi-api. The three test modules depend on
 everything. ingest, sipi and fuseki are separate deployables reached over HTTP, not compile-time
 dependencies, with one documented exception noted below.
@@ -1845,7 +1948,7 @@ graph LR
     LIB["libraries: bagit, jwt, shacl-validator, sparql-builder"]
     COMMON["webapi-common"]
     PLATFORM["platform: infrastructure, triplestore, sipi-client, security"]
-    DOMAIN["domain: admin, ontology, resources, standoff, search, export"]
+    DOMAIN["domain: admin, ontology, resources, standoff, search, export, fair"]
     API["webapi-api"]
     APP["webapi-app"]
     TESTS["tests: testkit, test-it, test-e2e"]
@@ -1891,9 +1994,10 @@ New work is registered in a shared inventory, not discovered from a reserved pat
 - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala` for layer assembly.
 - Each slice's `*Module.scala` (`CommonModule`, `AdminModule`, `AdminDomainModule`, `AdminRepoModule`,
     `OntologyModule`, `ResourcesModule`, `SearchResponderV2Module`, `ExportModule`, `ExportApiModule`,
-    `SecurityModule`, `InfrastructureModule`).
+    `FairApiModule`, `SecurityModule`, `InfrastructureModule`).
 - The endpoint aggregators `AdminApiServerEndpoints`, `ApiV2ServerEndpoints`, `ApiV3ServerEndpoints` and
-    `ManagementServerEndpoints`, composed by `ApiModule` into `Endpoints`.
+    `ManagementServerEndpoints`, composed by `ApiModule` into `Endpoints`, together with `FairServerEndpoints`
+    from `FairApiModule`.
 - `RepositoryUpdatePlan.makePluginsForVersions` for triplestore upgrade plugins.
 - `mkdocs.yml`'s `nav` for documentation pages.
 - `scalafmt_targets` in the justfile plus `_LICENSE_SRCS` and `_LINT_SRCS` for a new Bazel module's tooling
@@ -1901,7 +2005,10 @@ New work is registered in a shared inventory, not discovered from a reserved pat
 - Cross-context ports are declared in `slice/<consumer>/ports`, adapters `<Port>Live` live in
     `slice/<provider>/repo`, and both are wired in `core/LayersLive.scala` - enforcement: review
     ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)), target: structure via Bazel
-    visibility.
+    visibility. webapi-fair is the first consumer of this pattern: it declares `FairResources`,
+    `FairProjects`, `FairClasses` and `FairAssets`, and the adapters `FairResourcesLive`, `FairProjectsLive`,
+    `FairClassesLive` and `FairAssetsLive` sit in their providers (not yet in a `repo` package) and are
+    wired in `LayersLive`.
 
 Enforcement: `structure` where the compiler forces registration, since a ZLayer that is not provided fails at
 compile time in `LayersLive`; otherwise `review`. The two exceptions to the inventory rule are sipi, where any
