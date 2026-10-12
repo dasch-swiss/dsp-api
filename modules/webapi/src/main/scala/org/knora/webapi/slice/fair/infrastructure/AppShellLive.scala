@@ -66,7 +66,7 @@ object AppShellLive {
       .catchAll(e => ZIO.logWarning(s"Could not fetch the app shell: ${e.getMessage}").as(None))
 
   val layer: URLayer[FairConfig & Tracing, AppShell] =
-    TracingHttpClient.layer(readTimeout) >>> ZLayer.fromZIO {
+    TracingHttpClient.http11Layer(readTimeout) >>> ZLayer.fromZIO {
       for {
         config  <- ZIO.service[FairConfig]
         backend <- ZIO.service[StreamBackend[Task, ZioStreams]]
