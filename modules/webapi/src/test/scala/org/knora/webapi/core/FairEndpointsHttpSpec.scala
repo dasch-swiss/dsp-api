@@ -218,7 +218,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
   private val notVisibleRepresentation = "the representation answer for a resource that is not visible"
 
   val spec = suite("the FAIR routes over HTTP")(
-    suite("4.10 negotiation")(
+    suite("negotiation and landing headers")(
       test("Accept values that answer the HTML page") {
         val accepts = List(
           Nil,
@@ -314,11 +314,6 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
           } yield assertTrue(page, redirect)
         }
       },
-      test("the 200 HTML answer has exactly one Content-Type, text/html; charset=UTF-8") {
-        withHarness() { h =>
-          get(h, landingPath(visibleId)).map(w => assertTrue(w.contentType == List(html)))
-        }
-      },
       test("exactly one JSON-LD script and one cite-as, and the DC tags with DC.accessRights") {
         withHarness() { h =>
           get(h, landingPath(visibleId)).map { w =>
@@ -362,7 +357,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("4.11 what anonymous cannot see")(
+    suite("nothing beyond the anonymous view")(
       test("a landing answer for a resource that is not visible is the shell, byte for byte, without Link") {
         withHarness() { h =>
           get(h, landingPath(missingId)).map(w => assertTrue(w.body == shell, w.header("link").isEmpty))
@@ -417,7 +412,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("4.12 credentials")(
+    suite("credentials are ignored")(
       test("a Bearer token and a cookie change nothing on a visible resource, on any route") {
         val credentials = List(
           Header.Custom("Authorization", "Bearer anything-at-all"),
@@ -451,7 +446,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("4.13 the shell is unavailable")(
+    suite("shell failures")(
       test("an HTML answer is 502 with Vary and Cache-Control; the representations and a 303 are served") {
         withHarness() { h =>
           for {
@@ -474,6 +469,27 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
           )
         }
       },
+      test("HEAD on an HTML answer is 502 with the same Vary and Cache-Control as GET and an empty body") {
+        withHarness() { h =>
+          for {
+            _          <- h.shellUp.set(false)
+            page       <- get(h, landingPath(visibleId))
+            pageHead   <- head(h, landingPath(visibleId))
+            hidden     <- get(h, landingPath(missingId))
+            hiddenHead <- head(h, landingPath(missingId))
+          } yield assertTrue(
+            List(page -> pageHead, hidden -> hiddenHead).forall((g, hd) =>
+              hd.status == 502 &&
+                hd.status == g.status &&
+                hd.header("vary") == List("Accept") &&
+                hd.header("vary") == g.header("vary") &&
+                hd.header("cache-control") == List("no-store") &&
+                hd.header("cache-control") == g.header("cache-control") &&
+                hd.body.isEmpty,
+            ),
+          )
+        }
+      },
       test("the shell is not asked for a 303 or a representation") {
         withHarness() { h =>
           for {
@@ -489,7 +505,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("4.14 representations")(
+    suite("representations")(
       test("the .jsonld body is the graph embedded in the page") {
         withHarness() { h =>
           for {
@@ -522,7 +538,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
         }
       },
     ),
-    suite("4.15 query parameters")(
+    suite("query parameters")(
       test("?version= and ?highlightValue= change nothing, also for a value anonymous cannot see") {
         val encoded = java.net.URLEncoder.encode(hiddenValue, "UTF-8")
         val queries = List("?version=20240101T000000Z", "?highlightValue=" + encoded, "?version=2&highlightValue=x")

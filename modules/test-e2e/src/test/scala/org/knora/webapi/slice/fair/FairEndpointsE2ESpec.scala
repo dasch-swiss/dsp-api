@@ -12,33 +12,56 @@ import zio.*
 import zio.http as zh
 import zio.test.*
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.TestApiClient
 
+object FairEndpointsE2ESpec {
+  private val started = new AtomicBoolean(false)
+  private val scope   = new AtomicReference[Option[Scope.Closeable]](None)
+}
+
 @RunWith(classOf[DspZTestJUnitRunner])
 class FairEndpointsE2ESpec extends E2EZSpec {
 
   override def rdfDataObjects: List[RdfDataObject] = incunabulaRdfOntologyAndData ++ anythingRdfOntologyAndData
 
-  // Must equal `app.fair.app-shell-url` in this module's test application.conf.
+  // Fixed because `app.fair.app-shell-url` in this module's test application.conf is static and must name this port.
   private val shellPort = 18742
   private val shell     = "<html><head><title>t</title></head><body></body></html>"
 
   // The landing page fetches dsp-app's shell lazily, so the stub only has to be up before the first landing request.
+  // Started once per JVM and closed by afterAll, so a second spec instance neither fails to bind nor leaks the port.
   private val startShellStub: UIO[Unit] =
-    Scope.global
-      .extend[Any](
-        for {
-          env <- zh.Server.defaultWith(_.binding("localhost", shellPort)).build
-          _   <- zh.Server
-                 .install(zh.Routes(zh.Method.GET / "index.html" -> zh.handler(zh.Response.text(shell))))
-                 .provideEnvironment(env)
-        } yield (),
-      )
-      .orDie
+    ZIO.suspendSucceed {
+      if (FairEndpointsE2ESpec.started.compareAndSet(false, true))
+        (for {
+          scope <- Scope.make
+          _     <- ZIO.succeed(FairEndpointsE2ESpec.scope.set(Some(scope)))
+          _     <- scope.extend[Any](
+                 for {
+                   env <- zh.Server.defaultWith(_.binding("localhost", shellPort)).build
+                   _   <- zh.Server
+                          .install(zh.Routes(zh.Method.GET / "index.html" -> zh.handler(zh.Response.text(shell))))
+                          .provideEnvironment(env)
+                 } yield (),
+               )
+        } yield ()).tapError(_ => stopShellStub).orDie
+      else ZIO.unit
+    }
+
+  private val stopShellStub: UIO[Unit] =
+    ZIO.suspendSucceed {
+      FairEndpointsE2ESpec.scope.getAndSet(None) match {
+        case Some(scope) => scope.close(Exit.unit) *> ZIO.succeed(FairEndpointsE2ESpec.started.set(false))
+        case None        => ZIO.succeed(FairEndpointsE2ESpec.started.set(false))
+      }
+    }
 
   // The incunabula Sideband: anonymous users hold D on both the resource and its still image.
   private val visibleId = "0803/0b03b0a6e6be"
@@ -157,5 +180,5 @@ class FairEndpointsE2ESpec extends E2EZSpec {
   override val e2eSpec =
     suite("FAIR landing page endpoints E2E")(visibleSuite, restrictedSuite, hiddenSuite) @@ TestAspect.beforeAll(
       startShellStub,
-    )
+    ) @@ TestAspect.afterAll(stopShellStub)
 }
