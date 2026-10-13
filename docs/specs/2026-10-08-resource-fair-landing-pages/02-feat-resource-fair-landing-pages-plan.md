@@ -305,9 +305,13 @@ so services depend on `FairConfig` alone.
 - **#C6** ↑TD18: C4 arrives from the environment as one string. It is modelled
   as a `String`, split on `,`, uppercased into a set and validated, and defaults
   to empty, so no OAI link is emitted until H1 sets it.
-- **#C7** ↑TD2, TD14: C1 and C2 have local defaults in `application.conf`.
-  Startup validation fails when C1 is not an absolute `http(s)` URL. A wrong C2
+- **#C7** ↑TD2, TD14: C1 has no default: the FAIR routes are registered only
+  when it is set, so a deployment without it answers `404` on all of them
+  (nginx then serves its own shell) instead of publishing URLs on the wrong
+  host, and dsp-api can ship before H1. When set, startup validation fails
+  unless it is an absolute `http(s)` URL. C2 keeps a local default; a wrong C2
   only makes HTML answers `502`, which nginx turns into the plain shell.
+  Changed at execution (user decision, 2026-10-13).
 
 ### dsp-app nginx
 
