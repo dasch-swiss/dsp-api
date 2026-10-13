@@ -43,6 +43,8 @@ Supporting VRE contexts:
 
 - [Assets](docs/contexts/assets/CONTEXT.md): Sipi and ingest integration, asset metadata,
   byte-serving interfaces, and serving-policy enforcement.
+- [FAIR](docs/contexts/fair/CONTEXT.md): FAIR metadata and Signposting for the resource landing
+  route that ARKs resolve to.
 - [Project Migration](docs/contexts/project-migration/CONTEXT.md): VRE import/export, migration
   bundles, bulk graph movement, and the Data Task lifecycle.
 - [Operations](docs/contexts/operations/CONTEXT.md): genuine cross-context maintenance workflows,
@@ -79,6 +81,9 @@ cross-domain test support.
 - **Project Migration to Projects + Identity & Access + Data Model + Resources & Values + Assets +
   RDF platform**: migration coordinates the VRE contexts through ports; its RDF platform edge covers
   whole-graph movement only.
+- **FAIR to Projects + Data Model + Resources & Values + Assets, through ports**: FAIR declares
+  `FairResources`, `FairProjects`, `FairClasses` and `FairAssets` in `slice/fair/ports`; each
+  provider implements its own `<Port>Live`.
 - **Operations to ports implemented by the contexts it coordinates** (ADR-0011).
 - **Authentication to Identity & Access**: authenticated requests carry an effective identity and
   permission profile.
@@ -120,6 +125,7 @@ graph TD
     ASSETS["Assets"]
     RV["Resources & Values"]
     SEARCH["Search"]
+    FAIR["FAIR"]
     MIGRATION["Project Migration"]
     OPS["Operations"]
 
@@ -142,6 +148,8 @@ graph TD
     RV --> PP
     SEARCH --> DM
     SEARCH --> RV
+    FAIR --> FP
+    FAIR --> PP
     MIGRATION --> PROJECTS
     MIGRATION --> IAM
     MIGRATION --> DM
@@ -158,6 +166,7 @@ graph TD
     HTTP --> DM
     HTTP --> RV
     HTTP --> SEARCH
+    HTTP --> FAIR
     HTTP --> MIGRATION
     APP --> AUTHN
     APP --> HTTP

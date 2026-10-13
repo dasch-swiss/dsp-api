@@ -49,6 +49,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
+import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 
 final class DspApiServer(
   server: Server,
@@ -191,7 +192,7 @@ object DspApiServer {
       .options
 
   /**
-   * Tapir's own `Accept` negotiation, with the admin SPARQL passthrough exempted.
+   * Tapir's own `Accept` negotiation, with the admin SPARQL passthrough and [[NegotiatesOwnAccept]] endpoints exempted.
    *
    * By default tapir answers `406` with an empty body when none of an endpoint's declared output media types matches
    * the request's `Accept`, before the server logic runs. For every other endpoint that is what we want. For the
@@ -200,8 +201,8 @@ object DspApiServer {
    * relay verbatim -- would be unreachable behind tapir's empty one.
    *
    * Declaring the passthrough's body as `*&#47;*` does not help: the matching treats a wildcard as meaningful only on
-   * the requested-range side, so a supported `*&#47;*` matches no concrete `Accept`. Exempting the one route is the
-   * targeted fix; disabling the interceptor globally would silently change every other endpoint's behaviour.
+   * the requested-range side, so a supported `*&#47;*` matches no concrete `Accept`. Exempting the endpoints that carry
+   * [[NegotiatesOwnAccept]] (the passthrough and the FAIR routes) is the targeted fix; disabling the interceptor globally would silently change every other endpoint's behaviour.
    */
   private final class PassthroughAwareNotAcceptableInterceptor extends NotAcceptableInterceptor[Task] {
     override def apply[B](
@@ -214,7 +215,7 @@ object DspApiServer {
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          if (leavesNegotiationToTheStore(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
+          if (negotiatesItsOwnAccept(ctx.endpoint)) endpointHandler.onDecodeSuccess(ctx)
           else negotiating.onDecodeSuccess(ctx)
 
         // These two are pass-throughs in the interceptor being wrapped, so delegating past it would be
@@ -233,8 +234,7 @@ object DspApiServer {
       }
     }
 
-    private def leavesNegotiationToTheStore(ep: AnyEndpoint): Boolean =
-      SparqlPassthroughEndpoints.isPassthroughRoute(ep)
+    private def negotiatesItsOwnAccept(ep: AnyEndpoint): Boolean = NegotiatesOwnAccept.isSet(ep)
   }
 
   // Renames the active HTTP server span to the matched Tapir endpoint's path template

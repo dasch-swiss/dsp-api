@@ -10,6 +10,7 @@
     "com.google.gwt:gwt-servlet": -702638645,
     "com.google.j2objc:j2objc-annotations": 2003271689,
     "com.ibm.icu:icu4j": 1685361909,
+    "com.networknt:json-schema-validator": -512772507,
     "com.softwaremill.sttp.client4:opentelemetry-tracing-zio-backend_3": 1380310439,
     "com.softwaremill.sttp.client4:zio-json_3": -1985812838,
     "com.softwaremill.sttp.client4:zio_3": -2141540027,

@@ -46,6 +46,10 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes == 1048576,
           appConfig.triplestore.sparqlPassthrough.maxResponseBytes == 67108864,
           appConfig.triplestore.sparqlPassthrough.maxConcurrentCalls == 8,
+          appConfig.fair.appExternalBaseUrl.isEmpty,
+          appConfig.fair.appShellUrl == "http://localhost:4200/index.html",
+          appConfig.fair.dpeOaiBaseUrl == "https://repository.dasch.swiss/dpe/oai",
+          appConfig.fair.dpeOaiShortcodes == "",
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",
           dspIngestConfig.externalBaseUrl == "http://localhost:3340",
@@ -132,6 +136,34 @@ class AppConfigSpec extends ZIOSpecDefault {
     test("reject a probe max-concurrent below 1") {
       loadAppConfigWith("app.v2.fulltext-search.probe.max-concurrent = 0").exit
         .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a fair app-external-base-url that is not an absolute http(s) URL") {
+      loadAppConfigWith("app.fair.app-external-base-url = \"app/index.html\"").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept a fair app-external-base-url that is an absolute http(s) URL") {
+      loadAppConfigWith("app.fair.app-external-base-url = \"https://app.example.org\"").exit
+        .map(exit => assertTrue(exit.exists(_.fair.appExternalBaseUrl.contains("https://app.example.org"))))
+    },
+    test("reject a fair app-shell-url that is not an absolute http(s) URL") {
+      loadAppConfigWith("app.fair.app-shell-url = \"ftp://x\"").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a fair dpe-oai-base-url that is not an absolute http(s) URL") {
+      loadAppConfigWith("app.fair.dpe-oai-base-url = \"repository.dasch.swiss/oai\"").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept a fair app-shell-url whose host contains an underscore") {
+      loadAppConfigWith("app.fair.app-shell-url = \"http://my_app:4200/index.html\"").orDie
+        .map(config => assertTrue(config.fair.appShellUrl == "http://my_app:4200/index.html"))
+    },
+    test("reject a fair dpe-oai-shortcodes entry that is not 4 hex digits") {
+      loadAppConfigWith("app.fair.dpe-oai-shortcodes = \"0803,xyz\"").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept fair dpe-oai-shortcodes with whitespace and empty entries") {
+      loadAppConfigWith("app.fair.dpe-oai-shortcodes = \" 0803, 081c ,,\"").exit
+        .map(exit => assertTrue(exit.isSuccess))
     },
   )
 

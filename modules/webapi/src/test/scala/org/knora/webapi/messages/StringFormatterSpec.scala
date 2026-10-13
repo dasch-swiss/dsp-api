@@ -23,6 +23,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.common.ResourceIri
 
 /**
@@ -724,6 +725,11 @@ class StringFormatterSpec extends ZIOSpecDefault {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA")
       val arkUrl      = stringFormatter.resourceIriToArkUrl(resourceIri)
       assertTrue(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
+    },
+    test("generate an ARK URL for a project") {
+      assertTrue(
+        stringFormatter.projectArkUrl(Shortcode.unsafeFrom("081c")) == "http://0.0.0.0:3336/ark:/72163/1/081C",
+      )
     },
     test("generate an ARK URL for a resource IRI with a timestamp with a fractional part") {
       val resourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA")

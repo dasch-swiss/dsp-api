@@ -25,6 +25,8 @@ import scala.reflect.ClassTag
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints.Rejection
+import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
+import org.knora.webapi.slice.common.api.OwnAcceptNegotiation
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughOverloadedException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughTimedOutException
@@ -114,6 +116,7 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: 
     // Lets the server's interceptors recognise this route -- to exempt it from tapir's Accept negotiation, and to
     // attribute a request its security or decode logic rejected -- without matching on its path or method.
     .attribute(SparqlPassthroughEndpoints.routeMarker, SparqlPassthroughRoute)
+    .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .description(
       "Run a read-only SPARQL 1.1 query against the triplestore and receive the store's response unchanged. " +
         "Requires SystemAdmin permissions and a bearer token; HTTP basic and session cookies are not accepted. " +
