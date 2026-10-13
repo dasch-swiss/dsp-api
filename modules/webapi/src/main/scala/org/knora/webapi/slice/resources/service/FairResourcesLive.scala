@@ -67,7 +67,7 @@ object FairResourcesLive {
     FairResource(
       iri = r.resourceIri,
       label = r.label,
-      classIri = r.resourceClassIri.toString,
+      classIri = r.resourceClassIri.toComplexSchema.toString,
       userPermission = r.userPermission,
       creationDate = r.creationDate,
       lastModificationDate = r.lastModificationDate,

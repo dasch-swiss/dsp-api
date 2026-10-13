@@ -123,7 +123,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       assertTrue(
         fair.description == Some("A book"),
         fair.label == "Res",
-        fair.classIri == bookClass,
+        fair.classIri == complex(bookClass),
         fair.authorship == List("Jane Doe"),
         file.kind == FairFileKind.Stored,
         file.typeOfData == Some("Image"),
