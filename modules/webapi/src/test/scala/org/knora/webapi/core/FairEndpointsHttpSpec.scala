@@ -51,7 +51,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
   private final class Harness(val run: Request => Task[Wire], val shellCalls: UIO[Int], val shellUp: Ref[Boolean])
 
   private val fairConfig =
-    FairConfig("https://app.example.org", "https://app.example.org/index.html", "https://example.org/oai", "")
+    FairConfig(Some("https://app.example.org"), "https://app.example.org/index.html", "https://example.org/oai", "")
   private val api = KnoraApi("0.0.0.0", 3333, "https", "api.example.org", 443, 5555)
 
   private val shell = "<html><head><title>x</title></head><body>app</body></html>"
@@ -137,7 +137,7 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
                override def get: UIO[Option[String]] =
                  calls.update(_ + 1) *> up.get.map(isUp => if (isUp) shellText.orElse(Some(shell)) else None)
              }
-      endpoints = FairServerEndpoints(FairEndpoints(), FairRestService(builder, stub, fairConfig, api))
+      endpoints = FairServerEndpoints(fairConfig, FairEndpoints(), FairRestService(builder, stub, fairConfig, api))
       app       = ZioHttpInterpreter(DspApiServer.serverOptions(ctxStore)).toHttp(endpoints.serverEndpoints)
     } yield Harness(
       request =>

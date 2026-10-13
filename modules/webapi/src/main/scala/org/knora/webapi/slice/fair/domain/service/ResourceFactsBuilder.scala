@@ -51,6 +51,9 @@ final class ResourceFactsBuilder(
 
   private def gather(iri: ResourceIri, resource: FairResource): Task[FactsInputs] =
     for {
+      appExternalBaseUrl <- ZIO
+                              .fromOption(config.appExternalBaseUrl)
+                              .orElseFail(new IllegalStateException("app.fair.app-external-base-url is not configured"))
       project <- projects
                    .findByShortcode(iri.shortcode)
                    .someOrFail(new IllegalStateException(s"Resource ${iri.value} exists but its project does not"))
@@ -67,7 +70,7 @@ final class ResourceFactsBuilder(
       sidecar = sidecar,
       ark = sf.resourceIriToArkUrl(iri),
       projectArk = sf.projectArkUrl(iri.shortcode),
-      appExternalBaseUrl = config.appExternalBaseUrl,
+      appExternalBaseUrl = appExternalBaseUrl,
     )
 
   private def lookupLicence(licenceIri: Option[String]): Task[LicenceLookup] =

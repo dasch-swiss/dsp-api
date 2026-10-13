@@ -8,10 +8,19 @@ package org.knora.webapi.slice.fair.api
 import sttp.tapir.ztapir.*
 import zio.*
 
-/** Wires the FAIR endpoints to [[FairRestService]]; HEAD is the landing answer without its body. */
-final class FairServerEndpoints(endpoints: FairEndpoints, rest: FairRestService) {
+import org.knora.webapi.config.FairConfig
 
-  val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
+/**
+ * Wires the FAIR endpoints to [[FairRestService]]; HEAD is the landing answer without its body. The list is empty
+ * unless `app.fair.app-external-base-url` is configured, so an unconfigured deployment never serves representations
+ * whose URLs point at the wrong host.
+ */
+final class FairServerEndpoints(config: FairConfig, endpoints: FairEndpoints, rest: FairRestService) {
+
+  val serverEndpoints: List[ZServerEndpoint[Any, Any]] =
+    if (config.appExternalBaseUrl.isDefined) enabled else List.empty
+
+  private def enabled: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getLanding.zServerLogic { case (shortcode, id, accept) => rest.landing(shortcode, id, accept) },
     endpoints.headLanding.zServerLogic { case (shortcode, id, accept) =>
       rest.landing(shortcode, id, accept).map(_.copy(body = None))
@@ -22,5 +31,6 @@ final class FairServerEndpoints(endpoints: FairEndpoints, rest: FairRestService)
 }
 
 object FairServerEndpoints {
-  val layer: URLayer[FairEndpoints & FairRestService, FairServerEndpoints] = ZLayer.derive[FairServerEndpoints]
+  val layer: URLayer[FairConfig & FairEndpoints & FairRestService, FairServerEndpoints] =
+    ZLayer.derive[FairServerEndpoints]
 }

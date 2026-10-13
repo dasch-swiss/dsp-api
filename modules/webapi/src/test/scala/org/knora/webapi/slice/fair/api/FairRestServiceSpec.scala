@@ -28,7 +28,7 @@ import org.knora.webapi.slice.fair.ports.*
 class FairRestServiceSpec extends ZIOSpecDefault {
 
   private val fairConfig =
-    FairConfig("https://app.example.org", "https://app.example.org/index.html", "https://example.org/oai", "")
+    FairConfig(Some("https://app.example.org"), "https://app.example.org/index.html", "https://example.org/oai", "")
   private val api = KnoraApi("0.0.0.0", 3333, "https", "api.example.org", 443, 5555)
 
   private val id  = "0b03b0a6e6be"

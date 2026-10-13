@@ -57,7 +57,7 @@ final case class ExportConfig(
  * Settings for the FAIR metadata served with resource landing pages.
  */
 final case class FairConfig(
-  appExternalBaseUrl: String,
+  appExternalBaseUrl: Option[String],
   appShellUrl: String,
   dpeOaiBaseUrl: String,
   dpeOaiShortcodes: String,
@@ -334,8 +334,8 @@ object AppConfig {
     .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,
     )
-    .validate("app.fair.app-external-base-url must be an absolute http(s) URL")(c =>
-      isAbsoluteHttpUrl(c.fair.appExternalBaseUrl),
+    .validate("app.fair.app-external-base-url must be an absolute http(s) URL when set")(c =>
+      c.fair.appExternalBaseUrl.forall(isAbsoluteHttpUrl),
     )
     .validate("app.fair.app-shell-url must be an absolute http(s) URL")(c => isAbsoluteHttpUrl(c.fair.appShellUrl))
     .validate("app.fair.dpe-oai-base-url must be an absolute http(s) URL")(c => isAbsoluteHttpUrl(c.fair.dpeOaiBaseUrl))

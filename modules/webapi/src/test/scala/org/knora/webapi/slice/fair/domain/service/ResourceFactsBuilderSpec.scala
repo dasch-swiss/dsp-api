@@ -24,7 +24,7 @@ import org.knora.webapi.slice.fair.ports.*
 class ResourceFactsBuilderSpec extends ZIOSpecDefault {
 
   private val config =
-    FairConfig("https://app.example.org", "https://app.example.org/index.html", "https://example.org/oai", "")
+    FairConfig(Some("https://app.example.org"), "https://app.example.org/index.html", "https://example.org/oai", "")
 
   private val id    = "0b03b0a6e6be"
   private val iri   = ResourceIri.unsafeFrom(s"http://rdfh.ch/081C/$id")

@@ -46,7 +46,7 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.triplestore.sparqlPassthrough.maxRequestBodyBytes == 1048576,
           appConfig.triplestore.sparqlPassthrough.maxResponseBytes == 67108864,
           appConfig.triplestore.sparqlPassthrough.maxConcurrentCalls == 8,
-          appConfig.fair.appExternalBaseUrl == "http://localhost:4200",
+          appConfig.fair.appExternalBaseUrl.isEmpty,
           appConfig.fair.appShellUrl == "http://localhost:4200/index.html",
           appConfig.fair.dpeOaiBaseUrl == "https://repository.dasch.swiss/dpe/oai",
           appConfig.fair.dpeOaiShortcodes == "",
@@ -140,6 +140,10 @@ class AppConfigSpec extends ZIOSpecDefault {
     test("reject a fair app-external-base-url that is not an absolute http(s) URL") {
       loadAppConfigWith("app.fair.app-external-base-url = \"app/index.html\"").exit
         .map(exit => assertTrue(exit.isFailure))
+    },
+    test("accept a fair app-external-base-url that is an absolute http(s) URL") {
+      loadAppConfigWith("app.fair.app-external-base-url = \"https://app.example.org\"").exit
+        .map(exit => assertTrue(exit.exists(_.fair.appExternalBaseUrl.contains("https://app.example.org"))))
     },
     test("reject a fair app-shell-url that is not an absolute http(s) URL") {
       loadAppConfigWith("app.fair.app-shell-url = \"ftp://x\"").exit
