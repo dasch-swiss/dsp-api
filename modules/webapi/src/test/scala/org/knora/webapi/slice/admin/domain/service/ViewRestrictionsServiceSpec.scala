@@ -12,16 +12,13 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -230,83 +227,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
-
-  // ----- pure logic (no triplestore) -----
-
-  private val pureSuite = suite("visibilityOf")(
-    test("maps permission code 0 (no access) to Hidden") {
-      for {
-        vis <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(None)))
-      } yield assertTrue(vis == Visibility.Hidden)
-    },
-    test("maps RestrictedView (code 1) to RestrictedView for every item type") {
-      for {
-        vis <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.RestrictedView))))
-      } yield assertTrue(vis == Visibility.RestrictedView)
-    },
-    test("maps View and higher (code >= 2) to Visible") {
-      for {
-        v <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.View))))
-        m <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.Modify))))
-        c <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.ChangeRights))))
-      } yield assertTrue(v == Visibility.Visible, m == Visibility.Visible, c == Visibility.Visible)
-    },
-    test("the anonymous audience user is not an admin (would otherwise short-circuit to max permission)") {
-      for {
-        user <- service(_ => ZIO.succeed(ValueCountFold.audienceUser(Audience.Anonymous, projectIri)))
-      } yield assertTrue(user.isAnonymousUser, !user.isSystemAdmin, !user.isProjectAdmin(projectIri))
-    },
-    test("the project-member audience user is a member but not an admin of the project") {
-      for {
-        user <- service(_ => ZIO.succeed(ValueCountFold.audienceUser(Audience.ProjectMember, projectIri)))
-      } yield assertTrue(user.isProjectMember(projectIri), !user.isProjectAdmin(projectIri), !user.isSystemAdmin)
-    },
-    // LOAD-BEARING: the exact summary counts classify *bare* permission literals, substituting a placeholder
-    // for each object's real creator. That is only sound if the creator cannot change the answer — i.e. if
-    // no audience user is ever the creator of the object being judged. It holds because the audience users
-    // are synthetic and never author data. This pins it: for any real creator IRI, all three audiences see
-    // the same visibility they'd see with the placeholder.
-    //
-    // Note the deliberately included `CR knora-admin:Creator` literal: it is a real default clause, and it
-    // is exactly the case that would break if an audience user could ever equal an object's creator.
-    test("visibility of a literal does not depend on which real user created the object") {
-      val literals = Seq(
-        "M knora-admin:ProjectMember",
-        "V knora-admin:KnownUser",
-        "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
-        "CR knora-admin:Creator|V knora-admin:ProjectMember",
-      )
-      val creators = Seq(
-        "http://rdfh.ch/users/creator",
-        "http://rdfh.ch/users/root",
-        "http://rdfh.ch/users/someone-else",
-      )
-      for {
-        results <- service(_ =>
-                     ZIO.succeed(
-                       for {
-                         literal  <- literals
-                         audience <- Audience.ordered
-                       } yield creators.map { creator =>
-                         ValueCountFold.visibilityOf(
-                           PermissionUtilADM.getUserPermissionADM(
-                             entityCreator = creator,
-                             entityProject = projectIri.value,
-                             entityPermissionLiteral = literal,
-                             requestingUser = ValueCountFold.audienceUser(audience, projectIri),
-                           ),
-                         )
-                       }.distinct,
-                     ),
-                   )
-        // …and no audience user's own id collides with a real user IRI, which is what makes the above hold.
-        ids <- service(_ => ZIO.succeed(Audience.ordered.map(a => ValueCountFold.audienceUser(a, projectIri).id)))
-      } yield assertTrue(
-        results.forall(_.size == 1),
-        ids.forall(id => !creators.contains(id)),
-      )
-    },
-  ).provide(commonLayers, emptyDataset)
 
   private val itemsSuite = suite("items")(
     test("returns each affected resource with its per-audience visibility and correct paging total") {
@@ -566,7 +486,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   // ----- count units, at the repo boundary where the tagging happens -----
 
   def spec = suite("ViewRestrictionsService")(
-    pureSuite,
     itemsSuite,
     valuesSuite,
     nonImageSuite,

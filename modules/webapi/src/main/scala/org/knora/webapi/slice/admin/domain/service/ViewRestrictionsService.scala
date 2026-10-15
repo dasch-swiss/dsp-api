@@ -19,7 +19,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  * Computes the "view restrictions" report for a project.
  *
  * Visibility is resolved with the real permission model: [[PermissionUtilADM.getUserPermissionADM]] is run
- * against a synthetic user for each of the three audiences (see [[ValueCountFold.audienceUser]])
+ * against a synthetic user for each of the three audiences (see [[ViewRestrictionsAudience.audienceUser]])
  * and the resulting permission code mapped to a [[Visibility]]. This is a reporting view of what is stored,
  * not a rendering decision: restricted view (code 1) is reported as its own state for every item type, so
  * the dashboard reflects the actual permissions in the triplestore.
@@ -62,7 +62,7 @@ final case class ViewRestrictionsService(
     for {
       classes <- repo.projectClasses(projectIri)
       rows    <- repo.resourceCountsByClass(projectIri, classes)
-      lookup   = ValueCountFold.classify(rows.map(_.permissions).toSet, projectIri)
+      lookup   = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
       byClass  =
         rows.groupBy(_.groupId).collect { case (Some(classIri), rs) => classIri -> ValueCountFold.foldRows(rs, lookup) }
       // Report every class the project asserts, not just those that produced rows: a class holding no
@@ -85,17 +85,17 @@ final case class ViewRestrictionsService(
     for {
       classes <- repo.projectClasses(projectIri)
       rows    <- repo.valueCountsForClass(projectIri, resourceClass, ValueItemType.toItemType(itemType), classes)
-      lookup   = ValueCountFold.classify(rows.map(_.permissions).toSet, projectIri)
+      lookup   = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
       counts   = ValueCountFold.foldRows(rows, lookup)._1
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
 
   private def visibilityFor(row: RestrictedObjectRow, audience: Audience, projectIri: ProjectIri): Visibility =
-    ValueCountFold.visibilityOf(
+    ViewRestrictionsAudience.visibilityOf(
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = row.creator,
         entityProject = projectIri.value,
         entityPermissionLiteral = row.permissions,
-        requestingUser = ValueCountFold.audienceUser(audience, projectIri),
+        requestingUser = ViewRestrictionsAudience.audienceUser(audience, projectIri),
       ),
     )
 

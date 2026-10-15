@@ -40,13 +40,13 @@ object ViewRestrictionsClassification {
      * references inside text rather than a link a user created.
      */
     def of(info: ReadPropertyInfoV2): Option[ValueKind] =
-      if !info.isResourceProp || info.isLinkProp || info.isStandoffInternalReferenceProperty || isStandoffLinkValue(
-          info,
-        )
-      then None
+      if !isCounted(info) then None
       else if info.isLinkValueProp then Some(Link)
       else if info.isFileValueProp then Some(File)
       else Some(Plain)
+
+    private def isCounted(info: ReadPropertyInfoV2): Boolean =
+      info.isResourceProp && !info.isLinkProp && !info.isStandoffInternalReferenceProperty && !isStandoffLinkValue(info)
 
     private def isStandoffLinkValue(info: ReadPropertyInfoV2): Boolean =
       info.entityInfoContent.propertyIri.toString == OntologyConstants.KnoraBase.HasStandoffLinkToValue

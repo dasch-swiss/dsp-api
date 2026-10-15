@@ -303,8 +303,8 @@ object ViewRestrictionsRepo {
   final case class PermissionCountRow(groupId: Option[String], permissions: String, count: Int)
 
   /**
-   * One row of the C5 value-count query: the values of one class and property that carry one permission
-   * literal.
+   * One row of the value-count query, which counts per class and property, grouped by permission literal
+   * and the value's deleted flag: the values of one class and property that carry one permission literal.
    *
    * `deleted` is the value's `knora-base:isDeleted`; `commented` counts the values with a
    * `knora-base:valueHasComment`.

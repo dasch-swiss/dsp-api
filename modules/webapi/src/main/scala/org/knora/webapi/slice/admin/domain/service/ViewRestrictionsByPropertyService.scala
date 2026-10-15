@@ -23,10 +23,9 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
  * Computes the view-restrictions report **grouped by property**.
  *
  * A sibling of [[ViewRestrictionsService]], not a mode of it. Both classify permission literals with the
- * shared [[ValueCountFold]], whose Scaladoc gives the argument for why an object's visibility depends only
- * on its `knora-base:hasPermissions` literal.
+ * shared [[ViewRestrictionsAudience]], which explains why counting by permission literal is sound.
  *
- * `ViewRestrictionsByPropertyServiceSpec` pins that equivalence for the drill-down, which resolves each
+ * `ViewRestrictionsAudienceSpec` pins that equivalence for the drill-down, which resolves each
  * value with its real creator. A divergence between the counts and the drill-down should fail a test rather
  * than quietly change the numbers on one screen.
  *
@@ -54,7 +53,7 @@ final case class ViewRestrictionsByPropertyService(
   ): Task[ViewRestrictionsPropertyValues] =
     for {
       rows       <- repo.valueCountsForProperty(projectIri, property, itemType)
-      lookup      = ValueCountFold.classify(rows.map(_.permissions).toSet, projectIri)
+      lookup      = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
       countsTotal = ValueCountFold.foldRows(rows, lookup)
     } yield ViewRestrictionsPropertyValues(
       projectIri = projectIri.value,
@@ -135,12 +134,12 @@ final case class ViewRestrictionsByPropertyService(
     )
 
   private def visibilityFor(row: RestrictedPropertyValueRow, audience: Audience, projectIri: ProjectIri): Visibility =
-    ValueCountFold.visibilityOf(
+    ViewRestrictionsAudience.visibilityOf(
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = row.creator,
         entityProject = projectIri.value,
         entityPermissionLiteral = row.permissions,
-        requestingUser = ValueCountFold.audienceUser(audience, projectIri),
+        requestingUser = ViewRestrictionsAudience.audienceUser(audience, projectIri),
       ),
     )
 }

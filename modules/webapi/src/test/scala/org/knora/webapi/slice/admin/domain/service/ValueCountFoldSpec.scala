@@ -107,18 +107,41 @@ class ValueCountFoldSpec extends ZIOSpecDefault {
     },
     test("logs exactly one warning naming the unknown property IRIs, sorted") {
       for {
-        _ <-
+        before <- warningMessages
+        _      <-
           ValueCountFold.fold(Seq(row("urn:x:b"), row("urn:x:a"), row("urn:x:b")), index, ValueItemType.All, projectIri)
-        lines <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning).map(_.message()))
-      } yield assertTrue(lines.size == 1, lines.head.contains("urn:x:a, urn:x:b"))
+        after <- warningMessages
+      } yield assertTrue(
+        after.drop(before.size) == List(
+          "View restrictions: ignored values of properties not in the ontology cache: urn:x:a, urn:x:b",
+        ),
+      )
     },
     test("logs no warning when every property is known") {
       for {
-        _     <- ValueCountFold.fold(Seq(row(plain), row(file)), index, ValueItemType.All, projectIri)
-        lines <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning))
-      } yield assertTrue(lines.isEmpty)
+        before <- warningMessages
+        _      <- ValueCountFold.fold(Seq(row(plain), row(file)), index, ValueItemType.All, projectIri)
+        after  <- warningMessages
+      } yield assertTrue(after.size == before.size)
     },
-  )
+    test("logs no warning for a known property that is not counted") {
+      for {
+        before <- warningMessages
+        _      <- ValueCountFold.fold(Seq(row(isPartOf)), index, ValueItemType.All, projectIri)
+        after  <- warningMessages
+      } yield assertTrue(after.size == before.size)
+    },
+    test("does not report a deleted row of an unknown property") {
+      for {
+        before <- warningMessages
+        _      <- ValueCountFold.fold(Seq(row("urn:x:unknown", deleted = true)), index, ValueItemType.All, projectIri)
+        after  <- warningMessages
+      } yield assertTrue(after.size == before.size)
+    },
+  ) @@ TestAspect.sequential
+
+  private val warningMessages: UIO[List[String]] =
+    ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning).map(_.message()).toList)
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ValueCountFold")(permissionCountsSuite, foldSuite)
