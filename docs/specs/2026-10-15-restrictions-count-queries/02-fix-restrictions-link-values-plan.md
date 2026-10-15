@@ -259,29 +259,32 @@ glob).
 
 ### Phase 2: R and C5 for the class report
 
-- [ ] Add a failing service test (in-memory Turtle in `ViewRestrictionsServiceSpec`): a restricted user link value
+- [x] Add a failing service test (in-memory Turtle in `ViewRestrictionsServiceSpec`): a restricted user link value
       counts under `/values`.
-- [ ] Add a failing service test: a restricted standoff link value does not count under `/values`.
-- [ ] Add a failing service test: a value property from a second ontology counts.
-- [ ] Add a failing service test: a class whose resources are all deleted is not listed by `/classes`.
-- [ ] Give both services an `OntologyRepo` as the index source.
-- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in both service specs, with fixture ontology data.
-- [ ] Add the R query and its row parser to `ViewRestrictionsRepo`.
-- [ ] Add `GoldenTest` to `ViewRestrictionsQuerySpec`, and add a golden test for R.
-- [ ] Add the C5 query and its row parser.
-- [ ] Add a golden test for C5.
-- [ ] Add a Scaladoc comment on C5 that explains why `?value knora-base:isDeleted` keeps an unbound object.
-- [ ] Change `classSummaries` to R plus the resource-class filter of the index.
-- [ ] Change `valueCounts` to C5 plus the fold.
-- [ ] Remove `resourceCountsByClassAndPermissionQuery` and its legacy fixtures.
-- [ ] Remove `valueCountsByPermissionQuery` and its legacy fixtures.
-- [ ] Remove the orphan files `ViewRestrictionsQuerySpec__*.txt`, which no spec reads.
-- [ ] Change the multi-typed count tests: a multi-typed resource counts once for each type.
-- [ ] Run the tests; they pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add a failing service test: a restricted standoff link value does not count under `/values`.
+- [x] Add a failing service test: a value property from a second ontology counts.
+- [x] Add a failing service test: a class whose resources are all deleted is not listed by `/classes`.
+- [x] Give `ViewRestrictionsService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
+- [x] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsServiceSpec`, with fixture ontology data.
+- [x] Add the R query and its row parser to `ViewRestrictionsRepo`.
+- [x] Add `GoldenTest` to `ViewRestrictionsQuerySpec`, and add a golden test for R.
+- [x] Add the C5 query and its row parser.
+- [x] Add a golden test for C5.
+- [x] Add a Scaladoc comment on C5 that explains why `?value knora-base:isDeleted` keeps an unbound object.
+- [x] Change `classSummaries` to R plus the resource-class filter of the index.
+- [x] Change `valueCounts` to C5 plus the fold.
+- [x] Remove `resourceCountsByClassAndPermissionQuery` and its legacy fixtures.
+- [x] Remove `valueCountsByPermissionQuery` and its legacy fixtures.
+- [x] Remove the orphan files `ViewRestrictionsQuerySpec__*.txt`, which no spec reads.
+- [x] Change the multi-typed count tests: a multi-typed resource counts once for each type.
+- [x] Run the tests; they pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: Project cache and by-property counts from C5
 
+- [ ] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
+- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
+      ontology data.
 - [ ] Write a failing cache test (`makeCache` with a counting `Ref`): two concurrent lookups for the same key run one
       load.
 - [ ] Write a failing cache test: a failed load is not kept, so the next lookup runs the load again.
