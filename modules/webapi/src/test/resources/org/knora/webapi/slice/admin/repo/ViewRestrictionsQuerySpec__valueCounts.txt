@@ -1,0 +1,13 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
+WHERE {
+  ?resource a <http://www.knora.org/ontology/0001/anything#Thing> .
+  ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+  ?resource knora-base:isDeleted false .
+  ?resource ?prop ?value .
+  ?value knora-base:hasPermissions ?permissions .
+  ?value knora-base:isDeleted ?valueDeleted .
+  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+}
+GROUP BY ?prop ?permissions ?valueDeleted

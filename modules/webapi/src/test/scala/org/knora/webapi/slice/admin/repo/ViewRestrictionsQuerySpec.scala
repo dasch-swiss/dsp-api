@@ -11,8 +11,10 @@ import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
 /**
  * Query-generator tests for [[ViewRestrictionsRepo]]. They assert on the rendered SPARQL string rather
@@ -29,7 +31,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
  * to.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
-class ViewRestrictionsQuerySpec extends ZIOSpecDefault {
+class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
@@ -121,6 +123,16 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault {
   ).toMap
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
+    suite("class-scoped count queries")(
+      test("resourceCounts") {
+        val select = ViewRestrictionsRepo.resourceCountsQuery(projectIri)
+        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "resourceCounts")
+      },
+      test("valueCounts") {
+        val select = ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass)
+        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "valueCounts")
+      },
+    ),
     suite("permission-grouped counts (stepped report)")(
       test("resource counts group by class AND literal, with no permission filter at all") {
         val q = ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, singleTyped).sparql

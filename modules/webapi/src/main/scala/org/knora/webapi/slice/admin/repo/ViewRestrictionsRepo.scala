@@ -8,12 +8,16 @@ package org.knora.webapi.slice.admin.repo
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
+import scala.util.Try
+
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.EhCache
@@ -109,6 +113,39 @@ final case class ViewRestrictionsRepo(
     triplestore
       .query(ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, resourceClass, itemType, classes))
       .map(_.flatMap(row => permissionCountRow(row, groupCol = None)))
+
+  /**
+   * The project's current resources counted per class and permission literal. Rows missing a grouping
+   * key or with an unparseable count are dropped, as in [[permissionCountRow]].
+   */
+  def resourceCounts(projectIri: ProjectIri): Task[Seq[ResourceCountRow]] =
+    triplestore
+      .query(ViewRestrictionsRepo.resourceCountsQuery(projectIri))
+      .map(_.flatMap { row =>
+        Try(
+          ResourceCountRow(row.getRequired("resClass"), row.getRequired("permissions"), row.getRequired("cnt").toInt),
+        ).toOption
+      })
+
+  /**
+   * One resource class's value counts per property, permission literal and deleted flag. Rows missing a
+   * grouping key or with an unparseable count are dropped, as in [[permissionCountRow]].
+   */
+  def valueCounts(projectIri: ProjectIri, resourceClass: String): Task[Seq[ValueCountRow]] =
+    triplestore
+      .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass))
+      .map(_.flatMap { row =>
+        Try(
+          ValueCountRow(
+            classIri = resourceClass,
+            propertyIri = row.getRequired("prop"),
+            permissions = row.getRequired("permissions"),
+            deleted = row.getRequired("valueDeleted") == "true",
+            count = row.getRequired("cnt").toInt,
+            commented = row.getRequired("commented").toInt,
+          ),
+        ).toOption
+      })
 
   /**
    * Parses one permission-grouped count row. A row missing `permissions` or with an unparseable `cnt` is
@@ -301,6 +338,9 @@ object ViewRestrictionsRepo {
    * so it cannot be mixed up in the first place.
    */
   final case class PermissionCountRow(groupId: Option[String], permissions: String, count: Int)
+
+  /** One row of the resource-count query: the resources of one class that carry one permission literal. */
+  final case class ResourceCountRow(classIri: String, permissions: String, count: Int)
 
   /**
    * One row of the value-count query, which counts per class and property, grouped by permission literal
@@ -606,6 +646,57 @@ object ViewRestrictionsRepo {
                |  ?subClass rdfs:subClassOf+ ?resClass .
                |}
                |LIMIT 1""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
+  }
+
+  /**
+   * Counts a project's current resources per class and permission literal.
+   */
+  private[repo] def resourceCountsQuery(projectIri: ProjectIri): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?resClass ?permissions (COUNT(*) AS ?cnt)
+               |WHERE {
+               |  ?resource knora-base:attachedToProject $project .
+               |  ?resource a ?resClass ;
+               |    knora-base:hasPermissions ?permissions ;
+               |    knora-base:isDeleted false .
+               |}
+               |GROUP BY ?resClass ?permissions""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
+  }
+
+  /**
+   * Counts the permissioned objects reachable from the current resources of one class, per property,
+   * permission literal and deleted flag.
+   *
+   * No pattern on `?value` may have two bound terms before `?resource ?prop ?value` (for example
+   * `?value knora-base:isDeleted false`): Fuseki TDB2 without statistics orders patterns by bound terms
+   * and would then scan every non-deleted object in the store. `?valueDeleted` therefore stays an unbound
+   * variable and the caller drops deleted rows. `?prop` is unbound on purpose: the caller classifies
+   * properties with the ontology cache.
+   */
+  private[repo] def valueCountsQuery(projectIri: ProjectIri, resourceClass: String): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    val clazz   = Iri.unsafeFrom(resourceClass)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
+               |WHERE {
+               |  ?resource a $clazz .
+               |  ?resource knora-base:attachedToProject $project .
+               |  ?resource knora-base:isDeleted false .
+               |  ?resource ?prop ?value .
+               |  ?value knora-base:hasPermissions ?permissions .
+               |  ?value knora-base:isDeleted ?valueDeleted .
+               |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+               |}
+               |GROUP BY ?prop ?permissions ?valueDeleted""".render,
       SparqlTimeout.ViewRestrictions,
     )
   }
