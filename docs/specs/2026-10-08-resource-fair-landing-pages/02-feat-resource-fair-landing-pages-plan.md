@@ -9,7 +9,9 @@ repositories:
   - name: dsp-api
     path: /Users/raitisveinbahs/work/2-dsp-api
   - name: dsp-app
-    path: /Users/raitisveinbahs/work/2-dsp-app
+    path: /Users/raitisveinbahs/work/dsp-app
+  - name: ops-deploy
+    path: /Users/raitisveinbahs/work/ops-deploy
 prd: 01-resource-fair-landing-pages-PRD.md
 linear: DEV-7420
 ---
@@ -36,7 +38,8 @@ route carry the metadata the DPE project page carries:
 
 The PRD owns the *what*; where this plan and the PRD disagree, the PRD wins.
 dsp-api is the primary repository and its PR carries Phases 1–5 and 7. dsp-app's
-PR carries Phase 6. Phase 7 runs last because it needs both repositories' changes.
+and ops-deploy's PRs carry Phase 6. Phase 7 runs last because it needs the
+dsp-api and dsp-app changes. Phase 5 is deferred (user decision, 2026-10-15).
 
 ## Goal graph
 
@@ -88,7 +91,7 @@ cannot carry a tag. Its parent is that phase's subgoal.
 | #S3 | ↑PG2, PG3 | 3 | Pure functions produce the Signposting link set, its RFC 8288 serialisation and the `Accept` decision |
 | #S4 | ↑PG1, PG2, PG3, PG4, PG5 | 4 | HTTP endpoints serve the landing response and the two representations from the facts, writers and link set |
 | #S5 | ↑PG6 | 5 | The baseline is measured and recorded |
-| #S6 | ↑PG5, PG1, PG2, PG3 | 6 | dsp-app's nginx forwards the route to dsp-api and falls back to its own shell |
+| #S6 | ↑PG5, PG1, PG2, PG3 | 6 | dsp-app's nginx forwards the route to dsp-api and falls back to its own shell, and every deployed stack is configured for it |
 | #S7 | ↑PG6 | 7 | A local F-UJI run of the same page, before and after the change, shows the score rising |
 
 ## Problem Statement / Motivation
@@ -122,7 +125,7 @@ api.<host>/fair/resources/{sc}/{id}/metadata.datacite.json   → application/vnd
   record DataCite and Dublin Core mappings.
 - **#P2** ↑S6: dsp-app changes only its nginx configuration and `Dockerfile`.
 - **#P3** ↑S4, S6: Deployment needs two sets of environment variables in
-  ops-deploy, set after ship (H1).
+  ops-deploy, set in its own PR (H1).
 
 ### Slice layout
 
@@ -304,7 +307,8 @@ so services depend on `FairConfig` alone.
   `StringFormatter.resourceIriToArkUrl` with no timestamp (unversioned).
 - **#C6** ↑TD18: C4 arrives from the environment as one string. It is modelled
   as a `String`, split on `,`, uppercased into a set and validated, and defaults
-  to empty, so no OAI link is emitted until H1 sets it.
+  to empty, so no OAI link is emitted until H1 sets it. C3's default is the
+  production DPE, and H1 leaves it at that in every environment.
 - **#C7** ↑TD2, TD14: C1 has no default: the FAIR routes are registered only
   when it is set, so a deployment without it answers `404` on all of them
   (nginx then serves its own shell) instead of publishing URLs on the wrong
@@ -340,7 +344,8 @@ so services depend on `FairConfig` alone.
     `Authorization ""`, so no credential reaches dsp-api;
     - `proxy_redirect off`;
     - `proxy_intercept_errors on` with
-    `error_page 400 401 403 404 405 406 408 413 418 429 500 502 503 504 = @shell`;
+    `error_page 400 401 403 404 406 408 413 418 429 500 502 503 504 = @shell`
+    (no `405`: the location's own `405` for other methods must stay a `405`);
     - `include /etc/nginx/security-headers.conf`, so proxied answers keep the
     security headers.
 
@@ -553,9 +558,12 @@ The shell is a stub string through the shell provider's interface.
 - [x] 4.18 ↑S4: Run `just check`, `just test` and `just test-e2e`; all pass
 - [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 5: Baseline measured and recorded
+#### Phase 5: Baseline measured and recorded (deferred)
 
 Subgoal **S5** ↑PG6.
+
+Deferred (user decision, 2026-10-15). Once H1 reaches DEV, 5.2 can no longer
+measure the plain shell there; Phase 7's local baseline still can.
 
 The baseline measures the DEV pages before this work is deployed there. F-UJI
 is given the DEV landing page URL, not the ARK: every ARK resolves to
@@ -577,15 +585,15 @@ both times.
 - [ ] 5.4 ↑S5: Run `just check` and `just docs-build`; both pass
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 6: dsp-app forwards the route
+#### Phase 6: dsp-app forwards the route, ops-deploy configures it
 
 Subgoal **S6** ↑PG5, PG1, PG2, PG3.
 
 ### dsp-app
 
-- [ ] 6.1 ↑N1, N2, N3, N4: `nginx/default.conf.template`: the resolver lines, the landing location as the first regex location, and the `@shell` fallback
-- [ ] 6.2 ↑N4: `Dockerfile`: `ENV DSP_API_UPSTREAM=""` beside `ENV NGINX_PORT`
-- [ ] 6.3 ↑S6: `scripts/nginx-smoke-test.sh`, with a Makefile target `nginx-smoke-test`. It builds the image from a temporary context holding the real `Dockerfile` and `nginx/`, a stub `dist/apps/dsp-app/index.html` and `config/` (no Angular build), and runs it on a Docker network against a stub upstream (a Python `http.server` script). The upstream answers, in turn:
+- [x] 6.1 ↑N1, N2, N3, N4: `nginx/default.conf.template`: the resolver lines, the landing location as the first regex location, and the `@shell` fallback
+- [x] 6.2 ↑N4: `Dockerfile`: `ENV DSP_API_UPSTREAM=""` beside `ENV NGINX_PORT`
+- [x] 6.3 ↑S6: `scripts/nginx-smoke-test.sh`, with a Makefile target `nginx-smoke-test`. It builds the image from a temporary context holding the real `Dockerfile` and `nginx/`, a stub `dist/apps/dsp-app/index.html` and `config/` (no Angular build), and runs it on a Docker network against a stub upstream (a Python `http.server` script). The upstream answers, in turn:
     - `200` with `Link` and `Vary`;
     - `303` with `Location`;
     - `404`;
@@ -596,7 +604,13 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
     - an empty `DSP_API_UPSTREAM`.
 
   It asserts the passthroughs with the security headers, the fallback (`200`, the shell, `Vary: Accept`, `Cache-Control: no-store`, the security headers) in every other case, HEAD parity, that a `POST` is not forwarded, and that `/resource/0803/..%2F..%2Fx` and `/resource/0803/abc.json` are never forwarded
-- [ ] 6.4 ↑S6: Run `./scripts/nginx-smoke-test.sh`; every assertion passes
+- [x] 6.4 ↑S6: Run `./scripts/nginx-smoke-test.sh`; every assertion passes
+
+### ops-deploy
+
+- [x] 6.5 #H1 ↑S4, S6: In `roles/dsp-deploy`, for every stack at once (new variables only; either side without the other keeps today's behaviour):
+    - `app` service: `DSP_API_UPSTREAM=http://api:3333`;
+    - `api` service: C1 `https://{{ DSP_APP_HOST }}`, C2 `http://app/index.html`, C4 from a role default `DSP_API_FAIR_DPE_OAI_SHORTCODES: "0803,081C,0868"` (dsp-repository's `RECORD_SHORTCODES`); C3 is left at its production default
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 7: Score rise confirmed locally
@@ -634,7 +648,6 @@ A local score is a direction, not a DEV or production figure:
 
 | Id | Parent | Action | Who | When | Why not the agent |
 | --- | --- | --- | --- | --- | --- |
-| #H1 | ↑S4, S6 | In ops-deploy, per environment, set `DSP_API_UPSTREAM=http://api:3333` on the `app` service (`docker-compose-svc.yml.j2`) and C1–C4 on the `api` service | DevOps | after ship | Deployment configuration and its rollout are the operators' decision |
 | #H2 | ↑PG6 | After DEV runs both, run `just fair-check` against the two DEV page URLs of 5.2 and FAIR Champion by hand, then add the rows to the results table | Owner | after ship | Needs the deployed environment; FAIR Champion is run by hand |
 
 ## Acceptance Criteria

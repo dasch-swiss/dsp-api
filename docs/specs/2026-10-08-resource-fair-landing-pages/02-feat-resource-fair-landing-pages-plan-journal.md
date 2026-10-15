@@ -20,7 +20,9 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4385> |
+| dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | merged | <https://github.com/dasch-swiss/dsp-api/pull/4385> |
+| dsp-app | a08be9797 | feature/dev-7420-resource-landing-forwarding | squash | in-progress | — |
+| ops-deploy | a70ade4a | feature/dev-7420-fair-landing-pages | squash | in-progress | — |
 
 ## Phases
 
@@ -30,6 +32,8 @@ status: in-progress
 | 2 | reviewed | dsp-api@e1cfdaae8 | 1 |
 | 3 | reviewed | dsp-api@e8a6b8cfa | 1 |
 | 4 | reviewed | dsp-api@698c62e76 | 1 |
+| 5 | deferred | — | — |
+| 6 | implemented | dsp-app@a08be9797, ops-deploy@a70ade4a | 0 |
 
 ## Chunk queue
 
@@ -83,6 +87,8 @@ status: in-progress
 | 4.5 | dsp-api | complete | 2d052df45, afdfc63dd | FairEndpointsE2ESpec (7 tests; stub shell on localhost:18742; plan's three resources verified in test data, no substitutions) and docker-compose KNORA_WEBAPI_FAIR_* | E2E needed port 3333: user approved stopping container dsp-api-api-1 (left stopped) |
 | 4.R | dsp-api | complete | 6027a6612, f6da61675 | review fixes: one NegotiatesOwnAccept exemption (passthrough carries it), FairInternalError case object, no-</head> shell -> 502, defects -> typed 500 with landing headers, nosniff on representations, AppShellLive moved to fair/infrastructure (no redirects, 1 MiB cap), single AssetInfoServiceLayer; HTTP suites named by behaviour, E2E stub lifecycle | none |
 | 4.6 | dsp-api | complete | 534576fb7 | scoped ARCH-MAP update (webapi-fair + touched entries), docs/contexts/fair/CONTEXT.md, root index | user chose scoped update; schema-1 migration / full re-map left for a follow-up |
+| 6.1 | dsp-app | complete | f5be73057 | landing location (named captures, GET/HEAD only, credentials cleared, 2 s timeouts), @shell fallback, `ENV DSP_API_UPSTREAM=""`, `make nginx-smoke-test` (52 assertions green) | none |
+| 6.2 | ops-deploy | complete | 9f4ce7d3 | `DSP_API_UPSTREAM` on app; C1, C2, C4 on api for every stack; C3 left at its production default | `just lint` not run: ops-deploy tools not installed locally |
 | 4.7 | dsp-api | complete | — | just check + just test green; just test-e2e 967/971 with two ValuesEndpointsE2ESpec reorder tests (PUT /v2/values/order) answering 500 in the full suite only; that spec alone passes 107/107 on the same commit | flaky in full-suite context, unrelated to fair (previous full run lost Fuseki in the same spec) |
 
 ## Deferrals
@@ -90,6 +96,7 @@ status: in-progress
 - ARCH-MAP.md schema-1 -> 2 migration and re-mapping of the 22 components already stale from unrelated main changes: follow-up PR (user decision at 4.19).
 - Phase 1 review: ARCH-MAP/CONTEXT update -> new 4.19. OAI shortcode-list parsing moved out of `FairConfig` (config must not import `Shortcode`) -> 3.2.
 - 1.15 "a hidden file's authorship is ignored" -> 4.11 (needs the resources adapter; a hidden file never reaches derive).
+- Phase 5 deferred, Phase 7 to be discussed after Phase 6 (user, 2026-10-15). H1 is done by the agent as an ops-deploy PR for all stacks at once, not by DevOps (user, 2026-10-15).
 - Session scope set at intake: phases 1-4 (dsp-api only). dsp-app (Phase 6) gets a fresh branch cut from origin/main when that phase starts, not the existing `feature/dev-7420-resource-landing-proxy`.
 
 ## Side findings
@@ -111,3 +118,4 @@ status: in-progress
 - Phase 4 outcome: all items ticked; deferred: ARCH-MAP schema migration (follow-up). Review: 6 reviewers, one fix round. `ValuesEndpointsE2ESpec` reorder tests are flaky in the full E2E suite (500 / lost triplestore) but pass in isolation.
 - Spec id convention adopted (user, 2026-10-12): an id is written `#<id>` once at its origin and bare elsewhere; applied to the plan and PRD.
 - Local testing (2026-10-12): the shell fetch failed against the Angular dev server because Java's HttpClient opens plain-http requests with an `Upgrade: h2c` that the dev server never answers (500 ms read timeout). Fixed by fetching the shell over HTTP/1.1 (`TracingHttpClient.http11Layer`). Locally the dev server must also listen on 0.0.0.0 and allow the `host.docker.internal` host header (`--host 0.0.0.0 --allowed-hosts host.docker.internal`).
+- N2's `error_page` list includes `405`, but the landing location answers a non-GET/HEAD method with its own `405`, which that entry would turn into a `200` shell. `405` is left out; dsp-api never answers `405` to the GET/HEAD it is sent.
