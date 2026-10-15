@@ -55,6 +55,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
+  private val rowCache: ViewRestrictionsRowCache,
   private val ontologyRepo: OntologyRepo,
 ) {
 
@@ -69,7 +70,7 @@ final case class ViewRestrictionsService(
   def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
       index   <- ProjectOntologyIndex.load(ontologyRepo)
-      rows    <- repo.resourceCounts(projectIri)
+      rows    <- rowCache.refreshProject(projectIri)
       counted  = rows.filter(r => index.resourceClasses.contains(r.classIri))
       lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, projectIri)
       reported = counted.groupBy(_.classIri).toSeq.map { case (classIri, classRows) =>
@@ -87,7 +88,7 @@ final case class ViewRestrictionsService(
   ): Task[ViewRestrictionsValues] =
     for {
       index  <- ProjectOntologyIndex.load(ontologyRepo)
-      rows   <- repo.valueCounts(projectIri, resourceClass)
+      rows   <- rowCache.valueCounts(projectIri, resourceClass)
       counts <- ValueCountFold.fold(rows, index, itemType, projectIri).map(_._1)
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
 

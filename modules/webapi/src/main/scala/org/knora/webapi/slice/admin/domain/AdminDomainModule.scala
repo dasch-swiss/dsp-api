@@ -70,7 +70,7 @@ object AdminDomainModule { self =>
       KnoraGroupService.layer >+>
       (ProjectEraseService.layer ++ GroupService.layer) >+>
       KnoraUserToUserConverter.layer >+>
-      (ViewRestrictionsRepo.layer >+> ViewRestrictionsService.layer) >+>
+      (ViewRestrictionsRepo.layer >+> ViewRestrictionsRowCache.layer >+> ViewRestrictionsService.layer) >+>
       (ViewRestrictionsByPropertyRepo.layer >+> ViewRestrictionsByPropertyService.layer) >+>
       UserService.layer
 }

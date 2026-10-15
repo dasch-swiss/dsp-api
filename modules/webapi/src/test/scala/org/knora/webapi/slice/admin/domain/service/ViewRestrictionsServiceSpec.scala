@@ -310,6 +310,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
+    ViewRestrictionsRowCache.layer,
     ViewRestrictionsRepo.layer,
     CacheManager.layer,
     IriConverter.layer,
