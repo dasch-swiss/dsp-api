@@ -57,8 +57,14 @@ object ViewRestrictionsClassification {
    *
    * @param resourceClasses  the IRIs of the resource classes.
    * @param valueProperties  the counted properties, each with its [[ValueKind]].
+   * @param knownProperties  every property IRI in the ontologies, counted or not. A row whose property is not
+   *                         in this set points at an ontology-cache miss, not at a link target.
    */
-  final case class ProjectOntologyIndex(resourceClasses: Set[String], valueProperties: Map[String, ValueKind])
+  final case class ProjectOntologyIndex(
+    resourceClasses: Set[String],
+    valueProperties: Map[String, ValueKind],
+    knownProperties: Set[String],
+  )
 
   object ProjectOntologyIndex {
 
@@ -68,6 +74,7 @@ object ViewRestrictionsClassification {
         valueProperties = properties.flatMap { p =>
           ValueKind.of(p).map(p.entityInfoContent.propertyIri.toString -> _)
         }.toMap,
+        knownProperties = properties.map(_.entityInfoContent.propertyIri.toString).toSet,
       )
   }
 }

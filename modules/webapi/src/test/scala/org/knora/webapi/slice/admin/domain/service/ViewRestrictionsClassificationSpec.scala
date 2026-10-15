@@ -117,6 +117,11 @@ class ViewRestrictionsClassificationSpec extends ZIOSpecDefault {
             s"${anything}hasText"            -> ValueKind.Plain,
             s"${anything}hasOtherThingValue" -> ValueKind.Link,
           ),
+          index.knownProperties == Set(
+            s"${anything}hasText",
+            s"${anything}hasOtherThing",
+            s"${anything}hasOtherThingValue",
+          ),
         )
       },
     ),

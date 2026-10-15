@@ -26,11 +26,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 /**
  * Tests for [[ViewRestrictionsByPropertyService]].
  *
- * The suite that matters here is the equivalence pin (PRD REQ-6.3). The permission machinery is duplicated
- * between this service and [[ViewRestrictionsService]] on purpose — sharing it would reintroduce the
- * `groupBy` seam the split exists to remove — and the cost of that decision is that a subtle argument now
- * has to hold in two places. This is what turns a divergence into a failing test rather than two screens
- * quietly disagreeing.
+ * The suite that matters here is the equivalence pin (PRD REQ-6.3): the counts classify a bare literal
+ * through [[ValueCountFold]], the drill-down resolves each value with its real creator, and the two must
+ * agree.
  *
  * These tests deliberately need no triplestore and no ontology: the property under test is a property of
  * the permission model, not of any project's data.
@@ -39,17 +37,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-
-  /**
-   * The service instance under test.
-   *
-   * Constructed with `null` collaborators because every method exercised below — `audienceUser` and
-   * `visibilityOf` — is a pure function of its arguments and never touches the repo. Wiring a real
-   * `OntologyRepo` here would drag in the ontology cache and its whole layer stack to test arithmetic on a
-   * permission string. If a future test needs `properties`, `propertyValues` or `propertyItems`, it wants
-   * the full layer set and belongs in its own suite.
-   */
-  private val service = ViewRestrictionsByPropertyService(null)
 
   /**
    * A creator IRI that is emphatically not one of the synthetic audience users.
@@ -75,12 +62,12 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
   )
 
   private def visibilityWith(creator: String, literal: String, audience: Audience): Visibility =
-    service.visibilityOf(
+    ValueCountFold.visibilityOf(
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = creator,
         entityProject = projectIri.value,
         entityPermissionLiteral = literal,
-        requestingUser = service.audienceUser(audience, projectIri),
+        requestingUser = ValueCountFold.audienceUser(audience, projectIri),
       ),
     )
 
@@ -92,7 +79,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
       val mismatches = for {
         literal        <- literals
         audience       <- Audience.ordered
-        withPlaceholder = visibilityWith("urn:view-restrictions-by-property:no-such-creator", literal, audience)
+        withPlaceholder = visibilityWith("urn:view-restrictions:no-such-creator", literal, audience)
         withReal        = visibilityWith(realCreator, literal, audience)
         if withPlaceholder != withReal
       } yield s"$literal / $audience: placeholder=$withPlaceholder real=$withReal"
@@ -104,14 +91,14 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
       assertTrue(results.forall(_ == Visibility.Hidden))
     },
     test("no audience user is ever the creator, which is why the placeholder is sound") {
-      val ids = Audience.ordered.map(a => service.audienceUser(a, projectIri).id)
+      val ids = Audience.ordered.map(a => ValueCountFold.audienceUser(a, projectIri).id)
       assertTrue(ids.forall(_ != realCreator), ids.distinct.nonEmpty)
     },
   )
 
   private val visibilitySuite = suite("visibilityOf")(
     test("no permission at all is Hidden") {
-      assertTrue(service.visibilityOf(None) == Visibility.Hidden)
+      assertTrue(ValueCountFold.visibilityOf(None) == Visibility.Hidden)
     },
     test("a project member sees an open resource, anonymous does not see a member-only one") {
       val open       = visibilityWith(realCreator, "V knora-admin:UnknownUser", Audience.Anonymous)

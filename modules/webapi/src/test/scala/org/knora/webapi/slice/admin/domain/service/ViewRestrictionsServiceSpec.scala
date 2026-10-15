@@ -236,29 +236,29 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val pureSuite = suite("visibilityOf")(
     test("maps permission code 0 (no access) to Hidden") {
       for {
-        vis <- service(s => ZIO.succeed(s.visibilityOf(None)))
+        vis <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(None)))
       } yield assertTrue(vis == Visibility.Hidden)
     },
     test("maps RestrictedView (code 1) to RestrictedView for every item type") {
       for {
-        vis <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.RestrictedView))))
+        vis <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.RestrictedView))))
       } yield assertTrue(vis == Visibility.RestrictedView)
     },
     test("maps View and higher (code >= 2) to Visible") {
       for {
-        v <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.View))))
-        m <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.Modify))))
-        c <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.ChangeRights))))
+        v <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.View))))
+        m <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.Modify))))
+        c <- service(_ => ZIO.succeed(ValueCountFold.visibilityOf(Some(Permission.ObjectAccess.ChangeRights))))
       } yield assertTrue(v == Visibility.Visible, m == Visibility.Visible, c == Visibility.Visible)
     },
     test("the anonymous audience user is not an admin (would otherwise short-circuit to max permission)") {
       for {
-        user <- service(s => ZIO.succeed(s.audienceUser(Audience.Anonymous, projectIri)))
+        user <- service(_ => ZIO.succeed(ValueCountFold.audienceUser(Audience.Anonymous, projectIri)))
       } yield assertTrue(user.isAnonymousUser, !user.isSystemAdmin, !user.isProjectAdmin(projectIri))
     },
     test("the project-member audience user is a member but not an admin of the project") {
       for {
-        user <- service(s => ZIO.succeed(s.audienceUser(Audience.ProjectMember, projectIri)))
+        user <- service(_ => ZIO.succeed(ValueCountFold.audienceUser(Audience.ProjectMember, projectIri)))
       } yield assertTrue(user.isProjectMember(projectIri), !user.isProjectAdmin(projectIri), !user.isSystemAdmin)
     },
     // LOAD-BEARING: the exact summary counts classify *bare* permission literals, substituting a placeholder
@@ -282,25 +282,25 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         "http://rdfh.ch/users/someone-else",
       )
       for {
-        results <- service(s =>
+        results <- service(_ =>
                      ZIO.succeed(
                        for {
                          literal  <- literals
                          audience <- Audience.ordered
                        } yield creators.map { creator =>
-                         s.visibilityOf(
+                         ValueCountFold.visibilityOf(
                            PermissionUtilADM.getUserPermissionADM(
                              entityCreator = creator,
                              entityProject = projectIri.value,
                              entityPermissionLiteral = literal,
-                             requestingUser = s.audienceUser(audience, projectIri),
+                             requestingUser = ValueCountFold.audienceUser(audience, projectIri),
                            ),
                          )
                        }.distinct,
                      ),
                    )
         // …and no audience user's own id collides with a real user IRI, which is what makes the above hold.
-        ids <- service(s => ZIO.succeed(Audience.ordered.map(a => s.audienceUser(a, projectIri).id)))
+        ids <- service(_ => ZIO.succeed(Audience.ordered.map(a => ValueCountFold.audienceUser(a, projectIri).id)))
       } yield assertTrue(
         results.forall(_.size == 1),
         ids.forall(id => !creators.contains(id)),
