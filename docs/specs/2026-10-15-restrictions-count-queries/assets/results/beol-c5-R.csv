@@ -1,0 +1,37 @@
+cnt,permissions,resClass
+261,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#manuscript
+1248,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#entryComment
+1,"V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember",http://www.knora.org/ontology/0801/beol#manuscript
+647,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#JournalArticle
+160,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/newton#letter
+5,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Organization
+108,"CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",http://www.knora.org/ontology/0801/beol#figure
+184,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#EditedBook
+384,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Publisher
+4,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Webpage
+42,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Collection
+4,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#WebsiteArticle
+719,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#Location
+3,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#Archive
+510,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Book
+178,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Journal
+9,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/knora-base#XSLTransformation
+2,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#introduction
+611,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#CollectionArticle
+4,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Website
+1265,"M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",http://www.knora.org/ontology/knora-base#Region
+555,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#letter
+1,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#Publication
+1,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#BookContent
+33,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/biblio#VPArticle
+6159,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#transcription
+320,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#manuscriptEntry
+58,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#section
+386,"V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember",http://www.knora.org/ontology/0801/beol#page
+3054,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#person
+3525,"V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember",http://www.knora.org/ontology/knora-base#Region
+1946,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#letter
+1,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#facsimile
+2036,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#endnote
+157,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/leibniz#letter
+5379,CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser,http://www.knora.org/ontology/0801/beol#page

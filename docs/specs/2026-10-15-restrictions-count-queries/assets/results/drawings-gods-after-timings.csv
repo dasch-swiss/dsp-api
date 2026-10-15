@@ -1,0 +1,9 @@
+run,step,query,seconds,status,rows
+1,after,R resource counts,0.420,ok,31
+1,after,C1 matrix unbound ?prop,300.033,client-timeout,0
+1,after,C2 matrix VALUES ?prop,79.538,ok,556
+1,after,C3 matrix sub-select anchor,300.036,client-timeout,0
+2,after,R resource counts,0.454,ok,31
+2,after,C1 matrix unbound ?prop,300.042,client-timeout,0
+2,after,C2 matrix VALUES ?prop,78.106,ok,556
+2,after,C3 matrix sub-select anchor,300.040,client-timeout,0

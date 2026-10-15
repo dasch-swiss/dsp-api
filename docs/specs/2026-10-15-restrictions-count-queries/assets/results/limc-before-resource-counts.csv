@@ -1,0 +1,16 @@
+cnt,permissions,resClass
+55824,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Monument
+56691,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Scene
+1286,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Dating
+726,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Genealogy
+70600,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#CatalogLIMC
+922,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Artist
+61189,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Inventory
+4624,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Storage
+2908,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#MythologicalFigure
+2179,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Findspot
+8060,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#CatalogThesCRA
+54,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#HistoricalFigure
+3,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Documentation
+40846,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#Photo
+2345,"CR knora-admin:ProjectAdmin|D http://rdfh.ch/groups/080E/FZiUJ4TNTBm0kcdhHdXt3Q|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser",http://www.knora.org/ontology/080E/LIMC#StorageLocation

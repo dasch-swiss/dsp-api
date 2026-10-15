@@ -1,0 +1,52 @@
+run,step,query,seconds,status,rows
+1,R,R resource counts,4.904,ok,15
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Artist,0.873,ok,5
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogLIMC,8.274,ok,5
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogThesCRA,1.553,ok,5
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Dating,0.806,ok,2
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Documentation,0.723,ok,4
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Findspot,1.141,ok,9
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Genealogy,0.941,ok,7
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#HistoricalFigure,0.729,ok,5
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Inventory,7.465,ok,4
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Monument,24.306,ok,37
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#MythologicalFigure,1.207,ok,10
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Photo,7.098,ok,7
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Scene,8.674,ok,17
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Storage,1.787,ok,15
+1,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#StorageLocation,1.316,ok,9
+1,C6-project,C6 project matrix,56.979,ok,141
+2,R,R resource counts,2.677,ok,15
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Artist,1.014,ok,5
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogLIMC,8.417,ok,5
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogThesCRA,1.617,ok,5
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Dating,0.839,ok,2
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Documentation,0.826,ok,4
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Findspot,1.206,ok,9
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Genealogy,0.839,ok,7
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#HistoricalFigure,0.736,ok,5
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Inventory,7.137,ok,4
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Monument,22.295,ok,37
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#MythologicalFigure,1.194,ok,10
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Photo,6.825,ok,7
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Scene,8.206,ok,17
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Storage,1.783,ok,15
+2,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#StorageLocation,1.208,ok,9
+2,C6-project,C6 project matrix,55.699,ok,141
+3,R,R resource counts,2.836,ok,15
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Artist,0.820,ok,5
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogLIMC,7.896,ok,5
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#CatalogThesCRA,1.529,ok,5
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Dating,0.894,ok,2
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Documentation,0.762,ok,4
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Findspot,1.123,ok,9
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Genealogy,0.831,ok,7
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#HistoricalFigure,0.815,ok,5
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Inventory,6.989,ok,4
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Monument,21.521,ok,37
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#MythologicalFigure,1.280,ok,10
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Photo,6.624,ok,7
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Scene,8.099,ok,17
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#Storage,1.594,ok,15
+3,C5-class,C5 http://www.knora.org/ontology/080E/LIMC#StorageLocation,1.174,ok,9
+3,C6-project,C6 project matrix,55.182,ok,141

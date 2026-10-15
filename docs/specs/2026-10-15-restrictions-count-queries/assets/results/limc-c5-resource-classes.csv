@@ -1,0 +1,16 @@
+resClass
+http://www.knora.org/ontology/080E/LIMC#Artist
+http://www.knora.org/ontology/080E/LIMC#CatalogLIMC
+http://www.knora.org/ontology/080E/LIMC#CatalogThesCRA
+http://www.knora.org/ontology/080E/LIMC#Dating
+http://www.knora.org/ontology/080E/LIMC#Documentation
+http://www.knora.org/ontology/080E/LIMC#Findspot
+http://www.knora.org/ontology/080E/LIMC#Genealogy
+http://www.knora.org/ontology/080E/LIMC#HistoricalFigure
+http://www.knora.org/ontology/080E/LIMC#Inventory
+http://www.knora.org/ontology/080E/LIMC#Monument
+http://www.knora.org/ontology/080E/LIMC#MythologicalFigure
+http://www.knora.org/ontology/080E/LIMC#Photo
+http://www.knora.org/ontology/080E/LIMC#Scene
+http://www.knora.org/ontology/080E/LIMC#Storage
+http://www.knora.org/ontology/080E/LIMC#StorageLocation

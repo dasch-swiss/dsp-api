@@ -1,0 +1,55 @@
+run,step,query,seconds,status,rows
+1,R,R resource counts,0.479,ok,31
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Campaign,0.201,ok,34
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#CollectionSite,0.246,ok,18
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,0.158,ok,27
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,4.453,ok,99
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Instruction,0.189,ok,13
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Passage,0.283,ok,26
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Person,1.391,ok,34
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QualityData,1.117,ok,40
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,0.153,ok,3
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseFr,0.157,ok,4
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseOriginal,0.148,ok,6
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,1.924,ok,255
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,1.103,ok,12
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,0.315,ok,10
+1,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Verso,1.990,ok,90
+1,C5-class,C5 http://www.knora.org/ontology/knora-base#Region,0.159,ok,5
+1,C6-project,C6 project matrix,10.987,ok,676
+2,R,R resource counts,0.422,ok,31
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Campaign,0.182,ok,34
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#CollectionSite,0.203,ok,18
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,0.155,ok,27
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,3.637,ok,99
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Instruction,0.151,ok,13
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Passage,0.201,ok,26
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Person,1.306,ok,34
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QualityData,1.062,ok,40
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,0.167,ok,3
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseFr,0.153,ok,4
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseOriginal,0.158,ok,6
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,1.879,ok,255
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,1.008,ok,12
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,0.353,ok,10
+2,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Verso,1.862,ok,90
+2,C5-class,C5 http://www.knora.org/ontology/knora-base#Region,0.163,ok,5
+2,C6-project,C6 project matrix,9.774,ok,676
+3,R,R resource counts,0.645,ok,31
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Campaign,0.192,ok,34
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#CollectionSite,0.176,ok,18
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,0.168,ok,27
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,2.573,ok,99
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Instruction,0.150,ok,13
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Passage,0.185,ok,26
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Person,1.067,ok,34
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QualityData,0.790,ok,40
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,0.147,ok,3
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseFr,0.147,ok,4
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseOriginal,0.150,ok,6
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,1.316,ok,255
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,0.854,ok,12
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,0.254,ok,10
+3,C5-class,C5 http://www.knora.org/ontology/0105/drawings-gods#Verso,1.522,ok,90
+3,C5-class,C5 http://www.knora.org/ontology/knora-base#Region,0.151,ok,5
+3,C6-project,C6 project matrix,7.880,ok,676
