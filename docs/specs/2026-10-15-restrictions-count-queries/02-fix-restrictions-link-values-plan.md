@@ -285,22 +285,21 @@ glob).
 - [ ] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
 - [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
       ontology data.
-- [ ] Write a failing cache test (`makeCache` with a counting `Ref`): two concurrent lookups for the same key run one
+- [x] Write a failing cache test (`makeCache` with a counting `Ref`): two concurrent lookups for the same key run one
       load.
-- [ ] Write a failing cache test: a failed load is not kept, so the next lookup runs the load again.
-- [ ] Write a failing cache test: the project removal invalidates only the `C5Key`s of its own project.
-- [ ] Write a failing cache test for the cross-tab sequence `/classes`, `/values`, `/properties`, `/values`: the
+- [x] Write a failing cache test: a failed load is not kept, so the next lookup runs the load again.
+- [x] Write a failing cache test: the project removal invalidates only the `C5Key`s of its own project.
+- [x] Write a failing cache test for the cross-tab sequence `/classes`, `/values`, `/properties`, `/values`: the
       second `/values` runs no load.
 - [ ] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
 - [ ] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
-- [ ] Add `ViewRestrictionsRowCache` with `makeCache(capacity, ttl)(resolve)` (`Cache.makeWith`, 10-minute TTL on
+- [x] Add `ViewRestrictionsRowCache` with `makeCache(capacity, ttl)(resolve)` (`Cache.makeWith`, 10-minute TTL on
       success, `Duration.Zero` on failure) and a `ZLayer.scoped` layer.
-- [ ] Add the R cache (key `ProjectIri`) to `ViewRestrictionsRowCache`.
-- [ ] Add the C5 cache (key `C5Key(projectIri, classIri)`) to `ViewRestrictionsRowCache`.
-- [ ] Remove the EhCache `viewRestrictionsProjectClasses` and the `CacheManager` dependency of the repo layer.
-- [ ] Wire `ViewRestrictionsRowCache` into the admin layers and the test layers.
-- [ ] Use the cache in the class report.
-- [ ] On `/classes`, invalidate the `C5Key` of each class in the current R rows, then the R key.
+- [x] Add the R cache (key `ProjectIri`) to `ViewRestrictionsRowCache`.
+- [x] Add the C5 cache (key `C5Key(projectIri, classIri)`) to `ViewRestrictionsRowCache`.
+- [x] Wire `ViewRestrictionsRowCache` into the admin layers and the test layers.
+- [x] Use the cache in the class report.
+- [x] On `/classes`, invalidate the `C5Key` of each class in the current R rows, then the R key.
 - [ ] Change `propertyValues` to load all classes through the cache with
       `ZIO.foreachPar(classes)(…).withParallelism(4)`.
 - [ ] Change `propertyValues` to fold the rows for the requested property.
@@ -337,6 +336,7 @@ glob).
 - [ ] Add a unit test that optimizes each rendered drill-down query with `Algebra.optimize(Algebra.compile(query))`
       and asserts that no `knora-base:hasPermissions` triple has a constant object.
 - [ ] Remove `grantsViewToAnonymousRegex` from both repos.
+- [ ] Remove the EhCache `viewRestrictionsProjectClasses` and the `CacheManager` dependency of the repo layer.
 - [ ] Remove `ProjectClasses`, `projectClasses`, `projectClassesCache`, `projectClassesQuery`,
       `anyMultiTypedResourceQuery` and `multiTypedQuery`.
 - [ ] Remove the legacy fixtures of the removed queries.

@@ -29,6 +29,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@8e26dbf63 | 1 |
 | 2 | reviewed | dsp-api@6260e451a | 1 |
+| 3 | in-progress | dsp-api@6c1347ccd | 0 |
 
 ## Chunk queue
 
@@ -38,6 +39,8 @@ status: in-progress
 | 1.2 | dsp-api | slice/admin/domain/service/ValueCountFold.scala (new), repo/ViewRestrictionsRepo.scala (ValueCountRow), both services, new test spec, service specs | 1.1 | fold tests (3), move classify/foldRows, implement fold, warning log | fold drops deleted/unknown, maps item types, one warning per fold; both services use ValueCountFold | ViewRestrictionsService.scala:59-111, ViewRestrictionsByPropertyService.scala:55-132 | — |
 | 2.1 | dsp-api | repo/ViewRestrictionsRepo.scala, test repo/ViewRestrictionsQuerySpec.scala, test resources golden files | — | R query + parser, golden R, C5 query + parser, golden C5, C5 Scaladoc on pattern order, remove orphan golden files | R/C5 render exactly the plan text; goldens pinned through GoldenTest | ViewRestrictionsRepo.scala:597-705 (current count queries), ValueHasXmlBackfillQuerySpec.scala (GoldenTest pattern) | — |
 | 2.2 | dsp-api | domain/service/ViewRestrictionsService.scala, ViewRestrictionsByPropertyService.scala (OntologyRepo only), repo/ViewRestrictionsRepo.scala, test service specs, legacy fixtures | 2.1 | service tests (4), OntologyRepo in services, test double, classSummaries via R, valueCounts via C5, remove 2 old count queries + fixtures, multi-typed count tests | /classes and /values use R/C5 + fold; link values count, standoff not | ViewRestrictionsService.scala classSummaries/valueCounts; CardinalityServiceLiveSpec.scala:173-182 (OntologyCacheFake layer) | — |
+| 3.1 | dsp-api | domain/service/ViewRestrictionsRowCache.scala (new), ViewRestrictionsService.scala, admin layer wiring, test cache spec, service spec layers | — | cache tests (4), RowCache with makeCache, R cache, C5 cache, remove EhCache/CacheManager, wiring, class report uses cache, removal on /classes | single-flight, failures not kept, per-project removal, cross-tab reuse | AssetPermissionsCache.scala:34-110, AssetPermissionsCacheSpec.scala | — |
+| 3.2 | dsp-api | ViewRestrictionsByPropertyService.scala, ViewRestrictionsByPropertyRepo.scala, by-property spec, legacy fixtures | 3.1 | OntologyRepo + fixture for by-property, property-values sum test, standoff zero test, propertyValues via cache + foreachPar(4) + fold, zero for unknown property, remove by-property valueCountsQuery | /property-values sums C5 rows of all classes for the property | ViewRestrictionsByPropertyService.scala propertyValues | — |
 
 ## Chunks
 
@@ -49,9 +52,12 @@ status: in-progress
 | 2.1 | dsp-api | complete | 2b382475a | resourceCountsQuery/valueCountsQuery + parsers + ResourceCountRow; goldens; in-memory count spec; 9 orphan goldens removed | none |
 | 2.2 | dsp-api | complete | 21eabe6bc | /classes via resourceCounts + resource-class filter, /values via valueCounts + ValueCountFold; ProjectOntologyIndex.load; old count queries and fixtures removed; link/standoff/second-ontology/deleted-class tests | none |
 | 2.3 | dsp-api | complete | c887b1c1d | Phase 2 review fixes: malformed rows fail with InconsistentRepositoryDataException, PermissionCountRow.groupId removed, stale class-list and ProjectClasses docs, fixture helpers | none |
+| 3.1 | dsp-api | complete | f10def074 | ViewRestrictionsRowCache (zio-cache, 10 min TTL, failures not kept, refreshProject: invalidate R, reload R, invalidate each fresh class key); class report reads through it; 4 cache tests | none |
 
 ## Deferrals
 
+- Phase 3 checkbox "Remove the EhCache `viewRestrictionsProjectClasses` ...": moved to Phase 4, because the
+  drill-down uses `projectClasses` (and its EhCache) until Phase 4 removes `ProjectClasses`.
 - Phase 2 checkboxes "Give both services an OntologyRepo" and "Provide OntologyCacheFake ... in both service specs":
   split; the by-property service parts moved to Phase 3, where that service first uses the index.
 - Phase 1 review DUNE-001/DUNE-003 (stale `ARCH-MAP.md`, admin-domain import of API DTOs): Phase 5 checkbox
@@ -79,3 +85,20 @@ status: in-progress
 - Phase 2 review: no warning when `/classes` drops a class outside `index.resourceClasses`, because list nodes and
   ontologies are dropped on every request; the Scaladoc states it instead. Index memoization skipped (milliseconds).
 - Full webapi unit suite passed at 21eabe6bc (21.4 s).
+- Chunk 3.1: `refreshProject` reloads R first and then invalidates the value key of each class in the fresh rows, so
+  removal also works when no older R entry was cached. A mutation that keeps failures in the cache failed the
+  failure-retention test.
+
+## Resume note (2026-10-15)
+
+- Stopped on request after chunk 3.1. Nothing is pushed; the branch is `investigate/restrictions-matrix-query` and its
+  upstream points at `origin/main`, so push with `git push -u origin HEAD` (or a renamed branch) when shipping.
+- Next: chunk 3.2 (see `## Chunk queue`): give `ViewRestrictionsByPropertyService` an `OntologyRepo` and the
+  `ViewRestrictionsRowCache`; `propertyValues` loads every class through the cache with
+  `ZIO.foreachPar(classes)(...).withParallelism(4)` (classes from `rowCache.resourceCounts` filtered to
+  `index.resourceClasses`), filters the rows to the property and folds them with `ValueCountFold.fold`; zero counts for
+  a property not in `index.valueProperties`; remove the by-property `valueCountsQuery` and its legacy fixtures; add the
+  `OntologyCacheFake` fixture to `ViewRestrictionsByPropertyServiceSpec`. Then the Phase 3 review checkpoint.
+- Worker reports have twice been inaccurate (an edit not on disk, skipped red steps): verify each chunk with
+  `git status`, the test report and a compiling mutation before committing.
+- Resume with `/eng:workflows:work docs/specs/2026-10-15-restrictions-count-queries/02-fix-restrictions-link-values-plan.md`.
