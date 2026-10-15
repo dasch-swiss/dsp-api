@@ -3,7 +3,7 @@ title: "fix: restrictions overview counts user link values, with count queries c
 type: fix
 date: 2026-10-15
 author: "Nora Ammann"
-status: draft
+status: reviewed
 repositories: []
 linear: DEV-7390
 ---
@@ -81,7 +81,10 @@ These decisions are fixed for this plan:
 
 1. **By-property counts.** They come from the cached C5 rows, as the design doc recommends.
 2. **Multi-typed resources.** They count once for each type. `ProjectClasses`, `anyMultiTypedResourceQuery` and
-   `multiTypedQuery` are removed. None of the three measured projects has a multi-typed resource.
+   `multiTypedQuery` are removed. The current code keeps a most-specific-class filter, so that a resource with a class
+   and its subclass counts once (Scaladoc of `ProjectClasses.resClassPatterns`). That filter needs a `subClassOf+`
+   probe of up to 27.3 s on LHTT, and R and C5 have no resource IRI to remove duplicates with. None of the three
+   measured projects has a multi-typed resource, so the filter costs time and changes no count.
 3. **REGEX.** The REGEX is replaced in this plan.
 4. **Link item type.** A link value counts as item type `Value`. There is no new `Link` item type, so the API and
    dsp-app do not change.
@@ -92,7 +95,18 @@ These decisions are fixed for this plan:
 
 ### Classification
 
-The classification is a set of pure functions and stateless data, with no class that holds state.
+The classification is a set of pure functions and stateless data. No class holds state.
+
+- **Location.** The types and pure functions go in the slice domain (`slice/admin/domain/service/`):
+    - `ValueKind` with `ValueKind.of(info: ReadPropertyInfoV2): Option[ValueKind]`.
+    - `ProjectOntologyIndex` with the pure builder `ProjectOntologyIndex.from(properties, classes)`.
+    - `object ValueCountFold` with the fold functions.
+
+  The repo does SPARQL and row parsing only. `ValueCountRow` is a repo output, so it goes in the
+  `ViewRestrictionsRepo` companion, next to `PermissionCountRow`.
+- **Shared visibility.** `classify` and `foldRows` are duplicated today (`ViewRestrictionsService.scala:71,94`,
+  `ViewRestrictionsByPropertyService.scala:96,115`). Move them into `ValueCountFold`, and let both services use the one
+  copy.
 
 ```scala
 enum ValueKind { case Plain, File, Link }
@@ -102,6 +116,7 @@ final case class ProjectOntologyIndex(
   valueProperties: Map[String, ValueKind], // hasStandoffLinkToValue is absent
 )
 
+// ViewRestrictionsRepo companion
 final case class ValueCountRow(
   classIri: String,
   propertyIri: String,
@@ -113,9 +128,10 @@ final case class ValueCountRow(
 ```
 
 - **Index.** `ProjectOntologyIndex` comes from `OntologyRepo.findAll` (all cached ontologies, knora-base and shared
-  ontologies included). Property and class IRIs are unique across all ontologies, so one index for every ontology is
-  correct. With it, values of a property from a shared or other-project ontology still count, as they do today through
-  `subPropertyOf*`. `/properties` keeps its list from the project ontologies plus knora-base.
+  ontologies included). Only that call is an effect, and it runs in the service. Property and class IRIs are unique
+  across all ontologies, so one index for every ontology is correct. With it, values of a property from a shared or
+  other-project ontology still count, as they do today through `subPropertyOf*`. `/properties` keeps its list from the
+  project ontologies plus knora-base.
 - **Class list.** `/classes` lists the resource classes that have one or more non-deleted resources (from R). A class
   whose resources are all deleted is no longer listed. Today it is listed with population 0.
 - **totalValues.** The total for each item type is the sum of the rows of that type: `All` gives the value count, `File`
@@ -125,54 +141,90 @@ final case class ValueCountRow(
     - It drops properties that are not in the index: link targets, metadata and standoff links.
     - It maps each row to item types: `All` gives `count`, `File` gives File rows, `Value` gives Plain and Link rows,
       and `Comment` gives `commented`.
-- **Visibility.** `classify` and `foldRows` in the services stay as they are.
+    - It reports unknown property IRIs with one `ZIO.logWarning` line for each fold, not one line for each row.
+    - It is total: no `.get`, no `unsafeFrom`.
 
 ### Cache
 
-The cache uses `zio.cache.Cache` (pattern: `AssetPermissionsCache.scala`). It sends only one lookup when several
-requests ask for the same key at the same time. This matters because the app sends `/property-values` requests in
-parallel.
+The cache uses `zio.cache.Cache` 0.2.4. Concurrent `get` calls for one missing key share one lookup (single-flight).
+This matters because the app sends `/property-values` requests in parallel.
 
-- **Keys.** One key holds the R rows for a project (`ProjectIri`). One key holds the C5 rows for a class (`(ProjectIri,
-  classIri)`).
-- **Lifetime.** Each entry lives for 10 minutes at most (TTL). Only `/classes` removes the entries of its project,
-  because it starts a class-report run. `/properties` does not remove entries, so a change from the class tab to the
-  property tab reuses the rows. A reviewer sees a permission change at the next class-report page load, or after 10
-  minutes at most.
-- **Failures.** Build the cache with `Cache.makeWith`, and keep a failed lookup for `Duration.Zero`, as
-  `AssetPermissionsCache.scala:76-82` does. A timeout then does not block a key for 10 minutes. Set a fixed capacity.
-  Remove the entries of a project by filtering `cache.keys` and calling `invalidate` on each key.
+- **Structure.** A new `final case class ViewRestrictionsRowCache` holds two caches, with a `ZLayer.scoped` layer. It
+  follows `AssetPermissionsCache.scala:34-36,76-82,99-110`: a testable `makeCache(capacity, ttl)(resolve)` built with
+  `Cache.makeWith`, and a `CacheKey` case class in the companion. The loaders come from the repo. The repo layer then
+  needs only `TriplestoreService`, and the EhCache `viewRestrictionsProjectClasses` and its `CacheManager` wiring go
+  away. Both services take `ViewRestrictionsRowCache` as a constructor argument.
+- **Keys.** One cache holds the R rows for a project (key `ProjectIri`). One cache holds the C5 rows for a class (key
+  `C5Key(projectIri: ProjectIri, classIri: String)`).
+- **Settings.** TTL 10 minutes and capacity are companion `val`s, as `ProjectClassesTtl` is today. A failed lookup is
+  kept for `Duration.Zero`, so a timeout does not block a key for 10 minutes.
+- **Removal.** `zio-cache` 0.2.4 has no way to list keys (only `invalidate(key)` and `invalidateAll`). On `/classes`,
+  the service reads the current R rows of the project and calls `invalidate` for each `C5Key` of those classes. Then it
+  calls `invalidate` for the R key and loads R again. An entry for a class that is gone from R stays until its TTL ends.
+  A load that runs at the same time can insert an entry again after the removal. The TTL limits this.
+- **Lifetime.** Only `/classes` removes the entries of its project, because it starts a class-report run.
+  `/properties` does not remove entries, so a change from the class tab to the property tab reuses the rows. A
+  reviewer sees a permission change at the next class-report page load, or after 10 minutes at most.
 - **Drill-down from a new cache.** `/property-items` needs the literals of the property, so on a new cache it also loads
   all classes first. The app normally opens the drill-down after the counts are loaded, so the cache is usually ready. A
   deep link on a new cache waits for the same load as `/property-values`.
 - **Multi-typed resources, by property.** A multi-typed resource counts once for each type, also in `/property-values`.
   The property drill-down keeps `DISTINCT` values. For such a resource, the property total and the drill-down can
   therefore differ. This follows from decision 2, and the Scaladoc documents it.
-- **By-property load.** On a new cache, `/property-values` loads every class with `ZIO.foreachPar` and a parallelism
-  limit of 4. On LIMC, the slowest class takes 22 s and all classes take 64 s in sequence. The wall time is therefore
-  about 22–25 s, below the 40 s query timeout. This number is not measured yet; Phase 5 measures it.
+- **By-property load.** On a new cache, `/property-values` loads every class with
+  `ZIO.foreachPar(classes)(…).withParallelism(4)`. On LIMC, the slowest class takes 22 s and all classes take 64 s in
+  sequence. The wall time is therefore about 22–25 s, below the 40 s query timeout. This number is not measured yet;
+  Phase 5 measures it.
 
 ### Drill-down
 
 The drill-down keeps its current shape and its paging in SPARQL. It changes in four places:
 
 - **Standoff links.** `FILTER NOT EXISTS { ?value a knora-base:LinkValue . }` changes to `FILTER (?prop !=
-  knora-base:hasStandoffLinkToValue)` in the class repo. This compares a bound variable and needs no index lookup. In
-  the property repo, the filter goes away, because the property is bound.
-- **REGEX.** `FILTER (!REGEX(?permissions, …))` changes to `FILTER (?permissions IN (…))`. The list holds the literals
-  that are restricted for one or more audiences. Scala classifies them from the R or C5 rows of the same scope, so the
-  drill-down and the counts agree by construction.
-- **Empty list.** If the list is empty, the result is an empty page with a total of 0, and no query runs.
+  knora-base:hasStandoffLinkToValue)` in the class repo. This compares a bound variable and needs no index lookup. Jena
+  does not rewrite `!=` by default (`TransformFilterInequality` is off). In the property repo, the filter goes away,
+  because the property is bound.
+- **REGEX.** `FILTER (!REGEX(?permissions, …))` changes to `FILTER (STR(?permissions) IN (…))`. The list holds the
+  literals that are restricted for one or more audiences:
+    - The resource branch uses the restricted literals of the R rows of the class.
+    - The value branch uses the restricted literals of the C5 rows of the class.
+    - The property drill-down uses the restricted literals of the C5 rows for the property.
+
+  The `All` page and count queries thus carry two lists, one for each `UNION` branch. The drill-down and the counts
+  agree by construction.
+- **Why `STR()`.** Jena 6.2.0 rewrites `?permissions IN ("a", "b")` with plain string literals by default:
+  `TransformExpandOneOf` makes a disjunction, and `TransformFilterDisjunction` with `TransformFilterEquality` makes a
+  `UNION` with the literal in the triple pattern. Then `?value knora-base:hasPermissions "a"` has two bound terms and
+  scans the whole store. `STR(?permissions)` is not a variable, so the equality transform does not apply. A unit test
+  runs `Algebra.optimize(Algebra.compile(query))` on each rendered drill-down query. It asserts that the optimized
+  algebra has no `knora-base:hasPermissions` triple with a constant object. The test proves only that the filter is not
+  rewritten. It cannot show the final BGP order of TDB2.
+- **Literals.** The literals go into the query through `Literal.string`, which escapes `\`, `"` and `'`
+  (`modules/sparql-builder/src/main/scala/org/knora/sparqlbuilder/types.scala:122,151-159`).
+- **Empty list.** If a list is empty, its branch has no rows. If all lists are empty, the result is an empty page with
+  a total of 0, and no query runs.
 - **Class binding.** `${classes.valuesClause}`, `resClassPatterns` and `FILTER (?resClass = $groupClass)` change to
   `?resource a $groupClass` plus `BIND($groupClass AS ?resClass)`. The row parsers read `?resClass`
   (`ViewRestrictionsRepo.scala:195,225`), so the variable must stay bound.
 
-Jena can turn a `FILTER IN` or `=` into a constant inside the triple pattern (filter-equality transform). Then `?value
-knora-base:hasPermissions "lit"` has two bound terms and scans the whole store. A unit test runs
-`Algebra.optimize(Algebra.compile(query))` on the rendered drill-down queries. It checks that no basic graph pattern has
-a constant object for `knora-base:hasPermissions`. If the transform occurs, wrap the expression as `STR(?permissions) IN
-(…)`, which blocks the transform. The literals go into the query through `Literal.string`, which escapes quotes and
-backslashes.
+### Golden tests
+
+`ViewRestrictionsQuerySpec` does not use `GoldenTest` today. It compares the queries with
+`ViewRestrictionsLegacyFixtures` only. The files `ViewRestrictionsQuerySpec__*.txt` in
+`modules/webapi/src/test/resources/org/knora/webapi/slice/admin/repo/` are not read by any spec. The plan removes
+those orphan files, and adds `GoldenTest.assertGolden` tests for R, C5 and each drill-down query (pattern:
+`ValueHasXmlBackfillQuerySpec.scala`). New golden content is captured through `TEST_UNDECLARED_OUTPUTS_DIR`, because
+`rewrite = true` cannot write files under Bazel.
+
+### Test seams
+
+- **Pure tests.** `ValueKind`, the index builder and the fold need no layers.
+- **Cache tests.** They use `makeCache` with a counting `Ref` and no triplestore, as
+  `AssetPermissionsCacheSpec.scala` does.
+- **Service tests.** They use `ViewRestrictionsServiceSpec` and `ViewRestrictionsByPropertyServiceSpec` with
+  `OntologyCacheFake` plus `OntologyRepoLive` (pattern: `CardinalityServiceLiveSpec.scala:173-182`). The fixture
+  ontology data includes the knora-base properties that the test uses.
+- **Log tests.** They assert log lines with `ZTestLogger.logOutput` (pattern: `ValueHasXmlBackfillServiceSpec.scala:94`).
 
 ### Unchanged
 
@@ -189,7 +241,8 @@ glob).
 - [ ] Write failing unit tests for `ValueKind`: `hasStandoffLinkToValue`, a link property, a standoff internal reference
       and a non-resource property give no kind.
 - [ ] Write a failing unit test for `ValueKind`: a file value property gives `File`.
-- [ ] Add `ValueKind`, `ProjectOntologyIndex` and a pure builder from `ReadPropertyInfoV2` / `ReadClassInfoV2`.
+- [ ] Add `ValueKind` and `ProjectOntologyIndex` with its pure builder in `slice/admin/domain/service/`.
+- [ ] Move `classify` and `foldRows` from both services into `object ValueCountFold`, and let both services use it.
 - [ ] Replace `isValueProperty` with the `ValueKind` classification, so that `/properties` lists user link value
       properties and omits `hasStandoffLinkToValue`.
 - [ ] Update `ViewRestrictionsByPropertyRepoSpec`: "rejects the reified link-value property" becomes "accepts", and a
@@ -200,7 +253,7 @@ glob).
       and a link value with a comment.
 - [ ] Write a failing unit test: a value with a comment counts once under `All`.
 - [ ] Implement the fold.
-- [ ] Log a warning for each unknown property IRI in the fold, and assert the log line in a test.
+- [ ] Log one warning line for each fold that lists the unknown property IRIs, and assert the line with `ZTestLogger`.
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
@@ -212,38 +265,44 @@ glob).
 - [ ] Add a failing service test: a value property from a second ontology counts.
 - [ ] Add a failing service test: a class whose resources are all deleted is not listed by `/classes`.
 - [ ] Give both services an `OntologyRepo` as the index source.
-- [ ] Use the existing ontology test double in both service specs.
+- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in both service specs, with fixture ontology data.
 - [ ] Add the R query and its row parser to `ViewRestrictionsRepo`.
-- [ ] Add a golden test for R.
+- [ ] Add `GoldenTest` to `ViewRestrictionsQuerySpec`, and add a golden test for R.
 - [ ] Add the C5 query and its row parser.
 - [ ] Add a golden test for C5.
 - [ ] Add a Scaladoc comment on C5 that explains why `?value knora-base:isDeleted` keeps an unbound object.
 - [ ] Change `classSummaries` to R plus the resource-class filter of the index.
 - [ ] Change `valueCounts` to C5 plus the fold.
-- [ ] Remove `resourceCountsByClassAndPermissionQuery` with its golden files and legacy fixtures.
-- [ ] Remove `valueCountsByPermissionQuery` with its golden files and legacy fixtures.
+- [ ] Remove `resourceCountsByClassAndPermissionQuery` and its legacy fixtures.
+- [ ] Remove `valueCountsByPermissionQuery` and its legacy fixtures.
+- [ ] Remove the orphan files `ViewRestrictionsQuerySpec__*.txt`, which no spec reads.
 - [ ] Change the multi-typed count tests: a multi-typed resource counts once for each type.
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: Project cache and by-property counts from C5
 
-- [ ] Write a failing test: two concurrent lookups for the same key run one query.
-- [ ] Write a failing test: a failed lookup is not kept, so the next lookup runs the query again.
-- [ ] Write a failing test: `/classes` removes only the entries of its own project.
-- [ ] Write a failing test for the cross-tab sequence `/classes`, `/values`, `/properties`, `/values`: the second
-      `/values` runs no query.
+- [ ] Write a failing cache test (`makeCache` with a counting `Ref`): two concurrent lookups for the same key run one
+      load.
+- [ ] Write a failing cache test: a failed load is not kept, so the next lookup runs the load again.
+- [ ] Write a failing cache test: the project removal invalidates only the `C5Key`s of its own project.
+- [ ] Write a failing cache test for the cross-tab sequence `/classes`, `/values`, `/properties`, `/values`: the
+      second `/values` runs no load.
 - [ ] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
 - [ ] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
-- [ ] Add the `zio.cache.Cache` for R rows (key `ProjectIri`): `Cache.makeWith`, 10-minute TTL on success,
-      `Duration.Zero` on failure, fixed capacity.
-- [ ] Add the `zio.cache.Cache` for C5 rows (key `(ProjectIri, classIri)`), with the same settings.
-- [ ] Use both caches in the class report.
-- [ ] Remove the entries of a project on `/classes`.
-- [ ] Change `propertyValues` to load all classes through the cache (`ZIO.foreachPar`, parallelism 4).
+- [ ] Add `ViewRestrictionsRowCache` with `makeCache(capacity, ttl)(resolve)` (`Cache.makeWith`, 10-minute TTL on
+      success, `Duration.Zero` on failure) and a `ZLayer.scoped` layer.
+- [ ] Add the R cache (key `ProjectIri`) to `ViewRestrictionsRowCache`.
+- [ ] Add the C5 cache (key `C5Key(projectIri, classIri)`) to `ViewRestrictionsRowCache`.
+- [ ] Remove the EhCache `viewRestrictionsProjectClasses` and the `CacheManager` dependency of the repo layer.
+- [ ] Wire `ViewRestrictionsRowCache` into the admin layers and the test layers.
+- [ ] Use the cache in the class report.
+- [ ] On `/classes`, invalidate the `C5Key` of each class in the current R rows, then the R key.
+- [ ] Change `propertyValues` to load all classes through the cache with
+      `ZIO.foreachPar(classes)(…).withParallelism(4)`.
 - [ ] Change `propertyValues` to fold the rows for the requested property.
 - [ ] Return zero counts for a property that is not in the index.
-- [ ] Remove `valueCountsQuery` from `ViewRestrictionsByPropertyRepo` with its golden files and fixtures.
+- [ ] Remove `valueCountsQuery` and its legacy fixtures from `ViewRestrictionsByPropertyRepo`.
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
@@ -259,23 +318,26 @@ glob).
       `/items`.
 - [ ] Add a pure function that selects the restricted literals from classified rows (an audience below View).
 - [ ] Add a unit test: a literal with a quote and a backslash renders correctly in the `IN` list.
+- [ ] Add a unit test: an `All` page query carries the R list in the resource branch and the C5 list in the value
+      branch.
 - [ ] In the class drill-down queries, replace the `LinkValue` filter with `FILTER (?prop !=
       knora-base:hasStandoffLinkToValue)`.
-- [ ] In the class drill-down queries, replace the REGEX with `FILTER (?permissions IN (…))`.
+- [ ] In the class drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`, one list for
+      each branch.
 - [ ] In the class drill-down queries, replace the `ProjectClasses` holes with `?resource a $groupClass` and
       `BIND($groupClass AS ?resClass)`.
 - [ ] In the property drill-down queries, remove the `LinkValue` filter.
-- [ ] In the property drill-down queries, replace the REGEX with `FILTER (?permissions IN (…))`.
-- [ ] Return an empty page with total 0, and run no query, when the literal list is empty or the property is not in the
-      index.
-- [ ] Add a unit test that optimizes the rendered drill-down queries with `Algebra.optimize(Algebra.compile(query))` and
-      asserts that no basic graph pattern has a constant object for `knora-base:hasPermissions`.
-- [ ] If that test fails, change the filter to `STR(?permissions) IN (…)` until it passes.
+- [ ] In the property drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`.
+- [ ] Leave out a branch whose literal list is empty.
+- [ ] Return an empty page with total 0, and run no query, when all literal lists are empty or the property is not in
+      the index.
+- [ ] Add a unit test that optimizes each rendered drill-down query with `Algebra.optimize(Algebra.compile(query))`
+      and asserts that no `knora-base:hasPermissions` triple has a constant object.
 - [ ] Remove `grantsViewToAnonymousRegex` from both repos.
 - [ ] Remove `ProjectClasses`, `projectClasses`, `projectClassesCache`, `projectClassesQuery`,
       `anyMultiTypedResourceQuery` and `multiTypedQuery`.
-- [ ] Remove the golden files and legacy fixtures of the removed queries.
-- [ ] Update the drill-down golden files (capture through `TEST_UNDECLARED_OUTPUTS_DIR`).
+- [ ] Remove the legacy fixtures of the removed queries.
+- [ ] Add golden tests for each drill-down query (capture through `TEST_UNDECLARED_OUTPUTS_DIR`).
 - [ ] Remove the legacy-fixture suites, because the old builder output no longer applies.
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
@@ -327,7 +389,7 @@ glob).
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
 | A later edit adds a `?value` pattern with two bound terms and causes a store-wide scan | Medium | Timeout | Golden tests pin R and C5; Scaladoc and `REVIEW.md` rule |
-| Jena turns `?permissions IN (…)` into a constant in the triple pattern | Medium | Store-wide scan | Algebra unit test in Phase 4; `STR()` wrap as fallback |
+| Jena turns the permission `IN` list into a constant in the triple pattern (confirmed for plain `?permissions IN`) | High without `STR()` | Store-wide scan | `STR(?permissions) IN`; algebra unit test in Phase 4 |
 | First by-property request, or a deep link to `/property-items`, on LIMC with a new cache is over the timeout | Low | Empty column or failed drill-down | Parallelism 4, one lookup for concurrent requests, measured in Phase 5 |
 | A failed lookup stays in the cache | Low | Key blocked for 10 min | `Duration.Zero` on failure; tested in Phase 3 |
 | The cache shows old counts after a permission change | Low | Wrong review | Removal on `/classes`; 10-minute TTL |
