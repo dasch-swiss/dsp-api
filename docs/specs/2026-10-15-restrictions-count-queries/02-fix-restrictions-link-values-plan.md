@@ -237,25 +237,25 @@ glob).
 
 ### Phase 1: Classification of values in Scala
 
-- [ ] Write failing unit tests for `ValueKind`: a user link value property gives `Link`.
-- [ ] Write failing unit tests for `ValueKind`: `hasStandoffLinkToValue`, a link property, a standoff internal reference
+- [x] Write failing unit tests for `ValueKind`: a user link value property gives `Link`.
+- [x] Write failing unit tests for `ValueKind`: `hasStandoffLinkToValue`, a link property, a standoff internal reference
       and a non-resource property give no kind.
-- [ ] Write a failing unit test for `ValueKind`: a file value property gives `File`.
-- [ ] Add `ValueKind` and `ProjectOntologyIndex` with its pure builder in `slice/admin/domain/service/`.
-- [ ] Move `classify` and `foldRows` from both services into `object ValueCountFold`, and let both services use it.
-- [ ] Replace `isValueProperty` with the `ValueKind` classification, so that `/properties` lists user link value
+- [x] Write a failing unit test for `ValueKind`: a file value property gives `File`.
+- [x] Add `ValueKind` and `ProjectOntologyIndex` with its pure builder in `slice/admin/domain/service/`.
+- [x] Move `classify` and `foldRows` from both services into `object ValueCountFold`, and let both services use it.
+- [x] Replace `isValueProperty` with the `ValueKind` classification, so that `/properties` lists user link value
       properties and omits `hasStandoffLinkToValue`.
-- [ ] Update `ViewRestrictionsByPropertyRepoSpec`: "rejects the reified link-value property" becomes "accepts", and a
+- [x] Update `ViewRestrictionsByPropertyRepoSpec`: "rejects the reified link-value property" becomes "accepts", and a
       new test rejects `hasStandoffLinkToValue`.
-- [ ] Write failing unit tests for the fold: deleted rows dropped, unknown properties dropped, and link targets (an
+- [x] Write failing unit tests for the fold: deleted rows dropped, unknown properties dropped, and link targets (an
       `isPartOf` object with `hasPermissions`) dropped.
-- [ ] Write failing unit tests for the fold for each item type: `All`, `File`, `Value` (with a link value), `Comment`,
+- [x] Write failing unit tests for the fold for each item type: `All`, `File`, `Value` (with a link value), `Comment`,
       and a link value with a comment.
-- [ ] Write a failing unit test: a value with a comment counts once under `All`.
-- [ ] Implement the fold.
-- [ ] Log one warning line for each fold that lists the unknown property IRIs, and assert the line with `ZTestLogger`.
-- [ ] Run the tests; they pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Write a failing unit test: a value with a comment counts once under `All`.
+- [x] Implement the fold.
+- [x] Log one warning line for each fold that lists the unknown property IRIs, and assert the line with `ZTestLogger`.
+- [x] Run the tests; they pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: R and C5 for the class report
 
@@ -358,6 +358,9 @@ glob).
 - [ ] Measure the LIMC by-property wall time on a new cache; it is below 40 s.
 - [ ] Measure each drill-down page and count query; each is below 40 s.
 - [ ] Update the Scaladoc of both repos and both services: R/C5 shapes, pattern-order rule, cache, multi-typed counting.
+- [ ] Update `ARCH-MAP.md` for the webapi-admin component with `/dune:dune-map` (new `ViewRestrictionsAudience`,
+      `ValueCountFold`, `ViewRestrictionsClassification`, `ViewRestrictionsRowCache`; the admin-domain import of
+      `ViewRestrictionsEndpoints` DTOs in the violation count).
 - [ ] Add the pattern-order rule (no `?value` pattern with two bound terms before `?resource ?prop ?value`) to
       `REVIEW.md`.
 - [ ] Run `just fmt`.
