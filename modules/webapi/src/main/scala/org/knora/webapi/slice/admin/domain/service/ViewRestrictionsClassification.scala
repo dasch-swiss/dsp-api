@@ -5,9 +5,12 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.*
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 /**
  * Pure classification of ontology entities for the view-restrictions report.
@@ -67,6 +70,12 @@ object ViewRestrictionsClassification {
   )
 
   object ProjectOntologyIndex {
+
+    /** Indexes every ontology in the cache, so properties and classes of any ontology are found. */
+    def load(ontologyRepo: OntologyRepo): Task[ProjectOntologyIndex] =
+      ontologyRepo.findAll().map { ontologies =>
+        from(ontologies.flatMap(_.properties.values), ontologies.flatMap(_.classes.values))
+      }
 
     def from(properties: Iterable[ReadPropertyInfoV2], classes: Iterable[ReadClassInfoV2]): ProjectOntologyIndex =
       ProjectOntologyIndex(

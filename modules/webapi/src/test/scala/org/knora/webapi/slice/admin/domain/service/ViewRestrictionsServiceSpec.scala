@@ -11,12 +11,24 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
+import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -24,8 +36,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
-  private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val projectIri    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val thingClass    = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
 
   private val kb      = "http://www.knora.org/ontology/knora-base#"
   private val service = ZIO.serviceWithZIO[ViewRestrictionsService]
@@ -162,8 +175,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
-  private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
-
   /**
    * A resource asserted as BOTH its own class and that class's superclass — what a triplestore with RDFS
    * inference (or data that states both types) looks like. The report must still see it as ONE resource of
@@ -220,10 +231,85 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  private val anythingOntology  = "http://www.knora.org/ontology/0001/anything"
+  private val secondOntology    = "http://www.knora.org/ontology/0001/second"
+  private val hasOtherThing     = s"$anythingOntology#hasOtherThing"
+  private val hasOtherThingVal  = s"$anythingOntology#hasOtherThingValue"
+  private val hasSecondText     = s"$secondOntology#hasSecondText"
+  private val standoffLinkValue = s"${kb}hasStandoffLinkToValue"
+  private val deletedOnlyClass  = s"$anythingOntology#DeletedOnlyThing"
+
+  /** The ontology cache the report classifies with: the classes and properties the Turtle fixtures use. */
+  private def ontologyCacheData(sf: StringFormatter): OntologyCacheData = {
+    def iri(s: String): SmartIri = sf.toSmartIri(s, requireInternal = true)
+
+    def resourceClass(classIri: String): (SmartIri, ReadClassInfoV2) =
+      iri(classIri) -> ReadClassInfoV2(
+        ClassInfoContentV2(iri(classIri), ontologySchema = InternalSchema),
+        allBaseClasses = Seq.empty,
+        isResourceClass = true,
+      )
+
+    def property(
+      propertyIri: String,
+      isLinkProp: Boolean = false,
+      isLinkValueProp: Boolean = false,
+      isFileValueProp: Boolean = false,
+    ): (SmartIri, ReadPropertyInfoV2) =
+      iri(propertyIri) -> ReadPropertyInfoV2(
+        PropertyInfoContentV2(iri(propertyIri), ontologySchema = InternalSchema),
+        isResourceProp = true,
+        isLinkProp = isLinkProp,
+        isLinkValueProp = isLinkValueProp,
+        isFileValueProp = isFileValueProp,
+      )
+
+    def ontology(
+      ontologyIri: String,
+      classes: Seq[(SmartIri, ReadClassInfoV2)],
+      properties: Seq[(SmartIri, ReadPropertyInfoV2)],
+    ): (SmartIri, ReadOntologyV2) =
+      iri(ontologyIri) -> ReadOntologyV2(
+        OntologyMetadataV2(iri(ontologyIri)),
+        classes = classes.toMap,
+        properties = properties.toMap,
+      )
+
+    OntologyCacheFake.emptyData.copy(
+      ontologies = Map(
+        ontology(
+          anythingOntology,
+          classes = Seq(thingClass, subThingClass, deletedOnlyClass).map(resourceClass),
+          properties = Seq(
+            property(hasText),
+            property(hasPicture, isFileValueProp = true),
+            property(hasDocument, isFileValueProp = true),
+            property(hasOtherThing, isLinkProp = true),
+            property(hasOtherThingVal, isLinkValueProp = true),
+          ),
+        ),
+        ontology(secondOntology, classes = Seq.empty, properties = Seq(property(hasSecondText))),
+        ontology(
+          "http://www.knora.org/ontology/knora-base",
+          classes = Seq.empty,
+          properties = Seq(property(standoffLinkValue, isLinkValueProp = true)),
+        ),
+      ),
+    )
+  }
+
+  private val ontologyCacheLayer: ZLayer[StringFormatter, Nothing, OntologyCacheFake] =
+    ZLayer.fromZIO(
+      ZIO.serviceWithZIO[StringFormatter](sf => Ref.make(ontologyCacheData(sf)).map(OntologyCacheFake(_))),
+    )
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
     ViewRestrictionsRepo.layer,
     CacheManager.layer,
+    IriConverter.layer,
+    ontologyCacheLayer,
+    OntologyRepoLive.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
@@ -340,6 +426,125 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         page.pagination.totalItems == 1,
         page.data.size == 1,
         page.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+  )
+
+  private val hasOtherThingTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<http://rdfh.ch/0001/linkHost>
+       |  a <$thingClass> ;
+       |  rdfs:label "Link host" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  <$hasOtherThing> <http://rdfh.ch/0001/linkTarget> ;
+       |  <$hasOtherThingVal> <http://rdfh.ch/0001/linkHost/values/link> ;
+       |  <$standoffLinkValue> <http://rdfh.ch/0001/linkHost/values/standoff> .
+       |
+       |<http://rdfh.ch/0001/linkTarget>
+       |  a <$thingClass> ;
+       |  rdfs:label "Link target" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false .
+       |
+       |<http://rdfh.ch/0001/linkHost/values/link>
+       |  a kb:LinkValue ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |
+       |<http://rdfh.ch/0001/linkHost/values/standoff>
+       |  a kb:LinkValue ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
+  /** The same host as [[hasOtherThingTurtle]], without the user link value: only the standoff link value is restricted. */
+  private val standoffOnlyTurtle: String =
+    hasOtherThingTurtle.replace(s"<$hasOtherThingVal> <http://rdfh.ch/0001/linkHost/values/link> ;", "")
+
+  private val secondOntologyTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<http://rdfh.ch/0001/secondHost>
+       |  a <$thingClass> ;
+       |  rdfs:label "Second host" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  <$hasSecondText> <http://rdfh.ch/0001/secondHost/values/text> .
+       |
+       |<http://rdfh.ch/0001/secondHost/values/text>
+       |  a kb:TextValue ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
+  private val deletedOnlyTurtle: String =
+    s"""
+       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |
+       |<http://rdfh.ch/0001/liveThing>
+       |  a <$thingClass> ;
+       |  rdfs:label "Live thing" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |
+       |<http://rdfh.ch/0001/goneThing>
+       |  a <$deletedOnlyClass> ;
+       |  rdfs:label "Gone thing" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted true .
+       |""".stripMargin
+
+  private val valueClassificationSuite = suite("value classification by the ontology cache")(
+    test("a restricted user link value is counted, as All and as Value") {
+      for {
+        all   <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
+        value <- service(_.valueCounts(projectIri, thingClass, ValueItemType.Value))
+      } yield assertTrue(
+        all.counts.anonymous.hidden == 1,
+        all.counts.projectMember.hidden == 0,
+        value.counts.anonymous.hidden == 1,
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(hasOtherThingTurtle)),
+    test("a restricted standoff link value is not counted") {
+      for {
+        result <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
+      } yield assertTrue(result.counts == AudienceRestrictionCounts.zero)
+    }.provide(commonLayers, datasetLayerFromTurtle(standoffOnlyTurtle)),
+    test("a value of a property from another ontology is counted") {
+      for {
+        result <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
+      } yield assertTrue(result.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, datasetLayerFromTurtle(secondOntologyTurtle)),
+    test("a class whose resources are all deleted is not reported") {
+      for {
+        result <- service(_.classSummaries(projectIri))
+      } yield assertTrue(result.classes.map(_.id) == Seq(thingClass))
+    }.provide(commonLayers, datasetLayerFromTurtle(deletedOnlyTurtle)),
+    test("a resource typed with two classes is counted once for each class") {
+      for {
+        result <- service(_.classSummaries(projectIri))
+      } yield assertTrue(
+        result.classes.map(c => c.id -> c.totalResources).toMap == Map(thingClass -> 1, subThingClass -> 1),
       )
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
   )
@@ -492,6 +697,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     creatorOnlySuite,
     multiTypedSuite,
     steppedSuite,
+    valueClassificationSuite,
     graphScopingSuite,
   )
 }

@@ -9,11 +9,14 @@ import zio.*
 
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 /**
  * Computes the "view restrictions" report for a project.
@@ -52,6 +55,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
  */
 final case class ViewRestrictionsService(
   private val repo: ViewRestrictionsRepo,
+  private val ontologyRepo: OntologyRepo,
 ) {
 
   /**
@@ -60,16 +64,13 @@ final case class ViewRestrictionsService(
    */
   def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
-      classes <- repo.projectClasses(projectIri)
-      rows    <- repo.resourceCountsByClass(projectIri, classes)
-      lookup   = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
-      byClass  =
-        rows.groupBy(_.groupId).collect { case (Some(classIri), rs) => classIri -> ValueCountFold.foldRows(rs, lookup) }
-      // Report every class the project asserts, not just those that produced rows: a class holding no
-      // resources at all is still a real row, with a zero population. When no class was discovered the
-      // queries fall back to a subClassOf guard, so the row set is the only source of class IRIs.
-      reported = (if (classes.iris.nonEmpty) classes.iris else byClass.keys.toSeq).map { classIri =>
-                   val (counts, total) = byClass.getOrElse(classIri, (AudienceRestrictionCounts.zero, 0))
+      index   <- ProjectOntologyIndex.load(ontologyRepo)
+      rows    <- repo.resourceCounts(projectIri)
+      counted  = rows.filter(r => index.resourceClasses.contains(r.classIri))
+      lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, projectIri)
+      reported = counted.groupBy(_.classIri).toSeq.map { case (classIri, classRows) =>
+                   val permissionRows  = classRows.map(r => PermissionCountRow(Some(classIri), r.permissions, r.count))
+                   val (counts, total) = ValueCountFold.foldRows(permissionRows, lookup)
                    RestrictedClass(classIri, localName(classIri), Some(ontologyName(classIri)), total, counts)
                  }
       // Ordering is no longer part of the contract — the frontend renders rows as they arrive — but a
@@ -83,10 +84,9 @@ final case class ViewRestrictionsService(
     itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
-      classes <- repo.projectClasses(projectIri)
-      rows    <- repo.valueCountsForClass(projectIri, resourceClass, ValueItemType.toItemType(itemType), classes)
-      lookup   = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
-      counts   = ValueCountFold.foldRows(rows, lookup)._1
+      index  <- ProjectOntologyIndex.load(ontologyRepo)
+      rows   <- repo.valueCounts(projectIri, resourceClass)
+      counts <- ValueCountFold.fold(rows, index, itemType, projectIri).map(_._1)
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
 
   private def visibilityFor(row: RestrictedObjectRow, audience: Audience, projectIri: ProjectIri): Visibility =

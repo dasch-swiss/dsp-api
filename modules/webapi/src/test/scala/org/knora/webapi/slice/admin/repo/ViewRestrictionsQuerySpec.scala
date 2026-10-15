@@ -79,16 +79,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       "projectClassesQuery"        -> ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql,
       "anyMultiTypedResourceQuery" -> ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri).sparql,
       "multiTypedQuery"            -> ViewRestrictionsRepo.multiTypedQuery(projectIri).sparql,
-    ) ++ classesByKey.map { case (ck, cs) =>
-      s"resourceCountsByClassAndPermissionQuery-$ck" ->
-        ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, cs).sparql
-    } ++ itemTypes.map { it =>
-      s"valueCountsByPermissionQuery-$it-single" ->
-        ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, thingClass, it, singleTyped).sparql
-    } ++ otherClasses.map { case (ck, cs) =>
-      s"valueCountsByPermissionQuery-All-$ck" ->
-        ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, cs).sparql
-    } ++ itemTypes.map { it =>
+    ) ++ itemTypes.map { it =>
       s"resourcePageQuery-$it-single-50-25" ->
         ViewRestrictionsRepo.resourcePageQuery(projectIri, it, thingClass, 50, 25, singleTyped).sparql
     } ++ otherClasses.map { case (ck, cs) =>
@@ -133,57 +124,6 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "valueCounts")
       },
     ),
-    suite("permission-grouped counts (stepped report)")(
-      test("resource counts group by class AND literal, with no permission filter at all") {
-        val q = ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, singleTyped).sparql
-        assertTrue(
-          q.contains("COUNT") && q.contains("DISTINCT"),
-          // Both axes in the grouping key: this is what lets one query answer every audience and both
-          // restriction states at once.
-          q.contains("GROUP BY ?resClass ?permissions"),
-          // No literal IN-list — the absence of a permission filter is exactly what makes the class's
-          // whole population derivable by summing its rows.
-          !q.contains("M knora-admin:ProjectMember"),
-          !q.contains("V knora-admin:KnownUser"),
-          // The creator is neither projected nor constrained, so the join is dropped.
-          !q.contains("?creator"),
-          // exact at any size: no row cap
-          !q.contains("LIMIT"),
-        )
-      },
-      test("value counts group by literal alone and are narrowed to one class by FILTER, not by chunking") {
-        val q =
-          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped).sparql
-        assertTrue(
-          q.contains("GROUP BY ?permissions"),
-          // one class per request — the route is the unit of work, so there is no second grouping axis
-          !q.contains("GROUP BY ?resClass"),
-          q.contains("FILTER") && q.contains(thingClass),
-          // link values stay excluded, as in every other value query
-          q.contains("FILTER NOT EXISTS") && q.contains("knora-base:LinkValue"),
-          !q.contains("?creator"),
-          !q.contains("LIMIT"),
-        )
-      },
-      test("itemType still narrows the value counts") {
-        val comment = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Comment, singleTyped)
-          .sparql
-        val value = ViewRestrictionsRepo
-          .valueCountsByPermissionQuery(projectIri, thingClass, ItemType.Value, singleTyped)
-          .sparql
-        assertTrue(
-          comment.contains("knora-base:valueHasComment"),
-          value.contains("FILTER NOT EXISTS") && value.contains("knora-base:FileValue"),
-        )
-      },
-      test("the most-specific-class filter is kept, so a multi-typed resource is counted once") {
-        // Load-bearing for the grouping: without it a resource asserted as several classes in one
-        // hierarchy binds ?resClass once per class, double-counting it and overstating totalResources.
-        val q = ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, multiTyped).sparql
-        assertTrue(q.contains("rdfs:subClassOf+"))
-      },
-    ),
     suite("project class discovery")(
       test("the closure walk sits outside a sub-select, so it runs per class and not per resource row") {
         val q = ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql
@@ -212,8 +152,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         // …/data/0001/freetest, so scoping to the derived graph undercounts by those 6 — and silently,
         // because a graph with no matches yields no rows rather than an error. The join stays.
         val all = Seq(
-          ViewRestrictionsRepo.resourceCountsByClassAndPermissionQuery(projectIri, singleTyped).sparql,
-          ViewRestrictionsRepo.valueCountsByPermissionQuery(projectIri, thingClass, ItemType.All, singleTyped).sparql,
+          ViewRestrictionsRepo.resourceCountsQuery(projectIri).sparql,
+          ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass).sparql,
           ViewRestrictionsRepo
             .resourcePageQuery(projectIri, ItemType.All, thingClass, offset = 0, limit = 25, singleTyped)
             .sparql,
