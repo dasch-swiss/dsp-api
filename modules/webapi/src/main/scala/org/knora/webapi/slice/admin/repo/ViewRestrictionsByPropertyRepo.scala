@@ -12,6 +12,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ValueKind
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.PropertyRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.RestrictedPropertyValueRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
@@ -70,7 +71,9 @@ final case class ViewRestrictionsByPropertyRepo(
       builtIn <- ontologyRepo.findById(InternalIri(ViewRestrictionsByPropertyRepo.KnoraBaseOntologyIri)).map(_.toList)
       props    = (own ++ builtIn).flatMap(_.properties.values)
     } yield props
-      .filter(ViewRestrictionsByPropertyRepo.isValueProperty)
+      // `ValueKind.of` decides the report's whole row set: a property it rejects is never counted and never
+      // reaches a screen. User link values count; standoff link values do not.
+      .filter(ValueKind.of(_).isDefined)
       .map(toPropertyRow)
       .distinctBy(_.id)
       .sortBy(r => (r.label, r.id))
@@ -210,22 +213,6 @@ object ViewRestrictionsByPropertyRepo {
     creator: String,
     permissions: String,
   )
-
-  /**
-   * Whether a property carries values, as opposed to links or standoff references.
-   *
-   * There is no such predicate in the ontology slice to reuse, so it is defined here from the flags
-   * `ReadPropertyInfoV2` exposes. A resource property is either a link property (pointing at another
-   * resource), the reified link value that accompanies it, or a value property — so excluding the first two
-   * from the resource properties leaves exactly the value properties.
-   *
-   * This single filter decides the report's whole row set — a property it rejects can never be counted and
-   * never reaches a screen — so `ViewRestrictionsByPropertyRepoSpec` pins each flag combination directly:
-   * a plain value property and a file-value property are accepted, a link property, its reified link value,
-   * a standoff internal reference and a non-resource property are not.
-   */
-  private[repo] def isValueProperty(info: ReadPropertyInfoV2): Boolean =
-    info.isResourceProp && !info.isLinkProp && !info.isLinkValueProp && !info.isStandoffInternalReferenceProperty
 
   /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   private[repo] val KnoraBaseOntologyIri: String = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
