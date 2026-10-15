@@ -252,9 +252,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
     def property(
       propertyIri: String,
-      isLinkProp: Boolean = false,
-      isLinkValueProp: Boolean = false,
-      isFileValueProp: Boolean = false,
+      isLinkProp: Boolean,
+      isLinkValueProp: Boolean,
+      isFileValueProp: Boolean,
     ): (SmartIri, ReadPropertyInfoV2) =
       iri(propertyIri) -> ReadPropertyInfoV2(
         PropertyInfoContentV2(iri(propertyIri), ontologySchema = InternalSchema),
@@ -263,6 +263,11 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         isLinkValueProp = isLinkValueProp,
         isFileValueProp = isFileValueProp,
       )
+
+    def valueProp(propertyIri: String)     = property(propertyIri, false, false, false)
+    def fileProp(propertyIri: String)      = property(propertyIri, false, false, true)
+    def linkProp(propertyIri: String)      = property(propertyIri, true, false, false)
+    def linkValueProp(propertyIri: String) = property(propertyIri, false, true, false)
 
     def ontology(
       ontologyIri: String,
@@ -281,18 +286,18 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           anythingOntology,
           classes = Seq(thingClass, subThingClass, deletedOnlyClass).map(resourceClass),
           properties = Seq(
-            property(hasText),
-            property(hasPicture, isFileValueProp = true),
-            property(hasDocument, isFileValueProp = true),
-            property(hasOtherThing, isLinkProp = true),
-            property(hasOtherThingVal, isLinkValueProp = true),
+            valueProp(hasText),
+            fileProp(hasPicture),
+            fileProp(hasDocument),
+            linkProp(hasOtherThing),
+            linkValueProp(hasOtherThingVal),
           ),
         ),
-        ontology(secondOntology, classes = Seq.empty, properties = Seq(property(hasSecondText))),
+        ontology(secondOntology, classes = Seq.empty, properties = Seq(valueProp(hasSecondText))),
         ontology(
           "http://www.knora.org/ontology/knora-base",
           classes = Seq.empty,
-          properties = Seq(property(standoffLinkValue, isLinkValueProp = true)),
+          properties = Seq(linkValueProp(standoffLinkValue)),
         ),
       ),
     )
@@ -430,89 +435,97 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
   )
 
-  private val hasOtherThingTurtle: String =
-    s"""
-       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix kb:    <$kb> .
-       |
-       |<http://rdfh.ch/0001/linkHost>
-       |  a <$thingClass> ;
-       |  rdfs:label "Link host" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasOtherThing> <http://rdfh.ch/0001/linkTarget> ;
-       |  <$hasOtherThingVal> <http://rdfh.ch/0001/linkHost/values/link> ;
-       |  <$standoffLinkValue> <http://rdfh.ch/0001/linkHost/values/standoff> .
-       |
-       |<http://rdfh.ch/0001/linkTarget>
-       |  a <$thingClass> ;
-       |  rdfs:label "Link target" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false .
-       |
-       |<http://rdfh.ch/0001/linkHost/values/link>
-       |  a kb:LinkValue ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted false .
-       |
-       |<http://rdfh.ch/0001/linkHost/values/standoff>
-       |  a kb:LinkValue ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+  private val userCreator = "<http://rdfh.ch/users/creator>"
+
+  /** One project resource in Turtle; `extra` holds further `predicate object` pairs of the resource. */
+  private def resourceTurtle(
+    iri: String,
+    cls: String,
+    label: String,
+    permissions: String,
+    deleted: Boolean = false,
+    extra: Seq[String] = Seq.empty,
+  ): String = {
+    val predicates = Seq(
+      s"a <$cls>",
+      s"rdfs:label \"$label\"",
+      s"kb:attachedToProject <${projectIri.value}>",
+      s"kb:attachedToUser $userCreator",
+      s"kb:hasPermissions \"$permissions\"",
+      s"kb:isDeleted $deleted",
+    ) ++ extra
+    s"<$iri>\n  ${predicates.mkString(" ;\n  ")} .\n"
+  }
+
+  /** One value in Turtle, attached to a user and carrying a permission literal. */
+  private def valueTurtle(iri: String, cls: String, permissions: String): String =
+    s"""<$iri>
+       |  a $cls ;
+       |  kb:attachedToUser $userCreator ;
+       |  kb:hasPermissions "$permissions" ;
        |  kb:isDeleted false .
        |""".stripMargin
 
-  /** The same host as [[hasOtherThingTurtle]], without the user link value: only the standoff link value is restricted. */
+  private val turtlePrefixes: String =
+    s"""@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |""".stripMargin
+
+  private val linkHost         = "http://rdfh.ch/0001/linkHost"
+  private val linkValueIri     = s"$linkHost/values/link"
+  private val standoffValueIri = s"$linkHost/values/standoff"
+  private val standoffValue    = valueTurtle(standoffValueIri, "kb:LinkValue", "M knora-admin:ProjectMember")
+
+  private val hasOtherThingTurtle: String =
+    turtlePrefixes +
+      resourceTurtle(
+        linkHost,
+        thingClass,
+        "Link host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(
+          s"<$hasOtherThing> <http://rdfh.ch/0001/linkTarget>",
+          s"<$hasOtherThingVal> <$linkValueIri>",
+          s"<$standoffLinkValue> <$standoffValueIri>",
+        ),
+      ) +
+      resourceTurtle("http://rdfh.ch/0001/linkTarget", thingClass, "Link target", "V knora-admin:UnknownUser") +
+      valueTurtle(linkValueIri, "kb:LinkValue", "M knora-admin:ProjectMember") +
+      standoffValue
+
+  /** The same host without the user link value: only the standoff link value is restricted. */
   private val standoffOnlyTurtle: String =
-    hasOtherThingTurtle.replace(s"<$hasOtherThingVal> <http://rdfh.ch/0001/linkHost/values/link> ;", "")
+    turtlePrefixes +
+      resourceTurtle(
+        linkHost,
+        thingClass,
+        "Link host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$standoffLinkValue> <$standoffValueIri>"),
+      ) +
+      standoffValue
 
   private val secondOntologyTurtle: String =
-    s"""
-       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix kb:    <$kb> .
-       |
-       |<http://rdfh.ch/0001/secondHost>
-       |  a <$thingClass> ;
-       |  rdfs:label "Second host" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasSecondText> <http://rdfh.ch/0001/secondHost/values/text> .
-       |
-       |<http://rdfh.ch/0001/secondHost/values/text>
-       |  a kb:TextValue ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted false .
-       |""".stripMargin
+    turtlePrefixes +
+      resourceTurtle(
+        "http://rdfh.ch/0001/secondHost",
+        thingClass,
+        "Second host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$hasSecondText> <http://rdfh.ch/0001/secondHost/values/text>"),
+      ) +
+      valueTurtle("http://rdfh.ch/0001/secondHost/values/text", "kb:TextValue", "M knora-admin:ProjectMember")
 
   private val deletedOnlyTurtle: String =
-    s"""
-       |@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix kb:    <$kb> .
-       |
-       |<http://rdfh.ch/0001/liveThing>
-       |  a <$thingClass> ;
-       |  rdfs:label "Live thing" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted false .
-       |
-       |<http://rdfh.ch/0001/goneThing>
-       |  a <$deletedOnlyClass> ;
-       |  rdfs:label "Gone thing" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/creator> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted true .
-       |""".stripMargin
+    turtlePrefixes +
+      resourceTurtle("http://rdfh.ch/0001/liveThing", thingClass, "Live thing", "M knora-admin:ProjectMember") +
+      resourceTurtle(
+        "http://rdfh.ch/0001/goneThing",
+        deletedOnlyClass,
+        "Gone thing",
+        "M knora-admin:ProjectMember",
+        deleted = true,
+      )
 
   private val valueClassificationSuite = suite("value classification by the ontology cache")(
     test("a restricted user link value is counted, as All and as Value") {

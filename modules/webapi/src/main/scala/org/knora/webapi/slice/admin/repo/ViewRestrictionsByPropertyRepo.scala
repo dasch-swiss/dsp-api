@@ -162,7 +162,7 @@ final case class ViewRestrictionsByPropertyRepo(
       permissions <- row.get("permissions")
       count       <- row.get("cnt").flatMap(_.toIntOption)
       // No grouping key: the route has already narrowed to one property.
-    } yield ViewRestrictionsRepo.PermissionCountRow(None, permissions, count)
+    } yield ViewRestrictionsRepo.PermissionCountRow(permissions, count)
 
   private def restrictedRow(row: VariableResultsRow): Option[RestrictedPropertyValueRow] =
     for {

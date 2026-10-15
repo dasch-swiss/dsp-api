@@ -39,7 +39,7 @@ object ValueCountFold {
       index.valueProperties.get(r.propertyIri).map(kind => r.permissions -> contribution(kind, r, itemType))
     }
     val perLiteral = counted.groupMapReduce(_._1)(_._2)(_ + _)
-    val result     = perLiteral.collect { case (literal, n) if n > 0 => PermissionCountRow(None, literal, n) }.toSeq
+    val result     = perLiteral.collect { case (literal, n) if n > 0 => PermissionCountRow(literal, n) }.toSeq
     val unknown    = live.map(_.propertyIri).filterNot(index.knownProperties.contains).toSet
     (result, unknown)
   }

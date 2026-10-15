@@ -59,8 +59,12 @@ final case class ViewRestrictionsService(
 ) {
 
   /**
-   * Step 1 of the stepped report: every resource class with its population and its resource-level
-   * restrictions, from a single query.
+   * Step 1 of the stepped report: every resource class that has resources, with its population and its
+   * resource-level restrictions, from a single query.
+   *
+   * Rows of classes outside `index.resourceClasses` (list nodes, ontologies, value classes) are dropped on
+   * purpose: they carry `attachedToProject` but are not resources. The result is sorted for a reproducible
+   * response.
    */
   def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
@@ -69,12 +73,10 @@ final case class ViewRestrictionsService(
       counted  = rows.filter(r => index.resourceClasses.contains(r.classIri))
       lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, projectIri)
       reported = counted.groupBy(_.classIri).toSeq.map { case (classIri, classRows) =>
-                   val permissionRows  = classRows.map(r => PermissionCountRow(Some(classIri), r.permissions, r.count))
+                   val permissionRows  = classRows.map(r => PermissionCountRow(r.permissions, r.count))
                    val (counts, total) = ValueCountFold.foldRows(permissionRows, lookup)
                    RestrictedClass(classIri, localName(classIri), Some(ontologyName(classIri)), total, counts)
                  }
-      // Ordering is no longer part of the contract — the frontend renders rows as they arrive — but a
-      // stable order keeps the response reproducible and the tests readable.
     } yield ViewRestrictionsClasses(projectIri.value, reported.sortBy(c => (c.label, c.id)))
 
   /** Step 2 of the stepped report: one class's value-level restrictions, from a single query. */

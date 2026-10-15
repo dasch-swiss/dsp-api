@@ -8,9 +8,8 @@ package org.knora.webapi.slice.admin.repo
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
-import scala.util.Try
-
 import org.knora.sparqlbuilder.*
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
@@ -32,10 +31,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *     grouped by `knora-base:hasPermissions`. Because an object's visibility for the three synthetic
  *     audiences depends only on that literal (see [[ViewRestrictionsService]]), one grouped query answers
  *     every audience and both restriction states at once, and a group's whole population falls out of the
- *     same rows. No per-object data crosses the wire, so counts are exact at any project size.
+ *     same rows. No per-object data crosses the wire, so counts are exact at any project size. The
+ *     service classifies the rows with `ProjectOntologyIndex`; [[ProjectClasses]] is not involved.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
  *     query is always narrowed to one resource class, ordered deterministically, and windowed with
- *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`.
+ *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`. Only these queries use
+ *     [[projectClasses]].
  *
  * Values carry their own `hasPermissions`/`attachedToUser`, so resources and values are queried separately.
  * File values are distinguished by `rdfs:subClassOf* knora-base:FileValue`; a value carrying
@@ -51,10 +52,9 @@ final case class ViewRestrictionsRepo(
    * Resolves the project's asserted resource classes, and whether the most-specific-class filter is
    * needed at all — see [[ViewRestrictionsRepo.ProjectClasses]].
    *
-   * Cached per project, briefly. The stepped report calls this once for the class list and then once per
-   * class for that class's value counts, so on a 43-class project an uncached resolve is paid 44 times for
-   * an answer that is identical every time. The TTL is what keeps a newly added resource class from being
-   * invisible until restart: it only has to outlive one report run, not the deployment.
+   * Used by the drill-down queries. Cached per project, briefly: the page and its total are requested
+   * together and the user pages repeatedly, while the answer only changes when the project's data does.
+   * The TTL keeps a newly added resource class from being invisible until restart.
    */
   def projectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
     ZIO.succeed(projectClassesCache.get(projectIri)).flatMap {
@@ -80,37 +80,42 @@ final case class ViewRestrictionsRepo(
     } yield ProjectClasses(iris, multi)
 
   /**
-   * The project's current resources counted per class and permission literal. Rows missing a grouping
-   * key or with an unparseable count are dropped.
+   * The project's current resources counted per class and permission literal. A row that cannot be
+   * parsed fails the request.
    */
   def resourceCounts(projectIri: ProjectIri): Task[Seq[ResourceCountRow]] =
     triplestore
       .query(ViewRestrictionsRepo.resourceCountsQuery(projectIri))
-      .map(_.flatMap { row =>
-        Try(
-          ResourceCountRow(row.getRequired("resClass"), row.getRequired("permissions"), row.getRequired("cnt").toInt),
-        ).toOption
-      })
+      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseResourceCountRow))
 
   /**
-   * One resource class's value counts per property, permission literal and deleted flag. Rows missing a
-   * grouping key or with an unparseable count are dropped.
+   * One resource class's value counts per property, permission literal and deleted flag. A row that
+   * cannot be parsed fails the request.
    */
   def valueCounts(projectIri: ProjectIri, resourceClass: String): Task[Seq[ValueCountRow]] =
     triplestore
       .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass))
-      .map(_.flatMap { row =>
-        Try(
-          ValueCountRow(
-            classIri = resourceClass,
-            propertyIri = row.getRequired("prop"),
-            permissions = row.getRequired("permissions"),
-            deleted = row.getRequired("valueDeleted") == "true",
-            count = row.getRequired("cnt").toInt,
-            commented = row.getRequired("commented").toInt,
-          ),
-        ).toOption
-      })
+      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseValueCountRow(resourceClass, _)))
+
+  private def parseResourceCountRow(row: VariableResultsRow): Task[ResourceCountRow] =
+    ZIO.attempt(
+      ResourceCountRow(row.getRequired("resClass"), row.getRequired("permissions"), requiredInt(row, "cnt")),
+    )
+
+  private def parseValueCountRow(resourceClass: String, row: VariableResultsRow): Task[ValueCountRow] =
+    ZIO.attempt(
+      ValueCountRow(
+        classIri = resourceClass,
+        propertyIri = row.getRequired("prop"),
+        permissions = row.getRequired("permissions"),
+        deleted = row.getRequired("valueDeleted") == "true",
+        count = requiredInt(row, "cnt"),
+        commented = requiredInt(row, "commented"),
+      ),
+    )
+
+  private def requiredInt(row: VariableResultsRow, column: String): Int =
+    row.getRequired(column, value => value.toIntOption.toRight(s"not an integer: $value"))
 
   /**
    * The distinct resource IRIs of one page of the drill-down, ordered by label then IRI so paging is
@@ -276,17 +281,14 @@ object ViewRestrictionsRepo {
   )
 
   /**
-   * One row of a permission-grouped count: how many objects carry `permissions`, optionally within a group.
-   *
-   * `groupId` is the resource-class IRI for the step-1 query, which groups by class as well as by literal,
-   * and `None` for the step-2 query, which is already narrowed to a single class by the route.
+   * One row of a permission-grouped count: how many objects carry `permissions`.
    *
    * The literal is carried raw and unclassified on purpose: the caller resolves it against each audience
    * with the real permission model, which is what lets one query answer all three audiences and both
    * restriction states at once. No `CountUnit` here — the unit is decided by which query produced the row,
    * so it cannot be mixed up in the first place.
    */
-  final case class PermissionCountRow(groupId: Option[String], permissions: String, count: Int)
+  final case class PermissionCountRow(permissions: String, count: Int)
 
   /** One row of the resource-count query: the resources of one class that carry one permission literal. */
   final case class ResourceCountRow(classIri: String, permissions: String, count: Int)
@@ -308,8 +310,8 @@ object ViewRestrictionsRepo {
   )
 
   /**
-   * The resource classes a project actually asserts, resolved once per request and reused by every query
-   * of that request.
+   * The resource classes a project actually asserts, resolved once and reused by every drill-down query of
+   * a request.
    *
    * This replaces two `rdfs:subClassOf` traversals that the triplestore would otherwise re-evaluate for
    * every result row (rows scale as resources × properties × values):
@@ -459,27 +461,26 @@ object ViewRestrictionsRepo {
    * than sharing them, so that each template can be read as one whole piece of SPARQL. The count queries
    * and the row queries must nevertheless describe the same universe: a count that matched a different row
    * set than the drill-down would be worse than no count, and `ViewRestrictionsQuerySpec` pins that.
+   * The count queries count a resource typed with two classes once for each class.
    *
-   * Two skeleton details are load-bearing and repeated deliberately in every template:
+   * Two skeleton details are load-bearing and repeated deliberately in every drill-down template:
    *
    *   - `?resClass` is pinned to the resource's **most specific asserted** class whenever the caller's
    *     answer depends on how many rows a resource contributes — see `ProjectClasses.resClassPatterns`.
    *     Without that, a resource asserted as (or inferred to be) several classes in one hierarchy binds
-   *     `?resClass` once per class, which double-counts it in the aggregated summary and duplicates it in
-   *     the drill-down.
+   *     `?resClass` once per class, which duplicates it in the drill-down.
    *   - `knora-base:attachedToUser ?creator` is present only where the creator is projected or
-   *     constrained. In the permission probes it is an unconstrained join whose only effect is to multiply
-   *     intermediate rows, and the creator cannot change the decision for a synthetic audience anyway.
+   *     constrained. In the drill-down's permission probes it is an unconstrained join whose only effect is
+   *     to multiply intermediate rows, and the creator cannot change the decision for a synthetic audience
+   *     anyway.
    *
    * NOTE — graph scoping does NOT apply to any of them, and must not be introduced.
-   * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join
-   * (DEV-6827: 5.4×), and that holds for a caller which already knows the single graph it wants — the v2
-   * write path writes into one. It does **not** hold for a project-wide read: a project's resources span
-   * one data graph per ontology, while `ProjectService.projectDataNamedGraphV2` derives exactly one from
-   * shortcode + shortname. Measured on the local `anything` project: 65 resources in
-   * `…/data/0001/anything` and 6 more in `…/data/0001/freetest`, so scoping to the derived graph
-   * undercounts by those 6 — silently, since a graph with no matches yields no rows rather than an error.
-   * `ViewRestrictionsQuerySpec` pins that every query keeps the join.
+   * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join, and that
+   * holds for a caller which already knows the single graph it wants. It does **not** hold for a
+   * project-wide read: a project's resources span one data graph per ontology, while
+   * `ProjectService.projectDataNamedGraphV2` derives exactly one from shortcode + shortname, so scoping to
+   * the derived graph silently undercounts — a graph with no matches yields no rows rather than an error.
+   * Every query keeps the `attachedToProject` join; `ViewRestrictionsQuerySpec` pins that.
    *
    * Every query of this report runs on `SparqlTimeout.ViewRestrictions` rather than the standard tier —
    * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
@@ -622,6 +623,9 @@ object ViewRestrictionsRepo {
   /**
    * Counts the permissioned objects reachable from the current resources of one class, per property,
    * permission literal and deleted flag.
+   *
+   * `COUNT(*)` counts each value once: `knora-base:valueHasComment` has max cardinality 1, so the optional
+   * comment adds no second row.
    *
    * No pattern on `?value` may have two bound terms before `?resource ?prop ?value` (for example
    * `?value knora-base:isDeleted false`): Fuseki TDB2 without statistics orders patterns by bound terms

@@ -67,34 +67,34 @@ class ValueCountFoldSpec extends ZIOSpecDefault {
       val result = counts(Seq(row(plain, count = 2), row(file), row(link, open)), ValueItemType.All)
       assertTrue(
         result.toSet == Set(
-          PermissionCountRow(None, member, 3),
-          PermissionCountRow(None, open, 1),
+          PermissionCountRow(member, 3),
+          PermissionCountRow(open, 1),
         ),
       )
     },
     test("File counts only file values") {
       val result = counts(Seq(row(plain), row(file, count = 2), row(link)), ValueItemType.File)
-      assertTrue(result == Seq(PermissionCountRow(None, member, 2)))
+      assertTrue(result == Seq(PermissionCountRow(member, 2)))
     },
     test("Value counts plain and link values, not file values") {
       val result = counts(Seq(row(plain), row(file, count = 5), row(link, count = 2)), ValueItemType.Value)
-      assertTrue(result == Seq(PermissionCountRow(None, member, 3)))
+      assertTrue(result == Seq(PermissionCountRow(member, 3)))
     },
     test("Comment counts commented values of every kind") {
       val result = counts(Seq(row(plain, commented = 1), row(file, commented = 2), row(link)), ValueItemType.Comment)
-      assertTrue(result == Seq(PermissionCountRow(None, member, 3)))
+      assertTrue(result == Seq(PermissionCountRow(member, 3)))
     },
     test("a link value with a comment counts under Comment") {
       val result = counts(Seq(row(link, commented = 1)), ValueItemType.Comment)
-      assertTrue(result == Seq(PermissionCountRow(None, member, 1)))
+      assertTrue(result == Seq(PermissionCountRow(member, 1)))
     },
     test("a commented value counts once under All") {
       val result = counts(Seq(row(plain, count = 1, commented = 1)), ValueItemType.All)
-      assertTrue(result == Seq(PermissionCountRow(None, member, 1)))
+      assertTrue(result == Seq(PermissionCountRow(member, 1)))
     },
     test("literals whose summed count is zero are omitted") {
       val result = counts(Seq(row(plain, commented = 0), row(plain, open, commented = 1)), ValueItemType.Comment)
-      assertTrue(result == Seq(PermissionCountRow(None, open, 1)))
+      assertTrue(result == Seq(PermissionCountRow(open, 1)))
     },
   )
 

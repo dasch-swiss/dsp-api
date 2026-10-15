@@ -43,16 +43,15 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .in(base / "classes")
     .out(jsonBody[ViewRestrictionsClasses].example(ViewRestrictionsClasses.example))
     .description(
-      "Step 1 of the view-restrictions report: every resource class in the project with its label, " +
+      "Step 1 of the view-restrictions report: every resource class with resources in the project, with its label, " +
         "ontology, total resource count, and per-audience resource-level restriction counts. Answered by a " +
         "single triplestore query, so the whole table can be rendered before any value counts arrive. " +
         "Each audience reports `hidden` (permission code 0 — nothing is served) and `restrictedView` " +
         "(code 1 — a degraded version is served) separately; the two are disjoint. " +
         "`totalResources` is the class's whole population — restricted or not — and is the denominator " +
         "for the counts here, which are in the same unit. It is derived from the same query rather than " +
-        "from a separate count. **Every** class is reported, including classes with nothing restricted " +
-        "(all-zero counts, non-zero `totalResources`) and classes holding no resources at all (zero " +
-        "population). Takes no item-type filter: resource-level counts are never filtered. " +
+        "from a separate count. Every class with one or more non-deleted resources is reported, including " +
+        "classes with nothing restricted (all-zero counts, non-zero `totalResources`). Takes no item-type filter: resource-level counts are never filtered. " +
         "The user must be project admin or system admin.",
     )
 
@@ -69,7 +68,8 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
       "Step 2 of the view-restrictions report: the per-audience value-level restriction counts for ONE " +
         "resource class, answered by a single triplestore query. Clients call this once per class from " +
         "the step-1 list, which bounds each request and lets a failure affect only that class's row. " +
-        "Counts restricted values inside the class's resources — file values, ordinary values, comments — " +
+        "Counts restricted values inside the class's resources — file values, ordinary values, comments, " +
+        "and user link values (standoff link values are not counted) — " +
         "which is a different unit from the resource counts in step 1 and must never be summed with them. " +
         "`itemType` narrows to one kind of value; `All` means all value types (it does not include whole " +
         "resources, which step 1 already reports). " +
@@ -251,8 +251,8 @@ object ViewRestrictionsEndpoints {
    * counts rather than by a separate query. It is the denominator for every figure in `counts`, which are
    * in the same unit — unlike the value counts from `/values`, which count a different thing entirely.
    *
-   * Every class in the project is reported, so a row may be all zeros with a non-zero `totalResources`:
-   * that is a class with nothing restricted, not an empty row.
+   * Every class with one or more non-deleted resources is reported, so a row may be all zeros with a
+   * non-zero `totalResources`: that is a class with nothing restricted, not an empty row.
    */
   final case class RestrictedClass(
     id: String,
