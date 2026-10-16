@@ -219,13 +219,24 @@ In LIMC, the fix adds 35 % more values to the report.
 - Keep C6 as an option for later, behind a higher timeout, if one request is preferred over one request
   for each class.
 
-## Assets
+## Follow-up measurements (stage, 2026-10-16)
 
-- `assets/bench.py`: current queries and C1–C3 (`before`, `after` phases).
-- `assets/bench_c4.py`, `assets/bench_c5.py`: C4, and C5/C6 with R.
-- `assets/compare.py`, `assets/compare_c5.py`: count comparison.
-- `assets/results/`: raw rows (`*-before-*`, `*-c5-*`, `*-after-*`), timings (`*-timings.csv`) and logs.
-- `assets/bench_batch.py`: the listing query and the batched value counts; result in
-  [`assets/batched-value-counts.md`](assets/batched-value-counts.md) (batch size 2000, 0 differences).
-- `assets/bench_fix.py`: the final queries of all classes on a new cache and the drill-down; result in
-  [`assets/final-queries.md`](assets/final-queries.md) (0 differences, no query over the timeout).
+Batched value counts: one query lists the live resource IRIs of a class, then the value-count query runs for each
+batch of IRIs (`VALUES ?resource { … }`). Scala sums the batch rows.
+
+- The summed batch rows equal the unbatched rows (0 differences on LIMC `Monument` and BEOL `transcription`).
+- Chosen batch size: 2000. The slowest LIMC batch takes 0.84 s, and the request body is about 118 KB. Size 5000
+  is about 295 KB, above the Jetty form limit of 200,000 bytes.
+- The listing query takes 3.3 s for 55,824 resources. At linear growth, it reaches the 40 s timeout at about
+  680,000 live resources in one class.
+
+Final queries, all classes on a new cache:
+
+| Project | Value counts (wall) | Slowest batch | Drill-down page (worst case) | Differences |
+| --- | --- | --- | --- | --- |
+| drawings-gods | 10.9 s | 4.4 s | 2.6 s | 0 |
+| BEOL | 6.0 s | 4.5 s | 2.1 s | 0 |
+| LIMC | 46.0 s | 1.8 s | 18.8 s | 0 |
+
+No single query goes over the 40 s timeout. The first by-property request on a new LIMC cache takes 46 s.
+The owner accepted this on 2026-10-16.

@@ -1,4 +1,0 @@
-size,batches,slowest_s,total_s,status,differences
-5000,12,3.346,19.67,ok,0
-2000,28,0.836,19.166,ok,0
-500,112,0.404,26.722,ok,0

@@ -1,3 +1,0 @@
-run,step,query,seconds,status,rows
-1,R,R resource counts,0.645,ok,31
-1,C4-class,C4 http://www.knora.org/ontology/0105/drawings-gods#Campaign,120.036,client-timeout,0
