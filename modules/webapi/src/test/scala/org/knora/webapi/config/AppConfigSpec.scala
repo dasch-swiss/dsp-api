@@ -34,6 +34,8 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
           appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
           appConfig.triplestore.searchTimeout == Duration.ofSeconds(60),
+          appConfig.triplestore.viewRestrictionsTimeout == Duration.ofSeconds(40),
+          appConfig.triplestore.viewRestrictionsCountTimeout == Duration.ofSeconds(120),
           appConfig.v2.fulltextSearch.probe.cap == 250000,
           appConfig.v2.fulltextSearch.probe.cacheCapacity == 1024,
           appConfig.v2.fulltextSearch.probe.cacheTtl == Duration.ofMinutes(10),
@@ -62,6 +64,14 @@ class AppConfigSpec extends ZIOSpecDefault {
         )
       }
     }.provideLayer(AppConfig.layer),
+    test("reject a view-restrictions count timeout that is not positive") {
+      loadAppConfigWith("app.triplestore.view-restrictions-count-timeout = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a view-restrictions count timeout above the gravsearch timeout") {
+      loadAppConfigWith("app.triplestore.view-restrictions-count-timeout = 121 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
     test("reject a file-permission-cache ttl that is not positive") {
       loadAppConfigWith("app.file-permission-cache.ttl = 0 seconds").exit
         .map(exit => assertTrue(exit.isFailure))

@@ -30,9 +30,9 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
  * report's rows and its pattern is invisible; this answers "what is restricted on this property, across
  * every class that uses it".
  *
- * Stepped like the class report, and for the same reason: a single whole-project query grouped by property
- * measured 24.8s on LHTT. Step 1 comes from the ontology cache and issues no SPARQL, so the table paints at
- * once; step 2 is one bounded request per property.
+ * Stepped like the class report. Step 1 comes from the ontology cache and issues no SPARQL, so the table
+ * paints at once; step 2 is one bounded request per property, answered from the cached value rows of every
+ * class that uses it.
  *
  * `ValueItemType` is imported from [[ViewRestrictionsEndpoints]] rather than redefined. It carries no
  * grouping discriminator, both reports genuinely mean the same four value types, and a second identical
@@ -72,12 +72,14 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ViewRestrictionsPropertyValues].example(ViewRestrictionsPropertyValues.example))
     .description(
       "Step 2 of the property-grouped report: the per-audience restriction counts for ONE value property, " +
-        "across every resource class that uses it, answered by a single triplestore query. " +
+        "across every resource class that uses it. The counts come from the cached value counts of the project, " +
+        "which `/classes` refreshes and which are otherwise at most 60 minutes old. " +
         "Each audience reports `hidden` (permission code 0 — nothing is served) and `restrictedView` " +
         "(code 1 — a degraded version is served) separately; the two are disjoint. " +
         "`totalValues` is how many values of this property the project holds, restricted or not. It is a " +
         "true denominator: the counts beside it are in the same unit, so \"94 of 66,484 are hidden\" is a " +
-        "sound statement. It is derived from the same query rather than from a separate count. " +
+        "sound statement. A value of a resource typed with two classes counts once for each class, so " +
+        "`totalValues` can exceed the number of distinct values the drill-down lists. " +
         "The user must be project admin or system admin.",
     )
 
@@ -93,6 +95,8 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "Each resource reports its **own** resource class: a property spans classes, which is the whole " +
         "reason this report exists, so the class belongs to the row rather than to the table. " +
         "Ordered by label then IRI, so paging is stable across requests. " +
+        "The restricted literals come from the cached counts, so an object whose permissions changed after " +
+        "the last refresh by `/classes` (at most 60 minutes) can be missing until the next refresh. " +
         "The user must be project admin or system admin.",
     )
 }
