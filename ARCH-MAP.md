@@ -546,7 +546,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `KnoraUserService`, `UserService`, `ProjectService`, `ProjectEraseService`, `ProjectExportService`,
     `AdministrativePermissionRepo`, `DefaultObjectAccessPermissionRepo`, `PermissionIri`, `RestrictedView`,
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
-    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`
+    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`,
+    `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`, `ViewRestrictionsClassification`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
@@ -587,8 +588,14 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         webapi-ontology, webapi-common and webapi-api, all importing `KnoraUserRepoLive`,
         `KnoraProjectRepoLive`, `KnoraGroupRepoLive`, `AdministrativePermissionRepoLive` or `LicenseRepo`.
     - The admin domain must not import API DTOs; request and response models belong in webapi-api -
-        enforcement: review. Currently violated by 59 `slice.api.admin.*` imports inside `slice/admin` and
-        `responders/admin`.
+        enforcement: review. Currently violated by 50 `slice.api.admin` import lines in the main code of
+        `slice/admin` and `responders/admin` (`git grep -h 'slice\.api\.admin' -- <those paths> | wc -l`,
+        2026-10-16), among them `ValueCountFold` and `ViewRestrictionsAudience` (the report's `Audience`,
+        `Visibility` and count types).
+    - The view-restrictions report reads its counts only through `ViewRestrictionsRowCache`; only
+        `ViewRestrictionsService.classSummaries` refreshes it. Value counts are read in batches of resources
+        (`VALUES ?resource`), never one query for a whole class - enforcement: review (golden query files in
+        `src/test/resources/.../slice/admin/repo/`).
     - List persistence queries belong to whichever component owns lists; `ListsResponder` must not import
         `slice.resources.repo.*` query classes - enforcement: review. Currently violated by 13 imports in
         `ListsResponder.scala`.
@@ -617,8 +624,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         multi-writer: admin writes via `LegalInfoService`, `TopLeftCorrectionAction`, `ProjectEraseService`
         and `ListsResponder`, while webapi-resources owns the same graphs.
     - EhCache instances `knoraProject`, `knoraUser`, `knoraGroup` via `EntityCache` / `CachingEntityRepo`,
-        single writer each. `ViewRestrictionsRepo`'s project-classes cache and `AssetPermissionsCache`, single
-        writer each. Project export TriG and zip files on disk (`ProjectExportService`), single writer.
+        single writer each. `AssetPermissionsCache`, single writer. `ViewRestrictionsRowCache` (in-memory
+        zio-cache of the report's count rows, 10-minute TTL), loaded only through `ViewRestrictionsRepo` and
+        invalidated only by `ViewRestrictionsService.classSummaries`. Project export TriG and zip files on disk
+        (`ProjectExportService`), single writer.
     - `responders/admin` is the legacy migration parking lot: `ListsResponder`, `PermissionsResponder`,
         `AssetPermissionsResponder` and `AssetPermissionsCache` have no slice home and are excluded from
         review scope by `REVIEW.md` line 86.
