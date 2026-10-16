@@ -2,7 +2,7 @@
 title: "perf: graph-scoped restriction counts in one query per project"
 date: 2026-10-16
 author: "Nora Ammann"
-status: approved
+status: implemented
 repositories: []
 linear: DEV-7390
 ---
