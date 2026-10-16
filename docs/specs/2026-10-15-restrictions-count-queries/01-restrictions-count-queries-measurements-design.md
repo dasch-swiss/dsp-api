@@ -225,3 +225,5 @@ In LIMC, the fix adds 35 % more values to the report.
 - `assets/bench_c4.py`, `assets/bench_c5.py`: C4, and C5/C6 with R.
 - `assets/compare.py`, `assets/compare_c5.py`: count comparison.
 - `assets/results/`: raw rows (`*-before-*`, `*-c5-*`, `*-after-*`), timings (`*-timings.csv`) and logs.
+- `assets/bench_batch.py`: the listing query and the batched value counts; result in
+  [`assets/batched-value-counts.md`](assets/batched-value-counts.md) (batch size 5000, 0 differences).
