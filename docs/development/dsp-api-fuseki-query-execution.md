@@ -160,11 +160,9 @@ cost and benefit from scoping. And since a project's data graph *is* the project
 join (plus a dead `DISTINCT`) took the class-browsing prequery from 1.66s to 310ms on stage
 (DEV-6827).
 
-A project can have more than one data graph (the local `anything` project has `anything` and `freetest`), and
-`ProjectService.projectDataNamedGraphV2` derives only one. For a project-wide read, enumerate the graphs
-(`SELECT DISTINCT ?g WHERE { GRAPH ?g { ?r knora-base:attachedToProject <P> } }`, 0.3 s on the largest stage
-project) and scope with `VALUES ?g { … } GRAPH ?g { … }`, which performs as a literal graph does. Inside the
-graphs a pattern such as `?value knora-base:isDeleted false` is an index range scan of the project, not of the
+A project has exactly one data graph, and `ProjectService.projectDataNamedGraphV2` derives it from the project. Do
+not query the store to find it. For a project-wide read, scope with `GRAPH <projectDataGraph> { … }`. Inside the
+graph a pattern such as `?value knora-base:isDeleted false` is an index range scan of the project, not of the
 store. Measured on stage (DEV-7390): the project-wide value count of the largest project took 53.9 s with
 `attachedToProject` and 27.9 s scoped to its graph, with identical rows.
 

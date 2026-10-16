@@ -532,8 +532,8 @@ subject with that object; in the union default graph that is the whole store. Us
   it (`FILTER (?deleted = false)`; Jena does not substitute a boolean into the pattern).
 - Put a sub-select barrier *after* the pattern that binds the variable, and the constant-object patterns after the
   barrier. A nested `{ … }` group is not a barrier: Jena merges it into the surrounding BGP.
-- Make the constant-object pattern the one intended driver, inside the project's graphs (see
-  § Scope a project-wide aggregation to the project's graphs).
+- Make the constant-object pattern the one intended driver, inside the project's data graph (see
+  § Scope a project-wide aggregation to the project's data graph).
 
 Measured on stage (DEV-7390): a GRAPH-scoped value count that also had `?resource knora-base:isDeleted false` timed
 out at 120 s; with `?resource knora-base:isDeleted ?resDeleted` and a filter after the grouping it took 27.9 s.
@@ -546,23 +546,22 @@ and reads every object with that literal. `FILTER (STR(?p) IN ("a", "b"))` compa
 variable, so the rewrite does not apply. Use it when the rows are already bound, for example by
 `VALUES ?resource { … }`.
 
-When the literals are meant to select the rows, put them in `VALUES ?p { "a" "b" }` inside the project's graphs
+When the literals are meant to select the rows, put them in `VALUES ?p { "a" "b" }` inside the project's data graph
 instead: there the substituted pattern reads only the project's objects with that literal. Measured on stage
 (DEV-7390): a view-restrictions drill-down page of the largest project took 8.7 s with `STR()` over the class's
 values and 0.55 s driven by the literal, with identical rows.
 
-### Scope a project-wide aggregation to the project's graphs
+### Scope a project-wide aggregation to the project's data graph
 
 `LIMIT`/`OFFSET` on a grouped or aggregated result does not bound the query time: every page must scan and
 aggregate the whole input before it returns one row. To keep a growing aggregation under a timeout, first scope
-the scan to the project's graphs: enumerate them
-(`SELECT DISTINCT ?g WHERE { GRAPH ?g { ?r knora-base:attachedToProject <P> } }`), scope with
-`VALUES ?g { … } GRAPH ?g { … }`, and let one constant-object pattern drive the scan. Measured on stage (DEV-7390):
+the scan to the project's data graph (`GRAPH <projectDataGraph> { … }`, the graph
+`ProjectService.projectDataNamedGraphV2` derives), and let one constant-object pattern drive the scan. Measured on stage (DEV-7390):
 one such query counted the 1.67 M values of the largest project in 27.9 s; the same counts took 53.9 s in one
 resource-driven query with `attachedToProject`, and 64.1 s summed over per-class batches of 2000 resource IRIs.
 
 Batch only if the scoped query is still over the timeout. Then partition by a key that needs no listing query, such
-as the permission literal (`VALUES ?permissions { … }`), or batch resources inside the graphs. Keep each batch's
+as the permission literal (`VALUES ?permissions { … }`), or batch resources inside the graph. Keep each batch's
 form-encoded request body under Jetty's 200,000-byte default form limit (about 60 bytes for each IRI).
 
 ### GRAPH-scope scans, not lookups
@@ -580,8 +579,8 @@ a redundant join, not a belt-and-braces check. Measured (DEV-6827): dropping it 
 class-browsing prequery, together with its no-op `DISTINCT`, took the largest class in the
 store from 1.66s to 310ms per page (5.4×) with byte-identical results.
 
-A project can have more than one data graph, and `ProjectService.projectDataNamedGraphV2` derives only one. For a
-project-wide read, enumerate the graphs (see § Scope a project-wide aggregation to the project's graphs).
+For a project-wide read, scope to the project's data graph (see § Scope a project-wide aggregation to the project's
+data graph).
 
 ### Don't inline large closures as `VALUES`
 

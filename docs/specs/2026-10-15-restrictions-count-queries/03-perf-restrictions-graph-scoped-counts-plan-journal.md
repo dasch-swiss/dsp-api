@@ -34,3 +34,10 @@ repositories: []
   bound checks in the `sequence`.
 - Verification: `just check` and `just test-unit` pass. The E2E specs did not run: the Docker daemon was not
   running. The stage check (verification step 5) is open and needs the owner's go-ahead.
+- Review (PR #4392): each project has exactly one data graph, and the system depends on it. The report no
+  longer enumerates graphs with a query. It derives the graph with `ProjectService.projectDataNamedGraphV2`
+  and scopes with `GRAPH <graph>`. The second `anything` graph (`freetest`) exists only in test data. The row
+  cache is keyed by `KnoraProject`, because the value load needs the graph; the rest services pass the project
+  that the authorization check returns.
+- Review: `Cache.makeWith` with `Duration.Zero` for a failure stays. zio-cache 0.2.4 `Cache.make` is
+  `makeWith(capacity, lookup)(_ => timeToLive)`, so it keeps a failure for the full TTL.

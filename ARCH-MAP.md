@@ -595,7 +595,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `Visibility` and count types).
     - The view-restrictions report reads its counts only through `ViewRestrictionsRowCache`; only
         `ViewRestrictionsService.classSummaries` refreshes it. Value counts are read in one query per project,
-        scoped to the project's enumerated graphs, with `?value knora-base:isDeleted false` as its only
+        scoped to the project's data graph, with `?value knora-base:isDeleted false` as its only
         constant-object pattern - enforcement: static-analysis for the existing queries (golden query files in
         `src/test/resources/.../slice/admin/repo/` and the algebra checks in `ViewRestrictionsQuerySpec`), review
         for new ones.
