@@ -307,6 +307,40 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
          |""".stripMargin +
       restrictedValue("http://rdfh.ch/0001/m/v1")
 
+  /** One resource with three text values: project-member only, restricted view for anonymous, and open. */
+  private val mixedPermissionsTurtle: String =
+    prefixes +
+      host(
+        "http://rdfh.ch/0001/x",
+        thing,
+        s"<$hasText> <http://rdfh.ch/0001/x/v1>, <http://rdfh.ch/0001/x/v2>, <http://rdfh.ch/0001/x/v3>",
+      ) +
+      """
+        |<http://rdfh.ch/0001/x/v1> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/x/v2> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "RV knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/x/v3> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
+  /** One resource with a text value readable by anonymous users and restricted to restricted view for known users. */
+  private val unknownAndKnownTurtle: String =
+    prefixes +
+      host("http://rdfh.ch/0001/u", thing, s"<$hasText> <http://rdfh.ch/0001/u/v1>") +
+      """
+        |<http://rdfh.ch/0001/u/v1> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "V knora-admin:UnknownUser|RV knora-admin:KnownUser" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
   private def page(n: Int, size: Int) =
     byProperty(_.propertyItems(projectIri, hasText, ValueItemType.All, PageAndSize(n, size)))
 
@@ -489,9 +523,69 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
   )
 
+  private def itemsOf(property: String) =
+    byProperty(_.propertyItems(projectIri, property, ValueItemType.All, PageAndSize(1, 25)))
+
+  private val itemsSuite = suite("propertyItems selection")(
+    test("lists a restricted user link value") {
+      for {
+        p <- itemsOf(hasOtherThingV)
+      } yield assertTrue(
+        p.pagination.totalItems == 1,
+        p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/host/v1"),
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(hasOtherThingV))),
+    test("lists nothing for the standoff link value property and loads no rows") {
+      for {
+        loads <- Ref.make(0)
+        p     <- itemsOf(standoffLinkV).provideSome[Ref[Dataset]](
+               serviceLayers,
+               countingCache(loads, thing),
+               StringFormatter.test,
+               TriplestoreServiceInMemory.layer,
+             )
+        count <- loads.get
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0, count == 0)
+    }.provide(datasetLayerFromTurtle(linkValueTurtle(standoffLinkV))),
+    test("lists nothing for a property that is not in the ontology and loads no rows") {
+      for {
+        loads <- Ref.make(0)
+        p     <- itemsOf(hasUnknown).provideSome[Ref[Dataset]](
+               serviceLayers,
+               countingCache(loads, thing),
+               StringFormatter.test,
+               TriplestoreServiceInMemory.layer,
+             )
+        count <- loads.get
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0, count == 0)
+    }.provide(datasetLayerFromTurtle(twoClassTurtle)),
+    test("lists nothing when no value of the property is restricted") {
+      for {
+        p <- itemsOf(hasUnused)
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    test("lists a value that is open to anonymous users but restricted for known users") {
+      for {
+        p <- itemsOf(hasText)
+      } yield assertTrue(
+        p.pagination.totalItems == 1,
+        p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/u/v1"),
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(unknownAndKnownTurtle)),
+    test("the values listed equal the values the counts report as hidden or restricted view, one unit: values") {
+      for {
+        counts <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        items  <- itemsOf(hasText)
+        listed  = items.data.flatMap(_.values).size
+        a       = counts.counts.anonymous
+      } yield assertTrue(listed == 2, listed == a.hidden + a.restrictedView)
+    }.provide(commonLayers, datasetLayerFromTurtle(mixedPermissionsTurtle)),
+  )
+
   def spec = suite("ViewRestrictionsByPropertyService")(
     pagingSuite,
     foldSuite,
     multiTypedSuite,
+    itemsSuite,
   )
 }

@@ -86,7 +86,7 @@ final case class ViewRestrictionsByPropertyRepo(
   /**
    * One page of resources carrying a restricted value of the property, with all of their restricted values.
    *
-   * Two queries rather than one: the first windows **resources** in SPARQL, the second fetches every row
+   * `restricted` are the permission literals to list, and must not be empty. Two queries rather than one: the first windows **resources** in SPARQL, the second fetches every row
    * for exactly those IRIs. Windowing the value rows directly would page a different unit than
    * [[countRestrictedResources]] counts — see [[ViewRestrictionsByPropertyRepo.drillDownResourcePageQuery]].
    */
@@ -94,6 +94,7 @@ final case class ViewRestrictionsByPropertyRepo(
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
+    restricted: Set[String],
     offset: Int,
     limit: Int,
   ): Task[Seq[RestrictedPropertyValueRow]] =
@@ -101,7 +102,7 @@ final case class ViewRestrictionsByPropertyRepo(
       pageIris <- triplestore
                     .query(
                       ViewRestrictionsByPropertyRepo
-                        .drillDownResourcePageQuery(projectIri, propertyIri, itemType, offset, limit),
+                        .drillDownResourcePageQuery(projectIri, propertyIri, itemType, restricted, offset, limit),
                     )
                     .map(_.flatMap(_.get("resource")))
       // An empty window means an empty page: sending `?resource IN ()` would be a pointless round trip.
@@ -110,19 +111,23 @@ final case class ViewRestrictionsByPropertyRepo(
                 triplestore
                   .query(
                     ViewRestrictionsByPropertyRepo
-                      .drillDownRowsQuery(projectIri, propertyIri, itemType, pageIris),
+                      .drillDownRowsQuery(projectIri, propertyIri, itemType, restricted, pageIris),
                   )
                   .map(_.flatMap(restrictedRow))
     } yield rows
 
-  /** The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. */
+  /**
+   * The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. `restricted`
+   * must not be empty.
+   */
   def countRestrictedResources(
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
+    restricted: Set[String],
   ): Task[Int] =
     triplestore
-      .query(ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType))
+      .query(ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType, restricted))
       .map(_.flatMap(_.get("cnt").flatMap(_.toIntOption)).headOption.getOrElse(0))
 
   private def restrictedRow(row: VariableResultsRow): Option[RestrictedPropertyValueRow] =
@@ -197,11 +202,13 @@ object ViewRestrictionsByPropertyRepo {
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
+    restricted: Set[String],
     offset: Int,
     limit: Int,
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
+    val filter   = permissionFilter(restricted)
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -216,8 +223,7 @@ object ViewRestrictionsByPropertyRepo {
                    |      $property ?value .
                    |    ?value knora-base:hasPermissions ?permissions ;
                    |      knora-base:isDeleted false .
-                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                   |    FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |    $filter
                    |  }
                    |  OPTIONAL { ?resource rdfs:label ?label . }
                    |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
@@ -241,10 +247,9 @@ object ViewRestrictionsByPropertyRepo {
                    |        $property ?value .
                    |      ?value knora-base:hasPermissions ?permissions ;
                    |        knora-base:isDeleted false .
-                   |      FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
                    |    }
                    |    $constraint
-                   |    FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |    $filter
                    |  }
                    |  OPTIONAL { ?resource rdfs:label ?label . }
                    |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
@@ -271,10 +276,12 @@ object ViewRestrictionsByPropertyRepo {
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
+    restricted: Set[String],
     resourceIris: Seq[String],
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
+    val filter   = permissionFilter(restricted)
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -288,7 +295,6 @@ object ViewRestrictionsByPropertyRepo {
                    |    $property ?value .
                    |  ?value knora-base:hasPermissions ?permissions ;
                    |    knora-base:isDeleted false .
-                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
                    |  ?resource a ?resClass .
                    |  ?value knora-base:attachedToUser ?creator .
                    |  OPTIONAL { ?resource rdfs:label ?label . }
@@ -297,7 +303,7 @@ object ViewRestrictionsByPropertyRepo {
                    |    ?fileClass rdfs:subClassOf* knora-base:FileValue .
                    |  }
                    |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
-                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  $filter
                    |  FILTER (?resource IN (${Fragment
               .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
                    |}
@@ -317,7 +323,6 @@ object ViewRestrictionsByPropertyRepo {
                    |      $property ?value .
                    |    ?value knora-base:hasPermissions ?permissions ;
                    |      knora-base:isDeleted false .
-                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
                    |    ?resource a ?resClass .
                    |    ?value knora-base:attachedToUser ?creator .
                    |    OPTIONAL { ?resource rdfs:label ?label . }
@@ -328,7 +333,7 @@ object ViewRestrictionsByPropertyRepo {
                    |    OPTIONAL { ?value knora-base:valueHasComment ?comment . }
                    |  }
                    |  $constraint
-                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  $filter
                    |  FILTER (?resource IN (${Fragment
               .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
                    |}
@@ -346,9 +351,11 @@ object ViewRestrictionsByPropertyRepo {
     projectIri: ProjectIri,
     propertyIri: String,
     itemType: ValueItemType,
+    restricted: Set[String],
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
+    val filter   = permissionFilter(restricted)
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -362,8 +369,7 @@ object ViewRestrictionsByPropertyRepo {
                    |    $property ?value .
                    |  ?value knora-base:hasPermissions ?permissions ;
                    |    knora-base:isDeleted false .
-                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  $filter
                    |}""".render,
           SparqlTimeout.ViewRestrictions,
         )
@@ -380,10 +386,9 @@ object ViewRestrictionsByPropertyRepo {
                    |      $property ?value .
                    |    ?value knora-base:hasPermissions ?permissions ;
                    |      knora-base:isDeleted false .
-                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
                    |  }
                    |  $constraint
-                   |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+                   |  $filter
                    |}""".render,
           SparqlTimeout.ViewRestrictions,
         )
@@ -429,13 +434,13 @@ object ViewRestrictionsByPropertyRepo {
     }
 
   /**
-   * Matches a permission literal that grants full view to anonymous users. Copied from
-   * [[ViewRestrictionsRepo]] rather than shared, like `itemTypeConstraint` above.
-   *
-   * The drill-down queries use it in a `FILTER(!REGEX(?permissions, …))` to keep only rows restricted from
-   * someone. The authoritative per-audience decision still happens in Scala via `PermissionUtilADM`; the
-   * filter only removes provably-open rows, so it is conservative.
+   * `FILTER (STR(?permissions) IN ("a", "b", ...))`: keeps the values whose permission literal is one of
+   * `literals`, the restricted literals of the classification the counts use. `literals` must not be empty.
+   * `STR()` is deliberate; see `permissionFilter` in [[ViewRestrictionsRepo]].
    */
-  private val grantsViewToAnonymousRegex = "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser"
-
+  private def permissionFilter(literals: Set[String]): Fragment = {
+    require(literals.nonEmpty, "a permission filter needs at least one literal")
+    val list = Fragment.join(literals.toSeq.sorted.map(Literal.string(_).toFragment), Fragment.raw(", "))
+    sparql"FILTER (STR(?permissions) IN ($list))"
+  }
 }

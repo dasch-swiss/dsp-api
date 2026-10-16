@@ -81,7 +81,11 @@ final case class ViewRestrictionsByPropertyService(
     rowCache.valueRowsOfProject(projectIri, index).map(_.filter(_.propertyIri == property))
 
   /**
-   * Step 3: the resources carrying a restricted value of the property, paginated.
+   * Step 3: the resources carrying a restricted user value of the property, paginated.
+   *
+   * The values are selected by permission literal, classified by [[ViewRestrictionsAudience.restrictedLiterals]]
+   * as the counts classify them. A property that is not counted, or has no restricted literal, yields an
+   * empty page and runs no query.
    *
    * Each row reports its own resource class. That is the whole point of this report: one property can be
    * used by many classes, so the class belongs to the row and not to the table.
@@ -93,16 +97,39 @@ final case class ViewRestrictionsByPropertyService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedPropertyResource]] =
     for {
+      index      <- ProjectOntologyIndex.load(ontologyRepo)
+      restricted <- if (index.valueProperties.contains(property)) restrictedLiterals(projectIri, property, index)
+                    else ZIO.succeed(Set.empty[String])
+      result <- if (restricted.isEmpty)
+                  ZIO.succeed(PagedResponse.from(Seq.empty[RestrictedPropertyResource], 0, pageAndSize))
+                else pageOfItems(projectIri, property, itemType, restricted, pageAndSize)
+    } yield result
+
+  /** The permission literals of the property's current values that some audience cannot fully see. */
+  private def restrictedLiterals(projectIri: ProjectIri, property: String, index: ProjectOntologyIndex) =
+    propertyRows(projectIri, property, index).map(rows =>
+      ViewRestrictionsAudience.restrictedLiterals(rows.filterNot(_.deleted).map(_.permissions).toSet, projectIri),
+    )
+
+  private def pageOfItems(
+    projectIri: ProjectIri,
+    property: String,
+    itemType: ValueItemType,
+    restricted: Set[String],
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[RestrictedPropertyResource]] =
+    for {
       // The page and its total are independent reads, so they go out together. They are separate
       // transactions rather than a snapshot: a concurrent write between them can leave `totalItems`
       // inconsistent with the rows, exactly as in the class drill-down.
       totalAndRows <- repo
-                        .countRestrictedResources(projectIri, property, itemType)
+                        .countRestrictedResources(projectIri, property, itemType, restricted)
                         .zipPar(
                           repo.findRestrictedResources(
                             projectIri,
                             property,
                             itemType,
+                            restricted,
                             offset = pageAndSize.size * (pageAndSize.page - 1),
                             limit = pageAndSize.size,
                           ),

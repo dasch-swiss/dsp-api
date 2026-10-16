@@ -5,8 +5,6 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.apache.jena.query.QueryFactory
-import org.apache.jena.sparql.algebra.Algebra
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -27,13 +25,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
  * Both are cases where copying the class report would have been slower, so they are asserted rather than
  * left to a reader's care.
  *
- * The last suite pins the whole shape rather than single features: every query is compared against the
- * RDF4J SparqlBuilder output it was ported from (see [[ViewRestrictionsByPropertyLegacyFixtures]]). The
- * port is a pure port, so the comparison is the strict one the rest of this migration uses — both sides
- * parsed by Jena with the prefix map cleared and re-serialised, which ignores whitespace and prefix
- * rendering but nothing else, group nesting included. The algebra of both is asserted alongside it, since
- * that is what join order and filter placement — the two things this report's performance rests on —
- * actually reduce to.
+ * The last suite pins the permission-literal selection the drill-down shares with the counts.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
@@ -42,33 +34,22 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
   private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
   private val itemTypes  = List(ValueItemType.All, ValueItemType.File, ValueItemType.Value, ValueItemType.Comment)
 
-  /** Parse and re-serialise, with prefixes expanded, so only the query itself is compared. */
-  private def canonical(sparql: String): String = {
-    val q = QueryFactory.create(sparql)
-    q.getPrefixMapping.clearNsPrefixMap()
-    q.toString
-  }
+  private val restricted = Set("M knora-admin:ProjectMember", "V knora-admin:UnknownUser|RV knora-admin:KnownUser")
 
-  /** Unoptimised syntax-to-algebra translation: it keeps join order, group nesting and filter placement. */
-  private def algebra(sparql: String): String = Algebra.compile(QueryFactory.create(sparql)).toString
-
-  /** The ported queries, keyed exactly as [[ViewRestrictionsByPropertyLegacyFixtures]] keys them. */
-  private val actualByKey: Map[String, String] = itemTypes.flatMap { it =>
+  /** Every drill-down query, for each item type. */
+  private val allQueries: Map[String, String] = itemTypes.flatMap { it =>
     List(
-      s"drillDownCountQuery-$it"              -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, it).sparql,
-      s"drillDownResourcePageQuery-$it-50-25" -> ViewRestrictionsByPropertyRepo
-        .drillDownResourcePageQuery(projectIri, hasText, it, offset = 50, limit = 25)
-        .sparql,
-      s"drillDownResourcePageQuery-$it-0-25" -> ViewRestrictionsByPropertyRepo
-        .drillDownResourcePageQuery(projectIri, hasText, it, offset = 0, limit = 25)
-        .sparql,
-      s"drillDownRowsQuery-$it-two" -> ViewRestrictionsByPropertyRepo
-        .drillDownRowsQuery(projectIri, hasText, it, Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"))
-        .sparql,
-      s"drillDownRowsQuery-$it-one" -> ViewRestrictionsByPropertyRepo
-        .drillDownRowsQuery(projectIri, hasText, it, Seq("http://rdfh.ch/0001/a"))
-        .sparql,
-    )
+      s"drillDownCountQuery-$it" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
+        projectIri,
+        hasText,
+        it,
+        restricted,
+      ),
+      s"drillDownResourcePageQuery-$it" -> ViewRestrictionsByPropertyRepo
+        .drillDownResourcePageQuery(projectIri, hasText, it, restricted, offset = 0, limit = 25),
+      s"drillDownRowsQuery-$it" -> ViewRestrictionsByPropertyRepo
+        .drillDownRowsQuery(projectIri, hasText, it, restricted, Seq("http://rdfh.ch/0001/a")),
+    ).map { case (k, q) => k -> q.sparql }
   }.toMap
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsByPropertyRepo query generation")(
@@ -80,7 +61,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
         // totalPages 2, whose two pages consume rows 1-50 — resources 26-30 are then unreachable by any
         // page number the pagination block admits. So the LIMIT/OFFSET goes on a DISTINCT resource query.
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 50, limit = 25)
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, restricted, offset = 50, limit = 25)
           .sparql
         assertTrue(
           // The value is a join partner here, never a projected column: projecting it would reintroduce
@@ -93,7 +74,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
       },
       test("orders by label, falling back to the IRI so unlabelled resources still page deterministically") {
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
           .sparql
         assertTrue(q.contains("COALESCE"), q.contains("?labelOrIri"))
       },
@@ -105,6 +86,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
             projectIri,
             hasText,
             ValueItemType.All,
+            restricted,
             Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"),
           )
           .sparql
@@ -118,32 +100,32 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
         // REQ-4.2. Without this the drill-down could not show that one property is restricted across
         // several classes, which is the finding the whole report exists to surface.
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, Seq("http://rdfh.ch/0001/a"))
+          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, restricted, Seq("http://rdfh.ch/0001/a"))
           .sparql
         assertTrue(q.contains("?resClass"))
       },
       test("lists only restricted values") {
         val rows = ViewRestrictionsByPropertyRepo
-          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, Seq("http://rdfh.ch/0001/a"))
+          .drillDownRowsQuery(projectIri, hasText, ValueItemType.All, restricted, Seq("http://rdfh.ch/0001/a"))
           .sparql
-        assertTrue(rows.contains("knora-admin:UnknownUser"))
+        assertTrue(rows.contains("STR(?permissions) IN"))
       },
       test("both drill-down queries restrict identically, so the total cannot describe a different row set") {
         val page = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, offset = 0, limit = 25)
+          .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
           .sparql
         val count =
-          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All).sparql
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All, restricted).sparql
         assertTrue(
-          page.contains("knora-admin:UnknownUser"),
-          count.contains("knora-admin:UnknownUser"),
+          page.contains("STR(?permissions) IN"),
+          count.contains("STR(?permissions) IN"),
           page.contains(s"<$hasText>"),
           count.contains(s"<$hasText>"),
         )
       },
       test("the page total counts distinct resources — the same unit the page query windows") {
         val q =
-          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All).sparql
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, hasText, ValueItemType.All, restricted).sparql
         assertTrue(
           q.contains("COUNT") && q.contains("DISTINCT"),
           q.contains("?resource"),
@@ -152,16 +134,22 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
         )
       },
     ),
-    suite("matches the RDF4J builder it was ported from")(
-      ViewRestrictionsByPropertyLegacyFixtures.byKey.toList.sortBy(_._1).map { case (key, legacy) =>
-        test(key) {
-          val actual = actualByKey(key)
-          assertTrue(
-            canonical(actual) == canonical(legacy),
-            algebra(actual) == algebra(legacy),
-          )
-        }
-      }*,
+    suite("selects restricted values by permission literal")(
+      test("every query filters on STR(?permissions) IN the passed literals") {
+        assertTrue(
+          allQueries.values.forall(q =>
+            q.contains(
+              """FILTER (STR(?permissions) IN ("M knora-admin:ProjectMember", "V knora-admin:UnknownUser|RV knora-admin:KnownUser"))""",
+            ),
+          ),
+        )
+      },
+      test("no query uses REGEX or restricts to non-link values") {
+        assertTrue(allQueries.values.forall(q => !q.contains("REGEX") && !q.contains("LinkValue")))
+      },
+      test("every query binds the property in the triple pattern") {
+        assertTrue(allQueries.values.forall(_.contains(s"<$hasText> ?value")))
+      },
     ),
   )
 }
