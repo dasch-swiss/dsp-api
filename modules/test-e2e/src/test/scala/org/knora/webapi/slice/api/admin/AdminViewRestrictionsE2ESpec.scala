@@ -195,7 +195,7 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
           first.pagination.totalItems == second.pagination.totalItems,
         )
       },
-      test("lists a restricted link value of a Thing") {
+      test("lists a restricted link value of a Thing, on a page that holds every affected resource") {
         val itemsUri =
           uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=$thingClassIri&itemType=All&page=1&page-size=100"
         for {
