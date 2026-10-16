@@ -1,5 +1,17 @@
 # Changelog
 
+## [40.5.0](https://github.com/dasch-swiss/dsp-api/compare/v40.4.0...v40.5.0) (2026-10-16)
+
+
+### Enhancements
+
+* serve FAIR metadata and Signposting on the resource pages ARKs resolve to (DEV-7420) ([#4385](https://github.com/dasch-swiss/dsp-api/issues/4385)) ([72dd893](https://github.com/dasch-swiss/dsp-api/commit/72dd89360f2ea0591d7a7253d83165553fe5b805))
+
+
+### Bug Fixes
+
+* count user link values in the restrictions overview (DEV-7390) ([#4392](https://github.com/dasch-swiss/dsp-api/issues/4392)) ([97f1108](https://github.com/dasch-swiss/dsp-api/commit/97f11083feff692cf028c4cd3bb58a56e81ec5fa))
+
 ## [40.4.0](https://github.com/dasch-swiss/dsp-api/compare/v40.3.0...v40.4.0) (2026-10-09)
 
 
