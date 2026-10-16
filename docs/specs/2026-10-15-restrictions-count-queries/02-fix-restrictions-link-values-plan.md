@@ -394,13 +394,13 @@ glob).
 
 ### Phase 6: End-to-end tests, measurement, docs
 
-- [ ] Extend `AdminViewRestrictionsE2ESpec`: `/items` for `anything:Thing` includes
+- [x] Extend `AdminViewRestrictionsE2ESpec`: `/items` for `anything:Thing` includes
       `http://rdfh.ch/0001/project-thing-1/values/0` (restricted `hasOtherThingValue`, `CR knora-admin:Creator`).
-- [ ] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/properties` includes `anything:hasOtherThingValue`.
-- [ ] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/properties` omits `knora-base:hasStandoffLinkToValue`.
-- [ ] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/property-values` for `anything:hasOtherThingValue` reports
+- [x] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/properties` includes `anything:hasOtherThingValue`.
+- [x] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/properties` omits `knora-base:hasStandoffLinkToValue`.
+- [x] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/property-values` for `anything:hasOtherThingValue` reports
       restricted values.
-- [ ] Run `just test-e2e`; it passes.
+- [x] Run `just test-e2e`; it passes.
 - [x] Add `assets/bench_fix.py`, which renders the final R, C5 and drill-down queries and writes the rows and timings to
       `assets/results/`.
 - [x] Run `bench_fix.py` against stage for drawings-gods, BEOL and LIMC.
@@ -409,15 +409,15 @@ glob).
       the owner on 2026-10-16, see the journal).
 - [x] Measure each drill-down page and count query; each is below 40 s (slowest 18.8 s, worst case; follow-up
       DEV-7532).
-- [ ] Update the Scaladoc of both repos and both services: R/C5 shapes, pattern-order rule, cache, multi-typed counting.
-- [ ] Update `ARCH-MAP.md` for the webapi-admin component with `/dune:dune-map` (new `ViewRestrictionsAudience`,
+- [x] Update the Scaladoc of both repos and both services: R/C5 shapes, pattern-order rule, cache, multi-typed counting.
+- [x] Update `ARCH-MAP.md` for the webapi-admin component (hand edit; schema 2 migration is DEV-7534) (new `ViewRestrictionsAudience`,
       `ValueCountFold`, `ViewRestrictionsClassification`, `ViewRestrictionsRowCache`; the admin-domain import of
       `ViewRestrictionsEndpoints` DTOs in the violation count).
 - [x] Add the pattern-order rule (no `?value` pattern with two bound terms before `?resource ?prop ?value`) to
       `REVIEW.md`.
-- [ ] Run `just fmt`.
-- [ ] Run `just check`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just fmt`.
+- [x] Run `just check`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 

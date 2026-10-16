@@ -32,6 +32,7 @@ status: in-progress
 | 3 | reviewed | dsp-api@6c1347ccd | 1 |
 | 4 | reviewed | dsp-api@94bb8b85d | 1 |
 | 5 | reviewed | dsp-api@b921f8fb3 | 1 |
+| 6 | reviewed | dsp-api@ed917ecd1 | 1 |
 
 ## Chunk queue
 
@@ -70,6 +71,10 @@ status: in-progress
 | 5.2 | dsp-api | complete | 567237905 | property drill-down: LinkValue filter removed, STR(?permissions) IN from the property's cached rows, empty page without a query for a property outside the index or without restricted literals; REGEX copy removed; legacy builder suite replaced by render tests | none |
 | 5.3 | dsp-api | complete | 54a9f9864 | removed ProjectClasses, project-class discovery, multi-type probes, their EhCache and the repo CacheManager dependency, legacy RDF4J fixtures and suites; golden files for every drill-down query | none |
 | 5.4 | dsp-api | complete | 6fcb28c70 | Phase 5 review fixes: one permissionFilter, DrillDownBranches, item-type-specific row loads, VALUES ?resource page anchor, stale texts, documented cache and ontology limits, positive query assertions | none |
+| 6.1 | dsp-api | complete | c0ba5fa53 | e2e: class drill-down lists the restricted hasOtherThingValue of project-thing-1; /properties lists hasOtherThingValue, not hasStandoffLinkToValue; /property-values reports it; restriction specs and full e2e suite pass | none |
+| 6.2 | dsp-api | complete | ce52bcefc | stage measurement of the final queries: 0 differences, no query over the timeout; LIMC cold by-property 46 s and drill-down 18.8 s accepted, follow-up DEV-7532 | none |
+| 6.3 | dsp-api | complete | 4865c22ed, e404ef352 | REVIEW.md and SPARQL guide rules; webapi-admin ARCH-MAP entry (hand edit, schema 2 migration DEV-7534) | none |
+| 6.4 | dsp-api | complete | d57f5fb22 | Phase 6 review fixes: REVIEW.md items point to the guide, batching item added, STR() test scope stated, map enforcement for batching, e2e test name | none |
 
 ## Deferrals
 
@@ -85,6 +90,10 @@ status: in-progress
 
 ## Deviations
 
+- Phase 6 `ARCH-MAP.md` update: the map is still schema 1 (last verified 2026-09-13, 715 files changed since). Owner
+  decision 2026-10-16: hand-edit only the webapi-admin entry and keep the frontmatter; DEV-7534 tracks the full
+  `/dune:dune-map update` migration. The map's count of 59 DTO imports could not be reproduced; the entry records 50
+  with its command.
 - Plan criterion "LIMC by-property wall time on a new cache below 40 s": measured 46 s on stage (164 batches through
   4 permits; slowest query 1.75 s). Owner decision 2026-10-16: accept; the criterion is per query, and the first
   request on a new cache may take longer. The LIMC drill-down page of `CatalogLIMC` took 18.8 s (worst case,
@@ -138,3 +147,9 @@ status: in-progress
 - Phase 5 review: the graph-scoping constraint is still stated (`ViewRestrictionsRepo.scala:418-422`) and tested
   (`ViewRestrictionsQuerySpec`, "no view-restrictions query uses GRAPH scoping").
 - Full webapi unit suite passed at 54a9f9864.
+- Chunk 6.1: the e2e worker returned no report ("placeholder"); the session verified the diff, ran the two specs
+  (the three new tests passed) and the full e2e suite (passed, 359.6 s). The worker had not run `just fmt`; the
+  session formatted and amended the local, unpushed commit.
+- Phase 6 review DUNE-001 (`refreshProject` is public, so a second invalidator is possible): recorded only. A
+  read-only view of the cache for the property service would enforce it structurally; no code calls it outside
+  `classSummaries` today. Measurements stay in the SPARQL guide, which already records incidents with numbers.
