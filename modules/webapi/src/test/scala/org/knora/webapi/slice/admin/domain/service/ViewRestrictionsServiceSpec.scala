@@ -11,23 +11,14 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
@@ -239,74 +230,27 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val standoffLinkValue = s"${kb}hasStandoffLinkToValue"
   private val deletedOnlyClass  = s"$anythingOntology#DeletedOnlyThing"
 
-  /** The ontology cache the report classifies with: the classes and properties the Turtle fixtures use. */
-  private def ontologyCacheData(sf: StringFormatter): OntologyCacheData = {
-    def iri(s: String): SmartIri = sf.toSmartIri(s, requireInternal = true)
-
-    def resourceClass(classIri: String): (SmartIri, ReadClassInfoV2) =
-      iri(classIri) -> ReadClassInfoV2(
-        ClassInfoContentV2(iri(classIri), ontologySchema = InternalSchema),
-        allBaseClasses = Seq.empty,
-        isResourceClass = true,
-      )
-
-    def property(
-      propertyIri: String,
-      isLinkProp: Boolean,
-      isLinkValueProp: Boolean,
-      isFileValueProp: Boolean,
-    ): (SmartIri, ReadPropertyInfoV2) =
-      iri(propertyIri) -> ReadPropertyInfoV2(
-        PropertyInfoContentV2(iri(propertyIri), ontologySchema = InternalSchema),
-        isResourceProp = true,
-        isLinkProp = isLinkProp,
-        isLinkValueProp = isLinkValueProp,
-        isFileValueProp = isFileValueProp,
-      )
-
-    def valueProp(propertyIri: String)     = property(propertyIri, false, false, false)
-    def fileProp(propertyIri: String)      = property(propertyIri, false, false, true)
-    def linkProp(propertyIri: String)      = property(propertyIri, true, false, false)
-    def linkValueProp(propertyIri: String) = property(propertyIri, false, true, false)
-
-    def ontology(
-      ontologyIri: String,
-      classes: Seq[(SmartIri, ReadClassInfoV2)],
-      properties: Seq[(SmartIri, ReadPropertyInfoV2)],
-    ): (SmartIri, ReadOntologyV2) =
-      iri(ontologyIri) -> ReadOntologyV2(
-        OntologyMetadataV2(iri(ontologyIri)),
-        classes = classes.toMap,
-        properties = properties.toMap,
-      )
-
-    OntologyCacheFake.emptyData.copy(
-      ontologies = Map(
-        ontology(
-          anythingOntology,
-          classes = Seq(thingClass, subThingClass, deletedOnlyClass).map(resourceClass),
-          properties = Seq(
-            valueProp(hasText),
-            fileProp(hasPicture),
-            fileProp(hasDocument),
-            linkProp(hasOtherThing),
-            linkValueProp(hasOtherThingVal),
-          ),
-        ),
-        ontology(secondOntology, classes = Seq.empty, properties = Seq(valueProp(hasSecondText))),
-        ontology(
-          "http://www.knora.org/ontology/knora-base",
-          classes = Seq.empty,
-          properties = Seq(linkValueProp(standoffLinkValue)),
+  private val ontologyCacheLayer = ViewRestrictionsTestFixtures.ontologyCacheLayer(
+    Seq(
+      ontology(
+        anythingOntology,
+        classes = Seq(thingClass, subThingClass, deletedOnlyClass).map(resourceClass),
+        properties = Seq(
+          valueProp(hasText),
+          fileProp(hasPicture),
+          fileProp(hasDocument),
+          linkProp(hasOtherThing),
+          linkValueProp(hasOtherThingVal),
         ),
       ),
-    )
-  }
-
-  private val ontologyCacheLayer: ZLayer[StringFormatter, Nothing, OntologyCacheFake] =
-    ZLayer.fromZIO(
-      ZIO.serviceWithZIO[StringFormatter](sf => Ref.make(ontologyCacheData(sf)).map(OntologyCacheFake(_))),
-    )
+      ontology(secondOntology, classes = Seq.empty, properties = Seq(valueProp(hasSecondText))),
+      ontology(
+        "http://www.knora.org/ontology/knora-base",
+        classes = Seq.empty,
+        properties = Seq(linkValueProp(standoffLinkValue)),
+      ),
+    ),
+  )
 
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,

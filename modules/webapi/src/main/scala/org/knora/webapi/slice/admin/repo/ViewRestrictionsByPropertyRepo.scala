@@ -27,14 +27,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *
  * A deliberate sibling of [[ViewRestrictionsRepo]] rather than a mode of it: property grouping used to be
  * a `groupBy` flag threaded through a dozen signatures, which made every change to the class report a
- * change to property mode too. The two reports answer different questions and, as the notes below record,
- * want measurably different queries.
+ * change to property mode too. The two reports answer different questions and want different queries.
  *
- * Two access patterns (the counts come from `ViewRestrictionsRowCache`, not from this repo):
+ * Two access patterns; the counts come from `ViewRestrictionsRowCache`, not from this repo:
  *
  *   - **The property list** ([[projectValueProperties]]) — read from the ontology cache, issuing no SPARQL
- *     at all. Discovering it from the data instead costs 14.0s on LHTT, which is a blank screen for as long
- *     as the whole report used to take.
+ *     at all. It does not come from the data.
  *   - **Drill-down** ([[findRestrictedResources]] + [[countRestrictedResources]]) — paginated in SPARQL,
  *     ordered deterministically. Each row carries its own resource class, because a property spans classes.
  *
@@ -50,9 +48,7 @@ final case class ViewRestrictionsByPropertyRepo(
   /**
    * The project's value properties, with labels, from the ontology cache.
    *
-   * Issues no SPARQL. The alternative — `SELECT DISTINCT ?prop` joined against the project's value
-   * population — measured 14.0s on LHTT, which would put a blank screen in front of the step the stepped
-   * design exists to make immediate.
+   * Issues no SPARQL: the list comes from the ontology cache, never from the project's data.
    *
    * `knora-base` is fetched separately because it is not among a project's own ontologies, yet project data
    * uses its built-in file-value and comment properties without declaring them locally. Omitting it would
@@ -398,9 +394,9 @@ object ViewRestrictionsByPropertyRepo {
    * The queries above repeat the same WHERE skeleton — a project's current, non-deleted values of ONE
    * property — rather than sharing it, so that each template can be read as one whole piece of SPARQL.
    *
-   * No `?resClass` and no `ProjectClasses` — see the class doc for why, and for the measurement.
+   * No `?resClass` and no `ProjectClasses`: see the class doc for why.
    * `attachedToProject` on the resource is the whole project scope this needs. The property IRI is bound in
-   * the pattern, not filtered: 1,053ms against 3,060ms on LHTT.
+   * the triple pattern, never in a FILTER, because a FILTER does not narrow the scan.
    *
    * Each query is written as two whole templates chosen by whether an item-type constraint applies. The
    * skeleton is wrapped in a group of its own exactly when a constraint follows it — the constraint then

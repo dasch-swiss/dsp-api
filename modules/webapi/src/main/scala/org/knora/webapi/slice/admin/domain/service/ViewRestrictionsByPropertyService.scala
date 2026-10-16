@@ -31,6 +31,8 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
  * value with its real creator. A divergence between the counts and the drill-down should fail a test rather
  * than quietly change the numbers on one screen.
  *
+ * Counts read through [[ViewRestrictionsRowCache.valueRowsOfProject]].
+ *
  * One unit only. A property has no resource population of its own, so unlike the class report there is no
  * second unit to keep apart — every figure here counts values of one property, and `totalValues` is the
  * denominator they share.
@@ -76,13 +78,7 @@ final case class ViewRestrictionsByPropertyService(
     )
 
   private def propertyRows(projectIri: ProjectIri, property: String, index: ProjectOntologyIndex) =
-    for {
-      resourceRows <- rowCache.resourceCounts(projectIri)
-      classes       = resourceRows.map(_.classIri).distinct.filter(index.resourceClasses.contains)
-      rows         <- ZIO
-                .foreachPar(classes)(rowCache.valueCounts(projectIri, _))
-                .withParallelism(4)
-    } yield rows.flatten.filter(_.propertyIri == property)
+    rowCache.valueRowsOfProject(projectIri, index).map(_.filter(_.propertyIri == property))
 
   /**
    * Step 3: the resources carrying a restricted value of the property, paginated.

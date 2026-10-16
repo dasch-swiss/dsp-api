@@ -10,6 +10,7 @@ import zio.cache.Cache
 import zio.cache.Lookup
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
@@ -35,6 +36,19 @@ final case class ViewRestrictionsRowCache(
     valueRows.get(ViewRestrictionsRowCache.ValueKey(projectIri, resourceClass))
 
   /**
+   * The value rows of every class of a project that is in `index.resourceClasses`; the one place that reads all
+   * value rows of a project.
+   */
+  def valueRowsOfProject(projectIri: ProjectIri, index: ProjectOntologyIndex): Task[Seq[ValueCountRow]] =
+    for {
+      resourceRows <- resourceCounts(projectIri)
+      classes       = resourceRows.map(_.classIri).distinct.filter(index.resourceClasses.contains)
+      rows         <- ZIO
+                .foreachPar(classes)(valueCounts(projectIri, _))
+                .withParallelism(ViewRestrictionsRowCache.ProjectClassParallelism)
+    } yield rows.flatten
+
+  /**
    * Re-reads the resource counts of a project and drops the value counts of every class in the union of the
    * previously cached rows and the fresh rows, so a class that has since lost all its resources is dropped too.
    *
@@ -58,6 +72,9 @@ object ViewRestrictionsRowCache {
   final case class ValueKey(projectIri: ProjectIri, resourceClass: String)
 
   private val Ttl: Duration = 10.minutes
+
+  /** How many classes of a project load their value rows at once. */
+  private val ProjectClassParallelism: Int = 4
 
   private val ProjectCapacity: Int = 1000
   private val ClassCapacity: Int   = 2000

@@ -45,6 +45,8 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
                 )
     } yield ViewRestrictionsRowCache(resources, values)
 
+  private val index = ViewRestrictionsClassification.ProjectOntologyIndex(Set(classC), Map.empty, Set.empty)
+
   def spec: Spec[Any, Any] = suite("ViewRestrictionsRowCache")(
     test("runs the load once for concurrent gets of one missing key") {
       for {
@@ -130,6 +132,15 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
         values        <- valueLoads.get
         resources     <- resourceLoads.get
       } yield assertTrue(values == 1, resources == 1)
+    },
+    test("valueRowsOfProject loads only the classes that are resource classes of the index") {
+      for {
+        resourceLoads <- Ref.make(0)
+        valueLoads    <- Ref.make(0)
+        cache         <- rowCache(resourceLoads, valueLoads, _ => resourceRows(classC, classD))
+        rows          <- cache.valueRowsOfProject(projectA, index)
+        loaded        <- valueLoads.get
+      } yield assertTrue(rows == Seq(valueRow), loaded == 1)
     },
   )
 }

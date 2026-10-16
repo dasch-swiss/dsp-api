@@ -11,26 +11,15 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
-import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -57,60 +46,28 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
   private val byProperty = ZIO.serviceWithZIO[ViewRestrictionsByPropertyService]
 
   private val secondThing    = s"${anything}SecondThing"
-  private val subThing       = s"${anything}SubThing"
+  private val ghostThing     = s"${anything}GhostThing"
   private val hasOtherThingV = s"${anything}hasOtherThingValue"
+  private val hasPicture     = s"${anything}hasPicture"
+  private val hasUnused      = s"${anything}hasUnused"
   private val hasUnknown     = s"${anything}hasUnknown"
   private val standoffLinkV  = s"${kb}hasStandoffLinkToValue"
 
   /** The ontology cache the counts classify with: the classes and properties the Turtle fixtures use. */
-  private def ontologyCacheData(sf: StringFormatter): OntologyCacheData = {
-    def iri(s: String): SmartIri = sf.toSmartIri(s, requireInternal = true)
-
-    def resourceClass(classIri: String): (SmartIri, ReadClassInfoV2) =
-      iri(classIri) -> ReadClassInfoV2(
-        ClassInfoContentV2(iri(classIri), ontologySchema = InternalSchema),
-        allBaseClasses = Seq.empty,
-        isResourceClass = true,
-      )
-
-    def property(propertyIri: String, isLinkValueProp: Boolean): (SmartIri, ReadPropertyInfoV2) =
-      iri(propertyIri) -> ReadPropertyInfoV2(
-        PropertyInfoContentV2(iri(propertyIri), ontologySchema = InternalSchema),
-        isResourceProp = true,
-        isLinkValueProp = isLinkValueProp,
-      )
-
-    def ontology(
-      ontologyIri: String,
-      classes: Seq[(SmartIri, ReadClassInfoV2)],
-      properties: Seq[(SmartIri, ReadPropertyInfoV2)],
-    ): (SmartIri, ReadOntologyV2) =
-      iri(ontologyIri) -> ReadOntologyV2(
-        OntologyMetadataV2(iri(ontologyIri)),
-        classes = classes.toMap,
-        properties = properties.toMap,
-      )
-
-    OntologyCacheFake.emptyData.copy(
-      ontologies = Map(
-        ontology(
-          "http://www.knora.org/ontology/0001/anything",
-          classes = Seq(thing, secondThing, subThing).map(resourceClass),
-          properties = Seq(property(hasText, false), property(hasOtherThingV, true)),
-        ),
-        ontology(
-          "http://www.knora.org/ontology/knora-base",
-          classes = Seq.empty,
-          properties = Seq(property(standoffLinkV, true)),
-        ),
+  private val ontologyCacheLayer = ViewRestrictionsTestFixtures.ontologyCacheLayer(
+    Seq(
+      ontology(
+        "http://www.knora.org/ontology/0001/anything",
+        classes = Seq(thing, secondThing).map(resourceClass),
+        properties = Seq(valueProp(hasText), fileProp(hasPicture), valueProp(hasUnused), linkValueProp(hasOtherThingV)),
       ),
-    )
-  }
-
-  private val ontologyCacheLayer: ZLayer[StringFormatter, Nothing, OntologyCacheFake] =
-    ZLayer.fromZIO(
-      ZIO.serviceWithZIO[StringFormatter](sf => Ref.make(ontologyCacheData(sf)).map(OntologyCacheFake(_))),
-    )
+      ontology(
+        "http://www.knora.org/ontology/knora-base",
+        classes = Seq.empty,
+        properties = Seq(linkValueProp(standoffLinkV)),
+      ),
+    ),
+  )
 
   /** The service over a given row cache and triplestore. */
   private val serviceLayers =
@@ -215,7 +172,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
        |${restrictedValue("http://rdfh.ch/0001/multi/v1")}
        |""".stripMargin
 
-  private def linkValueTurtle(valueType: String, property: String): String =
+  private def linkValueTurtle(property: String): String =
     s"""
        |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
        |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -231,7 +188,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false ;
        |  <$property> <http://rdfh.ch/0001/host/v1> .
        |
-       |<http://rdfh.ch/0001/host/v1> rdf:type $valueType ;
+       |<http://rdfh.ch/0001/host/v1> rdf:type kb:LinkValue ;
        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
        |  kb:isDeleted false .
@@ -286,19 +243,69 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
-  /** A cache whose loaders count how often rows are read. */
-  private def countingCache(loads: Ref[Int]): ULayer[ViewRestrictionsRowCache] =
-    ZLayer.fromZIO {
-      for {
-        resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](10, 1.minute)(_ =>
-                       loads.update(_ + 1).as(Seq(ResourceCountRow(thing, "V knora-admin:UnknownUser", 1))),
-                     )
-        values <-
-          ViewRestrictionsRowCache.makeCache[ViewRestrictionsRowCache.ValueKey, Seq[ValueCountRow]](10, 1.minute)(_ =>
-            loads.update(_ + 1).as(Seq.empty),
-          )
-      } yield ViewRestrictionsRowCache(resources, values)
-    }
+  private def host(iri: String, clazz: String, props: String*) =
+    s"""
+       |<$iri> rdf:type <$clazz> ;
+       |  rdfs:label "$iri" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  ${props.mkString(" ;\n  ")} .
+       |""".stripMargin
+
+  private val prefixes: String =
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |<$thing> rdfs:subClassOf kb:Resource .
+       |<$secondThing> rdfs:subClassOf kb:Resource .
+       |<$ghostThing> rdfs:subClassOf kb:Resource .
+       |""".stripMargin
+
+  /** One `Thing` with a restricted value of `hasText`, and one `GhostThing`, a class outside the ontology cache. */
+  private val ghostClassTurtle: String =
+    prefixes +
+      host("http://rdfh.ch/0001/t", thing, s"<$hasText> <http://rdfh.ch/0001/t/v1>") +
+      host("http://rdfh.ch/0001/g", ghostThing, s"<$hasText> <http://rdfh.ch/0001/g/v1>") +
+      restrictedValue("http://rdfh.ch/0001/t/v1") +
+      restrictedValue("http://rdfh.ch/0001/g/v1")
+
+  /** One resource with a commented restricted text value and a restricted still-image file value. */
+  private val textAndFileTurtle: String =
+    prefixes +
+      host(
+        "http://rdfh.ch/0001/h",
+        thing,
+        s"<$hasText> <http://rdfh.ch/0001/h/text>",
+        s"<$hasPicture> <http://rdfh.ch/0001/h/pic>",
+      ) +
+      """
+        |<http://rdfh.ch/0001/h/text> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:valueHasComment "a note" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/h/pic> rdf:type kb:StillImageFileValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
+  /** One resource typed with two unrelated classes, carrying one restricted value. */
+  private val twoTypesTurtle: String =
+    prefixes +
+      s"""
+         |<http://rdfh.ch/0001/m> rdf:type <$thing>, <$secondThing> ;
+         |  rdfs:label "m" ;
+         |  kb:attachedToProject <${projectIri.value}> ;
+         |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+         |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+         |  kb:isDeleted false ;
+         |  <$hasText> <http://rdfh.ch/0001/m/v1> .
+         |""".stripMargin +
+      restrictedValue("http://rdfh.ch/0001/m/v1")
 
   private def page(n: Int, size: Int) =
     byProperty(_.propertyItems(projectIri, hasText, ValueItemType.All, PageAndSize(n, size)))
@@ -393,7 +400,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
       for {
         result <- byProperty(_.propertyValues(projectIri, hasOtherThingV, ValueItemType.All))
       } yield assertTrue(result.totalValues == 1, result.counts.anonymous.hidden == 1)
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle("kb:LinkValue", hasOtherThingV))),
+    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(hasOtherThingV))),
     test("gives zero counts for the standoff link value property") {
       for {
         result <- byProperty(_.propertyValues(projectIri, standoffLinkV, ValueItemType.All))
@@ -402,19 +409,65 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         result.counts.anonymous.hidden == 0,
         result.counts.authenticated.hidden == 0,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle("kb:LinkValue", standoffLinkV))),
+    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(standoffLinkV))),
     test("gives zero counts for a property that is not in the ontology, without loading rows") {
       for {
         loads  <- Ref.make(0)
         result <- byProperty(_.propertyValues(projectIri, hasUnknown, ValueItemType.All))
                     .provideSome[Ref[Dataset]](
                       serviceLayers,
-                      countingCache(loads),
+                      countingCache(loads, thing),
                       StringFormatter.test,
                       TriplestoreServiceInMemory.layer,
                     )
         count <- loads.get
       } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0, count == 0)
+    }.provide(datasetLayerFromTurtle(twoClassTurtle)),
+    test("gives zero counts for a known property that no class uses") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, hasUnused, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    test("does not count the values of a resource whose class is not in the ontology cache") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 1, result.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, datasetLayerFromTurtle(ghostClassTurtle)),
+    test("counts file values only for the File item type") {
+      for {
+        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.File))
+        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.File))
+      } yield assertTrue(file.totalValues == 1, file.counts.anonymous.hidden == 1, text.totalValues == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    test("counts non-file values only for the Value item type") {
+      for {
+        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.Value))
+        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.Value))
+      } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    test("counts only commented values for the Comment item type") {
+      for {
+        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.Comment))
+        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.Comment))
+      } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    test("counts the value of a resource typed with two classes once for each class") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 2, result.counts.anonymous.hidden == 2)
+    }.provide(commonLayers, datasetLayerFromTurtle(twoTypesTurtle)),
+    test("runs no row load for the standoff link value property") {
+      for {
+        loads  <- Ref.make(0)
+        result <- byProperty(_.propertyValues(projectIri, standoffLinkV, ValueItemType.All))
+                    .provideSome[Ref[Dataset]](
+                      serviceLayers,
+                      countingCache(loads, thing),
+                      StringFormatter.test,
+                      TriplestoreServiceInMemory.layer,
+                    )
+        count <- loads.get
+      } yield assertTrue(result.totalValues == 0, count == 0)
     }.provide(datasetLayerFromTurtle(twoClassTurtle)),
   )
 
