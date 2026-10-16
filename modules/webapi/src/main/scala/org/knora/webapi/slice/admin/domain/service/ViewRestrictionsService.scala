@@ -119,21 +119,26 @@ final case class ViewRestrictionsService(
     pageAndSize: PageAndSize,
     branches: DrillDownBranches,
   ): Task[PagedResponse[RestrictedResource]] =
-    // The page and its total are independent reads, issued together as separate transactions: a concurrent
-    // write between them can leave `totalItems` inconsistent with the rows.
-    repo
-      .countRestrictedResources(projectIri, itemType, resourceClass, branches)
-      .zipPar(
-        repo.findRestrictedObjects(
-          projectIri,
-          itemType,
-          resourceClass,
-          offset = pageAndSize.size * (pageAndSize.page - 1),
-          limit = pageAndSize.size,
-          branches,
-        ),
-      )
-      .map { case (total, rows) => PagedResponse.from(restrictedResources(rows, projectIri), total, pageAndSize) }
+    rowCache.dataGraphs(projectIri).flatMap { graphs =>
+      if (graphs.isEmpty) ZIO.succeed(emptyPage(pageAndSize))
+      else
+        // The page and its total are independent reads, issued together as separate transactions: a concurrent
+        // write between them can leave `totalItems` inconsistent with the rows.
+        repo
+          .countRestrictedResources(graphs, itemType, resourceClass, branches)
+          .zipPar(
+            repo.findRestrictedObjects(
+              projectIri,
+              graphs,
+              itemType,
+              resourceClass,
+              offset = pageAndSize.size * (pageAndSize.page - 1),
+              limit = pageAndSize.size,
+              branches,
+            ),
+          )
+          .map { case (total, rows) => PagedResponse.from(restrictedResources(rows, projectIri), total, pageAndSize) }
+    }
 
   /**
    * One [[RestrictedResource]] per resource of `rows`, with its restricted parts nested under it, in the

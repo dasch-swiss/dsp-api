@@ -12,7 +12,9 @@ import org.apache.jena.sparql.algebra.OpVisitorBase
 import org.apache.jena.sparql.algebra.OpWalker
 import org.apache.jena.sparql.algebra.op.OpBGP
 import org.apache.jena.sparql.algebra.op.OpConditional
+import org.apache.jena.sparql.algebra.op.OpJoin
 import org.apache.jena.sparql.algebra.op.OpLeftJoin
+import org.apache.jena.sparql.algebra.op.OpTable
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -52,28 +54,30 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   private def page(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
     ViewRestrictionsRepo
-      .resourcePageQuery(projectIri, itemType, thingClass, 50, 25, branches(itemType, resource, value))
+      .resourcePageQuery(graphs, itemType, thingClass, 50, 25, branches(itemType, resource, value))
       .sparql
 
   private def count(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
     ViewRestrictionsRepo
-      .resourceCountForDrillDownQuery(projectIri, itemType, thingClass, branches(itemType, resource, value))
+      .resourceCountForDrillDownQuery(graphs, itemType, thingClass, branches(itemType, resource, value))
       .sparql
 
   private def resourceRows =
     ViewRestrictionsRepo.resourceQuery(projectIri, thingClass, twoIris, resourceLiterals).sparql
   private def valueRows = ViewRestrictionsRepo.valueQuery(projectIri, hasPicture, twoIris, valueLiterals).sparql
 
-  /** Every drill-down query shape: each item type, and each branch alone and together. */
-  private val drillDownQueries: Map[String, String] =
+  /** Every page and count query shape: each item type, and each branch alone and together. */
+  private val pageAndCountQueries: Map[String, String] =
     (itemTypes.flatMap(it => List(s"page-$it" -> page(it), s"count-$it" -> count(it))) ++ List(
       "page-All-resourcesOnly"  -> page(ItemType.All, value = Set.empty),
       "page-All-valuesOnly"     -> page(ItemType.All, resource = Set.empty),
       "count-All-resourcesOnly" -> count(ItemType.All, value = Set.empty),
       "count-All-valuesOnly"    -> count(ItemType.All, resource = Set.empty),
-      "resourceQuery"           -> resourceRows,
-      "valueQuery"              -> valueRows,
     )).toMap
+
+  /** Every drill-down query shape: each item type, and each branch alone and together. */
+  private val drillDownQueries: Map[String, String] =
+    pageAndCountQueries ++ Map("resourceQuery" -> resourceRows, "valueQuery" -> valueRows)
 
   private val goldenLiterals =
     Set("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser")
@@ -138,6 +142,24 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   }
 
   private val isDeletedIri = "http://www.knora.org/ontology/knora-base#isDeleted"
+
+  /**
+   * Whether the optimised algebra of `sparql` joins two independently evaluated parts other than two `VALUES`
+   * tables (whose join is the small cross product of the literals and the graphs). The drill-down's barrier
+   * sub-select must be joined as a sequence, so the patterns after it run with its bindings; as a plain join they
+   * would scan the store on their own.
+   */
+  private def hasIndependentJoin(sparql: String): Boolean = {
+    var found = false
+    OpWalker.walk(
+      optimised(sparql),
+      new OpVisitorBase {
+        override def visit(op: OpJoin): Unit =
+          if (!(op.getLeft.isInstanceOf[OpTable] && op.getRight.isInstanceOf[OpTable])) found = true
+      },
+    )
+    found
+  }
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
     suite("count queries")(
@@ -212,20 +234,19 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       test("resourceQuery")(assertGolden(goldenQueries("resourceQuery"), "resourceQuery")),
       test("valueQuery")(assertGolden(goldenQueries("valueQuery"), "valueQuery")),
     ),
-    suite("every query is scoped by attachedToProject")(
-      test("no view-restrictions query uses GRAPH scoping") {
-        // Deliberate, and measured: a project's resources span one data graph per ontology, while
-        // ProjectService.projectDataNamedGraphV2 derives exactly one from shortcode + shortname. On the
-        // local `anything` project that is 65 resources in …/data/0001/anything and 6 more in
-        // …/data/0001/freetest, so scoping to the derived graph undercounts by those 6 — and silently,
-        // because a graph with no matches yields no rows rather than an error. The join stays.
-        val all = Seq(
-          ViewRestrictionsRepo.resourceCountsQuery(projectIri).sparql,
-          page(ItemType.All),
-        )
+    suite("graph scoping")(
+      test("the resource counts keep the attachedToProject join") {
         assertTrue(
-          all.forall(_.contains(s"knora-base:attachedToProject <${projectIri.value}>")),
-          all.forall(!_.contains("GRAPH")),
+          ViewRestrictionsRepo
+            .resourceCountsQuery(projectIri)
+            .sparql
+            .contains(s"knora-base:attachedToProject <${projectIri.value}>"),
+        )
+      },
+      test("every page and count query is scoped to the given graphs instead of attachedToProject") {
+        assertTrue(
+          pageAndCountQueries.values.forall(q => graphs.forall(g => q.contains(s"<$g>")) && q.contains("GRAPH ?g")),
+          pageAndCountQueries.values.forall(!_.contains("attachedToProject")),
         )
       },
     ),
@@ -275,8 +296,12 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
     ),
     suite("drill-down permission selection")(
       test("a literal with a quote and a backslash is escaped in the IN list") {
-        val q = page(ItemType.Resource, resource = Set("""a"b\c"""))
+        val q = ViewRestrictionsRepo.resourceQuery(projectIri, thingClass, twoIris, Set("""a"b\c""")).sparql
         assertTrue(q.contains("""STR(?permissions) IN ("a\"b\\c")"""))
+      },
+      test("a literal with a quote and a backslash is escaped in the VALUES list") {
+        val q = page(ItemType.Resource, resource = Set("""a"b\c"""))
+        assertTrue(q.contains("""VALUES ?permissions { "a\"b\\c" }"""))
       },
       test(
         "an All page query carries the resource list in the resource branch and the value list in the value branch",
@@ -327,20 +352,29 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           valueRows.contains(filter),
         )
       },
-      test("the class drill-down queries bind the class as ?resClass") {
-        val bind = s"BIND(<$thingClass> AS ?resClass)"
+      test("the row queries bind the class as ?resClass") {
         assertTrue(
-          drillDownQueries.filter { case (name, _) => name != "valueQuery" }.values
-            .forall(_.contains(bind)),
+          resourceRows.contains(s"BIND(<$thingClass> AS ?resClass)"),
           valueRows.contains(s"BIND(<$hasPicture> AS ?resClass)"),
         )
       },
       test("no drill-down query uses REGEX or the project class list") {
         assertTrue(drillDownQueries.values.forall(q => !q.contains("REGEX") && !q.contains("VALUES ?resClass")))
       },
-      suite("the optimised algebra has no constant hasPermissions triple")(
-        drillDownQueries.toList.sortBy(_._1).map { case (name, q) =>
+      suite("the optimised algebra of a row query has no constant hasPermissions triple")(
+        List("resourceQuery" -> resourceRows, "valueQuery" -> valueRows).map { case (name, q) =>
           test(name)(assertTrue(!hasConstantPermissionTriple(q)))
+        }*,
+      ),
+      suite("the page and count queries select the objects by a VALUES list behind a sub-select barrier")(
+        pageAndCountQueries.toList.sortBy(_._1).map { case (name, q) =>
+          test(name)(
+            assertTrue(
+              q.contains("VALUES ?permissions {"),
+              !q.contains("STR(?permissions)"),
+              !hasIndependentJoin(q),
+            ),
+          )
         }*,
       ),
       test("the check catches a plain IN over the permission variable") {
