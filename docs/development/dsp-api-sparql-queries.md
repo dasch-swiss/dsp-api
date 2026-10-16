@@ -520,6 +520,33 @@ before subtracting. `FILTER NOT EXISTS` is checked per candidate row instead. Me
 ~200ms by swapping `MINUS` for `FILTER NOT EXISTS` and GRAPH-scoping — either change alone
 rescues it.
 
+### Keep a filter on an unbound variable out of the pattern
+
+Without statistics, Fuseki orders the patterns of a group by the number of bound terms. A pattern such as
+`?value knora-base:isDeleted false` (two bound terms) therefore runs before `?resource ?prop ?value` (one bound
+term), while `?value` is still unbound, and reads every non-deleted object in the store. Measured on stage
+(DEV-7390): the per-class value counts timed out after more than 120 s in this shape. Bind the value to a variable
+instead (`?value knora-base:isDeleted ?valueDeleted`), group or project it, and drop the unwanted rows in Scala; the
+same per-class query then took 22 s on the largest LIMC class.
+
+### Wrap a literal `IN` list in `STR()`
+
+Jena expands `FILTER (?p IN ("a", "b"))` over plain string literals into a disjunction and then into a `UNION` with
+each literal substituted into the triple pattern. `?value knora-base:hasPermissions "a"` then has two bound terms
+and reads every object with that literal. `FILTER (STR(?p) IN ("a", "b"))` compares a function result, not a
+variable, so the rewrite does not apply. The view-restrictions drill-downs pin this with a test on the optimized
+algebra.
+
+### Bound the query time by batching the input, not the output
+
+`LIMIT`/`OFFSET` on a grouped or aggregated result does not bound the query time: every page must scan and
+aggregate the whole input before it returns one row. To keep a growing aggregation under a timeout, batch the input
+instead: list the subjects with a cheap query, then aggregate each batch with `VALUES ?subject { … }` as the first
+pattern, and sum the disjoint batch results in Scala. Measured on stage (DEV-7390): the value counts of the largest
+LIMC class (55,824 resources) took 26.7 s in one query and 19.2 s in 28 batches of 2000, with a slowest batch of
+0.84 s and identical rows. Keep each batch's form-encoded request body under Jetty's 200,000-byte default form limit
+(about 60 bytes for each IRI).
+
 ### GRAPH-scope scans, not lookups
 
 With the union default graph, *selective* bound-term lookups (a bound IRI, a literal such as a
