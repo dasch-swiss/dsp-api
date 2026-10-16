@@ -11,11 +11,27 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
+import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
@@ -40,15 +56,77 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
   private val byProperty = ZIO.serviceWithZIO[ViewRestrictionsByPropertyService]
 
-  /**
-   * The repo's `OntologyRepo` is `null` on purpose: only `projectValueProperties` reads it, and that path
-   * is covered by [[ViewRestrictionsClassificationSpec]]. Everything
-   * exercised here goes to the triplestore, so wiring the ontology cache would add a layer stack without
-   * adding coverage.
-   */
+  private val secondThing    = s"${anything}SecondThing"
+  private val subThing       = s"${anything}SubThing"
+  private val hasOtherThingV = s"${anything}hasOtherThingValue"
+  private val hasUnknown     = s"${anything}hasUnknown"
+  private val standoffLinkV  = s"${kb}hasStandoffLinkToValue"
+
+  /** The ontology cache the counts classify with: the classes and properties the Turtle fixtures use. */
+  private def ontologyCacheData(sf: StringFormatter): OntologyCacheData = {
+    def iri(s: String): SmartIri = sf.toSmartIri(s, requireInternal = true)
+
+    def resourceClass(classIri: String): (SmartIri, ReadClassInfoV2) =
+      iri(classIri) -> ReadClassInfoV2(
+        ClassInfoContentV2(iri(classIri), ontologySchema = InternalSchema),
+        allBaseClasses = Seq.empty,
+        isResourceClass = true,
+      )
+
+    def property(propertyIri: String, isLinkValueProp: Boolean): (SmartIri, ReadPropertyInfoV2) =
+      iri(propertyIri) -> ReadPropertyInfoV2(
+        PropertyInfoContentV2(iri(propertyIri), ontologySchema = InternalSchema),
+        isResourceProp = true,
+        isLinkValueProp = isLinkValueProp,
+      )
+
+    def ontology(
+      ontologyIri: String,
+      classes: Seq[(SmartIri, ReadClassInfoV2)],
+      properties: Seq[(SmartIri, ReadPropertyInfoV2)],
+    ): (SmartIri, ReadOntologyV2) =
+      iri(ontologyIri) -> ReadOntologyV2(
+        OntologyMetadataV2(iri(ontologyIri)),
+        classes = classes.toMap,
+        properties = properties.toMap,
+      )
+
+    OntologyCacheFake.emptyData.copy(
+      ontologies = Map(
+        ontology(
+          "http://www.knora.org/ontology/0001/anything",
+          classes = Seq(thing, secondThing, subThing).map(resourceClass),
+          properties = Seq(property(hasText, false), property(hasOtherThingV, true)),
+        ),
+        ontology(
+          "http://www.knora.org/ontology/knora-base",
+          classes = Seq.empty,
+          properties = Seq(property(standoffLinkV, true)),
+        ),
+      ),
+    )
+  }
+
+  private val ontologyCacheLayer: ZLayer[StringFormatter, Nothing, OntologyCacheFake] =
+    ZLayer.fromZIO(
+      ZIO.serviceWithZIO[StringFormatter](sf => Ref.make(ontologyCacheData(sf)).map(OntologyCacheFake(_))),
+    )
+
+  /** The service over a given row cache and triplestore. */
+  private val serviceLayers =
+    ZLayer.makeSome[ViewRestrictionsRowCache & TriplestoreService & StringFormatter, ViewRestrictionsByPropertyService](
+      ViewRestrictionsByPropertyService.layer,
+      ViewRestrictionsByPropertyRepo.layer,
+      ontologyCacheLayer,
+      OntologyRepoLive.layer,
+      IriConverter.layer,
+    )
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsByPropertyService](
-    ViewRestrictionsByPropertyService.layer,
-    ZLayer.fromFunction((ts: TriplestoreService) => ViewRestrictionsByPropertyRepo(ts, null)),
+    serviceLayers,
+    ViewRestrictionsRowCache.layer,
+    ViewRestrictionsRepo.layer,
+    CacheManager.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
@@ -137,6 +215,91 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
        |${restrictedValue("http://rdfh.ch/0001/multi/v1")}
        |""".stripMargin
 
+  private def linkValueTurtle(valueType: String, property: String): String =
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |
+       |<$thing> rdfs:subClassOf kb:Resource .
+       |
+       |<http://rdfh.ch/0001/host> rdf:type <$thing> ;
+       |  rdfs:label "Host" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  <$property> <http://rdfh.ch/0001/host/v1> .
+       |
+       |<http://rdfh.ch/0001/host/v1> rdf:type $valueType ;
+       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
+  /** Two classes that both use `hasText`: three restricted values on `Thing`, two on `SecondThing`. */
+  private val twoClassTurtle: String =
+    def host(iri: String, clazz: String, values: Seq[String]) =
+      s"""
+         |<$iri> rdf:type <$clazz> ;
+         |  rdfs:label "$iri" ;
+         |  kb:attachedToProject <${projectIri.value}> ;
+         |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+         |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+         |  kb:isDeleted false ;
+         |  <$hasText> ${values.map(v => s"<$v>").mkString(", ")} .
+         |${values.map(restrictedValue).mkString("\n")}
+         |""".stripMargin
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |
+       |<$thing> rdfs:subClassOf kb:Resource .
+       |<$secondThing> rdfs:subClassOf kb:Resource .
+       |
+       |${host("http://rdfh.ch/0001/t1", thing, Seq("http://rdfh.ch/0001/t1/v1", "http://rdfh.ch/0001/t1/v2"))}
+       |${host("http://rdfh.ch/0001/t2", thing, Seq("http://rdfh.ch/0001/t2/v1"))}
+       |${host("http://rdfh.ch/0001/s1", secondThing, Seq("http://rdfh.ch/0001/s1/v1", "http://rdfh.ch/0001/s1/v2"))}
+       |""".stripMargin
+
+  /** One resource with a restricted text value and a restricted user link value: two properties, one class. */
+  private val twoPropertyTurtle: String =
+    s"""
+       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
+       |
+       |<http://rdfh.ch/0001/both> rdf:type <$thing> ;
+       |  rdfs:label "Both" ;
+       |  kb:attachedToProject <${projectIri.value}> ;
+       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+       |  kb:isDeleted false ;
+       |  <$hasText> <http://rdfh.ch/0001/both/text> ;
+       |  <$hasOtherThingV> <http://rdfh.ch/0001/both/link> .
+       |
+       |${restrictedValue("http://rdfh.ch/0001/both/text")}
+       |<http://rdfh.ch/0001/both/link> rdf:type kb:LinkValue ;
+       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
+  /** A cache whose loaders count how often rows are read. */
+  private def countingCache(loads: Ref[Int]): ULayer[ViewRestrictionsRowCache] =
+    ZLayer.fromZIO {
+      for {
+        resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](10, 1.minute)(_ =>
+                       loads.update(_ + 1).as(Seq(ResourceCountRow(thing, "V knora-admin:UnknownUser", 1))),
+                     )
+        values <-
+          ViewRestrictionsRowCache.makeCache[ViewRestrictionsRowCache.ValueKey, Seq[ValueCountRow]](10, 1.minute)(_ =>
+            loads.update(_ + 1).as(Seq.empty),
+          )
+      } yield ViewRestrictionsRowCache(resources, values)
+    }
+
   private def page(n: Int, size: Int) =
     byProperty(_.propertyItems(projectIri, hasText, ValueItemType.All, PageAndSize(n, size)))
 
@@ -210,6 +373,49 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         result.counts.anonymous.total <= result.totalValues,
       )
     }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    test("sums the rows of every class that uses the property") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+      } yield assertTrue(
+        result.totalValues == 5,
+        result.counts.anonymous.hidden == 5,
+        result.counts.authenticated.hidden == 5,
+        result.counts.projectMember.hidden == 0,
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    test("counts only the values of the requested property") {
+      for {
+        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        link <- byProperty(_.propertyValues(projectIri, hasOtherThingV, ValueItemType.All))
+      } yield assertTrue(text.totalValues == 1, link.totalValues == 1)
+    }.provide(commonLayers, datasetLayerFromTurtle(twoPropertyTurtle)),
+    test("counts a restricted user link value") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, hasOtherThingV, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 1, result.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle("kb:LinkValue", hasOtherThingV))),
+    test("gives zero counts for the standoff link value property") {
+      for {
+        result <- byProperty(_.propertyValues(projectIri, standoffLinkV, ValueItemType.All))
+      } yield assertTrue(
+        result.totalValues == 0,
+        result.counts.anonymous.hidden == 0,
+        result.counts.authenticated.hidden == 0,
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle("kb:LinkValue", standoffLinkV))),
+    test("gives zero counts for a property that is not in the ontology, without loading rows") {
+      for {
+        loads  <- Ref.make(0)
+        result <- byProperty(_.propertyValues(projectIri, hasUnknown, ValueItemType.All))
+                    .provideSome[Ref[Dataset]](
+                      serviceLayers,
+                      countingCache(loads),
+                      StringFormatter.test,
+                      TriplestoreServiceInMemory.layer,
+                    )
+        count <- loads.get
+      } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0, count == 0)
+    }.provide(datasetLayerFromTurtle(twoClassTurtle)),
   )
 
   private val multiTypedSuite = suite("a resource asserted as several classes")(

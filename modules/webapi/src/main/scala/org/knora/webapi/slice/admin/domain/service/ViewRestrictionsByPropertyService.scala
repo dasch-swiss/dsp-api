@@ -9,6 +9,7 @@ import zio.*
 
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.RestrictedPropertyValueRow
 import org.knora.webapi.slice.api.PageAndSize
@@ -18,6 +19,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Audience
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemVisibility
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 /**
  * Computes the view-restrictions report **grouped by property**.
@@ -35,6 +37,8 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
  */
 final case class ViewRestrictionsByPropertyService(
   private val repo: ViewRestrictionsByPropertyRepo,
+  private val ontologyRepo: OntologyRepo,
+  private val rowCache: ViewRestrictionsRowCache,
 ) {
 
   /** Step 1: the project's value properties, from the ontology cache. No counts, and no SPARQL. */
@@ -45,16 +49,24 @@ final case class ViewRestrictionsByPropertyService(
         ViewRestrictionsProperties(projectIri.value, rows.map(r => RestrictedProperty(r.id, r.label, r.ontology))),
       )
 
-  /** Step 2: one property's value counts and its population, from a single grouped query. */
+  /**
+   * Step 2: one property's value counts and its population, folded from the per-class value rows.
+   *
+   * Reads through the shared [[ViewRestrictionsRowCache]] and never refreshes it. A resource typed with two
+   * classes counts once for each class, so its values can count twice in this total, while the drill-down
+   * lists each value once. A property that is not counted (standoff link values, unknown IRIs) yields zero
+   * counts without loading any rows.
+   */
   def propertyValues(
     projectIri: ProjectIri,
     property: String,
     itemType: ValueItemType,
   ): Task[ViewRestrictionsPropertyValues] =
     for {
-      rows       <- repo.valueCountsForProperty(projectIri, property, itemType)
-      lookup      = ViewRestrictionsAudience.classify(rows.map(_.permissions).toSet, projectIri)
-      countsTotal = ValueCountFold.foldRows(rows, lookup)
+      index <- ProjectOntologyIndex.load(ontologyRepo)
+      rows  <- if (index.valueProperties.contains(property)) propertyRows(projectIri, property, index)
+              else ZIO.succeed(Seq.empty)
+      countsTotal <- ValueCountFold.fold(rows, index, itemType, projectIri)
     } yield ViewRestrictionsPropertyValues(
       projectIri = projectIri.value,
       property = property,
@@ -62,6 +74,15 @@ final case class ViewRestrictionsByPropertyService(
       totalValues = countsTotal._2,
       counts = countsTotal._1,
     )
+
+  private def propertyRows(projectIri: ProjectIri, property: String, index: ProjectOntologyIndex) =
+    for {
+      resourceRows <- rowCache.resourceCounts(projectIri)
+      classes       = resourceRows.map(_.classIri).distinct.filter(index.resourceClasses.contains)
+      rows         <- ZIO
+                .foreachPar(classes)(rowCache.valueCounts(projectIri, _))
+                .withParallelism(4)
+    } yield rows.flatten.filter(_.propertyIri == property)
 
   /**
    * Step 3: the resources carrying a restricted value of the property, paginated.

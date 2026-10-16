@@ -30,24 +30,17 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  * change to property mode too. The two reports answer different questions and, as the notes below record,
  * want measurably different queries.
  *
- * Three access patterns:
+ * Two access patterns (the counts come from `ViewRestrictionsRowCache`, not from this repo):
  *
  *   - **The property list** ([[projectValueProperties]]) — read from the ontology cache, issuing no SPARQL
  *     at all. Discovering it from the data instead costs 14.0s on LHTT, which is a blank screen for as long
  *     as the whole report used to take.
- *   - **Counts** ([[valueCountsForProperty]]) — one property at a time, grouped by
- *     `knora-base:hasPermissions`, so one query answers every audience and both restriction states, and the
- *     property's whole value population falls out of the same rows.
  *   - **Drill-down** ([[findRestrictedResources]] + [[countRestrictedResources]]) — paginated in SPARQL,
  *     ordered deterministically. Each row carries its own resource class, because a property spans classes.
  *
- * NOTE — this repo joins **no resource class**, and that is load-bearing rather than an omission.
- * [[ViewRestrictionsRepo]] needs `ProjectClasses`, its `VALUES` clause and the most-specific-class filter
- * because it groups by class and so must pin each resource to exactly one `?resClass`. Counting
- * `DISTINCT ?value` under a single bound property cannot double-count, so none of that applies here.
- * Measured on LHTT for `lhtt:hasTitle`: with the class join 2,380ms, without it 1,128ms, both returning
- * 66,484. It also means this report is never exposed to the 27s multi-typed probe that
- * `ViewRestrictionsRepo.projectClasses` has to gate.
+ * NOTE — the drill-down queries join **no resource class** to pin a resource, and that is load-bearing.
+ * Under a single bound property `DISTINCT ?value` and `DISTINCT ?resource` cannot double-count, so the
+ * most-specific-class filter of [[ViewRestrictionsRepo]] does not apply here.
  */
 final case class ViewRestrictionsByPropertyRepo(
   private val triplestore: TriplestoreService,
@@ -95,22 +88,6 @@ final case class ViewRestrictionsByPropertyRepo(
   }
 
   /**
-   * One property's value counts, grouped by permission literal.
-   *
-   * The caller classifies the handful of returned literals with the real permission model, so a single
-   * query answers all three audiences and both restriction states — and, because no permission filter is
-   * applied, summing the rows gives the property's whole value population.
-   */
-  def valueCountsForProperty(
-    projectIri: ProjectIri,
-    propertyIri: String,
-    itemType: ValueItemType,
-  ): Task[Seq[ViewRestrictionsRepo.PermissionCountRow]] =
-    triplestore
-      .query(ViewRestrictionsByPropertyRepo.valueCountsQuery(projectIri, propertyIri, itemType))
-      .map(_.flatMap(permissionCountRow))
-
-  /**
    * One page of resources carrying a restricted value of the property, with all of their restricted values.
    *
    * Two queries rather than one: the first windows **resources** in SPARQL, the second fetches every row
@@ -151,18 +128,6 @@ final case class ViewRestrictionsByPropertyRepo(
     triplestore
       .query(ViewRestrictionsByPropertyRepo.drillDownCountQuery(projectIri, propertyIri, itemType))
       .map(_.flatMap(_.get("cnt").flatMap(_.toIntOption)).headOption.getOrElse(0))
-
-  /**
-   * Parses one permission-grouped row. A row missing its literal or with an unparseable count is dropped
-   * rather than failing the request: an aggregate row without its grouping key carries no information, and
-   * a report is more useful slightly incomplete than not at all.
-   */
-  private def permissionCountRow(row: VariableResultsRow): Option[ViewRestrictionsRepo.PermissionCountRow] =
-    for {
-      permissions <- row.get("permissions")
-      count       <- row.get("cnt").flatMap(_.toIntOption)
-      // No grouping key: the route has already narrowed to one property.
-    } yield ViewRestrictionsRepo.PermissionCountRow(permissions, count)
 
   private def restrictedRow(row: VariableResultsRow): Option[RestrictedPropertyValueRow] =
     for {
@@ -216,65 +181,6 @@ object ViewRestrictionsByPropertyRepo {
 
   /** The knora-base ontology, which is not among a project's own and must be fetched explicitly. */
   private[repo] val KnoraBaseOntologyIri: String = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
-
-  /**
-   * `SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt) … GROUP BY ?permissions` for ONE property.
-   *
-   * The property IRI is **bound in the triple pattern**, not applied as a `FILTER`. Measured on LHTT for
-   * `lhtt:hasTitle`: bound 1,053ms, filtered 3,060ms. [[ViewRestrictionsRepo]] narrows its value counts
-   * with a `FILTER` because its grouping key is the class and the property varies; here the property is the
-   * one fixed thing, so it belongs in the pattern.
-   *
-   * No permission filter at all — that absence is what lets the caller derive the property's whole value
-   * population by summing the rows.
-   */
-  private[repo] def valueCountsQuery(
-    projectIri: ProjectIri,
-    propertyIri: String,
-    itemType: ValueItemType,
-  ): Select = {
-    val project  = Iri.unsafeFrom(projectIri.value)
-    val property = Iri.unsafeFrom(propertyIri)
-    itemTypeConstraint(itemType) match {
-      case None =>
-        Select(
-          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                   |
-                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
-                   |WHERE {
-                   |  ?resource knora-base:attachedToProject $project ;
-                   |    knora-base:isDeleted false ;
-                   |    $property ?value .
-                   |  ?value knora-base:hasPermissions ?permissions ;
-                   |    knora-base:isDeleted false .
-                   |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                   |}
-                   |GROUP BY ?permissions""".render,
-          SparqlTimeout.ViewRestrictions,
-        )
-      case Some(constraint) =>
-        Select(
-          sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                   |
-                   |SELECT ?permissions (COUNT(DISTINCT ?value) AS ?cnt)
-                   |WHERE {
-                   |  {
-                   |    ?resource knora-base:attachedToProject $project ;
-                   |      knora-base:isDeleted false ;
-                   |      $property ?value .
-                   |    ?value knora-base:hasPermissions ?permissions ;
-                   |      knora-base:isDeleted false .
-                   |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                   |  }
-                   |  $constraint
-                   |}
-                   |GROUP BY ?permissions""".render,
-          SparqlTimeout.ViewRestrictions,
-        )
-    }
-  }
 
   /**
    * One page of **resources** carrying a restricted value of the property.
@@ -489,7 +395,7 @@ object ViewRestrictionsByPropertyRepo {
   }
 
   /*
-   * The four queries above repeat the same WHERE skeleton — a project's current, non-deleted values of ONE
+   * The queries above repeat the same WHERE skeleton — a project's current, non-deleted values of ONE
    * property — rather than sharing it, so that each template can be read as one whole piece of SPARQL.
    *
    * No `?resClass` and no `ProjectClasses` — see the class doc for why, and for the measurement.
@@ -500,9 +406,6 @@ object ViewRestrictionsByPropertyRepo {
    * skeleton is wrapped in a group of its own exactly when a constraint follows it — the constraint then
    * cannot be merged into the skeleton's basic graph pattern, nor reordered against its triples — and left
    * bare when there is no constraint, so no template adds a group that has nothing to separate.
-   *
-   * The counts deliberately do NOT apply the `!REGEX` restriction filter that the drill-down does: keeping
-   * every permission literal is what makes the property's whole population derivable from the same rows.
    */
 
   /**

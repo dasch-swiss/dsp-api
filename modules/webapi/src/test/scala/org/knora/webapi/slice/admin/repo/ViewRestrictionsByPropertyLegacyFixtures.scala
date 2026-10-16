@@ -368,54 +368,5 @@ FILTER NOT EXISTS { ?value a ?fileClass .
 FILTER ( !( REGEX( ?permissions, "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser" ) ) )
 FILTER ( ?resource IN ( <http://rdfh.ch/0001/a>, <http://rdfh.ch/0001/b> ) ) }
 ORDER BY ASC( ?label ) ASC( ?resource ) ASC( ?value )""",
-    "valueCountsQuery-All" ->
-      """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?permissions ( COUNT( DISTINCT ?value ) AS ?cnt )
-WHERE { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:isDeleted false ;
-    <http://www.knora.org/ontology/0001/anything#hasText> ?value .
-?value knora-base:hasPermissions ?permissions ;
-    knora-base:isDeleted false .
-FILTER NOT EXISTS { ?value a knora-base:LinkValue . } }
-GROUP BY ?permissions""",
-    "valueCountsQuery-Comment" ->
-      """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?permissions ( COUNT( DISTINCT ?value ) AS ?cnt )
-WHERE { { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:isDeleted false ;
-    <http://www.knora.org/ontology/0001/anything#hasText> ?value .
-?value knora-base:hasPermissions ?permissions ;
-    knora-base:isDeleted false .
-FILTER NOT EXISTS { ?value a knora-base:LinkValue . } }
-?value knora-base:valueHasComment ?comment . }
-GROUP BY ?permissions""",
-    "valueCountsQuery-File" ->
-      """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?permissions ( COUNT( DISTINCT ?value ) AS ?cnt )
-WHERE { { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:isDeleted false ;
-    <http://www.knora.org/ontology/0001/anything#hasText> ?value .
-?value knora-base:hasPermissions ?permissions ;
-    knora-base:isDeleted false .
-FILTER NOT EXISTS { ?value a knora-base:LinkValue . } }
-{ ?value a ?fileClass .
-?fileClass rdfs:subClassOf* knora-base:FileValue . } }
-GROUP BY ?permissions""",
-    "valueCountsQuery-Value" ->
-      """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?permissions ( COUNT( DISTINCT ?value ) AS ?cnt )
-WHERE { { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:isDeleted false ;
-    <http://www.knora.org/ontology/0001/anything#hasText> ?value .
-?value knora-base:hasPermissions ?permissions ;
-    knora-base:isDeleted false .
-FILTER NOT EXISTS { ?value a knora-base:LinkValue . } }
-FILTER NOT EXISTS { ?value a ?fileClass .
-?fileClass rdfs:subClassOf* knora-base:FileValue . } }
-GROUP BY ?permissions""",
   )
 }
