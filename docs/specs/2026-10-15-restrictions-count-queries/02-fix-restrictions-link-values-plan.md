@@ -322,23 +322,23 @@ glob).
 - [x] Wire `ViewRestrictionsRowCache` into the admin layers and the test layers.
 - [x] Use the cache in the class report.
 - [x] On `/classes`, invalidate the `C5Key` of each class in the current R rows, then the R key.
-- [ ] Add `assets/bench_batch.py`, which renders the listing query and the batched value-count query (same patterns as
+- [x] Add `assets/bench_batch.py`, which renders the listing query and the batched value-count query (same patterns as
       `valueCountsQuery`, with `VALUES ?resource { … }` first).
-- [ ] Run `bench_batch.py` on stage for the largest LIMC class (`Monument`) and one BEOL class, with batch sizes 500,
+- [x] Run `bench_batch.py` on stage for the largest LIMC class (`Monument`) and one BEOL class, with batch sizes 500,
       2000 and 5000, and record each listing time and the slowest batch time in `assets/results/`.
-- [ ] Check with the measurement that the summed batch rows equal the unbatched value-count rows (0 differences).
-- [ ] Set `ValueCountBatchSize` to the largest measured size whose slowest LIMC batch stays under 10 s.
-- [ ] Add a short `assets/` note with the measured numbers and the chosen batch size, linked from the design doc.
-- [ ] Write a failing repo test: the batched loader returns the same rows as one unbatched query on the in-memory fixture,
+- [x] Check with the measurement that the summed batch rows equal the unbatched value-count rows (0 differences).
+- [x] Set `ValueCountBatchSize` from the measurement (2000; see the journal deviation on the form-size limit).
+- [x] Add a short `assets/` note with the measured numbers and the chosen batch size, linked from the design doc.
+- [x] Write a failing repo test: the batched loader returns the same rows as one unbatched query on the in-memory fixture,
       with a batch size smaller than the class.
-- [ ] Write a failing unit test: summing batch rows adds counts and `commented` per `(property, permissions, deleted)`.
-- [ ] Add the resource listing query and its golden test to `ViewRestrictionsRepo`.
-- [ ] Add the batched value-count query (`VALUES ?resource` first) and its golden test; keep the pattern-order Scaladoc.
-- [ ] Change the value-count loader of `ViewRestrictionsRowCache` to list, batch and sum, with a parallelism limit for
-      the batches of one class.
-- [ ] Remove the unbatched `valueCountsQuery` and its golden file, or keep it only if a test still needs it.
-- [ ] Run the tests; they pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Write a failing unit test: summing batch rows adds counts and `commented` per `(property, permissions, deleted)`.
+- [x] Add the resource listing query and its golden test to `ViewRestrictionsRepo`.
+- [x] Add the batched value-count query (`VALUES ?resource` first) and its golden test; keep the pattern-order Scaladoc.
+- [x] Change `ViewRestrictionsRepo.valueCounts`, which the cache loader calls, to list, batch and sum, with a
+      parallelism limit for the batches of one class.
+- [x] Replace the unbatched `valueCountsQuery` and its golden file with the batched query.
+- [x] Run the tests; they pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 4: By-property counts from the cached rows
 

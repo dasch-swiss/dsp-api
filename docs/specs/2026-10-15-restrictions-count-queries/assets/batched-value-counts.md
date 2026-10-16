@@ -22,6 +22,8 @@ Setup: stage Fuseki, read-only `SELECT` over HTTPS, queries one at a time with a
 2. Batching is not slower in total: on LIMC `Monument`, 19.7 s at size 5000 against 26.7 s unbatched.
 3. The time of one batch depends on the batch size and the number of values for each resource, not on the size of the
    class or the project.
-4. Chosen batch size: **5000**, the largest measured size whose slowest LIMC batch stays under 10 s (3.35 s).
+4. Chosen batch size: **2000**. Size 5000 also stays under 10 s (3.35 s), but its form-encoded request body is
+   about 295 KB, above Jetty's 200,000-byte default form limit. Size 2000 is about 118 KB, with the same total time
+   (19.2 s) and a slowest LIMC batch of 0.84 s.
 5. The listing query takes 3.3 s for 55,824 resources. If it grows linearly, it reaches the 40 s timeout at about
    680,000 live resources in one class. Above that, the listing needs its own paging.

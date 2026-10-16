@@ -29,7 +29,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@8e26dbf63 | 1 |
 | 2 | reviewed | dsp-api@6260e451a | 1 |
-| 3 | in-progress | dsp-api@6c1347ccd | 0 |
+| 3 | reviewed | dsp-api@6c1347ccd | 1 |
 
 ## Chunk queue
 
@@ -41,6 +41,8 @@ status: in-progress
 | 2.2 | dsp-api | domain/service/ViewRestrictionsService.scala, ViewRestrictionsByPropertyService.scala (OntologyRepo only), repo/ViewRestrictionsRepo.scala, test service specs, legacy fixtures | 2.1 | service tests (4), OntologyRepo in services, test double, classSummaries via R, valueCounts via C5, remove 2 old count queries + fixtures, multi-typed count tests | /classes and /values use R/C5 + fold; link values count, standoff not | ViewRestrictionsService.scala classSummaries/valueCounts; CardinalityServiceLiveSpec.scala:173-182 (OntologyCacheFake layer) | — |
 | 3.1 | dsp-api | domain/service/ViewRestrictionsRowCache.scala (new), ViewRestrictionsService.scala, admin layer wiring, test cache spec, service spec layers | — | cache tests (4), RowCache with makeCache, R cache, C5 cache, remove EhCache/CacheManager, wiring, class report uses cache, removal on /classes | single-flight, failures not kept, per-project removal, cross-tab reuse | AssetPermissionsCache.scala:34-110, AssetPermissionsCacheSpec.scala | — |
 | 3.2 | dsp-api | ViewRestrictionsByPropertyService.scala, ViewRestrictionsByPropertyRepo.scala, by-property spec, legacy fixtures | 3.1 | OntologyRepo + fixture for by-property, property-values sum test, standoff zero test, propertyValues via cache + foreachPar(4) + fold, zero for unknown property, remove by-property valueCountsQuery | /property-values sums C5 rows of all classes for the property | ViewRestrictionsByPropertyService.scala propertyValues | — |
+| 3.3 | dsp-api | assets/bench_batch.py, assets/results/*batch*, assets note | — | bench script, stage run, equality check, batch size, assets note | summed batch rows equal unbatched rows; slowest LIMC batch under 10 s at the chosen size | assets/bench.py, bench_c5.py | — |
+| 3.4 | dsp-api | repo/ViewRestrictionsRepo.scala, domain/service/ViewRestrictionsRowCache.scala, ValueCountFold or row-sum helper, specs, goldens | 3.3 | repo equality test, sum test, listing query + golden, batched query + golden, loader change, remove unbatched query | the value-count loader lists, batches and sums; equality with the unbatched result on the fixture | ViewRestrictionsRepo.scala valueCountsQuery, ViewRestrictionsRowCache.scala layer | — |
 
 ## Chunks
 
@@ -53,6 +55,9 @@ status: in-progress
 | 2.2 | dsp-api | complete | 21eabe6bc | /classes via resourceCounts + resource-class filter, /values via valueCounts + ValueCountFold; ProjectOntologyIndex.load; old count queries and fixtures removed; link/standoff/second-ontology/deleted-class tests | none |
 | 2.3 | dsp-api | complete | c887b1c1d | Phase 2 review fixes: malformed rows fail with InconsistentRepositoryDataException, PermissionCountRow.groupId removed, stale class-list and ProjectClasses docs, fixture helpers | none |
 | 3.1 | dsp-api | complete | f10def074 | ViewRestrictionsRowCache (zio-cache, 10 min TTL, failures not kept, refreshProject: invalidate R, reload R, invalidate each fresh class key); class report reads through it; 4 cache tests | none |
+| 3.3 | dsp-api | complete | 673719bc7 | stage measurement of batched value counts: 0 differences at 500/2000/5000; slowest LIMC Monument batch 3.35 s at 5000; listing 3.28 s for 55,824 resources; batch size 5000 | none |
+| 3.4 | dsp-api | complete | 1431e2e25 | resourceListingQuery + batched valueCountsQuery (VALUES ?resource first), sumBatches, batch size 5000, parallelism 2; equality test with batch size 1; empty class runs no value query | none |
+| 3.5 | dsp-api | complete | 288f3f523 | Phase 3 review fixes: refresh drops old and new class rows, batch size 2000, 4-permit semaphore for batch queries, class capacity 2000, private constants and test-only overload, docs, stronger single-flight test | none |
 
 ## Deferrals
 
@@ -68,7 +73,14 @@ status: in-progress
 
 ## Deviations
 
-- none
+- Batch size: the plan's rule ("largest measured size whose slowest LIMC batch stays under 10 s") selects 5000.
+  Phase 3 review: at 5000 IRIs the form-encoded request body is about 295 KB, above Jetty's 200,000-byte default form
+  limit; the repo does not raise it, and only stage is known to accept it. 2000 IRIs is about 118 KB, with the same
+  measured total (19.2 s against 19.7 s) and a slowest LIMC batch of 0.84 s. Chosen: 2000 (chunk 3.5). Owner informed
+  in the session.
+- Chunk 3.4: the batching (list, batch, sum) lives in `ViewRestrictionsRepo.valueCounts`, not in the loader of
+  `ViewRestrictionsRowCache` as the plan checkbox says; the cache key and rows stay the same. Data-access policy
+  belongs in the repo, and the cache stays generic.
 
 ## Side findings
 
@@ -91,14 +103,4 @@ status: in-progress
 - Chunk 3.1: `refreshProject` reloads R first and then invalidates the value key of each class in the fresh rows, so
   removal also works when no older R entry was cached. A mutation that keeps failures in the cache failed the
   failure-retention test.
-
-## Resume note (2026-10-15)
-
-- Stopped on request after chunk 3.1. Nothing is pushed; the branch is `investigate/restrictions-matrix-query` and its
-  upstream points at `origin/main`, so push with `git push -u origin HEAD` (or a renamed branch) when shipping.
-- Next: the batching items of Phase 3, starting with the stage measurement (`assets/bench_batch.py`; needs
-  `SPARQL_ENDPOINT` and `STAGE_DB_PASSWORD` in the environment, see `assets/bench.py`). The by-property work that was
-  chunk 3.2 is now Phase 4 and builds on the batched loader.
-- Worker reports have twice been inaccurate (an edit not on disk, skipped red steps): verify each chunk with
-  `git status`, the test report and a compiling mutation before committing.
-- Resume with `/eng:workflows:work docs/specs/2026-10-15-restrictions-count-queries/02-fix-restrictions-link-values-plan.md`.
+- Full webapi unit suite passed at 1431e2e25.
