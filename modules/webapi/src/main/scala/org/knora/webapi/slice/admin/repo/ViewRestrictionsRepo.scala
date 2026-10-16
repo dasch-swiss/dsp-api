@@ -7,10 +7,11 @@ package org.knora.webapi.slice.admin.repo
 
 import zio.*
 
-import dsp.errors.InconsistentRepositoryDataException
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.ontologyName
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
@@ -58,38 +59,16 @@ final case class ViewRestrictionsRepo(private val triplestore: TriplestoreServic
       .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseResourceCountRow))
 
   /**
-   * The named graphs that hold something attached to the project: its data graphs and its ontology graphs, in IRI
-   * order. A row that is not an IRI fails the request.
+   * The value counts of the project, per resource class, property, permission literal and file flag. Only current
+   * values of current resources are counted, and only of a sub-property of `knora-base:hasValue` other than
+   * `knora-base:hasStandoffLinkToValue`. Row order is unspecified. A row that cannot be parsed fails the request.
    *
    * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
    */
-  def dataGraphs(projectIri: ProjectIri): Task[Seq[String]] =
+  def valueCounts(project: KnoraProject): Task[Seq[ValueCountRow]] =
     triplestore
-      .query(ViewRestrictionsRepo.projectDataGraphsQuery(projectIri))
-      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseGraphIri))
-
-  /**
-   * The value counts of the project whose data lies in `graphs`, per resource class, property, permission literal
-   * and file flag. Only current values of current resources are counted, and only of a sub-property of
-   * `knora-base:hasValue` other than `knora-base:hasStandoffLinkToValue`. No graph means no rows and no query. Row
-   * order is unspecified. A row that cannot be parsed fails the request.
-   *
-   * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
-   */
-  def valueCounts(graphs: Seq[String]): Task[Seq[ValueCountRow]] =
-    if (graphs.isEmpty) ZIO.succeed(Seq.empty)
-    else
-      triplestore
-        .query(ViewRestrictionsRepo.valueCountsQuery(graphs))
-        .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseValueCountRow))
-
-  private def parseGraphIri(row: VariableResultsRow): Task[String] =
-    for {
-      iri <- ZIO.attempt(row.getRequired("g"))
-      _   <- ZIO
-             .fromEither(Iri.from(iri))
-             .mapError(msg => InconsistentRepositoryDataException(s"Invalid graph IRI: $msg"))
-    } yield iri
+      .query(ViewRestrictionsRepo.valueCountsQuery(ViewRestrictionsRepo.dataGraph(project)))
+      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseValueCountRow))
 
   private def parseResourceCountRow(row: VariableResultsRow): Task[ResourceCountRow] =
     ZIO.attempt(
@@ -118,13 +97,11 @@ final case class ViewRestrictionsRepo(private val triplestore: TriplestoreServic
    * Paging is over *resources* (the unit the API returns), not raw rows: the page window is applied in
    * SPARQL to the resource list, then the rows for exactly those resources are fetched.
    *
-   * `branches` holds the permission literals that select the restricted resources and values, `graphs` the
-   * project's graphs the page is read from; see [[ViewRestrictionsRepo.resourcePageQuery]]. `graphs` must not be
-   * empty.
+   * `branches` holds the permission literals that select the restricted resources and values; see
+   * [[ViewRestrictionsRepo.resourcePageQuery]].
    */
   def findRestrictedObjects(
-    projectIri: ProjectIri,
-    graphs: Seq[String],
+    project: KnoraProject,
     itemType: ItemType,
     group: String,
     offset: Int,
@@ -134,10 +111,13 @@ final case class ViewRestrictionsRepo(private val triplestore: TriplestoreServic
     for {
       pageIris <-
         triplestore
-          .query(ViewRestrictionsRepo.resourcePageQuery(graphs, itemType, group, offset, limit, branches))
+          .query(
+            ViewRestrictionsRepo
+              .resourcePageQuery(ViewRestrictionsRepo.dataGraph(project), itemType, group, offset, limit, branches),
+          )
           .map(_.flatMap(_.get("resource")))
       rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
-              else fetchRowsFor(projectIri, itemType, group, pageIris, branches)
+              else fetchRowsFor(project.id, itemType, group, pageIris, branches)
     } yield rows
 
   private def fetchRowsFor(
@@ -153,18 +133,18 @@ final case class ViewRestrictionsRepo(private val triplestore: TriplestoreServic
         branches.values.fold(ZIO.succeed(Seq.empty))(runValueQuery(projectIri, group, itemType, resourceIris, _))
     } yield resources ++ values
 
-  /**
-   * Total number of distinct resources the drill-down would return — the exact `totalItems` for paging. `graphs`
-   * must not be empty.
-   */
+  /** Total number of distinct resources the drill-down would return — the exact `totalItems` for paging. */
   def countRestrictedResources(
-    graphs: Seq[String],
+    project: KnoraProject,
     itemType: ItemType,
     group: String,
     branches: DrillDownBranches,
   ): Task[Int] =
     triplestore
-      .query(ViewRestrictionsRepo.resourceCountForDrillDownQuery(graphs, itemType, group, branches))
+      .query(
+        ViewRestrictionsRepo
+          .resourceCountForDrillDownQuery(ViewRestrictionsRepo.dataGraph(project), itemType, group, branches),
+      )
       .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
 
   private def runResourceQuery(
@@ -393,11 +373,9 @@ object ViewRestrictionsRepo {
    * and `valueQuery`. The page and count templates leave it out: it is not constrained there, and an
    * unconstrained join only multiplies intermediate rows.
    *
-   * Graph scoping uses the project's graphs as [[projectDataGraphsQuery]] enumerates them, never the one graph
-   * `ProjectService.projectDataNamedGraphV2` derives: a project can have one data graph per ontology (the local
-   * `anything` project has `anything` and `freetest`), and scoping to the derived graph would silently undercount.
-   * Inside the enumerated graphs a constant-object pattern such as `?value knora-base:isDeleted false` scans the
-   * project, not the store, and replaces the `attachedToProject` join.
+   * Graph scoping uses the project's data graph, as [[dataGraph]] derives it. Inside the graph a constant-object
+   * pattern such as `?value knora-base:isDeleted false` scans the project, not the store, and replaces the
+   * `attachedToProject` join.
    *
    * Every query of this report runs on `SparqlTimeout.ViewRestrictions` rather than the standard tier —
    * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for. The
@@ -424,24 +402,13 @@ object ViewRestrictionsRepo {
     )
   }
 
-  /** The named graphs that hold a triple with `knora-base:attachedToProject` of the project, in IRI order. */
-  private[repo] def projectDataGraphsQuery(projectIri: ProjectIri): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
-    Select(
-      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |
-               |SELECT DISTINCT ?g
-               |WHERE {
-               |  GRAPH ?g { ?resource knora-base:attachedToProject $project . }
-               |}
-               |ORDER BY ?g""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
-  }
+  /** The project's data graph, which scopes the value counts and the drill-down queries. */
+  private[repo] def dataGraph(project: KnoraProject): Iri =
+    Iri.unsafeFrom(ProjectService.projectDataNamedGraphV2(project).value)
 
   /**
-   * Counts the current values of the current resources in `graphs`, per resource class, property, permission
-   * literal and file flag. `graphs` must not be empty.
+   * Counts the current values of the current resources in `graph`, per resource class, property, permission
+   * literal and file flag.
    *
    * The pattern order is load-bearing. Fuseki TDB2 without statistics orders the patterns of one group by fixed
    * weights: a pattern with a constant object (`?x <P> <O>`, and `?x a <C>`) runs before a pattern with an unbound
@@ -456,9 +423,7 @@ object ViewRestrictionsRepo {
    * The properties are classified after grouping, on a few hundred rows: the property path drops what is not a
    * value (link targets, value versions, `rdf:object`), and `isFile` marks file values.
    */
-  private[repo] def valueCountsQuery(graphs: Seq[String]): Select = {
-    require(graphs.nonEmpty, "a value count needs at least one graph")
-    val graphValues = Fragments.values(Variable("g"), graphs.map(Iri.unsafeFrom))
+  private[repo] def valueCountsQuery(graph: Iri): Select =
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -468,8 +433,7 @@ object ViewRestrictionsRepo {
                |  {
                |    SELECT ?resClass ?prop ?permissions ?resDeleted (COUNT(*) AS ?valueCount) (0 AS ?commentCount)
                |    WHERE {
-               |      $graphValues
-               |      GRAPH ?g {
+               |      GRAPH $graph {
                |        ?value knora-base:isDeleted false .
                |        ?value knora-base:hasPermissions ?permissions .
                |        ?resource ?prop ?value .
@@ -483,8 +447,7 @@ object ViewRestrictionsRepo {
                |  {
                |    SELECT ?resClass ?prop ?permissions ?resDeleted (0 AS ?valueCount) (COUNT(*) AS ?commentCount)
                |    WHERE {
-               |      $graphValues
-               |      GRAPH ?g {
+               |      GRAPH $graph {
                |        ?value knora-base:valueHasComment ?comment .
                |        ?value knora-base:isDeleted ?valueDeleted .
                |        ?value knora-base:hasPermissions ?permissions .
@@ -504,7 +467,6 @@ object ViewRestrictionsRepo {
                |GROUP BY ?resClass ?prop ?permissions ?isFile""".render,
       SparqlTimeout.ViewRestrictionsCounts,
     )
-  }
 
   /**
    * `FILTER (STR(?permissions) IN ("a", "b", ...))`: keeps the rows whose permission literal is one of
@@ -528,18 +490,12 @@ object ViewRestrictionsRepo {
    * restricted literals of the classification the counts use (`ViewRestrictionsAudience.restrictedLiterals`).
    * `literals` must not be empty.
    *
-   * Inside the project's graphs, `?x knora-base:hasPermissions "a"` scans only the project's objects that carry
+   * Inside the project's data graph, `?x knora-base:hasPermissions "a"` scans only the project's objects that carry
    * the literal, so the literal is meant to be the driver here.
    */
   private[repo] def permissionValues(literals: Set[String]): Fragment = {
     require(literals.nonEmpty, "a permission list needs at least one literal")
     Fragments.values(Variable("permissions"), literals.toSeq.sorted.map(Literal.string))
-  }
-
-  /** `VALUES ?g { ... }`: the graphs a query reads from. `graphs` must not be empty. */
-  private[repo] def graphValues(graphs: Seq[String]): Fragment = {
-    require(graphs.nonEmpty, "a graph-scoped query needs at least one graph")
-    Fragments.values(Variable("g"), graphs.map(Iri.unsafeFrom))
   }
 
   /**
@@ -549,13 +505,13 @@ object ViewRestrictionsRepo {
    * [[resourceCountForDrillDownQuery]] share it, so a page and its total describe the same row set.
    *
    * Each branch is driven by its permission literals: an inner sub-select reads the objects that carry one of
-   * them from the project's graphs, and only then are the class and the deleted flags checked, on bound terms.
+   * them from the project's data graph, and only then are the class and the deleted flags checked, on bound terms.
    * The sub-select is load-bearing: written in one group, `?resource a <group>` would run before
    * `?resource ?prop ?value` and join the whole class with every restricted value. A value counts unless its
    * property is `knora-base:hasStandoffLinkToValue`: a user link value is listed, a standoff link value is not.
    */
   private def restrictedResourcesOfClass(
-    graphs: Seq[String],
+    graph: Iri,
     itemType: ItemType,
     group: String,
     branches: DrillDownBranches,
@@ -566,8 +522,7 @@ object ViewRestrictionsRepo {
                |    SELECT ?resource
                |    WHERE {
                |      ${permissionValues(literals)}
-               |      ${graphValues(graphs)}
-               |      GRAPH ?g { ?resource knora-base:hasPermissions ?permissions . }
+               |      GRAPH $graph { ?resource knora-base:hasPermissions ?permissions . }
                |    }
                |  }
                |  ?resource a $groupClass ;
@@ -578,8 +533,7 @@ object ViewRestrictionsRepo {
                |    SELECT ?resource ?prop ?value
                |    WHERE {
                |      ${permissionValues(literals)}
-               |      ${graphValues(graphs)}
-               |      GRAPH ?g {
+               |      GRAPH $graph {
                |        ?value knora-base:hasPermissions ?permissions .
                |        ?resource ?prop ?value .
                |      }
@@ -608,7 +562,7 @@ object ViewRestrictionsRepo {
    * [[restrictedResourcesOfClass]]; the label is joined only after them.
    */
   private[repo] def resourcePageQuery(
-    graphs: Seq[String],
+    graph: Iri,
     itemType: ItemType,
     group: String,
     offset: Int,
@@ -621,7 +575,7 @@ object ViewRestrictionsRepo {
                |
                |SELECT DISTINCT ?resource ?labelOrIri
                |WHERE {
-               |  ${restrictedResourcesOfClass(graphs, itemType, group, branches)}
+               |  ${restrictedResourcesOfClass(graph, itemType, group, branches)}
                |  OPTIONAL { ?resource rdfs:label ?label . }
                |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
                |}
@@ -636,7 +590,7 @@ object ViewRestrictionsRepo {
    * query windows in, unwindowed.
    */
   private[repo] def resourceCountForDrillDownQuery(
-    graphs: Seq[String],
+    graph: Iri,
     itemType: ItemType,
     group: String,
     branches: DrillDownBranches,
@@ -647,7 +601,7 @@ object ViewRestrictionsRepo {
                |
                |SELECT (COUNT(*) AS ?cnt)
                |WHERE {
-               |  ${restrictedResourcesOfClass(graphs, itemType, group, branches)}
+               |  ${restrictedResourcesOfClass(graph, itemType, group, branches)}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
     )

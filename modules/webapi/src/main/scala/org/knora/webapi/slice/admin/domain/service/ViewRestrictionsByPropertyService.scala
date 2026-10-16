@@ -7,7 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
@@ -28,11 +28,11 @@ final case class ViewRestrictionsByPropertyService(
 ) {
 
   /** Step 1: the project's value properties, from the ontology cache. No counts, and no SPARQL. */
-  def properties(projectIri: ProjectIri): Task[ViewRestrictionsProperties] =
+  def properties(project: KnoraProject): Task[ViewRestrictionsProperties] =
     repo
-      .projectValueProperties(projectIri)
+      .projectValueProperties(project.id)
       .map(rows =>
-        ViewRestrictionsProperties(projectIri.value, rows.map(r => RestrictedProperty(r.id, r.label, r.ontology))),
+        ViewRestrictionsProperties(project.id.value, rows.map(r => RestrictedProperty(r.id, r.label, r.ontology))),
       )
 
   /**
@@ -44,14 +44,14 @@ final case class ViewRestrictionsByPropertyService(
    * yields zero counts.
    */
   def propertyValues(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     property: String,
     itemType: ValueItemType,
   ): Task[ViewRestrictionsPropertyValues] =
-    propertyRows(projectIri, property).map { rows =>
-      val (counts, total) = ValueCountFold.fold(rows, itemType, projectIri)
+    propertyRows(project, property).map { rows =>
+      val (counts, total) = ValueCountFold.fold(rows, itemType, project.id)
       ViewRestrictionsPropertyValues(
-        projectIri = projectIri.value,
+        projectIri = project.id.value,
         property = property,
         itemType = itemType,
         totalValues = total,
@@ -59,8 +59,8 @@ final case class ViewRestrictionsByPropertyService(
       )
     }
 
-  private def propertyRows(projectIri: ProjectIri, property: String) =
-    rowCache.valueCounts(projectIri).map(_.filter(_.propertyIri == property))
+  private def propertyRows(project: KnoraProject, property: String) =
+    rowCache.valueCounts(project).map(_.filter(_.propertyIri == property))
 
   /**
    * Step 3: the resources carrying a restricted user value of the property, paginated.
@@ -76,39 +76,26 @@ final case class ViewRestrictionsByPropertyService(
    * used by many classes, so the class belongs to the row and not to the table.
    */
   def propertyItems(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     property: String,
     itemType: ValueItemType,
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedPropertyResource]] =
     for {
-      restricted <- restrictedLiterals(projectIri, property)
+      restricted <- restrictedLiterals(project, property)
       result     <- if (restricted.isEmpty)
                   ZIO.succeed(PagedResponse.from(Seq.empty[RestrictedPropertyResource], 0, pageAndSize))
-                else graphScopedPage(projectIri, property, itemType, restricted, pageAndSize)
+                else pageOfItems(project, property, itemType, restricted, pageAndSize)
     } yield result
 
   /** The permission literals of the property's current values that some audience cannot fully see. */
-  private def restrictedLiterals(projectIri: ProjectIri, property: String) =
-    propertyRows(projectIri, property).map(rows =>
-      ViewRestrictionsAudience.restrictedLiterals(rows.map(_.permissions).toSet, projectIri),
+  private def restrictedLiterals(project: KnoraProject, property: String) =
+    propertyRows(project, property).map(rows =>
+      ViewRestrictionsAudience.restrictedLiterals(rows.map(_.permissions).toSet, project.id),
     )
 
-  private def graphScopedPage(
-    projectIri: ProjectIri,
-    property: String,
-    itemType: ValueItemType,
-    restricted: Set[String],
-    pageAndSize: PageAndSize,
-  ): Task[PagedResponse[RestrictedPropertyResource]] =
-    rowCache.dataGraphs(projectIri).flatMap { graphs =>
-      if (graphs.isEmpty) ZIO.succeed(PagedResponse.from(Seq.empty[RestrictedPropertyResource], 0, pageAndSize))
-      else pageOfItems(projectIri, graphs, property, itemType, restricted, pageAndSize)
-    }
-
   private def pageOfItems(
-    projectIri: ProjectIri,
-    graphs: Seq[String],
+    project: KnoraProject,
     property: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -117,11 +104,10 @@ final case class ViewRestrictionsByPropertyService(
     for {
       // Independent reads issued together as separate transactions, not a snapshot.
       totalAndRows <- repo
-                        .countRestrictedResources(graphs, property, itemType, restricted)
+                        .countRestrictedResources(project, property, itemType, restricted)
                         .zipPar(
                           repo.findRestrictedResources(
-                            projectIri,
-                            graphs,
+                            project,
                             property,
                             itemType,
                             restricted,
@@ -145,7 +131,7 @@ final case class ViewRestrictionsByPropertyService(
                           valueIri = r.valueIri,
                           isFile = r.isFile,
                           hasComment = r.hasComment,
-                          visibility = ViewRestrictionsAudience.itemVisibility(r.creator, r.permissions, projectIri),
+                          visibility = ViewRestrictionsAudience.itemVisibility(r.creator, r.permissions, project.id),
                         ),
                       ),
                   )

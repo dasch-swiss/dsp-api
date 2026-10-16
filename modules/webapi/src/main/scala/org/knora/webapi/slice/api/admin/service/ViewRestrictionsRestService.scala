@@ -37,8 +37,8 @@ final case class ViewRestrictionsRestService(
   /** Step 1: the whole class table. No filter, so nothing to validate beyond authorization. */
   def getClasses(user: User)(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
-      _       <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      classes <- service.classSummaries(projectIri)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      classes <- service.classSummaries(project)
     } yield classes
 
   /** Step 2: one class's value counts. */
@@ -48,12 +48,12 @@ final case class ViewRestrictionsRestService(
     itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
       // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed IRI
       // at the boundary: a malformed value is a client error (400), not a 500, and it must never reach the
       // SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
       _      <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
-      counts <- service.valueCounts(projectIri, resourceClass, itemType)
+      counts <- service.valueCounts(project, resourceClass, itemType)
     } yield counts
 
   def getItems(user: User)(
@@ -63,12 +63,12 @@ final case class ViewRestrictionsRestService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
       // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed
       // IRI at the boundary: a malformed value is a client error (400), not a 500, and it must never reach
       // the SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
       _     <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
-      items <- service.items(projectIri, resourceClass, itemType, pageAndSize)
+      items <- service.items(project, resourceClass, itemType, pageAndSize)
     } yield items
 }
 

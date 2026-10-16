@@ -5,24 +5,46 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.apache.jena.query.Dataset
 import zio.*
 
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 
 /** Ontology-cache and row-cache builders shared by the view restrictions service specs. */
 object ViewRestrictionsTestFixtures {
+
+  val anythingProject: KnoraProject = KnoraProject(
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
+    Shortname.unsafeFrom("anything"),
+    Shortcode.unsafeFrom("0001"),
+    None,
+    NonEmptyChunk(Description.unsafeFrom(StringLiteralV2.from("Test project"))),
+    List.empty,
+    None,
+    SelfJoin.CannotJoin,
+    None,
+    Set.empty,
+    Set.empty,
+  )
+
+  /** A dataset with `turtle` in the data graph of [[anythingProject]], which the graph-scoped queries read. */
+  def projectDataset(turtle: String): TaskLayer[Ref[Dataset]] =
+    datasetLayerFromTurtle(turtle, ProjectService.projectDataNamedGraphV2(anythingProject).value)
 
   def iri(s: String)(using sf: StringFormatter): SmartIri = sf.toSmartIri(s, requireInternal = true)
 
@@ -79,7 +101,7 @@ object ViewRestrictionsTestFixtures {
 
   /**
    * A row cache whose loaders count the resource-row and value-row reads and return one resource row of
-   * `classIri`, no graphs and no value rows.
+   * `classIri` and no value rows.
    */
   def countingCache(
     resourceLoads: Ref[Int],
@@ -88,13 +110,12 @@ object ViewRestrictionsTestFixtures {
   ): ULayer[ViewRestrictionsRowCache] =
     ZLayer.fromZIO {
       for {
-        resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](10, 1.minute)(_ =>
+        resources <- ViewRestrictionsRowCache.makeCache[KnoraProject, Seq[ResourceCountRow]](10, 1.minute)(_ =>
                        resourceLoads.update(_ + 1).as(Seq(ResourceCountRow(classIri, "V knora-admin:UnknownUser", 1))),
                      )
-        graphs <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[String]](10, 1.minute)(_ => ZIO.succeed(Seq.empty))
-        values <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ValueCountRow]](10, 1.minute)(_ =>
+        values <- ViewRestrictionsRowCache.makeCache[KnoraProject, Seq[ValueCountRow]](10, 1.minute)(_ =>
                     valueLoads.update(_ + 1).as(Seq.empty),
                   )
-      } yield ViewRestrictionsRowCache(resources, graphs, values)
+      } yield ViewRestrictionsRowCache(resources, values)
     }
 }

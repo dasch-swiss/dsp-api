@@ -12,7 +12,6 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
@@ -20,7 +19,6 @@ import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
@@ -33,7 +31,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
-  private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val project    = anythingProject
+  private val projectIri = project.id
 
   // ----- dataset-backed: the fold and the drill-down paging -----
 
@@ -361,7 +360,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         |""".stripMargin
 
   private def page(n: Int, size: Int) =
-    byProperty(_.propertyItems(projectIri, hasText, ValueItemType.All, PageAndSize(n, size)))
+    byProperty(_.propertyItems(project, hasText, ValueItemType.All, PageAndSize(n, size)))
 
   private val pagingSuite = suite("propertyItems paging")(
     test("a page is a page of resources, in the same unit the total counts") {
@@ -384,7 +383,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         seen.size == 3,
         seen.contains("http://rdfh.ch/0001/c"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("a resource arrives whole: all of its restricted values on its own page, and none of the open ones") {
       // The other half of windowing by resource — a resource's values can no longer straddle a boundary
       // and come back twice, partial on each side.
@@ -397,7 +396,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // the world-readable value is not a restriction, so the drill-down omits it
         a.exists(!_.values.map(_.valueIri).contains("http://rdfh.ch/0001/a/open")),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("ordering is stable across pages, so paging cannot skip or repeat") {
       for {
         p1 <- page(1, 1)
@@ -408,18 +407,18 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         p2.data.map(_.label) == Seq("B"),
         p3.data.map(_.label) == Seq("C"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("a page past the end is empty rather than an error") {
       for {
         p <- page(9, 25)
       } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 3)
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
   )
 
   private val foldSuite = suite("propertyValues")(
     test("counts values and derives the population from the same rows") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
       } yield assertTrue(
         result.property == hasText,
         // 6 restricted + 1 world-readable: the population includes literals that are in no restriction
@@ -432,80 +431,80 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // and the denominator is in the same unit as the numerator
         result.counts.anonymous.total <= result.totalValues,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("sums the rows of every class that uses the property") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
       } yield assertTrue(
         result.totalValues == 5,
         result.counts.anonymous.hidden == 5,
         result.counts.authenticated.hidden == 5,
         result.counts.projectMember.hidden == 0,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
     test("counts only the values of the requested property") {
       for {
-        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
-        link <- byProperty(_.propertyValues(projectIri, hasOtherThingV, ValueItemType.All))
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+        link <- byProperty(_.propertyValues(project, hasOtherThingV, ValueItemType.All))
       } yield assertTrue(text.totalValues == 1, link.totalValues == 1)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoPropertyTurtle)),
+    }.provide(commonLayers, projectDataset(twoPropertyTurtle)),
     test("counts a restricted user link value") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasOtherThingV, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasOtherThingV, ValueItemType.All))
       } yield assertTrue(result.totalValues == 1, result.counts.anonymous.hidden == 1)
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(hasOtherThingV))),
+    }.provide(commonLayers, projectDataset(linkValueTurtle(hasOtherThingV))),
     test("gives zero counts for the standoff link value property") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, standoffLinkV, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, standoffLinkV, ValueItemType.All))
       } yield assertTrue(
         result.totalValues == 0,
         result.counts.anonymous.hidden == 0,
         result.counts.authenticated.hidden == 0,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(standoffLinkV))),
+    }.provide(commonLayers, projectDataset(linkValueTurtle(standoffLinkV))),
     test("gives zero counts for a property that is not in the ontology") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasUnknown, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasUnknown, ValueItemType.All))
       } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
     test("gives zero counts for a known property that no class uses") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasUnused, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasUnused, ValueItemType.All))
       } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
     test("counts the values of every class, as the drill-down lists them, whether or not the class is in the cache") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
         items  <- itemsOf(hasText)
       } yield assertTrue(
         result.totalValues == 2,
         result.counts.anonymous.hidden == 2,
         items.data.flatMap(_.values).size == 2,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(ghostClassTurtle)),
+    }.provide(commonLayers, projectDataset(ghostClassTurtle)),
     test("counts file values only for the File item type") {
       for {
-        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.File))
-        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.File))
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.File))
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.File))
       } yield assertTrue(file.totalValues == 1, file.counts.anonymous.hidden == 1, text.totalValues == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
     test("counts non-file values only for the Value item type") {
       for {
-        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.Value))
-        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.Value))
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.Value))
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.Value))
       } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
     test("counts only commented values for the Comment item type") {
       for {
-        text <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.Comment))
-        file <- byProperty(_.propertyValues(projectIri, hasPicture, ValueItemType.Comment))
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.Comment))
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.Comment))
       } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(textAndFileTurtle)),
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
     test("counts the value of a resource typed with two classes once for each class") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
       } yield assertTrue(result.totalValues == 2, result.counts.anonymous.hidden == 2)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoTypesTurtle)),
+    }.provide(commonLayers, projectDataset(twoTypesTurtle)),
   )
 
   private val multiTypedSuite = suite("a resource asserted as several classes")(
@@ -522,11 +521,11 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // deterministic rather than whichever binding the store returned first
         p.data.head.resourceClassIri == s"${anything}SubThing",
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+    }.provide(commonLayers, projectDataset(multiTypedTurtle)),
   )
 
   private def itemsOf(property: String) =
-    byProperty(_.propertyItems(projectIri, property, ValueItemType.All, PageAndSize(1, 25)))
+    byProperty(_.propertyItems(project, property, ValueItemType.All, PageAndSize(1, 25)))
 
   private val itemsSuite = suite("propertyItems selection")(
     test("lists a restricted user link value") {
@@ -536,22 +535,22 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         p.pagination.totalItems == 1,
         p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/host/v1"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(hasOtherThingV))),
+    }.provide(commonLayers, projectDataset(linkValueTurtle(hasOtherThingV))),
     test("lists nothing for the standoff link value property") {
       for {
         p <- itemsOf(standoffLinkV)
       } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(linkValueTurtle(standoffLinkV))),
+    }.provide(commonLayers, projectDataset(linkValueTurtle(standoffLinkV))),
     test("lists nothing for a property that is not in the ontology") {
       for {
         p <- itemsOf(hasUnknown)
       } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
     test("lists nothing when no value of the property is restricted") {
       for {
         p <- itemsOf(hasUnused)
       } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
-    }.provide(commonLayers, datasetLayerFromTurtle(twoClassTurtle)),
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
     test("lists a value that is open to anonymous users but restricted for known users") {
       for {
         p <- itemsOf(hasText)
@@ -559,15 +558,15 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         p.pagination.totalItems == 1,
         p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/u/v1"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(unknownAndKnownTurtle)),
+    }.provide(commonLayers, projectDataset(unknownAndKnownTurtle)),
     test("the values listed equal the values the counts report as hidden or restricted view, one unit: values") {
       for {
-        counts <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        counts <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
         items  <- itemsOf(hasText)
         listed  = items.data.flatMap(_.values).size
         a       = counts.counts.anonymous
       } yield assertTrue(listed == 2, listed == a.hidden + a.restrictedView)
-    }.provide(commonLayers, datasetLayerFromTurtle(mixedPermissionsTurtle)),
+    }.provide(commonLayers, projectDataset(mixedPermissionsTurtle)),
   )
 
   def spec = suite("ViewRestrictionsByPropertyService")(

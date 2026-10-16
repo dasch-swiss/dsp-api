@@ -47,6 +47,10 @@ object TestDatasetBuilder {
 
   def datasetLayerFromTurtle(turtle: String): TaskLayer[Ref[Dataset]] = asLayer(datasetFromTurtle(turtle))
 
+  /** As [[datasetLayerFromTurtle]], but puts every triple in `graph`. */
+  def datasetLayerFromTurtle(turtle: String, graph: String): TaskLayer[Ref[Dataset]] =
+    asLayer(datasetFromTurtle(turtle, graph))
+
   /**
    * As [[datasetLayerFromTurtle]], but the fixture chooses its own named graphs.
    *

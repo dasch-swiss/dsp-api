@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
@@ -54,32 +55,32 @@ final case class ViewRestrictionsService(
    * purpose: they carry `attachedToProject` but are not resources. The result is sorted for a reproducible
    * response.
    */
-  def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
+  def classSummaries(project: KnoraProject): Task[ViewRestrictionsClasses] =
     for {
       index <- ProjectOntologyIndex.load(ontologyRepo)
       // The only invalidation point besides the cache TTL.
-      rows    <- rowCache.refreshProject(projectIri)
+      rows    <- rowCache.refreshProject(project)
       counted  = rows.filter(r => index.resourceClasses.contains(r.classIri))
-      lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, projectIri)
+      lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, project.id)
       reported = counted.groupBy(_.classIri).toSeq.map { case (classIri, classRows) =>
                    val permissionRows  = classRows.map(r => PermissionCountRow(r.permissions, r.count))
                    val (counts, total) = ValueCountFold.foldRows(permissionRows, lookup)
                    RestrictedClass(classIri, localName(classIri), Some(ontologyName(classIri)), total, counts)
                  }
-    } yield ViewRestrictionsClasses(projectIri.value, reported.sortBy(c => (c.label, c.id)))
+    } yield ViewRestrictionsClasses(project.id.value, reported.sortBy(c => (c.label, c.id)))
 
   /** Step 2 of the stepped report: one class's value-level restrictions, from the project's cached value rows. */
   def valueCounts(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     resourceClass: String,
     itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
       index  <- ProjectOntologyIndex.load(ontologyRepo)
       counts <- if (index.resourceClasses.contains(resourceClass))
-                  classValueRows(projectIri, resourceClass).map(ValueCountFold.fold(_, itemType, projectIri)._1)
+                  classValueRows(project, resourceClass).map(ValueCountFold.fold(_, itemType, project.id)._1)
                 else ZIO.succeed(AudienceRestrictionCounts.zero)
-    } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
+    } yield ViewRestrictionsValues(project.id.value, resourceClass, itemType, counts)
 
   /**
    * The restricted resources of one class, with their restricted parts nested, one page at a time.
@@ -94,7 +95,7 @@ final case class ViewRestrictionsService(
    * by [[classSummaries]] (at most 60 minutes ago) can be missing until the next refresh.
    */
   def items(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     resourceClass: String,
     itemType: ItemType,
     pageAndSize: PageAndSize,
@@ -102,10 +103,10 @@ final case class ViewRestrictionsService(
     for {
       index    <- ProjectOntologyIndex.load(ontologyRepo)
       branches <- if (index.resourceClasses.contains(resourceClass))
-                    drillDownBranches(projectIri, resourceClass, itemType)
+                    drillDownBranches(project, resourceClass, itemType)
                   else ZIO.none
       result <- branches.fold(ZIO.succeed(emptyPage(pageAndSize)))(
-                  pageOfItems(projectIri, resourceClass, itemType, pageAndSize, _),
+                  pageOfItems(project, resourceClass, itemType, pageAndSize, _),
                 )
     } yield result
 
@@ -113,32 +114,27 @@ final case class ViewRestrictionsService(
     PagedResponse.from(Seq.empty[RestrictedResource], 0, pageAndSize)
 
   private def pageOfItems(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     resourceClass: String,
     itemType: ItemType,
     pageAndSize: PageAndSize,
     branches: DrillDownBranches,
   ): Task[PagedResponse[RestrictedResource]] =
-    rowCache.dataGraphs(projectIri).flatMap { graphs =>
-      if (graphs.isEmpty) ZIO.succeed(emptyPage(pageAndSize))
-      else
-        // The page and its total are independent reads, issued together as separate transactions: a concurrent
-        // write between them can leave `totalItems` inconsistent with the rows.
-        repo
-          .countRestrictedResources(graphs, itemType, resourceClass, branches)
-          .zipPar(
-            repo.findRestrictedObjects(
-              projectIri,
-              graphs,
-              itemType,
-              resourceClass,
-              offset = pageAndSize.size * (pageAndSize.page - 1),
-              limit = pageAndSize.size,
-              branches,
-            ),
-          )
-          .map { case (total, rows) => PagedResponse.from(restrictedResources(rows, projectIri), total, pageAndSize) }
-    }
+    // The page and its total are independent reads, issued together as separate transactions: a concurrent
+    // write between them can leave `totalItems` inconsistent with the rows.
+    repo
+      .countRestrictedResources(project, itemType, resourceClass, branches)
+      .zipPar(
+        repo.findRestrictedObjects(
+          project,
+          itemType,
+          resourceClass,
+          offset = pageAndSize.size * (pageAndSize.page - 1),
+          limit = pageAndSize.size,
+          branches,
+        ),
+      )
+      .map { case (total, rows) => PagedResponse.from(restrictedResources(rows, project.id), total, pageAndSize) }
 
   /**
    * One [[RestrictedResource]] per resource of `rows`, with its restricted parts nested under it, in the
@@ -180,15 +176,15 @@ final case class ViewRestrictionsService(
 
   /** The drill-down branches of one class, reading only the cached rows the item type needs. */
   private def drillDownBranches(
-    projectIri: ProjectIri,
+    project: KnoraProject,
     resourceClass: String,
     itemType: ItemType,
   ): Task[Option[DrillDownBranches]] = {
     val resourceLiterals = rowCache
-      .resourceCounts(projectIri)
-      .map(rows => restricted(rows.filter(_.classIri == resourceClass).map(_.permissions), projectIri))
+      .resourceCounts(project)
+      .map(rows => restricted(rows.filter(_.classIri == resourceClass).map(_.permissions), project.id))
     val valueLiterals =
-      classValueRows(projectIri, resourceClass).map(rows => restricted(rows.map(_.permissions), projectIri))
+      classValueRows(project, resourceClass).map(rows => restricted(rows.map(_.permissions), project.id))
     itemType match {
       case ItemType.Resource                                 => resourceLiterals.map(DrillDownBranches.of(itemType, _, Set.empty))
       case ItemType.All                                      => resourceLiterals.zipPar(valueLiterals).map(DrillDownBranches.of(itemType, _, _))
@@ -197,8 +193,8 @@ final case class ViewRestrictionsService(
     }
   }
 
-  private def classValueRows(projectIri: ProjectIri, resourceClass: String) =
-    rowCache.valueCounts(projectIri).map(_.filter(_.classIri == resourceClass))
+  private def classValueRows(project: KnoraProject, resourceClass: String) =
+    rowCache.valueCounts(project).map(_.filter(_.classIri == resourceClass))
 
   private def restricted(permissions: Seq[String], projectIri: ProjectIri): Set[String] =
     ViewRestrictionsAudience.restrictedLiterals(permissions.toSet, projectIri)

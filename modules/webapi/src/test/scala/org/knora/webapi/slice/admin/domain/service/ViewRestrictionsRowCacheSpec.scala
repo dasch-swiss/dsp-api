@@ -10,6 +10,7 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
@@ -20,33 +21,29 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
 
   private val ttl = 60.minutes
 
-  private val projectA = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val projectB = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
+  private val projectA = ViewRestrictionsTestFixtures.anythingProject
+  private val projectB = projectA.copy(id = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002"))
   private val classC   = "http://www.knora.org/ontology/0001/onto#C"
-  private val graph    = "http://www.knora.org/data/0001/onto"
 
   private val resourceRows = Seq(ResourceCountRow(classC, "V knora-admin:UnknownUser", 1))
 
   private val valueRow = ValueCountRow(classC, "http://www.knora.org/ontology/0001/onto#p", "V x", false, 1, 0)
 
-  /** Counts the loads of each cache; the value loader reads the graphs through the cache, as the live layer does. */
-  final case class Loads(resources: Ref[Int], graphs: Ref[Int], values: Ref[Int]) {
-    def get: UIO[(Int, Int, Int)] = resources.get.zip(graphs.get).zip(values.get)
+  /** Counts the loads of each cache. */
+  final case class Loads(resources: Ref[Int], values: Ref[Int]) {
+    def get: UIO[(Int, Int)] = resources.get.zip(values.get)
   }
 
   private def rowCache: UIO[(ViewRestrictionsRowCache, Loads)] =
     for {
-      loads     <- Ref.make(0).zip(Ref.make(0)).zip(Ref.make(0)).map(Loads.apply)
-      resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](100, ttl)(_ =>
+      loads     <- Ref.make(0).zip(Ref.make(0)).map(Loads.apply)
+      resources <- ViewRestrictionsRowCache.makeCache[KnoraProject, Seq[ResourceCountRow]](100, ttl)(_ =>
                      loads.resources.update(_ + 1).as(resourceRows),
                    )
-      graphs <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[String]](100, ttl)(_ =>
-                  loads.graphs.update(_ + 1).as(Seq(graph)),
+      values <- ViewRestrictionsRowCache.makeCache[KnoraProject, Seq[ValueCountRow]](100, ttl)(_ =>
+                  loads.values.update(_ + 1).as(Seq(valueRow)),
                 )
-      values <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ValueCountRow]](100, ttl)(p =>
-                  graphs.get(p) *> loads.values.update(_ + 1).as(Seq(valueRow)),
-                )
-    } yield (ViewRestrictionsRowCache(resources, graphs, values), loads)
+    } yield (ViewRestrictionsRowCache(resources, values), loads)
 
   def spec: Spec[Any, Any] = suite("ViewRestrictionsRowCache")(
     test("runs the load once for concurrent gets of one missing key") {
@@ -82,7 +79,7 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
         n     <- calls.get
       } yield assertTrue(first.isFailure, again == 2, n == 2)
     },
-    test("refreshProject drops the graphs and value rows of its own project only") {
+    test("refreshProject drops the value rows of its own project only") {
       for {
         (cache, loads) <- rowCache
         _              <- cache.valueCounts(projectA)
@@ -92,7 +89,7 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
         afterB         <- loads.get
         _              <- cache.valueCounts(projectA)
         afterA         <- loads.get
-      } yield assertTrue(afterB == (1, 2, 2), afterA == (1, 3, 3))
+      } yield assertTrue(afterB == (1, 2), afterA == (1, 3))
     },
     test("refreshProject reloads the resource rows exactly once, whether or not they were cached") {
       for {
@@ -108,11 +105,10 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
         (cache, loads) <- rowCache
         _              <- cache.refreshProject(projectA)
         values         <- cache.valueCounts(projectA)
-        graphs         <- cache.dataGraphs(projectA)
         _              <- cache.resourceCounts(projectA)
         _              <- cache.valueCounts(projectA)
         n              <- loads.get
-      } yield assertTrue(values == Seq(valueRow), graphs == Seq(graph), n == (1, 1, 1))
+      } yield assertTrue(values == Seq(valueRow), n == (1, 1))
     },
   )
 }

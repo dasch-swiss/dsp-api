@@ -12,7 +12,7 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.anythingProject
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
@@ -21,16 +21,16 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 /**
  * Runs the count queries of [[ViewRestrictionsRepo]] against an in-memory triplestore.
  *
- * The project's data spans two named graphs, as the local `anything` project does (`anything` and `freetest`),
- * and the ontology sits in a graph of its own, as in a deployed store. The property hierarchy is in the data, so
- * the value query classifies the properties as it does on a real store.
+ * The project's data is in its data graph, and the ontology sits in a graph of its own, as in a deployed store. One
+ * resource of the project lies in another named graph, which the value counts do not read. The property hierarchy
+ * is in the data, so the value query classifies the properties as it does on a real store.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
 
-  private val projectIri    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val projectIri    = anythingProject.id
   private val anythingGraph = "http://www.knora.org/data/0001/anything"
-  private val freetestGraph = "http://www.knora.org/data/0001/freetest"
+  private val otherGraph    = "http://www.knora.org/data/0001/other"
   private val ontologyGraph = "http://www.knora.org/ontology/0001/anything"
   private val anything      = "http://www.knora.org/ontology/0001/anything#"
   private val kb            = "http://www.knora.org/ontology/knora-base#"
@@ -96,7 +96,7 @@ class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
        |${value("http://rdfh.ch/0001/deleted/t1", member)}
        |}
        |
-       |<$freetestGraph> {
+       |<$otherGraph> {
        |${resource("http://rdfh.ch/0001/c", member, deleted = false, s"; <$hasText> <http://rdfh.ch/0001/c/t1>")}
        |${value("http://rdfh.ch/0001/c/t1", open)}
        |}
@@ -118,26 +118,18 @@ class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
         rows.toSet == Set(ResourceCountRow(thingClass, open, 2), ResourceCountRow(thingClass, member, 1)),
       )
     },
-    test("dataGraphs lists every graph that holds something of the project") {
+    test("valueCounts reads the project's data graph and keeps only the live values of live resources") {
       for {
-        graphs <- repo(_.dataGraphs(projectIri))
-      } yield assertTrue(graphs == Seq(anythingGraph, freetestGraph, ontologyGraph))
-    },
-    test("valueCounts sums the graphs and keeps only the live values of live resources") {
-      for {
-        rows <- repo(r => r.dataGraphs(projectIri).flatMap(r.valueCounts))
+        rows <- repo(_.valueCounts(anythingProject))
       } yield assertTrue(
         rows.toSet == Set(
-          // a/t1 (commented) and a/t2 in one graph, c/t1 in the other; the deleted a/t3 is left out
-          ValueCountRow(thingClass, hasText, open, isFile = false, count = 3, commented = 1),
+          // a/t1 (commented) and a/t2; the deleted a/t3 and c/t1 in the other graph are left out
+          ValueCountRow(thingClass, hasText, open, isFile = false, count = 2, commented = 1),
           // a user link value counts; the link target b and the standoff link value s1 do not
           ValueCountRow(thingClass, hasThingValue, open, isFile = false, count = 1, commented = 0),
           ValueCountRow(thingClass, hasPicture, member, isFile = true, count = 1, commented = 0),
         ),
       )
-    },
-    test("valueCounts of no graphs returns no rows") {
-      repo(_.valueCounts(Seq.empty)).map(rows => assertTrue(rows.isEmpty))
     },
   ).provide(layers, datasetLayerFromTriG(trig))
 }

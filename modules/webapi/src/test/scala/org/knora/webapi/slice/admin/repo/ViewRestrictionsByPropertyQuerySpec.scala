@@ -10,10 +10,10 @@ import org.apache.jena.sparql.algebra.Algebra
 import org.apache.jena.sparql.algebra.OpVisitorBase
 import org.apache.jena.sparql.algebra.OpWalker
 import org.apache.jena.sparql.algebra.op.OpJoin
-import org.apache.jena.sparql.algebra.op.OpTable
 import org.junit.runner.RunWith
 import zio.test.*
 
+import org.knora.sparqlbuilder.Iri
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -40,7 +40,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
-  private val graphs     = Seq("http://www.knora.org/data/0001/anything", "http://www.knora.org/data/0001/freetest")
+  private val graph      = Iri.unsafeFrom("http://www.knora.org/data/0001/anything")
   private val itemTypes  = List(ValueItemType.All, ValueItemType.File, ValueItemType.Value, ValueItemType.Comment)
 
   private val restricted = Set("M knora-admin:ProjectMember", "V knora-admin:UnknownUser|RV knora-admin:KnownUser")
@@ -49,13 +49,13 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
   private val allQueries: Map[String, String] = itemTypes.flatMap { it =>
     List(
       s"drillDownCountQuery-$it" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
-        graphs,
+        graph,
         hasText,
         it,
         restricted,
       ),
       s"drillDownResourcePageQuery-$it" -> ViewRestrictionsByPropertyRepo
-        .drillDownResourcePageQuery(graphs, hasText, it, restricted, offset = 0, limit = 25),
+        .drillDownResourcePageQuery(graph, hasText, it, restricted, offset = 0, limit = 25),
       s"drillDownRowsQuery-$it" -> ViewRestrictionsByPropertyRepo
         .drillDownRowsQuery(projectIri, hasText, it, restricted, Seq("http://rdfh.ch/0001/a")),
     ).map { case (k, q) => k -> q.sparql }
@@ -66,9 +66,9 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
 
   private val goldenQueries: Map[String, String] = Map(
     "drillDownResourcePage-All" -> ViewRestrictionsByPropertyRepo
-      .drillDownResourcePageQuery(graphs, hasText, ValueItemType.All, goldenLiterals, offset = 50, limit = 25),
+      .drillDownResourcePageQuery(graph, hasText, ValueItemType.All, goldenLiterals, offset = 50, limit = 25),
     "drillDownResourcePage-File" -> ViewRestrictionsByPropertyRepo
-      .drillDownResourcePageQuery(graphs, hasText, ValueItemType.File, goldenLiterals, offset = 50, limit = 25),
+      .drillDownResourcePageQuery(graph, hasText, ValueItemType.File, goldenLiterals, offset = 50, limit = 25),
     "drillDownRows-All" -> ViewRestrictionsByPropertyRepo
       .drillDownRowsQuery(
         projectIri,
@@ -86,13 +86,13 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
         Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"),
       ),
     "drillDownCount-All" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
-      graphs,
+      graph,
       hasText,
       ValueItemType.All,
       goldenLiterals,
     ),
     "drillDownCount-File" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
-      graphs,
+      graph,
       hasText,
       ValueItemType.File,
       goldenLiterals,
@@ -101,14 +101,13 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
 
   private val pageAndCountQueries = allQueries.filterNot(_._1.startsWith("drillDownRowsQuery"))
 
-  /** Whether the optimised algebra joins two independently evaluated parts other than two `VALUES` tables. */
+  /** Whether the optimised algebra joins two independently evaluated parts. */
   private def hasIndependentJoin(sparql: String): Boolean = {
     var found = false
     OpWalker.walk(
       Algebra.optimize(Algebra.compile(QueryFactory.create(sparql))),
       new OpVisitorBase {
-        override def visit(op: OpJoin): Unit =
-          if (!(op.getLeft.isInstanceOf[OpTable] && op.getRight.isInstanceOf[OpTable])) found = true
+        override def visit(op: OpJoin): Unit = found = true
       },
     )
     found
@@ -123,7 +122,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
         // totalPages 2, whose two pages consume rows 1-50 — resources 26-30 are then unreachable by any
         // page number the pagination block admits. So the LIMIT/OFFSET goes on a DISTINCT resource query.
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(graphs, hasText, ValueItemType.All, restricted, offset = 50, limit = 25)
+          .drillDownResourcePageQuery(graph, hasText, ValueItemType.All, restricted, offset = 50, limit = 25)
           .sparql
         assertTrue(
           // The value is a join partner here, never a projected column: projecting it would reintroduce
@@ -136,7 +135,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
       },
       test("orders by label, falling back to the IRI so unlabelled resources still page deterministically") {
         val q = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(graphs, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
+          .drillDownResourcePageQuery(graph, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
           .sparql
         assertTrue(q.contains("COALESCE"), q.contains("?labelOrIri"))
       },
@@ -176,10 +175,10 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
       },
       test("both drill-down queries restrict identically, so the total cannot describe a different row set") {
         val page = ViewRestrictionsByPropertyRepo
-          .drillDownResourcePageQuery(graphs, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
+          .drillDownResourcePageQuery(graph, hasText, ValueItemType.All, restricted, offset = 0, limit = 25)
           .sparql
         val count =
-          ViewRestrictionsByPropertyRepo.drillDownCountQuery(graphs, hasText, ValueItemType.All, restricted).sparql
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(graph, hasText, ValueItemType.All, restricted).sparql
         // the count's whole WHERE body is the page's selection
         val countBody = count.substring(count.indexOf("WHERE {\n") + "WHERE {\n".length, count.lastIndexOf("\n}"))
         assertTrue(
@@ -190,7 +189,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
       },
       test("the page total counts distinct resources — the same unit the page query windows") {
         val q =
-          ViewRestrictionsByPropertyRepo.drillDownCountQuery(graphs, hasText, ValueItemType.All, restricted).sparql
+          ViewRestrictionsByPropertyRepo.drillDownCountQuery(graph, hasText, ValueItemType.All, restricted).sparql
         assertTrue(
           q.contains("COUNT(*)") && q.contains("SELECT DISTINCT ?resource\n"),
           q.contains("?resource"),
@@ -249,9 +248,9 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
       },
     ),
     suite("graph scoping")(
-      test("the page and count queries read the given graphs and do not join attachedToProject") {
+      test("the page and count queries read the given graph and do not join attachedToProject") {
         assertTrue(
-          pageAndCountQueries.values.forall(q => graphs.forall(g => q.contains(s"<$g>")) && q.contains("GRAPH ?g")),
+          pageAndCountQueries.values.forall(_.contains("GRAPH <http://www.knora.org/data/0001/anything>")),
           pageAndCountQueries.values.forall(!_.contains("attachedToProject")),
         )
       },

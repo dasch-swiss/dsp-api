@@ -11,8 +11,7 @@ WHERE {
           SELECT ?resource
           WHERE {
             VALUES ?permissions { "M knora-admin:ProjectMember" "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser" }
-            VALUES ?g { <http://www.knora.org/data/0001/anything> <http://www.knora.org/data/0001/freetest> }
-            GRAPH ?g { ?resource knora-base:hasPermissions ?permissions . }
+            GRAPH <http://www.knora.org/data/0001/anything> { ?resource knora-base:hasPermissions ?permissions . }
           }
         }
         ?resource a <http://www.knora.org/ontology/0001/anything#Thing> ;
@@ -24,8 +23,7 @@ WHERE {
           SELECT ?resource ?prop ?value
           WHERE {
             VALUES ?permissions { "M knora-admin:ProjectMember" "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser" }
-            VALUES ?g { <http://www.knora.org/data/0001/anything> <http://www.knora.org/data/0001/freetest> }
-            GRAPH ?g {
+            GRAPH <http://www.knora.org/data/0001/anything> {
               ?value knora-base:hasPermissions ?permissions .
               ?resource ?prop ?value .
             }

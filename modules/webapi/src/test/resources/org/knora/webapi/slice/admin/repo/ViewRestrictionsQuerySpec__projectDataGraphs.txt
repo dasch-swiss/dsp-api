@@ -1,7 +1,0 @@
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-SELECT DISTINCT ?g
-WHERE {
-  GRAPH ?g { ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> . }
-}
-ORDER BY ?g

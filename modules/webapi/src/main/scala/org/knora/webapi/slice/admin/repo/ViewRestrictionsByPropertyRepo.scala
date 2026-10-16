@@ -11,6 +11,7 @@ import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ValueKind
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
@@ -81,14 +82,12 @@ final case class ViewRestrictionsByPropertyRepo(
   /**
    * One page of resources carrying a restricted value of the property, with all of their restricted values.
    *
-   * `restricted` are the permission literals to list, `graphs` the project's graphs the page is read from; `graphs`
-   * must not be empty. Two queries rather than one: the first windows **resources** in SPARQL, the second fetches
-   * every row for exactly those IRIs. Windowing the value rows directly would page a different unit than
+   * `restricted` are the permission literals to list. Two queries rather than one: the first windows **resources**
+   * in SPARQL, the second fetches every row for exactly those IRIs. Windowing the value rows directly would page a different unit than
    * [[countRestrictedResources]] counts — see [[ViewRestrictionsByPropertyRepo.drillDownResourcePageQuery]].
    */
   def findRestrictedResources(
-    projectIri: ProjectIri,
-    graphs: Seq[String],
+    project: KnoraProject,
     propertyIri: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -99,7 +98,14 @@ final case class ViewRestrictionsByPropertyRepo(
       pageIris <- triplestore
                     .query(
                       ViewRestrictionsByPropertyRepo
-                        .drillDownResourcePageQuery(graphs, propertyIri, itemType, restricted, offset, limit),
+                        .drillDownResourcePageQuery(
+                          ViewRestrictionsRepo.dataGraph(project),
+                          propertyIri,
+                          itemType,
+                          restricted,
+                          offset,
+                          limit,
+                        ),
                     )
                     .map(_.flatMap(_.get("resource")))
       // An empty window means an empty page: `VALUES ?resource { }` would match nothing.
@@ -108,23 +114,23 @@ final case class ViewRestrictionsByPropertyRepo(
                 triplestore
                   .query(
                     ViewRestrictionsByPropertyRepo
-                      .drillDownRowsQuery(projectIri, propertyIri, itemType, restricted, pageIris),
+                      .drillDownRowsQuery(project.id, propertyIri, itemType, restricted, pageIris),
                   )
                   .map(_.flatMap(restrictedRow))
     } yield rows
 
-  /**
-   * The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. `graphs` must not be
-   * empty.
-   */
+  /** The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. */
   def countRestrictedResources(
-    graphs: Seq[String],
+    project: KnoraProject,
     propertyIri: String,
     itemType: ValueItemType,
     restricted: Set[String],
   ): Task[Int] =
     triplestore
-      .query(ViewRestrictionsByPropertyRepo.drillDownCountQuery(graphs, propertyIri, itemType, restricted))
+      .query(
+        ViewRestrictionsByPropertyRepo
+          .drillDownCountQuery(ViewRestrictionsRepo.dataGraph(project), propertyIri, itemType, restricted),
+      )
       .map(_.flatMap(_.get("cnt").flatMap(_.toIntOption)).headOption.getOrElse(0))
 
   private def restrictedRow(row: VariableResultsRow): Option[RestrictedPropertyValueRow] =
@@ -179,12 +185,12 @@ object ViewRestrictionsByPropertyRepo {
    * permission literal is one of `restricted`. [[drillDownResourcePageQuery]] and [[drillDownCountQuery]] share it,
    * so a page and its total describe the same row set.
    *
-   * An inner sub-select reads the values that carry one of the literals from the project's graphs, and only then
+   * An inner sub-select reads the values that carry one of the literals from the project's data graph, and only then
    * are the deleted flags and the item-type constraint checked, on bound terms. The sub-select is load-bearing: in
    * one group, `?resource knora-base:isDeleted false` could run before the values are bound and read every resource.
    */
   private def restrictedResourcesOfProperty(
-    graphs: Seq[String],
+    graph: Iri,
     propertyIri: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -197,8 +203,7 @@ object ViewRestrictionsByPropertyRepo {
              |      SELECT ?resource ?value
              |      WHERE {
              |        ${ViewRestrictionsRepo.permissionValues(restricted)}
-             |        ${ViewRestrictionsRepo.graphValues(graphs)}
-             |        GRAPH ?g {
+             |        GRAPH $graph {
              |          ?value knora-base:hasPermissions ?permissions .
              |          ?resource $property ?value .
              |        }
@@ -226,7 +231,7 @@ object ViewRestrictionsByPropertyRepo {
    * otherwise keeps unlabelled resources paging deterministically.
    */
   private[repo] def drillDownResourcePageQuery(
-    graphs: Seq[String],
+    graph: Iri,
     propertyIri: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -239,7 +244,7 @@ object ViewRestrictionsByPropertyRepo {
                |
                |SELECT DISTINCT ?resource ?labelOrIri
                |WHERE {
-               |  ${restrictedResourcesOfProperty(graphs, propertyIri, itemType, restricted)}
+               |  ${restrictedResourcesOfProperty(graph, propertyIri, itemType, restricted)}
                |  OPTIONAL { ?resource rdfs:label ?label . }
                |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
                |}
@@ -334,7 +339,7 @@ object ViewRestrictionsByPropertyRepo {
    * that query pages in. A page is a page of resources; each one arrives with all of its restricted values.
    */
   private[repo] def drillDownCountQuery(
-    graphs: Seq[String],
+    graph: Iri,
     propertyIri: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -345,14 +350,14 @@ object ViewRestrictionsByPropertyRepo {
                |
                |SELECT (COUNT(*) AS ?cnt)
                |WHERE {
-               |  ${restrictedResourcesOfProperty(graphs, propertyIri, itemType, restricted)}
+               |  ${restrictedResourcesOfProperty(graph, propertyIri, itemType, restricted)}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
     )
 
   /*
    * The queries above describe the same row set — a project's current, non-deleted values of ONE property. The
-   * page and count queries share it as one fragment, scoped to the project's graphs; the row query is anchored by
+   * page and count queries share it as one fragment, scoped to the project's data graph; the row query is anchored by
    * the page's resource IRIs and keeps the `attachedToProject` join. The property IRI is bound in the triple
    * pattern, never in a FILTER, because a FILTER does not narrow the scan.
    *
