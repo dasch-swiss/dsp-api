@@ -32,6 +32,8 @@ class AdminViewRestrictionsByPropertyE2ESpec extends E2EZSpec {
   /** Step 1 takes no parameters: the property list cannot vary with a filter. */
   private val propertiesUri = uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/properties"
 
+  private val hasOtherThingValueIri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue"
+
   private def valuesUri(property: String, itemType: String = "All") =
     uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/property-values?property=$property&itemType=$itemType"
 
@@ -80,6 +82,15 @@ class AdminViewRestrictionsByPropertyE2ESpec extends E2EZSpec {
           result.properties.forall(_.label.nonEmpty),
         )
       },
+      test("lists link-value properties but not the standoff link value property") {
+        for {
+          result <- TestApiClient.getJson[ViewRestrictionsProperties](propertiesUri, rootUser).flatMap(_.assert200)
+          ids     = result.properties.map(_.id)
+        } yield assertTrue(
+          ids.contains(hasOtherThingValueIri),
+          !ids.contains("http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"),
+        )
+      },
       test("carries no counts — a property has one unit, so step 2 answers everything") {
         for {
           result <- TestApiClient.getJson[ViewRestrictionsProperties](propertiesUri, rootUser).flatMap(_.assert200)
@@ -125,6 +136,16 @@ class AdminViewRestrictionsByPropertyE2ESpec extends E2EZSpec {
           // access widens across the audiences, so counts can only shrink
           result.counts.anonymous.total >= result.counts.authenticated.total,
           result.counts.authenticated.total >= result.counts.projectMember.total,
+        )
+      },
+      test("reports the restricted values of a link-value property") {
+        for {
+          result <- TestApiClient
+                      .getJson[ViewRestrictionsPropertyValues](valuesUri(hasOtherThingValueIri), rootUser)
+                      .flatMap(_.assert200)
+        } yield assertTrue(
+          result.totalValues > 0,
+          result.counts.anonymous.hidden + result.counts.anonymous.restrictedView > 0,
         )
       },
       test("itemType narrows the counts") {

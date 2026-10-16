@@ -195,6 +195,17 @@ class AdminViewRestrictionsE2ESpec extends E2EZSpec {
           first.pagination.totalItems == second.pagination.totalItems,
         )
       },
+      test("lists a restricted link value of a Thing") {
+        val itemsUri =
+          uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=$thingClassIri&itemType=All&page=1&page-size=100"
+        for {
+          page     <- TestApiClient.getJson[PagedResponse[RestrictedResource]](itemsUri, rootUser).flatMap(_.assert200)
+          valueIris = page.data.flatMap(_.items.flatMap(_.valueIri))
+        } yield assertTrue(
+          page.pagination.totalItems <= 100,
+          valueIris.contains("http://rdfh.ch/0001/project-thing-1/values/0"),
+        )
+      },
       test("returns 403 for a non-admin user") {
         val itemsUri =
           uri"/admin/projects/iri/$anythingProjectIri/view-restrictions/items?resourceClass=x&itemType=All"
