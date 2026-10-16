@@ -1,12 +1,24 @@
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
+SELECT (COUNT(*) AS ?cnt)
 WHERE {
-  ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:isDeleted false ;
-    <http://www.knora.org/ontology/0001/anything#hasText> ?value .
-  ?value knora-base:hasPermissions ?permissions ;
-    knora-base:isDeleted false .
-  FILTER (STR(?permissions) IN ("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser"))
+  {
+    SELECT DISTINCT ?resource
+    WHERE {
+      {
+        SELECT ?resource ?value
+        WHERE {
+          VALUES ?permissions { "M knora-admin:ProjectMember" "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser" }
+          VALUES ?g { <http://www.knora.org/data/0001/anything> <http://www.knora.org/data/0001/freetest> }
+          GRAPH ?g {
+            ?value knora-base:hasPermissions ?permissions .
+            ?resource <http://www.knora.org/ontology/0001/anything#hasText> ?value .
+          }
+        }
+      }
+      ?resource knora-base:isDeleted false .
+      ?value knora-base:isDeleted false .
+    }
+  }
 }

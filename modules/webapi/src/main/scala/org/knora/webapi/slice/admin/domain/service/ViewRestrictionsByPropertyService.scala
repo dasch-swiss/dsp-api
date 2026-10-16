@@ -85,7 +85,7 @@ final case class ViewRestrictionsByPropertyService(
       restricted <- restrictedLiterals(projectIri, property)
       result     <- if (restricted.isEmpty)
                   ZIO.succeed(PagedResponse.from(Seq.empty[RestrictedPropertyResource], 0, pageAndSize))
-                else pageOfItems(projectIri, property, itemType, restricted, pageAndSize)
+                else graphScopedPage(projectIri, property, itemType, restricted, pageAndSize)
     } yield result
 
   /** The permission literals of the property's current values that some audience cannot fully see. */
@@ -94,8 +94,21 @@ final case class ViewRestrictionsByPropertyService(
       ViewRestrictionsAudience.restrictedLiterals(rows.map(_.permissions).toSet, projectIri),
     )
 
+  private def graphScopedPage(
+    projectIri: ProjectIri,
+    property: String,
+    itemType: ValueItemType,
+    restricted: Set[String],
+    pageAndSize: PageAndSize,
+  ): Task[PagedResponse[RestrictedPropertyResource]] =
+    rowCache.dataGraphs(projectIri).flatMap { graphs =>
+      if (graphs.isEmpty) ZIO.succeed(PagedResponse.from(Seq.empty[RestrictedPropertyResource], 0, pageAndSize))
+      else pageOfItems(projectIri, graphs, property, itemType, restricted, pageAndSize)
+    }
+
   private def pageOfItems(
     projectIri: ProjectIri,
+    graphs: Seq[String],
     property: String,
     itemType: ValueItemType,
     restricted: Set[String],
@@ -104,10 +117,11 @@ final case class ViewRestrictionsByPropertyService(
     for {
       // Independent reads issued together as separate transactions, not a snapshot.
       totalAndRows <- repo
-                        .countRestrictedResources(projectIri, property, itemType, restricted)
+                        .countRestrictedResources(graphs, property, itemType, restricted)
                         .zipPar(
                           repo.findRestrictedResources(
                             projectIri,
+                            graphs,
                             property,
                             itemType,
                             restricted,
