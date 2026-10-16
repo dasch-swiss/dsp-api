@@ -31,6 +31,7 @@ status: in-progress
 | 2 | reviewed | dsp-api@6260e451a | 1 |
 | 3 | reviewed | dsp-api@6c1347ccd | 1 |
 | 4 | reviewed | dsp-api@94bb8b85d | 1 |
+| 5 | reviewed | dsp-api@b921f8fb3 | 1 |
 
 ## Chunk queue
 
@@ -45,6 +46,9 @@ status: in-progress
 | 3.3 | dsp-api | assets/bench_batch.py, assets/results/*batch*, assets note | — | bench script, stage run, equality check, batch size, assets note | summed batch rows equal unbatched rows; slowest LIMC batch under 10 s at the chosen size | assets/bench.py, bench_c5.py | — |
 | 3.4 | dsp-api | repo/ViewRestrictionsRepo.scala, domain/service/ViewRestrictionsRowCache.scala, ValueCountFold or row-sum helper, specs, goldens | 3.3 | repo equality test, sum test, listing query + golden, batched query + golden, loader change, remove unbatched query | the value-count loader lists, batches and sums; equality with the unbatched result on the fixture | ViewRestrictionsRepo.scala valueCountsQuery, ViewRestrictionsRowCache.scala layer | — |
 | 4.1 | dsp-api | domain/service/ViewRestrictionsByPropertyService.scala, repo/ViewRestrictionsByPropertyRepo.scala, AdminDomainModule.scala, by-property specs and fixtures | — | all Phase 4 checkboxes | /property-values sums the cached per-class rows for the property; zero for a property not in the index | ViewRestrictionsByPropertyService.scala propertyValues; ViewRestrictionsByPropertyRepo.scala valueCountsQuery | — |
+| 5.1 | dsp-api | domain/service (ViewRestrictionsAudience, ValueCountFold, ViewRestrictionsService), repo/ViewRestrictionsRepo.scala drill-down queries, specs | — | class drill-down tests, restricted-literal function, standoff filter, STR IN lists per branch, class BIND, empty lists, algebra test, quote test, All-branch test | /items lists restricted user link values, never standoff ones; REGEX case appears; counts and drill-down agree | ViewRestrictionsRepo.scala resourcePageQuery/resourceCountForDrillDownQuery/resourceQuery/valueQuery | — |
+| 5.2 | dsp-api | ViewRestrictionsByPropertyService.scala, ViewRestrictionsByPropertyRepo.scala drill-down queries, spec | 5.1 | property drill-down tests, LinkValue filter removed, STR IN list, empty list or unknown property runs no query | /property-items lists restricted user link values | ViewRestrictionsByPropertyRepo.scala drillDown* queries | — |
+| 5.3 | dsp-api | ViewRestrictionsRepo.scala, ViewRestrictionsByPropertyRepo.scala, AdminRepoModule/CacheManager wiring, legacy fixtures and suites, goldens | 5.1, 5.2 | remove REGEX, EhCache + CacheManager, ProjectClasses and probes, legacy fixtures and suites; drill-down goldens | no REGEX, LinkValue filter or subClassOf+ probe remains | ViewRestrictionsRepo.scala ProjectClasses, projectClassesQuery, multi-typed probes | — |
 
 ## Chunks
 
@@ -62,6 +66,10 @@ status: in-progress
 | 3.5 | dsp-api | complete | 288f3f523 | Phase 3 review fixes: refresh drops old and new class rows, batch size 2000, 4-permit semaphore for batch queries, class capacity 2000, private constants and test-only overload, docs, stronger single-flight test | none |
 | 4.1 | dsp-api | complete | 44901bf36 | /property-values from cached batched rows of all classes (parallelism 4) + ValueCountFold; zero for a property outside the index without loads; per-property count query removed | none |
 | 4.2 | dsp-api | complete | 0e53cde70 | Phase 4 review fixes: valueRowsOfProject on the row cache, shared test fixtures, constraint comments without measurements, property endpoint docs with the multi-type caveat, 8 tests checked by mutation | none |
+| 5.1 | dsp-api | complete | 0f42c017c | class drill-down: standoff filter on ?prop, STR(?permissions) IN lists per branch from cached rows via restrictedLiterals, class bound with BIND, empty branches skipped; REGEX constant removed from the class repo; multi-typed resource listed under each class | none |
+| 5.2 | dsp-api | complete | 567237905 | property drill-down: LinkValue filter removed, STR(?permissions) IN from the property's cached rows, empty page without a query for a property outside the index or without restricted literals; REGEX copy removed; legacy builder suite replaced by render tests | none |
+| 5.3 | dsp-api | complete | 54a9f9864 | removed ProjectClasses, project-class discovery, multi-type probes, their EhCache and the repo CacheManager dependency, legacy RDF4J fixtures and suites; golden files for every drill-down query | none |
+| 5.4 | dsp-api | complete | 6fcb28c70 | Phase 5 review fixes: one permissionFilter, DrillDownBranches, item-type-specific row loads, VALUES ?resource page anchor, stale texts, documented cache and ontology limits, positive query assertions | none |
 
 ## Deferrals
 
@@ -114,3 +122,15 @@ status: in-progress
 - Phase 4 review DUNE-001 (repo count methods are public; only a doc points to the cache): recorded only. The
   services and the cache share a package, so visibility cannot restrict the methods to the cache;
   `valueRowsOfProject` is the shared read to follow. Full webapi unit suite passed at 44901bf36.
+- Chunk 5.1: the algebra check catches a plain `?permissions IN` rewrite in the count and resource queries, but
+  Jena does not rewrite it inside the page templates, so the check cannot fail there. All queries use
+  `STR(?permissions) IN`, so this is a limit of the test, not a defect.
+- Phase 5 review, accepted and documented (chunk 5.4): (1) the drill-down literals come from the cached counts, so
+  an object whose permissions changed after the last `/classes` refresh (at most 10 minutes) can be missing until
+  the next refresh; counts and drill-down still agree with each other. (2) The class value branch accepts any
+  `hasValue` sub-property except the standoff link value, while the counts use the ontology index, so a value of a
+  property missing from the ontology cache can be listed but not counted; the counts log a warning for such
+  properties. A `VALUES ?prop` list would close the gap but measured slower in the design (C2).
+- Phase 5 review: the graph-scoping constraint is still stated (`ViewRestrictionsRepo.scala:418-422`) and tested
+  (`ViewRestrictionsQuerySpec`, "no view-restrictions query uses GRAPH scoping").
+- Full webapi unit suite passed at 54a9f9864.

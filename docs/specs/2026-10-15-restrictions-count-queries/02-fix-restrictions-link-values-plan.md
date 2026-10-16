@@ -357,40 +357,40 @@ glob).
 
 ### Phase 5: Drill-down: link fix and exact permission filter
 
-- [ ] Add a failing service test: a restricted user link value appears in `/items`.
-- [ ] Add a failing service test: a restricted user link value appears in `/property-items`.
-- [ ] Add a failing service test: a restricted standoff link value appears in neither drill-down.
-- [ ] Add a failing service test: a resource with `V knora-admin:UnknownUser|RV knora-admin:KnownUser` appears in
+- [x] Add a failing service test: a restricted user link value appears in `/items`.
+- [x] Add a failing service test: a restricted user link value appears in `/property-items`.
+- [x] Add a failing service test: a restricted standoff link value appears in neither drill-down.
+- [x] Add a failing service test: a resource with `V knora-admin:UnknownUser|RV knora-admin:KnownUser` appears in
       `/items`.
-- [ ] Add a failing service test: `resourceClassIri` is set on every `/items` row.
-- [ ] Add a failing service test: for one fixture, the `/values` restricted total equals the number of value rows in
+- [x] Add a failing service test: `resourceClassIri` is set on every `/items` row.
+- [x] Add a failing service test: for one fixture, the `/values` restricted total equals the number of value rows in
       `/items`.
-- [ ] Add a pure function that selects the restricted literals from classified rows (an audience below View).
-- [ ] Add a unit test: a literal with a quote and a backslash renders correctly in the `IN` list.
-- [ ] Add a unit test: an `All` page query carries the R list in the resource branch and the C5 list in the value
+- [x] Add a pure function that selects the restricted literals from classified rows (an audience below View).
+- [x] Add a unit test: a literal with a quote and a backslash renders correctly in the `IN` list.
+- [x] Add a unit test: an `All` page query carries the R list in the resource branch and the C5 list in the value
       branch.
-- [ ] In the class drill-down queries, replace the `LinkValue` filter with `FILTER (?prop !=
+- [x] In the class drill-down queries, replace the `LinkValue` filter with `FILTER (?prop !=
       knora-base:hasStandoffLinkToValue)`.
-- [ ] In the class drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`, one list for
+- [x] In the class drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`, one list for
       each branch.
-- [ ] In the class drill-down queries, replace the `ProjectClasses` holes with `?resource a $groupClass` and
+- [x] In the class drill-down queries, replace the `ProjectClasses` holes with `?resource a $groupClass` and
       `BIND($groupClass AS ?resClass)`.
-- [ ] In the property drill-down queries, remove the `LinkValue` filter.
-- [ ] In the property drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`.
-- [ ] Leave out a branch whose literal list is empty.
-- [ ] Return an empty page with total 0, and run no query, when all literal lists are empty or the property is not in
+- [x] In the property drill-down queries, remove the `LinkValue` filter.
+- [x] In the property drill-down queries, replace the REGEX with `FILTER (STR(?permissions) IN (…))`.
+- [x] Leave out a branch whose literal list is empty.
+- [x] Return an empty page with total 0, and run no query, when all literal lists are empty or the property is not in
       the index.
-- [ ] Add a unit test that optimizes each rendered drill-down query with `Algebra.optimize(Algebra.compile(query))`
+- [x] Add a unit test that optimizes each rendered drill-down query with `Algebra.optimize(Algebra.compile(query))`
       and asserts that no `knora-base:hasPermissions` triple has a constant object.
-- [ ] Remove `grantsViewToAnonymousRegex` from both repos.
-- [ ] Remove the EhCache `viewRestrictionsProjectClasses` and the `CacheManager` dependency of the repo layer.
-- [ ] Remove `ProjectClasses`, `projectClasses`, `projectClassesCache`, `projectClassesQuery`,
+- [x] Remove `grantsViewToAnonymousRegex` from both repos.
+- [x] Remove the EhCache `viewRestrictionsProjectClasses` and the `CacheManager` dependency of the repo layer.
+- [x] Remove `ProjectClasses`, `projectClasses`, `projectClassesCache`, `projectClassesQuery`,
       `anyMultiTypedResourceQuery` and `multiTypedQuery`.
-- [ ] Remove the legacy fixtures of the removed queries.
-- [ ] Add golden tests for each drill-down query (capture through `TEST_UNDECLARED_OUTPUTS_DIR`).
-- [ ] Remove the legacy-fixture suites, because the old builder output no longer applies.
-- [ ] Run the tests; they pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Remove the legacy fixtures of the removed queries.
+- [x] Add golden tests for each drill-down query (capture through `TEST_UNDECLARED_OUTPUTS_DIR`).
+- [x] Remove the legacy-fixture suites, because the old builder output no longer applies.
+- [x] Run the tests; they pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 6: End-to-end tests, measurement, docs
 
