@@ -12,7 +12,7 @@ symptoms:
   - Restricted user link values do not appear in /values, /property-values, /items or /property-items.
   - /properties does not list user link value properties.
   - A resource with "V knora-admin:UnknownUser|RV knora-admin:KnownUser" is dropped from the drill-down.
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 02-fix-restrictions-link-values-plan

@@ -3,7 +3,7 @@ title: "fix: restrictions overview counts user link values, with count queries c
 type: fix
 date: 2026-10-15
 author: "Nora Ammann"
-status: reviewed
+status: implemented
 repositories: []
 linear: DEV-7390
 ---
