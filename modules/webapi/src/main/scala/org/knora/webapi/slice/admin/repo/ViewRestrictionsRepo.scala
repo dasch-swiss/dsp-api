@@ -28,9 +28,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *
  * Two access patterns, deliberately different in shape:
  *
- *   - **Counts** (the resource listing of [[resourceCounts]] plus the batched value queries of
- *     [[valueCounts]], read through `ViewRestrictionsRowCache`): computed by the triplestore and
- *     grouped by `knora-base:hasPermissions`. Visibility depends only on that literal (see
+ *   - **Counts** ([[resourceCounts]] and [[valueCounts]], read through `ViewRestrictionsRowCache`): computed
+ *     by the triplestore and grouped by `knora-base:hasPermissions`. Visibility depends only on that literal (see
  *     [[org.knora.webapi.slice.admin.domain.service.ViewRestrictionsAudience]]), so one grouped query
  *     answers every audience and both restriction states at once, and a group's whole population falls out
  *     of the same rows. No per-object data crosses the wire, so counts are exact at any project size.
@@ -45,10 +44,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  * `knora-base:valueHasComment` additionally yields a comment item (a comment is a plain literal on the
  * value and is not independently permissioned, so its visibility equals its parent value's).
  */
-final case class ViewRestrictionsRepo(
-  private val triplestore: TriplestoreService,
-  private val valueQueryPermits: Semaphore,
-) {
+final case class ViewRestrictionsRepo(private val triplestore: TriplestoreService) {
 
   /**
    * The project's current resources counted per class and permission literal. A row that cannot be
@@ -62,46 +58,37 @@ final case class ViewRestrictionsRepo(
       .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseResourceCountRow))
 
   /**
-   * One resource class's value counts per property, permission literal and deleted flag.
-   *
-   * The class's live resources are listed first and their values counted in batches of resources, so each
-   * query stays within the view-restrictions timeout as a project grows; the batch rows are summed into the
-   * rows a single unbatched query would return. A class without live resources runs no value query. Row order
-   * is unspecified. A row that cannot be parsed fails the request.
+   * The named graphs that hold something attached to the project: its data graphs and its ontology graphs, in IRI
+   * order. A row that is not an IRI fails the request.
    *
    * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
    */
-  def valueCounts(projectIri: ProjectIri, resourceClass: String): Task[Seq[ValueCountRow]] =
-    valueCounts(projectIri, resourceClass, ViewRestrictionsRepo.ValueCountBatchSize)
+  def dataGraphs(projectIri: ProjectIri): Task[Seq[String]] =
+    triplestore
+      .query(ViewRestrictionsRepo.projectDataGraphsQuery(projectIri))
+      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseGraphIri))
 
-  private[repo] def valueCounts(
-    projectIri: ProjectIri,
-    resourceClass: String,
-    batchSize: Int,
-  ): Task[Seq[ValueCountRow]] = {
-    require(batchSize > 0, s"batchSize must be positive, was $batchSize")
-    for {
-      listing   <- triplestore.query(ViewRestrictionsRepo.resourceListingQuery(projectIri, resourceClass))
-      resources <- ZIO.foreach(listing.results.bindings)(parseResourceIri)
-      batches    = resources.grouped(batchSize).toSeq
-      rows      <- ZIO
-                .foreachPar(batches)(batch =>
-                  valueQueryPermits.withPermit(
-                    triplestore
-                      .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass, batch))
-                      .flatMap(result => ZIO.foreach(result.results.bindings)(parseValueCountRow(resourceClass, _))),
-                  ),
-                )
-                .withParallelism(ViewRestrictionsRepo.ValueCountBatchParallelism)
-    } yield ViewRestrictionsRepo.sumBatches(rows.flatten)
-  }
+  /**
+   * The value counts of the project whose data lies in `graphs`, per resource class, property, permission literal
+   * and file flag. Only current values of current resources are counted, and only of a sub-property of
+   * `knora-base:hasValue` other than `knora-base:hasStandoffLinkToValue`. No graph means no rows and no query. Row
+   * order is unspecified. A row that cannot be parsed fails the request.
+   *
+   * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
+   */
+  def valueCounts(graphs: Seq[String]): Task[Seq[ValueCountRow]] =
+    if (graphs.isEmpty) ZIO.succeed(Seq.empty)
+    else
+      triplestore
+        .query(ViewRestrictionsRepo.valueCountsQuery(graphs))
+        .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseValueCountRow))
 
-  private def parseResourceIri(row: VariableResultsRow): Task[String] =
+  private def parseGraphIri(row: VariableResultsRow): Task[String] =
     for {
-      iri <- ZIO.attempt(row.getRequired("resource"))
+      iri <- ZIO.attempt(row.getRequired("g"))
       _   <- ZIO
              .fromEither(Iri.from(iri))
-             .mapError(msg => InconsistentRepositoryDataException(s"Invalid resource IRI in the listing: $msg"))
+             .mapError(msg => InconsistentRepositoryDataException(s"Invalid graph IRI: $msg"))
     } yield iri
 
   private def parseResourceCountRow(row: VariableResultsRow): Task[ResourceCountRow] =
@@ -109,13 +96,13 @@ final case class ViewRestrictionsRepo(
       ResourceCountRow(row.getRequired("resClass"), row.getRequired("permissions"), requiredInt(row, "cnt")),
     )
 
-  private def parseValueCountRow(resourceClass: String, row: VariableResultsRow): Task[ValueCountRow] =
+  private def parseValueCountRow(row: VariableResultsRow): Task[ValueCountRow] =
     ZIO.attempt(
       ValueCountRow(
-        classIri = resourceClass,
+        classIri = row.getRequired("resClass"),
         propertyIri = row.getRequired("prop"),
         permissions = row.getRequired("permissions"),
-        deleted = row.getRequired("valueDeleted") == "true",
+        isFile = row.getRequired("isFile") == "true",
         count = requiredInt(row, "cnt"),
         commented = requiredInt(row, "commented"),
       ),
@@ -252,25 +239,7 @@ final case class ViewRestrictionsRepo(
 
 object ViewRestrictionsRepo {
 
-  /**
-   * Resources per value-count query. Keeps each query well under [[SparqlTimeout.ViewRestrictions]] and keeps
-   * the form-encoded request body (about 60 bytes for each IRI) under the 200,000-byte default form limit of
-   * Jetty, on which Fuseki runs.
-   */
-  val ValueCountBatchSize: Int = 2000
-
-  /** Concurrent batch queries of one class. */
-  private val ValueCountBatchParallelism: Int = 2
-
-  /** Concurrent batch queries across all requests; limits the load the report puts on the triplestore. */
-  private val ValueQueryPermits: Int = 4
-
-  val layer: URLayer[TriplestoreService, ViewRestrictionsRepo] = ZLayer.fromZIO(
-    for {
-      triplestore <- ZIO.service[TriplestoreService]
-      permits     <- Semaphore.make(ValueQueryPermits)
-    } yield ViewRestrictionsRepo(triplestore, permits),
-  )
+  val layer: URLayer[TriplestoreService, ViewRestrictionsRepo] = ZLayer.derive[ViewRestrictionsRepo]
 
   /**
    * One row of a permission-grouped count: how many objects carry `permissions`.
@@ -285,32 +254,20 @@ object ViewRestrictionsRepo {
   final case class ResourceCountRow(classIri: String, permissions: String, count: Int)
 
   /**
-   * One row of the value-count query, which counts per class and property, grouped by permission literal
-   * and the value's deleted flag: the values of one class and property that carry one permission literal.
+   * One row of the value-count query: the current values of one property of the current resources of one class
+   * that carry one permission literal.
    *
-   * `deleted` is the value's `knora-base:isDeleted`; `commented` counts the values with a
-   * `knora-base:valueHasComment`.
+   * `isFile` is set when the property is a sub-property of `knora-base:hasFileValue`; `commented` counts the
+   * values with a `knora-base:valueHasComment`.
    */
   final case class ValueCountRow(
     classIri: String,
     propertyIri: String,
     permissions: String,
-    deleted: Boolean,
+    isFile: Boolean,
     count: Int,
     commented: Int,
   )
-
-  /**
-   * Sums rows that share class, property, permission literal and deleted flag, so the batched rows equal the
-   * rows of one unbatched query.
-   */
-  private[repo] def sumBatches(rows: Seq[ValueCountRow]): Seq[ValueCountRow] =
-    rows
-      .groupMapReduce(row => (row.classIri, row.propertyIri, row.permissions, row.deleted))(identity)((a, b) =>
-        a.copy(count = a.count + b.count, commented = a.commented + b.commented),
-      )
-      .values
-      .toSeq
 
   /**
    * One restriction-bearing object as read from the triplestore, before visibility resolution.
@@ -431,16 +388,15 @@ object ViewRestrictionsRepo {
    * and `valueQuery`. The page and count templates leave it out: it is not constrained there, and an
    * unconstrained join only multiplies intermediate rows.
    *
-   * NOTE — graph scoping does NOT apply to any of them, and must not be introduced.
-   * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join, and that
-   * holds for a caller which already knows the single graph it wants. It does **not** hold for a
-   * project-wide read: a project's resources span one data graph per ontology, while
-   * `ProjectService.projectDataNamedGraphV2` derives exactly one from shortcode + shortname, so scoping to
-   * the derived graph silently undercounts — a graph with no matches yields no rows rather than an error.
-   * Every query keeps the `attachedToProject` join; `ViewRestrictionsQuerySpec` pins that.
+   * Graph scoping uses the project's graphs as [[projectDataGraphsQuery]] enumerates them, never the one graph
+   * `ProjectService.projectDataNamedGraphV2` derives: a project can have one data graph per ontology (the local
+   * `anything` project has `anything` and `freetest`), and scoping to the derived graph would silently undercount.
+   * Inside the enumerated graphs a constant-object pattern such as `?value knora-base:isDeleted false` scans the
+   * project, not the store, and replaces the `attachedToProject` join.
    *
    * Every query of this report runs on `SparqlTimeout.ViewRestrictions` rather than the standard tier —
-   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
+   * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for. The
+   * project-wide value count runs on `SparqlTimeout.ViewRestrictionsCounts`.
    */
 
   /**
@@ -463,62 +419,85 @@ object ViewRestrictionsRepo {
     )
   }
 
-  /**
-   * The IRIs of a project's current resources of one class, the unit [[valueCountsQuery]] is batched over.
-   */
-  private[repo] def resourceListingQuery(projectIri: ProjectIri, resourceClass: String): Select = {
+  /** The named graphs that hold a triple with `knora-base:attachedToProject` of the project, in IRI order. */
+  private[repo] def projectDataGraphsQuery(projectIri: ProjectIri): Select = {
     val project = Iri.unsafeFrom(projectIri.value)
-    val clazz   = Iri.unsafeFrom(resourceClass)
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
-               |SELECT ?resource
+               |SELECT DISTINCT ?g
                |WHERE {
-               |  ?resource a $clazz .
-               |  ?resource knora-base:attachedToProject $project .
-               |  ?resource knora-base:isDeleted false .
-               |}""".render,
+               |  GRAPH ?g { ?resource knora-base:attachedToProject $project . }
+               |}
+               |ORDER BY ?g""".render,
       SparqlTimeout.ViewRestrictions,
     )
   }
 
   /**
-   * Counts the permissioned objects reachable from the given current resources of one class, per property,
-   * permission literal and deleted flag. `resources` must not be empty.
+   * Counts the current values of the current resources in `graphs`, per resource class, property, permission
+   * literal and file flag. `graphs` must not be empty.
    *
-   * `?resource` is bound by `VALUES` first, so each query reads only its batch. Value counts are always read
-   * in batches of resources, never one query for a whole class, because a whole-class query grows with the
-   * class and can exceed the timeout; the golden file pins the `VALUES` clause.
+   * The pattern order is load-bearing. Fuseki TDB2 without statistics orders the patterns of one group by fixed
+   * weights: a pattern with a constant object (`?x <P> <O>`, and `?x a <C>`) runs before a pattern with an unbound
+   * object. So the group has exactly one such pattern, `?value knora-base:isDeleted false`, which inside the graph
+   * scans the project's values; every other pattern is a lookup from it. The resource's deleted flag stays a
+   * variable and is filtered after grouping: `?resource knora-base:isDeleted false` would run first and join every
+   * resource with every value.
    *
-   * `COUNT(*)` counts each value once: `knora-base:valueHasComment` has max cardinality 1, so the optional
-   * comment adds no second row.
+   * Comments are counted in a `UNION` branch of their own, driven by `knora-base:valueHasComment`: an `OPTIONAL` is
+   * evaluated once per value row, which on the largest project cost about as much as the rest of the query.
    *
-   * No pattern on `?value` may have two bound terms before `?resource ?prop ?value` (for example
-   * `?value knora-base:isDeleted false`): Fuseki TDB2 without statistics orders patterns by bound terms
-   * and would then scan every non-deleted object in the store. `?valueDeleted` therefore stays an unbound
-   * variable and the caller drops deleted rows. `?prop` is unbound on purpose: the caller classifies
-   * properties with the ontology cache.
+   * The properties are classified after grouping, on a few hundred rows: the property path drops what is not a
+   * value (link targets, value versions, `rdf:object`), and `isFile` marks file values.
    */
-  private[repo] def valueCountsQuery(projectIri: ProjectIri, resourceClass: String, resources: Seq[String]): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
-    val clazz   = Iri.unsafeFrom(resourceClass)
-    val batch   = Fragments.values(Variable("resource"), resources.map(Iri.unsafeFrom))
+  private[repo] def valueCountsQuery(graphs: Seq[String]): Select = {
+    require(graphs.nonEmpty, "a value count needs at least one graph")
+    val graphValues = Fragments.values(Variable("g"), graphs.map(Iri.unsafeFrom))
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |
-               |SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
+               |SELECT ?resClass ?prop ?permissions ?isFile (SUM(?valueCount) AS ?cnt) (SUM(?commentCount) AS ?commented)
                |WHERE {
-               |  $batch
-               |  ?resource a $clazz .
-               |  ?resource knora-base:attachedToProject $project .
-               |  ?resource knora-base:isDeleted false .
-               |  ?resource ?prop ?value .
-               |  ?value knora-base:hasPermissions ?permissions .
-               |  ?value knora-base:isDeleted ?valueDeleted .
-               |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+               |  {
+               |    SELECT ?resClass ?prop ?permissions ?resDeleted (COUNT(*) AS ?valueCount) (0 AS ?commentCount)
+               |    WHERE {
+               |      $graphValues
+               |      GRAPH ?g {
+               |        ?value knora-base:isDeleted false .
+               |        ?value knora-base:hasPermissions ?permissions .
+               |        ?resource ?prop ?value .
+               |        ?resource a ?resClass .
+               |        ?resource knora-base:isDeleted ?resDeleted .
+               |      }
+               |    }
+               |    GROUP BY ?resClass ?prop ?permissions ?resDeleted
+               |  }
+               |  UNION
+               |  {
+               |    SELECT ?resClass ?prop ?permissions ?resDeleted (0 AS ?valueCount) (COUNT(*) AS ?commentCount)
+               |    WHERE {
+               |      $graphValues
+               |      GRAPH ?g {
+               |        ?value knora-base:valueHasComment ?comment .
+               |        ?value knora-base:isDeleted ?valueDeleted .
+               |        ?value knora-base:hasPermissions ?permissions .
+               |        ?resource ?prop ?value .
+               |        ?resource a ?resClass .
+               |        ?resource knora-base:isDeleted ?resDeleted .
+               |      }
+               |      FILTER (?valueDeleted = false)
+               |    }
+               |    GROUP BY ?resClass ?prop ?permissions ?resDeleted
+               |  }
+               |  FILTER (?resDeleted = false)
+               |  ?prop rdfs:subPropertyOf* knora-base:hasValue .
+               |  FILTER (?prop != knora-base:hasStandoffLinkToValue)
+               |  BIND (EXISTS { ?prop rdfs:subPropertyOf* knora-base:hasFileValue } AS ?isFile)
                |}
-               |GROUP BY ?prop ?permissions ?valueDeleted""".render,
-      SparqlTimeout.ViewRestrictions,
+               |GROUP BY ?resClass ?prop ?permissions ?isFile""".render,
+      SparqlTimeout.ViewRestrictionsCounts,
     )
   }
 

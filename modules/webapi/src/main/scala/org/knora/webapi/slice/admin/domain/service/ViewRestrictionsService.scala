@@ -68,7 +68,7 @@ final case class ViewRestrictionsService(
                  }
     } yield ViewRestrictionsClasses(projectIri.value, reported.sortBy(c => (c.label, c.id)))
 
-  /** Step 2 of the stepped report: one class's value-level restrictions, read in batches of resources. */
+  /** Step 2 of the stepped report: one class's value-level restrictions, from the project's cached value rows. */
   def valueCounts(
     projectIri: ProjectIri,
     resourceClass: String,
@@ -77,10 +77,7 @@ final case class ViewRestrictionsService(
     for {
       index  <- ProjectOntologyIndex.load(ontologyRepo)
       counts <- if (index.resourceClasses.contains(resourceClass))
-                  rowCache
-                    .valueCounts(projectIri, resourceClass)
-                    .flatMap(ValueCountFold.fold(_, index, itemType, projectIri))
-                    .map(_._1)
+                  classValueRows(projectIri, resourceClass).map(ValueCountFold.fold(_, itemType, projectIri)._1)
                 else ZIO.succeed(AudienceRestrictionCounts.zero)
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
 
@@ -94,9 +91,7 @@ final case class ViewRestrictionsService(
    * no drill-down query runs.
    *
    * The literals come from the cached counts, so an object whose permissions changed after the last refresh
-   * by [[classSummaries]] (at most 60 minutes ago) can be missing until the next refresh. The value branch
-   * accepts any value property except the standoff link value, while the counts count only properties in
-   * the ontology cache, so a value of a property missing from the cache can be listed but not counted.
+   * by [[classSummaries]] (at most 60 minutes ago) can be missing until the next refresh.
    */
   def items(
     projectIri: ProjectIri,
@@ -107,7 +102,7 @@ final case class ViewRestrictionsService(
     for {
       index    <- ProjectOntologyIndex.load(ontologyRepo)
       branches <- if (index.resourceClasses.contains(resourceClass))
-                    drillDownBranches(projectIri, resourceClass, itemType, index)
+                    drillDownBranches(projectIri, resourceClass, itemType)
                   else ZIO.none
       result <- branches.fold(ZIO.succeed(emptyPage(pageAndSize)))(
                   pageOfItems(projectIri, resourceClass, itemType, pageAndSize, _),
@@ -183,19 +178,12 @@ final case class ViewRestrictionsService(
     projectIri: ProjectIri,
     resourceClass: String,
     itemType: ItemType,
-    index: ProjectOntologyIndex,
   ): Task[Option[DrillDownBranches]] = {
     val resourceLiterals = rowCache
       .resourceCounts(projectIri)
       .map(rows => restricted(rows.filter(_.classIri == resourceClass).map(_.permissions), projectIri))
-    val valueLiterals = rowCache
-      .valueCounts(projectIri, resourceClass)
-      .map(rows =>
-        restricted(
-          rows.filterNot(_.deleted).filter(r => index.valueProperties.contains(r.propertyIri)).map(_.permissions),
-          projectIri,
-        ),
-      )
+    val valueLiterals =
+      classValueRows(projectIri, resourceClass).map(rows => restricted(rows.map(_.permissions), projectIri))
     itemType match {
       case ItemType.Resource                                 => resourceLiterals.map(DrillDownBranches.of(itemType, _, Set.empty))
       case ItemType.All                                      => resourceLiterals.zipPar(valueLiterals).map(DrillDownBranches.of(itemType, _, _))
@@ -203,6 +191,9 @@ final case class ViewRestrictionsService(
         valueLiterals.map(DrillDownBranches.of(itemType, Set.empty, _))
     }
   }
+
+  private def classValueRows(projectIri: ProjectIri, resourceClass: String) =
+    rowCache.valueCounts(projectIri).map(_.filter(_.classIri == resourceClass))
 
   private def restricted(permissions: Seq[String], projectIri: ProjectIri): Set[String] =
     ViewRestrictionsAudience.restrictedLiterals(permissions.toSet, projectIri)

@@ -18,34 +18,35 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
 
-  private val ttl = 10.minutes
+  private val ttl = 60.minutes
 
   private val projectA = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val projectB = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
   private val classC   = "http://www.knora.org/ontology/0001/onto#C"
-  private val classD   = "http://www.knora.org/ontology/0001/onto#D"
+  private val graph    = "http://www.knora.org/data/0001/onto"
 
-  private def resourceRows(classIris: String*): Seq[ResourceCountRow] =
-    classIris.map(ResourceCountRow(_, "V knora-admin:UnknownUser", 1))
+  private val resourceRows = Seq(ResourceCountRow(classC, "V knora-admin:UnknownUser", 1))
 
   private val valueRow = ValueCountRow(classC, "http://www.knora.org/ontology/0001/onto#p", "V x", false, 1, 0)
 
-  /** `rowsOfLoad` gives the resource rows returned by the n-th resource load, counting from 1. */
-  private def rowCache(
-    resourceLoads: Ref[Int],
-    valueLoads: Ref[Int],
-    rowsOfLoad: Int => Seq[ResourceCountRow] = _ => resourceRows(classC),
-  ): UIO[ViewRestrictionsRowCache] =
-    for {
-      resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](100, ttl)(_ =>
-                     resourceLoads.updateAndGet(_ + 1).map(rowsOfLoad),
-                   )
-      values <- ViewRestrictionsRowCache.makeCache[ViewRestrictionsRowCache.ValueKey, Seq[ValueCountRow]](100, ttl)(_ =>
-                  valueLoads.update(_ + 1).as(Seq(valueRow)),
-                )
-    } yield ViewRestrictionsRowCache(resources, values)
+  /** Counts the loads of each cache; the value loader reads the graphs through the cache, as the live layer does. */
+  final case class Loads(resources: Ref[Int], graphs: Ref[Int], values: Ref[Int]) {
+    def get: UIO[(Int, Int, Int)] = resources.get.zip(graphs.get).zip(values.get)
+  }
 
-  private val index = ViewRestrictionsClassification.ProjectOntologyIndex(Set(classC), Map.empty, Set.empty)
+  private def rowCache: UIO[(ViewRestrictionsRowCache, Loads)] =
+    for {
+      loads     <- Ref.make(0).zip(Ref.make(0)).zip(Ref.make(0)).map(Loads.apply)
+      resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](100, ttl)(_ =>
+                     loads.resources.update(_ + 1).as(resourceRows),
+                   )
+      graphs <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[String]](100, ttl)(_ =>
+                  loads.graphs.update(_ + 1).as(Seq(graph)),
+                )
+      values <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ValueCountRow]](100, ttl)(p =>
+                  graphs.get(p) *> loads.values.update(_ + 1).as(Seq(valueRow)),
+                )
+    } yield (ViewRestrictionsRowCache(resources, graphs, values), loads)
 
   def spec: Spec[Any, Any] = suite("ViewRestrictionsRowCache")(
     test("runs the load once for concurrent gets of one missing key") {
@@ -81,66 +82,37 @@ class ViewRestrictionsRowCacheSpec extends ZIOSpecDefault {
         n     <- calls.get
       } yield assertTrue(first.isFailure, again == 2, n == 2)
     },
-    test("refreshProject invalidates only the value keys of its own project") {
+    test("refreshProject drops the graphs and value rows of its own project only") {
       for {
-        resourceLoads <- Ref.make(0)
-        valueLoads    <- Ref.make(0)
-        cache         <- rowCache(resourceLoads, valueLoads)
-        _             <- cache.valueCounts(projectA, classC)
-        _             <- cache.valueCounts(projectB, classC)
-        _             <- cache.refreshProject(projectA)
-        _             <- cache.valueCounts(projectB, classC)
-        afterB        <- valueLoads.get
-        _             <- cache.valueCounts(projectA, classC)
-        afterA        <- valueLoads.get
-      } yield assertTrue(afterB == 2, afterA == 3)
-    },
-    test("refreshProject drops the value entry of a class that is only in the old rows") {
-      for {
-        resourceLoads <- Ref.make(0)
-        valueLoads    <- Ref.make(0)
-        cache         <-
-          rowCache(resourceLoads, valueLoads, n => if (n == 1) resourceRows(classC, classD) else resourceRows(classC))
-        _      <- cache.resourceCounts(projectA)
-        _      <- cache.valueCounts(projectA, classD)
-        _      <- cache.refreshProject(projectA)
-        before <- valueLoads.get
-        _      <- cache.valueCounts(projectA, classD)
-        after  <- valueLoads.get
-      } yield assertTrue(before == 1, after == 2)
+        (cache, loads) <- rowCache
+        _              <- cache.valueCounts(projectA)
+        _              <- cache.valueCounts(projectB)
+        _              <- cache.refreshProject(projectA)
+        _              <- cache.valueCounts(projectB)
+        afterB         <- loads.get
+        _              <- cache.valueCounts(projectA)
+        afterA         <- loads.get
+      } yield assertTrue(afterB == (1, 2, 2), afterA == (1, 3, 3))
     },
     test("refreshProject reloads the resource rows exactly once, whether or not they were cached") {
       for {
-        resourceLoads <- Ref.make(0)
-        valueLoads    <- Ref.make(0)
-        cache         <- rowCache(resourceLoads, valueLoads)
-        _             <- cache.refreshProject(projectA)
-        afterCold     <- resourceLoads.get
-        _             <- cache.refreshProject(projectA)
-        afterWarm     <- resourceLoads.get
+        (cache, loads) <- rowCache
+        _              <- cache.refreshProject(projectA)
+        afterCold      <- loads.resources.get
+        _              <- cache.refreshProject(projectA)
+        afterWarm      <- loads.resources.get
       } yield assertTrue(afterCold == 1, afterWarm == 2)
     },
-    test("serves the value counts from cache after a refresh and a resource-count read of the same project") {
+    test("serves every row set from cache after the first read") {
       for {
-        resourceLoads <- Ref.make(0)
-        valueLoads    <- Ref.make(0)
-        cache         <- rowCache(resourceLoads, valueLoads)
-        _             <- cache.refreshProject(projectA)
-        _             <- cache.valueCounts(projectA, classC)
-        _             <- cache.resourceCounts(projectA)
-        _             <- cache.valueCounts(projectA, classC)
-        values        <- valueLoads.get
-        resources     <- resourceLoads.get
-      } yield assertTrue(values == 1, resources == 1)
-    },
-    test("valueRowsOfProject loads only the classes that are resource classes of the index") {
-      for {
-        resourceLoads <- Ref.make(0)
-        valueLoads    <- Ref.make(0)
-        cache         <- rowCache(resourceLoads, valueLoads, _ => resourceRows(classC, classD))
-        rows          <- cache.valueRowsOfProject(projectA, index)
-        loaded        <- valueLoads.get
-      } yield assertTrue(rows == Seq(valueRow), loaded == 1)
+        (cache, loads) <- rowCache
+        _              <- cache.refreshProject(projectA)
+        values         <- cache.valueCounts(projectA)
+        graphs         <- cache.dataGraphs(projectA)
+        _              <- cache.resourceCounts(projectA)
+        _              <- cache.valueCounts(projectA)
+        n              <- loads.get
+      } yield assertTrue(values == Seq(valueRow), graphs == Seq(graph), n == (1, 1, 1))
     },
   )
 }

@@ -77,11 +77,10 @@ object ViewRestrictionsTestFixtures {
       ),
     )
 
-  /** A row cache whose loaders count each read and return one resource row of `classIri` and no value rows. */
-  def countingCache(loads: Ref[Int], classIri: String): ULayer[ViewRestrictionsRowCache] =
-    countingCache(loads, loads, classIri)
-
-  /** Like the single-counter variant, counting resource-row and value-row reads separately. */
+  /**
+   * A row cache whose loaders count the resource-row and value-row reads and return one resource row of
+   * `classIri`, no graphs and no value rows.
+   */
   def countingCache(
     resourceLoads: Ref[Int],
     valueLoads: Ref[Int],
@@ -92,10 +91,10 @@ object ViewRestrictionsTestFixtures {
         resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](10, 1.minute)(_ =>
                        resourceLoads.update(_ + 1).as(Seq(ResourceCountRow(classIri, "V knora-admin:UnknownUser", 1))),
                      )
-        values <-
-          ViewRestrictionsRowCache.makeCache[ViewRestrictionsRowCache.ValueKey, Seq[ValueCountRow]](10, 1.minute)(_ =>
-            valueLoads.update(_ + 1).as(Seq.empty),
-          )
-      } yield ViewRestrictionsRowCache(resources, values)
+        graphs <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[String]](10, 1.minute)(_ => ZIO.succeed(Seq.empty))
+        values <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ValueCountRow]](10, 1.minute)(_ =>
+                    valueLoads.update(_ + 1).as(Seq.empty),
+                  )
+      } yield ViewRestrictionsRowCache(resources, graphs, values)
     }
 }

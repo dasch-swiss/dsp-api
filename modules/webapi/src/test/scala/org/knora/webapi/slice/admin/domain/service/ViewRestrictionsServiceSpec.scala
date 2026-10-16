@@ -527,7 +527,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
       standoffValue
 
   private val secondOntologyTurtle: String =
-    turtlePrefixes +
+    turtlePrefixes + s"<$hasSecondText> rdfs:subPropertyOf kb:hasValue .\n" +
       resourceTurtle(
         "http://rdfh.ch/0001/secondHost",
         thingClass,
@@ -548,7 +548,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         deleted = true,
       )
 
-  private val valueClassificationSuite = suite("value classification by the ontology cache")(
+  private val valueClassificationSuite = suite("value classification by the property hierarchy")(
     test("a restricted user link value is counted, as All and as Value") {
       for {
         all   <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
@@ -688,7 +688,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
       )
     turtlePrefixes + linkPropertiesTurtle +
       s"""<$hasText> rdfs:subPropertyOf kb:hasValue .
-         |<$hasPicture> rdfs:subPropertyOf kb:hasValue .
+         |<$hasPicture> rdfs:subPropertyOf kb:hasStillImageFileValue .
+         |kb:hasStillImageFileValue rdfs:subPropertyOf kb:hasFileValue .
+         |kb:hasFileValue rdfs:subPropertyOf kb:hasValue .
          |kb:StillImageFileValue rdfs:subClassOf kb:FileValue .
          |""".stripMargin +
       host("plainHost", Seq(s"<$hasText> <$parityHost/plain>", s"<$hasText> <$parityHost/open>")) +
@@ -845,16 +847,14 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(steppedTurtle)),
   )
 
-  // ----- graph scoping would undercount: a project's data spans one graph per ontology -----
+  // ----- a project's data spanning several named graphs -----
 
   /**
-   * Three `Thing`s of one project, split across **two** named data graphs.
+   * Three `Thing`s of one project, split across **two** named data graphs, each graph with a member-only value.
    *
-   * This is the real DSP layout, not a contrived one: a project gets one data graph per ontology, so
-   * `projectDataNamedGraphV2` — which derives exactly one — names only a slice of the project. An earlier
-   * revision scoped these queries with `GRAPH <thatOneGraph>` for the speed-up, and the report silently
-   * lost every resource living in the project's other graphs. Measured on the local `anything` project as
-   * 65 resources in one graph and 6 in another; reproduced here at 2 and 1, which is the same defect.
+   * This is the layout of the local `anything` project (`anything` and `freetest`): a project can have one data
+   * graph per ontology, so `projectDataNamedGraphV2`, which derives exactly one, names only a slice of the project.
+   * The report scopes its queries to every graph that holds something of the project, so both graphs count.
    *
    * A Turtle fixture cannot catch this — [[datasetLayerFromTurtle]] puts everything in one fixed graph, so
    * a graph-scoped query would either match all of it or none of it, and the test would pass either way.
@@ -866,16 +866,27 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
        |@prefix kb:   <$kb> .
        |
-       |<http://www.knora.org/data/0001/anything> {
+       |<http://www.knora.org/ontology/0001/anything> {
        |  <$thingClass> rdfs:subClassOf kb:Resource .
+       |  <$hasText> rdfs:subPropertyOf kb:hasValue .
+       |}
        |
+       |<http://www.knora.org/data/0001/anything> {
        |  <http://rdfh.ch/0001/inAnything1> rdf:type <$thingClass> ;
+       |    rdfs:label "In anything 1" ;
        |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false ;
+       |    <$hasText> <http://rdfh.ch/0001/inAnything1/values/v1> .
+       |
+       |  <http://rdfh.ch/0001/inAnything1/values/v1> rdf:type kb:TextValue ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "M knora-admin:ProjectMember" ;
        |    kb:isDeleted false .
        |
        |  <http://rdfh.ch/0001/inAnything2> rdf:type <$thingClass> ;
+       |    rdfs:label "In anything 2" ;
        |    kb:attachedToProject <${projectIri.value}> ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "V knora-admin:UnknownUser" ;
@@ -884,7 +895,14 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |
        |<http://www.knora.org/data/0001/something> {
        |  <http://rdfh.ch/0001/inSomething> rdf:type <$thingClass> ;
+       |    rdfs:label "In something" ;
        |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false ;
+       |    <$hasText> <http://rdfh.ch/0001/inSomething/values/v1> .
+       |
+       |  <http://rdfh.ch/0001/inSomething/values/v1> rdf:type kb:TextValue ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "M knora-admin:ProjectMember" ;
        |    kb:isDeleted false .
@@ -892,16 +910,28 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |""".stripMargin
 
   private val graphScopingSuite = suite("a project's data spanning several named graphs")(
-    test("every graph is counted, because the queries scope by attachedToProject and not by GRAPH") {
+    test("every graph is counted, resources and values") {
       for {
-        result <- service(_.classSummaries(projectIri))
-        thing   = result.classes.find(_.id == thingClass)
+        classes <- service(_.classSummaries(projectIri))
+        values  <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
+        thing    = classes.classes.find(_.id == thingClass)
       } yield assertTrue(
-        // 2 in one graph + 1 in another. Under the reverted GRAPH scoping this read 2, with nothing to
-        // indicate the third was missing — the failure mode was a plausible-looking smaller number.
+        // 2 in one graph + 1 in another: scoping to one graph would read 2, a plausible-looking smaller number
         thing.map(_.totalResources).contains(3),
-        // and the restriction counts lose the other graph's rows the same way
         thing.map(_.counts.anonymous.hidden).contains(2),
+        // one restricted value in each graph, summed
+        values.counts.anonymous.hidden == 2,
+      )
+    }.provide(commonLayers, datasetLayerFromTriG(twoGraphTriG)),
+    test("the drill-down lists the restricted objects of every graph") {
+      for {
+        _    <- service(_.classSummaries(projectIri))
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(
+        page.pagination.totalItems == 2,
+        page.data.map(_.resourceIri).toSet == Set("http://rdfh.ch/0001/inAnything1", "http://rdfh.ch/0001/inSomething"),
+        page.data.flatMap(_.items).flatMap(_.valueIri).toSet ==
+          Set("http://rdfh.ch/0001/inAnything1/values/v1", "http://rdfh.ch/0001/inSomething/values/v1"),
       )
     }.provide(commonLayers, datasetLayerFromTriG(twoGraphTriG)),
   )

@@ -1,14 +1,42 @@
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
+SELECT ?resClass ?prop ?permissions ?isFile (SUM(?valueCount) AS ?cnt) (SUM(?commentCount) AS ?commented)
 WHERE {
-  VALUES ?resource { <http://rdfh.ch/0001/a> <http://rdfh.ch/0001/b> }
-  ?resource a <http://www.knora.org/ontology/0001/anything#Thing> .
-  ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
-  ?resource knora-base:isDeleted false .
-  ?resource ?prop ?value .
-  ?value knora-base:hasPermissions ?permissions .
-  ?value knora-base:isDeleted ?valueDeleted .
-  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+  {
+    SELECT ?resClass ?prop ?permissions ?resDeleted (COUNT(*) AS ?valueCount) (0 AS ?commentCount)
+    WHERE {
+      VALUES ?g { <http://www.knora.org/data/0001/anything> <http://www.knora.org/data/0001/freetest> }
+      GRAPH ?g {
+        ?value knora-base:isDeleted false .
+        ?value knora-base:hasPermissions ?permissions .
+        ?resource ?prop ?value .
+        ?resource a ?resClass .
+        ?resource knora-base:isDeleted ?resDeleted .
+      }
+    }
+    GROUP BY ?resClass ?prop ?permissions ?resDeleted
+  }
+  UNION
+  {
+    SELECT ?resClass ?prop ?permissions ?resDeleted (0 AS ?valueCount) (COUNT(*) AS ?commentCount)
+    WHERE {
+      VALUES ?g { <http://www.knora.org/data/0001/anything> <http://www.knora.org/data/0001/freetest> }
+      GRAPH ?g {
+        ?value knora-base:valueHasComment ?comment .
+        ?value knora-base:isDeleted ?valueDeleted .
+        ?value knora-base:hasPermissions ?permissions .
+        ?resource ?prop ?value .
+        ?resource a ?resClass .
+        ?resource knora-base:isDeleted ?resDeleted .
+      }
+      FILTER (?valueDeleted = false)
+    }
+    GROUP BY ?resClass ?prop ?permissions ?resDeleted
+  }
+  FILTER (?resDeleted = false)
+  ?prop rdfs:subPropertyOf* knora-base:hasValue .
+  FILTER (?prop != knora-base:hasStandoffLinkToValue)
+  BIND (EXISTS { ?prop rdfs:subPropertyOf* knora-base:hasFileValue } AS ?isFile)
 }
-GROUP BY ?prop ?permissions ?valueDeleted
+GROUP BY ?resClass ?prop ?permissions ?isFile

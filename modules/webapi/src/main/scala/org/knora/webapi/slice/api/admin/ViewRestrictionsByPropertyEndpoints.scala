@@ -72,8 +72,8 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ViewRestrictionsPropertyValues].example(ViewRestrictionsPropertyValues.example))
     .description(
       "Step 2 of the property-grouped report: the per-audience restriction counts for ONE value property, " +
-        "across every resource class that uses it. The counts come from the cached value rows of those classes, " +
-        "which `/classes` refreshes and which are otherwise at most 10 minutes old. " +
+        "across every resource class that uses it. The counts come from the cached value counts of the project, " +
+        "which `/classes` refreshes and which are otherwise at most 60 minutes old. " +
         "Each audience reports `hidden` (permission code 0 — nothing is served) and `restrictedView` " +
         "(code 1 — a degraded version is served) separately; the two are disjoint. " +
         "`totalValues` is how many values of this property the project holds, restricted or not. It is a " +
@@ -96,8 +96,7 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "reason this report exists, so the class belongs to the row rather than to the table. " +
         "Ordered by label then IRI, so paging is stable across requests. " +
         "The restricted literals come from the cached counts, so an object whose permissions changed after " +
-        "the last refresh by `/classes` (at most 10 minutes) can be missing until the next refresh. " +
-        "Only properties in the ontology cache are listed, as only they are counted. " +
+        "the last refresh by `/classes` (at most 60 minutes) can be missing until the next refresh. " +
         "The user must be project admin or system admin.",
     )
 }

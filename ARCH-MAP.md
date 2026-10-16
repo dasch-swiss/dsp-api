@@ -470,7 +470,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - The test-only `TriplestoreServiceInMemory` lets most unit specs avoid a live Fuseki;
         `TriplestoreServiceLive` behavior is exercised only by test-it.
     - The `SparqlTimeout` tiers (Standard, Maintenance, Gravsearch, Search, SearchProbe, ViewRestrictions,
-        added in DEV-6864) are a load-bearing budget scheme; a new caller picks a tier deliberately.
+        ViewRestrictionsCounts, added in DEV-6864) are a load-bearing budget scheme; a new caller picks a tier
+        deliberately.
 
 ### webapi-sipi-client
 
@@ -593,9 +594,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         2026-10-16), among them `ValueCountFold` and `ViewRestrictionsAudience` (the report's `Audience`,
         `Visibility` and count types).
     - The view-restrictions report reads its counts only through `ViewRestrictionsRowCache`; only
-        `ViewRestrictionsService.classSummaries` refreshes it. Value counts are read in batches of resources
-        (`VALUES ?resource`), never one query for a whole class - enforcement: static-analysis for the existing
-        queries (golden query files in `src/test/resources/.../slice/admin/repo/`), review for new ones.
+        `ViewRestrictionsService.classSummaries` refreshes it. Value counts are read in one query per project,
+        scoped to the project's enumerated graphs, with `?value knora-base:isDeleted false` as its only
+        constant-object pattern - enforcement: static-analysis for the existing queries (golden query files in
+        `src/test/resources/.../slice/admin/repo/` and the algebra checks in `ViewRestrictionsQuerySpec`), review
+        for new ones.
     - List persistence queries belong to whichever component owns lists; `ListsResponder` must not import
         `slice.resources.repo.*` query classes - enforcement: review. Currently violated by 13 imports in
         `ListsResponder.scala`.

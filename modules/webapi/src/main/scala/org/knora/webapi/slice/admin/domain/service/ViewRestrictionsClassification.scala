@@ -15,9 +15,9 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 /**
  * Classification of ontology entities for the view-restrictions report.
  *
- * Decides which properties the report counts and of what kind, from the flags the ontology cache already
- * carries, without any triplestore access. [[ProjectOntologyIndex.load]] is the one effectful entry point
- * and is shared by both reports; everything else is pure.
+ * Decides which properties the property report lists and which classes both reports show, from the flags the
+ * ontology cache already carries, without any triplestore access. The counts classify properties in SPARQL.
+ * [[ProjectOntologyIndex.load]] is the one effectful entry point; everything else is pure.
  */
 object ViewRestrictionsClassification {
 
@@ -57,34 +57,19 @@ object ViewRestrictionsClassification {
   }
 
   /**
-   * The ontology entities of every ontology in the cache that the report can count, keyed by internal-schema IRI.
+   * The resource classes of every ontology in the cache, keyed by internal-schema IRI.
    *
    * @param resourceClasses  the IRIs of the resource classes.
-   * @param valueProperties  the counted properties, each with its [[ValueKind]].
-   * @param knownProperties  every property IRI in the ontologies, counted or not. A row whose property is not
-   *                         in this set points at an ontology-cache miss, not at a link target.
    */
-  final case class ProjectOntologyIndex(
-    resourceClasses: Set[String],
-    valueProperties: Map[String, ValueKind],
-    knownProperties: Set[String],
-  )
+  final case class ProjectOntologyIndex(resourceClasses: Set[String])
 
   object ProjectOntologyIndex {
 
-    /** Indexes every ontology in the cache, so properties and classes of any ontology are found. */
+    /** Indexes every ontology in the cache, so classes of any ontology are found. */
     def load(ontologyRepo: OntologyRepo): Task[ProjectOntologyIndex] =
-      ontologyRepo.findAll().map { ontologies =>
-        from(ontologies.flatMap(_.properties.values), ontologies.flatMap(_.classes.values))
-      }
+      ontologyRepo.findAll().map(ontologies => from(ontologies.flatMap(_.classes.values)))
 
-    def from(properties: Iterable[ReadPropertyInfoV2], classes: Iterable[ReadClassInfoV2]): ProjectOntologyIndex =
-      ProjectOntologyIndex(
-        resourceClasses = classes.filter(_.isResourceClass).map(_.entityInfoContent.classIri.toString).toSet,
-        valueProperties = properties.flatMap { p =>
-          ValueKind.of(p).map(p.entityInfoContent.propertyIri.toString -> _)
-        }.toMap,
-        knownProperties = properties.map(_.entityInfoContent.propertyIri.toString).toSet,
-      )
+    def from(classes: Iterable[ReadClassInfoV2]): ProjectOntologyIndex =
+      ProjectOntologyIndex(classes.filter(_.isResourceClass).map(_.entityInfoContent.classIri.toString).toSet)
   }
 }

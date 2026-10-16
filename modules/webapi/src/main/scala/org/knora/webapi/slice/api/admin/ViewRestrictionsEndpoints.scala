@@ -66,9 +66,10 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ViewRestrictionsValues].example(ViewRestrictionsValues.example))
     .description(
       "Step 2 of the view-restrictions report: the per-audience value-level restriction counts for ONE " +
-        "resource class. The counts are read in batches of resources and may be served from a cache that " +
-        "step 1 refreshes; without a refresh they are at most 10 minutes old. Clients call this once per class from " +
-        "the step-1 list, which bounds each request and lets a failure affect only that class's row. " +
+        "resource class. The counts come from the cached value counts of the whole project, which step 1 " +
+        "refreshes; without a refresh they are at most 60 minutes old. Clients call this once per class from " +
+        "the step-1 list; the first call reads the counts of every class of the project, later calls are served " +
+        "from the cache. " +
         "Counts restricted values inside the class's resources — file values, ordinary values, comments, " +
         "and user link values (standoff link values are not counted) — " +
         "which is a different unit from the resource counts in step 1 and must never be summed with them. " +
@@ -88,10 +89,7 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "its per-audience visibility and the nested restricted file values / values / comments. " +
         "Ordered by label then IRI, so paging is stable across requests. " +
         "The restricted literals come from the cached counts, so an object whose permissions changed after " +
-        "the last refresh by `/classes` (at most 10 minutes) can be missing until the next refresh. " +
-        "The value branch accepts any value property except the standoff link value, while the counts count " +
-        "only properties in the ontology cache, so a value of a property missing from the cache can be " +
-        "listed but not counted. " +
+        "the last refresh by `/classes` (at most 60 minutes) can be missing until the next refresh. " +
         "The user must be project admin or system admin.",
     )
 }
@@ -288,7 +286,7 @@ object ViewRestrictionsEndpoints {
     )
   }
 
-  /** Step 2: one class's value-level counts, read in batches of resources and possibly served from a cache that step 1 refreshes (at most 10 minutes old otherwise). */
+  /** Step 2: one class's value-level counts, from a cache that step 1 refreshes (at most 60 minutes old otherwise). */
   final case class ViewRestrictionsValues(
     projectIri: String,
     resourceClass: String,

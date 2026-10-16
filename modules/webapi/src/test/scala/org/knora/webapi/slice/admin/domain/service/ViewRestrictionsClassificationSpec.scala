@@ -98,31 +98,9 @@ class ViewRestrictionsClassificationSpec extends ZIOSpecDefault {
     suite("ProjectOntologyIndex.from")(
       test("keeps resource classes and drops other classes") {
         val index = ProjectOntologyIndex.from(
-          Seq.empty,
           Seq(classInfo(s"${anything}Thing", isResourceClass = true), classInfo(s"${anything}TextValue", false)),
         )
         assertTrue(index.resourceClasses == Set(s"${anything}Thing"))
-      },
-      test("keeps value properties by kind and drops link properties") {
-        val index = ProjectOntologyIndex.from(
-          Seq(
-            property(s"${anything}hasText"),
-            property(s"${anything}hasOtherThing", isLinkProp = true),
-            property(s"${anything}hasOtherThingValue", isLinkValueProp = true),
-          ),
-          Seq.empty,
-        )
-        assertTrue(
-          index.valueProperties == Map(
-            s"${anything}hasText"            -> ValueKind.Plain,
-            s"${anything}hasOtherThingValue" -> ValueKind.Link,
-          ),
-          index.knownProperties == Set(
-            s"${anything}hasText",
-            s"${anything}hasOtherThing",
-            s"${anything}hasOtherThingValue",
-          ),
-        )
       },
     ),
   )

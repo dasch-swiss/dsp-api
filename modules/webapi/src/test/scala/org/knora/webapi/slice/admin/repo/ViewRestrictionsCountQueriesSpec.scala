@@ -15,67 +15,91 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
-/** Runs the class-scoped count queries of [[ViewRestrictionsRepo]] against an in-memory triplestore. */
+/**
+ * Runs the count queries of [[ViewRestrictionsRepo]] against an in-memory triplestore.
+ *
+ * The project's data spans two named graphs, as the local `anything` project does (`anything` and `freetest`),
+ * and the ontology sits in a graph of its own, as in a deployed store. The property hierarchy is in the data, so
+ * the value query classifies the properties as it does on a real store.
+ */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
 
-  private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val kb         = "http://www.knora.org/ontology/knora-base#"
-  private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
-  private val hasLink    = "http://www.knora.org/ontology/0001/anything#hasThingValue"
-  private val hasThing   = "http://www.knora.org/ontology/0001/anything#hasThing"
+  private val projectIri    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val anythingGraph = "http://www.knora.org/data/0001/anything"
+  private val freetestGraph = "http://www.knora.org/data/0001/freetest"
+  private val ontologyGraph = "http://www.knora.org/ontology/0001/anything"
+  private val anything      = "http://www.knora.org/ontology/0001/anything#"
+  private val kb            = "http://www.knora.org/ontology/knora-base#"
+  private val thingClass    = s"${anything}Thing"
+  private val hasText       = s"${anything}hasText"
+  private val hasThingValue = s"${anything}hasThingValue"
+  private val hasPicture    = s"${anything}hasPicture"
+  private val open          = "V knora-admin:UnknownUser"
+  private val member        = "M knora-admin:ProjectMember"
 
-  private val turtle: String =
+  private def value(iri: String, permissions: String, deleted: Boolean = false, extra: String = ""): String =
+    s"""  <$iri> kb:hasPermissions "$permissions" ; kb:isDeleted $deleted $extra .
+       |""".stripMargin
+
+  private def resource(iri: String, permissions: String, deleted: Boolean, properties: String): String =
+    s"""  <$iri> a <$thingClass> ;
+       |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:hasPermissions "$permissions" ;
+       |    kb:isDeleted $deleted $properties .
+       |""".stripMargin
+
+  private val trig: String =
     s"""
-       |@prefix kb: <$kb> .
+       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:   <$kb> .
        |
-       |<http://rdfh.ch/0001/a>
-       |  a <$thingClass> ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasText> <http://rdfh.ch/0001/a/values/t1>, <http://rdfh.ch/0001/a/values/t2>, <http://rdfh.ch/0001/a/values/t3> ;
-       |  <$hasLink> <http://rdfh.ch/0001/a/values/l1> ;
-       |  <$hasThing> <http://rdfh.ch/0001/b> .
+       |<$ontologyGraph> {
+       |  <$ontologyGraph> kb:attachedToProject <${projectIri.value}> .
+       |  <$hasText> rdfs:subPropertyOf kb:hasValue .
+       |  <$hasThingValue> rdfs:subPropertyOf kb:hasLinkToValue .
+       |  <${anything}hasThing> rdfs:subPropertyOf kb:hasLinkTo .
+       |  <$hasPicture> rdfs:subPropertyOf kb:hasStillImageFileValue .
+       |  kb:hasStillImageFileValue rdfs:subPropertyOf kb:hasFileValue .
+       |  kb:hasFileValue rdfs:subPropertyOf kb:hasValue .
+       |  kb:hasLinkToValue rdfs:subPropertyOf kb:hasValue .
+       |  kb:hasStandoffLinkToValue rdfs:subPropertyOf kb:hasLinkToValue .
+       |}
        |
-       |<http://rdfh.ch/0001/b>
-       |  a <$thingClass> ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false .
+       |<$anythingGraph> {
+       |${resource(
+        "http://rdfh.ch/0001/a",
+        open,
+        deleted = false,
+        s"""; <$hasText> <http://rdfh.ch/0001/a/t1>, <http://rdfh.ch/0001/a/t2>, <http://rdfh.ch/0001/a/t3> ;
+           |    <$hasThingValue> <http://rdfh.ch/0001/a/l1> ;
+           |    <${anything}hasThing> <http://rdfh.ch/0001/b> ;
+           |    kb:hasStandoffLinkToValue <http://rdfh.ch/0001/a/s1> ;
+           |    <$hasPicture> <http://rdfh.ch/0001/a/p1>""".stripMargin,
+      )}
+       |${resource("http://rdfh.ch/0001/b", open, deleted = false, "")}
+       |${resource(
+        "http://rdfh.ch/0001/deleted",
+        member,
+        deleted = true,
+        s"; <$hasText> <http://rdfh.ch/0001/deleted/t1>",
+      )}
+       |${value("http://rdfh.ch/0001/a/t1", open, extra = """; kb:valueHasComment "a comment"""")}
+       |${value("http://rdfh.ch/0001/a/t2", open)}
+       |${value("http://rdfh.ch/0001/a/t3", member, deleted = true, extra = """; kb:valueHasComment "gone"""")}
+       |${value("http://rdfh.ch/0001/a/l1", open)}
+       |${value("http://rdfh.ch/0001/a/s1", member)}
+       |${value("http://rdfh.ch/0001/a/p1", member)}
+       |${value("http://rdfh.ch/0001/deleted/t1", member)}
+       |}
        |
-       |<http://rdfh.ch/0001/c>
-       |  a <$thingClass> ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted false .
-       |
-       |<http://rdfh.ch/0001/deleted>
-       |  a <$thingClass> ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted true .
-       |
-       |<http://rdfh.ch/0001/a/values/t1>
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  kb:valueHasComment "a comment" .
-       |
-       |<http://rdfh.ch/0001/a/values/t2>
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false .
-       |
-       |<http://rdfh.ch/0001/a/values/t3>
-       |  kb:hasPermissions "M knora-admin:ProjectMember" ;
-       |  kb:isDeleted true .
-       |
-       |<http://rdfh.ch/0001/a/values/l1>
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false .
+       |<$freetestGraph> {
+       |${resource("http://rdfh.ch/0001/c", member, deleted = false, s"; <$hasText> <http://rdfh.ch/0001/c/t1>")}
+       |${value("http://rdfh.ch/0001/c/t1", open)}
+       |}
        |""".stripMargin
 
   private val repo = ZIO.serviceWithZIO[ViewRestrictionsRepo]
@@ -91,34 +115,29 @@ class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
       for {
         rows <- repo(_.resourceCounts(projectIri))
       } yield assertTrue(
-        rows.toSet == Set(
-          ResourceCountRow(thingClass, "V knora-admin:UnknownUser", 2),
-          ResourceCountRow(thingClass, "M knora-admin:ProjectMember", 1),
-        ),
+        rows.toSet == Set(ResourceCountRow(thingClass, open, 2), ResourceCountRow(thingClass, member, 1)),
       )
-    }.provide(layers, datasetLayerFromTurtle(turtle)),
-    test("valueCounts returns deleted values, comments, link values and link targets per property") {
+    },
+    test("dataGraphs lists every graph that holds something of the project") {
       for {
-        rows <- repo(_.valueCounts(projectIri, thingClass))
+        graphs <- repo(_.dataGraphs(projectIri))
+      } yield assertTrue(graphs == Seq(anythingGraph, freetestGraph, ontologyGraph))
+    },
+    test("valueCounts sums the graphs and keeps only the live values of live resources") {
+      for {
+        rows <- repo(r => r.dataGraphs(projectIri).flatMap(r.valueCounts))
       } yield assertTrue(
         rows.toSet == Set(
-          ValueCountRow(thingClass, hasText, "V knora-admin:UnknownUser", deleted = false, count = 2, commented = 1),
-          ValueCountRow(thingClass, hasText, "M knora-admin:ProjectMember", deleted = true, count = 1, commented = 0),
-          ValueCountRow(thingClass, hasLink, "V knora-admin:UnknownUser", deleted = false, count = 1, commented = 0),
-          ValueCountRow(thingClass, hasThing, "V knora-admin:UnknownUser", deleted = false, count = 1, commented = 0),
+          // a/t1 (commented) and a/t2 in one graph, c/t1 in the other; the deleted a/t3 is left out
+          ValueCountRow(thingClass, hasText, open, isFile = false, count = 3, commented = 1),
+          // a user link value counts; the link target b and the standoff link value s1 do not
+          ValueCountRow(thingClass, hasThingValue, open, isFile = false, count = 1, commented = 0),
+          ValueCountRow(thingClass, hasPicture, member, isFile = true, count = 1, commented = 0),
         ),
       )
-    }.provide(layers, datasetLayerFromTurtle(turtle)),
-    test("valueCounts in batches of one resource returns the rows of the default batch size") {
-      for {
-        batched   <- repo(_.valueCounts(projectIri, thingClass, batchSize = 1))
-        unbatched <- repo(_.valueCounts(projectIri, thingClass))
-      } yield assertTrue(batched.nonEmpty, batched.toSet == unbatched.toSet, batched.size == unbatched.size)
-    }.provide(layers, datasetLayerFromTurtle(turtle)),
-    test("valueCounts of a class without live resources returns no rows") {
-      for {
-        rows <- repo(_.valueCounts(projectIri, "http://www.knora.org/ontology/0001/anything#Unused"))
-      } yield assertTrue(rows.isEmpty)
-    }.provide(layers, datasetLayerFromTurtle(turtle)),
-  )
+    },
+    test("valueCounts of no graphs returns no rows") {
+      repo(_.valueCounts(Seq.empty)).map(rows => assertTrue(rows.isEmpty))
+    },
+  ).provide(layers, datasetLayerFromTriG(trig))
 }

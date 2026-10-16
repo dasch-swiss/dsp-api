@@ -5,11 +5,14 @@
 
 package org.knora.webapi.slice.admin.repo
 
+import org.apache.jena.graph.Triple
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.sparql.algebra.Algebra
 import org.apache.jena.sparql.algebra.OpVisitorBase
 import org.apache.jena.sparql.algebra.OpWalker
 import org.apache.jena.sparql.algebra.op.OpBGP
+import org.apache.jena.sparql.algebra.op.OpConditional
+import org.apache.jena.sparql.algebra.op.OpLeftJoin
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -20,7 +23,6 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.Both
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.ResourcesOnly
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.ValuesOnly
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
@@ -36,8 +38,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
   private val hasPicture = "http://www.knora.org/ontology/0001/anything#hasPicture"
-  private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
-  private val open       = "V knora-admin:UnknownUser"
+  private val graphs     = Seq("http://www.knora.org/data/0001/anything", "http://www.knora.org/data/0001/freetest")
 
   private val itemTypes = List(ItemType.All, ItemType.Resource, ItemType.File, ItemType.Value, ItemType.Comment)
 
@@ -109,39 +110,62 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
     found
   }
 
+  private def optimised(sparql: String) = Algebra.optimize(Algebra.compile(QueryFactory.create(sparql)))
+
+  /** The triples of every basic graph pattern in the optimised algebra of `sparql`. */
+  private def bgpTriples(sparql: String): List[Triple] = {
+    val triples = List.newBuilder[Triple]
+    OpWalker.walk(
+      optimised(sparql),
+      new OpVisitorBase {
+        override def visit(opBGP: OpBGP): Unit = opBGP.getPattern.getList.forEach(t => triples += t)
+      },
+    )
+    triples.result()
+  }
+
+  /** Whether the optimised algebra of `sparql` has an `OPTIONAL`, which Jena evaluates once per input row. */
+  private def hasOptional(sparql: String): Boolean = {
+    var found = false
+    OpWalker.walk(
+      optimised(sparql),
+      new OpVisitorBase {
+        override def visit(op: OpLeftJoin): Unit    = found = true
+        override def visit(op: OpConditional): Unit = found = true
+      },
+    )
+    found
+  }
+
+  private val isDeletedIri = "http://www.knora.org/ontology/knora-base#isDeleted"
+
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
-    suite("class-scoped count queries")(
+    suite("count queries")(
       test("resourceCounts") {
         val select = ViewRestrictionsRepo.resourceCountsQuery(projectIri)
         assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "resourceCounts")
       },
-      test("resourceListing") {
-        val select = ViewRestrictionsRepo.resourceListingQuery(projectIri, thingClass)
-        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "resourceListing")
+      test("projectDataGraphs") {
+        val select = ViewRestrictionsRepo.projectDataGraphsQuery(projectIri)
+        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "projectDataGraphs")
       },
       test("valueCounts") {
-        val select = ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris)
-        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "valueCounts")
+        val select = ViewRestrictionsRepo.valueCountsQuery(graphs)
+        assertTrue(select.timeout == SparqlTimeout.ViewRestrictionsCounts) && assertGolden(select.sparql, "valueCounts")
       },
-    ),
-    suite("sumBatches")(
-      test("rows with the same key add count and commented") {
-        val rows = Seq(
-          ValueCountRow(thingClass, hasText, open, deleted = false, count = 2, commented = 1),
-          ValueCountRow(thingClass, hasText, open, deleted = false, count = 3, commented = 2),
-        )
+      test("valueCounts has one constant-object pattern, the isDeleted false driver") {
+        val constant = bgpTriples(ViewRestrictionsRepo.valueCountsQuery(graphs).sparql).filter(_.getObject.isConcrete)
         assertTrue(
-          ViewRestrictionsRepo.sumBatches(rows) ==
-            Seq(ValueCountRow(thingClass, hasText, open, deleted = false, count = 5, commented = 3)),
+          constant.size == 1,
+          constant.forall(t => t.getPredicate.getURI == isDeletedIri && t.getObject.getLiteralLexicalForm == "false"),
         )
       },
-      test("rows with different keys stay separate") {
-        val rows = Seq(
-          ValueCountRow(thingClass, hasText, open, deleted = false, count = 2, commented = 1),
-          ValueCountRow(thingClass, hasText, open, deleted = true, count = 3, commented = 0),
-          ValueCountRow(thingClass, hasText, "M knora-admin:ProjectMember", deleted = false, count = 1, commented = 0),
-        )
-        assertTrue(ViewRestrictionsRepo.sumBatches(rows).toSet == rows.toSet)
+      test("valueCounts has no OPTIONAL") {
+        assertTrue(!hasOptional(ViewRestrictionsRepo.valueCountsQuery(graphs).sparql))
+      },
+      test("valueCounts scopes the scan to the given graphs") {
+        val q = ViewRestrictionsRepo.valueCountsQuery(graphs).sparql
+        assertTrue(graphs.forall(g => q.contains(s"<$g>")), q.contains("GRAPH ?g"), !q.contains("attachedToProject"))
       },
     ),
     suite("DrillDownBranches.of")(
@@ -197,8 +221,6 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         // because a graph with no matches yields no rows rather than an error. The join stays.
         val all = Seq(
           ViewRestrictionsRepo.resourceCountsQuery(projectIri).sparql,
-          ViewRestrictionsRepo.resourceListingQuery(projectIri, thingClass).sparql,
-          ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris).sparql,
           page(ItemType.All),
         )
         assertTrue(
