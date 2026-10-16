@@ -28,7 +28,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *
  * Two access patterns, deliberately different in shape:
  *
- *   - **Counts** ([[resourceCounts]] + [[valueCounts]]): computed by the triplestore and
+ *   - **Counts** (the resource listing of [[resourceCounts]] plus the batched value queries of
+ *     [[valueCounts]], read through `ViewRestrictionsRowCache`): computed by the triplestore and
  *     grouped by `knora-base:hasPermissions`. Because an object's visibility for the three synthetic
  *     audiences depends only on that literal (see [[ViewRestrictionsService]]), one grouped query answers
  *     every audience and both restriction states at once, and a group's whole population falls out of the
@@ -47,6 +48,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 final case class ViewRestrictionsRepo(
   private val triplestore: TriplestoreService,
   private val projectClassesCache: EhCache[ProjectIri, ProjectClasses],
+  private val valueQueryPermits: Semaphore,
 ) {
 
   /**
@@ -83,6 +85,8 @@ final case class ViewRestrictionsRepo(
   /**
    * The project's current resources counted per class and permission literal. A row that cannot be
    * parsed fails the request.
+   *
+   * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
    */
   def resourceCounts(projectIri: ProjectIri): Task[Seq[ResourceCountRow]] =
     triplestore
@@ -92,38 +96,45 @@ final case class ViewRestrictionsRepo(
   /**
    * One resource class's value counts per property, permission literal and deleted flag.
    *
-   * The class's live resources are listed first and their values counted in batches of `batchSize`
-   * resources, so each query stays within the view-restrictions timeout as a project grows; the batch rows
-   * are summed into the rows a single unbatched query would return. A row that cannot be parsed fails the
-   * request.
+   * The class's live resources are listed first and their values counted in batches of resources, so each
+   * query stays within the view-restrictions timeout as a project grows; the batch rows are summed into the
+   * rows a single unbatched query would return. A class without live resources runs no value query. Row order
+   * is unspecified. A row that cannot be parsed fails the request.
+   *
+   * Callers read through `ViewRestrictionsRowCache`; a direct call bypasses its refresh rule.
    */
-  def valueCounts(
+  def valueCounts(projectIri: ProjectIri, resourceClass: String): Task[Seq[ValueCountRow]] =
+    valueCounts(projectIri, resourceClass, ViewRestrictionsRepo.ValueCountBatchSize)
+
+  private[repo] def valueCounts(
     projectIri: ProjectIri,
     resourceClass: String,
-    batchSize: Int = ViewRestrictionsRepo.ValueCountBatchSize,
-  ): Task[Seq[ValueCountRow]] =
+    batchSize: Int,
+  ): Task[Seq[ValueCountRow]] = {
+    require(batchSize > 0, s"batchSize must be positive, was $batchSize")
     for {
       listing   <- triplestore.query(ViewRestrictionsRepo.resourceListingQuery(projectIri, resourceClass))
       resources <- ZIO.foreach(listing.results.bindings)(parseResourceIri)
       batches    = resources.grouped(batchSize).toSeq
       rows      <- ZIO
                 .foreachPar(batches)(batch =>
-                  triplestore
-                    .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass, batch))
-                    .flatMap(result => ZIO.foreach(result.results.bindings)(parseValueCountRow(resourceClass, _))),
+                  valueQueryPermits.withPermit(
+                    triplestore
+                      .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass, batch))
+                      .flatMap(result => ZIO.foreach(result.results.bindings)(parseValueCountRow(resourceClass, _))),
+                  ),
                 )
                 .withParallelism(ViewRestrictionsRepo.ValueCountBatchParallelism)
     } yield ViewRestrictionsRepo.sumBatches(rows.flatten)
+  }
 
   private def parseResourceIri(row: VariableResultsRow): Task[String] =
-    ZIO
-      .attempt(row.getRequired("resource"))
-      .flatMap(iri =>
-        ZIO
-          .fromEither(Iri.from(iri))
-          .as(iri)
-          .mapError(msg => InconsistentRepositoryDataException(s"Invalid resource IRI in the listing: $msg")),
-      )
+    for {
+      iri <- ZIO.attempt(row.getRequired("resource"))
+      _   <- ZIO
+             .fromEither(Iri.from(iri))
+             .mapError(msg => InconsistentRepositoryDataException(s"Invalid resource IRI in the listing: $msg"))
+    } yield iri
 
   private def parseResourceCountRow(row: VariableResultsRow): Task[ResourceCountRow] =
     ZIO.attempt(
@@ -285,11 +296,18 @@ final case class ViewRestrictionsRepo(
 
 object ViewRestrictionsRepo {
 
-  /** Resources per value-count query; keeps each query well under [[SparqlTimeout.ViewRestrictions]]. */
-  val ValueCountBatchSize: Int = 5000
+  /**
+   * Resources per value-count query. Keeps each query well under [[SparqlTimeout.ViewRestrictions]] and keeps
+   * the form-encoded request body (about 60 bytes for each IRI) under the 200,000-byte default form limit of
+   * Jetty, on which Fuseki runs.
+   */
+  val ValueCountBatchSize: Int = 2000
 
   /** Concurrent batch queries of one class. */
-  val ValueCountBatchParallelism: Int = 2
+  private val ValueCountBatchParallelism: Int = 2
+
+  /** Concurrent batch queries across all requests; limits the load the report puts on the triplestore. */
+  private val ValueQueryPermits: Int = 4
 
   /**
    * How long a resolved [[ProjectClasses]] stays cached.
@@ -311,7 +329,8 @@ object ViewRestrictionsRepo {
                  ),
                )
       triplestore <- ZIO.service[TriplestoreService]
-    } yield ViewRestrictionsRepo(triplestore, cache),
+      permits     <- Semaphore.make(ValueQueryPermits)
+    } yield ViewRestrictionsRepo(triplestore, cache, permits),
   )
 
   /**
@@ -344,8 +363,8 @@ object ViewRestrictionsRepo {
   )
 
   /**
-   * Sums rows with the same class, property, permission literal and deleted flag, as the rows of separate
-   * batches must be to equal the rows of one unbatched query.
+   * Sums rows that share class, property, permission literal and deleted flag, so the batched rows equal the
+   * rows of one unbatched query.
    */
   private[repo] def sumBatches(rows: Seq[ValueCountRow]): Seq[ValueCountRow] =
     rows
@@ -689,7 +708,9 @@ object ViewRestrictionsRepo {
    * Counts the permissioned objects reachable from the given current resources of one class, per property,
    * permission literal and deleted flag. `resources` must not be empty.
    *
-   * `?resource` is bound by `VALUES` first, so each query reads only its batch.
+   * `?resource` is bound by `VALUES` first, so each query reads only its batch. Value counts are always read
+   * in batches of resources, never one query for a whole class, because a whole-class query grows with the
+   * class and can exceed the timeout; the golden file pins the `VALUES` clause.
    *
    * `COUNT(*)` counts each value once: `knora-base:valueHasComment` has max cardinality 1, so the optional
    * comment adds no second row.

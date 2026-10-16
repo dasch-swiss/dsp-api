@@ -13,6 +13,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 
@@ -37,6 +38,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
   private val bookClass  = "http://www.knora.org/ontology/0001/anything#Book"
   private val hasPicture = "http://www.knora.org/ontology/0001/anything#hasPicture"
+  private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
+  private val open       = "V knora-admin:UnknownUser"
 
   /** The common case: every resource carries exactly one class, so no most-specific-class filter is needed. */
   private val singleTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = false)
@@ -126,6 +129,26 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       test("valueCounts") {
         val select = ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris)
         assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "valueCounts")
+      },
+    ),
+    suite("sumBatches")(
+      test("rows with the same key add count and commented") {
+        val rows = Seq(
+          ValueCountRow(thingClass, hasText, open, deleted = false, count = 2, commented = 1),
+          ValueCountRow(thingClass, hasText, open, deleted = false, count = 3, commented = 2),
+        )
+        assertTrue(
+          ViewRestrictionsRepo.sumBatches(rows) ==
+            Seq(ValueCountRow(thingClass, hasText, open, deleted = false, count = 5, commented = 3)),
+        )
+      },
+      test("rows with different keys stay separate") {
+        val rows = Seq(
+          ValueCountRow(thingClass, hasText, open, deleted = false, count = 2, commented = 1),
+          ValueCountRow(thingClass, hasText, open, deleted = true, count = 3, commented = 0),
+          ValueCountRow(thingClass, hasText, "M knora-admin:ProjectMember", deleted = false, count = 1, commented = 0),
+        )
+        assertTrue(ViewRestrictionsRepo.sumBatches(rows).toSet == rows.toSet)
       },
     ),
     suite("project class discovery")(

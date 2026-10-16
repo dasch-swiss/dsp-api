@@ -50,7 +50,7 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "(code 1 — a degraded version is served) separately; the two are disjoint. " +
         "`totalResources` is the class's whole population — restricted or not — and is the denominator " +
         "for the counts here, which are in the same unit. It is derived from the same query rather than " +
-        "from a separate count. Every class with one or more non-deleted resources is reported, including " +
+        "from a separate count. Requesting this report refreshes the project's cached counts. Every class with one or more non-deleted resources is reported, including " +
         "classes with nothing restricted (all-zero counts, non-zero `totalResources`). Takes no item-type filter: resource-level counts are never filtered. " +
         "The user must be project admin or system admin.",
     )
@@ -66,7 +66,8 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ViewRestrictionsValues].example(ViewRestrictionsValues.example))
     .description(
       "Step 2 of the view-restrictions report: the per-audience value-level restriction counts for ONE " +
-        "resource class, answered by a single triplestore query. Clients call this once per class from " +
+        "resource class. The counts are read in batches of resources and may be served from a cache that " +
+        "step 1 refreshes; without a refresh they are at most 10 minutes old. Clients call this once per class from " +
         "the step-1 list, which bounds each request and lets a failure affect only that class's row. " +
         "Counts restricted values inside the class's resources — file values, ordinary values, comments, " +
         "and user link values (standoff link values are not counted) — " +
@@ -290,7 +291,7 @@ object ViewRestrictionsEndpoints {
     )
   }
 
-  /** Step 2: one class's value-level counts, from a single query. */
+  /** Step 2: one class's value-level counts, read in batches of resources and possibly served from a cache that step 1 refreshes (at most 10 minutes old otherwise). */
   final case class ViewRestrictionsValues(
     projectIri: String,
     resourceClass: String,

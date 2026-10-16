@@ -18,9 +18,11 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
  * A short-lived, in-memory cache of the count rows behind the view restrictions reports: the resource counts of a
  * project and the value counts of one of its classes.
  *
- * Concurrent reads of one key run a single load, entries live for [[ViewRestrictionsRowCache.Ttl]], and failed loads
- * are not kept. Requesting the `/classes` report refreshes a project, so its rows are re-read while the per-class
- * rows are dropped.
+ * Concurrent reads of one key run a single load and entries live for ten minutes. A failed load is kept for
+ * `Duration.Zero`; expiry uses a strict "after" check, so a retry at the same clock instant can still see the
+ * failure, and the next instant loads again.
+ *
+ * Besides the TTL, [[refreshProject]] is the only invalidation point; the `/classes` report calls it.
  */
 final case class ViewRestrictionsRowCache(
   private val resourceRows: Cache[ProjectIri, Throwable, Seq[ResourceCountRow]],
@@ -33,16 +35,19 @@ final case class ViewRestrictionsRowCache(
     valueRows.get(ViewRestrictionsRowCache.ValueKey(projectIri, resourceClass))
 
   /**
-   * Re-reads the resource counts of a project and drops the value counts of every class in them.
+   * Re-reads the resource counts of a project and drops the value counts of every class in the union of the
+   * previously cached rows and the fresh rows, so a class that has since lost all its resources is dropped too.
    *
-   * The cache cannot list its keys, so the resource counts are reloaded first and the classes of the fresh rows
-   * name the value entries to drop.
+   * The cache cannot list its keys, so the classes of the two row sets name the value entries to drop. The old
+   * rows are read only when present, so no load happens for them.
    */
   def refreshProject(projectIri: ProjectIri): Task[Seq[ResourceCountRow]] =
     for {
-      _    <- resourceRows.invalidate(projectIri)
-      rows <- resourceRows.get(projectIri)
-      _    <- ZIO.foreachDiscard(rows.map(_.classIri).distinct)(c =>
+      cached <- resourceRows.contains(projectIri)
+      old    <- if (cached) resourceRows.get(projectIri).orElseSucceed(Seq.empty) else ZIO.succeed(Seq.empty)
+      _      <- resourceRows.invalidate(projectIri)
+      rows   <- resourceRows.get(projectIri)
+      _      <- ZIO.foreachDiscard((old ++ rows).map(_.classIri).distinct)(c =>
              valueRows.invalidate(ViewRestrictionsRowCache.ValueKey(projectIri, c)),
            )
     } yield rows
@@ -52,16 +57,16 @@ object ViewRestrictionsRowCache {
 
   final case class ValueKey(projectIri: ProjectIri, resourceClass: String)
 
-  val Ttl: Duration = 10.minutes
+  private val Ttl: Duration = 10.minutes
 
-  val ProjectCapacity: Int = 1000
-  val ClassCapacity: Int   = 20000
+  private val ProjectCapacity: Int = 1000
+  private val ClassCapacity: Int   = 2000
 
   /**
    * Built with `Cache.makeWith` so that only successes are retained for `ttl`, while a failure is given
    * `Duration.Zero` and is loaded again by the next request.
    */
-  def makeCache[K, V](capacity: Int, ttl: Duration)(load: K => Task[V]): UIO[Cache[K, Throwable, V]] =
+  private[service] def makeCache[K, V](capacity: Int, ttl: Duration)(load: K => Task[V]): UIO[Cache[K, Throwable, V]] =
     Cache.makeWith(capacity, Lookup(load)) {
       case Exit.Success(_) => ttl
       case Exit.Failure(_) => Duration.Zero

@@ -61,7 +61,7 @@ final case class ViewRestrictionsService(
 
   /**
    * Step 1 of the stepped report: every resource class that has resources, with its population and its
-   * resource-level restrictions, from a single query.
+   * resource-level restrictions, from a single query. Refreshes the project's cached counts.
    *
    * Rows of classes outside `index.resourceClasses` (list nodes, ontologies, value classes) are dropped on
    * purpose: they carry `attachedToProject` but are not resources. The result is sorted for a reproducible
@@ -69,7 +69,8 @@ final case class ViewRestrictionsService(
    */
   def classSummaries(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
-      index   <- ProjectOntologyIndex.load(ontologyRepo)
+      index <- ProjectOntologyIndex.load(ontologyRepo)
+      // The only invalidation point besides the cache TTL.
       rows    <- rowCache.refreshProject(projectIri)
       counted  = rows.filter(r => index.resourceClasses.contains(r.classIri))
       lookup   = ViewRestrictionsAudience.classify(counted.map(_.permissions).toSet, projectIri)
@@ -80,7 +81,7 @@ final case class ViewRestrictionsService(
                  }
     } yield ViewRestrictionsClasses(projectIri.value, reported.sortBy(c => (c.label, c.id)))
 
-  /** Step 2 of the stepped report: one class's value-level restrictions, from a single query. */
+  /** Step 2 of the stepped report: one class's value-level restrictions, read in batches of resources. */
   def valueCounts(
     projectIri: ProjectIri,
     resourceClass: String,
