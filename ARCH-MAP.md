@@ -603,9 +603,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `modules/webapi/src/test/.../service/<Name>InMemory.scala` - enforcement: review (`CONVENTIONS.md`
         section Services, `REVIEW.md` line 18). Currently violated by `KnoraGroupRepoInMemory`, defined inside
         `KnoraGroupRepoLiveSpec.scala`, and `KnoraProjectRepoInMemory`, at `slice/admin/domain/repo/`.
-    - New SPARQL uses the `sparql"..."` interpolator; existing RDF4J `SparqlBuilder` sites are legacy, and 14
-        of 15 admin query files still use RDF4J, only `ViewRestrictionsRepo.scala` being migrated -
-        enforcement: review (`REVIEW.md` line 43).
+    - New SPARQL uses the `sparql"..."` interpolator; no file in `slice/admin` or `responders/admin` imports the
+        RDF4J `SparqlBuilder` (`git grep -l 'org.eclipse.rdf4j.sparqlbuilder' -- <those paths>`, 2026-10-16) -
+        enforcement: review (`REVIEW.md` § SPARQL).
     - No compile-time or Bazel enforcement exists: all of webapi is one `//modules/webapi:webapi` target with
         `//visibility:public` - enforcement: docs-only.
     - Wiring: shared inventory. Domain services register in `AdminDomainModule.scala`, repos in
