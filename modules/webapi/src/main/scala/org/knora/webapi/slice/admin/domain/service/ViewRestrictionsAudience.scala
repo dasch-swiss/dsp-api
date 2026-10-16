@@ -55,6 +55,16 @@ object ViewRestrictionsAudience {
     )).toMap
 
   /**
+   * The literals that some audience cannot fully see, classified exactly as the counts classify them. The
+   * drill-down selects objects by these literals, so it lists the objects the counts report.
+   */
+  def restrictedLiterals(literals: Set[String], projectIri: ProjectIri): Set[String] =
+    classify(literals, projectIri).collect {
+      case ((literal, _), visibility) if visibility != Visibility.Visible =>
+        literal
+    }.toSet
+
+  /**
    * Stands in for `entityCreator` when classifying a bare permission literal: a value no real
    * `attachedToUser` and no [[audienceUser]] id can take.
    */

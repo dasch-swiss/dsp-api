@@ -7,6 +7,9 @@ package org.knora.webapi.slice.admin.repo
 
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.sparql.algebra.Algebra
+import org.apache.jena.sparql.algebra.OpVisitorBase
+import org.apache.jena.sparql.algebra.OpWalker
+import org.apache.jena.sparql.algebra.op.OpBGP
 import org.junit.runner.RunWith
 import zio.test.*
 
@@ -36,35 +39,16 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
-  private val bookClass  = "http://www.knora.org/ontology/0001/anything#Book"
   private val hasPicture = "http://www.knora.org/ontology/0001/anything#hasPicture"
   private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
   private val open       = "V knora-admin:UnknownUser"
 
-  /** The common case: every resource carries exactly one class, so no most-specific-class filter is needed. */
-  private val singleTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = false)
-
-  /** A project that asserts a class together with one of its ancestors — the filter must be kept. */
-  private val multiTyped = ViewRestrictionsRepo.ProjectClasses(Seq(thingClass), multiTyped = true)
-
-  /**
-   * The `ProjectClasses` shapes the legacy comparison covers, keyed as
-   * [[ViewRestrictionsLegacyFixtures]] keys them: the four combinations of "is there a `VALUES` clause"
-   * and "is the most-specific-class filter needed", plus a two-IRI `VALUES` clause.
-   */
-  private val classesByKey = List(
-    "single"    -> singleTyped,
-    "multi"     -> multiTyped,
-    "two"       -> ViewRestrictionsRepo.ProjectClasses(Seq(thingClass, bookClass), multiTyped = false),
-    "none"      -> ViewRestrictionsRepo.ProjectClasses(Seq.empty, multiTyped = false),
-    "noneMulti" -> ViewRestrictionsRepo.ProjectClasses(Seq.empty, multiTyped = true),
-  )
-
   private val itemTypes = List(ItemType.All, ItemType.Resource, ItemType.File, ItemType.Value, ItemType.Comment)
 
-  private val otherClasses = classesByKey.tail
-  private val twoIris      = Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b")
-  private val oneIri       = Seq("http://rdfh.ch/0001/a")
+  private val resourceLiterals = Set("M knora-admin:ProjectMember")
+  private val valueLiterals    = Set("V knora-admin:KnownUser", "RV knora-admin:UnknownUser|V knora-admin:KnownUser")
+
+  private val twoIris = Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b")
 
   /** Parse and re-serialise, with prefixes expanded, so only the query itself is compared. */
   private def canonical(sparql: String): String = {
@@ -77,44 +61,53 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private def algebra(sparql: String): String = Algebra.compile(QueryFactory.create(sparql)).toString
 
   /** The ported queries, keyed exactly as [[ViewRestrictionsLegacyFixtures]] keys them. */
-  private val actualByKey: Map[String, String] = (
-    List(
-      "projectClassesQuery"        -> ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql,
-      "anyMultiTypedResourceQuery" -> ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri).sparql,
-      "multiTypedQuery"            -> ViewRestrictionsRepo.multiTypedQuery(projectIri).sparql,
-    ) ++ itemTypes.map { it =>
-      s"resourcePageQuery-$it-single-50-25" ->
-        ViewRestrictionsRepo.resourcePageQuery(projectIri, it, thingClass, 50, 25, singleTyped).sparql
-    } ++ otherClasses.map { case (ck, cs) =>
-      s"resourcePageQuery-All-$ck-50-25" ->
-        ViewRestrictionsRepo.resourcePageQuery(projectIri, ItemType.All, thingClass, 50, 25, cs).sparql
-    } ++ List(
-      "resourcePageQuery-All-single-0-25" ->
-        ViewRestrictionsRepo.resourcePageQuery(projectIri, ItemType.All, thingClass, 0, 25, singleTyped).sparql,
-    ) ++ itemTypes.map { it =>
-      s"resourceCountForDrillDownQuery-$it-single" ->
-        ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, it, thingClass, singleTyped).sparql
-    } ++ otherClasses.map { case (ck, cs) =>
-      s"resourceCountForDrillDownQuery-All-$ck" ->
-        ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, ItemType.All, thingClass, cs).sparql
-    } ++ classesByKey.map { case (ck, cs) =>
-      s"resourceQuery-group-$ck-two" ->
-        ViewRestrictionsRepo.resourceQuery(projectIri, Some(thingClass), twoIris, cs).sparql
-    } ++ List(
-      "resourceQuery-noGroup-single-two" ->
-        ViewRestrictionsRepo.resourceQuery(projectIri, None, twoIris, singleTyped).sparql,
-      "resourceQuery-group-single-one" ->
-        ViewRestrictionsRepo.resourceQuery(projectIri, Some(thingClass), oneIri, singleTyped).sparql,
-    ) ++ classesByKey.map { case (ck, cs) =>
-      s"valueQuery-group-$ck-two" ->
-        ViewRestrictionsRepo.valueQuery(projectIri, Some(hasPicture), twoIris, cs).sparql
-    } ++ List(
-      "valueQuery-noGroup-single-two" ->
-        ViewRestrictionsRepo.valueQuery(projectIri, None, twoIris, singleTyped).sparql,
-      "valueQuery-group-single-one" ->
-        ViewRestrictionsRepo.valueQuery(projectIri, Some(hasPicture), oneIri, singleTyped).sparql,
-    )
-  ).toMap
+  private val actualByKey: Map[String, String] = Map(
+    "projectClassesQuery"        -> ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql,
+    "anyMultiTypedResourceQuery" -> ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri).sparql,
+    "multiTypedQuery"            -> ViewRestrictionsRepo.multiTypedQuery(projectIri).sparql,
+  )
+
+  private def page(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
+    ViewRestrictionsRepo.resourcePageQuery(projectIri, itemType, thingClass, 50, 25, resource, value).sparql
+
+  private def count(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
+    ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, itemType, thingClass, resource, value).sparql
+
+  private def resourceRows =
+    ViewRestrictionsRepo.resourceQuery(projectIri, thingClass, twoIris, resourceLiterals).sparql
+  private def valueRows = ViewRestrictionsRepo.valueQuery(projectIri, hasPicture, twoIris, valueLiterals).sparql
+
+  /** Every drill-down query shape: each item type, and each branch alone and together. */
+  private val drillDownQueries: Map[String, String] =
+    (itemTypes.flatMap(it => List(s"page-$it" -> page(it), s"count-$it" -> count(it))) ++ List(
+      "page-All-resourcesOnly"  -> page(ItemType.All, value = Set.empty),
+      "page-All-valuesOnly"     -> page(ItemType.All, resource = Set.empty),
+      "count-All-resourcesOnly" -> count(ItemType.All, value = Set.empty),
+      "count-All-valuesOnly"    -> count(ItemType.All, resource = Set.empty),
+      "resourceQuery"           -> resourceRows,
+      "valueQuery"              -> valueRows,
+    )).toMap
+
+  private val hasPermissionsIri = "http://www.knora.org/ontology/knora-base#hasPermissions"
+
+  /**
+   * Whether the optimised algebra of `sparql` has a basic-graph-pattern triple that matches a constant
+   * `knora-base:hasPermissions` object. That is the shape Jena produces from `?permissions IN (...)` with
+   * plain string literals, and it makes the store scan every object carrying that literal.
+   */
+  private def hasConstantPermissionTriple(sparql: String): Boolean = {
+    val op      = Algebra.optimize(Algebra.compile(QueryFactory.create(sparql)))
+    var found   = false
+    val visitor = new OpVisitorBase {
+      override def visit(opBGP: OpBGP): Unit =
+        if (
+          opBGP.getPattern.getList.stream
+            .anyMatch(t => t.getPredicate.isURI && t.getPredicate.getURI == hasPermissionsIri && t.getObject.isConcrete)
+        ) found = true
+    }
+    OpWalker.walk(op, visitor)
+    found
+  }
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsRepo query generation")(
     suite("class-scoped count queries")(
@@ -182,9 +175,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
           ViewRestrictionsRepo.resourceCountsQuery(projectIri).sparql,
           ViewRestrictionsRepo.resourceListingQuery(projectIri, thingClass).sparql,
           ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris).sparql,
-          ViewRestrictionsRepo
-            .resourcePageQuery(projectIri, ItemType.All, thingClass, offset = 0, limit = 25, singleTyped)
-            .sparql,
+          page(ItemType.All),
         )
         assertTrue(
           all.forall(_.contains(s"knora-base:attachedToProject <${projectIri.value}>")),
@@ -194,9 +185,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
     ),
     suite("drill-down paging")(
       test("the page query orders deterministically and windows in SPARQL") {
-        val q = ViewRestrictionsRepo
-          .resourcePageQuery(projectIri, ItemType.All, thingClass, offset = 50, limit = 25, singleTyped)
-          .sparql
+        val q = page(ItemType.All)
         assertTrue(
           // ordering by the label-or-IRI key then the IRI makes paging reproducible
           q.contains("ORDER BY"),
@@ -207,8 +196,7 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         )
       },
       test("the page total is a COUNT DISTINCT over resources, unwindowed") {
-        val q =
-          ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, ItemType.All, thingClass, singleTyped).sparql
+        val q = count(ItemType.All)
         assertTrue(
           q.contains("COUNT") && q.contains("DISTINCT"),
           q.contains(thingClass),
@@ -218,8 +206,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         )
       },
       test("row queries are scoped to the page's resource IRIs and carry no cap of their own") {
-        val rq = ViewRestrictionsRepo.resourceQuery(projectIri, Some(thingClass), twoIris, singleTyped).sparql
-        val vq = ViewRestrictionsRepo.valueQuery(projectIri, Some(hasPicture), twoIris, singleTyped).sparql
+        val rq = resourceRows
+        val vq = valueRows
         assertTrue(
           twoIris.forall(rq.contains),
           twoIris.forall(vq.contains),
@@ -234,10 +222,72 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         )
       },
     ),
+    suite("drill-down permission selection")(
+      test("a literal with a quote and a backslash is escaped in the IN list") {
+        val q = page(ItemType.Resource, resource = Set("""a"b\c"""))
+        assertTrue(q.contains("""STR(?permissions) IN ("a\"b\\c")"""))
+      },
+      test(
+        "an All page query carries the resource list in the resource branch and the value list in the value branch",
+      ) {
+        val Array(resourceBranch, valueBranch) = page(ItemType.All).split("UNION")
+        assertTrue(
+          resourceLiterals.forall(l => resourceBranch.contains(s""""$l"""")),
+          valueLiterals.forall(l => !resourceBranch.contains(s""""$l"""")),
+          valueLiterals.forall(l => valueBranch.contains(s""""$l"""")),
+          resourceLiterals.forall(l => !valueBranch.contains(s""""$l"""")),
+        )
+      },
+      test("an All count query carries one list per branch") {
+        val Array(resourceBranch, valueBranch) = count(ItemType.All).split("UNION")
+        assertTrue(
+          resourceLiterals.forall(l => resourceBranch.contains(s""""$l"""")),
+          valueLiterals.forall(l => valueBranch.contains(s""""$l"""")),
+          valueLiterals.forall(l => !resourceBranch.contains(s""""$l"""")),
+        )
+      },
+      test("a branch with an empty list is left out") {
+        val valuesOnly    = page(ItemType.All, resource = Set.empty)
+        val resourcesOnly = page(ItemType.All, value = Set.empty)
+        assertTrue(
+          !valuesOnly.contains("UNION"),
+          valuesOnly.contains("knora-base:hasValue"),
+          !resourcesOnly.contains("UNION"),
+          !resourcesOnly.contains("knora-base:hasValue"),
+        )
+      },
+      test("value branches skip standoff link values and no query tests for LinkValue") {
+        assertTrue(
+          drillDownQueries
+            .filter(_._1.matches(".*(Value|All|Comment|File).*"))
+            .values
+            .forall(q => !q.contains("a knora-base:LinkValue")),
+          page(ItemType.Value).contains("FILTER (?prop != knora-base:hasStandoffLinkToValue)"),
+          valueRows.contains("FILTER (?prop != knora-base:hasStandoffLinkToValue)"),
+        )
+      },
+      test("no drill-down query uses REGEX or the project class list") {
+        assertTrue(drillDownQueries.values.forall(q => !q.contains("REGEX") && !q.contains("VALUES ?resClass")))
+      },
+      suite("the optimised algebra has no constant hasPermissions triple")(
+        drillDownQueries.toList.sortBy(_._1).map { case (name, q) =>
+          test(name)(assertTrue(!hasConstantPermissionTriple(q)))
+        }*,
+      ),
+      test("the check catches a plain IN over the permission variable") {
+        val plain =
+          """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+            |SELECT ?value WHERE {
+            |  ?value knora-base:hasPermissions ?permissions .
+            |  FILTER (?permissions IN ("M knora-admin:ProjectMember", "V knora-admin:KnownUser"))
+            |}""".stripMargin
+        assertTrue(hasConstantPermissionTriple(plain))
+      },
+    ),
     suite("matches the RDF4J builder it was ported from")(
-      ViewRestrictionsLegacyFixtures.byKey.toList.sortBy(_._1).map { case (key, legacy) =>
+      actualByKey.toList.sortBy(_._1).map { case (key, actual) =>
         test(key) {
-          val actual = actualByKey(key)
+          val legacy = ViewRestrictionsLegacyFixtures.byKey(key)
           assertTrue(
             canonical(actual) == canonical(legacy),
             algebra(actual) == algebra(legacy),

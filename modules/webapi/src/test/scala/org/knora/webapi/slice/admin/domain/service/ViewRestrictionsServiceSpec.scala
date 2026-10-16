@@ -369,13 +369,18 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   // ----- a resource typed as several classes in one hierarchy must not be counted per class -----
 
   private val multiTypedSuite = suite("resources typed as several classes in one hierarchy")(
-    test("the drill-down lists the resource once for its most specific class") {
+    test("the drill-down lists the resource under each of its classes") {
       for {
-        page <- service(_.items(projectIri, subThingClass, ItemType.All, PageAndSize.Default))
+        sub   <- service(_.items(projectIri, subThingClass, ItemType.All, PageAndSize.Default))
+        thing <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
       } yield assertTrue(
-        page.pagination.totalItems == 1,
-        page.data.size == 1,
-        page.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+        sub.pagination.totalItems == 1,
+        sub.data.size == 1,
+        sub.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+        sub.data.head.resourceClassIri == subThingClass,
+        thing.pagination.totalItems == 1,
+        thing.data.map(_.resourceIri) == Seq("http://rdfh.ch/0001/multiTyped"),
+        thing.data.head.resourceClassIri == thingClass,
       )
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
   )
@@ -421,8 +426,13 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val standoffValueIri = s"$linkHost/values/standoff"
   private val standoffValue    = valueTurtle(standoffValueIri, "kb:LinkValue", "M knora-admin:ProjectMember")
 
+  private val linkPropertiesTurtle: String =
+    s"""<$hasOtherThingVal> rdfs:subPropertyOf kb:hasValue .
+       |<$standoffLinkValue> rdfs:subPropertyOf kb:hasValue .
+       |""".stripMargin
+
   private val hasOtherThingTurtle: String =
-    turtlePrefixes +
+    turtlePrefixes + linkPropertiesTurtle +
       resourceTurtle(
         linkHost,
         thingClass,
@@ -440,7 +450,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
   /** The same host without the user link value: only the standoff link value is restricted. */
   private val standoffOnlyTurtle: String =
-    turtlePrefixes +
+    turtlePrefixes + linkPropertiesTurtle +
       resourceTurtle(
         linkHost,
         thingClass,
@@ -505,6 +515,63 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         result.classes.map(c => c.id -> c.totalResources).toMap == Map(thingClass -> 1, subThingClass -> 1),
       )
     }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+  )
+
+  private val anonymousOpenButRestrictedForKnownUsers = "V knora-admin:UnknownUser|RV knora-admin:KnownUser"
+
+  private val mixedClauseTurtle: String =
+    turtlePrefixes +
+      resourceTurtle(
+        "http://rdfh.ch/0001/mixedClause",
+        thingClass,
+        "Mixed clause",
+        anonymousOpenButRestrictedForKnownUsers,
+      )
+
+  private val linkDrillDownSuite = suite("the class drill-down")(
+    test("lists a restricted user link value as a Value item") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+        items = page.data.flatMap(_.items)
+      } yield assertTrue(
+        page.data.map(_.resourceIri) == Seq(linkHost),
+        items.map(i => i.`type` -> i.valueIri) == Seq(ItemType.Value -> Some(linkValueIri)),
+        page.pagination.totalItems == 1,
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(hasOtherThingTurtle)),
+    test("does not list a restricted standoff link value") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.isEmpty, page.pagination.totalItems == 0)
+    }.provide(commonLayers, datasetLayerFromTurtle(standoffOnlyTurtle)),
+    test("lists a resource whose literal is open to anonymous users but restricted for authenticated users") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(
+        page.data.map(_.resourceIri) == Seq("http://rdfh.ch/0001/mixedClause"),
+        page.data.head.resourceVisibility ==
+          ItemVisibility(Visibility.Visible, Visibility.RestrictedView, Visibility.RestrictedView),
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(mixedClauseTurtle)),
+    test("sets the resource class on every listed resource") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.nonEmpty, page.data.forall(_.resourceClassIri == thingClass))
+    }.provide(commonLayers, datasetLayerFromTurtle(turtle)),
+    test("sets the resource class on every resource listed through a value") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.nonEmpty, page.data.forall(_.resourceClassIri == thingClass))
+    }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
+    test("the number of listed Value items equals the anonymous hidden plus restricted-view value count") {
+      // Both sides count values: every restricted value of the fixture is hidden for anonymous users.
+      for {
+        page   <- service(_.items(projectIri, thingClass, ItemType.Value, PageAndSize.Default))
+        counts <- service(_.valueCounts(projectIri, thingClass, ValueItemType.Value))
+        listed  = page.data.flatMap(_.items).count(_.`type` == ItemType.Value)
+        anon    = counts.counts.anonymous
+      } yield assertTrue(listed == 1, listed == anon.hidden + anon.restrictedView)
+    }.provide(commonLayers, datasetLayerFromTurtle(hasOtherThingTurtle)),
   )
 
   // ----- stepped report (DEV-6778) -----
@@ -656,6 +723,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     multiTypedSuite,
     steppedSuite,
     valueClassificationSuite,
+    linkDrillDownSuite,
     graphScopingSuite,
   )
 }

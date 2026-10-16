@@ -37,8 +37,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *     service classifies the rows with `ProjectOntologyIndex`; [[ProjectClasses]] is not involved.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
  *     query is always narrowed to one resource class, ordered deterministically, and windowed with
- *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`. Only these queries use
- *     [[projectClasses]].
+ *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`. The objects are selected by
+ *     the permission literals the service classifies as restricted, so the drill-down lists what the counts
+ *     report; [[ProjectClasses]] is not involved.
  *
  * Values carry their own `hasPermissions`/`attachedToUser`, so resources and values are queried separately.
  * File values are distinguished by `rdfs:subClassOf* knora-base:FileValue`; a value carrying
@@ -162,6 +163,10 @@ final case class ViewRestrictionsRepo(
    *
    * Paging is over *resources* (the unit the API returns), not raw rows: the page window is applied in
    * SPARQL to the resource list, then the rows for exactly those resources are fetched.
+   *
+   * `resourceRestricted` and `valueRestricted` are the permission literals that select the restricted
+   * resources and values; see [[ViewRestrictionsRepo.resourcePageQuery]]. When the literals the item type
+   * needs are all empty, nothing can qualify and no query runs.
    */
   def findRestrictedObjects(
     projectIri: ProjectIri,
@@ -169,32 +174,44 @@ final case class ViewRestrictionsRepo(
     group: String,
     offset: Int,
     limit: Int,
-    classes: ProjectClasses,
-  ): Task[Seq[RestrictedObjectRow]] = {
-    val effective = itemType
-    for {
-      pageIris <-
-        triplestore
-          .query(ViewRestrictionsRepo.resourcePageQuery(projectIri, effective, group, offset, limit, classes))
-          .map(_.flatMap(_.get("resource")))
-      rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
-              else fetchRowsFor(projectIri, effective, group, pageIris, classes)
-    } yield rows
-  }
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
+  ): Task[Seq[RestrictedObjectRow]] =
+    if (!ViewRestrictionsRepo.hasBranch(itemType, resourceRestricted, valueRestricted)) ZIO.succeed(Seq.empty)
+    else
+      for {
+        pageIris <-
+          triplestore
+            .query(
+              ViewRestrictionsRepo.resourcePageQuery(
+                projectIri,
+                itemType,
+                group,
+                offset,
+                limit,
+                resourceRestricted,
+                valueRestricted,
+              ),
+            )
+            .map(_.flatMap(_.get("resource")))
+        rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
+                else fetchRowsFor(projectIri, itemType, group, pageIris, resourceRestricted, valueRestricted)
+      } yield rows
 
   private def fetchRowsFor(
     projectIri: ProjectIri,
     itemType: ItemType,
     group: String,
     resourceIris: Seq[String],
-    classes: ProjectClasses,
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
   ): Task[Seq[RestrictedObjectRow]] = {
-    val wantResources = ViewRestrictionsRepo.wantResources(itemType)
-    val wantValues    = ViewRestrictionsRepo.wantValues(itemType)
+    val wantResources = ViewRestrictionsRepo.wantResources(itemType) && resourceRestricted.nonEmpty
+    val wantValues    = ViewRestrictionsRepo.wantValues(itemType) && valueRestricted.nonEmpty
     for {
-      resources <- if (wantResources) runResourceQuery(projectIri, group, resourceIris, classes)
+      resources <- if (wantResources) runResourceQuery(projectIri, group, resourceIris, resourceRestricted)
                    else ZIO.succeed(Seq.empty)
-      values <- if (wantValues) runValueQuery(projectIri, group, itemType, resourceIris, classes)
+      values <- if (wantValues) runValueQuery(projectIri, group, itemType, resourceIris, valueRestricted)
                 else ZIO.succeed(Seq.empty)
     } yield resources ++ values
   }
@@ -204,22 +221,26 @@ final case class ViewRestrictionsRepo(
     projectIri: ProjectIri,
     itemType: ItemType,
     group: String,
-    classes: ProjectClasses,
-  ): Task[Int] = {
-    val effective = itemType
-    triplestore
-      .query(ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, effective, group, classes))
-      .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
-  }
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
+  ): Task[Int] =
+    if (!ViewRestrictionsRepo.hasBranch(itemType, resourceRestricted, valueRestricted)) ZIO.succeed(0)
+    else
+      triplestore
+        .query(
+          ViewRestrictionsRepo
+            .resourceCountForDrillDownQuery(projectIri, itemType, group, resourceRestricted, valueRestricted),
+        )
+        .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
 
   private def runResourceQuery(
     projectIri: ProjectIri,
     group: String,
     resourceIris: Seq[String],
-    classes: ProjectClasses,
+    resourceRestricted: Set[String],
   ): Task[Seq[RestrictedObjectRow]] =
     triplestore
-      .query(ViewRestrictionsRepo.resourceQuery(projectIri, Some(group), resourceIris, classes))
+      .query(ViewRestrictionsRepo.resourceQuery(projectIri, group, resourceIris, resourceRestricted))
       .map(_.map { row =>
         val resource = row.getRequired("resource")
         val resClass = row.getRequired("resClass")
@@ -246,10 +267,10 @@ final case class ViewRestrictionsRepo(
     group: String,
     itemType: ItemType,
     resourceIris: Seq[String],
-    classes: ProjectClasses,
+    valueRestricted: Set[String],
   ): Task[Seq[RestrictedObjectRow]] =
     triplestore
-      .query(ViewRestrictionsRepo.valueQuery(projectIri, Some(group), resourceIris, classes))
+      .query(ViewRestrictionsRepo.valueQuery(projectIri, group, resourceIris, valueRestricted))
       .map(_.flatMap { row =>
         val resource   = row.getRequired("resource")
         val resClass   = row.getRequired("resClass")
@@ -486,19 +507,6 @@ object ViewRestrictionsRepo {
   }
 
   /**
-   * A permission-literal grants View-or-better to anonymous users when a `V`/`M`/`D`/`CR` clause lists
-   * `knora-admin:UnknownUser` (groups within a clause are comma-separated, clauses are `|`-separated).
-   * Such an object is fully visible to all three audiences, so it contributes 0 to every count and can be
-   * dropped in the query — this keeps every query proportional to the number of *restrictions* rather than
-   * the total number of values. The authoritative per-audience decision still happens in Scala via
-   * PermissionUtilADM; this only removes provably-open rows, so it is conservative.
-   *
-   * The drill-down queries use it in `FILTER(!REGEX(?permissions, …))`; the count queries deliberately do
-   * not, since keeping every literal is what makes a group's whole population derivable from its rows.
-   */
-  private val grantsViewToAnonymousRegex = "(^|[|])(V|M|D|CR) [^|]*knora-admin:UnknownUser"
-
-  /**
    * Narrows a value pattern to one item type. `File`/`Value` need the file-ness of the value decided in
    * the query (not just reported), and `Comment` needs the comment to exist; `All` and `Resource` add
    * nothing, and their templates then also omit the group that would isolate the skeleton from a
@@ -528,12 +536,8 @@ object ViewRestrictionsRepo {
    * set than the drill-down would be worse than no count, and `ViewRestrictionsQuerySpec` pins that.
    * The count queries count a resource typed with two classes once for each class.
    *
-   * Two skeleton details are load-bearing and repeated deliberately in every drill-down template:
+   * One skeleton detail is load-bearing and repeated deliberately in every drill-down template:
    *
-   *   - `?resClass` is pinned to the resource's **most specific asserted** class whenever the caller's
-   *     answer depends on how many rows a resource contributes — see `ProjectClasses.resClassPatterns`.
-   *     Without that, a resource asserted as (or inferred to be) several classes in one hierarchy binds
-   *     `?resClass` once per class, which duplicates it in the drill-down.
    *   - `knora-base:attachedToUser ?creator` is present only where the creator is projected or
    *     constrained. In the drill-down's permission probes it is an unconstrained join whose only effect is
    *     to multiply intermediate rows, and the creator cannot change the decision for a synthetic audience
@@ -745,13 +749,49 @@ object ViewRestrictionsRepo {
   }
 
   /**
+   * Whether the drill-down of `itemType` has a branch to run: a resource branch needs a restricted resource
+   * literal, a value branch a restricted value literal. Without a branch nothing can qualify.
+   */
+  private[repo] def hasBranch(
+    itemType: ItemType,
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
+  ): Boolean =
+    (wantResources(itemType) && resourceRestricted.nonEmpty) || (wantValues(itemType) && valueRestricted.nonEmpty)
+
+  /**
+   * `FILTER (STR(?permissions) IN ("a", "b", ...))`: keeps the objects whose permission literal is one of
+   * `literals`, the restricted literals of the same classification the counts use
+   * (`ViewRestrictionsAudience.restrictedLiterals`). `literals` must not be empty.
+   *
+   * `STR()` is deliberate. Jena rewrites `?permissions IN ("a", ...)` over plain string literals into a
+   * `UNION` with each literal placed in the triple pattern, which makes
+   * `?value knora-base:hasPermissions "a"` scan every object in the store that carries that literal.
+   * `STR(?permissions)` is not a variable, so the rewrite does not apply and the permission is matched
+   * on the rows already bound by `?resource ?prop ?value`.
+   */
+  private def permissionFilter(literals: Set[String]): Fragment = {
+    require(literals.nonEmpty, "a permission filter needs at least one literal")
+    val list = Fragment.join(literals.toSeq.sorted.map(Literal.string(_).toFragment), Fragment.raw(", "))
+    sparql"FILTER (STR(?permissions) IN ($list))"
+  }
+
+  /**
    * One page of distinct resource IRIs for the drill-down, ordered by label then IRI so that paging is
    * reproducible, windowed in SPARQL with `LIMIT`/`OFFSET`.
    *
    * A resource qualifies if it is itself restricted or carries a restricted value under the active filter,
    * mirroring what the row queries return — hence three templates, one per branch shape the filter
-   * produces: whole resources only, values only, or a `UNION` of both. Paging is over *resources*, the unit
-   * the API returns, so that a resource can never straddle a page boundary.
+   * produces: whole resources only, values only, or a `UNION` of both. A branch is left out when its
+   * item type is not asked for or its literal list is empty (see [[hasBranch]]; at least one branch must
+   * remain). Paging is over *resources*, the unit the API returns, so that a resource can never straddle
+   * a page boundary.
+   *
+   * The restricted objects are selected by permission literal, not by pattern: `resourceRestricted` and
+   * `valueRestricted` come from the same classification as the counts, so the list holds the objects the
+   * counts report. See [[permissionFilter]] for why the literal is matched through `STR()`. A value counts
+   * unless its property is `knora-base:hasStandoffLinkToValue`: a user link value is listed, a standoff
+   * link value is not.
    *
    * The restriction filter stays inside the branch, i.e. before the label `OPTIONAL` is joined in.
    * [[resourceCountForDrillDownQuery]] repeats these branches verbatim so the page and its total cannot
@@ -763,29 +803,31 @@ object ViewRestrictionsRepo {
     group: String,
     offset: Int,
     limit: Int,
-    classes: ProjectClasses,
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
   ): Select = {
-    val project    = Iri.unsafeFrom(projectIri.value)
-    val groupClass = Iri.unsafeFrom(group)
-    val open       = Literal.string(grantsViewToAnonymousRegex)
-    val sparqlText =
-      if (!wantValues(itemType))
+    require(hasBranch(itemType, resourceRestricted, valueRestricted), "the drill-down has no branch to query")
+    val project             = Iri.unsafeFrom(projectIri.value)
+    val groupClass          = Iri.unsafeFrom(group)
+    val withResources       = wantResources(itemType) && resourceRestricted.nonEmpty
+    val withValues          = wantValues(itemType) && valueRestricted.nonEmpty
+    lazy val resourceFilter = permissionFilter(resourceRestricted)
+    val sparqlText          =
+      if (!withValues)
         // Resource-only filter: the resource itself must be restricted.
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
                  |SELECT DISTINCT ?resource ?labelOrIri
                  |WHERE {
-                 |  ${classes.valuesClause}
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    BIND($groupClass AS ?resClass)
+                 |    $resourceFilter
                  |  }
                  |  OPTIONAL { ?resource rdfs:label ?label . }
                  |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
@@ -793,7 +835,7 @@ object ViewRestrictionsRepo {
                  |ORDER BY ASC(?labelOrIri) ASC(?resource)
                  |LIMIT ${Literal.int(limit)}
                  |OFFSET ${Literal.int(offset)}"""
-      else if (!wantResources(itemType))
+      else if (!withResources)
         // Value-only filter: the resource must carry a restricted value of the requested kind. The
         // skeleton gets a group of its own so the item-type constraint cannot merge into its BGP.
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -801,13 +843,12 @@ object ViewRestrictionsRepo {
                  |
                  |SELECT DISTINCT ?resource ?labelOrIri
                  |WHERE {
-                 |  ${classes.valuesClause}
                  |  {
                  |    {
-                 |      ?resource a ?resClass ;
+                 |      ?resource a $groupClass ;
                  |        knora-base:attachedToProject $project ;
                  |        knora-base:isDeleted false .
-                 |      ${classes.resClassPatterns(dedupeRows = true)}
+                 |      BIND($groupClass AS ?resClass)
                  |      {
                  |        ?resource ?prop ?value .
                  |        ?prop rdfs:subPropertyOf* knora-base:hasValue .
@@ -815,11 +856,10 @@ object ViewRestrictionsRepo {
                  |      ?value knora-base:attachedToUser ?creator ;
                  |        knora-base:hasPermissions ?permissions ;
                  |        knora-base:isDeleted false .
-                 |      FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |      FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |    }
                  |    ${itemTypeConstraint(itemType).whenSome(identity)}
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    ${permissionFilter(valueRestricted)}
                  |  }
                  |  OPTIONAL { ?resource rdfs:label ?label . }
                  |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
@@ -834,23 +874,21 @@ object ViewRestrictionsRepo {
                  |
                  |SELECT DISTINCT ?resource ?labelOrIri
                  |WHERE {
-                 |  ${classes.valuesClause}
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    BIND($groupClass AS ?resClass)
+                 |    $resourceFilter
                  |  }
                  |  UNION
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    BIND($groupClass AS ?resClass)
                  |    {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
@@ -858,9 +896,8 @@ object ViewRestrictionsRepo {
                  |    ?value knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
+                 |    ${permissionFilter(valueRestricted)}
                  |  }
                  |  OPTIONAL { ?resource rdfs:label ?label . }
                  |  BIND(COALESCE(?label, STR(?resource)) AS ?labelOrIri)
@@ -883,40 +920,41 @@ object ViewRestrictionsRepo {
     projectIri: ProjectIri,
     itemType: ItemType,
     group: String,
-    classes: ProjectClasses,
+    resourceRestricted: Set[String],
+    valueRestricted: Set[String],
   ): Select = {
-    val project    = Iri.unsafeFrom(projectIri.value)
-    val groupClass = Iri.unsafeFrom(group)
-    val open       = Literal.string(grantsViewToAnonymousRegex)
-    val sparqlText =
-      if (!wantValues(itemType))
+    require(hasBranch(itemType, resourceRestricted, valueRestricted), "the drill-down has no branch to query")
+    val project             = Iri.unsafeFrom(projectIri.value)
+    val groupClass          = Iri.unsafeFrom(group)
+    val withResources       = wantResources(itemType) && resourceRestricted.nonEmpty
+    val withValues          = wantValues(itemType) && valueRestricted.nonEmpty
+    lazy val resourceFilter = permissionFilter(resourceRestricted)
+    val sparqlText          =
+      if (!withValues)
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
                  |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
                  |WHERE {
-                 |  ${classes.valuesClause}
-                 |  ?resource a ?resClass ;
+                 |  ?resource a $groupClass ;
                  |    knora-base:attachedToProject $project ;
                  |    knora-base:attachedToUser ?creator ;
                  |    knora-base:hasPermissions ?permissions ;
                  |    knora-base:isDeleted false .
-                 |  ${classes.resClassPatterns(dedupeRows = true)}
-                 |  FILTER (!REGEX(?permissions, $open))
-                 |  FILTER (?resClass = $groupClass)
+                 |  BIND($groupClass AS ?resClass)
+                 |  $resourceFilter
                  |}"""
-      else if (!wantResources(itemType))
+      else if (!withResources)
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
                  |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
                  |WHERE {
-                 |  ${classes.valuesClause}
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    BIND($groupClass AS ?resClass)
                  |    {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
@@ -924,11 +962,10 @@ object ViewRestrictionsRepo {
                  |    ?value knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+                 |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |  }
                  |  ${itemTypeConstraint(itemType).whenSome(identity)}
-                 |  FILTER (!REGEX(?permissions, $open))
-                 |  FILTER (?resClass = $groupClass)
+                 |  ${permissionFilter(valueRestricted)}
                  |}"""
       else
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -936,23 +973,21 @@ object ViewRestrictionsRepo {
                  |
                  |SELECT (COUNT(DISTINCT ?resource) AS ?cnt)
                  |WHERE {
-                 |  ${classes.valuesClause}
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    BIND($groupClass AS ?resClass)
+                 |    $resourceFilter
                  |  }
                  |  UNION
                  |  {
-                 |    ?resource a ?resClass ;
+                 |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
                  |      knora-base:isDeleted false .
-                 |    ${classes.resClassPatterns(dedupeRows = true)}
+                 |    BIND($groupClass AS ?resClass)
                  |    {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
@@ -960,9 +995,8 @@ object ViewRestrictionsRepo {
                  |    ?value knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
-                 |    FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
-                 |    FILTER (!REGEX(?permissions, $open))
-                 |    FILTER (?resClass = $groupClass)
+                 |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
+                 |    ${permissionFilter(valueRestricted)}
                  |  }
                  |}"""
     Select(sparqlText.render, SparqlTimeout.ViewRestrictions)
@@ -970,32 +1004,31 @@ object ViewRestrictionsRepo {
 
   /**
    * The restriction-bearing resource rows for an explicit set of resource IRIs (one drill-down page).
-   * Unbounded by design: the IRI list is already the page window.
+   * Unbounded by design: the IRI list is already the page window. `resourceRestricted` must not be empty.
    */
   private[repo] def resourceQuery(
     projectIri: ProjectIri,
-    group: Option[String],
+    group: String,
     resourceIris: Seq[String],
-    classes: ProjectClasses,
+    resourceRestricted: Set[String],
   ): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
+    val project    = Iri.unsafeFrom(projectIri.value)
+    val groupClass = Iri.unsafeFrom(group)
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |
                |SELECT DISTINCT ?resource ?resClass ?label ?creator ?permissions
                |WHERE {
-               |  ${classes.valuesClause}
-               |  ?resource a ?resClass ;
+               |  ?resource a $groupClass ;
                |    knora-base:attachedToProject $project ;
                |    knora-base:attachedToUser ?creator ;
                |    knora-base:hasPermissions ?permissions ;
                |    knora-base:isDeleted false .
-               |  ${classes.resClassPatterns(dedupeRows = true)}
+               |  BIND($groupClass AS ?resClass)
                |  OPTIONAL { ?resource rdfs:label ?label . }
-               |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+               |  ${permissionFilter(resourceRestricted)}
                |  ${Fragments.filterIn(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
-               |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
     )
@@ -1005,26 +1038,27 @@ object ViewRestrictionsRepo {
    * The restriction-bearing value rows for an explicit set of resource IRIs (one drill-down page).
    * `?fileClass` is bound when the value is a `knora-base:FileValue`, `?comment` when it carries a
    * `knora-base:valueHasComment` — both reported rather than filtered on, since this query returns every
-   * kind of value and the caller decides which item rows a value yields.
+   * kind of value and the caller decides which item rows a value yields. `valueRestricted` must not be
+   * empty.
    */
   private[repo] def valueQuery(
     projectIri: ProjectIri,
-    group: Option[String],
+    group: String,
     resourceIris: Seq[String],
-    classes: ProjectClasses,
+    valueRestricted: Set[String],
   ): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
+    val project    = Iri.unsafeFrom(projectIri.value)
+    val groupClass = Iri.unsafeFrom(group)
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |
                |SELECT DISTINCT ?resource ?resClass ?label ?prop ?value ?fileClass ?comment ?creator ?permissions
                |WHERE {
-               |  ${classes.valuesClause}
-               |  ?resource a ?resClass ;
+               |  ?resource a $groupClass ;
                |    knora-base:attachedToProject $project ;
                |    knora-base:isDeleted false .
-               |  ${classes.resClassPatterns(dedupeRows = true)}
+               |  BIND($groupClass AS ?resClass)
                |  {
                |    ?resource ?prop ?value .
                |    ?prop rdfs:subPropertyOf* knora-base:hasValue .
@@ -1032,16 +1066,15 @@ object ViewRestrictionsRepo {
                |  ?value knora-base:attachedToUser ?creator ;
                |    knora-base:hasPermissions ?permissions ;
                |    knora-base:isDeleted false .
-               |  FILTER NOT EXISTS { ?value a knora-base:LinkValue . }
+               |  FILTER (?prop != knora-base:hasStandoffLinkToValue)
                |  OPTIONAL { ?resource rdfs:label ?label . }
                |  OPTIONAL {
                |    ?value a ?fileClass .
                |    ?fileClass rdfs:subClassOf* knora-base:FileValue .
                |  }
                |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
-               |  FILTER (!REGEX(?permissions, ${Literal.string(grantsViewToAnonymousRegex)}))
+               |  ${permissionFilter(valueRestricted)}
                |  ${Fragments.filterIn(Variable("resource"), resourceIris.map(Iri.unsafeFrom))}
-               |  ${group.whenSome(g => sparql"FILTER (?resClass = ${Iri.unsafeFrom(g)})")}
                |}""".render,
       SparqlTimeout.ViewRestrictions,
     )

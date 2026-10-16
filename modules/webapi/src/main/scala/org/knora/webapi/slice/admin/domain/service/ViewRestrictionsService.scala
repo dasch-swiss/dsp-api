@@ -116,6 +116,14 @@ final case class ViewRestrictionsService(
     beforeHash.split('/').lastOption.getOrElse(beforeHash)
   }
 
+  /**
+   * The restricted resources of one class, with their restricted parts nested, one page at a time.
+   *
+   * The objects are selected by permission literal: the literals of the class's cached count rows are
+   * classified by [[ViewRestrictionsAudience.restrictedLiterals]], the classification the counts use, so the
+   * drill-down lists the objects the counts report. When no literal the item type needs is restricted,
+   * the page is empty and no drill-down query runs.
+   */
   def items(
     projectIri: ProjectIri,
     resourceClass: String,
@@ -123,24 +131,40 @@ final case class ViewRestrictionsService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
+      index             <- ProjectOntologyIndex.load(ontologyRepo)
+      resourceRows      <- rowCache.resourceCounts(projectIri)
+      valueRows         <- rowCache.valueCounts(projectIri, resourceClass)
+      resourceRestricted = ViewRestrictionsAudience.restrictedLiterals(
+                             resourceRows.filter(_.classIri == resourceClass).map(_.permissions).toSet,
+                             projectIri,
+                           )
+      valueRestricted = ViewRestrictionsAudience.restrictedLiterals(
+                          valueRows
+                            .filterNot(_.deleted)
+                            .filter(r => index.valueProperties.contains(r.propertyIri))
+                            .map(_.permissions)
+                            .toSet,
+                          projectIri,
+                        )
       // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
       // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
-      classes <- repo.projectClasses(projectIri)
       // The page total and the page itself are independent reads, so they go out together rather than one
       // after the other. They are separate transactions, not a snapshot: a concurrent write between them
       // can leave `totalItems` inconsistent with the rows — as it could before, when they ran in sequence.
-      totalAndRows <- repo
-                        .countRestrictedResources(projectIri, itemType, resourceClass, classes)
-                        .zipPar(
-                          repo.findRestrictedObjects(
-                            projectIri,
-                            itemType,
-                            resourceClass,
-                            offset = pageAndSize.size * (pageAndSize.page - 1),
-                            limit = pageAndSize.size,
-                            classes,
-                          ),
-                        )
+      totalAndRows <-
+        repo
+          .countRestrictedResources(projectIri, itemType, resourceClass, resourceRestricted, valueRestricted)
+          .zipPar(
+            repo.findRestrictedObjects(
+              projectIri,
+              itemType,
+              resourceClass,
+              offset = pageAndSize.size * (pageAndSize.page - 1),
+              limit = pageAndSize.size,
+              resourceRestricted,
+              valueRestricted,
+            ),
+          )
       (total, rows) = totalAndRows
       // Assemble one RestrictedResource per affected resource, with its restricted parts nested under it.
       byResource = rows.groupBy(_.resourceIri).toSeq.map { case (resourceIri, resourceRows) =>

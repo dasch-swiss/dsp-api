@@ -152,6 +152,27 @@ class ViewRestrictionsAudienceSpec extends ZIOSpecDefault {
     },
   )
 
+  private val restrictedLiteralsSuite = suite("restrictedLiterals")(
+    test("keeps the literals some audience cannot fully see and drops the open ones") {
+      val restricted = ViewRestrictionsAudience.restrictedLiterals(literals.toSet, projectIri)
+      assertTrue(
+        !restricted.contains("V knora-admin:UnknownUser"),
+        restricted.contains("M knora-admin:ProjectMember"),
+        restricted.contains("V knora-admin:KnownUser"),
+        restricted.contains("RV knora-admin:UnknownUser|V knora-admin:KnownUser"),
+        restricted.contains("CR knora-admin:Creator"),
+        !restricted.contains("CR knora-admin:Creator|V knora-admin:UnknownUser"),
+      )
+    },
+    test("a literal open to anonymous users through a later clause is restricted for authenticated users") {
+      val literal = "V knora-admin:UnknownUser|RV knora-admin:KnownUser"
+      assertTrue(ViewRestrictionsAudience.restrictedLiterals(Set(literal), projectIri) == Set(literal))
+    },
+    test("no literals, no restricted literals") {
+      assertTrue(ViewRestrictionsAudience.restrictedLiterals(Set.empty, projectIri).isEmpty)
+    },
+  )
+
   override def spec: Spec[TestEnvironment & zio.Scope, Any] =
-    suite("ViewRestrictionsAudience")(visibilityOfSuite, audienceUserSuite, placeholderSuite)
+    suite("ViewRestrictionsAudience")(visibilityOfSuite, audienceUserSuite, placeholderSuite, restrictedLiteralsSuite)
 }
