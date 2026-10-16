@@ -227,3 +227,5 @@ In LIMC, the fix adds 35 % more values to the report.
 - `assets/results/`: raw rows (`*-before-*`, `*-c5-*`, `*-after-*`), timings (`*-timings.csv`) and logs.
 - `assets/bench_batch.py`: the listing query and the batched value counts; result in
   [`assets/batched-value-counts.md`](assets/batched-value-counts.md) (batch size 2000, 0 differences).
+- `assets/bench_fix.py`: the final queries of all classes on a new cache and the drill-down; result in
+  [`assets/final-queries.md`](assets/final-queries.md) (0 differences, no query over the timeout).

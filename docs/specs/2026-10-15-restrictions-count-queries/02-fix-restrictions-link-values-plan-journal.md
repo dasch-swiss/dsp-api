@@ -85,6 +85,10 @@ status: in-progress
 
 ## Deviations
 
+- Plan criterion "LIMC by-property wall time on a new cache below 40 s": measured 46 s on stage (164 batches through
+  4 permits; slowest query 1.75 s). Owner decision 2026-10-16: accept; the criterion is per query, and the first
+  request on a new cache may take longer. The LIMC drill-down page of `CatalogLIMC` took 18.8 s (worst case,
+  superset literals); accepted for this PR, follow-up DEV-7532.
 - Batch size: the plan's rule ("largest measured size whose slowest LIMC batch stays under 10 s") selects 5000.
   Phase 3 review: at 5000 IRIs the form-encoded request body is about 295 KB, above Jetty's 200,000-byte default form
   limit; the repo does not raise it, and only stage is known to accept it. 2000 IRIs is about 118 KB, with the same

@@ -401,17 +401,19 @@ glob).
 - [ ] Extend `AdminViewRestrictionsByPropertyE2ESpec`: `/property-values` for `anything:hasOtherThingValue` reports
       restricted values.
 - [ ] Run `just test-e2e`; it passes.
-- [ ] Add `assets/bench_fix.py`, which renders the final R, C5 and drill-down queries and writes the rows and timings to
+- [x] Add `assets/bench_fix.py`, which renders the final R, C5 and drill-down queries and writes the rows and timings to
       `assets/results/`.
-- [ ] Run `bench_fix.py` against stage for drawings-gods, BEOL and LIMC.
-- [ ] Compare the R and C5 rows (link values removed) with the design-doc rows; the result is 0 differences.
-- [ ] Measure the LIMC by-property wall time on a new cache; it is below 40 s.
-- [ ] Measure each drill-down page and count query; each is below 40 s.
+- [x] Run `bench_fix.py` against stage for drawings-gods, BEOL and LIMC.
+- [x] Compare the R and C5 rows (link values removed) with the design-doc rows; the result is 0 differences.
+- [x] Measure the LIMC by-property wall time on a new cache (46 s; each query stays under the timeout; accepted by
+      the owner on 2026-10-16, see the journal).
+- [x] Measure each drill-down page and count query; each is below 40 s (slowest 18.8 s, worst case; follow-up
+      DEV-7532).
 - [ ] Update the Scaladoc of both repos and both services: R/C5 shapes, pattern-order rule, cache, multi-typed counting.
 - [ ] Update `ARCH-MAP.md` for the webapi-admin component with `/dune:dune-map` (new `ViewRestrictionsAudience`,
       `ValueCountFold`, `ViewRestrictionsClassification`, `ViewRestrictionsRowCache`; the admin-domain import of
       `ViewRestrictionsEndpoints` DTOs in the violation count).
-- [ ] Add the pattern-order rule (no `?value` pattern with two bound terms before `?resource ?prop ?value`) to
+- [x] Add the pattern-order rule (no `?value` pattern with two bound terms before `?resource ?prop ?value`) to
       `REVIEW.md`.
 - [ ] Run `just fmt`.
 - [ ] Run `just check`; it passes.
@@ -432,7 +434,8 @@ glob).
 - [ ] The drill-down and the counts use the same permission classification. The `V knora-admin:UnknownUser|RV
       knora-admin:KnownUser` case appears in both.
 - [ ] On stage, R and C5 counts with the link fix applied match the design-doc rows (0 differences).
-- [ ] No query on stage goes over the 40 s view-restrictions timeout.
+- [ ] No query on stage goes over the 40 s view-restrictions timeout. (The first request on a new cache may take
+      longer; on LIMC the by-property counts take 46 s.)
 - [ ] The slowest batched value-count query on LIMC stays under 10 s, and the summed batch rows equal the unbatched rows.
 - [ ] No `REGEX`, `FILTER NOT EXISTS { ?value a knora-base:LinkValue }`, or `subClassOf+` probe remains in the
       restrictions repos.
