@@ -7,9 +7,10 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.*
 
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.ontologyName
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
@@ -33,25 +34,10 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
  * items an audience cannot fully see. Conflating them would hide code-1 items behind a label saying
  * "hidden".
  *
- * The two UNITS are never mixed either. `/classes` counts whole restricted resources and `/values` counts
- * restricted values inside them; adding them gives a number in no unit at all, since one resource holding
- * three hidden values is 1 resource and 3 values. Keeping them apart is what makes the resource figure
- * comparable to `totalResources`. Each endpoint answers in one unit, so nothing here can mix them.
+ * The two units are never mixed: `/classes` counts whole resources and `/values` counts values inside them.
  *
- * COUNTING: counts are computed by the triplestore, not by scanning objects here. That is sound because for
- * the three synthetic audiences the visibility of an object depends **only** on its
- * `knora-base:hasPermissions` literal:
- *
- *   - `entityProject` is constant per request;
- *   - `requestingUser` is one of three synthetic users, none of them system/project admin (so
- *     `getUserPermissionADM`'s max-permission short-circuit never fires);
- *   - `entityCreator` matters only when it equals the requesting user, which a synthetic audience user never
- *     is — so the `Creator` group never applies, and a `CR knora-admin:Creator` clause grants the audiences
- *     nothing (the drill-down, resolving the real creator, reaches the same conclusion for the same reason).
- *
- * So the repo groups its counts by permission literal and the handful of distinct literals are classified
- * here with the real permission model — one query answers all three audiences and both states at once.
- * Counts are exact at any project size. The drill-down is paged in SPARQL with a matching `COUNT`, so its
+ * Counts are computed by the triplestore, grouped by permission literal; why that is sound is explained in
+ * [[ViewRestrictionsAudience]]. The drill-down is paged in SPARQL with a matching `COUNT`, so its
  * `totalItems` is exact and its page order is stable.
  */
 final case class ViewRestrictionsService(
@@ -90,32 +76,13 @@ final case class ViewRestrictionsService(
   ): Task[ViewRestrictionsValues] =
     for {
       index  <- ProjectOntologyIndex.load(ontologyRepo)
-      rows   <- rowCache.valueCounts(projectIri, resourceClass)
-      counts <- ValueCountFold.fold(rows, index, itemType, projectIri).map(_._1)
+      counts <- if (index.resourceClasses.contains(resourceClass))
+                  rowCache
+                    .valueCounts(projectIri, resourceClass)
+                    .flatMap(ValueCountFold.fold(_, index, itemType, projectIri))
+                    .map(_._1)
+                else ZIO.succeed(AudienceRestrictionCounts.zero)
     } yield ViewRestrictionsValues(projectIri.value, resourceClass, itemType, counts)
-
-  private def visibilityFor(row: RestrictedObjectRow, audience: Audience, projectIri: ProjectIri): Visibility =
-    ViewRestrictionsAudience.visibilityOf(
-      PermissionUtilADM.getUserPermissionADM(
-        entityCreator = row.creator,
-        entityProject = projectIri.value,
-        entityPermissionLiteral = row.permissions,
-        requestingUser = ViewRestrictionsAudience.audienceUser(audience, projectIri),
-      ),
-    )
-
-  private def itemVisibility(row: RestrictedObjectRow, projectIri: ProjectIri): ItemVisibility =
-    ItemVisibility(
-      anonymous = visibilityFor(row, Audience.Anonymous, projectIri),
-      authenticated = visibilityFor(row, Audience.Authenticated, projectIri),
-      projectMember = visibilityFor(row, Audience.ProjectMember, projectIri),
-    )
-
-  private def localName(iri: String): String    = iri.split(Array('#', '/')).lastOption.getOrElse(iri)
-  private def ontologyName(iri: String): String = {
-    val beforeHash = iri.split('#').headOption.getOrElse(iri)
-    beforeHash.split('/').lastOption.getOrElse(beforeHash)
-  }
 
   /**
    * The restricted resources of one class, with their restricted parts nested, one page at a time.
@@ -123,7 +90,8 @@ final case class ViewRestrictionsService(
    * The objects are selected by permission literal: the literals of the class's cached count rows are
    * classified by [[ViewRestrictionsAudience.restrictedLiterals]], the classification the counts use, so the
    * drill-down lists what the counts report. Only the cached rows the item type needs are read. When no
-   * literal the item type needs is restricted, the page is empty and no drill-down query runs.
+   * literal the item type needs is restricted, or the class is not a resource class, the page is empty and
+   * no drill-down query runs.
    *
    * The literals come from the cached counts, so an object whose permissions changed after the last refresh
    * by [[classSummaries]] (at most 10 minutes ago) can be missing until the next refresh. The value branch
@@ -138,55 +106,77 @@ final case class ViewRestrictionsService(
   ): Task[PagedResponse[RestrictedResource]] =
     for {
       index    <- ProjectOntologyIndex.load(ontologyRepo)
-      branches <- drillDownBranches(projectIri, resourceClass, itemType, index)
-      // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
-      // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
-      // The page total and the page itself are independent reads, so they go out together. They are separate
-      // transactions, not a snapshot: a concurrent write between them can leave `totalItems` inconsistent
-      // with the rows.
-      totalAndRows <-
-        repo
-          .countRestrictedResources(projectIri, itemType, resourceClass, branches)
-          .zipPar(
-            repo.findRestrictedObjects(
-              projectIri,
-              itemType,
-              resourceClass,
-              offset = pageAndSize.size * (pageAndSize.page - 1),
-              limit = pageAndSize.size,
-              branches,
+      branches <- if (index.resourceClasses.contains(resourceClass))
+                    drillDownBranches(projectIri, resourceClass, itemType, index)
+                  else ZIO.none
+      result <- branches.fold(ZIO.succeed(emptyPage(pageAndSize)))(
+                  pageOfItems(projectIri, resourceClass, itemType, pageAndSize, _),
+                )
+    } yield result
+
+  private def emptyPage(pageAndSize: PageAndSize): PagedResponse[RestrictedResource] =
+    PagedResponse.from(Seq.empty[RestrictedResource], 0, pageAndSize)
+
+  private def pageOfItems(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ItemType,
+    pageAndSize: PageAndSize,
+    branches: DrillDownBranches,
+  ): Task[PagedResponse[RestrictedResource]] =
+    // The page and its total are independent reads, issued together as separate transactions: a concurrent
+    // write between them can leave `totalItems` inconsistent with the rows.
+    repo
+      .countRestrictedResources(projectIri, itemType, resourceClass, branches)
+      .zipPar(
+        repo.findRestrictedObjects(
+          projectIri,
+          itemType,
+          resourceClass,
+          offset = pageAndSize.size * (pageAndSize.page - 1),
+          limit = pageAndSize.size,
+          branches,
+        ),
+      )
+      .map { case (total, rows) => PagedResponse.from(restrictedResources(rows, projectIri), total, pageAndSize) }
+
+  /**
+   * One [[RestrictedResource]] per resource of `rows`, with its restricted parts nested under it, in the
+   * SPARQL page order (label, then IRI).
+   *
+   * The resource's own visibility comes from its resource-level row if present, else it is fully visible. A
+   * value typed with several file classes yields one row per class and is listed once per item type.
+   */
+  private def restrictedResources(rows: Seq[RestrictedObjectRow], projectIri: ProjectIri): Seq[RestrictedResource] =
+    rows
+      .groupBy(_.resourceIri)
+      .toSeq
+      .map { case (resourceIri, resourceRows) =>
+        val restrictedItems = resourceRows
+          .filter(_.itemType != ItemType.Resource)
+          .distinctBy(r => (r.itemType, r.valueIri))
+          .map(r =>
+            RestrictedItem(
+              `type` = r.itemType,
+              propertyIri = r.propertyIri,
+              propertyLabel = r.propertyLabel,
+              valueIri = r.valueIri,
+              visibility = ViewRestrictionsAudience.itemVisibility(r.creator, r.permissions, projectIri),
             ),
           )
-      (total, rows) = totalAndRows
-      // Assemble one RestrictedResource per affected resource, with its restricted parts nested under it.
-      byResource = rows.groupBy(_.resourceIri).toSeq.map { case (resourceIri, resourceRows) =>
-                     val head            = resourceRows.head
-                     val restrictedItems = resourceRows.collect {
-                       case r if r.itemType != ItemType.Resource =>
-                         RestrictedItem(
-                           `type` = r.itemType,
-                           propertyIri = r.propertyIri,
-                           propertyLabel = r.propertyLabel,
-                           valueIri = r.valueIri,
-                           visibility = itemVisibility(r, projectIri),
-                         )
-                     }
-                     // The resource's own visibility comes from the resource-level row if present, else fully visible.
-                     val resourceVis = resourceRows
-                       .find(_.itemType == ItemType.Resource)
-                       .map(itemVisibility(_, projectIri))
-                       .getOrElse(ItemVisibility(Visibility.Visible, Visibility.Visible, Visibility.Visible))
-                     RestrictedResource(
-                       resourceIri = resourceIri,
-                       label = head.resourceLabel,
-                       resourceClassIri = head.resourceClassIri,
-                       resourceVisibility = resourceVis,
-                       items = restrictedItems,
-                     )
-                   }
-      // Preserve the SPARQL page order (label, then IRI) so paging stays reproducible across requests.
-      ordered = byResource.sortBy(r => (r.label, r.resourceIri))
-    } yield PagedResponse.from(ordered, total, pageAndSize)
+        val resourceVisibility = resourceRows
+          .find(_.itemType == ItemType.Resource)
+          .map(r => ViewRestrictionsAudience.itemVisibility(r.creator, r.permissions, projectIri))
+          .getOrElse(ItemVisibility(Visibility.Visible, Visibility.Visible, Visibility.Visible))
+        RestrictedResource(
+          resourceIri = resourceIri,
+          label = resourceRows.head.resourceLabel,
+          resourceClassIri = resourceRows.head.resourceClassIri,
+          resourceVisibility = resourceVisibility,
+          items = restrictedItems,
+        )
+      }
+      .sortBy(r => (r.label, r.resourceIri))
 
   /** The drill-down branches of one class, reading only the cached rows the item type needs. */
   private def drillDownBranches(
@@ -194,7 +184,7 @@ final case class ViewRestrictionsService(
     resourceClass: String,
     itemType: ItemType,
     index: ProjectOntologyIndex,
-  ): Task[DrillDownBranches] = {
+  ): Task[Option[DrillDownBranches]] = {
     val resourceLiterals = rowCache
       .resourceCounts(projectIri)
       .map(rows => restricted(rows.filter(_.classIri == resourceClass).map(_.permissions), projectIri))

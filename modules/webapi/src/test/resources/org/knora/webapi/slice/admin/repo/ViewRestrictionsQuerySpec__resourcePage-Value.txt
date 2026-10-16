@@ -13,8 +13,7 @@ WHERE {
         ?resource ?prop ?value .
         ?prop rdfs:subPropertyOf* knora-base:hasValue .
       }
-      ?value knora-base:attachedToUser ?creator ;
-        knora-base:hasPermissions ?permissions ;
+      ?value knora-base:hasPermissions ?permissions ;
         knora-base:isDeleted false .
       FILTER (?prop != knora-base:hasStandoffLinkToValue)
     }

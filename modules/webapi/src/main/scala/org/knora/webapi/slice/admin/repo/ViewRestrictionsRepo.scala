@@ -11,11 +11,14 @@ import dsp.errors.InconsistentRepositoryDataException
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.ontologyName
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
+import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -27,11 +30,10 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *
  *   - **Counts** (the resource listing of [[resourceCounts]] plus the batched value queries of
  *     [[valueCounts]], read through `ViewRestrictionsRowCache`): computed by the triplestore and
- *     grouped by `knora-base:hasPermissions`. Because an object's visibility for the three synthetic
- *     audiences depends only on that literal (see [[ViewRestrictionsService]]), one grouped query answers
- *     every audience and both restriction states at once, and a group's whole population falls out of the
- *     same rows. No per-object data crosses the wire, so counts are exact at any project size. The
- *     service classifies the rows with `ProjectOntologyIndex`.
+ *     grouped by `knora-base:hasPermissions`. Visibility depends only on that literal (see
+ *     [[org.knora.webapi.slice.admin.domain.service.ViewRestrictionsAudience]]), so one grouped query
+ *     answers every audience and both restriction states at once, and a group's whole population falls out
+ *     of the same rows. No per-object data crosses the wire, so counts are exact at any project size.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
  *     query is always narrowed to one resource class, ordered deterministically, and windowed with
  *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`. The objects are selected by
@@ -130,7 +132,7 @@ final case class ViewRestrictionsRepo(
    * SPARQL to the resource list, then the rows for exactly those resources are fetched.
    *
    * `branches` holds the permission literals that select the restricted resources and values; see
-   * [[ViewRestrictionsRepo.resourcePageQuery]]. Without a branch nothing can qualify and no query runs.
+   * [[ViewRestrictionsRepo.resourcePageQuery]].
    */
   def findRestrictedObjects(
     projectIri: ProjectIri,
@@ -140,16 +142,14 @@ final case class ViewRestrictionsRepo(
     limit: Int,
     branches: DrillDownBranches,
   ): Task[Seq[RestrictedObjectRow]] =
-    if (branches.isEmpty) ZIO.succeed(Seq.empty)
-    else
-      for {
-        pageIris <-
-          triplestore
-            .query(ViewRestrictionsRepo.resourcePageQuery(projectIri, itemType, group, offset, limit, branches))
-            .map(_.flatMap(_.get("resource")))
-        rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
-                else fetchRowsFor(projectIri, itemType, group, pageIris, branches)
-      } yield rows
+    for {
+      pageIris <-
+        triplestore
+          .query(ViewRestrictionsRepo.resourcePageQuery(projectIri, itemType, group, offset, limit, branches))
+          .map(_.flatMap(_.get("resource")))
+      rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedObjectRow])
+              else fetchRowsFor(projectIri, itemType, group, pageIris, branches)
+    } yield rows
 
   private def fetchRowsFor(
     projectIri: ProjectIri,
@@ -171,11 +171,9 @@ final case class ViewRestrictionsRepo(
     group: String,
     branches: DrillDownBranches,
   ): Task[Int] =
-    if (branches.isEmpty) ZIO.succeed(0)
-    else
-      triplestore
-        .query(ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, itemType, group, branches))
-        .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
+    triplestore
+      .query(ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, itemType, group, branches))
+      .map(_.getFirst("cnt").flatMap(_.toIntOption).getOrElse(0))
 
   private def runResourceQuery(
     projectIri: ProjectIri,
@@ -250,13 +248,6 @@ final case class ViewRestrictionsRepo(
           Option.when(hasComment && (itemType == ItemType.All || itemType == ItemType.Comment))(mk(ItemType.Comment))
         Seq(itemRow, commentRow).flatten
       })
-
-  /** Small IRI helpers for labels until the spike wires proper ontology-label lookup. */
-  private def localName(iri: String): String    = iri.split(Array('#', '/')).lastOption.getOrElse(iri)
-  private def ontologyName(iri: String): String = {
-    val beforeHash = iri.split('#').headOption.getOrElse(iri)
-    beforeHash.split('/').lastOption.getOrElse(beforeHash)
-  }
 }
 
 object ViewRestrictionsRepo {
@@ -286,8 +277,7 @@ object ViewRestrictionsRepo {
    *
    * The literal is carried raw and unclassified on purpose: the caller resolves it against each audience
    * with the real permission model, which is what lets one query answer all three audiences and both
-   * restriction states at once. No `CountUnit` here — the unit is decided by which query produced the row,
-   * so it cannot be mixed up in the first place.
+   * restriction states at once.
    */
   final case class PermissionCountRow(permissions: String, count: Int)
 
@@ -348,23 +338,48 @@ object ViewRestrictionsRepo {
 
   /**
    * The parts of a class drill-down that have something to run, each with the permission literals that mark
-   * its objects as restricted. A branch is present only when the item type asks for it and its literal set is
-   * non-empty; without any branch nothing can qualify.
-   *
-   * @param resources the literals selecting whole restricted resources.
-   * @param values    the literals selecting restricted values.
+   * its objects as restricted: whole resources, values, or both.
    */
-  final case class DrillDownBranches(resources: Option[Set[String]], values: Option[Set[String]]) {
-    def isEmpty: Boolean = resources.isEmpty && values.isEmpty
+  sealed trait DrillDownBranches {
+
+    /** The literals selecting whole restricted resources, if that branch runs. */
+    def resources: Option[Set[String]] = this match {
+      case DrillDownBranches.ResourcesOnly(literals) => Some(literals)
+      case DrillDownBranches.Both(literals, _)       => Some(literals)
+      case DrillDownBranches.ValuesOnly(_)           => None
+    }
+
+    /** The literals selecting restricted values, if that branch runs. */
+    def values: Option[Set[String]] = this match {
+      case DrillDownBranches.ValuesOnly(literals) => Some(literals)
+      case DrillDownBranches.Both(_, literals)    => Some(literals)
+      case DrillDownBranches.ResourcesOnly(_)     => None
+    }
   }
 
   object DrillDownBranches {
+    final case class ResourcesOnly(literals: Set[String])                            extends DrillDownBranches
+    final case class ValuesOnly(literals: Set[String])                               extends DrillDownBranches
+    final case class Both(resourceLiterals: Set[String], valueLiterals: Set[String]) extends DrillDownBranches
 
-    def of(itemType: ItemType, resourceRestricted: Set[String], valueRestricted: Set[String]): DrillDownBranches =
-      DrillDownBranches(
-        resources = Option.when(wantsResources(itemType) && resourceRestricted.nonEmpty)(resourceRestricted),
-        values = Option.when(wantsValues(itemType) && valueRestricted.nonEmpty)(valueRestricted),
-      )
+    /**
+     * The branches `itemType` asks for whose literal set is non-empty; `None` when nothing can qualify and no
+     * query has to run.
+     */
+    def of(
+      itemType: ItemType,
+      resourceRestricted: Set[String],
+      valueRestricted: Set[String],
+    ): Option[DrillDownBranches] = {
+      val resources = Option.when(wantsResources(itemType) && resourceRestricted.nonEmpty)(resourceRestricted)
+      val values    = Option.when(wantsValues(itemType) && valueRestricted.nonEmpty)(valueRestricted)
+      (resources, values) match {
+        case (Some(r), Some(v)) => Some(Both(r, v))
+        case (Some(r), None)    => Some(ResourcesOnly(r))
+        case (None, Some(v))    => Some(ValuesOnly(v))
+        case (None, None)       => None
+      }
+    }
 
     private def wantsResources(itemType: ItemType): Boolean =
       itemType == ItemType.All || itemType == ItemType.Resource
@@ -376,23 +391,31 @@ object ViewRestrictionsRepo {
 
   /**
    * Narrows a value pattern to one item type. `File`/`Value` need the file-ness of the value decided in
-   * the query (not just reported), and `Comment` needs the comment to exist; `All` and `Resource` add
-   * nothing, and their templates then also omit the group that would isolate the skeleton from a
-   * constraint — there is nothing to separate.
+   * the query (not just reported), and `Comment` needs the comment to exist; `All` adds nothing, and its
+   * templates then also omit the group that would isolate the skeleton from a constraint.
    */
-  private def itemTypeConstraint(itemType: ItemType): Option[Fragment] =
+  private[repo] def itemTypeConstraint(itemType: ValueItemType): Option[Fragment] =
     itemType match {
-      case ItemType.File =>
+      case ValueItemType.File =>
         Some(sparql"""|{
                       |  ?value a ?fileClass .
                       |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
                       |}""")
-      case ItemType.Value =>
+      case ValueItemType.Value =>
         Some(sparql"""|FILTER NOT EXISTS {
                       |  ?value a ?fileClass .
                       |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
                       |}""")
-      case ItemType.Comment => Some(sparql"?value knora-base:valueHasComment ?comment .")
+      case ValueItemType.Comment => Some(sparql"?value knora-base:valueHasComment ?comment .")
+      case ValueItemType.All     => None
+    }
+
+  /** The constraint of a class drill-down item type; whole resources and `All` add none. */
+  private def classItemTypeConstraint(itemType: ItemType): Option[Fragment] =
+    itemType match {
+      case ItemType.File    => itemTypeConstraint(ValueItemType.File)
+      case ItemType.Value   => itemTypeConstraint(ValueItemType.Value)
+      case ItemType.Comment => itemTypeConstraint(ValueItemType.Comment)
       case _                => None
     }
 
@@ -404,12 +427,9 @@ object ViewRestrictionsRepo {
    * set than the drill-down would be worse than no count, and `ViewRestrictionsQuerySpec` pins that.
    * The count queries count a resource typed with two classes once for each class.
    *
-   * One skeleton detail is load-bearing and repeated deliberately in every drill-down template:
-   *
-   *   - `knora-base:attachedToUser ?creator` is present only where the creator is projected or
-   *     constrained. In the page and count templates it is an unconstrained join whose only effect is to
-   *     multiply intermediate rows, and the creator cannot change the decision for a synthetic audience
-   *     anyway.
+   * `knora-base:attachedToUser ?creator` is joined only where the creator is projected, in `resourceQuery`
+   * and `valueQuery`. The page and count templates leave it out: it is not constrained there, and an
+   * unconstrained join only multiplies intermediate rows.
    *
    * NOTE — graph scoping does NOT apply to any of them, and must not be introduced.
    * `CONVENTIONS.md` records that `GRAPH <projectDataGraph>` replaces an `attachedToProject` join, and that
@@ -547,8 +567,8 @@ object ViewRestrictionsRepo {
   ): Select = {
     val project    = Iri.unsafeFrom(projectIri.value)
     val groupClass = Iri.unsafeFrom(group)
-    val sparqlText = (branches.resources, branches.values) match {
-      case (Some(resourceLiterals), None) =>
+    val sparqlText = branches match {
+      case DrillDownBranches.ResourcesOnly(resourceLiterals) =>
         // Resource-only filter: the resource itself must be restricted.
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -558,7 +578,6 @@ object ViewRestrictionsRepo {
                  |  {
                  |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
-                 |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    BIND($groupClass AS ?resClass)
@@ -570,7 +589,7 @@ object ViewRestrictionsRepo {
                  |ORDER BY ASC(?labelOrIri) ASC(?resource)
                  |LIMIT ${Literal.int(limit)}
                  |OFFSET ${Literal.int(offset)}"""
-      case (None, Some(valueLiterals)) =>
+      case DrillDownBranches.ValuesOnly(valueLiterals) =>
         // Value-only filter: the resource must carry a restricted value of the requested kind. The
         // skeleton gets a group of its own so the item-type constraint cannot merge into its BGP.
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -588,12 +607,11 @@ object ViewRestrictionsRepo {
                  |        ?resource ?prop ?value .
                  |        ?prop rdfs:subPropertyOf* knora-base:hasValue .
                  |      }
-                 |      ?value knora-base:attachedToUser ?creator ;
-                 |        knora-base:hasPermissions ?permissions ;
+                 |      ?value knora-base:hasPermissions ?permissions ;
                  |        knora-base:isDeleted false .
                  |      FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |    }
-                 |    ${itemTypeConstraint(itemType).whenSome(identity)}
+                 |    ${classItemTypeConstraint(itemType).whenSome(identity)}
                  |    ${permissionFilter(valueLiterals)}
                  |  }
                  |  OPTIONAL { ?resource rdfs:label ?label . }
@@ -602,7 +620,7 @@ object ViewRestrictionsRepo {
                  |ORDER BY ASC(?labelOrIri) ASC(?resource)
                  |LIMIT ${Literal.int(limit)}
                  |OFFSET ${Literal.int(offset)}"""
-      case (Some(resourceLiterals), Some(valueLiterals)) =>
+      case DrillDownBranches.Both(resourceLiterals, valueLiterals) =>
         // Both are in scope: a resource qualifies via its own restriction OR via a restricted value.
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -612,7 +630,6 @@ object ViewRestrictionsRepo {
                  |  {
                  |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
-                 |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    BIND($groupClass AS ?resClass)
@@ -628,8 +645,7 @@ object ViewRestrictionsRepo {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
                  |    }
-                 |    ?value knora-base:attachedToUser ?creator ;
-                 |      knora-base:hasPermissions ?permissions ;
+                 |    ?value knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |    ${permissionFilter(valueLiterals)}
@@ -640,7 +656,6 @@ object ViewRestrictionsRepo {
                  |ORDER BY ASC(?labelOrIri) ASC(?resource)
                  |LIMIT ${Literal.int(limit)}
                  |OFFSET ${Literal.int(offset)}"""
-      case (None, None) => throw IllegalArgumentException("the drill-down has no branch to query")
     }
     Select(sparqlText.render, SparqlTimeout.ViewRestrictions)
   }
@@ -661,8 +676,8 @@ object ViewRestrictionsRepo {
   ): Select = {
     val project    = Iri.unsafeFrom(projectIri.value)
     val groupClass = Iri.unsafeFrom(group)
-    val sparqlText = (branches.resources, branches.values) match {
-      case (Some(resourceLiterals), None) =>
+    val sparqlText = branches match {
+      case DrillDownBranches.ResourcesOnly(resourceLiterals) =>
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
@@ -670,13 +685,12 @@ object ViewRestrictionsRepo {
                  |WHERE {
                  |  ?resource a $groupClass ;
                  |    knora-base:attachedToProject $project ;
-                 |    knora-base:attachedToUser ?creator ;
                  |    knora-base:hasPermissions ?permissions ;
                  |    knora-base:isDeleted false .
                  |  BIND($groupClass AS ?resClass)
                  |  ${permissionFilter(resourceLiterals)}
                  |}"""
-      case (None, Some(valueLiterals)) =>
+      case DrillDownBranches.ValuesOnly(valueLiterals) =>
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
@@ -691,15 +705,14 @@ object ViewRestrictionsRepo {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
                  |    }
-                 |    ?value knora-base:attachedToUser ?creator ;
-                 |      knora-base:hasPermissions ?permissions ;
+                 |    ?value knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |  }
-                 |  ${itemTypeConstraint(itemType).whenSome(identity)}
+                 |  ${classItemTypeConstraint(itemType).whenSome(identity)}
                  |  ${permissionFilter(valueLiterals)}
                  |}"""
-      case (Some(resourceLiterals), Some(valueLiterals)) =>
+      case DrillDownBranches.Both(resourceLiterals, valueLiterals) =>
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                  |
@@ -708,7 +721,6 @@ object ViewRestrictionsRepo {
                  |  {
                  |    ?resource a $groupClass ;
                  |      knora-base:attachedToProject $project ;
-                 |      knora-base:attachedToUser ?creator ;
                  |      knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    BIND($groupClass AS ?resClass)
@@ -724,14 +736,12 @@ object ViewRestrictionsRepo {
                  |      ?resource ?prop ?value .
                  |      ?prop rdfs:subPropertyOf* knora-base:hasValue .
                  |    }
-                 |    ?value knora-base:attachedToUser ?creator ;
-                 |      knora-base:hasPermissions ?permissions ;
+                 |    ?value knora-base:hasPermissions ?permissions ;
                  |      knora-base:isDeleted false .
                  |    FILTER (?prop != knora-base:hasStandoffLinkToValue)
                  |    ${permissionFilter(valueLiterals)}
                  |  }
                  |}"""
-      case (None, None) => throw IllegalArgumentException("the drill-down has no branch to query")
     }
     Select(sparqlText.render, SparqlTimeout.ViewRestrictions)
   }

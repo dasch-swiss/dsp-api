@@ -6,7 +6,6 @@ WHERE {
   {
     ?resource a <http://www.knora.org/ontology/0001/anything#Thing> ;
       knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-      knora-base:attachedToUser ?creator ;
       knora-base:hasPermissions ?permissions ;
       knora-base:isDeleted false .
     BIND(<http://www.knora.org/ontology/0001/anything#Thing> AS ?resClass)

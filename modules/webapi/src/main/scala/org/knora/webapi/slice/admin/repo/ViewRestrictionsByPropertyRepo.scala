@@ -13,6 +13,8 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ValueKind
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.localName
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsIriNames.ontologyName
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.PropertyRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo.RestrictedPropertyValueRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
@@ -25,9 +27,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
 /**
  * Reads a project's view-restriction data **grouped by property**.
  *
- * A deliberate sibling of [[ViewRestrictionsRepo]] rather than a mode of it: property grouping used to be
- * a `groupBy` flag threaded through a dozen signatures, which made every change to the class report a
- * change to property mode too. The two reports answer different questions and want different queries.
+ * A deliberate sibling of [[ViewRestrictionsRepo]] rather than a mode of it: the two reports answer
+ * different questions and want different queries.
  *
  * Two access patterns; the counts come from `ViewRestrictionsRowCache`, not from this repo:
  *
@@ -67,13 +68,7 @@ final case class ViewRestrictionsByPropertyRepo(
       .distinctBy(_.id)
       .sortBy(r => (r.label, r.id))
 
-  /**
-   * The display label is derived from the property's IRI local name, matching what the class report does
-   * for its class labels. The ontology cache does carry `rdfs:label`, but reading it needs a
-   * `StringFormatter` to build the predicate key, and taking that as a dependency propagated a new
-   * requirement up through `AdminDomainModule` and `AdminModule` for a cosmetic gain. Real labels are worth
-   * doing for both reports at once, not for this one alone.
-   */
+  /** The display label is the property's IRI local name, as the class report labels its classes. */
   private def toPropertyRow(info: ReadPropertyInfoV2): PropertyRow = {
     val iri = info.entityInfoContent.propertyIri.toString
     PropertyRow(
@@ -148,12 +143,6 @@ final case class ViewRestrictionsByPropertyRepo(
       creator = creator,
       permissions = permissions,
     )
-
-  private def localName(iri: String): String    = iri.split(Array('#', '/')).lastOption.getOrElse(iri)
-  private def ontologyName(iri: String): String = {
-    val beforeHash = iri.split('#').headOption.getOrElse(iri)
-    beforeHash.split('/').lastOption.getOrElse(beforeHash)
-  }
 }
 
 object ViewRestrictionsByPropertyRepo {
@@ -209,7 +198,7 @@ object ViewRestrictionsByPropertyRepo {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
     val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
-    itemTypeConstraint(itemType) match {
+    ViewRestrictionsRepo.itemTypeConstraint(itemType) match {
       case None =>
         Select(
           sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -283,7 +272,7 @@ object ViewRestrictionsByPropertyRepo {
     val property = Iri.unsafeFrom(propertyIri)
     val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
     val page     = Fragments.values(Variable("resource"), resourceIris.map(Iri.unsafeFrom))
-    itemTypeConstraint(itemType) match {
+    ViewRestrictionsRepo.itemTypeConstraint(itemType) match {
       case None =>
         Select(
           sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -355,7 +344,7 @@ object ViewRestrictionsByPropertyRepo {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
     val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
-    itemTypeConstraint(itemType) match {
+    ViewRestrictionsRepo.itemTypeConstraint(itemType) match {
       case None =>
         Select(
           sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -406,28 +395,4 @@ object ViewRestrictionsByPropertyRepo {
    * cannot be merged into the skeleton's basic graph pattern, nor reordered against its triples — and left
    * bare when there is no constraint, so no template adds a group that has nothing to separate.
    */
-
-  /**
-   * Narrows to one kind of value. Copied rather than shared with [[ViewRestrictionsRepo]]: reusing it would
-   * couple the two repos through the exact seam this split exists to remove, and the fragment is small.
-   *
-   * `All` has no constraint at all; the group that isolates the skeleton exists only to separate it from a
-   * constraint, so the callers omit both.
-   */
-  private def itemTypeConstraint(itemType: ValueItemType): Option[Fragment] =
-    itemType match {
-      case ValueItemType.File =>
-        Some(sparql"""|{
-                      |  ?value a ?fileClass .
-                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
-                      |}""")
-      case ValueItemType.Value =>
-        Some(sparql"""|FILTER NOT EXISTS {
-                      |  ?value a ?fileClass .
-                      |  ?fileClass rdfs:subClassOf* knora-base:FileValue .
-                      |}""")
-      case ValueItemType.Comment =>
-        Some(sparql"?value knora-base:valueHasComment ?comment .")
-      case ValueItemType.All => None
-    }
 }

@@ -19,9 +19,8 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
  * A short-lived, in-memory cache of the count rows behind the view restrictions reports: the resource counts of a
  * project and the value counts of one of its classes.
  *
- * Concurrent reads of one key run a single load and entries live for ten minutes. A failed load is kept for
- * `Duration.Zero`; expiry uses a strict "after" check, so a retry at the same clock instant can still see the
- * failure, and the next instant loads again.
+ * Concurrent reads of one key run a single load and entries live for ten minutes; a failed load is retained
+ * for `Duration.Zero`.
  *
  * Besides the TTL, [[refreshProject]] is the only invalidation point; the `/classes` report calls it.
  */
@@ -54,6 +53,9 @@ final case class ViewRestrictionsRowCache(
    *
    * The cache cannot list its keys, so the classes of the two row sets name the value entries to drop. The old
    * rows are read only when present, so no load happens for them.
+   *
+   * A value load that started before a refresh can still store rows it read before it; the TTL bounds how
+   * long they stay.
    */
   def refreshProject(projectIri: ProjectIri): Task[Seq[ResourceCountRow]] =
     for {

@@ -169,14 +169,6 @@ object ViewRestrictionsEndpoints {
 
     given Codec[String, ValueItemType, CodecFormat.TextPlain] =
       Codec.derivedEnumeration[String, ValueItemType].defaultStringBased
-
-    /** The corresponding [[ItemType]], for the query builder that still speaks in those terms. */
-    def toItemType(t: ValueItemType): ItemType = t match {
-      case ValueItemType.All     => ItemType.All
-      case ValueItemType.File    => ItemType.File
-      case ValueItemType.Value   => ItemType.Value
-      case ValueItemType.Comment => ItemType.Comment
-    }
   }
 
   /**

@@ -72,7 +72,8 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ViewRestrictionsPropertyValues].example(ViewRestrictionsPropertyValues.example))
     .description(
       "Step 2 of the property-grouped report: the per-audience restriction counts for ONE value property, " +
-        "across every resource class that uses it, computed from the cached value rows of those classes. " +
+        "across every resource class that uses it. The counts come from the cached value rows of those classes, " +
+        "which `/classes` refreshes and which are otherwise at most 10 minutes old. " +
         "Each audience reports `hidden` (permission code 0 — nothing is served) and `restrictedView` " +
         "(code 1 — a degraded version is served) separately; the two are disjoint. " +
         "`totalValues` is how many values of this property the project holds, restricted or not. It is a " +

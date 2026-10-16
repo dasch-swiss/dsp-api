@@ -100,6 +100,24 @@ object ViewRestrictionsAudience {
       permissions = PermissionsDataADM(groupsPerProject = groupsPerProject),
     )
 
+  /** The visibility of one object for each audience, resolved with the object's real creator. */
+  def itemVisibility(creator: String, permissions: String, projectIri: ProjectIri): ItemVisibility =
+    ItemVisibility(
+      anonymous = visibilityFor(creator, permissions, Audience.Anonymous, projectIri),
+      authenticated = visibilityFor(creator, permissions, Audience.Authenticated, projectIri),
+      projectMember = visibilityFor(creator, permissions, Audience.ProjectMember, projectIri),
+    )
+
+  def visibilityFor(creator: String, permissions: String, audience: Audience, projectIri: ProjectIri): Visibility =
+    visibilityOf(
+      PermissionUtilADM.getUserPermissionADM(
+        entityCreator = creator,
+        entityProject = projectIri.value,
+        entityPermissionLiteral = permissions,
+        requestingUser = audienceUser(audience, projectIri),
+      ),
+    )
+
   /**
    * Map a resolved object-access permission (or the absence of one) to a [[Visibility]].
    *

@@ -17,6 +17,9 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.Both
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.ResourcesOnly
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches.ValuesOnly
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -43,14 +46,17 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   private val twoIris = Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b")
 
+  private def branches(itemType: ItemType, resource: Set[String], value: Set[String]): DrillDownBranches =
+    DrillDownBranches.of(itemType, resource, value).get
+
   private def page(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
     ViewRestrictionsRepo
-      .resourcePageQuery(projectIri, itemType, thingClass, 50, 25, DrillDownBranches.of(itemType, resource, value))
+      .resourcePageQuery(projectIri, itemType, thingClass, 50, 25, branches(itemType, resource, value))
       .sparql
 
   private def count(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
     ViewRestrictionsRepo
-      .resourceCountForDrillDownQuery(projectIri, itemType, thingClass, DrillDownBranches.of(itemType, resource, value))
+      .resourceCountForDrillDownQuery(projectIri, itemType, thingClass, branches(itemType, resource, value))
       .sparql
 
   private def resourceRows =
@@ -142,33 +148,29 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       test("Resource keeps the resource literals only") {
         assertTrue(
           DrillDownBranches.of(ItemType.Resource, resourceLiterals, valueLiterals) ==
-            DrillDownBranches(Some(resourceLiterals), None),
+            Some(ResourcesOnly(resourceLiterals)),
         )
       },
       test("File, Value and Comment keep the value literals only") {
         assertTrue(
           List(ItemType.File, ItemType.Value, ItemType.Comment).forall(it =>
-            DrillDownBranches.of(it, resourceLiterals, valueLiterals) == DrillDownBranches(None, Some(valueLiterals)),
+            DrillDownBranches.of(it, resourceLiterals, valueLiterals) == Some(ValuesOnly(valueLiterals)),
           ),
         )
       },
       test("All keeps both") {
         assertTrue(
           DrillDownBranches.of(ItemType.All, resourceLiterals, valueLiterals) ==
-            DrillDownBranches(Some(resourceLiterals), Some(valueLiterals)),
+            Some(Both(resourceLiterals, valueLiterals)),
         )
       },
       test("a branch with an empty literal set is absent") {
-        val noValues    = DrillDownBranches.of(ItemType.All, resourceLiterals, Set.empty)
-        val noResources = DrillDownBranches.of(ItemType.All, Set.empty, valueLiterals)
         assertTrue(
-          noValues == DrillDownBranches(Some(resourceLiterals), None),
-          noResources == DrillDownBranches(None, Some(valueLiterals)),
-          !noValues.isEmpty,
-          !noResources.isEmpty,
+          DrillDownBranches.of(ItemType.All, resourceLiterals, Set.empty) == Some(ResourcesOnly(resourceLiterals)),
+          DrillDownBranches.of(ItemType.All, Set.empty, valueLiterals) == Some(ValuesOnly(valueLiterals)),
         )
       },
-      test("is empty when the item type needs a branch only the other literals could fill") {
+      test("is None when the item type needs a branch only the other literals could fill") {
         assertTrue(
           DrillDownBranches.of(ItemType.Resource, Set.empty, valueLiterals).isEmpty,
           DrillDownBranches.of(ItemType.Value, resourceLiterals, Set.empty).isEmpty,

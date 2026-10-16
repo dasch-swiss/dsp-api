@@ -303,6 +303,33 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(datasetLayerFromTurtle(turtle)),
   )
 
+  private val notAClass = "http://www.knora.org/ontology/0001/anything#NotAResourceClass"
+
+  /** The (resource-row, value-row) loads `run` triggered against the counting cache. */
+  private def loadsOfRun(run: ViewRestrictionsService => Task[Any]) =
+    for {
+      resourceLoads <- Ref.make(0)
+      valueLoads    <- Ref.make(0)
+      _             <- service(run).provideSome[Ref[Dataset]](countedLayers(resourceLoads, valueLoads))
+      resources     <- resourceLoads.get
+      values        <- valueLoads.get
+    } yield (resources, values)
+
+  private val unknownClassSuite = suite("an IRI that is not a resource class")(
+    test("valueCounts returns zero counts and loads no rows") {
+      for {
+        loads  <- loadsOfRun(_.valueCounts(projectIri, notAClass, ValueItemType.All))
+        result <- service(_.valueCounts(projectIri, notAClass, ValueItemType.All))
+      } yield assertTrue(loads == (0, 0), result.counts == AudienceRestrictionCounts.zero)
+    }.provide(datasetLayerFromTurtle(turtle), commonLayers),
+    test("items returns an empty page with total 0 and loads no rows") {
+      for {
+        loads <- loadsOfRun(_.items(projectIri, notAClass, ItemType.All, PageAndSize.Default))
+        page  <- service(_.items(projectIri, notAClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(loads == (0, 0), page.data.isEmpty, page.pagination.totalItems == 0)
+    }.provide(datasetLayerFromTurtle(turtle), commonLayers),
+  )
+
   private val itemsSuite = suite("items")(
     test("returns each affected resource with its per-audience visibility and correct paging total") {
       for {
@@ -613,6 +640,133 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     }.provide(commonLayers, datasetLayerFromTurtle(hasOtherThingTurtle)),
   )
 
+  /** A resource whose restricted file value is typed with two file classes, which yields one query row per class. */
+  private val twoFileClassesTurtle: String =
+    turtlePrefixes + linkPropertiesTurtle +
+      s"""<$hasPicture> rdfs:subPropertyOf kb:hasValue .
+         |kb:StillImageFileValue rdfs:subClassOf kb:FileValue .
+         |kb:DocumentFileValue rdfs:subClassOf kb:FileValue .
+         |""".stripMargin +
+      resourceTurtle(
+        "http://rdfh.ch/0001/twoClasses",
+        thingClass,
+        "Two file classes",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$hasPicture> <http://rdfh.ch/0001/twoClasses/values/pic>"),
+      ) +
+      valueTurtle(
+        "http://rdfh.ch/0001/twoClasses/values/pic",
+        "kb:StillImageFileValue, kb:DocumentFileValue",
+        "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
+      )
+
+  private val valueItemsSuite = suite("the class drill-down value items")(
+    test("a value typed with two file classes is listed once") {
+      for {
+        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+        items = page.data.flatMap(_.items)
+      } yield assertTrue(
+        items.map(i => i.`type` -> i.valueIri) ==
+          Seq(ItemType.File -> Some("http://rdfh.ch/0001/twoClasses/values/pic")),
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(twoFileClassesTurtle)),
+  )
+
+  // ----- the counts and the drill-down agree on what counts -----
+
+  private val parityHost = "http://rdfh.ch/0001/parityHost"
+
+  /** One resource per value kind: plain, file with a comment, user link, standoff link, and an open value. */
+  private val parityTurtle: String = {
+    val host = (name: String, values: Seq[String]) =>
+      resourceTurtle(
+        s"http://rdfh.ch/0001/$name",
+        thingClass,
+        name,
+        "V knora-admin:UnknownUser",
+        extra = values,
+      )
+    turtlePrefixes + linkPropertiesTurtle +
+      s"""<$hasText> rdfs:subPropertyOf kb:hasValue .
+         |<$hasPicture> rdfs:subPropertyOf kb:hasValue .
+         |kb:StillImageFileValue rdfs:subClassOf kb:FileValue .
+         |""".stripMargin +
+      host("plainHost", Seq(s"<$hasText> <$parityHost/plain>", s"<$hasText> <$parityHost/open>")) +
+      host("fileHost", Seq(s"<$hasPicture> <$parityHost/file>")) +
+      host("linkHost", Seq(s"<$hasOtherThingVal> <$parityHost/link>", s"<$standoffLinkValue> <$parityHost/standoff>")) +
+      valueTurtle(s"$parityHost/plain", "kb:TextValue", "M knora-admin:ProjectMember") +
+      valueTurtle(s"$parityHost/open", "kb:TextValue", "V knora-admin:UnknownUser") +
+      s"""<$parityHost/file>
+         |  a kb:StillImageFileValue ;
+         |  kb:attachedToUser $userCreator ;
+         |  kb:hasPermissions "RV knora-admin:UnknownUser|V knora-admin:KnownUser" ;
+         |  kb:isDeleted false ;
+         |  kb:valueHasComment "a comment" .
+         |""".stripMargin +
+      valueTurtle(s"$parityHost/link", "kb:LinkValue", "V knora-admin:KnownUser|M knora-admin:ProjectMember") +
+      valueTurtle(s"$parityHost/standoff", "kb:LinkValue", "M knora-admin:ProjectMember")
+  }
+
+  private def visibleFor(audience: Audience, visibility: ItemVisibility): Visibility =
+    audience match {
+      case Audience.Anonymous     => visibility.anonymous
+      case Audience.Authenticated => visibility.authenticated
+      case Audience.ProjectMember => visibility.projectMember
+    }
+
+  private def restrictedCount(counts: AudienceRestrictionCounts, audience: Audience): Int = {
+    val c = audience match {
+      case Audience.Anonymous     => counts.anonymous
+      case Audience.Authenticated => counts.authenticated
+      case Audience.ProjectMember => counts.projectMember
+    }
+    c.hidden + c.restrictedView
+  }
+
+  /** The drill-down item types whose items are the values `itemType` counts. */
+  private def countedItemTypes(itemType: ValueItemType): Set[ItemType] =
+    itemType match {
+      case ValueItemType.All     => Set(ItemType.File, ItemType.Value)
+      case ValueItemType.File    => Set(ItemType.File)
+      case ValueItemType.Value   => Set(ItemType.Value)
+      case ValueItemType.Comment => Set(ItemType.Comment)
+    }
+
+  private def drillDownItemType(itemType: ValueItemType): ItemType =
+    itemType match {
+      case ValueItemType.All     => ItemType.All
+      case ValueItemType.File    => ItemType.File
+      case ValueItemType.Value   => ItemType.Value
+      case ValueItemType.Comment => ItemType.Comment
+    }
+
+  private val paritySuite = suite("value counts and the class drill-down")(
+    test("agree, per item type and audience, on how many values are not fully visible") {
+      val valueItemTypes = List(ValueItemType.All, ValueItemType.File, ValueItemType.Value, ValueItemType.Comment)
+      for {
+        checks <- ZIO.foreach(valueItemTypes.flatMap(t => Audience.ordered.map(t -> _))) { case (itemType, audience) =>
+                    for {
+                      counts <- service(_.valueCounts(projectIri, thingClass, itemType))
+                      page   <- service(_.items(projectIri, thingClass, drillDownItemType(itemType), PageAndSize(1, 100)))
+                      listed  = page.data
+                                 .flatMap(_.items)
+                                 .filter(i => countedItemTypes(itemType).contains(i.`type`))
+                                 .count(i => visibleFor(audience, i.visibility) != Visibility.Visible)
+                    } yield (itemType, audience, restrictedCount(counts.counts, audience), listed)
+                  }
+      } yield assertTrue(
+        checks.forall { case (_, _, counted, listed) => counted == listed },
+        // The fixture makes every audience see something restricted for All, so the check is not vacuous.
+        checks.exists { case (itemType, audience, counted, _) =>
+          itemType == ValueItemType.All && audience == Audience.Anonymous && counted == 3
+        },
+        checks.exists { case (itemType, audience, counted, _) =>
+          itemType == ValueItemType.Comment && audience == Audience.Anonymous && counted == 1
+        },
+      )
+    }.provide(commonLayers, datasetLayerFromTurtle(parityTurtle)),
+  )
+
   // ----- stepped report (DEV-6778) -----
 
   /**
@@ -764,6 +918,9 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     valueClassificationSuite,
     linkDrillDownSuite,
     loadsSuite,
+    unknownClassSuite,
+    valueItemsSuite,
+    paritySuite,
     graphScopingSuite,
   )
 }
