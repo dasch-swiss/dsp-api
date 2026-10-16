@@ -30,6 +30,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@8e26dbf63 | 1 |
 | 2 | reviewed | dsp-api@6260e451a | 1 |
 | 3 | reviewed | dsp-api@6c1347ccd | 1 |
+| 4 | reviewed | dsp-api@94bb8b85d | 1 |
 
 ## Chunk queue
 
@@ -43,6 +44,7 @@ status: in-progress
 | 3.2 | dsp-api | ViewRestrictionsByPropertyService.scala, ViewRestrictionsByPropertyRepo.scala, by-property spec, legacy fixtures | 3.1 | OntologyRepo + fixture for by-property, property-values sum test, standoff zero test, propertyValues via cache + foreachPar(4) + fold, zero for unknown property, remove by-property valueCountsQuery | /property-values sums C5 rows of all classes for the property | ViewRestrictionsByPropertyService.scala propertyValues | — |
 | 3.3 | dsp-api | assets/bench_batch.py, assets/results/*batch*, assets note | — | bench script, stage run, equality check, batch size, assets note | summed batch rows equal unbatched rows; slowest LIMC batch under 10 s at the chosen size | assets/bench.py, bench_c5.py | — |
 | 3.4 | dsp-api | repo/ViewRestrictionsRepo.scala, domain/service/ViewRestrictionsRowCache.scala, ValueCountFold or row-sum helper, specs, goldens | 3.3 | repo equality test, sum test, listing query + golden, batched query + golden, loader change, remove unbatched query | the value-count loader lists, batches and sums; equality with the unbatched result on the fixture | ViewRestrictionsRepo.scala valueCountsQuery, ViewRestrictionsRowCache.scala layer | — |
+| 4.1 | dsp-api | domain/service/ViewRestrictionsByPropertyService.scala, repo/ViewRestrictionsByPropertyRepo.scala, AdminDomainModule.scala, by-property specs and fixtures | — | all Phase 4 checkboxes | /property-values sums the cached per-class rows for the property; zero for a property not in the index | ViewRestrictionsByPropertyService.scala propertyValues; ViewRestrictionsByPropertyRepo.scala valueCountsQuery | — |
 
 ## Chunks
 
@@ -58,6 +60,8 @@ status: in-progress
 | 3.3 | dsp-api | complete | 673719bc7 | stage measurement of batched value counts: 0 differences at 500/2000/5000; slowest LIMC Monument batch 3.35 s at 5000; listing 3.28 s for 55,824 resources; batch size 5000 | none |
 | 3.4 | dsp-api | complete | 1431e2e25 | resourceListingQuery + batched valueCountsQuery (VALUES ?resource first), sumBatches, batch size 5000, parallelism 2; equality test with batch size 1; empty class runs no value query | none |
 | 3.5 | dsp-api | complete | 288f3f523 | Phase 3 review fixes: refresh drops old and new class rows, batch size 2000, 4-permit semaphore for batch queries, class capacity 2000, private constants and test-only overload, docs, stronger single-flight test | none |
+| 4.1 | dsp-api | complete | 44901bf36 | /property-values from cached batched rows of all classes (parallelism 4) + ValueCountFold; zero for a property outside the index without loads; per-property count query removed | none |
+| 4.2 | dsp-api | complete | 0e53cde70 | Phase 4 review fixes: valueRowsOfProject on the row cache, shared test fixtures, constraint comments without measurements, property endpoint docs with the multi-type caveat, 8 tests checked by mutation | none |
 
 ## Deferrals
 
@@ -104,3 +108,9 @@ status: in-progress
   removal also works when no older R entry was cached. A mutation that keeps failures in the cache failed the
   failure-retention test.
 - Full webapi unit suite passed at 1431e2e25.
+- Chunk 4.1: a mutation that removed the filter to the requested property passed all worker tests (every fixture
+  had one counted property for each class). The session added "counts only the values of the requested property";
+  it fails under the mutation.
+- Phase 4 review DUNE-001 (repo count methods are public; only a doc points to the cache): recorded only. The
+  services and the cache share a package, so visibility cannot restrict the methods to the cache;
+  `valueRowsOfProject` is the shared read to follow. Full webapi unit suite passed at 44901bf36.

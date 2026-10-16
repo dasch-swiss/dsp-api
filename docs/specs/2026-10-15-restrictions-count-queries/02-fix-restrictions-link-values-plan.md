@@ -342,18 +342,18 @@ glob).
 
 ### Phase 4: By-property counts from the cached rows
 
-- [ ] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
-- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
+- [x] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
+- [x] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
       ontology data.
-- [ ] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
-- [ ] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
-- [ ] Change `propertyValues` to load all classes through the cache with
+- [x] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
+- [x] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
+- [x] Change `propertyValues` to load all classes through the cache with
       `ZIO.foreachPar(classes)(…).withParallelism(4)`.
-- [ ] Change `propertyValues` to fold the rows for the requested property.
-- [ ] Return zero counts for a property that is not in the index.
-- [ ] Remove `valueCountsQuery` and its legacy fixtures from `ViewRestrictionsByPropertyRepo`.
-- [ ] Run the tests; they pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Change `propertyValues` to fold the rows for the requested property.
+- [x] Return zero counts for a property that is not in the index.
+- [x] Remove `valueCountsQuery` and its legacy fixtures from `ViewRestrictionsByPropertyRepo`.
+- [x] Run the tests; they pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 5: Drill-down: link fix and exact permission filter
 
