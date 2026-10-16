@@ -17,7 +17,7 @@ The fix has two parts:
 1. Include user link values in every count and every drill-down. Exclude only standoff link values
    (`knora-base:hasStandoffLinkToValue`).
 2. Use the fastest measured query shapes, from the stage measurement in `01-…-design.md`:
-   - Step 1 uses R. Step 2 uses C5, one query for each class.
+   - Step 1 uses R. Step 2 uses C5 for each class, in batches of resources so that each query stays under the timeout.
    - The by-property counts come from the C5 rows of all classes, in a cache for each project.
    - Scala does all classification.
 
@@ -42,7 +42,7 @@ The report has three problems:
 | Endpoint | Today | After |
 | --- | --- | --- |
 | `/classes` | class discovery + 2 multi-type probes + resource counts | **R**, classes filtered in Scala |
-| `/values` | `valueCountsByPermissionQuery` (2 templates) | **C5** for the class, from the cache, folded in Scala for each item type |
+| `/values` | `valueCountsByPermissionQuery` (2 templates) | **C5** for the class in resource batches, from the cache, folded in Scala for each item type |
 | `/properties` | ontology cache | unchanged; the filter now accepts user link value properties |
 | `/property-values` | `valueCountsQuery` for each property | C5 rows of all classes, from the cache, filtered to the property in Scala |
 | `/items`, `/property-items` | REGEX + `LinkValue` filter | `FILTER (?permissions IN (…))` with Scala-classified literals; standoff excluded by `?prop`; class bound directly |
@@ -90,6 +90,9 @@ These decisions are fixed for this plan:
    dsp-app do not change.
 5. **Structural links.** `isPartOf`, `isRegionOf`, `isAnnotationOf` and `hasRepresentation` count as user links. Only
    standoff links are excluded.
+6. **Batched value counts.** The value counts of a class are read in batches of resources, so each query stays under
+   the 40 s timeout as projects grow. Paging the grouped result rows with `LIMIT`/`OFFSET` would not bound the query
+   time, because each page must scan and aggregate the whole class. The project-wide resource counts stay one query.
 
 ## Technical Considerations
 
@@ -174,7 +177,31 @@ This matters because the app sends `/property-values` requests in parallel.
 - **By-property load.** On a new cache, `/property-values` loads every class with
   `ZIO.foreachPar(classes)(…).withParallelism(4)`. On LIMC, the slowest class takes 22 s and all classes take 64 s in
   sequence. The wall time is therefore about 22–25 s, below the 40 s query timeout. This number is not measured yet;
-  Phase 5 measures it.
+  Phase 6 measures it.
+
+### Batched value counts
+
+The value counts of one class come from two steps:
+
+1. **List.** One query lists the IRIs of the class's live resources: `?resource a $resourceClass ;
+   knora-base:attachedToProject $project ; knora-base:isDeleted false`. It has no value join and no aggregate.
+2. **Count.** The value-count query runs once for each batch of `ValueCountBatchSize` resource IRIs, with
+   `VALUES ?resource { … }` as the first pattern, so `?resource` is bound before `?resource ?prop ?value`. The other
+   patterns and the pattern-order rule stay as they are.
+
+Scala sums the batch rows by `(property, permissions, deleted)`. The batches are disjoint, because a value belongs to
+one resource, so the sum equals the unbatched result. The cache keeps one row set for each class; only its loader
+changes. Batches of one class run with a parallelism limit, so one class does not take all triplestore capacity.
+
+Limits that stay:
+
+- **Listing.** The listing query still grows with the class size. It reads one index and returns only IRIs. If the
+  measurement shows that it does not stay well under the timeout for the largest measured class, it needs its own
+  paging (follow-up).
+- **Total time.** The total time for each class still grows linearly with its size. The 40 s timeout applies to each
+  query, not to each request.
+- **Batch size.** `ValueCountBatchSize` is a measured constant, not a guess. The measurement in Phase 3 sets it so
+  that the slowest batch query on LIMC stays under 10 s, which leaves room for growth.
 
 ### Drill-down
 
@@ -280,19 +307,14 @@ glob).
 - [x] Run the tests; they pass.
 - [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-### Phase 3: Project cache and by-property counts from C5
+### Phase 3: Row cache and batched value counts
 
-- [ ] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
-- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
-      ontology data.
 - [x] Write a failing cache test (`makeCache` with a counting `Ref`): two concurrent lookups for the same key run one
       load.
 - [x] Write a failing cache test: a failed load is not kept, so the next lookup runs the load again.
 - [x] Write a failing cache test: the project removal invalidates only the `C5Key`s of its own project.
 - [x] Write a failing cache test for the cross-tab sequence `/classes`, `/values`, `/properties`, `/values`: the
       second `/values` runs no load.
-- [ ] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
-- [ ] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
 - [x] Add `ViewRestrictionsRowCache` with `makeCache(capacity, ttl)(resolve)` (`Cache.makeWith`, 10-minute TTL on
       success, `Duration.Zero` on failure) and a `ZLayer.scoped` layer.
 - [x] Add the R cache (key `ProjectIri`) to `ViewRestrictionsRowCache`.
@@ -300,6 +322,31 @@ glob).
 - [x] Wire `ViewRestrictionsRowCache` into the admin layers and the test layers.
 - [x] Use the cache in the class report.
 - [x] On `/classes`, invalidate the `C5Key` of each class in the current R rows, then the R key.
+- [ ] Add `assets/bench_batch.py`, which renders the listing query and the batched value-count query (same patterns as
+      `valueCountsQuery`, with `VALUES ?resource { … }` first).
+- [ ] Run `bench_batch.py` on stage for the largest LIMC class (`Monument`) and one BEOL class, with batch sizes 500,
+      2000 and 5000, and record each listing time and the slowest batch time in `assets/results/`.
+- [ ] Check with the measurement that the summed batch rows equal the unbatched value-count rows (0 differences).
+- [ ] Set `ValueCountBatchSize` to the largest measured size whose slowest LIMC batch stays under 10 s.
+- [ ] Add a short `assets/` note with the measured numbers and the chosen batch size, linked from the design doc.
+- [ ] Write a failing repo test: the batched loader returns the same rows as one unbatched query on the in-memory fixture,
+      with a batch size smaller than the class.
+- [ ] Write a failing unit test: summing batch rows adds counts and `commented` per `(property, permissions, deleted)`.
+- [ ] Add the resource listing query and its golden test to `ViewRestrictionsRepo`.
+- [ ] Add the batched value-count query (`VALUES ?resource` first) and its golden test; keep the pattern-order Scaladoc.
+- [ ] Change the value-count loader of `ViewRestrictionsRowCache` to list, batch and sum, with a parallelism limit for
+      the batches of one class.
+- [ ] Remove the unbatched `valueCountsQuery` and its golden file, or keep it only if a test still needs it.
+- [ ] Run the tests; they pass.
+- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+
+### Phase 4: By-property counts from the cached rows
+
+- [ ] Give `ViewRestrictionsByPropertyService` an `OntologyRepo` as the index source (`ProjectOntologyIndex.load`).
+- [ ] Provide `OntologyCacheFake` plus `OntologyRepoLive` in `ViewRestrictionsByPropertyServiceSpec`, with fixture
+      ontology data.
+- [ ] Write a failing test: `/property-values` sums the C5 rows of all classes for the property.
+- [ ] Write a failing test: `/property-values` for `hasStandoffLinkToValue` gives zero counts.
 - [ ] Change `propertyValues` to load all classes through the cache with
       `ZIO.foreachPar(classes)(…).withParallelism(4)`.
 - [ ] Change `propertyValues` to fold the rows for the requested property.
@@ -308,7 +355,7 @@ glob).
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-### Phase 4: Drill-down: link fix and exact permission filter
+### Phase 5: Drill-down: link fix and exact permission filter
 
 - [ ] Add a failing service test: a restricted user link value appears in `/items`.
 - [ ] Add a failing service test: a restricted user link value appears in `/property-items`.
@@ -345,7 +392,7 @@ glob).
 - [ ] Run the tests; they pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-### Phase 5: End-to-end tests, measurement, docs
+### Phase 6: End-to-end tests, measurement, docs
 
 - [ ] Extend `AdminViewRestrictionsE2ESpec`: `/items` for `anything:Thing` includes
       `http://rdfh.ch/0001/project-thing-1/values/0` (restricted `hasOtherThingValue`, `CR knora-admin:Creator`).
@@ -386,6 +433,7 @@ glob).
       knora-admin:KnownUser` case appears in both.
 - [ ] On stage, R and C5 counts with the link fix applied match the design-doc rows (0 differences).
 - [ ] No query on stage goes over the 40 s view-restrictions timeout.
+- [ ] The slowest batched value-count query on LIMC stays under 10 s, and the summed batch rows equal the unbatched rows.
 - [ ] No `REGEX`, `FILTER NOT EXISTS { ?value a knora-base:LinkValue }`, or `subClassOf+` probe remains in the
       restrictions repos.
 - [ ] The API contract and dsp-app stay unchanged.
@@ -395,8 +443,9 @@ glob).
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
 | A later edit adds a `?value` pattern with two bound terms and causes a store-wide scan | Medium | Timeout | Golden tests pin R and C5; Scaladoc and `REVIEW.md` rule |
-| Jena turns the permission `IN` list into a constant in the triple pattern (confirmed for plain `?permissions IN`) | High without `STR()` | Store-wide scan | `STR(?permissions) IN`; algebra unit test in Phase 4 |
-| First by-property request, or a deep link to `/property-items`, on LIMC with a new cache is over the timeout | Low | Empty column or failed drill-down | Parallelism 4, one lookup for concurrent requests, measured in Phase 5 |
+| Jena turns the permission `IN` list into a constant in the triple pattern (confirmed for plain `?permissions IN`) | High without `STR()` | Store-wide scan | `STR(?permissions) IN`; algebra unit test in Phase 5 |
+| First by-property request, or a deep link to `/property-items`, on LIMC with a new cache is over the timeout | Low | Empty column or failed drill-down | Parallelism 4, one lookup for concurrent requests, measured in Phase 6 |
+| A batch query or the listing query of a very large class goes over the timeout | Medium as projects grow | Empty `/values` row | Batches sized from the stage measurement (slowest LIMC batch under 10 s); listing measured in Phase 3, paged in a follow-up if needed |
 | A failed lookup stays in the cache | Low | Key blocked for 10 min | `Duration.Zero` on failure; tested in Phase 3 |
 | The cache shows old counts after a permission change | Low | Wrong review | Removal on `/classes`; 10-minute TTL |
 | Ontology cache misses a property or class, and its rows drop | Low | Count too low | Index over all ontologies; warning log for each unknown property IRI, tested |

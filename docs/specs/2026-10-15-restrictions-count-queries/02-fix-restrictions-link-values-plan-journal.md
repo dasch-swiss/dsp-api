@@ -56,6 +56,9 @@ status: in-progress
 
 ## Deferrals
 
+- 2026-10-16 design change (owner decision): value counts are read in resource batches (decision 6). Phase 3 becomes
+  "Row cache and batched value counts" with a stage measurement first; the by-property items move to a new Phase 4;
+  the drill-down and the final phase become Phases 5 and 6.
 - Phase 3 checkbox "Remove the EhCache `viewRestrictionsProjectClasses` ...": moved to Phase 4, because the
   drill-down uses `projectClasses` (and its EhCache) until Phase 4 removes `ProjectClasses`.
 - Phase 2 checkboxes "Give both services an OntologyRepo" and "Provide OntologyCacheFake ... in both service specs":
@@ -93,12 +96,9 @@ status: in-progress
 
 - Stopped on request after chunk 3.1. Nothing is pushed; the branch is `investigate/restrictions-matrix-query` and its
   upstream points at `origin/main`, so push with `git push -u origin HEAD` (or a renamed branch) when shipping.
-- Next: chunk 3.2 (see `## Chunk queue`): give `ViewRestrictionsByPropertyService` an `OntologyRepo` and the
-  `ViewRestrictionsRowCache`; `propertyValues` loads every class through the cache with
-  `ZIO.foreachPar(classes)(...).withParallelism(4)` (classes from `rowCache.resourceCounts` filtered to
-  `index.resourceClasses`), filters the rows to the property and folds them with `ValueCountFold.fold`; zero counts for
-  a property not in `index.valueProperties`; remove the by-property `valueCountsQuery` and its legacy fixtures; add the
-  `OntologyCacheFake` fixture to `ViewRestrictionsByPropertyServiceSpec`. Then the Phase 3 review checkpoint.
+- Next: the batching items of Phase 3, starting with the stage measurement (`assets/bench_batch.py`; needs
+  `SPARQL_ENDPOINT` and `STAGE_DB_PASSWORD` in the environment, see `assets/bench.py`). The by-property work that was
+  chunk 3.2 is now Phase 4 and builds on the batched loader.
 - Worker reports have twice been inaccurate (an edit not on disk, skipped red steps): verify each chunk with
   `git status`, the test report and a compiling mutation before committing.
 - Resume with `/eng:workflows:work docs/specs/2026-10-15-restrictions-count-queries/02-fix-restrictions-link-values-plan.md`.
