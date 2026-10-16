@@ -2,7 +2,7 @@
 plan: docs/specs/2026-10-15-restrictions-count-queries/02-fix-restrictions-link-values-plan.md
 target_repo: /Users/noraammann/Documents/Cloned_GitHub/dsp-api
 base_commit: 8e26dbf63
-branch: investigate/restrictions-matrix-query
+branch: feature/dev-7390-restrictions-overview-omits-user-facing-link-values
 started: 2026-10-15
 problem: >
   The restrictions overview drops every knora-base:LinkValue from its value queries, so restricted user link values
@@ -21,7 +21,7 @@ status: complete
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | 8e26dbf63 | investigate/restrictions-matrix-query | squash | in-progress | — |
+| dsp-api | 8e26dbf63 | feature/dev-7390-restrictions-overview-omits-user-facing-link-values | squash | shipped | <https://github.com/dasch-swiss/dsp-api/pull/4392> |
 
 ## Phases
 
