@@ -75,7 +75,7 @@ final case class ViewRestrictionsByPropertyService(
    * empty page and runs no query.
    *
    * The literals come from the cached counts, so an object whose permissions changed after the last refresh
-   * by `/classes` (at most 10 minutes ago) can be missing until the next refresh. Only properties in the
+   * by `/classes` (at most 60 minutes ago) can be missing until the next refresh. Only properties in the
    * ontology cache are listed, as only they are counted.
    *
    * Each row reports its own resource class. That is the whole point of this report: one property can be

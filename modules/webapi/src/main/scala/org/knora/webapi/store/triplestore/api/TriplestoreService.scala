@@ -220,6 +220,10 @@ object TriplestoreService {
       // its own, not a longer Standard: nothing else should silently inherit a doubled budget, and the report's
       // durations stay separable in the metrics.
       case ViewRestrictions
+      // The project-wide value-count query of the view-restrictions report. It reads every value of the project
+      // once and its result is cached, so it gets a longer budget than the report's other queries, which stay on
+      // ViewRestrictions.
+      case ViewRestrictionsCounts
     }
 
     sealed trait SparqlQuery {

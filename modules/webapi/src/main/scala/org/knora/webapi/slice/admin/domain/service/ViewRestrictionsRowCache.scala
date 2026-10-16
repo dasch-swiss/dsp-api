@@ -19,7 +19,7 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
  * A short-lived, in-memory cache of the count rows behind the view restrictions reports: the resource counts of a
  * project and the value counts of one of its classes.
  *
- * Concurrent reads of one key run a single load and entries live for ten minutes; a failed load is retained
+ * Concurrent reads of one key run a single load and entries live for 60 minutes; a failed load is retained
  * for `Duration.Zero`.
  *
  * Besides the TTL, [[refreshProject]] is the only invalidation point; the `/classes` report calls it.
@@ -73,7 +73,7 @@ object ViewRestrictionsRowCache {
 
   final case class ValueKey(projectIri: ProjectIri, resourceClass: String)
 
-  private val Ttl: Duration = 10.minutes
+  private val Ttl: Duration = 60.minutes
 
   /** How many classes of a project load their value rows at once. */
   private val ProjectClassParallelism: Int = 4

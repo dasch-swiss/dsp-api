@@ -94,7 +94,7 @@ final case class ViewRestrictionsService(
    * no drill-down query runs.
    *
    * The literals come from the cached counts, so an object whose permissions changed after the last refresh
-   * by [[classSummaries]] (at most 10 minutes ago) can be missing until the next refresh. The value branch
+   * by [[classSummaries]] (at most 60 minutes ago) can be missing until the next refresh. The value branch
    * accepts any value property except the standoff link value, while the counts count only properties in
    * the ontology cache, so a value of a property missing from the cache can be listed but not counted.
    */
