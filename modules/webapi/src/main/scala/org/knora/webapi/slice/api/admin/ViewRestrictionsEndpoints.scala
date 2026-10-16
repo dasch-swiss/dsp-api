@@ -87,6 +87,11 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
       "Paginated list of resources affected by a restriction under a given resource class, each with " +
         "its per-audience visibility and the nested restricted file values / values / comments. " +
         "Ordered by label then IRI, so paging is stable across requests. " +
+        "The restricted literals come from the cached counts, so an object whose permissions changed after " +
+        "the last refresh by `/classes` (at most 10 minutes) can be missing until the next refresh. " +
+        "The value branch accepts any value property except the standoff link value, while the counts count " +
+        "only properties in the ontology cache, so a value of a property missing from the cache can be " +
+        "listed but not counted. " +
         "The user must be project admin or system admin.",
     )
 }

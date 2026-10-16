@@ -87,6 +87,10 @@ final case class ViewRestrictionsByPropertyService(
    * as the counts classify them. A property that is not counted, or has no restricted literal, yields an
    * empty page and runs no query.
    *
+   * The literals come from the cached counts, so an object whose permissions changed after the last refresh
+   * by `/classes` (at most 10 minutes ago) can be missing until the next refresh. Only properties in the
+   * ontology cache are listed, as only they are counted.
+   *
    * Each row reports its own resource class. That is the whole point of this report: one property can be
    * used by many classes, so the class belongs to the row and not to the table.
    */
@@ -140,11 +144,8 @@ final case class ViewRestrictionsByPropertyService(
                   RestrictedPropertyResource(
                     resourceIri = resourceIri,
                     label = head.resourceLabel,
-                    // A resource asserted as several classes yields one row per type, since this report
-                    // joins `?resource a ?resClass` without the most-specific-class filter the class report
-                    // needs. Picking the minimum rather than `head` keeps the answer reproducible across
-                    // requests; resolving the most specific one would mean importing the class machinery
-                    // this report exists without.
+                    // A resource asserted as several classes yields one row per type. The minimum class IRI
+                    // is picked so the answer is reproducible across requests.
                     resourceClassIri = resourceRows.map(_.resourceClassIri).min,
                     // ...and the same multi-typing would repeat every value once per type.
                     values = resourceRows

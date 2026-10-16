@@ -94,6 +94,9 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "Each resource reports its **own** resource class: a property spans classes, which is the whole " +
         "reason this report exists, so the class belongs to the row rather than to the table. " +
         "Ordered by label then IRI, so paging is stable across requests. " +
+        "The restricted literals come from the cached counts, so an object whose permissions changed after " +
+        "the last refresh by `/classes` (at most 10 minutes) can be missing until the next refresh. " +
+        "Only properties in the ontology cache are listed, as only they are counted. " +
         "The user must be project admin or system admin.",
     )
 }

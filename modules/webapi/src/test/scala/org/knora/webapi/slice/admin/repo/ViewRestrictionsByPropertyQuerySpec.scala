@@ -117,7 +117,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
           .sparql
         assertTrue(q.contains("COALESCE"), q.contains("?labelOrIri"))
       },
-      test("the row query is bounded by the page's IRIs and carries no window of its own") {
+      test("the row query is anchored by VALUES on the page's IRIs and carries no window of its own") {
         // The IRI list IS the window, so every restricted value of a paged resource comes back together.
         // A resource can therefore never straddle a page boundary and be returned twice, partial each time.
         val q = ViewRestrictionsByPropertyRepo
@@ -131,6 +131,8 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
           .sparql
         assertTrue(
           q.contains("http://rdfh.ch/0001/a") && q.contains("http://rdfh.ch/0001/b"),
+          q.contains("WHERE {\n  VALUES ?resource {"),
+          !q.contains("?resource IN"),
           !q.contains("LIMIT"),
           !q.contains("OFFSET"),
         )
@@ -195,7 +197,7 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest
           ),
         )
       },
-      test("no query uses REGEX or restricts to non-link values") {
+      test("no query uses REGEX or mentions LinkValue") {
         assertTrue(allQueries.values.forall(q => !q.contains("REGEX") && !q.contains("LinkValue")))
       },
       test("every query binds the property in the triple pattern") {

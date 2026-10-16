@@ -16,6 +16,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -43,10 +44,14 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val twoIris = Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b")
 
   private def page(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
-    ViewRestrictionsRepo.resourcePageQuery(projectIri, itemType, thingClass, 50, 25, resource, value).sparql
+    ViewRestrictionsRepo
+      .resourcePageQuery(projectIri, itemType, thingClass, 50, 25, DrillDownBranches.of(itemType, resource, value))
+      .sparql
 
   private def count(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
-    ViewRestrictionsRepo.resourceCountForDrillDownQuery(projectIri, itemType, thingClass, resource, value).sparql
+    ViewRestrictionsRepo
+      .resourceCountForDrillDownQuery(projectIri, itemType, thingClass, DrillDownBranches.of(itemType, resource, value))
+      .sparql
 
   private def resourceRows =
     ViewRestrictionsRepo.resourceQuery(projectIri, thingClass, twoIris, resourceLiterals).sparql
@@ -133,6 +138,44 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(ViewRestrictionsRepo.sumBatches(rows).toSet == rows.toSet)
       },
     ),
+    suite("DrillDownBranches.of")(
+      test("Resource keeps the resource literals only") {
+        assertTrue(
+          DrillDownBranches.of(ItemType.Resource, resourceLiterals, valueLiterals) ==
+            DrillDownBranches(Some(resourceLiterals), None),
+        )
+      },
+      test("File, Value and Comment keep the value literals only") {
+        assertTrue(
+          List(ItemType.File, ItemType.Value, ItemType.Comment).forall(it =>
+            DrillDownBranches.of(it, resourceLiterals, valueLiterals) == DrillDownBranches(None, Some(valueLiterals)),
+          ),
+        )
+      },
+      test("All keeps both") {
+        assertTrue(
+          DrillDownBranches.of(ItemType.All, resourceLiterals, valueLiterals) ==
+            DrillDownBranches(Some(resourceLiterals), Some(valueLiterals)),
+        )
+      },
+      test("a branch with an empty literal set is absent") {
+        val noValues    = DrillDownBranches.of(ItemType.All, resourceLiterals, Set.empty)
+        val noResources = DrillDownBranches.of(ItemType.All, Set.empty, valueLiterals)
+        assertTrue(
+          noValues == DrillDownBranches(Some(resourceLiterals), None),
+          noResources == DrillDownBranches(None, Some(valueLiterals)),
+          !noValues.isEmpty,
+          !noResources.isEmpty,
+        )
+      },
+      test("is empty when the item type needs a branch only the other literals could fill") {
+        assertTrue(
+          DrillDownBranches.of(ItemType.Resource, Set.empty, valueLiterals).isEmpty,
+          DrillDownBranches.of(ItemType.Value, resourceLiterals, Set.empty).isEmpty,
+          DrillDownBranches.of(ItemType.All, Set.empty, Set.empty).isEmpty,
+        )
+      },
+    ),
     suite("drill-down golden queries")(
       test("resourcePage-Resource")(assertGolden(goldenQueries("resourcePage-Resource"), "resourcePage-Resource")),
       test("resourcePage-Value")(assertGolden(goldenQueries("resourcePage-Value"), "resourcePage-Value")),
@@ -190,6 +233,11 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(
           twoIris.forall(rq.contains),
           twoIris.forall(vq.contains),
+          // `VALUES` opens the WHERE, so the page's resources anchor the query
+          rq.contains("WHERE {\n  VALUES ?resource {"),
+          vq.contains("WHERE {\n  VALUES ?resource {"),
+          !rq.contains("?resource IN"),
+          !vq.contains("?resource IN"),
           !rq.contains("LIMIT"),
           !vq.contains("LIMIT"),
           // the value rows still report file-ness and comments for the drill-down
@@ -243,6 +291,24 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
             .forall(q => !q.contains("a knora-base:LinkValue")),
           page(ItemType.Value).contains("FILTER (?prop != knora-base:hasStandoffLinkToValue)"),
           valueRows.contains("FILTER (?prop != knora-base:hasStandoffLinkToValue)"),
+        )
+      },
+      test("every class value branch skips the standoff link value") {
+        val filter = "FILTER (?prop != knora-base:hasStandoffLinkToValue)"
+        assertTrue(
+          page(ItemType.Value).contains(filter),
+          count(ItemType.Value).contains(filter),
+          page(ItemType.All).split("UNION")(1).contains(filter),
+          count(ItemType.All).split("UNION")(1).contains(filter),
+          valueRows.contains(filter),
+        )
+      },
+      test("the class drill-down queries bind the class as ?resClass") {
+        val bind = s"BIND(<$thingClass> AS ?resClass)"
+        assertTrue(
+          drillDownQueries.filter { case (name, _) => name != "valueQuery" }.values
+            .forall(_.contains(bind)),
+          valueRows.contains(s"BIND(<$hasPicture> AS ?resClass)"),
         )
       },
       test("no drill-down query uses REGEX or the project class list") {

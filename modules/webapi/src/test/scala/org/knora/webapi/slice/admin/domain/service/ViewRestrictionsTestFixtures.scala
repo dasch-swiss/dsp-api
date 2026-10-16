@@ -79,14 +79,22 @@ object ViewRestrictionsTestFixtures {
 
   /** A row cache whose loaders count each read and return one resource row of `classIri` and no value rows. */
   def countingCache(loads: Ref[Int], classIri: String): ULayer[ViewRestrictionsRowCache] =
+    countingCache(loads, loads, classIri)
+
+  /** Like the single-counter variant, counting resource-row and value-row reads separately. */
+  def countingCache(
+    resourceLoads: Ref[Int],
+    valueLoads: Ref[Int],
+    classIri: String,
+  ): ULayer[ViewRestrictionsRowCache] =
     ZLayer.fromZIO {
       for {
         resources <- ViewRestrictionsRowCache.makeCache[ProjectIri, Seq[ResourceCountRow]](10, 1.minute)(_ =>
-                       loads.update(_ + 1).as(Seq(ResourceCountRow(classIri, "V knora-admin:UnknownUser", 1))),
+                       resourceLoads.update(_ + 1).as(Seq(ResourceCountRow(classIri, "V knora-admin:UnknownUser", 1))),
                      )
         values <-
           ViewRestrictionsRowCache.makeCache[ViewRestrictionsRowCache.ValueKey, Seq[ValueCountRow]](10, 1.minute)(_ =>
-            loads.update(_ + 1).as(Seq.empty),
+            valueLoads.update(_ + 1).as(Seq.empty),
           )
       } yield ViewRestrictionsRowCache(resources, values)
     }

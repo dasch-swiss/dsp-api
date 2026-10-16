@@ -11,6 +11,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsClassification.ProjectOntologyIndex
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.DrillDownBranches
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.PermissionCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.api.PageAndSize
@@ -121,8 +122,13 @@ final case class ViewRestrictionsService(
    *
    * The objects are selected by permission literal: the literals of the class's cached count rows are
    * classified by [[ViewRestrictionsAudience.restrictedLiterals]], the classification the counts use, so the
-   * drill-down lists the objects the counts report. When no literal the item type needs is restricted,
-   * the page is empty and no drill-down query runs.
+   * drill-down lists what the counts report. Only the cached rows the item type needs are read. When no
+   * literal the item type needs is restricted, the page is empty and no drill-down query runs.
+   *
+   * The literals come from the cached counts, so an object whose permissions changed after the last refresh
+   * by [[classSummaries]] (at most 10 minutes ago) can be missing until the next refresh. The value branch
+   * accepts any value property except the standoff link value, while the counts count only properties in
+   * the ontology cache, so a value of a property missing from the cache can be listed but not counted.
    */
   def items(
     projectIri: ProjectIri,
@@ -131,29 +137,16 @@ final case class ViewRestrictionsService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
-      index             <- ProjectOntologyIndex.load(ontologyRepo)
-      resourceRows      <- rowCache.resourceCounts(projectIri)
-      valueRows         <- rowCache.valueCounts(projectIri, resourceClass)
-      resourceRestricted = ViewRestrictionsAudience.restrictedLiterals(
-                             resourceRows.filter(_.classIri == resourceClass).map(_.permissions).toSet,
-                             projectIri,
-                           )
-      valueRestricted = ViewRestrictionsAudience.restrictedLiterals(
-                          valueRows
-                            .filterNot(_.deleted)
-                            .filter(r => index.valueProperties.contains(r.propertyIri))
-                            .map(_.permissions)
-                            .toSet,
-                          projectIri,
-                        )
+      index    <- ProjectOntologyIndex.load(ontologyRepo)
+      branches <- drillDownBranches(projectIri, resourceClass, itemType, index)
       // Paging happens in SPARQL: `rows` are already exactly the resources of the requested page, and
       // `total` is an exact COUNT over the whole result set — no scan cap, no Scala-side slicing.
-      // The page total and the page itself are independent reads, so they go out together rather than one
-      // after the other. They are separate transactions, not a snapshot: a concurrent write between them
-      // can leave `totalItems` inconsistent with the rows — as it could before, when they ran in sequence.
+      // The page total and the page itself are independent reads, so they go out together. They are separate
+      // transactions, not a snapshot: a concurrent write between them can leave `totalItems` inconsistent
+      // with the rows.
       totalAndRows <-
         repo
-          .countRestrictedResources(projectIri, itemType, resourceClass, resourceRestricted, valueRestricted)
+          .countRestrictedResources(projectIri, itemType, resourceClass, branches)
           .zipPar(
             repo.findRestrictedObjects(
               projectIri,
@@ -161,8 +154,7 @@ final case class ViewRestrictionsService(
               resourceClass,
               offset = pageAndSize.size * (pageAndSize.page - 1),
               limit = pageAndSize.size,
-              resourceRestricted,
-              valueRestricted,
+              branches,
             ),
           )
       (total, rows) = totalAndRows
@@ -195,6 +187,35 @@ final case class ViewRestrictionsService(
       // Preserve the SPARQL page order (label, then IRI) so paging stays reproducible across requests.
       ordered = byResource.sortBy(r => (r.label, r.resourceIri))
     } yield PagedResponse.from(ordered, total, pageAndSize)
+
+  /** The drill-down branches of one class, reading only the cached rows the item type needs. */
+  private def drillDownBranches(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    itemType: ItemType,
+    index: ProjectOntologyIndex,
+  ): Task[DrillDownBranches] = {
+    val resourceLiterals = rowCache
+      .resourceCounts(projectIri)
+      .map(rows => restricted(rows.filter(_.classIri == resourceClass).map(_.permissions), projectIri))
+    val valueLiterals = rowCache
+      .valueCounts(projectIri, resourceClass)
+      .map(rows =>
+        restricted(
+          rows.filterNot(_.deleted).filter(r => index.valueProperties.contains(r.propertyIri)).map(_.permissions),
+          projectIri,
+        ),
+      )
+    itemType match {
+      case ItemType.Resource                                 => resourceLiterals.map(DrillDownBranches.of(itemType, _, Set.empty))
+      case ItemType.All                                      => resourceLiterals.zipPar(valueLiterals).map(DrillDownBranches.of(itemType, _, _))
+      case ItemType.File | ItemType.Value | ItemType.Comment =>
+        valueLiterals.map(DrillDownBranches.of(itemType, Set.empty, _))
+    }
+  }
+
+  private def restricted(permissions: Seq[String], projectIri: ProjectIri): Set[String] =
+    ViewRestrictionsAudience.restrictedLiterals(permissions.toSet, projectIri)
 }
 
 object ViewRestrictionsService {

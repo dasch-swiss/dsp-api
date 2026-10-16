@@ -37,8 +37,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *     ordered deterministically. Each row carries its own resource class, because a property spans classes.
  *
  * NOTE — the drill-down queries join **no resource class** to pin a resource, and that is load-bearing.
- * Under a single bound property `DISTINCT ?value` and `DISTINCT ?resource` cannot double-count, so the
- * most-specific-class filter of [[ViewRestrictionsRepo]] does not apply here.
+ * Under a single bound property `DISTINCT ?value` and `DISTINCT ?resource` cannot double-count. The row
+ * query returns one row per class a resource is asserted as; the service collapses them.
  */
 final case class ViewRestrictionsByPropertyRepo(
   private val triplestore: TriplestoreService,
@@ -86,9 +86,10 @@ final case class ViewRestrictionsByPropertyRepo(
   /**
    * One page of resources carrying a restricted value of the property, with all of their restricted values.
    *
-   * `restricted` are the permission literals to list, and must not be empty. Two queries rather than one: the first windows **resources** in SPARQL, the second fetches every row
-   * for exactly those IRIs. Windowing the value rows directly would page a different unit than
-   * [[countRestrictedResources]] counts — see [[ViewRestrictionsByPropertyRepo.drillDownResourcePageQuery]].
+   * `restricted` are the permission literals to list. Two queries rather than one: the first windows
+   * **resources** in SPARQL, the second fetches every row for exactly those IRIs. Windowing the value rows
+   * directly would page a different unit than [[countRestrictedResources]] counts — see
+   * [[ViewRestrictionsByPropertyRepo.drillDownResourcePageQuery]].
    */
   def findRestrictedResources(
     projectIri: ProjectIri,
@@ -105,7 +106,7 @@ final case class ViewRestrictionsByPropertyRepo(
                         .drillDownResourcePageQuery(projectIri, propertyIri, itemType, restricted, offset, limit),
                     )
                     .map(_.flatMap(_.get("resource")))
-      // An empty window means an empty page: sending `?resource IN ()` would be a pointless round trip.
+      // An empty window means an empty page: `VALUES ?resource { }` would match nothing.
       rows <- if (pageIris.isEmpty) ZIO.succeed(Seq.empty[RestrictedPropertyValueRow])
               else
                 triplestore
@@ -117,8 +118,7 @@ final case class ViewRestrictionsByPropertyRepo(
     } yield rows
 
   /**
-   * The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate. `restricted`
-   * must not be empty.
+   * The exact page total for [[findRestrictedResources]], so `totalItems` is not an estimate.
    */
   def countRestrictedResources(
     projectIri: ProjectIri,
@@ -208,7 +208,7 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val filter   = permissionFilter(restricted)
+    val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -265,12 +265,12 @@ object ViewRestrictionsByPropertyRepo {
   /**
    * Every restricted value of the property carried by an explicit set of resources — one drill-down page.
    *
-   * Unbounded by design: the IRI list from [[drillDownResourcePageQuery]] is already the window. Fetching
-   * by resource rather than by row is also what keeps a resource whole: its values cannot straddle a page
-   * boundary and be returned twice, once partially on each side.
+   * Unbounded by design: the IRI list from [[drillDownResourcePageQuery]] is already the window, and `VALUES`
+   * binds `?resource` to it first. Fetching by resource rather than by row is also what keeps a resource
+   * whole: its values cannot straddle a page boundary and be returned twice, once partially on each side.
    *
    * `resourceIris` are the IRIs the page query just returned, so they are well-formed by construction; the
-   * caller guarantees the list is non-empty, since `?resource IN ()` is not valid SPARQL.
+   * caller passes a non-empty list, since an empty `VALUES` clause matches nothing.
    */
   private[repo] def drillDownRowsQuery(
     projectIri: ProjectIri,
@@ -281,7 +281,8 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val filter   = permissionFilter(restricted)
+    val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
+    val page     = Fragments.values(Variable("resource"), resourceIris.map(Iri.unsafeFrom))
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -290,6 +291,7 @@ object ViewRestrictionsByPropertyRepo {
                    |
                    |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
                    |WHERE {
+                   |  $page
                    |  ?resource knora-base:attachedToProject $project ;
                    |    knora-base:isDeleted false ;
                    |    $property ?value .
@@ -304,8 +306,6 @@ object ViewRestrictionsByPropertyRepo {
                    |  }
                    |  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
                    |  $filter
-                   |  FILTER (?resource IN (${Fragment
-              .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
                    |}
                    |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
           SparqlTimeout.ViewRestrictions,
@@ -317,6 +317,7 @@ object ViewRestrictionsByPropertyRepo {
                    |
                    |SELECT DISTINCT ?resource ?resClass ?value ?creator ?permissions ?fileClass ?comment ?label
                    |WHERE {
+                   |  $page
                    |  {
                    |    ?resource knora-base:attachedToProject $project ;
                    |      knora-base:isDeleted false ;
@@ -334,8 +335,6 @@ object ViewRestrictionsByPropertyRepo {
                    |  }
                    |  $constraint
                    |  $filter
-                   |  FILTER (?resource IN (${Fragment
-              .join(resourceIris.map(Iri.unsafeFrom(_).toFragment), Fragment.raw(", "))}))
                    |}
                    |ORDER BY ASC(?label) ASC(?resource) ASC(?value)""".render,
           SparqlTimeout.ViewRestrictions,
@@ -355,7 +354,7 @@ object ViewRestrictionsByPropertyRepo {
   ): Select = {
     val project  = Iri.unsafeFrom(projectIri.value)
     val property = Iri.unsafeFrom(propertyIri)
-    val filter   = permissionFilter(restricted)
+    val filter   = ViewRestrictionsRepo.permissionFilter(restricted)
     itemTypeConstraint(itemType) match {
       case None =>
         Select(
@@ -431,15 +430,4 @@ object ViewRestrictionsByPropertyRepo {
         Some(sparql"?value knora-base:valueHasComment ?comment .")
       case ValueItemType.All => None
     }
-
-  /**
-   * `FILTER (STR(?permissions) IN ("a", "b", ...))`: keeps the values whose permission literal is one of
-   * `literals`, the restricted literals of the classification the counts use. `literals` must not be empty.
-   * `STR()` is deliberate; see `permissionFilter` in [[ViewRestrictionsRepo]].
-   */
-  private def permissionFilter(literals: Set[String]): Fragment = {
-    require(literals.nonEmpty, "a permission filter needs at least one literal")
-    val list = Fragment.join(literals.toSeq.sorted.map(Literal.string(_).toFragment), Fragment.raw(", "))
-    sparql"FILTER (STR(?permissions) IN ($list))"
-  }
 }

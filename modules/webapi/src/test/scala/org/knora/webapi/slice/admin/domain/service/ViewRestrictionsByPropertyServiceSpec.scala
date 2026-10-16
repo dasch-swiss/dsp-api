@@ -505,8 +505,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
   private val multiTypedSuite = suite("a resource asserted as several classes")(
     test("is one row carrying its value once, not one row per type") {
-      // This report joins `?resource a ?resClass` without the most-specific-class filter the class report
-      // needs, so a multi-typed resource comes back once per type. Left unhandled that repeats every value
+      // A multi-typed resource comes back once per asserted type. Left unhandled that repeats every value
       // under `values` and reports an arbitrary class.
       for {
         p <- page(1, 25)

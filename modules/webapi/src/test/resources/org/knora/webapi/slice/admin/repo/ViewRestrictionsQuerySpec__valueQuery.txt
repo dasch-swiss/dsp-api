@@ -3,6 +3,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 SELECT DISTINCT ?resource ?resClass ?label ?prop ?value ?fileClass ?comment ?creator ?permissions
 WHERE {
+  VALUES ?resource { <http://rdfh.ch/0001/a> <http://rdfh.ch/0001/b> }
   ?resource a <http://www.knora.org/ontology/0001/anything#Thing> ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:isDeleted false .
@@ -22,5 +23,4 @@ WHERE {
   }
   OPTIONAL { ?value knora-base:valueHasComment ?comment . }
   FILTER (STR(?permissions) IN ("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser"))
-  FILTER (?resource IN (<http://rdfh.ch/0001/a>, <http://rdfh.ch/0001/b>))
 }

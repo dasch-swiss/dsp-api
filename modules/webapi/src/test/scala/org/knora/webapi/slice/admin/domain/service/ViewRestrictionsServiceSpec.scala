@@ -262,6 +262,47 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     TriplestoreServiceInMemory.layer,
   )
 
+  private def countedLayers(resourceLoads: Ref[Int], valueLoads: Ref[Int]) =
+    ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
+      ViewRestrictionsService.layer,
+      countingCache(resourceLoads, valueLoads, thingClass),
+      ViewRestrictionsRepo.layer,
+      IriConverter.layer,
+      ontologyCacheLayer,
+      OntologyRepoLive.layer,
+      StringFormatter.test,
+      TriplestoreServiceInMemory.layer,
+    )
+
+  /** The number of (resource-row, value-row) loads the drill-down of `itemType` triggered. */
+  private def loadsOf(itemType: ItemType) =
+    for {
+      resourceLoads <- Ref.make(0)
+      valueLoads    <- Ref.make(0)
+      _             <- service(_.items(projectIri, thingClass, itemType, PageAndSize.Default))
+             .provideSome[Ref[Dataset]](countedLayers(resourceLoads, valueLoads))
+      resources <- resourceLoads.get
+      values    <- valueLoads.get
+    } yield (resources, values)
+
+  private val loadsSuite = suite("items reads only the cached rows the item type needs")(
+    test("Resource loads resource rows only") {
+      loadsOf(ItemType.Resource).map(loads => assertTrue(loads == (1, 0)))
+    }.provide(datasetLayerFromTurtle(turtle)),
+    test("Value loads value rows only") {
+      loadsOf(ItemType.Value).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(datasetLayerFromTurtle(turtle)),
+    test("File loads value rows only") {
+      loadsOf(ItemType.File).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(datasetLayerFromTurtle(turtle)),
+    test("Comment loads value rows only") {
+      loadsOf(ItemType.Comment).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(datasetLayerFromTurtle(turtle)),
+    test("All loads both") {
+      loadsOf(ItemType.All).map(loads => assertTrue(loads == (1, 1)))
+    }.provide(datasetLayerFromTurtle(turtle)),
+  )
+
   private val itemsSuite = suite("items")(
     test("returns each affected resource with its per-audience visibility and correct paging total") {
       for {
@@ -722,6 +763,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     steppedSuite,
     valueClassificationSuite,
     linkDrillDownSuite,
+    loadsSuite,
     graphScopingSuite,
   )
 }
