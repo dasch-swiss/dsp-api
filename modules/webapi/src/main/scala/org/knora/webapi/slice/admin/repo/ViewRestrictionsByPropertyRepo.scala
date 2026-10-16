@@ -399,7 +399,6 @@ object ViewRestrictionsByPropertyRepo {
    * The queries above repeat the same WHERE skeleton — a project's current, non-deleted values of ONE
    * property — rather than sharing it, so that each template can be read as one whole piece of SPARQL.
    *
-   * No `?resClass` and no `ProjectClasses`: see the class doc for why.
    * `attachedToProject` on the resource is the whole project scope this needs. The property IRI is bound in
    * the triple pattern, never in a FILTER, because a FILTER does not narrow the scan.
    *

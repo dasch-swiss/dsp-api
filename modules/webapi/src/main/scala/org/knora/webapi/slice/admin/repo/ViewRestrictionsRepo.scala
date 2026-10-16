@@ -5,20 +5,16 @@
 
 package org.knora.webapi.slice.admin.repo
 
-import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ProjectClasses
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.RestrictedObjectRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ItemType
-import org.knora.webapi.slice.infrastructure.CacheManager
-import org.knora.webapi.slice.infrastructure.EhCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
@@ -34,12 +30,12 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  *     audiences depends only on that literal (see [[ViewRestrictionsService]]), one grouped query answers
  *     every audience and both restriction states at once, and a group's whole population falls out of the
  *     same rows. No per-object data crosses the wire, so counts are exact at any project size. The
- *     service classifies the rows with `ProjectOntologyIndex`; [[ProjectClasses]] is not involved.
+ *     service classifies the rows with `ProjectOntologyIndex`.
  *   - **Drill-down** ([[findRestrictedObjects]] + [[countRestrictedResources]]): genuinely paginated. The
  *     query is always narrowed to one resource class, ordered deterministically, and windowed with
  *     `LIMIT`/`OFFSET` in SPARQL, with the page total from a matching `COUNT`. The objects are selected by
  *     the permission literals the service classifies as restricted, so the drill-down lists what the counts
- *     report; [[ProjectClasses]] is not involved.
+ *     report.
  *
  * Values carry their own `hasPermissions`/`attachedToUser`, so resources and values are queried separately.
  * File values are distinguished by `rdfs:subClassOf* knora-base:FileValue`; a value carrying
@@ -48,40 +44,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  */
 final case class ViewRestrictionsRepo(
   private val triplestore: TriplestoreService,
-  private val projectClassesCache: EhCache[ProjectIri, ProjectClasses],
   private val valueQueryPermits: Semaphore,
 ) {
-
-  /**
-   * Resolves the project's asserted resource classes, and whether the most-specific-class filter is
-   * needed at all — see [[ViewRestrictionsRepo.ProjectClasses]].
-   *
-   * Used by the drill-down queries. Cached per project, briefly: the page and its total are requested
-   * together and the user pages repeatedly, while the answer only changes when the project's data does.
-   * The TTL keeps a newly added resource class from being invisible until restart.
-   */
-  def projectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
-    ZIO.succeed(projectClassesCache.get(projectIri)).flatMap {
-      case Some(cached) => ZIO.succeed(cached)
-      case None         =>
-        resolveProjectClasses(projectIri).tap(resolved => ZIO.succeed(projectClassesCache.put(projectIri, resolved)))
-    }
-
-  private def resolveProjectClasses(projectIri: ProjectIri): Task[ProjectClasses] =
-    for {
-      iris <- triplestore
-                .query(ViewRestrictionsRepo.projectClassesQuery(projectIri))
-                .map(_.flatMap(_.get("resClass")))
-      // Gated: the `subClassOf+` probe costs 27.3s on LHTT when the answer is "no", and this weaker
-      // check settles that case in 1.4s. Only a project that actually has a multi-typed resource pays
-      // for the traversal. See ViewRestrictionsRepo.anyMultiTypedResourceQuery.
-      anyMultiTyped <-
-        triplestore
-          .query(ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri))
-          .map(_.nonEmpty)
-      multi <- if (anyMultiTyped) triplestore.query(ViewRestrictionsRepo.multiTypedQuery(projectIri)).map(_.nonEmpty)
-               else ZIO.succeed(false)
-    } yield ProjectClasses(iris, multi)
 
   /**
    * The project's current resources counted per class and permission literal. A row that cannot be
@@ -330,28 +294,11 @@ object ViewRestrictionsRepo {
   /** Concurrent batch queries across all requests; limits the load the report puts on the triplestore. */
   private val ValueQueryPermits: Int = 4
 
-  /**
-   * How long a resolved [[ProjectClasses]] stays cached.
-   *
-   * Sized to outlive one report run — step 1 plus one request per class, at the frontend's concurrency —
-   * and nothing more, so an ontology change shows up on the next report rather than the next restart.
-   */
-  private val ProjectClassesTtl: java.time.Duration = java.time.Duration.ofMinutes(1)
-
-  val layer: URLayer[TriplestoreService & CacheManager, ViewRestrictionsRepo] = ZLayer.fromZIO(
+  val layer: URLayer[TriplestoreService, ViewRestrictionsRepo] = ZLayer.fromZIO(
     for {
-      cache <- ZIO.serviceWithZIO[CacheManager](
-                 _.createCache[ProjectIri, ProjectClasses](
-                   "viewRestrictionsProjectClasses",
-                   CacheManager
-                     .defaultCacheConfigBuilder[ProjectIri, ProjectClasses]()
-                     .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(ProjectClassesTtl))
-                     .build(),
-                 ),
-               )
       triplestore <- ZIO.service[TriplestoreService]
       permits     <- Semaphore.make(ValueQueryPermits)
-    } yield ViewRestrictionsRepo(triplestore, cache, permits),
+    } yield ViewRestrictionsRepo(triplestore, permits),
   )
 
   /**
@@ -394,82 +341,6 @@ object ViewRestrictionsRepo {
       )
       .values
       .toSeq
-
-  /**
-   * The resource classes a project actually asserts, resolved once and reused by every drill-down query of
-   * a request.
-   *
-   * This replaces two `rdfs:subClassOf` traversals that the triplestore would otherwise re-evaluate for
-   * every result row (rows scale as resources × properties × values):
-   *
-   *   - `?resClass rdfs:subClassOf* knora-base:Resource` — restricting `?resClass` to resource classes.
-   *     Superseded by binding `?resClass` to this list, which is *already* the set of resource classes the
-   *     project uses.
-   *   - `FILTER NOT EXISTS { … subClassOf+ … }` — needed only when a project asserts both a class and one
-   *     of its ancestors on the same resource, which `multiTyped` records.
-   *
-   * The list is deliberately the classes **present in the project's data**, not the `Resource` subclass
-   * closure from the ontology: `docs/development/dsp-api-sparql-queries.md` (DEV-6803) measured that
-   * inlining a large closure as `VALUES` is catastrophic (2.1s → >60s), because the engine joins the whole
-   * table against a large intermediate. A project's asserted classes are a small set that *anchors* the
-   * scan instead — the shape that doc endorses.
-   *
-   * @param iris       the project's asserted resource-class IRIs.
-   * @param multiTyped whether any resource asserts a class together with a strict subclass of it, in which
-   *                   case the most-specific-class filter is still required for correctness.
-   */
-  final case class ProjectClasses(iris: Seq[String], multiTyped: Boolean) {
-
-    /**
-     * `VALUES ?resClass { <…> }`, or the empty fragment when no class was discovered.
-     *
-     * Empty does **not** mean "no constraint": [[resClassPatterns]] falls back to the original
-     * `subClassOf*` guard in that case, so `?resClass` is never left unconstrained. It is a hole rather
-     * than literal template text because both its presence and its length are decided per project;
-     * `Fragments.values` throws on an empty collection, hence the explicit branch here.
-     *
-     * Every template interpolates it as the first thing inside its `WHERE` block, where it binds
-     * `?resClass` before the patterns that consume it — the position the previous string splice used.
-     */
-    def valuesClause: Fragment =
-      if (iris.isEmpty) Fragment.empty else Fragments.values(Variable("resClass"), iris.map(Iri.unsafeFrom))
-
-    /**
-     * The patterns that pin `?resClass`, beyond the `VALUES` clause of [[valuesClause]]. Also a hole
-     * rather than template text: which of the two blocks appear is a per-project decision.
-     *
-     *   - When no class was discovered, the `VALUES` clause is empty, so the original
-     *     `?resClass rdfs:subClassOf* knora-base:Resource` guard is emitted instead. Dropping both would
-     *     leave `?resClass` matching every asserted type — including value and non-resource classes —
-     *     and inflate every count.
-     *   - The most-specific-class filter keeps only the most specific asserted class of a resource, so one
-     *     resource yields exactly one `?resClass` binding even when the triplestore asserts or infers its
-     *     superclasses too. It is added only when the project's data can actually produce an ambiguous
-     *     binding (see [[multiTypedQuery]]) *and* the caller's result depends on how many rows a resource
-     *     contributes — see `dedupeRows`. The filter is a `subClassOf+` traversal re-evaluated per result
-     *     row — rows scale as resources × properties × values — so on the common case where every resource
-     *     carries exactly one class it is pure overhead and is left out entirely (measured on
-     *     `incunabula`: 2.46s → 0.78s for that pattern alone).
-     *
-     * @param dedupeRows whether the caller needs one `?resClass` binding per resource. True for the
-     *                   counting and paging queries, whose answer changes if a multi-typed resource is
-     *                   counted or listed once per class in its hierarchy. False for
-     *                   `SELECT DISTINCT ?permissions`, which projects only the permission literal, so
-     *                   duplicate rows collapse in `DISTINCT` and the filter cannot change the result set
-     *                   — it is a row *reducer*, and reducing rows cannot add or remove a literal that
-     *                   some other row still carries.
-     */
-    def resClassPatterns(dedupeRows: Boolean): Fragment =
-      Seq(
-        Option.when(iris.isEmpty)(sparql"?resClass rdfs:subClassOf* knora-base:Resource ."),
-        Option.when(multiTyped && dedupeRows)(
-          sparql"""|FILTER NOT EXISTS {
-                   |  ?resource a ?subClass .
-                   |  ?subClass rdfs:subClassOf+ ?resClass .
-                   |}""",
-        ),
-      ).flatten.joinLines
-  }
 
   /**
    * One restriction-bearing object as read from the triplestore, before visibility resolution.
@@ -554,120 +425,6 @@ object ViewRestrictionsRepo {
    * Every query of this report runs on `SparqlTimeout.ViewRestrictions` rather than the standard tier —
    * these are whole-project scans grouped by permission literal, not the bounded lookups 20s is sized for.
    */
-
-  /**
-   * `SELECT DISTINCT ?resClass` — the resource classes the project actually asserts.
-   *
-   * The `subClassOf*` guard is **not** redundant: `attachedToProject` is also carried by list nodes and by
-   * the project's own ontologies, so without it `?resClass` would pick up `knora-base:ListNode` and
-   * `owl:Ontology` and inflate every downstream count.
-   *
-   * It is, however, the reason this query timed out on a large project (Fuseki-cancelled at the 20s
-   * standard tier). A property path splits the BGP and is never reordered across, so with the guard in the
-   * same group the store first materializes one row per (resource, asserted type) for the *whole* project
-   * and then probes the closure once per row — the cross-join shape
-   * `docs/development/dsp-api-sparql-queries.md` records under "Anchor property paths" (DEV-6803, the same
-   * `subClassOf* knora-base:Resource` pattern, >60s).
-   *
-   * The sub-select fixes the row count rather than the path: Fuseki evaluates a sub-select bottom-up, so
-   * the project scan is deduplicated to the handful of classes the project uses *before* the closure walk
-   * sees them, and the walk runs once per class instead of once per resource-type pair. The result set is
-   * identical — `DISTINCT ?resClass` over a set the outer pattern only filters.
-   *
-   * The `attachedToProject` join stays inside the sub-select rather than becoming a `GRAPH` scope: a
-   * project's resources span one data graph per ontology, so a single derived graph undercounts.
-   */
-  private[repo] def projectClassesQuery(projectIri: ProjectIri): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
-    Select(
-      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-               |
-               |SELECT DISTINCT ?resClass
-               |WHERE {
-               |  {
-               |    SELECT DISTINCT ?resClass
-               |    WHERE {
-               |      ?resource knora-base:attachedToProject $project ;
-               |        a ?resClass .
-               |    }
-               |  }
-               |  ?resClass rdfs:subClassOf* knora-base:Resource .
-               |}""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
-  }
-
-  /**
-   * Does any non-deleted resource of the project carry **two distinct types at all**?
-   *
-   * A necessary condition for [[multiTypedQuery]]: asserting a class together with a strict subclass of it
-   * entails having two distinct types. So `false` here settles `multiTypedQuery` as `false` too, without
-   * the `subClassOf+` traversal — and it is the common case, since most resources carry exactly one class.
-   *
-   * Strictly weaker on purpose, so it can only ever over-approximate: a `true` answer proves nothing and
-   * the real traversal still runs. That keeps the correctness argument in [[multiTypedQuery]] intact —
-   * notably that `?subClass` must stay unconstrained.
-   *
-   * Measured on LHTT: 1.4s, against 27.3s for the query it gates.
-   */
-  private[repo] def anyMultiTypedResourceQuery(projectIri: ProjectIri): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
-    Select(
-      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |
-               |SELECT ?resource
-               |WHERE {
-               |  ?resource a ?c1 ;
-               |    knora-base:attachedToProject $project ;
-               |    knora-base:isDeleted false ;
-               |    a ?c2 .
-               |  FILTER (?c1 != ?c2)
-               |}
-               |LIMIT 1""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
-  }
-
-  /**
-   * Whether the most-specific-class filter can actually change the answer for this project: does any
-   * non-deleted resource assert a class together with a **strict subclass** of that class?
-   *
-   * This mirrors the gated filter exactly, which is what makes omitting the filter sound. In particular
-   * `?subClass` is **not** restricted to the project's discovered classes: the filter's own `?subClass` is
-   * unconstrained, so a resource typed with a subclass that is not itself a resource class (and so never
-   * appears in [[projectClassesQuery]]) still makes the filter load-bearing. Narrowing the probe to the
-   * discovered list would answer "no" for exactly that case and silently inflate the counts.
-   *
-   * The `isDeleted false` guard matches the query skeletons: a deleted resource can never produce a
-   * `?resClass` binding there, so it must not drag the expensive filter back on for the request.
-   *
-   * PERFORMANCE — the `LIMIT 1` does **not** bound this. It stops at the first hit, but when the answer is
-   * "no" there is no hit to stop at, so the store must exhaust the search space to prove it: measured 27.3s
-   * on LHTT (105,983 resources) returning nothing. Anchoring `?resClass` with a `VALUES` clause makes it
-   * worse, not better (36.7s) — the closure-as-VALUES shape `CONVENTIONS.md` warns about.
-   *
-   * So [[anyMultiTypedResourceQuery]] gates it: that probe is a strictly weaker condition, cheap because it
-   * needs no path, and a negative answer settles this one. See [[projectClasses]].
-   */
-  private[repo] def multiTypedQuery(projectIri: ProjectIri): Select = {
-    val project = Iri.unsafeFrom(projectIri.value)
-    Select(
-      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-               |
-               |SELECT ?resource
-               |WHERE {
-               |  ?resource a ?resClass ;
-               |    knora-base:attachedToProject $project ;
-               |    knora-base:isDeleted false ;
-               |    a ?subClass .
-               |  ?subClass rdfs:subClassOf+ ?resClass .
-               |}
-               |LIMIT 1""".render,
-      SparqlTimeout.ViewRestrictions,
-    )
-  }
 
   /**
    * Counts a project's current resources per class and permission literal.

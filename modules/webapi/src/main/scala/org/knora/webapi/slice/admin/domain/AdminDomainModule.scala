@@ -19,7 +19,6 @@ import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriInP
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -30,7 +29,6 @@ object AdminDomainModule { self =>
       // format: off
       AdministrativePermissionRepo &
       AppConfig &
-      CacheManager &
       DefaultObjectAccessPermissionRepo &
       DspIngestClient &
       IriService &

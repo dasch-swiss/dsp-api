@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 
@@ -28,7 +29,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
  * The last suite pins the permission-literal selection the drill-down shares with the counts.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
-class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
+class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val hasText    = "http://www.knora.org/ontology/0001/anything#hasText"
@@ -51,6 +52,44 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
         .drillDownRowsQuery(projectIri, hasText, it, restricted, Seq("http://rdfh.ch/0001/a")),
     ).map { case (k, q) => k -> q.sparql }
   }.toMap
+
+  private val goldenLiterals =
+    Set("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser")
+
+  private val goldenQueries: Map[String, String] = Map(
+    "drillDownResourcePage-All" -> ViewRestrictionsByPropertyRepo
+      .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.All, goldenLiterals, offset = 50, limit = 25),
+    "drillDownResourcePage-File" -> ViewRestrictionsByPropertyRepo
+      .drillDownResourcePageQuery(projectIri, hasText, ValueItemType.File, goldenLiterals, offset = 50, limit = 25),
+    "drillDownRows-All" -> ViewRestrictionsByPropertyRepo
+      .drillDownRowsQuery(
+        projectIri,
+        hasText,
+        ValueItemType.All,
+        goldenLiterals,
+        Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"),
+      ),
+    "drillDownRows-File" -> ViewRestrictionsByPropertyRepo
+      .drillDownRowsQuery(
+        projectIri,
+        hasText,
+        ValueItemType.File,
+        goldenLiterals,
+        Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b"),
+      ),
+    "drillDownCount-All" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
+      projectIri,
+      hasText,
+      ValueItemType.All,
+      goldenLiterals,
+    ),
+    "drillDownCount-File" -> ViewRestrictionsByPropertyRepo.drillDownCountQuery(
+      projectIri,
+      hasText,
+      ValueItemType.File,
+      goldenLiterals,
+    ),
+  ).view.mapValues(_.sparql).toMap
 
   override def spec: Spec[TestEnvironment, Any] = suite("ViewRestrictionsByPropertyRepo query generation")(
     suite("drill-down")(
@@ -133,6 +172,18 @@ class ViewRestrictionsByPropertyQuerySpec extends ZIOSpecDefault {
           !q.contains("OFFSET"),
         )
       },
+    ),
+    suite("drill-down golden queries")(
+      test("drillDownResourcePage-All")(
+        assertGolden(goldenQueries("drillDownResourcePage-All"), "drillDownResourcePage-All"),
+      ),
+      test("drillDownResourcePage-File")(
+        assertGolden(goldenQueries("drillDownResourcePage-File"), "drillDownResourcePage-File"),
+      ),
+      test("drillDownRows-All")(assertGolden(goldenQueries("drillDownRows-All"), "drillDownRows-All")),
+      test("drillDownRows-File")(assertGolden(goldenQueries("drillDownRows-File"), "drillDownRows-File")),
+      test("drillDownCount-All")(assertGolden(goldenQueries("drillDownCount-All"), "drillDownCount-All")),
+      test("drillDownCount-File")(assertGolden(goldenQueries("drillDownCount-File"), "drillDownCount-File")),
     ),
     suite("selects restricted values by permission literal")(
       test("every query filters on STR(?permissions) IN the passed literals") {

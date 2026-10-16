@@ -15,7 +15,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ResourceCountRow
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo.ValueCountRow
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
@@ -83,7 +82,6 @@ class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
 
   private val layers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsRepo](
     ViewRestrictionsRepo.layer,
-    CacheManager.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )

@@ -18,7 +18,6 @@ import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
@@ -256,7 +255,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     ViewRestrictionsService.layer,
     ViewRestrictionsRowCache.layer,
     ViewRestrictionsRepo.layer,
-    CacheManager.layer,
     IriConverter.layer,
     ontologyCacheLayer,
     OntologyRepoLive.layer,

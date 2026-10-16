@@ -25,14 +25,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlT
  * than on triplestore results, pinning the query shape the service's correctness relies on: the
  * permission grouping the counts rely on, deleted exclusion, the file-value marker, and deterministic
  * ordering + windowing for the drill-down.
- *
- * The last suite pins the whole shape rather than single features: every query is compared against the
- * RDF4J SparqlBuilder output it was ported from (see [[ViewRestrictionsLegacyFixtures]]). The port is a
- * pure port, so the comparison is the strict one the rest of this migration uses — both sides parsed by
- * Jena with the prefix map cleared and re-serialised, which ignores whitespace and prefix rendering but
- * nothing else, group nesting included. The algebra of both is asserted alongside it, since that is what
- * join order and filter placement — the two things this report's performance rests on — actually reduce
- * to.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
@@ -49,23 +41,6 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
   private val valueLiterals    = Set("V knora-admin:KnownUser", "RV knora-admin:UnknownUser|V knora-admin:KnownUser")
 
   private val twoIris = Seq("http://rdfh.ch/0001/a", "http://rdfh.ch/0001/b")
-
-  /** Parse and re-serialise, with prefixes expanded, so only the query itself is compared. */
-  private def canonical(sparql: String): String = {
-    val q = QueryFactory.create(sparql)
-    q.getPrefixMapping.clearNsPrefixMap()
-    q.toString
-  }
-
-  /** Unoptimised syntax-to-algebra translation: it keeps join order, group nesting and filter placement. */
-  private def algebra(sparql: String): String = Algebra.compile(QueryFactory.create(sparql)).toString
-
-  /** The ported queries, keyed exactly as [[ViewRestrictionsLegacyFixtures]] keys them. */
-  private val actualByKey: Map[String, String] = Map(
-    "projectClassesQuery"        -> ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql,
-    "anyMultiTypedResourceQuery" -> ViewRestrictionsRepo.anyMultiTypedResourceQuery(projectIri).sparql,
-    "multiTypedQuery"            -> ViewRestrictionsRepo.multiTypedQuery(projectIri).sparql,
-  )
 
   private def page(itemType: ItemType, resource: Set[String] = resourceLiterals, value: Set[String] = valueLiterals) =
     ViewRestrictionsRepo.resourcePageQuery(projectIri, itemType, thingClass, 50, 25, resource, value).sparql
@@ -87,6 +62,20 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
       "resourceQuery"           -> resourceRows,
       "valueQuery"              -> valueRows,
     )).toMap
+
+  private val goldenLiterals =
+    Set("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser")
+
+  private val goldenQueries: Map[String, String] = Map(
+    "resourcePage-Resource"  -> page(ItemType.Resource, goldenLiterals, goldenLiterals),
+    "resourcePage-Value"     -> page(ItemType.Value, goldenLiterals, goldenLiterals),
+    "resourcePage-All"       -> page(ItemType.All, goldenLiterals, goldenLiterals),
+    "resourceCount-Resource" -> count(ItemType.Resource, goldenLiterals, goldenLiterals),
+    "resourceCount-Value"    -> count(ItemType.Value, goldenLiterals, goldenLiterals),
+    "resourceCount-All"      -> count(ItemType.All, goldenLiterals, goldenLiterals),
+    "resourceQuery"          -> ViewRestrictionsRepo.resourceQuery(projectIri, thingClass, twoIris, goldenLiterals).sparql,
+    "valueQuery"             -> ViewRestrictionsRepo.valueQuery(projectIri, thingClass, twoIris, goldenLiterals).sparql,
+  )
 
   private val hasPermissionsIri = "http://www.knora.org/ontology/knora-base#hasPermissions"
 
@@ -144,25 +133,15 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         assertTrue(ViewRestrictionsRepo.sumBatches(rows).toSet == rows.toSet)
       },
     ),
-    suite("project class discovery")(
-      test("the closure walk sits outside a sub-select, so it runs per class and not per resource row") {
-        val q = ViewRestrictionsRepo.projectClassesQuery(projectIri).sparql
-        assertTrue(
-          // The project scan is deduplicated to the classes in use *before* the path sees them. Without the
-          // sub-select the store materializes one row per (resource, asserted type) for the whole project
-          // and probes the closure once per row -- Fuseki-cancelled at the 20s tier on a large project.
-          q.contains("SELECT DISTINCT ?resClass") && q.indexOf("SELECT DISTINCT ?resClass") != q.lastIndexOf(
-            "SELECT DISTINCT ?resClass",
-          ),
-          // The guard itself stays: attachedToProject is also carried by list nodes and by the project's
-          // own ontologies, so dropping it would let ListNode and owl:Ontology into the class list.
-          q.contains("rdfs:subClassOf*") && q.contains("knora-base:Resource"),
-          // and the closure walk is outside the sub-select, i.e. after its closing brace
-          q.indexOf("rdfs:subClassOf*") > q.lastIndexOf("a ?resClass"),
-          q.contains(s"knora-base:attachedToProject <${projectIri.value}>"),
-          !q.contains("GRAPH"),
-        )
-      },
+    suite("drill-down golden queries")(
+      test("resourcePage-Resource")(assertGolden(goldenQueries("resourcePage-Resource"), "resourcePage-Resource")),
+      test("resourcePage-Value")(assertGolden(goldenQueries("resourcePage-Value"), "resourcePage-Value")),
+      test("resourcePage-All")(assertGolden(goldenQueries("resourcePage-All"), "resourcePage-All")),
+      test("resourceCount-Resource")(assertGolden(goldenQueries("resourceCount-Resource"), "resourceCount-Resource")),
+      test("resourceCount-Value")(assertGolden(goldenQueries("resourceCount-Value"), "resourceCount-Value")),
+      test("resourceCount-All")(assertGolden(goldenQueries("resourceCount-All"), "resourceCount-All")),
+      test("resourceQuery")(assertGolden(goldenQueries("resourceQuery"), "resourceQuery")),
+      test("valueQuery")(assertGolden(goldenQueries("valueQuery"), "valueQuery")),
     ),
     suite("every query is scoped by attachedToProject")(
       test("no view-restrictions query uses GRAPH scoping") {
@@ -283,17 +262,6 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
             |}""".stripMargin
         assertTrue(hasConstantPermissionTriple(plain))
       },
-    ),
-    suite("matches the RDF4J builder it was ported from")(
-      actualByKey.toList.sortBy(_._1).map { case (key, actual) =>
-        test(key) {
-          val legacy = ViewRestrictionsLegacyFixtures.byKey(key)
-          assertTrue(
-            canonical(actual) == canonical(legacy),
-            algebra(actual) == algebra(legacy),
-          )
-        }
-      }*,
     ),
   )
 }

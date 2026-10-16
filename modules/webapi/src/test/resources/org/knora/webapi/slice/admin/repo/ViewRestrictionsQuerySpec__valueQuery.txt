@@ -1,0 +1,26 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?resource ?resClass ?label ?prop ?value ?fileClass ?comment ?creator ?permissions
+WHERE {
+  ?resource a <http://www.knora.org/ontology/0001/anything#Thing> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:isDeleted false .
+  BIND(<http://www.knora.org/ontology/0001/anything#Thing> AS ?resClass)
+  {
+    ?resource ?prop ?value .
+    ?prop rdfs:subPropertyOf* knora-base:hasValue .
+  }
+  ?value knora-base:attachedToUser ?creator ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+  FILTER (?prop != knora-base:hasStandoffLinkToValue)
+  OPTIONAL { ?resource rdfs:label ?label . }
+  OPTIONAL {
+    ?value a ?fileClass .
+    ?fileClass rdfs:subClassOf* knora-base:FileValue .
+  }
+  OPTIONAL { ?value knora-base:valueHasComment ?comment . }
+  FILTER (STR(?permissions) IN ("M knora-admin:ProjectMember", "V knora-admin:KnownUser|RV \"q\" knora-admin:UnknownUser"))
+  FILTER (?resource IN (<http://rdfh.ch/0001/a>, <http://rdfh.ch/0001/b>))
+}
