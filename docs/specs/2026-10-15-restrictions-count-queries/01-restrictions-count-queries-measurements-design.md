@@ -144,7 +144,8 @@ group after the path sees `?value` bound. In C5 and C6, `?value knora-base:isDel
 has only one bound term. Jena then runs it last, when `?value` is bound. Scala drops the deleted rows.
 
 A sub-select barrier (C3) does not help. The plan of C3 was not checked. A likely cause is that Jena
-evaluates the outer group on its own and then joins.
+evaluates the outer group on its own and then joins. (Corrected in § Graph-scoped counts: the barrier works,
+but C3 placed it before `?resource ?prop ?value`.)
 
 ## Timings
 
@@ -240,3 +241,31 @@ Final queries, all classes on a new cache:
 
 No single query goes over the 40 s timeout. The first by-property request on a new LIMC cache takes 46 s.
 The owner accepted this on 2026-10-16.
+
+## Graph-scoped counts (review measurements, stage, 2026-10-16)
+
+A reviewer measured a GRAPH-scoped shape on stage and read the Jena 6.2.0 source. The implementation follows it.
+
+- **One value-count query per project**, scoped to the project's enumerated graphs (`VALUES ?g { … } GRAPH ?g`).
+  Inside the graph, `?value knora-base:isDeleted false` is the only constant-object pattern and scans the project.
+  Comments are counted in a separate `UNION` branch; the per-row `OPTIONAL` cost about 35 s on LIMC. The
+  properties are classified in SPARQL after grouping.
+- **Drill-down** driven by `VALUES ?permissions` inside the graph, with a sub-select barrier before the class
+  check.
+- **C3 correction.** The barrier works when it sits after `?resource ?prop ?value`. C3 put it before, so the
+  second BGP still held `?value knora-base:isDeleted false` and the fan-out. Nested `{ … }` groups are merged and
+  are not barriers. `?x a <Class>` (weight 5) is the same trap as `?x <P> <O>` (weight 3).
+- Every stage project has one data graph (64 projects checked). The local `anything` project has two, so the
+  graphs are enumerated, not derived.
+
+| Project | Values counted | C6 (median of 3) | Per-class sum | Graph-scoped, one query |
+| --- | --- | --- | --- | --- |
+| LIMC | 1,669,898 | 53.9 s | 64.1 s | 27.9 s (median of 5) |
+| ekws | 1,443,825 | 58.4 s | – | 33.8 s (without comments) |
+| lhtt | 732,455 | 28.9 s | – | 14.5 s (without comments) |
+| drawings-gods | 328,323 | 9.8 s | 12.6 s | 6.8 s |
+| BEOL | 157,009 | 4.8 s | 9.0 s | 5.8 s |
+
+The rows equal the PR's rows after its Scala classification (checksum on LIMC). Drill-down page on LIMC `Photo`:
+8.7 s to 0.55 s; count 7.7 s to 0.36 s; identical pages and totals. The value-count query runs on a 120 s tier
+of its own; the cache keeps each project's rows for 60 minutes.

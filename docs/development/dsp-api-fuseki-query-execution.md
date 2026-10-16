@@ -15,8 +15,8 @@ clause span the union of all named graphs), a **Lucene text index** over `rdfs:l
 Lucene field, which has consequences (Fact 10) — (`modules/fuseki/dsp-repo.ttl`),
 and **no `stats.opt` statistics file** — so the BGP optimizer runs on the `fixed`
 variable-counting heuristic, not cost estimates. The API sends every query with a server-side
-`timeout` form parameter in tiers (Standard 20s, Maintenance 120s, Gravsearch 120s, Search 60s;
-`application.conf`). The fulltext prequery and count run on the Search tier; the fulltext breadth probe
+`timeout` form parameter in tiers (Standard 20s, Maintenance 120s, Gravsearch 120s, Search 60s,
+ViewRestrictions 40s, ViewRestrictionsCounts 120s; `application.conf`). The fulltext prequery and count run on the Search tier; the fulltext breadth probe
 (DEV-6864) reuses the Search timeout value under a distinct `SearchProbe` tier so its samples stay out of
 the Search-tier metric.
 
@@ -42,12 +42,50 @@ optimizer cannot reorder across. Every “find incoming references” query has 
 Measured on `/v2/resources/candelete` (`isResourceInUse`): 1801 ms → 317 ms with the barrier,
 byte-identical results (DEV-6885).
 
+**The fixed weights.** Without `stats.opt`, TDB2 weighs each pattern of a BGP with fixed weights
+(`ReorderFixed`), runs the lowest, treats its variables as bound, weighs the rest again, and repeats; ties
+keep document order. Lower runs first:
+
+| Pattern shape | Weight |
+| --- | --- |
+| `S P O` | 1 |
+| `S P ?o`, `S ?p O` | 2 |
+| `?s P O` | 3 |
+| `?s rdf:type O` | 5 |
+| `S ?p ?o` | 10 |
+| `?s ?p O` | 20 |
+| `?s P ?o` | 30 |
+| `?s rdf:type ?o` | 50 |
+| `?s ?p ?o` | 100 |
+
+Before it weighs a BGP, TDB2 substitutes the first input binding into it, so a variable bound by an earlier
+BGP, a sub-select or a `VALUES` table counts as a term. Consequences, measured on stage (DEV-7390):
+
+- `?x a <Class>` (5) is the same trap as `?x <P> <O>` (3): it runs before `?s ?p ?x` (20) and joins the
+  whole class extent with every row.
+- `FILTER (?x = false)` is not substituted into the pattern: only IRIs, blank nodes and plain strings are
+  (`TransformFilterEquality`). So `?x knora-base:isDeleted ?deleted` plus a later
+  `FILTER (?deleted = false)` keeps the guard out of the weighing.
+- A barrier must sit *after* the pattern that binds the variable. A sub-select that ends before
+  `?resource ?prop ?value` leaves `?value knora-base:isDeleted false` (3) and the fan-out in the same BGP, and
+  the trap recurs inside it.
+- Nested `{ … }` groups are not barriers. `TransformMergeBGPs` merges adjacent BGPs; a query that relied on
+  a nested group timed out at 120 s. Only a sub-select, a `GRAPH` block, `OPTIONAL`, `UNION`, `MINUS`, a
+  property path or a filter placement splits a BGP.
+- A `FILTER` is placed into a BGP at the first point, in document order, where its variables are bound, and
+  splits the BGP there (`TransformFilterPlacement`). A filter can therefore create a barrier.
+
 ## Fact 2 — OPTIONAL is a left join, and independent OPTIONALs multiply
 
 Each `OPTIONAL` left-joins against everything matched so far, in document order (Fact 1). Two
 OPTIONALs over multi-valued properties of the same subject produce the cross product of their
 values. Measured: the 15-property project entity query materialized **29,310 rows for 49
 projects** (~600/project — descriptions × keywords × licenses × …) before its restriction.
+
+An `OPTIONAL` (and a `FILTER NOT EXISTS`) is evaluated once for each input row: TDB2 enters the executor
+again for each row. Keep both out of a BGP with millions of rows. Measured on stage (DEV-7390): the comment
+`OPTIONAL` of a project-wide value count cost about 35 s on 2.9 M rows; a separate `UNION` branch driven by
+`knora-base:valueHasComment` counted the same comments in 0.5 s.
 
 ## Fact 3 — `*`/`+` property paths are special-cased, and anchoring decides everything
 
@@ -121,6 +159,14 @@ cost and benefit from scoping. And since a project's data graph *is* the project
 `GRAPH <projectDataGraph>` **replaces** an `attachedToProject` join — dropping that redundant
 join (plus a dead `DISTINCT`) took the class-browsing prequery from 1.66s to 310ms on stage
 (DEV-6827).
+
+A project can have more than one data graph (the local `anything` project has `anything` and `freetest`), and
+`ProjectService.projectDataNamedGraphV2` derives only one. For a project-wide read, enumerate the graphs
+(`SELECT DISTINCT ?g WHERE { GRAPH ?g { ?r knora-base:attachedToProject <P> } }`, 0.3 s on the largest stage
+project) and scope with `VALUES ?g { … } GRAPH ?g { … }`, which performs as a literal graph does. Inside the
+graphs a pattern such as `?value knora-base:isDeleted false` is an index range scan of the project, not of the
+store. Measured on stage (DEV-7390): the project-wide value count of the largest project took 53.9 s with
+`attachedToProject` and 27.9 s scoped to its graph, with identical rows.
 
 ## Fact 6 — What materializes and what streams
 
@@ -238,6 +284,9 @@ it. This is the same discipline as the equivalence check below — and for the s
   [TDB Datasets / union default graph](https://jena.apache.org/documentation/tdb/datasets.html),
   [Text searches (jena-text)](https://jena.apache.org/documentation/query/text-query.html) —
   entity map, fields, and `text:query` arguments (Facts 9, 10)
+- Jena 6.2.0 source, read for DEV-7390: `ReorderFixed`, `ReorderTransformationSubstitution`,
+  `TransformFilterEquality`, `TransformFilterPlacement`, `TransformMergeBGPs` (via `OptimizerStd`),
+  `OpExecutorTDB2`, `QueryIterMinus`
 - ARQ vs TDB optimizer interaction:
   [apache/jena discussion #1659](https://github.com/apache/jena/discussions/1659)
 - All measurements: Linear **DEV-6803** (audit report and sub-issues), 2026-07.
