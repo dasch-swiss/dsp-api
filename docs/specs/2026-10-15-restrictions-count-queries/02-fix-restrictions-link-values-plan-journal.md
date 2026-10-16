@@ -75,6 +75,7 @@ status: in-progress
 | 6.2 | dsp-api | complete | ce52bcefc | stage measurement of the final queries: 0 differences, no query over the timeout; LIMC cold by-property 46 s and drill-down 18.8 s accepted, follow-up DEV-7532 | none |
 | 6.3 | dsp-api | complete | 4865c22ed, e404ef352 | REVIEW.md and SPARQL guide rules; webapi-admin ARCH-MAP entry (hand edit, schema 2 migration DEV-7534) | none |
 | 6.4 | dsp-api | complete | d57f5fb22 | Phase 6 review fixes: REVIEW.md items point to the guide, batching item added, STR() test scope stated, map enforcement for batching, e2e test name | none |
+| 7.1 | dsp-api | complete | 866630043, 00f870d75 | final whole-branch review fixes: unknown classes skip the cache, one item-type constraint, sealed DrillDownBranches, value items de-duplicated, shared helpers, unused creator join removed, comments once, counts/drill-down parity test; ARCH-MAP RDF4J line | none |
 
 ## Deferrals
 
@@ -153,3 +154,36 @@ status: in-progress
 - Phase 6 review DUNE-001 (`refreshProject` is public, so a second invalidator is possible): recorded only. A
   read-only view of the cache for the property service would enforce it structurally; no code calls it outside
   `classSummaries` today. Measurements stay in the SPARQL guide, which already records incidents with numbers.
+
+## Closeout
+
+- root_cause: the restrictions report excluded every `knora-base:LinkValue` with
+  `FILTER NOT EXISTS { ?value a knora-base:LinkValue }` in all 13 value queries, and the by-property list rejected
+  every link value property (`!isLinkValueProp`). The intent was to hide the system-managed standoff link values,
+  but the filter matched user link values too, so restricted user links never reached the counts or the drill-down.
+  The drill-down also pre-filtered with a REGEX that judged a literal open when any clause granted anonymous View,
+  which disagrees with `PermissionUtilADM` for literals such as `V knora-admin:UnknownUser|RV knora-admin:KnownUser`.
+- investigation: a stage measurement (design doc 01) compared the current queries with shapes that classify in
+  Scala. Pattern order was decisive: `?value knora-base:isDeleted false` has two bound terms, so Fuseki without
+  statistics ran it before `?value` was bound and scanned the store (timeouts). Keeping the flag as a variable
+  (`?valueDeleted`) fixed it. Paging a grouped result does not bound the query time; batching the input
+  (`VALUES ?resource`) does, with identical rows and a lower total. Jena rewrites a plain-literal `IN` list into a
+  `UNION` with the literal in the triple pattern; `STR(?permissions) IN` blocks it. Batch size 5000 exceeds Jetty's
+  default form limit, so 2000 was chosen. Dead ends: a project-wide value query (56 s on LIMC), `VALUES ?prop`
+  (slower), and a sub-select barrier.
+- solution: `/classes` reads one project-wide resource-count query; `/values` and `/property-values` read per-class
+  value rows listed and counted in batches of 2000 resources through a 4-permit semaphore, cached per project and
+  class in `ViewRestrictionsRowCache` (10-minute TTL, refreshed only by `/classes`). Scala classifies properties
+  with the ontology cache (`ValueKind`: user link values count, `hasStandoffLinkToValue` never), folds rows per item
+  type (`ValueCountFold`) and resolves visibility once per literal (`ViewRestrictionsAudience`). The drill-downs
+  select restricted objects with `FILTER (STR(?permissions) IN (...))` from the same classified literals, drop only
+  `?prop = knora-base:hasStandoffLinkToValue`, bind the class directly and anchor page rows with `VALUES ?resource`.
+  `ProjectClasses`, the multi-type probes, their EhCache, the REGEX and the legacy RDF4J fixtures are gone.
+  Accepted: a multi-typed resource counts once for each class; a class with only deleted resources is not listed;
+  the first by-property request on a new LIMC cache takes 46 s (each query stays under the timeout).
+- prevention: golden files pin every count and drill-down query; a Jena algebra test pins the `STR()` rule; a parity
+  test pins that counts and drill-down agree for every item type and audience; mutation checks confirmed the key
+  tests. `REVIEW.md` and the SPARQL guide record the unbound-variable, `STR()` and batch-the-input rules. Follow-ups:
+  DEV-7532 (drill-down speed on large classes), DEV-7534 (ARCH-MAP schema 2 migration). Worker reports were
+  inaccurate several times (missing edits, skipped red steps, an unformatted commit, an empty report): verify each
+  chunk with `git status`, the test report and a compiling mutation before committing.
