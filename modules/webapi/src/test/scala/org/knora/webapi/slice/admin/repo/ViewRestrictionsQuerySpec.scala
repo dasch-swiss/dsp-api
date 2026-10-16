@@ -119,8 +119,12 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         val select = ViewRestrictionsRepo.resourceCountsQuery(projectIri)
         assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "resourceCounts")
       },
+      test("resourceListing") {
+        val select = ViewRestrictionsRepo.resourceListingQuery(projectIri, thingClass)
+        assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "resourceListing")
+      },
       test("valueCounts") {
-        val select = ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass)
+        val select = ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris)
         assertTrue(select.timeout == SparqlTimeout.ViewRestrictions) && assertGolden(select.sparql, "valueCounts")
       },
     ),
@@ -153,7 +157,8 @@ class ViewRestrictionsQuerySpec extends ZIOSpecDefault with GoldenTest {
         // because a graph with no matches yields no rows rather than an error. The join stays.
         val all = Seq(
           ViewRestrictionsRepo.resourceCountsQuery(projectIri).sparql,
-          ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass).sparql,
+          ViewRestrictionsRepo.resourceListingQuery(projectIri, thingClass).sparql,
+          ViewRestrictionsRepo.valueCountsQuery(projectIri, thingClass, twoIris).sparql,
           ViewRestrictionsRepo
             .resourcePageQuery(projectIri, ItemType.All, thingClass, offset = 0, limit = 25, singleTyped)
             .sparql,

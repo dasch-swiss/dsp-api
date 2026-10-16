@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.repo
 import org.ehcache.config.builders.ExpiryPolicyBuilder
 import zio.*
 
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -89,13 +90,40 @@ final case class ViewRestrictionsRepo(
       .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseResourceCountRow))
 
   /**
-   * One resource class's value counts per property, permission literal and deleted flag. A row that
-   * cannot be parsed fails the request.
+   * One resource class's value counts per property, permission literal and deleted flag.
+   *
+   * The class's live resources are listed first and their values counted in batches of `batchSize`
+   * resources, so each query stays within the view-restrictions timeout as a project grows; the batch rows
+   * are summed into the rows a single unbatched query would return. A row that cannot be parsed fails the
+   * request.
    */
-  def valueCounts(projectIri: ProjectIri, resourceClass: String): Task[Seq[ValueCountRow]] =
-    triplestore
-      .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass))
-      .flatMap(rows => ZIO.foreach(rows.results.bindings)(parseValueCountRow(resourceClass, _)))
+  def valueCounts(
+    projectIri: ProjectIri,
+    resourceClass: String,
+    batchSize: Int = ViewRestrictionsRepo.ValueCountBatchSize,
+  ): Task[Seq[ValueCountRow]] =
+    for {
+      listing   <- triplestore.query(ViewRestrictionsRepo.resourceListingQuery(projectIri, resourceClass))
+      resources <- ZIO.foreach(listing.results.bindings)(parseResourceIri)
+      batches    = resources.grouped(batchSize).toSeq
+      rows      <- ZIO
+                .foreachPar(batches)(batch =>
+                  triplestore
+                    .query(ViewRestrictionsRepo.valueCountsQuery(projectIri, resourceClass, batch))
+                    .flatMap(result => ZIO.foreach(result.results.bindings)(parseValueCountRow(resourceClass, _))),
+                )
+                .withParallelism(ViewRestrictionsRepo.ValueCountBatchParallelism)
+    } yield ViewRestrictionsRepo.sumBatches(rows.flatten)
+
+  private def parseResourceIri(row: VariableResultsRow): Task[String] =
+    ZIO
+      .attempt(row.getRequired("resource"))
+      .flatMap(iri =>
+        ZIO
+          .fromEither(Iri.from(iri))
+          .as(iri)
+          .mapError(msg => InconsistentRepositoryDataException(s"Invalid resource IRI in the listing: $msg")),
+      )
 
   private def parseResourceCountRow(row: VariableResultsRow): Task[ResourceCountRow] =
     ZIO.attempt(
@@ -257,6 +285,12 @@ final case class ViewRestrictionsRepo(
 
 object ViewRestrictionsRepo {
 
+  /** Resources per value-count query; keeps each query well under [[SparqlTimeout.ViewRestrictions]]. */
+  val ValueCountBatchSize: Int = 5000
+
+  /** Concurrent batch queries of one class. */
+  val ValueCountBatchParallelism: Int = 2
+
   /**
    * How long a resolved [[ProjectClasses]] stays cached.
    *
@@ -308,6 +342,18 @@ object ViewRestrictionsRepo {
     count: Int,
     commented: Int,
   )
+
+  /**
+   * Sums rows with the same class, property, permission literal and deleted flag, as the rows of separate
+   * batches must be to equal the rows of one unbatched query.
+   */
+  private[repo] def sumBatches(rows: Seq[ValueCountRow]): Seq[ValueCountRow] =
+    rows
+      .groupMapReduce(row => (row.classIri, row.propertyIri, row.permissions, row.deleted))(identity)((a, b) =>
+        a.copy(count = a.count + b.count, commented = a.commented + b.commented),
+      )
+      .values
+      .toSeq
 
   /**
    * The resource classes a project actually asserts, resolved once and reused by every drill-down query of
@@ -621,8 +667,29 @@ object ViewRestrictionsRepo {
   }
 
   /**
-   * Counts the permissioned objects reachable from the current resources of one class, per property,
-   * permission literal and deleted flag.
+   * The IRIs of a project's current resources of one class, the unit [[valueCountsQuery]] is batched over.
+   */
+  private[repo] def resourceListingQuery(projectIri: ProjectIri, resourceClass: String): Select = {
+    val project = Iri.unsafeFrom(projectIri.value)
+    val clazz   = Iri.unsafeFrom(resourceClass)
+    Select(
+      sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?resource
+               |WHERE {
+               |  ?resource a $clazz .
+               |  ?resource knora-base:attachedToProject $project .
+               |  ?resource knora-base:isDeleted false .
+               |}""".render,
+      SparqlTimeout.ViewRestrictions,
+    )
+  }
+
+  /**
+   * Counts the permissioned objects reachable from the given current resources of one class, per property,
+   * permission literal and deleted flag. `resources` must not be empty.
+   *
+   * `?resource` is bound by `VALUES` first, so each query reads only its batch.
    *
    * `COUNT(*)` counts each value once: `knora-base:valueHasComment` has max cardinality 1, so the optional
    * comment adds no second row.
@@ -633,14 +700,16 @@ object ViewRestrictionsRepo {
    * variable and the caller drops deleted rows. `?prop` is unbound on purpose: the caller classifies
    * properties with the ontology cache.
    */
-  private[repo] def valueCountsQuery(projectIri: ProjectIri, resourceClass: String): Select = {
+  private[repo] def valueCountsQuery(projectIri: ProjectIri, resourceClass: String, resources: Seq[String]): Select = {
     val project = Iri.unsafeFrom(projectIri.value)
     val clazz   = Iri.unsafeFrom(resourceClass)
+    val batch   = Fragments.values(Variable("resource"), resources.map(Iri.unsafeFrom))
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
                |SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
                |WHERE {
+               |  $batch
                |  ?resource a $clazz .
                |  ?resource knora-base:attachedToProject $project .
                |  ?resource knora-base:isDeleted false .

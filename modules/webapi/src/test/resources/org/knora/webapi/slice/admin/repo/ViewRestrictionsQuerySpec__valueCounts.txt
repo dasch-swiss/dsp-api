@@ -2,6 +2,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?prop ?permissions ?valueDeleted (COUNT(*) AS ?cnt) (COUNT(?comment) AS ?commented)
 WHERE {
+  VALUES ?resource { <http://rdfh.ch/0001/a> <http://rdfh.ch/0001/b> }
   ?resource a <http://www.knora.org/ontology/0001/anything#Thing> .
   ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
   ?resource knora-base:isDeleted false .

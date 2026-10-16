@@ -111,5 +111,16 @@ class ViewRestrictionsCountQueriesSpec extends ZIOSpecDefault {
         ),
       )
     }.provide(layers, datasetLayerFromTurtle(turtle)),
+    test("valueCounts in batches of one resource returns the rows of the default batch size") {
+      for {
+        batched   <- repo(_.valueCounts(projectIri, thingClass, batchSize = 1))
+        unbatched <- repo(_.valueCounts(projectIri, thingClass))
+      } yield assertTrue(batched.nonEmpty, batched.toSet == unbatched.toSet, batched.size == unbatched.size)
+    }.provide(layers, datasetLayerFromTurtle(turtle)),
+    test("valueCounts of a class without live resources returns no rows") {
+      for {
+        rows <- repo(_.valueCounts(projectIri, "http://www.knora.org/ontology/0001/anything#Unused"))
+      } yield assertTrue(rows.isEmpty)
+    }.provide(layers, datasetLayerFromTurtle(turtle)),
   )
 }
