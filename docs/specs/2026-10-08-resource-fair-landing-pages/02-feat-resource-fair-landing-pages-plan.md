@@ -565,6 +565,37 @@ Subgoal **S5** ↑PG6.
 Deferred (user decision, 2026-10-15). Once H1 reaches DEV, 5.2 can no longer
 measure the plain shell there; Phase 7's local baseline still can.
 
+H1 and Phase 6 reached DEV on 2026-10-19. An interim measurement, before the
+results table of 5.1 exists, used one resource on two hosts: the production
+page (still the plain shell) as the before, and the DEV page as the after.
+F-UJI 3.5.0 (`sha256:3cde9d30…`), target kind page URL,
+`/resource/0803/fJsdjgkPULyPYXoiGkPOAw`:
+
+| Metric | Production (before) | DEV (after) |
+| --- | --- | --- |
+| FsF-F1-01D | 1/1 | 1/1 |
+| FsF-F1-02D | 0/1 | 1/1 |
+| FsF-F2-01M | 0/2 | 1/2 |
+| FsF-F3-01M | 0/1 | 1/1 |
+| FsF-F4-01M | 0/2 | 1/2 |
+| FsF-A1-01M | 0/1 | 1/1 |
+| FsF-A1-02M | 1/1 | 1/1 |
+| FsF-A1-03D | 0/1 | 1/1 |
+| FsF-I1-01M | 0/2 | 2/2 |
+| FsF-I2-01M | 0/1 | 1/1 |
+| FsF-I3-01M | 0/1 | 1/1 |
+| FsF-R1-01MD | 0/4 | 2/4 |
+| FsF-R1.1-01M | 0/2 | 2/2 |
+| FsF-R1.2-01M | 0/2 | 2/2 |
+| FsF-R1.3-01M | 0/1 | 1/1 |
+| FsF-R1.3-02D | 0/1 | 1/1 |
+| **Total** | **2/24** | **20/24** |
+
+`F1-02D` passes on DEV, against M1's expectation, although DEV's `cite-as`
+points at the stage ARK resolver. Still open for PG6: a 0868 resource, runs
+against the ARKs themselves (they resolve to production, so the ARK baseline
+can be taken only until the release reaches production), and FAIR Champion.
+
 The baseline measures the DEV pages before this work is deployed there. F-UJI
 is given the DEV landing page URL, not the ARK: every ARK resolves to
 production (PRD Open Question 3), so an ARK target would measure production
@@ -611,7 +642,7 @@ Subgoal **S6** ↑PG5, PG1, PG2, PG3.
 - [x] 6.5 #H1 ↑S4, S6: In `roles/dsp-deploy`, for every stack at once (new variables only; either side without the other keeps today's behaviour):
     - `app` service: `DSP_API_UPSTREAM=http://api:3333`;
     - `api` service: C1 `https://{{ DSP_APP_HOST }}`, C2 `http://app/index.html`, C4 from a role default `DSP_API_FAIR_DPE_OAI_SHORTCODES: "0803,081C,0868"` (dsp-repository's `RECORD_SHORTCODES`); C3 is left at its production default
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 7: Score rise confirmed locally
 

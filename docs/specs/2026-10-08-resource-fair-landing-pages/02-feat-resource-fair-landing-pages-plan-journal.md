@@ -21,8 +21,8 @@ status: in-progress
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
 | dsp-api | 5f4f820d8 | feature/dev-7420-resource-landing-pages | squash | merged | <https://github.com/dasch-swiss/dsp-api/pull/4385> |
-| dsp-app | a08be9797 | feature/dev-7420-resource-landing-forwarding | squash | in-progress | <https://github.com/dasch-swiss/dsp-app/pull/3530> |
-| ops-deploy | a70ade4a | feature/dev-7420-fair-landing-pages | squash | in-progress | <https://github.com/dasch-swiss/ops-deploy/pull/1463> |
+| dsp-app | a08be9797 | feature/dev-7420-resource-landing-forwarding | squash | merged | <https://github.com/dasch-swiss/dsp-app/pull/3530> |
+| ops-deploy | a70ade4a | feature/dev-7420-fair-landing-pages | squash | merged | <https://github.com/dasch-swiss/ops-deploy/pull/1463> |
 
 ## Phases
 
@@ -33,7 +33,7 @@ status: in-progress
 | 3 | reviewed | dsp-api@e8a6b8cfa | 1 |
 | 4 | reviewed | dsp-api@698c62e76 | 1 |
 | 5 | deferred | — | — |
-| 6 | implemented | dsp-app@a08be9797, ops-deploy@a70ade4a | 0 |
+| 6 | reviewed | dsp-app@a08be9797, ops-deploy@a70ade4a | 0 |
 
 ## Chunk queue
 
@@ -119,3 +119,8 @@ status: in-progress
 - Spec id convention adopted (user, 2026-10-12): an id is written `#<id>` once at its origin and bare elsewhere; applied to the plan and PRD.
 - Local testing (2026-10-12): the shell fetch failed against the Angular dev server because Java's HttpClient opens plain-http requests with an `Upgrade: h2c` that the dev server never answers (500 ms read timeout). Fixed by fetching the shell over HTTP/1.1 (`TracingHttpClient.http11Layer`). Locally the dev server must also listen on 0.0.0.0 and allow the `host.docker.internal` host header (`--host 0.0.0.0 --allowed-hosts host.docker.internal`).
 - N2's `error_page` list includes `405`, but the landing location answers a non-GET/HEAD method with its own `405`, which that entry would turn into a `200` shell. `405` is left out; dsp-api never answers `405` to the GET/HEAD it is sent.
+- Phase 6 review: one devops reviewer over both diffs, no blocking findings, no fix round. Kept as decided: the `error_page` list (a `405`/`410`/`501` from dsp-api would reach the client; dsp-api's routes never answer them to GET/HEAD), the 2 s timeouts (R2), and the `api`/`app` aliases on the shared `proxyNet` (one stack per host, as `db`, `iiif` and `ingest` already assume).
+- Local end-to-end run (2026-10-15): the published dsp-app image with the branch's nginx template mounted over its own (compose override in `.claude/tmp/`), the API image built from main. A dsp-app dev server on host port 4200 made the API splice the dev server's `index.html` into a page whose bundles the container lacks (blank page); C2 must name the `app` container (`http://app:4200/index.html`), as ops-deploy's `http://app/index.html` does.
+- DEV (2026-10-19, app `v13.16.0-20-g4a60f6a`): `Link`, `Vary: Accept`, `Cache-Control: no-store`, the head block and the `303` all as specified. Representation URLs read `https://api.dev.dasch.swiss:443/...` (existing `externalKnoraApiBaseUrl` behaviour, see above). F-UJI before/after recorded under Phase 5 (2/24 on the production page, 20/24 on DEV).
+- dsp-repository's `just fair-check` swaps in a scratch `DOCKER_CONFIG`, which drops the Docker Desktop context; on macOS run it with `DOCKER_HOST=unix://$HOME/.docker/run/docker.sock`.
+- DEV-7420's issue text asks for `author` links for creators with an ORCID; the PRD's Creators row decides none, because dsp-api authorship records no ORCID.
