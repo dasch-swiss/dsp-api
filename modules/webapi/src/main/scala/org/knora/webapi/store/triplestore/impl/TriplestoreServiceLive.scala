@@ -475,8 +475,9 @@ case class TriplestoreServiceLive(
     case SparqlTimeout.Gravsearch  => triplestoreConfig.gravsearchTimeout
     case SparqlTimeout.Search      => triplestoreConfig.searchTimeout
     // The probe reuses the search-timeout value; the distinct tier exists only for metric separation (PROBE).
-    case SparqlTimeout.SearchProbe      => triplestoreConfig.searchTimeout
-    case SparqlTimeout.ViewRestrictions => triplestoreConfig.viewRestrictionsTimeout
+    case SparqlTimeout.SearchProbe            => triplestoreConfig.searchTimeout
+    case SparqlTimeout.ViewRestrictions       => triplestoreConfig.viewRestrictionsTimeout
+    case SparqlTimeout.ViewRestrictionsCounts => triplestoreConfig.viewRestrictionsCountTimeout
   }
 
   private def executeSparqlQuery(

@@ -1,0 +1,10 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?resClass ?permissions (COUNT(*) AS ?cnt)
+WHERE {
+  ?resource knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+  ?resource a ?resClass ;
+    knora-base:hasPermissions ?permissions ;
+    knora-base:isDeleted false .
+}
+GROUP BY ?resClass ?permissions

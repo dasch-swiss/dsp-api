@@ -12,23 +12,22 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
-import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTriG
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.emptyDataset
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
 
-  private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val thingClass = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val project       = anythingProject
+  private val projectIri    = project.id
+  private val thingClass    = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
 
   private val kb      = "http://www.knora.org/ontology/knora-base#"
   private val service = ZIO.serviceWithZIO[ViewRestrictionsService]
@@ -165,8 +164,6 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
-  private val subThingClass = "http://www.knora.org/ontology/0001/anything#SubThing"
-
   /**
    * A resource asserted as BOTH its own class and that class's superclass — what a triplestore with RDFS
    * inference (or data that states both types) looks like. The report must still see it as ONE resource of
@@ -223,95 +220,119 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |  kb:isDeleted false .
        |""".stripMargin
 
+  private val anythingOntology  = "http://www.knora.org/ontology/0001/anything"
+  private val secondOntology    = "http://www.knora.org/ontology/0001/second"
+  private val hasOtherThing     = s"$anythingOntology#hasOtherThing"
+  private val hasOtherThingVal  = s"$anythingOntology#hasOtherThingValue"
+  private val hasSecondText     = s"$secondOntology#hasSecondText"
+  private val standoffLinkValue = s"${kb}hasStandoffLinkToValue"
+  private val deletedOnlyClass  = s"$anythingOntology#DeletedOnlyThing"
+
+  private val ontologyCacheLayer = ViewRestrictionsTestFixtures.ontologyCacheLayer(
+    Seq(
+      ontology(
+        anythingOntology,
+        classes = Seq(thingClass, subThingClass, deletedOnlyClass).map(resourceClass),
+        properties = Seq(
+          valueProp(hasText),
+          fileProp(hasPicture),
+          fileProp(hasDocument),
+          linkProp(hasOtherThing),
+          linkValueProp(hasOtherThingVal),
+        ),
+      ),
+      ontology(secondOntology, classes = Seq.empty, properties = Seq(valueProp(hasSecondText))),
+      ontology(
+        "http://www.knora.org/ontology/knora-base",
+        classes = Seq.empty,
+        properties = Seq(linkValueProp(standoffLinkValue)),
+      ),
+    ),
+  )
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
     ViewRestrictionsService.layer,
+    ViewRestrictionsRowCache.layer,
     ViewRestrictionsRepo.layer,
-    CacheManager.layer,
+    IriConverter.layer,
+    ontologyCacheLayer,
+    OntologyRepoLive.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
 
-  // ----- pure logic (no triplestore) -----
+  private def countedLayers(resourceLoads: Ref[Int], valueLoads: Ref[Int]) =
+    ZLayer.makeSome[Ref[Dataset], ViewRestrictionsService](
+      ViewRestrictionsService.layer,
+      countingCache(resourceLoads, valueLoads, thingClass),
+      ViewRestrictionsRepo.layer,
+      IriConverter.layer,
+      ontologyCacheLayer,
+      OntologyRepoLive.layer,
+      StringFormatter.test,
+      TriplestoreServiceInMemory.layer,
+    )
 
-  private val pureSuite = suite("visibilityOf")(
-    test("maps permission code 0 (no access) to Hidden") {
+  /** The number of (resource-row, value-row) loads the drill-down of `itemType` triggered. */
+  private def loadsOf(itemType: ItemType) =
+    for {
+      resourceLoads <- Ref.make(0)
+      valueLoads    <- Ref.make(0)
+      _             <- service(_.items(project, thingClass, itemType, PageAndSize.Default))
+             .provideSome[Ref[Dataset]](countedLayers(resourceLoads, valueLoads))
+      resources <- resourceLoads.get
+      values    <- valueLoads.get
+    } yield (resources, values)
+
+  private val loadsSuite = suite("items reads only the cached rows the item type needs")(
+    test("Resource loads resource rows only") {
+      loadsOf(ItemType.Resource).map(loads => assertTrue(loads == (1, 0)))
+    }.provide(projectDataset(turtle)),
+    test("Value loads value rows only") {
+      loadsOf(ItemType.Value).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(projectDataset(turtle)),
+    test("File loads value rows only") {
+      loadsOf(ItemType.File).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(projectDataset(turtle)),
+    test("Comment loads value rows only") {
+      loadsOf(ItemType.Comment).map(loads => assertTrue(loads == (0, 1)))
+    }.provide(projectDataset(turtle)),
+    test("All loads both") {
+      loadsOf(ItemType.All).map(loads => assertTrue(loads == (1, 1)))
+    }.provide(projectDataset(turtle)),
+  )
+
+  private val notAClass = "http://www.knora.org/ontology/0001/anything#NotAResourceClass"
+
+  /** The (resource-row, value-row) loads `run` triggered against the counting cache. */
+  private def loadsOfRun(run: ViewRestrictionsService => Task[Any]) =
+    for {
+      resourceLoads <- Ref.make(0)
+      valueLoads    <- Ref.make(0)
+      _             <- service(run).provideSome[Ref[Dataset]](countedLayers(resourceLoads, valueLoads))
+      resources     <- resourceLoads.get
+      values        <- valueLoads.get
+    } yield (resources, values)
+
+  private val unknownClassSuite = suite("an IRI that is not a resource class")(
+    test("valueCounts returns zero counts and loads no rows") {
       for {
-        vis <- service(s => ZIO.succeed(s.visibilityOf(None)))
-      } yield assertTrue(vis == Visibility.Hidden)
-    },
-    test("maps RestrictedView (code 1) to RestrictedView for every item type") {
+        loads  <- loadsOfRun(_.valueCounts(project, notAClass, ValueItemType.All))
+        result <- service(_.valueCounts(project, notAClass, ValueItemType.All))
+      } yield assertTrue(loads == (0, 0), result.counts == AudienceRestrictionCounts.zero)
+    }.provide(projectDataset(turtle), commonLayers),
+    test("items returns an empty page with total 0 and loads no rows") {
       for {
-        vis <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.RestrictedView))))
-      } yield assertTrue(vis == Visibility.RestrictedView)
-    },
-    test("maps View and higher (code >= 2) to Visible") {
-      for {
-        v <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.View))))
-        m <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.Modify))))
-        c <- service(s => ZIO.succeed(s.visibilityOf(Some(Permission.ObjectAccess.ChangeRights))))
-      } yield assertTrue(v == Visibility.Visible, m == Visibility.Visible, c == Visibility.Visible)
-    },
-    test("the anonymous audience user is not an admin (would otherwise short-circuit to max permission)") {
-      for {
-        user <- service(s => ZIO.succeed(s.audienceUser(Audience.Anonymous, projectIri)))
-      } yield assertTrue(user.isAnonymousUser, !user.isSystemAdmin, !user.isProjectAdmin(projectIri))
-    },
-    test("the project-member audience user is a member but not an admin of the project") {
-      for {
-        user <- service(s => ZIO.succeed(s.audienceUser(Audience.ProjectMember, projectIri)))
-      } yield assertTrue(user.isProjectMember(projectIri), !user.isProjectAdmin(projectIri), !user.isSystemAdmin)
-    },
-    // LOAD-BEARING: the exact summary counts classify *bare* permission literals, substituting a placeholder
-    // for each object's real creator. That is only sound if the creator cannot change the answer — i.e. if
-    // no audience user is ever the creator of the object being judged. It holds because the audience users
-    // are synthetic and never author data. This pins it: for any real creator IRI, all three audiences see
-    // the same visibility they'd see with the placeholder.
-    //
-    // Note the deliberately included `CR knora-admin:Creator` literal: it is a real default clause, and it
-    // is exactly the case that would break if an audience user could ever equal an object's creator.
-    test("visibility of a literal does not depend on which real user created the object") {
-      val literals = Seq(
-        "M knora-admin:ProjectMember",
-        "V knora-admin:KnownUser",
-        "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
-        "CR knora-admin:Creator|V knora-admin:ProjectMember",
-      )
-      val creators = Seq(
-        "http://rdfh.ch/users/creator",
-        "http://rdfh.ch/users/root",
-        "http://rdfh.ch/users/someone-else",
-      )
-      for {
-        results <- service(s =>
-                     ZIO.succeed(
-                       for {
-                         literal  <- literals
-                         audience <- Audience.ordered
-                       } yield creators.map { creator =>
-                         s.visibilityOf(
-                           PermissionUtilADM.getUserPermissionADM(
-                             entityCreator = creator,
-                             entityProject = projectIri.value,
-                             entityPermissionLiteral = literal,
-                             requestingUser = s.audienceUser(audience, projectIri),
-                           ),
-                         )
-                       }.distinct,
-                     ),
-                   )
-        // …and no audience user's own id collides with a real user IRI, which is what makes the above hold.
-        ids <- service(s => ZIO.succeed(Audience.ordered.map(a => s.audienceUser(a, projectIri).id)))
-      } yield assertTrue(
-        results.forall(_.size == 1),
-        ids.forall(id => !creators.contains(id)),
-      )
-    },
-  ).provide(commonLayers, emptyDataset)
+        loads <- loadsOfRun(_.items(project, notAClass, ItemType.All, PageAndSize.Default))
+        page  <- service(_.items(project, notAClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(loads == (0, 0), page.data.isEmpty, page.pagination.totalItems == 0)
+    }.provide(projectDataset(turtle), commonLayers),
+  )
 
   private val itemsSuite = suite("items")(
     test("returns each affected resource with its per-audience visibility and correct paging total") {
       for {
-        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
       } yield {
         val byIri = page.data.map(r => r.resourceIri -> r.resourceVisibility).toMap
         assertTrue(
@@ -334,12 +355,12 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           !byIri.contains("http://rdfh.ch/0001/deletedThing"),
         )
       }
-    }.provide(commonLayers, datasetLayerFromTurtle(turtle)),
+    }.provide(commonLayers, projectDataset(turtle)),
     test("second page is empty when page size exceeds the result set") {
       for {
-        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize(2, 25)))
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize(2, 25)))
       } yield assertTrue(page.data.isEmpty, page.pagination.totalItems == 3)
-    }.provide(commonLayers, datasetLayerFromTurtle(turtle)),
+    }.provide(commonLayers, projectDataset(turtle)),
   )
 
   // ----- values / file values / comments + property grouping over the values fixture -----
@@ -347,7 +368,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val valuesSuite = suite("values, files and comments")(
     test("drill-down nests the file/value/comment items under their resource with correct visibility") {
       for {
-        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
       } yield {
         val host  = page.data.find(_.resourceIri == "http://rdfh.ch/0001/host")
         val items = host.map(_.items).getOrElse(Nil)
@@ -368,7 +389,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           value.exists(_.visibility == ItemVisibility(Visibility.Hidden, Visibility.Hidden, Visibility.Visible)),
         )
       }
-    }.provide(commonLayers, datasetLayerFromTurtle(valuesTurtle)),
+    }.provide(commonLayers, projectDataset(valuesTurtle)),
   )
 
   // ----- restricted view is reported for non-image file values too -----
@@ -376,7 +397,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val nonImageSuite = suite("non-image file values")(
     test("a non-image file value with RV for anon is reported as RestrictedView") {
       for {
-        page <- service(_.items(projectIri, thingClass, ItemType.File, PageAndSize.Default))
+        page <- service(_.items(project, thingClass, ItemType.File, PageAndSize.Default))
       } yield {
         val doc = page.data.flatMap(_.items).find(_.`type` == ItemType.File)
         assertTrue(
@@ -386,7 +407,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           doc.get.visibility.authenticated == Visibility.Visible,
         )
       }
-    }.provide(commonLayers, datasetLayerFromTurtle(nonImageFileTurtle)),
+    }.provide(commonLayers, projectDataset(nonImageFileTurtle)),
   )
 
   // ----- the aggregated summary and the row-based drill-down must agree -----
@@ -397,7 +418,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
     // each other — this asserts they don't, on the one literal where the creator is load-bearing.
     test("the drill-down agrees with the summary for the same resource") {
       for {
-        page <- service(_.items(projectIri, thingClass, ItemType.All, PageAndSize.Default))
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
       } yield {
         val res = page.data.find(_.resourceIri == "http://rdfh.ch/0001/creatorOnly")
         assertTrue(
@@ -407,21 +428,344 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
           page.pagination.totalItems == 1,
         )
       }
-    }.provide(commonLayers, datasetLayerFromTurtle(creatorOnlyTurtle)),
+    }.provide(commonLayers, projectDataset(creatorOnlyTurtle)),
   )
 
   // ----- a resource typed as several classes in one hierarchy must not be counted per class -----
 
   private val multiTypedSuite = suite("resources typed as several classes in one hierarchy")(
-    test("the drill-down lists the resource once for its most specific class") {
+    test("the drill-down lists the resource under each of its classes") {
       for {
-        page <- service(_.items(projectIri, subThingClass, ItemType.All, PageAndSize.Default))
+        sub   <- service(_.items(project, subThingClass, ItemType.All, PageAndSize.Default))
+        thing <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
       } yield assertTrue(
-        page.pagination.totalItems == 1,
-        page.data.size == 1,
-        page.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+        sub.pagination.totalItems == 1,
+        sub.data.size == 1,
+        sub.data.head.resourceIri == "http://rdfh.ch/0001/multiTyped",
+        sub.data.head.resourceClassIri == subThingClass,
+        thing.pagination.totalItems == 1,
+        thing.data.map(_.resourceIri) == Seq("http://rdfh.ch/0001/multiTyped"),
+        thing.data.head.resourceClassIri == thingClass,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+    }.provide(commonLayers, projectDataset(multiTypedTurtle)),
+  )
+
+  private val userCreator = "<http://rdfh.ch/users/creator>"
+
+  /** One project resource in Turtle; `extra` holds further `predicate object` pairs of the resource. */
+  private def resourceTurtle(
+    iri: String,
+    cls: String,
+    label: String,
+    permissions: String,
+    deleted: Boolean = false,
+    extra: Seq[String] = Seq.empty,
+  ): String = {
+    val predicates = Seq(
+      s"a <$cls>",
+      s"rdfs:label \"$label\"",
+      s"kb:attachedToProject <${projectIri.value}>",
+      s"kb:attachedToUser $userCreator",
+      s"kb:hasPermissions \"$permissions\"",
+      s"kb:isDeleted $deleted",
+    ) ++ extra
+    s"<$iri>\n  ${predicates.mkString(" ;\n  ")} .\n"
+  }
+
+  /** One value in Turtle, attached to a user and carrying a permission literal. */
+  private def valueTurtle(iri: String, cls: String, permissions: String): String =
+    s"""<$iri>
+       |  a $cls ;
+       |  kb:attachedToUser $userCreator ;
+       |  kb:hasPermissions "$permissions" ;
+       |  kb:isDeleted false .
+       |""".stripMargin
+
+  private val turtlePrefixes: String =
+    s"""@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+       |@prefix kb:    <$kb> .
+       |""".stripMargin
+
+  private val linkHost         = "http://rdfh.ch/0001/linkHost"
+  private val linkValueIri     = s"$linkHost/values/link"
+  private val standoffValueIri = s"$linkHost/values/standoff"
+  private val standoffValue    = valueTurtle(standoffValueIri, "kb:LinkValue", "M knora-admin:ProjectMember")
+
+  private val linkPropertiesTurtle: String =
+    s"""<$hasOtherThingVal> rdfs:subPropertyOf kb:hasValue .
+       |<$standoffLinkValue> rdfs:subPropertyOf kb:hasValue .
+       |""".stripMargin
+
+  private val hasOtherThingTurtle: String =
+    turtlePrefixes + linkPropertiesTurtle +
+      resourceTurtle(
+        linkHost,
+        thingClass,
+        "Link host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(
+          s"<$hasOtherThing> <http://rdfh.ch/0001/linkTarget>",
+          s"<$hasOtherThingVal> <$linkValueIri>",
+          s"<$standoffLinkValue> <$standoffValueIri>",
+        ),
+      ) +
+      resourceTurtle("http://rdfh.ch/0001/linkTarget", thingClass, "Link target", "V knora-admin:UnknownUser") +
+      valueTurtle(linkValueIri, "kb:LinkValue", "M knora-admin:ProjectMember") +
+      standoffValue
+
+  /** The same host without the user link value: only the standoff link value is restricted. */
+  private val standoffOnlyTurtle: String =
+    turtlePrefixes + linkPropertiesTurtle +
+      resourceTurtle(
+        linkHost,
+        thingClass,
+        "Link host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$standoffLinkValue> <$standoffValueIri>"),
+      ) +
+      standoffValue
+
+  private val secondOntologyTurtle: String =
+    turtlePrefixes + s"<$hasSecondText> rdfs:subPropertyOf kb:hasValue .\n" +
+      resourceTurtle(
+        "http://rdfh.ch/0001/secondHost",
+        thingClass,
+        "Second host",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$hasSecondText> <http://rdfh.ch/0001/secondHost/values/text>"),
+      ) +
+      valueTurtle("http://rdfh.ch/0001/secondHost/values/text", "kb:TextValue", "M knora-admin:ProjectMember")
+
+  private val deletedOnlyTurtle: String =
+    turtlePrefixes +
+      resourceTurtle("http://rdfh.ch/0001/liveThing", thingClass, "Live thing", "M knora-admin:ProjectMember") +
+      resourceTurtle(
+        "http://rdfh.ch/0001/goneThing",
+        deletedOnlyClass,
+        "Gone thing",
+        "M knora-admin:ProjectMember",
+        deleted = true,
+      )
+
+  private val valueClassificationSuite = suite("value classification by the property hierarchy")(
+    test("a restricted user link value is counted, as All and as Value") {
+      for {
+        all   <- service(_.valueCounts(project, thingClass, ValueItemType.All))
+        value <- service(_.valueCounts(project, thingClass, ValueItemType.Value))
+      } yield assertTrue(
+        all.counts.anonymous.hidden == 1,
+        all.counts.projectMember.hidden == 0,
+        value.counts.anonymous.hidden == 1,
+      )
+    }.provide(commonLayers, projectDataset(hasOtherThingTurtle)),
+    test("a restricted standoff link value is not counted") {
+      for {
+        result <- service(_.valueCounts(project, thingClass, ValueItemType.All))
+      } yield assertTrue(result.counts == AudienceRestrictionCounts.zero)
+    }.provide(commonLayers, projectDataset(standoffOnlyTurtle)),
+    test("a value of a property from another ontology is counted") {
+      for {
+        result <- service(_.valueCounts(project, thingClass, ValueItemType.All))
+      } yield assertTrue(result.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, projectDataset(secondOntologyTurtle)),
+    test("a class whose resources are all deleted is not reported") {
+      for {
+        result <- service(_.classSummaries(project))
+      } yield assertTrue(result.classes.map(_.id) == Seq(thingClass))
+    }.provide(commonLayers, projectDataset(deletedOnlyTurtle)),
+    test("a resource typed with two classes is counted once for each class") {
+      for {
+        result <- service(_.classSummaries(project))
+      } yield assertTrue(
+        result.classes.map(c => c.id -> c.totalResources).toMap == Map(thingClass -> 1, subThingClass -> 1),
+      )
+    }.provide(commonLayers, projectDataset(multiTypedTurtle)),
+  )
+
+  private val anonymousOpenButRestrictedForKnownUsers = "V knora-admin:UnknownUser|RV knora-admin:KnownUser"
+
+  private val mixedClauseTurtle: String =
+    turtlePrefixes +
+      resourceTurtle(
+        "http://rdfh.ch/0001/mixedClause",
+        thingClass,
+        "Mixed clause",
+        anonymousOpenButRestrictedForKnownUsers,
+      )
+
+  private val linkDrillDownSuite = suite("the class drill-down")(
+    test("lists a restricted user link value as a Value item") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+        items = page.data.flatMap(_.items)
+      } yield assertTrue(
+        page.data.map(_.resourceIri) == Seq(linkHost),
+        items.map(i => i.`type` -> i.valueIri) == Seq(ItemType.Value -> Some(linkValueIri)),
+        page.pagination.totalItems == 1,
+      )
+    }.provide(commonLayers, projectDataset(hasOtherThingTurtle)),
+    test("does not list a restricted standoff link value") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.isEmpty, page.pagination.totalItems == 0)
+    }.provide(commonLayers, projectDataset(standoffOnlyTurtle)),
+    test("lists a resource whose literal is open to anonymous users but restricted for authenticated users") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(
+        page.data.map(_.resourceIri) == Seq("http://rdfh.ch/0001/mixedClause"),
+        page.data.head.resourceVisibility ==
+          ItemVisibility(Visibility.Visible, Visibility.RestrictedView, Visibility.RestrictedView),
+      )
+    }.provide(commonLayers, projectDataset(mixedClauseTurtle)),
+    test("sets the resource class on every listed resource") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.nonEmpty, page.data.forall(_.resourceClassIri == thingClass))
+    }.provide(commonLayers, projectDataset(turtle)),
+    test("sets the resource class on every resource listed through a value") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+      } yield assertTrue(page.data.nonEmpty, page.data.forall(_.resourceClassIri == thingClass))
+    }.provide(commonLayers, projectDataset(valuesTurtle)),
+    test("the number of listed Value items equals the anonymous hidden plus restricted-view value count") {
+      // Both sides count values: every restricted value of the fixture is hidden for anonymous users.
+      for {
+        page   <- service(_.items(project, thingClass, ItemType.Value, PageAndSize.Default))
+        counts <- service(_.valueCounts(project, thingClass, ValueItemType.Value))
+        listed  = page.data.flatMap(_.items).count(_.`type` == ItemType.Value)
+        anon    = counts.counts.anonymous
+      } yield assertTrue(listed == 1, listed == anon.hidden + anon.restrictedView)
+    }.provide(commonLayers, projectDataset(hasOtherThingTurtle)),
+  )
+
+  /** A resource whose restricted file value is typed with two file classes, which yields one query row per class. */
+  private val twoFileClassesTurtle: String =
+    turtlePrefixes + linkPropertiesTurtle +
+      s"""<$hasPicture> rdfs:subPropertyOf kb:hasValue .
+         |kb:StillImageFileValue rdfs:subClassOf kb:FileValue .
+         |kb:DocumentFileValue rdfs:subClassOf kb:FileValue .
+         |""".stripMargin +
+      resourceTurtle(
+        "http://rdfh.ch/0001/twoClasses",
+        thingClass,
+        "Two file classes",
+        "V knora-admin:UnknownUser",
+        extra = Seq(s"<$hasPicture> <http://rdfh.ch/0001/twoClasses/values/pic>"),
+      ) +
+      valueTurtle(
+        "http://rdfh.ch/0001/twoClasses/values/pic",
+        "kb:StillImageFileValue, kb:DocumentFileValue",
+        "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
+      )
+
+  private val valueItemsSuite = suite("the class drill-down value items")(
+    test("a value typed with two file classes is listed once") {
+      for {
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
+        items = page.data.flatMap(_.items)
+      } yield assertTrue(
+        items.map(i => i.`type` -> i.valueIri) ==
+          Seq(ItemType.File -> Some("http://rdfh.ch/0001/twoClasses/values/pic")),
+      )
+    }.provide(commonLayers, projectDataset(twoFileClassesTurtle)),
+  )
+
+  // ----- the counts and the drill-down agree on what counts -----
+
+  private val parityHost = "http://rdfh.ch/0001/parityHost"
+
+  /** One resource per value kind: plain, file with a comment, user link, standoff link, and an open value. */
+  private val parityTurtle: String = {
+    val host = (name: String, values: Seq[String]) =>
+      resourceTurtle(
+        s"http://rdfh.ch/0001/$name",
+        thingClass,
+        name,
+        "V knora-admin:UnknownUser",
+        extra = values,
+      )
+    turtlePrefixes + linkPropertiesTurtle +
+      s"""<$hasText> rdfs:subPropertyOf kb:hasValue .
+         |<$hasPicture> rdfs:subPropertyOf kb:hasStillImageFileValue .
+         |kb:hasStillImageFileValue rdfs:subPropertyOf kb:hasFileValue .
+         |kb:hasFileValue rdfs:subPropertyOf kb:hasValue .
+         |kb:StillImageFileValue rdfs:subClassOf kb:FileValue .
+         |""".stripMargin +
+      host("plainHost", Seq(s"<$hasText> <$parityHost/plain>", s"<$hasText> <$parityHost/open>")) +
+      host("fileHost", Seq(s"<$hasPicture> <$parityHost/file>")) +
+      host("linkHost", Seq(s"<$hasOtherThingVal> <$parityHost/link>", s"<$standoffLinkValue> <$parityHost/standoff>")) +
+      valueTurtle(s"$parityHost/plain", "kb:TextValue", "M knora-admin:ProjectMember") +
+      valueTurtle(s"$parityHost/open", "kb:TextValue", "V knora-admin:UnknownUser") +
+      s"""<$parityHost/file>
+         |  a kb:StillImageFileValue ;
+         |  kb:attachedToUser $userCreator ;
+         |  kb:hasPermissions "RV knora-admin:UnknownUser|V knora-admin:KnownUser" ;
+         |  kb:isDeleted false ;
+         |  kb:valueHasComment "a comment" .
+         |""".stripMargin +
+      valueTurtle(s"$parityHost/link", "kb:LinkValue", "V knora-admin:KnownUser|M knora-admin:ProjectMember") +
+      valueTurtle(s"$parityHost/standoff", "kb:LinkValue", "M knora-admin:ProjectMember")
+  }
+
+  private def visibleFor(audience: Audience, visibility: ItemVisibility): Visibility =
+    audience match {
+      case Audience.Anonymous     => visibility.anonymous
+      case Audience.Authenticated => visibility.authenticated
+      case Audience.ProjectMember => visibility.projectMember
+    }
+
+  private def restrictedCount(counts: AudienceRestrictionCounts, audience: Audience): Int = {
+    val c = audience match {
+      case Audience.Anonymous     => counts.anonymous
+      case Audience.Authenticated => counts.authenticated
+      case Audience.ProjectMember => counts.projectMember
+    }
+    c.hidden + c.restrictedView
+  }
+
+  /** The drill-down item types whose items are the values `itemType` counts. */
+  private def countedItemTypes(itemType: ValueItemType): Set[ItemType] =
+    itemType match {
+      case ValueItemType.All     => Set(ItemType.File, ItemType.Value)
+      case ValueItemType.File    => Set(ItemType.File)
+      case ValueItemType.Value   => Set(ItemType.Value)
+      case ValueItemType.Comment => Set(ItemType.Comment)
+    }
+
+  private def drillDownItemType(itemType: ValueItemType): ItemType =
+    itemType match {
+      case ValueItemType.All     => ItemType.All
+      case ValueItemType.File    => ItemType.File
+      case ValueItemType.Value   => ItemType.Value
+      case ValueItemType.Comment => ItemType.Comment
+    }
+
+  private val paritySuite = suite("value counts and the class drill-down")(
+    test("agree, per item type and audience, on how many values are not fully visible") {
+      val valueItemTypes = List(ValueItemType.All, ValueItemType.File, ValueItemType.Value, ValueItemType.Comment)
+      for {
+        checks <- ZIO.foreach(valueItemTypes.flatMap(t => Audience.ordered.map(t -> _))) { case (itemType, audience) =>
+                    for {
+                      counts <- service(_.valueCounts(project, thingClass, itemType))
+                      page   <- service(_.items(project, thingClass, drillDownItemType(itemType), PageAndSize(1, 100)))
+                      listed  = page.data
+                                 .flatMap(_.items)
+                                 .filter(i => countedItemTypes(itemType).contains(i.`type`))
+                                 .count(i => visibleFor(audience, i.visibility) != Visibility.Visible)
+                    } yield (itemType, audience, restrictedCount(counts.counts, audience), listed)
+                  }
+      } yield assertTrue(
+        checks.forall { case (_, _, counted, listed) => counted == listed },
+        // The fixture makes every audience see something restricted for All, so the check is not vacuous.
+        checks.exists { case (itemType, audience, counted, _) =>
+          itemType == ValueItemType.All && audience == Audience.Anonymous && counted == 3
+        },
+        checks.exists { case (itemType, audience, counted, _) =>
+          itemType == ValueItemType.Comment && audience == Audience.Anonymous && counted == 1
+        },
+      )
+    }.provide(commonLayers, projectDataset(parityTurtle)),
   )
 
   // ----- stepped report (DEV-6778) -----
@@ -465,7 +809,7 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   private val steppedSuite = suite("stepped report")(
     test("classSummaries derives totalResources by summing every literal, visible ones included") {
       for {
-        result <- service(_.classSummaries(projectIri))
+        result <- service(_.classSummaries(project))
         thing   = result.classes.find(_.id == thingClass)
       } yield assertTrue(
         // Both resources counted, though only one is restricted: the population is not a restriction count.
@@ -477,20 +821,20 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         // The open resource is fully visible, so it is in the population but in no restriction bucket.
         thing.map(_.counts.anonymous.restrictedView).contains(0),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(steppedTurtle)),
+    }.provide(commonLayers, projectDataset(steppedTurtle)),
     test("classSummaries reports the project IRI and every asserted class") {
       for {
-        result <- service(_.classSummaries(projectIri))
+        result <- service(_.classSummaries(project))
       } yield assertTrue(
         result.classes.nonEmpty,
         result.projectIri == projectIri.value,
         // A class is a row whether or not it carries a restriction — the frontend needs the denominator.
         result.classes.forall(_.totalResources >= 0),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(steppedTurtle)),
+    }.provide(commonLayers, projectDataset(steppedTurtle)),
     test("valueCounts counts values, in a unit separate from the resource counts") {
       for {
-        result <- service(_.valueCounts(projectIri, thingClass, ValueItemType.All))
+        result <- service(_.valueCounts(project, thingClass, ValueItemType.All))
       } yield assertTrue(
         result.resourceClass == thingClass,
         // One member-only value: hidden from anon and logged-in, visible to a member. This is 1 *value*,
@@ -499,23 +843,17 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
         result.counts.authenticated.hidden == 1,
         result.counts.projectMember.hidden == 0,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(steppedTurtle)),
+    }.provide(commonLayers, projectDataset(steppedTurtle)),
   )
 
-  // ----- graph scoping would undercount: a project's data spans one graph per ontology -----
+  // ----- graph scoping -----
 
   /**
-   * Three `Thing`s of one project, split across **two** named data graphs.
+   * Two `Thing`s in the project's data graph and one in another named graph, each with a member-only value. The
+   * drill-down and the value counts read only the data graph that `ProjectService.projectDataNamedGraphV2` derives.
    *
-   * This is the real DSP layout, not a contrived one: a project gets one data graph per ontology, so
-   * `projectDataNamedGraphV2` — which derives exactly one — names only a slice of the project. An earlier
-   * revision scoped these queries with `GRAPH <thatOneGraph>` for the speed-up, and the report silently
-   * lost every resource living in the project's other graphs. Measured on the local `anything` project as
-   * 65 resources in one graph and 6 in another; reproduced here at 2 and 1, which is the same defect.
-   *
-   * A Turtle fixture cannot catch this — [[datasetLayerFromTurtle]] puts everything in one fixed graph, so
-   * a graph-scoped query would either match all of it or none of it, and the test would pass either way.
-   * Hence TriG.
+   * A Turtle fixture cannot catch this: [[projectDataset]] puts everything in one graph, so the test would
+   * pass whether the queries are scoped or not. Hence TriG.
    */
   private val twoGraphTriG: String =
     s"""
@@ -523,16 +861,27 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
        |@prefix kb:   <$kb> .
        |
-       |<http://www.knora.org/data/0001/anything> {
+       |<http://www.knora.org/ontology/0001/anything> {
        |  <$thingClass> rdfs:subClassOf kb:Resource .
+       |  <$hasText> rdfs:subPropertyOf kb:hasValue .
+       |}
        |
+       |<http://www.knora.org/data/0001/anything> {
        |  <http://rdfh.ch/0001/inAnything1> rdf:type <$thingClass> ;
+       |    rdfs:label "In anything 1" ;
        |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false ;
+       |    <$hasText> <http://rdfh.ch/0001/inAnything1/values/v1> .
+       |
+       |  <http://rdfh.ch/0001/inAnything1/values/v1> rdf:type kb:TextValue ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "M knora-admin:ProjectMember" ;
        |    kb:isDeleted false .
        |
        |  <http://rdfh.ch/0001/inAnything2> rdf:type <$thingClass> ;
+       |    rdfs:label "In anything 2" ;
        |    kb:attachedToProject <${projectIri.value}> ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "V knora-admin:UnknownUser" ;
@@ -541,24 +890,34 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
        |
        |<http://www.knora.org/data/0001/something> {
        |  <http://rdfh.ch/0001/inSomething> rdf:type <$thingClass> ;
+       |    rdfs:label "In something" ;
        |    kb:attachedToProject <${projectIri.value}> ;
+       |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
+       |    kb:hasPermissions "M knora-admin:ProjectMember" ;
+       |    kb:isDeleted false ;
+       |    <$hasText> <http://rdfh.ch/0001/inSomething/values/v1> .
+       |
+       |  <http://rdfh.ch/0001/inSomething/values/v1> rdf:type kb:TextValue ;
        |    kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |    kb:hasPermissions "M knora-admin:ProjectMember" ;
        |    kb:isDeleted false .
        |}
        |""".stripMargin
 
-  private val graphScopingSuite = suite("a project's data spanning several named graphs")(
-    test("every graph is counted, because the queries scope by attachedToProject and not by GRAPH") {
+  private val graphScopingSuite = suite("graph scoping")(
+    test("the value counts read only the project's data graph") {
       for {
-        result <- service(_.classSummaries(projectIri))
-        thing   = result.classes.find(_.id == thingClass)
+        values <- service(_.valueCounts(project, thingClass, ValueItemType.All))
+      } yield assertTrue(values.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, datasetLayerFromTriG(twoGraphTriG)),
+    test("the drill-down lists only the restricted objects of the project's data graph") {
+      for {
+        _    <- service(_.classSummaries(project))
+        page <- service(_.items(project, thingClass, ItemType.All, PageAndSize.Default))
       } yield assertTrue(
-        // 2 in one graph + 1 in another. Under the reverted GRAPH scoping this read 2, with nothing to
-        // indicate the third was missing — the failure mode was a plausible-looking smaller number.
-        thing.map(_.totalResources).contains(3),
-        // and the restriction counts lose the other graph's rows the same way
-        thing.map(_.counts.anonymous.hidden).contains(2),
+        page.pagination.totalItems == 1,
+        page.data.map(_.resourceIri) == Seq("http://rdfh.ch/0001/inAnything1"),
+        page.data.flatMap(_.items).flatMap(_.valueIri) == Seq("http://rdfh.ch/0001/inAnything1/values/v1"),
       )
     }.provide(commonLayers, datasetLayerFromTriG(twoGraphTriG)),
   )
@@ -566,13 +925,18 @@ class ViewRestrictionsServiceSpec extends ZIOSpecDefault {
   // ----- count units, at the repo boundary where the tagging happens -----
 
   def spec = suite("ViewRestrictionsService")(
-    pureSuite,
     itemsSuite,
     valuesSuite,
     nonImageSuite,
     creatorOnlySuite,
     multiTypedSuite,
     steppedSuite,
+    valueClassificationSuite,
+    linkDrillDownSuite,
+    loadsSuite,
+    unknownClassSuite,
+    valueItemsSuite,
+    paritySuite,
     graphScopingSuite,
   )
 }

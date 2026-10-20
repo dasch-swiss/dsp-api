@@ -520,6 +520,50 @@ before subtracting. `FILTER NOT EXISTS` is checked per candidate row instead. Me
 ~200ms by swapping `MINUS` for `FILTER NOT EXISTS` and GRAPH-scoping — either change alone
 rescues it.
 
+### Keep a filter on an unbound variable out of the pattern
+
+Without statistics, Fuseki orders the patterns of a group by fixed weights (see Fact 1 in
+[the engine facts](dsp-api-fuseki-query-execution.md)).
+A pattern with a constant object, such as `?value knora-base:isDeleted false` or `?resource a <Class>`, runs before
+a pattern with one bound term, such as `?resource ?prop ?value`. If its variable is not yet bound, it reads every
+subject with that object; in the union default graph that is the whole store. Use one of these fixes:
+
+- Bind the value to a variable (`?value knora-base:isDeleted ?deleted`) and filter it after the pattern that binds
+  it (`FILTER (?deleted = false)`; Jena does not substitute a boolean into the pattern).
+- Put a sub-select barrier *after* the pattern that binds the variable, and the constant-object patterns after the
+  barrier. A nested `{ … }` group is not a barrier: Jena merges it into the surrounding BGP.
+- Make the constant-object pattern the one intended driver, inside the project's data graph (see
+  § Scope a project-wide aggregation to the project's data graph).
+
+Measured on stage (DEV-7390): a GRAPH-scoped value count that also had `?resource knora-base:isDeleted false` timed
+out at 120 s; with `?resource knora-base:isDeleted ?resDeleted` and a filter after the grouping it took 27.9 s.
+
+### Wrap a literal `IN` list in `STR()`
+
+Jena expands `FILTER (?p IN ("a", "b"))` over plain string literals into a disjunction and then into a `UNION` with
+each literal substituted into the triple pattern. `?value knora-base:hasPermissions "a"` then has two bound terms
+and reads every object with that literal. `FILTER (STR(?p) IN ("a", "b"))` compares a function result, not a
+variable, so the rewrite does not apply. Use it when the rows are already bound, for example by
+`VALUES ?resource { … }`.
+
+When the literals are meant to select the rows, put them in `VALUES ?p { "a" "b" }` inside the project's data graph
+instead: there the substituted pattern reads only the project's objects with that literal. Measured on stage
+(DEV-7390): a view-restrictions drill-down page of the largest project took 8.7 s with `STR()` over the class's
+values and 0.55 s driven by the literal, with identical rows.
+
+### Scope a project-wide aggregation to the project's data graph
+
+`LIMIT`/`OFFSET` on a grouped or aggregated result does not bound the query time: every page must scan and
+aggregate the whole input before it returns one row. To keep a growing aggregation under a timeout, first scope
+the scan to the project's data graph (`GRAPH <projectDataGraph> { … }`, the graph
+`ProjectService.projectDataNamedGraphV2` derives), and let one constant-object pattern drive the scan. Measured on stage (DEV-7390):
+one such query counted the 1.67 M values of the largest project in 27.9 s; the same counts took 53.9 s in one
+resource-driven query with `attachedToProject`, and 64.1 s summed over per-class batches of 2000 resource IRIs.
+
+Batch only if the scoped query is still over the timeout. Then partition by a key that needs no listing query, such
+as the permission literal (`VALUES ?permissions { … }`), or batch resources inside the graph. Keep each batch's
+form-encoded request body under Jetty's 200,000-byte default form limit (about 60 bytes for each IRI).
+
 ### GRAPH-scope scans, not lookups
 
 With the union default graph, *selective* bound-term lookups (a bound IRI, a literal such as a
@@ -534,6 +578,9 @@ project data graph *is* the project, so once a pattern is graph-scoped the membe
 a redundant join, not a belt-and-braces check. Measured (DEV-6827): dropping it from the
 class-browsing prequery, together with its no-op `DISTINCT`, took the largest class in the
 store from 1.66s to 310ms per page (5.4×) with byte-identical results.
+
+For a project-wide read, scope to the project's data graph (see § Scope a project-wide aggregation to the project's
+data graph).
 
 ### Don't inline large closures as `VALUES`
 

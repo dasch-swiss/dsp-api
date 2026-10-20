@@ -12,136 +12,27 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsTestFixtures.*
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
+import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
 import org.knora.webapi.slice.api.PageAndSize
-import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Audience
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
-import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
-import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
+import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 /**
  * Tests for [[ViewRestrictionsByPropertyService]].
  *
- * The suite that matters here is the equivalence pin (PRD REQ-6.3). The permission machinery is duplicated
- * between this service and [[ViewRestrictionsService]] on purpose — sharing it would reintroduce the
- * `groupBy` seam the split exists to remove — and the cost of that decision is that a subtle argument now
- * has to hold in two places. This is what turns a divergence into a failing test rather than two screens
- * quietly disagreeing.
- *
- * These tests deliberately need no triplestore and no ontology: the property under test is a property of
- * the permission model, not of any project's data.
+ * The counts classify a bare literal through [[ViewRestrictionsAudience]] while the drill-down resolves
+ * each value with its real creator; the equivalence of the two is pinned in [[ViewRestrictionsAudienceSpec]].
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
-  private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-
-  /**
-   * The service instance under test.
-   *
-   * Constructed with `null` collaborators because every method exercised below — `audienceUser` and
-   * `visibilityOf` — is a pure function of its arguments and never touches the repo. Wiring a real
-   * `OntologyRepo` here would drag in the ontology cache and its whole layer stack to test arithmetic on a
-   * permission string. If a future test needs `properties`, `propertyValues` or `propertyItems`, it wants
-   * the full layer set and belongs in its own suite.
-   */
-  private val service = ViewRestrictionsByPropertyService(null)
-
-  /**
-   * A creator IRI that is emphatically not one of the synthetic audience users.
-   *
-   * The equivalence being pinned is that classifying a bare literal against a placeholder creator gives the
-   * same answer as classifying a real object whose creator is known — which holds precisely because none of
-   * the three audiences is ever the creator.
-   */
-  private val realCreator = "http://rdfh.ch/users/some-real-person"
-
-  /**
-   * Literals spanning the cases the report distinguishes, including the one that makes the argument
-   * non-obvious: `CR knora-admin:Creator` grants the creator full rights and everyone else nothing, so it
-   * is exactly the literal where a placeholder creator could have diverged from a real one.
-   */
-  private val literals = List(
-    "V knora-admin:UnknownUser",
-    "M knora-admin:ProjectMember",
-    "V knora-admin:KnownUser|M knora-admin:ProjectMember",
-    "RV knora-admin:UnknownUser|V knora-admin:KnownUser",
-    "CR knora-admin:Creator",
-    "CR knora-admin:Creator|V knora-admin:UnknownUser",
-  )
-
-  private def visibilityWith(creator: String, literal: String, audience: Audience): Visibility =
-    service.visibilityOf(
-      PermissionUtilADM.getUserPermissionADM(
-        entityCreator = creator,
-        entityProject = projectIri.value,
-        entityPermissionLiteral = literal,
-        requestingUser = service.audienceUser(audience, projectIri),
-      ),
-    )
-
-  private val equivalenceSuite = suite("bare-literal classification (REQ-6.3)")(
-    // THE pin. The counts classify a literal with a placeholder creator; the drill-down resolves the same
-    // object with its real creator. If those ever disagree, a property's count and its drill-down would
-    // contradict each other, and neither would obviously be wrong.
-    test("classifying a bare literal equals classifying a real object, for every audience") {
-      val mismatches = for {
-        literal        <- literals
-        audience       <- Audience.ordered
-        withPlaceholder = visibilityWith("urn:view-restrictions-by-property:no-such-creator", literal, audience)
-        withReal        = visibilityWith(realCreator, literal, audience)
-        if withPlaceholder != withReal
-      } yield s"$literal / $audience: placeholder=$withPlaceholder real=$withReal"
-      assertTrue(mismatches.isEmpty)
-    },
-    // The consequence that makes the equivalence hold, stated directly so the reasoning is not implicit.
-    test("a Creator-only literal grants nothing to any audience") {
-      val results = Audience.ordered.map(a => visibilityWith(realCreator, "CR knora-admin:Creator", a))
-      assertTrue(results.forall(_ == Visibility.Hidden))
-    },
-    test("no audience user is ever the creator, which is why the placeholder is sound") {
-      val ids = Audience.ordered.map(a => service.audienceUser(a, projectIri).id)
-      assertTrue(ids.forall(_ != realCreator), ids.distinct.nonEmpty)
-    },
-  )
-
-  private val visibilitySuite = suite("visibilityOf")(
-    test("no permission at all is Hidden") {
-      assertTrue(service.visibilityOf(None) == Visibility.Hidden)
-    },
-    test("a project member sees an open resource, anonymous does not see a member-only one") {
-      val open       = visibilityWith(realCreator, "V knora-admin:UnknownUser", Audience.Anonymous)
-      val memberOnly = visibilityWith(realCreator, "M knora-admin:ProjectMember", Audience.Anonymous)
-      val asMember   = visibilityWith(realCreator, "M knora-admin:ProjectMember", Audience.ProjectMember)
-      assertTrue(
-        open == Visibility.Visible,
-        memberOnly == Visibility.Hidden,
-        asMember == Visibility.Visible,
-      )
-    },
-    test("restricted view is reported as its own state, not folded into hidden") {
-      // The whole point of reporting two states: RV means a degraded version IS served, and collapsing it
-      // into "hidden" would tell an admin nothing is served when something is.
-      val rv = visibilityWith(realCreator, "RV knora-admin:UnknownUser|V knora-admin:KnownUser", Audience.Anonymous)
-      assertTrue(rv == Visibility.RestrictedView)
-    },
-    test("access widens across the audiences, never narrows") {
-      // The cumulative invariant the report's columns rely on.
-      val order      = Map(Visibility.Hidden -> 0, Visibility.RestrictedView -> 1, Visibility.Visible -> 2)
-      val violations = for {
-        literal <- literals
-        anon     = order(visibilityWith(realCreator, literal, Audience.Anonymous))
-        auth     = order(visibilityWith(realCreator, literal, Audience.Authenticated))
-        member   = order(visibilityWith(realCreator, literal, Audience.ProjectMember))
-        if anon > auth || auth > member
-      } yield s"$literal: anon=$anon auth=$auth member=$member"
-      assertTrue(violations.isEmpty)
-    },
-  )
+  private val project    = anythingProject
+  private val projectIri = project.id
 
   // ----- dataset-backed: the fold and the drill-down paging -----
 
@@ -152,18 +43,60 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
 
   private val byProperty = ZIO.serviceWithZIO[ViewRestrictionsByPropertyService]
 
-  /**
-   * The repo's `OntologyRepo` is `null` on purpose: only `projectValueProperties` reads it, and that path
-   * is covered by [[org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepoSpec]]. Everything
-   * exercised here goes to the triplestore, so wiring the ontology cache would add a layer stack without
-   * adding coverage.
-   */
+  private val secondThing    = s"${anything}SecondThing"
+  private val ghostThing     = s"${anything}GhostThing"
+  private val hasOtherThingV = s"${anything}hasOtherThingValue"
+  private val hasPicture     = s"${anything}hasPicture"
+  private val hasUnused      = s"${anything}hasUnused"
+  private val hasUnknown     = s"${anything}hasUnknown"
+  private val standoffLinkV  = s"${kb}hasStandoffLinkToValue"
+
+  /** The ontology cache the counts classify with: the classes and properties the Turtle fixtures use. */
+  private val ontologyCacheLayer = ViewRestrictionsTestFixtures.ontologyCacheLayer(
+    Seq(
+      ontology(
+        "http://www.knora.org/ontology/0001/anything",
+        classes = Seq(thing, secondThing).map(resourceClass),
+        properties = Seq(valueProp(hasText), fileProp(hasPicture), valueProp(hasUnused), linkValueProp(hasOtherThingV)),
+      ),
+      ontology(
+        "http://www.knora.org/ontology/knora-base",
+        classes = Seq.empty,
+        properties = Seq(linkValueProp(standoffLinkV)),
+      ),
+    ),
+  )
+
+  /** The service over a given row cache and triplestore. */
+  private val serviceLayers =
+    ZLayer.makeSome[ViewRestrictionsRowCache & TriplestoreService & StringFormatter, ViewRestrictionsByPropertyService](
+      ViewRestrictionsByPropertyService.layer,
+      ViewRestrictionsByPropertyRepo.layer,
+      ontologyCacheLayer,
+      OntologyRepoLive.layer,
+      IriConverter.layer,
+    )
+
   private val commonLayers = ZLayer.makeSome[Ref[Dataset], ViewRestrictionsByPropertyService](
-    ViewRestrictionsByPropertyService.layer,
-    ZLayer.fromFunction((ts: TriplestoreService) => ViewRestrictionsByPropertyRepo(ts, null)),
+    serviceLayers,
+    ViewRestrictionsRowCache.layer,
+    ViewRestrictionsRepo.layer,
     StringFormatter.test,
     TriplestoreServiceInMemory.layer,
   )
+
+  /** The property hierarchy the counts classify with, as a deployed store holds it. */
+  private val propertyHierarchy: String =
+    s"""
+       |<$hasText> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasValue> .
+       |<$hasUnused> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasValue> .
+       |<$hasOtherThingV> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasLinkToValue> .
+       |<$standoffLinkV> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasLinkToValue> .
+       |<${kb}hasLinkToValue> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasValue> .
+       |<$hasPicture> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasStillImageFileValue> .
+       |<${kb}hasStillImageFileValue> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasFileValue> .
+       |<${kb}hasFileValue> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${kb}hasValue> .
+       |""".stripMargin
 
   private def restrictedValue(iri: String) =
     s"""
@@ -182,75 +115,252 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
    * bug this fixture exists to catch is invisible.
    */
   private val pagingTurtle: String =
-    s"""
-       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix kb:   <$kb> .
-       |
-       |<$thing> rdfs:subClassOf kb:Resource .
-       |<$hasText> rdfs:subPropertyOf kb:hasValue .
-       |
-       |<http://rdfh.ch/0001/a> rdf:type <$thing> ;
-       |  rdfs:label "A" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasText> <http://rdfh.ch/0001/a/v1>, <http://rdfh.ch/0001/a/v2>, <http://rdfh.ch/0001/a/open> .
-       |
-       |<http://rdfh.ch/0001/b> rdf:type <$thing> ;
-       |  rdfs:label "B" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasText> <http://rdfh.ch/0001/b/v1>, <http://rdfh.ch/0001/b/v2> .
-       |
-       |<http://rdfh.ch/0001/c> rdf:type <$thing> ;
-       |  rdfs:label "C" ;
-       |  kb:attachedToProject <${projectIri.value}> ;
-       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false ;
-       |  <$hasText> <http://rdfh.ch/0001/c/v1>, <http://rdfh.ch/0001/c/v2> .
-       |
-       |${restrictedValue("http://rdfh.ch/0001/a/v1")}
-       |${restrictedValue("http://rdfh.ch/0001/a/v2")}
-       |${restrictedValue("http://rdfh.ch/0001/b/v1")}
-       |${restrictedValue("http://rdfh.ch/0001/b/v2")}
-       |${restrictedValue("http://rdfh.ch/0001/c/v1")}
-       |${restrictedValue("http://rdfh.ch/0001/c/v2")}
-       |
-       |<http://rdfh.ch/0001/a/open> rdf:type kb:TextValue ;
-       |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
-       |  kb:hasPermissions "V knora-admin:UnknownUser" ;
-       |  kb:isDeleted false .
-       |""".stripMargin
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |
+                           |<$thing> rdfs:subClassOf kb:Resource .
+                           |<$hasText> rdfs:subPropertyOf kb:hasValue .
+                           |
+                           |<http://rdfh.ch/0001/a> rdf:type <$thing> ;
+                           |  rdfs:label "A" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$hasText> <http://rdfh.ch/0001/a/v1>, <http://rdfh.ch/0001/a/v2>, <http://rdfh.ch/0001/a/open> .
+                           |
+                           |<http://rdfh.ch/0001/b> rdf:type <$thing> ;
+                           |  rdfs:label "B" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$hasText> <http://rdfh.ch/0001/b/v1>, <http://rdfh.ch/0001/b/v2> .
+                           |
+                           |<http://rdfh.ch/0001/c> rdf:type <$thing> ;
+                           |  rdfs:label "C" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$hasText> <http://rdfh.ch/0001/c/v1>, <http://rdfh.ch/0001/c/v2> .
+                           |
+                           |${restrictedValue("http://rdfh.ch/0001/a/v1")}
+                           |${restrictedValue("http://rdfh.ch/0001/a/v2")}
+                           |${restrictedValue("http://rdfh.ch/0001/b/v1")}
+                           |${restrictedValue("http://rdfh.ch/0001/b/v2")}
+                           |${restrictedValue("http://rdfh.ch/0001/c/v1")}
+                           |${restrictedValue("http://rdfh.ch/0001/c/v2")}
+                           |
+                           |<http://rdfh.ch/0001/a/open> rdf:type kb:TextValue ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false .
+                           |""".stripMargin
 
   /** One resource asserted as two classes in one hierarchy, carrying a single restricted value. */
   private val multiTypedTurtle: String =
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |
+                           |<$thing> rdfs:subClassOf kb:Resource .
+                           |<${anything}SubThing> rdfs:subClassOf <$thing> .
+                           |<$hasText> rdfs:subPropertyOf kb:hasValue .
+                           |
+                           |<http://rdfh.ch/0001/multi> rdf:type <$thing>, <${anything}SubThing> ;
+                           |  rdfs:label "Multi" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$hasText> <http://rdfh.ch/0001/multi/v1> .
+                           |
+                           |${restrictedValue("http://rdfh.ch/0001/multi/v1")}
+                           |""".stripMargin
+
+  private def linkValueTurtle(property: String): String =
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |
+                           |<$thing> rdfs:subClassOf kb:Resource .
+                           |
+                           |<http://rdfh.ch/0001/host> rdf:type <$thing> ;
+                           |  rdfs:label "Host" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$property> <http://rdfh.ch/0001/host/v1> .
+                           |
+                           |<http://rdfh.ch/0001/host/v1> rdf:type kb:LinkValue ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+                           |  kb:isDeleted false .
+                           |""".stripMargin
+
+  /** Two classes that both use `hasText`: three restricted values on `Thing`, two on `SecondThing`. */
+  private val twoClassTurtle: String =
+    def host(iri: String, clazz: String, values: Seq[String]) =
+      s"""
+         |<$iri> rdf:type <$clazz> ;
+         |  rdfs:label "$iri" ;
+         |  kb:attachedToProject <${projectIri.value}> ;
+         |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+         |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+         |  kb:isDeleted false ;
+         |  <$hasText> ${values.map(v => s"<$v>").mkString(", ")} .
+         |${values.map(restrictedValue).mkString("\n")}
+         |""".stripMargin
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |
+                           |<$thing> rdfs:subClassOf kb:Resource .
+                           |<$secondThing> rdfs:subClassOf kb:Resource .
+                           |
+                           |${host(
+                            "http://rdfh.ch/0001/t1",
+                            thing,
+                            Seq("http://rdfh.ch/0001/t1/v1", "http://rdfh.ch/0001/t1/v2"),
+                          )}
+                           |${host("http://rdfh.ch/0001/t2", thing, Seq("http://rdfh.ch/0001/t2/v1"))}
+                           |${host(
+                            "http://rdfh.ch/0001/s1",
+                            secondThing,
+                            Seq("http://rdfh.ch/0001/s1/v1", "http://rdfh.ch/0001/s1/v2"),
+                          )}
+                           |""".stripMargin
+
+  /** One resource with a restricted text value and a restricted user link value: two properties, one class. */
+  private val twoPropertyTurtle: String =
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |
+                           |<http://rdfh.ch/0001/both> rdf:type <$thing> ;
+                           |  rdfs:label "Both" ;
+                           |  kb:attachedToProject <${projectIri.value}> ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+                           |  kb:isDeleted false ;
+                           |  <$hasText> <http://rdfh.ch/0001/both/text> ;
+                           |  <$hasOtherThingV> <http://rdfh.ch/0001/both/link> .
+                           |
+                           |${restrictedValue("http://rdfh.ch/0001/both/text")}
+                           |<http://rdfh.ch/0001/both/link> rdf:type kb:LinkValue ;
+                           |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+                           |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+                           |  kb:isDeleted false .
+                           |""".stripMargin
+
+  private def host(iri: String, clazz: String, props: String*) =
     s"""
-       |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-       |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-       |@prefix kb:   <$kb> .
-       |
-       |<$thing> rdfs:subClassOf kb:Resource .
-       |<${anything}SubThing> rdfs:subClassOf <$thing> .
-       |<$hasText> rdfs:subPropertyOf kb:hasValue .
-       |
-       |<http://rdfh.ch/0001/multi> rdf:type <$thing>, <${anything}SubThing> ;
-       |  rdfs:label "Multi" ;
+       |<$iri> rdf:type <$clazz> ;
+       |  rdfs:label "$iri" ;
        |  kb:attachedToProject <${projectIri.value}> ;
        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
        |  kb:hasPermissions "V knora-admin:UnknownUser" ;
        |  kb:isDeleted false ;
-       |  <$hasText> <http://rdfh.ch/0001/multi/v1> .
-       |
-       |${restrictedValue("http://rdfh.ch/0001/multi/v1")}
+       |  ${props.mkString(" ;\n  ")} .
        |""".stripMargin
 
+  private val prefixes: String =
+    propertyHierarchy + s"""
+                           |@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+                           |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                           |@prefix kb:   <$kb> .
+                           |<$thing> rdfs:subClassOf kb:Resource .
+                           |<$secondThing> rdfs:subClassOf kb:Resource .
+                           |<$ghostThing> rdfs:subClassOf kb:Resource .
+                           |""".stripMargin
+
+  /** One `Thing` with a restricted value of `hasText`, and one `GhostThing`, a class outside the ontology cache. */
+  private val ghostClassTurtle: String =
+    prefixes +
+      host("http://rdfh.ch/0001/t", thing, s"<$hasText> <http://rdfh.ch/0001/t/v1>") +
+      host("http://rdfh.ch/0001/g", ghostThing, s"<$hasText> <http://rdfh.ch/0001/g/v1>") +
+      restrictedValue("http://rdfh.ch/0001/t/v1") +
+      restrictedValue("http://rdfh.ch/0001/g/v1")
+
+  /** One resource with a commented restricted text value and a restricted still-image file value. */
+  private val textAndFileTurtle: String =
+    prefixes +
+      host(
+        "http://rdfh.ch/0001/h",
+        thing,
+        s"<$hasText> <http://rdfh.ch/0001/h/text>",
+        s"<$hasPicture> <http://rdfh.ch/0001/h/pic>",
+      ) +
+      """
+        |<http://rdfh.ch/0001/h/text> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:valueHasComment "a note" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/h/pic> rdf:type kb:StillImageFileValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
+  /** One resource typed with two unrelated classes, carrying one restricted value. */
+  private val twoTypesTurtle: String =
+    prefixes +
+      s"""
+         |<http://rdfh.ch/0001/m> rdf:type <$thing>, <$secondThing> ;
+         |  rdfs:label "m" ;
+         |  kb:attachedToProject <${projectIri.value}> ;
+         |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+         |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+         |  kb:isDeleted false ;
+         |  <$hasText> <http://rdfh.ch/0001/m/v1> .
+         |""".stripMargin +
+      restrictedValue("http://rdfh.ch/0001/m/v1")
+
+  /** One resource with three text values: project-member only, restricted view for anonymous, and open. */
+  private val mixedPermissionsTurtle: String =
+    prefixes +
+      host(
+        "http://rdfh.ch/0001/x",
+        thing,
+        s"<$hasText> <http://rdfh.ch/0001/x/v1>, <http://rdfh.ch/0001/x/v2>, <http://rdfh.ch/0001/x/v3>",
+      ) +
+      """
+        |<http://rdfh.ch/0001/x/v1> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/x/v2> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "RV knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+        |  kb:isDeleted false .
+        |<http://rdfh.ch/0001/x/v3> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "V knora-admin:UnknownUser" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
+  /** One resource with a text value readable by anonymous users and restricted to restricted view for known users. */
+  private val unknownAndKnownTurtle: String =
+    prefixes +
+      host("http://rdfh.ch/0001/u", thing, s"<$hasText> <http://rdfh.ch/0001/u/v1>") +
+      """
+        |<http://rdfh.ch/0001/u/v1> rdf:type kb:TextValue ;
+        |  kb:attachedToUser <http://rdfh.ch/users/someone> ;
+        |  kb:hasPermissions "V knora-admin:UnknownUser|RV knora-admin:KnownUser" ;
+        |  kb:isDeleted false .
+        |""".stripMargin
+
   private def page(n: Int, size: Int) =
-    byProperty(_.propertyItems(projectIri, hasText, ValueItemType.All, PageAndSize(n, size)))
+    byProperty(_.propertyItems(project, hasText, ValueItemType.All, PageAndSize(n, size)))
 
   private val pagingSuite = suite("propertyItems paging")(
     test("a page is a page of resources, in the same unit the total counts") {
@@ -273,7 +383,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         seen.size == 3,
         seen.contains("http://rdfh.ch/0001/c"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("a resource arrives whole: all of its restricted values on its own page, and none of the open ones") {
       // The other half of windowing by resource — a resource's values can no longer straddle a boundary
       // and come back twice, partial on each side.
@@ -286,7 +396,7 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // the world-readable value is not a restriction, so the drill-down omits it
         a.exists(!_.values.map(_.valueIri).contains("http://rdfh.ch/0001/a/open")),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("ordering is stable across pages, so paging cannot skip or repeat") {
       for {
         p1 <- page(1, 1)
@@ -297,18 +407,18 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         p2.data.map(_.label) == Seq("B"),
         p3.data.map(_.label) == Seq("C"),
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
     test("a page past the end is empty rather than an error") {
       for {
         p <- page(9, 25)
       } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 3)
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
   )
 
   private val foldSuite = suite("propertyValues")(
     test("counts values and derives the population from the same rows") {
       for {
-        result <- byProperty(_.propertyValues(projectIri, hasText, ValueItemType.All))
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
       } yield assertTrue(
         result.property == hasText,
         // 6 restricted + 1 world-readable: the population includes literals that are in no restriction
@@ -321,13 +431,85 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // and the denominator is in the same unit as the numerator
         result.counts.anonymous.total <= result.totalValues,
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(pagingTurtle)),
+    }.provide(commonLayers, projectDataset(pagingTurtle)),
+    test("sums the rows of every class that uses the property") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+      } yield assertTrue(
+        result.totalValues == 5,
+        result.counts.anonymous.hidden == 5,
+        result.counts.authenticated.hidden == 5,
+        result.counts.projectMember.hidden == 0,
+      )
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
+    test("counts only the values of the requested property") {
+      for {
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+        link <- byProperty(_.propertyValues(project, hasOtherThingV, ValueItemType.All))
+      } yield assertTrue(text.totalValues == 1, link.totalValues == 1)
+    }.provide(commonLayers, projectDataset(twoPropertyTurtle)),
+    test("counts a restricted user link value") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasOtherThingV, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 1, result.counts.anonymous.hidden == 1)
+    }.provide(commonLayers, projectDataset(linkValueTurtle(hasOtherThingV))),
+    test("gives zero counts for the standoff link value property") {
+      for {
+        result <- byProperty(_.propertyValues(project, standoffLinkV, ValueItemType.All))
+      } yield assertTrue(
+        result.totalValues == 0,
+        result.counts.anonymous.hidden == 0,
+        result.counts.authenticated.hidden == 0,
+      )
+    }.provide(commonLayers, projectDataset(linkValueTurtle(standoffLinkV))),
+    test("gives zero counts for a property that is not in the ontology") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasUnknown, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0)
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
+    test("gives zero counts for a known property that no class uses") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasUnused, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 0, result.counts.anonymous.hidden == 0)
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
+    test("counts the values of every class, as the drill-down lists them, whether or not the class is in the cache") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+        items  <- itemsOf(hasText)
+      } yield assertTrue(
+        result.totalValues == 2,
+        result.counts.anonymous.hidden == 2,
+        items.data.flatMap(_.values).size == 2,
+      )
+    }.provide(commonLayers, projectDataset(ghostClassTurtle)),
+    test("counts file values only for the File item type") {
+      for {
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.File))
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.File))
+      } yield assertTrue(file.totalValues == 1, file.counts.anonymous.hidden == 1, text.totalValues == 0)
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
+    test("counts non-file values only for the Value item type") {
+      for {
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.Value))
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.Value))
+      } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
+    test("counts only commented values for the Comment item type") {
+      for {
+        text <- byProperty(_.propertyValues(project, hasText, ValueItemType.Comment))
+        file <- byProperty(_.propertyValues(project, hasPicture, ValueItemType.Comment))
+      } yield assertTrue(text.totalValues == 1, text.counts.anonymous.hidden == 1, file.totalValues == 0)
+    }.provide(commonLayers, projectDataset(textAndFileTurtle)),
+    test("counts the value of a resource typed with two classes once for each class") {
+      for {
+        result <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+      } yield assertTrue(result.totalValues == 2, result.counts.anonymous.hidden == 2)
+    }.provide(commonLayers, projectDataset(twoTypesTurtle)),
   )
 
   private val multiTypedSuite = suite("a resource asserted as several classes")(
     test("is one row carrying its value once, not one row per type") {
-      // This report joins `?resource a ?resClass` without the most-specific-class filter the class report
-      // needs, so a multi-typed resource comes back once per type. Left unhandled that repeats every value
+      // A multi-typed resource comes back once per asserted type. Left unhandled that repeats every value
       // under `values` and reports an arbitrary class.
       for {
         p <- page(1, 25)
@@ -339,14 +521,58 @@ class ViewRestrictionsByPropertyServiceSpec extends ZIOSpecDefault {
         // deterministic rather than whichever binding the store returned first
         p.data.head.resourceClassIri == s"${anything}SubThing",
       )
-    }.provide(commonLayers, datasetLayerFromTurtle(multiTypedTurtle)),
+    }.provide(commonLayers, projectDataset(multiTypedTurtle)),
+  )
+
+  private def itemsOf(property: String) =
+    byProperty(_.propertyItems(project, property, ValueItemType.All, PageAndSize(1, 25)))
+
+  private val itemsSuite = suite("propertyItems selection")(
+    test("lists a restricted user link value") {
+      for {
+        p <- itemsOf(hasOtherThingV)
+      } yield assertTrue(
+        p.pagination.totalItems == 1,
+        p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/host/v1"),
+      )
+    }.provide(commonLayers, projectDataset(linkValueTurtle(hasOtherThingV))),
+    test("lists nothing for the standoff link value property") {
+      for {
+        p <- itemsOf(standoffLinkV)
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
+    }.provide(commonLayers, projectDataset(linkValueTurtle(standoffLinkV))),
+    test("lists nothing for a property that is not in the ontology") {
+      for {
+        p <- itemsOf(hasUnknown)
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
+    test("lists nothing when no value of the property is restricted") {
+      for {
+        p <- itemsOf(hasUnused)
+      } yield assertTrue(p.data.isEmpty, p.pagination.totalItems == 0)
+    }.provide(commonLayers, projectDataset(twoClassTurtle)),
+    test("lists a value that is open to anonymous users but restricted for known users") {
+      for {
+        p <- itemsOf(hasText)
+      } yield assertTrue(
+        p.pagination.totalItems == 1,
+        p.data.flatMap(_.values.map(_.valueIri)) == Seq("http://rdfh.ch/0001/u/v1"),
+      )
+    }.provide(commonLayers, projectDataset(unknownAndKnownTurtle)),
+    test("the values listed equal the values the counts report as hidden or restricted view, one unit: values") {
+      for {
+        counts <- byProperty(_.propertyValues(project, hasText, ValueItemType.All))
+        items  <- itemsOf(hasText)
+        listed  = items.data.flatMap(_.values).size
+        a       = counts.counts.anonymous
+      } yield assertTrue(listed == 2, listed == a.hidden + a.restrictedView)
+    }.provide(commonLayers, projectDataset(mixedPermissionsTurtle)),
   )
 
   def spec = suite("ViewRestrictionsByPropertyService")(
-    equivalenceSuite,
-    visibilitySuite,
     pagingSuite,
     foldSuite,
     multiTypedSuite,
+    itemsSuite,
   )
 }

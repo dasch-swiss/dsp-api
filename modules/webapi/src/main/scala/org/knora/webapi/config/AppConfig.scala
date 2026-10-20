@@ -202,6 +202,7 @@ final case class Triplestore(
   gravsearchTimeout: Duration,
   searchTimeout: Duration,
   viewRestrictionsTimeout: Duration,
+  viewRestrictionsCountTimeout: Duration,
   maintenanceTimeout: Duration,
   fuseki: Fuseki,
   profileQueries: Boolean,
@@ -295,6 +296,13 @@ object AppConfig {
     // value injectable at deploy time, so guard it.
     .validate("app.triplestore.view-restrictions-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
       c.triplestore.viewRestrictionsTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
+    )
+    .validate("app.triplestore.view-restrictions-count-timeout must be positive")(
+      _.triplestore.viewRestrictionsCountTimeout.compareTo(Duration.ZERO) > 0,
+    )
+    // Same load-shed argument, guarded for the same env override (KNORA_WEBAPI_TRIPLESTORE_VIEW_RESTRICTIONS_COUNT_TIMEOUT).
+    .validate("app.triplestore.view-restrictions-count-timeout must be <= app.triplestore.gravsearch-timeout")(c =>
+      c.triplestore.viewRestrictionsCountTimeout.compareTo(c.triplestore.gravsearchTimeout) <= 0,
     )
     .validate("app.file-permission-cache.ttl must be positive")(_.filePermissionCache.ttl.compareTo(Duration.ZERO) > 0)
     .validate("app.file-permission-cache.ttl must be at most 10 minutes (permission-staleness guard)")(

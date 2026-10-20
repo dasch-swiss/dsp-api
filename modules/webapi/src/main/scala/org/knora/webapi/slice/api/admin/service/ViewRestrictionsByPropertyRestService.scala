@@ -37,8 +37,8 @@ final case class ViewRestrictionsByPropertyRestService(
   /** Step 1: the property list. No filter, so nothing to validate beyond authorization. */
   def getProperties(user: User)(projectIri: ProjectIri): Task[ViewRestrictionsProperties] =
     for {
-      _      <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      result <- service.properties(projectIri)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      result  <- service.properties(project)
     } yield result
 
   /** Step 2: one property's counts. */
@@ -48,9 +48,9 @@ final case class ViewRestrictionsByPropertyRestService(
     itemType: ValueItemType,
   ): Task[ViewRestrictionsPropertyValues] =
     for {
-      _      <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      _      <- validateProperty(property)
-      result <- service.propertyValues(projectIri, property, itemType)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      _       <- validateProperty(property)
+      result  <- service.propertyValues(project, property, itemType)
     } yield result
 
   /** The drill-down: resources carrying a restricted value of the property. */
@@ -61,9 +61,9 @@ final case class ViewRestrictionsByPropertyRestService(
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedPropertyResource]] =
     for {
-      _      <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      _      <- validateProperty(property)
-      result <- service.propertyItems(projectIri, property, itemType, pageAndSize)
+      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      _       <- validateProperty(property)
+      result  <- service.propertyItems(project, property, itemType, pageAndSize)
     } yield result
 
   /**

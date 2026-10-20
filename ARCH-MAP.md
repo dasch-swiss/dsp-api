@@ -470,7 +470,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - The test-only `TriplestoreServiceInMemory` lets most unit specs avoid a live Fuseki;
         `TriplestoreServiceLive` behavior is exercised only by test-it.
     - The `SparqlTimeout` tiers (Standard, Maintenance, Gravsearch, Search, SearchProbe, ViewRestrictions,
-        added in DEV-6864) are a load-bearing budget scheme; a new caller picks a tier deliberately.
+        ViewRestrictionsCounts, added in DEV-6864) are a load-bearing budget scheme; a new caller picks a tier
+        deliberately.
 
 ### webapi-sipi-client
 
@@ -546,7 +547,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `KnoraUserService`, `UserService`, `ProjectService`, `ProjectEraseService`, `ProjectExportService`,
     `AdministrativePermissionRepo`, `DefaultObjectAccessPermissionRepo`, `PermissionIri`, `RestrictedView`,
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
-    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`
+    `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`,
+    `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`, `ViewRestrictionsClassification`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
@@ -587,8 +589,16 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         webapi-ontology, webapi-common and webapi-api, all importing `KnoraUserRepoLive`,
         `KnoraProjectRepoLive`, `KnoraGroupRepoLive`, `AdministrativePermissionRepoLive` or `LicenseRepo`.
     - The admin domain must not import API DTOs; request and response models belong in webapi-api -
-        enforcement: review. Currently violated by 59 `slice.api.admin.*` imports inside `slice/admin` and
-        `responders/admin`.
+        enforcement: review. Currently violated by 50 `slice.api.admin` import lines in the main code of
+        `slice/admin` and `responders/admin` (`git grep -h 'slice\.api\.admin' -- <those paths> | wc -l`,
+        2026-10-16), among them `ValueCountFold` and `ViewRestrictionsAudience` (the report's `Audience`,
+        `Visibility` and count types).
+    - The view-restrictions report reads its counts only through `ViewRestrictionsRowCache`; only
+        `ViewRestrictionsService.classSummaries` refreshes it. Value counts are read in one query per project,
+        scoped to the project's data graph, with `?value knora-base:isDeleted false` as its only
+        constant-object pattern - enforcement: static-analysis for the existing queries (golden query files in
+        `src/test/resources/.../slice/admin/repo/` and the algebra checks in `ViewRestrictionsQuerySpec`), review
+        for new ones.
     - List persistence queries belong to whichever component owns lists; `ListsResponder` must not import
         `slice.resources.repo.*` query classes - enforcement: review. Currently violated by 13 imports in
         `ListsResponder.scala`.
@@ -596,9 +606,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `modules/webapi/src/test/.../service/<Name>InMemory.scala` - enforcement: review (`CONVENTIONS.md`
         section Services, `REVIEW.md` line 18). Currently violated by `KnoraGroupRepoInMemory`, defined inside
         `KnoraGroupRepoLiveSpec.scala`, and `KnoraProjectRepoInMemory`, at `slice/admin/domain/repo/`.
-    - New SPARQL uses the `sparql"..."` interpolator; existing RDF4J `SparqlBuilder` sites are legacy, and 14
-        of 15 admin query files still use RDF4J, only `ViewRestrictionsRepo.scala` being migrated -
-        enforcement: review (`REVIEW.md` line 43).
+    - New SPARQL uses the `sparql"..."` interpolator; no file in `slice/admin` or `responders/admin` imports the
+        RDF4J `SparqlBuilder` (`git grep -l 'org.eclipse.rdf4j.sparqlbuilder' -- <those paths>`, 2026-10-16) -
+        enforcement: review (`REVIEW.md` § SPARQL).
     - No compile-time or Bazel enforcement exists: all of webapi is one `//modules/webapi:webapi` target with
         `//visibility:public` - enforcement: docs-only.
     - Wiring: shared inventory. Domain services register in `AdminDomainModule.scala`, repos in
@@ -617,8 +627,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         multi-writer: admin writes via `LegalInfoService`, `TopLeftCorrectionAction`, `ProjectEraseService`
         and `ListsResponder`, while webapi-resources owns the same graphs.
     - EhCache instances `knoraProject`, `knoraUser`, `knoraGroup` via `EntityCache` / `CachingEntityRepo`,
-        single writer each. `ViewRestrictionsRepo`'s project-classes cache and `AssetPermissionsCache`, single
-        writer each. Project export TriG and zip files on disk (`ProjectExportService`), single writer.
+        single writer each. `AssetPermissionsCache`, single writer. `ViewRestrictionsRowCache` (in-memory
+        zio-cache of the report's count rows, 10-minute TTL), loaded only through `ViewRestrictionsRepo` and
+        invalidated only by `ViewRestrictionsService.classSummaries`. Project export TriG and zip files on disk
+        (`ProjectExportService`), single writer.
     - `responders/admin` is the legacy migration parking lot: `ListsResponder`, `PermissionsResponder`,
         `AssetPermissionsResponder` and `AssetPermissionsCache` have no slice home and are excluded from
         review scope by `REVIEW.md` line 86.
