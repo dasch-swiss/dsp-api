@@ -61,10 +61,26 @@
 # Mapping in the index
 # URI stored in field "uri"
 # knora-base:valueHasString is mapped to field "text"
+#
+# text:graphField stores each indexed triple's named graph in the Lucene document, so that
+# `GRAPH <g> { ?s text:query ... }` filters inside Lucene (the graph term is ANDed into the Lucene
+# query before the hit limit applies) and returns only hits from <g>. Without it, a GRAPH clause
+# around text:query is a no-op and hits come from every graph. Queries without a GRAPH clause are
+# unchanged: under unionDefaultGraph the lookup runs against the union graph and no graph filter
+# is applied.
+#
+# Adding (or changing) graphField requires a full index rebuild; existing Lucene documents have no
+# graph field, so a GRAPH-scoped lookup against an old index returns nothing.
+#
+# CAVEAT: as with the setting above, docker-entrypoint.sh copies this file only when the target does
+# not exist and /fuseki is a persistent volume, so a new image does not deliver this change to an
+# existing host. Add the line to /fuseki/configuration/dsp-repo.ttl on each host by hand, then run
+# `make db-rebuild-index` (deletes the index and reindexes; the DB is down for the duration).
 :entMap                 a                                   text:EntityMap ;
                         text:entityField                    "uri" ;
                         text:defaultField                   "text" ;
                         text:uidField                       "uid" ;
+                        text:graphField                     "graph" ;
                         text:map                            (
                                                                 [ text:field  "text" ;  text:predicate  rdfs:label ]
                                                                 [ text:field  "text" ;  text:predicate  knora-base:valueHasString ]

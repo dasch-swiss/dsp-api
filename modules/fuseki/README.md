@@ -27,6 +27,19 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 | `JVM_ARGS` | JVM heap and flags | `-Xmx4G` |
 | `REBUILD_INDEX_OF_DATASET` | Dataset name to rebuild Lucene index for | unset |
 
+## Lucene index configuration changes
+
+The `dsp-repo.ttl` copy on the `/fuseki` volume is authoritative once it exists: the entrypoint copies the bundled file
+only when the target is missing, so a new image does **not** change the configuration of an existing host. A change
+to the text index description (`:indexLucene` / `:entMap`) must be applied by editing
+`/fuseki/configuration/dsp-repo.ttl` on each host by hand.
+
+Changes that alter what is stored per Lucene document — such as `text:graphField "graph"`, which lets
+`GRAPH <g> { ?s text:query ... }` filter inside Lucene — also need a full index rebuild, because existing
+documents lack the new field. Trigger it with `make db-rebuild-index` on the host (sets the marker file and
+restarts the DB) or with `REBUILD_INDEX_OF_DATASET=dsp-repo`; the entrypoint deletes the old index directory and
+runs `jena.textindexer`. The database is down for the duration of the rebuild.
+
 ## Updating Jena/Fuseki
 
 The Jena dist (jar) version is single-sourced as `FUSEKI_DIST_VERSION` in `MODULE.bazel`. To bump:
