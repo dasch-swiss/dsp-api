@@ -75,6 +75,7 @@ nav:
       - 0009 API `v3` for client-optimized endpoints: adr/0009-api-v3.md
       - 0010 API `v3` basics: adr/0010-api-v3-basics.md
       - 0011 Cross-context access through consumer-defined ports: adr/0011-cross-context-access-ports-and-adapters.md
+      - 0012 Graph-scoped Lucene text lookups: adr/0012-graph-scoped-lucene-text-lookups.md
   - DSP Internals:
       - Design:
           - DSP-API Design Principles:

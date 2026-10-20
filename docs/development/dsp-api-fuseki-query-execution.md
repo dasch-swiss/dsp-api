@@ -232,6 +232,15 @@ Second, because `rdfs:label` shares the *default* field, a predicate-less `text:
 `SearchFulltextQuery` issues — matches labels today; giving `rdfs:label` its own field would
 silently remove that behaviour.
 
+A related index-side lever is `text:graphField "graph"` in the entity map (added for DEV-7377): it
+stores each indexed triple's named graph in the Lucene document, so `GRAPH <g> { ?s text:query … }`
+filters inside Lucene — the graph term is ANDed into the query before the hit limit — and returns
+only hits from `<g>`. Without the field, a `GRAPH` clause around `text:query` is a no-op and hits
+come from every graph, so never rely on it for scoping against an index built without it. Queries
+with no `GRAPH` clause are unchanged under `unionDefaultGraph`. Like any entity-map change, the
+field only takes effect after a full reindex, and the on-disk `dsp-repo.ttl` of every existing
+host must be edited by hand (see `modules/fuseki/README.md`, "Lucene index configuration changes").
+
 ## Fact 11 — Replacing a property path with a plain pattern can be much slower
 
 A path splits the BGP and pins evaluation to document order (Facts 1, 3). A plain triple pattern

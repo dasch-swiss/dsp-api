@@ -68,6 +68,16 @@ if ! sed 's/#.*$//' "$FUSEKI_BASE/configuration/dsp-repo.ttl" | tr -d '\n' |
   warn "Add it to $FUSEKI_BASE/configuration/dsp-repo.ttl and restart before enabling the dsp-api SPARQL passthrough."
 fi
 
+# Same staleness problem for text:graphField: without it a `GRAPH <g> { ?s text:query ... }` pattern is NOT scoped to <g>
+# (hits come from every graph), so a host still on the old file would silently ignore the scoping. Match the key with
+# its value on comment-stripped, newline-folded content, as above. The file also needs a full index rebuild after the
+# edit; the entrypoint cannot tell whether the existing index was built with the field, so that part stays in the message.
+if ! sed 's/#.*$//' "$FUSEKI_BASE/configuration/dsp-repo.ttl" | tr -d '\n' |
+  grep -qE 'text:graphField[[:space:]]*"graph"'; then
+  warn "Existing dsp-repo.ttl does not set text:graphField \"graph\": GRAPH-scoped text queries will NOT be scoped."
+  warn "Add it to $FUSEKI_BASE/configuration/dsp-repo.ttl, then run \`make db-rebuild-index\` to rebuild the Lucene index."
+fi
+
 # Check if index rebuild marker file exists
 if [ ! -n "$REBUILD_INDEX_OF_DATASET" ] && [ -f "$REBUILD_INDEX_MARKER_FILE" ] ; then
   info "Detected index rebuild marker file ${REBUILD_INDEX_MARKER_FILE}"
