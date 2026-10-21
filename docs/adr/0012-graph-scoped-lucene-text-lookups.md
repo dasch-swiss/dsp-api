@@ -58,8 +58,8 @@ existing data, while new writes are indexed with their graph, so the index is si
    the main resource of a project-restricted query, and `/v2/search` with `limitToProject`, scope only the Lucene
    statement. All other patterns stay on the union graph; a blanket GRAPH scope returns zero rows because the
    ontology patterns resolve against other graphs. Scoping to the data graph is exact because of the one-graph
-   rule in [Resources & Values](../contexts/resources-values/CONTEXT.md): a project's resources, values and list
-   nodes live in exactly one data graph.
+   rule in the Resources & Values context (`docs/contexts/resources-values/CONTEXT.md`): a project's resources,
+   values and list nodes live in exactly one data graph.
 3. **The list-node branch is scoped to the project data graph alone.** No union with the system-lists graph,
    because no cross-graph list references exist and the platform does not allow them.
 4. **The breadth probe of `/v2/search` mirrors the restriction.** Otherwise it keeps refusing scoped searches
