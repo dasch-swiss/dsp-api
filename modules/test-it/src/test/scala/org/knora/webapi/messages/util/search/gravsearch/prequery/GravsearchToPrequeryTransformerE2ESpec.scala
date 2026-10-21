@@ -638,12 +638,12 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    FILTER knora-api:matchFulltext(?other, "Zeitglöcklein")
       |}""".stripMargin
 
-  private val anythingProject   = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"))
-  private val incunabulaProject = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803"))
+  private val anythingProject   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val incunabulaProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
 
-  /** Restricted to the anything project, with its matchFulltext lookup scoped to the project's data graph. */
-  private def transformScoped(query: String) =
-    transformQueryWithInference(query, limitResultsToProject = anythingProject, scopeLuceneToProject = true)
+  /** Restricted to a project, with its main-resource-anchored Lucene lookups scoped to the project's data graph. */
+  private def transformScoped(query: String, project: ProjectIri = anythingProject) =
+    transformQueryWithInference(query, limitResultsToProject = Some(project), scopeLuceneToProject = true)
 
   val queryMatchTextSimple: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1069,11 +1069,7 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       )
     },
     test("scope only the Lucene statement of a matchLabel on the main resource") {
-      transformQueryWithInference(
-        queryMatchLabel,
-        limitResultsToProject = incunabulaProject,
-        scopeLuceneToProject = true,
-      )
+      transformScoped(queryMatchLabel, incunabulaProject)
         .map(actual =>
           assertGolden(actual.toSparql, "matchLabelScoped") &&
             assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchLabelScopedShape"),

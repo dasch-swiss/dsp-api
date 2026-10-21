@@ -44,13 +44,28 @@ class LuceneScopeSpec extends ZIOSpecDefault {
     test("anchor a value bound from the main resource inside an OPTIONAL") {
       assertTrue(anchored(OptionalPattern(Seq(StatementPattern(mainRes, hasText, text)))) == Set(text))
     },
-    test("not anchor a value of a linked resource") {
+    test("not anchor a value of a linked resource, but anchor the link target bound from the main resource") {
       val result = anchored(
         StatementPattern(mainRes, hasOtherLink, other),
         StatementPattern(other, hasText, text),
         matchTextFilter(text),
       )
       assertTrue(!result.contains(text), result.contains(other))
+    },
+    test("anchor a value bound from the main resource through a variable predicate") {
+      assertTrue(anchored(StatementPattern(mainRes, QueryVariable("prop"), text)) == Set(text))
+    },
+    test("not anchor a value bound from a fixed resource IRI") {
+      val fixedResource = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
+      assertTrue(anchored(StatementPattern(fixedResource, hasText, text)).isEmpty)
+    },
+    test("not anchor a value also bound from a linked resource inside a nested group or subselect") {
+      val direct = StatementPattern(mainRes, hasText, text)
+      val linked = StatementPattern(other, hasText, text)
+      assertTrue(
+        !anchored(direct, GroupPattern(Seq(linked))).contains(text),
+        !anchored(direct, SubSelectPattern(text, Seq(linked))).contains(text),
+      )
     },
     test("not anchor a value bound from the main resource in one UNION branch and a linked resource in the other") {
       val result = anchored(

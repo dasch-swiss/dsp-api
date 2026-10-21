@@ -39,7 +39,11 @@ object LuceneScope {
       case MinusPattern(nested)           => statements(nested)
       case FilterNotExistsPattern(nested) => statements(nested)
       case UnionPattern(blocks)           => blocks.flatMap(statements)
-      case _                              => Seq.empty
+      case GroupPattern(nested)           => statements(nested)
+      case SubSelectPattern(_, nested)    => statements(nested)
+      case GraphPattern(_, statement)     => Seq(statement)
+      // Exhaustive on purpose: a missed binding would scope a lookup that must stay unscoped.
+      case _: FilterPattern | _: BindPattern | _: ValuesPattern => Seq.empty
     }
 
     def anchored(statement: StatementPattern): Boolean = statement match {

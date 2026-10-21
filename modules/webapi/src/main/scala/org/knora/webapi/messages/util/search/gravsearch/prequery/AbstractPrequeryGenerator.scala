@@ -1608,7 +1608,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value, luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar))),
+      lucenePattern(textValueVar, searchTerm.value, valueDataGraph(textValueVar)),
     )
   }
 
@@ -1665,7 +1665,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value, luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar))),
+      lucenePattern(textValueVar, searchTerm.value, valueDataGraph(textValueVar)),
     )
   }
 
@@ -1745,7 +1745,7 @@ abstract class AbstractPrequeryGenerator(
     val luceneStatement = lucenePattern(
       textValueVar,
       searchTermStr.value,
-      luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar)),
+      valueDataGraph(textValueVar),
     )
 
     // Generate query patterns to assign the text in the standoff tag to a variable, if we
@@ -1910,7 +1910,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
       None, // The FILTER has been replaced by statements.
-      lucenePattern(resourceVar, searchTerm.value, luceneDataGraph(resourceVar == mainResourceVariable)),
+      lucenePattern(resourceVar, searchTerm.value, resourceDataGraph(resourceVar)),
     )
   }
 
@@ -1928,12 +1928,17 @@ abstract class AbstractPrequeryGenerator(
     Seq(dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup)))
   }
 
-  /**
+  /*
    * The data graph a Lucene lookup is scoped to: only with a [[LuceneScope]], and only for a lookup anchored on the
-   * main resource. A lookup anchored elsewhere stays unscoped, since links may cross projects.
+   * main resource. A lookup anchored elsewhere stays unscoped, since links may cross projects. Every Lucene-backed
+   * function picks one of the two: `resourceDataGraph` for a resource-anchored lookup, `valueDataGraph` for a
+   * value-anchored one.
    */
-  private def luceneDataGraph(anchoredOnMainResource: Boolean): Option[InternalIri] =
-    luceneScope.filter(_ => anchoredOnMainResource).map(_.dataGraph)
+  private def resourceDataGraph(resourceVar: QueryVariable): Option[InternalIri] =
+    luceneScope.filter(_ => resourceVar == mainResourceVariable).map(_.dataGraph)
+
+  private def valueDataGraph(valueVar: QueryVariable): Option[InternalIri] =
+    luceneScope.filter(_ => mainResourceAnchoredValues.contains(valueVar)).map(_.dataGraph)
 
   // Read from the input WHERE, never from state filled during generation, which is incomplete at a FILTER.
   private lazy val mainResourceAnchoredValues: Set[QueryVariable] =
@@ -2103,7 +2108,7 @@ abstract class AbstractPrequeryGenerator(
     val matchVar          = matchFulltextVar("match")
     val containingResVar  = matchFulltextVar("containingRes")
     val resWithListValVar = matchFulltextVar("resWithListVal")
-    val dataGraph         = luceneDataGraph(resourceVar == mainResourceVariable)
+    val dataGraph         = resourceDataGraph(resourceVar)
 
     val bindResource = BindPattern(
       variable = resourceVar,
