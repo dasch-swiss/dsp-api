@@ -8,6 +8,8 @@ package org.knora.webapi.messages.util.search
 import org.junit.runner.RunWith
 import zio.test.*
 
+import scala.util.Try
+
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -35,6 +37,19 @@ class GraphPatternSpec extends ZIOSpecDefault {
             |}
             |""".stripMargin,
       )
+    },
+    test("rejects a statement other than a Lucene lookup") {
+      val typeStatement = StatementPattern(
+        QueryVariable("mainRes"),
+        IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri),
+      )
+      val result = Try(GraphPattern(InternalIri("http://www.knora.org/data/0803/incunabula"), typeStatement))
+      assertTrue(result.isFailure)
+    },
+    test("rejects a graph IRI that would break out of the GRAPH clause") {
+      val result = Try(GraphPattern(InternalIri("http://example.org/g> { ?s ?p ?o } <x"), luceneStatement))
+      assertTrue(result.isFailure)
     },
   )
 }

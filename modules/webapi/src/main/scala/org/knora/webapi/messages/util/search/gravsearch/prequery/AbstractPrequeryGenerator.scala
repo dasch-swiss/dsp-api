@@ -1925,7 +1925,7 @@ abstract class AbstractPrequeryGenerator(
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
     )
-    Seq(dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup)))
+    Seq(GraphPattern.scoped(lookup, dataGraph))
   }
 
   /*
@@ -2149,7 +2149,7 @@ abstract class AbstractPrequeryGenerator(
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
       obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
     )
-    SubSelectPattern(matchVar, Seq(dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup))))
+    SubSelectPattern(matchVar, Seq(GraphPattern.scoped(lookup, dataGraph)))
   }
 
   /** A text value or value comment containing the match, and the resource that owns it. */

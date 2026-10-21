@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.util.search
 
 import dsp.errors.GravsearchException
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
@@ -545,9 +546,10 @@ case class SubSelectPattern(variable: QueryVariable, patterns: Seq[QueryPattern]
 
 /**
  * `GRAPH <graph> { statement }`: evaluates one statement against a single named graph instead of the union graph.
- * Emitted only around the Lucene `text:query` statement of a project-scoped fulltext lookup
- * (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`); every other pattern stays on the union graph, because
- * ontology-backed patterns (`rdf:type`, `rdfs:subClassOf*`) match nothing inside a project data graph.
+ * Wraps only the Lucene `text:query` statement of a project-scoped fulltext lookup, and the constructor rejects any
+ * other statement (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`): every other pattern stays on the union
+ * graph, because ontology-backed patterns (`rdf:type`, `rdfs:subClassOf*`) match nothing inside a project data graph.
+ * The graph is rendered through the validated sparql-builder [[Iri]], so it cannot break out of `<...>`.
  *
  * Opaque like [[GroupPattern]]: [[QueryTraverser]] and
  * [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]] pass it through unchanged, so
@@ -559,7 +561,24 @@ case class SubSelectPattern(variable: QueryVariable, patterns: Seq[QueryPattern]
  * @param statement the single wrapped statement.
  */
 case class GraphPattern(graph: InternalIri, statement: StatementPattern) extends QueryPattern {
-  override def toSparql: String = s"GRAPH <${graph.value}> {\n${statement.toSparql}}\n"
+  require(
+    statement.pred match {
+      case IriRef(pred, None) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+      case _                  => false
+    },
+    s"GraphPattern wraps only a Lucene text:query statement, got: ${statement.toSparql}",
+  )
+
+  private val graphIri: Iri = Iri.unsafeFrom(graph.value)
+
+  override def toSparql: String = s"GRAPH ${graphIri.render} {\n${statement.toSparql}}\n"
+}
+
+object GraphPattern {
+
+  /** The Lucene `lookup`, wrapped in `GRAPH <dataGraph> { }` when a data graph is given. */
+  def scoped(lookup: StatementPattern, dataGraph: Option[InternalIri]): QueryPattern =
+    dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup))
 }
 
 /**

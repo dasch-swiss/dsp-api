@@ -55,9 +55,7 @@ final case class FulltextBreadthGuard(
   )(query: Task[A]): Task[A] =
     if (!FulltextSearchTerms.shouldProbe(searchTerms)) query
     else {
-      // The probe SPARQL encodes term, standoff and a Scoped project's data graph (all the probe measures), so a
-      // scoped and an unscoped probe of the same term never share a cache entry. Project and resource class are
-      // carried in the key as well, keeping it correct for any restriction the probe SPARQL does not encode.
+      // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
       val key = BreadthKey(
         SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, restriction),
         restriction.map(_.project.value),
