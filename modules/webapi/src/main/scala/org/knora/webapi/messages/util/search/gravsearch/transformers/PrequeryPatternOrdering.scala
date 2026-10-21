@@ -344,7 +344,10 @@ object PrequeryPatternOrdering {
     case _               => plainUnitKey(u, valuesByVar)
   }
 
-  /** Never sees a [[GraphPattern]]: `unitKey` unwraps it, so the helpers below need no case for it. */
+  /**
+   * Never sees a top-level [[GraphPattern]]: `unitKey` unwraps it first, so `tierNum` and `hasProjectDataPredicate`
+   * need no case for one. `containsLucene` keeps its case, for a `GraphPattern` nested in a group or subquery.
+   */
   private def plainUnitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
     val t                                                      = tierNum(u, valuesByVar)
     val (restrictedCount, loopVars): (Int, Seq[QueryVariable]) = u match {
