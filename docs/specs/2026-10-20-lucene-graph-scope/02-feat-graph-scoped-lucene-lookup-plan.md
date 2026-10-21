@@ -365,24 +365,24 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 4: Scope /v2/search and its breadth probe
 
-- [ ] `SearchFulltextQuery.build` takes `Option[FulltextProjectRestriction]`, wraps the `text:query` statement
+- [x] `SearchFulltextQuery.build` takes `Option[FulltextProjectRestriction]`, wraps the `text:query` statement
   inside the inner subselect in `GRAPH <g> { }` for `Scoped` and omits the `attachedToProject` line (keeps it if
   the Phase 1 check found exceptions); `Unresolved` keeps today's line
-- [ ] `buildProbe(searchTerms, limitToStandoffClass, restriction: Option[FulltextProjectRestriction])` mirrors
+- [x] `buildProbe(searchTerms, limitToStandoffClass, restriction: Option[FulltextProjectRestriction])` mirrors
   the wrap for `Scoped`
-- [ ] Rewrite the `buildProbe` Scaladoc: the project restriction is now mirrored, the class restriction still is not
-- [ ] Update the comment block above `build` (the project-restriction paragraph) to describe the scoped form
-- [ ] `FulltextBreadthGuard.guarded` takes the same restriction, passes it to `buildProbe`, and fills
+- [x] Rewrite the `buildProbe` Scaladoc: the project restriction is now mirrored, the class restriction still is not
+- [x] Update the comment block above `build` (the project-restriction paragraph) to describe the scoped form
+- [x] `FulltextBreadthGuard.guarded` takes the same restriction, passes it to `buildProbe`, and fills
   `BreadthKey.project` from `restriction.map(_.project.value)`
-- [ ] Update the `BreadthKey` Scaladoc, the comment in `guarded` and the guard's Scaladoc: the project is no longer
+- [x] Update the `BreadthKey` Scaladoc, the comment in `guarded` and the guard's Scaladoc: the project is no longer
   only future-proofing, and the cap applies to the scoped candidate count
-- [ ] `fulltextSearchV2` and `fulltextSearchCountV2` resolve the restriction once and pass it to `build` and
+- [x] `fulltextSearchV2` and `fulltextSearchCountV2` resolve the restriction once and pass it to `build` and
   `guarded`
-- [ ] `SearchFulltextQuerySpec`: every existing `build` / `buildProbe` call compiles against the new signatures;
+- [x] `SearchFulltextQuerySpec`: every existing `build` / `buildProbe` call compiles against the new signatures;
   the two tests that pass `Some(testProjectIri)` pass `Some(Unresolved(testProjectIri))`, the two `buildProbe`
   tests pass `None` as the new restriction argument (the standoff argument is unchanged), and all keep matching
   their byte-unchanged legacy fixtures
-- [ ] `SearchFulltextQuerySpec`: new `GoldenTest` cases for `Scoped` (count with class, search with all filters,
+- [x] `SearchFulltextQuerySpec`: new `GoldenTest` cases for `Scoped` (count with class, search with all filters,
   probe), `GRAPH` around the Lucene statement only and no `attachedToProject` (with it, if Phase 1 found
   exceptions); add the scoping rule to the invariants comment above the suite
 - [ ] `FulltextBreadthGuardSpec`: the existing `guarded(..., None, ...)` calls still compile; add one test with a

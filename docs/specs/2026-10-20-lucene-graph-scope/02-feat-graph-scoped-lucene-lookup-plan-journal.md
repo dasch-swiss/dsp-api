@@ -27,6 +27,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@4f77b8b49 | 2 |
 | 2 | reviewed | dsp-api@c9b97fe9d | 2 |
 | 3 | reviewed | dsp-api@485ded859 | 1 |
+| 4 | in-progress | dsp-api@0345a24a9 | 0 |
 | 7 | gated (H1) | — | 0 |
 
 ## Chunk queue
@@ -47,6 +48,11 @@ status: in-progress
 | 3.1 | dsp-api | prequery/LuceneScope.scala, webapi test: prequery/LuceneScopeSpec.scala (new) | — | "Add a pure function … main-resource-anchored value variables" | UNION-with-linked-resource, filter-before-label, nested OPTIONAL/MINUS/FNE cases green | LuceneScope.scala; QueryTraverser.visitWherePatterns (recursion shape) | — |
 | 3.2 | dsp-api | AbstractPrequeryGenerator.scala | 3.1 | "The generator's lazy anchored set …", "lucenePattern: take the scope decision …", "handleMatchLabelFunction …", "handleMatchTextFunctionInSimpleSchema and …Complex…", "handleMatchTextInStandoffFunction …" | compiles; existing goldens unchanged | AbstractPrequeryGenerator.scala § handleMatchText* (~1566-1810), handleMatchLabelFunction, lucenePattern (~1913), matchFulltextExpansion (~2084) | — |
 | 3.3 | dsp-api | test-it: GravsearchToPrequeryTransformerE2ESpec, GravsearchToCountPrequeryTransformerE2ESpec, new golden files | 3.2 | the eight "New … golden" items, "Run just test-gravsearch-prequery" | existing goldens byte-identical; simple/complex matchTextScoped share one golden; canary (no wrapping) fails the scoped cases | GravsearchToPrequeryTransformerE2ESpec § queries ~647-720, tests ~980-1003 | — |
+| 4.1 | dsp-api | slice/search/repo/SearchFulltextQuery.scala, slice/search/FulltextBreadthGuard.scala, responders/v2/SearchResponderV2.scala, webapi test: SearchFulltextQuerySpec (legacy call sites), FulltextBreadthGuardSpec (call sites) | — | "`SearchFulltextQuery.build` takes …", "`buildProbe(…)` mirrors the wrap", "Rewrite the `buildProbe` Scaladoc", "Update the comment block above `build`", "`FulltextBreadthGuard.guarded` takes the same restriction", "Update the `BreadthKey` Scaladoc …", "`fulltextSearchV2` and `fulltextSearchCountV2` resolve …", "`SearchFulltextQuerySpec`: every existing … compiles" | compiles; legacy fixtures byte-unchanged and green | SearchFulltextQuery.scala § build/buildProbe; FulltextBreadthGuard.guarded; SearchResponderV2.scala § fulltextSearchCountV2/fulltextSearchV2 (~587-670) | — |
+| 4.2 | dsp-api | webapi test: SearchFulltextQuerySpec, new golden .txt files | 4.1 | "`SearchFulltextQuerySpec`: new `GoldenTest` cases for `Scoped` …" | 3 scoped goldens (count+class, search all filters, probe) show GRAPH around text:query only, no attachedToProject; canary fails them | SearchFulltextQuerySpec; GoldenTest.scala | — |
+| 4.3 | dsp-api | webapi test: FulltextBreadthGuardSpec | 4.1 | "`FulltextBreadthGuardSpec`: … add one test with a probe double" | unscoped refused, scoped admitted | FulltextBreadthGuardSpec | — |
+| 4.4 | dsp-api | test-it: SearchResponderV2Spec | 4.1 | "`SearchResponderV2Spec` …: add a scoped two-term search", "`SearchResponderV2Spec`: a scoped search with a standoff restriction …" | both green against Fuseki with graphField | SearchResponderV2Spec § restricted search (~163-239) | — |
+| 4.5 | dsp-api | — (verification runs) | 4.1-4.4 | "Run `bazel test //modules/webapi:test`", "Run `bazel test //modules/test-it:test --test_filter='.*SearchResponderV2Spec.*'`" | both green | — | — |
 
 ## Chunks
 
@@ -71,6 +77,8 @@ status: in-progress
 | 3.2 | dsp-api | done | 6e8a33bce | Generator: lazy `mainResourceAnchoredValues` from `luceneScope.inputWhere`; `lucenePattern(subj, term, dataGraph)` wraps only text:query; `luceneDataGraph(anchored)` is the one scope decision for matchFulltext/matchLabel/matchText/matchTextInStandoff; existing goldens byte-identical | — |
 | 3.3 | dsp-api | done | 7d4d67588 | 9 page + 1 count goldens (simple/complex share `matchTextScoped`; matchLabel scoped to 0803; linked-value, UNION-with-linked, filter-before-label render no GRAPH; FNE matchLabel scoped); `just test-gravsearch-prequery` green; canary inverting the decision fails exactly the 9 new cases | — |
 | 3.4 | dsp-api | done | 6f8eed4ee | Review fix round 1: anchoring fold exhaustive over `QueryPattern` (recurses into Group/SubSelect/Graph; dune DUNE-001, consistency); `resourceDataGraph` / `valueDataGraph` replace the Boolean built at each call site (simplicity, DUNE-002, scala-zio, consistency); 3 more unit cases; `transformScoped(query, project)`; prequery suites green, goldens unchanged | — |
+| 4.1 | dsp-api | done | ec2c5d621 | `build`/`buildProbe` take `Option[FulltextProjectRestriction]`; shared `luceneLookupClause` wraps only text:query in GRAPH for `Scoped`; `build` drops `attachedToProject` for `Scoped` (Phase 1: 0 exceptions), keeps it for `Unresolved`; `guarded` takes the restriction, key project from `restriction.map(_.project.value)`; both fulltext responder methods resolve once via `resolveRestriction`; Scaladocs/comments updated; legacy fixtures byte-unchanged and green | — |
+| 4.2 | dsp-api | done | c197a63c7 | 3 exact-text goldens (scoped count+class, page with all filters, probe with standoff): GRAPH around text:query only, no attachedToProject; invariants comment gains the scoping rule; canary (wrapping disabled) fails exactly the 3 scoped cases; webapi `GoldenTest` rewrite cannot write from the Bazel sandbox (relative source path), so the content was printed once and written by hand, then a clean run | — |
 
 ## Deferrals
 
