@@ -14,22 +14,27 @@ import zio.test.*
 
 import dsp.errors.SparqlGenerationException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.search.repo.FulltextProjectRestriction.Scoped
 import org.knora.webapi.slice.search.repo.FulltextProjectRestriction.Unresolved
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class SearchFulltextQuerySpec extends ZIOSpecDefault {
+class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val searchTerms     = LuceneQueryString("test")
   private val testProjectIri  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val scopedToProject =
+    Some(Scoped(testProjectIri, InternalIri("http://www.knora.org/data/0001/anything")))
   private val testResourceIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testStandoffIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag".toSmartIri
@@ -73,6 +78,12 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
   //    that DEV-6864 measured at 2.2-6.3x their cost for identical results. See SearchFulltextQuery and DEV-6850.
   //  - There is no outer SELECT DISTINCT: GROUP BY ?resource already deduplicates. The inner SELECT DISTINCT
   //    ?matchingSubject and the count branch's COUNT(DISTINCT ?resource) stay (DEV-6809 (d)).
+  //  - A Scoped project wraps only the text:query statement in GRAPH <dataGraph> { }, in the page, count and probe
+  //    queries alike, and emits no attachedToProject. The standoff filter and every outer pattern stay outside: the
+  //    class walk reads ontology graphs, so a wider GRAPH returns no rows. An Unresolved project keeps the unscoped
+  //    lookup and the attachedToProject line (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
+  //
+  // The scoped cases are exact-text goldens (`GoldenTest`); the legacy fixtures above predate them.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchFulltextQuery")(
     suite("count query")(
       test("minimal count query") {
@@ -150,6 +161,45 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
       test("probe query with standoff") {
         val query = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri), None)
         matchesLegacy(query, "probeWithStandoff")
+      },
+    ),
+    suite("scoped to a known project")(
+      test("count query with class limit") {
+        val query = render(
+          SearchFulltextQuery.build(
+            searchTerms = searchTerms,
+            restriction = scopedToProject,
+            limitToResourceClass = Some(testResourceIri),
+            limitToStandoffClass = None,
+            returnFiles = false,
+            separator = None,
+            limit = 1,
+            offset = 0,
+            countQuery = true,
+          ),
+        )
+        assertGolden(query.sparql, "scopedCountWithClass")
+      },
+      test("regular query with all filters") {
+        val query = render(
+          SearchFulltextQuery.build(
+            searchTerms = LuceneQueryString("test search"),
+            restriction = scopedToProject,
+            limitToResourceClass = Some(testResourceIri),
+            limitToStandoffClass = Some(testStandoffIri),
+            returnFiles = true,
+            separator = Some(separator),
+            limit = 25,
+            offset = 50,
+            countQuery = false,
+          ),
+        )
+        assertGolden(query.sparql, "scopedSearchWithAllFilters")
+      },
+      test("probe query with standoff") {
+        val query =
+          SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri), scopedToProject)
+        assertGolden(query.sparql, "scopedProbeWithStandoff")
       },
     ),
     suite("escaping of user input")(
