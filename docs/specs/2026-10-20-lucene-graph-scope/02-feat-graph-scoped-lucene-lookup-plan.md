@@ -338,30 +338,30 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 3: Scope matchText, matchTextInStandoff and matchLabel
 
-- [ ] Add a pure function (unit-tested in webapi, including the UNION-with-a-linked-resource and
+- [x] Add a pure function (unit-tested in webapi, including the UNION-with-a-linked-resource and
   filter-before-label cases) that computes the main-resource-anchored value variables from the input WHERE
   patterns and the main resource variable: a variable qualifies iff it is the object of at least one statement,
   every statement with it as object has the main resource as subject, and none has the predicate `rdfs:label`
-- [ ] The generator's lazy anchored set calls it with `luceneScope.inputWhere` and `mainResourceVariable`; it
+- [x] The generator's lazy anchored set calls it with `luceneScope.inputWhere` and `mainResourceVariable`; it
   does not read `literalVariables`
-- [ ] `lucenePattern`: take the scope decision as a parameter and return the `text:query` statement wrapped in
+- [x] `lucenePattern`: take the scope decision as a parameter and return the `text:query` statement wrapped in
   `GraphPattern` when scoped
-- [ ] `handleMatchLabelFunction`: scoped iff the resource variable is the main resource
-- [ ] `handleMatchTextFunctionInSimpleSchema` and `handleMatchTextFunctionInComplexSchema`: scoped iff the text
+- [x] `handleMatchLabelFunction`: scoped iff the resource variable is the main resource
+- [x] `handleMatchTextFunctionInSimpleSchema` and `handleMatchTextFunctionInComplexSchema`: scoped iff the text
   value variable is in the anchored set
-- [ ] `handleMatchTextInStandoffFunction`: the same rule; only the `text:query` statement is wrapped
-- [ ] New scoped golden (with `...Shape`): `matchText` in the simple and in the complex schema, sharing one
+- [x] `handleMatchTextInStandoffFunction`: the same rule; only the `text:query` statement is wrapped
+- [x] New scoped golden (with `...Shape`): `matchText` in the simple and in the complex schema, sharing one
   `matchTextScoped` suffix like the existing unscoped pair (the outputs are byte-identical; a divergence is a bug)
-- [ ] New scoped goldens (with `...Shape`): `matchLabel` (page and count)
-- [ ] New scoped golden: `matchTextInStandoff`
-- [ ] New golden: `matchText` on a value of a linked resource with a scope set renders no `GRAPH`
-- [ ] New golden: `matchText` on a variable bound from the main resource in one UNION branch and from a linked
+- [x] New scoped goldens (with `...Shape`): `matchLabel` (page and count)
+- [x] New scoped golden: `matchTextInStandoff`
+- [x] New golden: `matchText` on a value of a linked resource with a scope set renders no `GRAPH`
+- [x] New golden: `matchText` on a variable bound from the main resource in one UNION branch and from a linked
   resource in the other renders no `GRAPH`
-- [ ] New golden (simple schema): `FILTER matchText(?l, ...)` written before `?mainRes rdfs:label ?l` renders no
+- [x] New golden (simple schema): `FILTER matchText(?l, ...)` written before `?mainRes rdfs:label ?l` renders no
   `GRAPH`
-- [ ] New golden: scoped `matchLabel` inside `FILTER NOT EXISTS`
-- [ ] Run `just test-gravsearch-prequery`; existing goldens unchanged
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] New golden: scoped `matchLabel` inside `FILTER NOT EXISTS`
+- [x] Run `just test-gravsearch-prequery`; existing goldens unchanged
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 4: Scope /v2/search and its breadth probe
 

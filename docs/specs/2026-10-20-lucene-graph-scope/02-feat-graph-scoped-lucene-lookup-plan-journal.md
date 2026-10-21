@@ -26,6 +26,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@4f77b8b49 | 2 |
 | 2 | reviewed | dsp-api@c9b97fe9d | 2 |
+| 3 | reviewed | dsp-api@485ded859 | 1 |
 | 7 | gated (H1) | — | 0 |
 
 ## Chunk queue
@@ -43,6 +44,9 @@ status: in-progress
 | 2.5 | dsp-api | test-e2e: MatchFulltextE2ESpec, matchfulltext-data.ttl | 2.3 | "MatchFulltextE2ESpec: load … into 0001 anything", "Update the fixture's header comment", "scoped to another existing project → 0" | E2E green (or "not run") | MatchFulltextE2ESpec | — |
 | 2.6 | dsp-api | test-it: SearchResponderV2Spec | 2.3 | "Load the test images … graphField", "test-it stale-index detector" | GRAPH-scoped Narr in anything = 0, unscoped > 0 | SearchResponderV2Spec § restricted search | — |
 | 2.7 | dsp-api | — (verification runs) | 2.3-2.6 | "Run bazel test //modules/test-it:test_gravsearch_span", "From an unsandboxed shell … MatchFulltext" | both green | — | — |
+| 3.1 | dsp-api | prequery/LuceneScope.scala, webapi test: prequery/LuceneScopeSpec.scala (new) | — | "Add a pure function … main-resource-anchored value variables" | UNION-with-linked-resource, filter-before-label, nested OPTIONAL/MINUS/FNE cases green | LuceneScope.scala; QueryTraverser.visitWherePatterns (recursion shape) | — |
+| 3.2 | dsp-api | AbstractPrequeryGenerator.scala | 3.1 | "The generator's lazy anchored set …", "lucenePattern: take the scope decision …", "handleMatchLabelFunction …", "handleMatchTextFunctionInSimpleSchema and …Complex…", "handleMatchTextInStandoffFunction …" | compiles; existing goldens unchanged | AbstractPrequeryGenerator.scala § handleMatchText* (~1566-1810), handleMatchLabelFunction, lucenePattern (~1913), matchFulltextExpansion (~2084) | — |
+| 3.3 | dsp-api | test-it: GravsearchToPrequeryTransformerE2ESpec, GravsearchToCountPrequeryTransformerE2ESpec, new golden files | 3.2 | the eight "New … golden" items, "Run just test-gravsearch-prequery" | existing goldens byte-identical; simple/complex matchTextScoped share one golden; canary (no wrapping) fails the scoped cases | GravsearchToPrequeryTransformerE2ESpec § queries ~647-720, tests ~980-1003 | — |
 
 ## Chunks
 
@@ -63,6 +67,10 @@ status: in-progress
 | 2.7 | dsp-api | done | — (verification) | test_gravsearch_span 14/14 green; MatchFulltext E2E 26/26 green (port override, see Side findings) at 2a7cb5953 | — |
 | 2.8 | dsp-api | done | 308db46c3 | Review fix round 1: `SearchResponderV2Live.luceneScopeFor` is the one scope derivation, used by the responder and the test-it golden support (dune DUNE-003); LuceneScope Scaladoc says which lookups need `inputWhere` (DUNE-002, consistency, scala-zio) | — |
 | 2.9 | dsp-api | done | 91e26acce | Review fix round 2 (cap reached): the golden support fails when a requested scope does not resolve, restoring the fail-fast lost in 2.8 (consistency, dune, simplicity re-review); canary with an unknown project fails as intended | — |
+| 3.1 | dsp-api | done | 643f339d9 | `LuceneScope.mainResourceAnchoredValues(inputWhere, mainResource)`: pure fold over the input WHERE (OPTIONAL/UNION/MINUS/FNE); 7 unit cases incl. UNION with a linked resource and filter-before-label; canary (`exists` + label allowed) fails 3 cases | — |
+| 3.2 | dsp-api | done | 6e8a33bce | Generator: lazy `mainResourceAnchoredValues` from `luceneScope.inputWhere`; `lucenePattern(subj, term, dataGraph)` wraps only text:query; `luceneDataGraph(anchored)` is the one scope decision for matchFulltext/matchLabel/matchText/matchTextInStandoff; existing goldens byte-identical | — |
+| 3.3 | dsp-api | done | 7d4d67588 | 9 page + 1 count goldens (simple/complex share `matchTextScoped`; matchLabel scoped to 0803; linked-value, UNION-with-linked, filter-before-label render no GRAPH; FNE matchLabel scoped); `just test-gravsearch-prequery` green; canary inverting the decision fails exactly the 9 new cases | — |
+| 3.4 | dsp-api | done | 6f8eed4ee | Review fix round 1: anchoring fold exhaustive over `QueryPattern` (recurses into Group/SubSelect/Graph; dune DUNE-001, consistency); `resourceDataGraph` / `valueDataGraph` replace the Boolean built at each call site (simplicity, DUNE-002, scala-zio, consistency); 3 more unit cases; `transformScoped(query, project)`; prequery suites green, goldens unchanged | — |
 
 ## Deferrals
 
@@ -125,3 +133,16 @@ status: in-progress
   says `("Narr" 1000)` where the test uses the build's hit limit 1000000.
 - Phase 2 review round 2 was not re-reviewed (cap of 2 fix rounds reached); its diff is one test-support guard,
   verified by a canary and a clean `just test-gravsearch-prequery`.
+- Phase 3 review (4 lenses: consistency, simplicity, dune, scala-zio; 1 fix round, 6f8eed4ee): the two verified Warnings
+  (fail-open `case _` in the anchoring fold; Boolean scope decision built at each call site) are fixed. Scala-zio traced
+  property paths (unsupported by the parser), variable predicates, IRI subjects, simple-schema variables and lazy-val
+  init order: no path where scoping drops a result. Re-review of the fix (consistency, simplicity, dune): no Critical
+  or Warning.
+- Phase 3 review suggestions (not fixed): the `/* */` block above `resourceDataGraph` / `valueDataGraph` is not
+  Scaladoc and its last sentence half-restates the helper names; `mainResourceAnchoredValues` Scaladoc lists
+  OPTIONAL/UNION/MINUS/FNE but the fold also descends Group/SubSelect/Graph (generator-only patterns); both helpers take
+  a plain `QueryVariable`, so a wrong kind still compiles; goldens named `...Scoped` that render no GRAPH (scope set,
+  lookup unscoped); no scoped test for matchLabel on a linked resource or for matchTextInStandoff's negative shapes
+  (same helpers as the tested ones); `lucenePattern` keeps the `fold[QueryPattern]` idiom of `matchFulltextLuceneLookup`.
+- Phase 3 verification at 6f8eed4ee: `//modules/webapi:test` 2617/2617, `just test-gravsearch-prequery` green
+  (existing goldens byte-identical), `just check` green. E2E not run for Phase 3 (no E2E checkbox; Phase 5 owns it).
