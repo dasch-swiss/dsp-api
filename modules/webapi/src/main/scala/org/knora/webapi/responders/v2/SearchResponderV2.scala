@@ -1750,7 +1750,8 @@ object SearchResponderV2Live {
     limitToProject: Option[ProjectIri],
     inputWhere: WhereClause,
   ): Task[Option[LuceneScope]] =
-    resolveRestriction(port, limitToProject).map(_.collect { case FulltextProjectRestriction.Scoped(_, dataGraph) =>
-      LuceneScope(dataGraph, inputWhere.patterns)
+    resolveRestriction(port, limitToProject).map(_.flatMap {
+      case FulltextProjectRestriction.Scoped(_, dataGraph) => Some(LuceneScope(dataGraph, inputWhere.patterns))
+      case FulltextProjectRestriction.Unresolved(_)        => None
     })
 }
