@@ -13,6 +13,7 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Pins the DEV-7287 `PrequeryPatternOrdering` behaviour by hand-built AST.
@@ -23,7 +24,8 @@ import org.knora.webapi.messages.util.search.*
  * `knora-base:LinkValue` and `knora-base:Resource` type units ever leading a component, while
  * `knora-base:ListNode` remains eligible; a size-preservation check applied to every input in `allInputs`,
  * which must list every fixture the suite defines; bind-first emission; Lucene-group opacity and its
- * ability to lead even when unconnected; `VALUES` attachment (unit-attached, block-attached, orphan);
+ * ability to lead even when unconnected; a `GraphPattern` around `text:query` ranking exactly like the bare
+ * statement; `VALUES` attachment (unit-attached, block-attached, orphan);
  * filter/FNE placement; `MINUS`/`OPTIONAL` recursion seeds; disconnected components staying contiguous;
  * cycle termination; permutation invariance; the T2/T3/T7 tier exclusions and tie-breaks; and the three
  * measured DEV-7287 stage regressions -- a standoff `rdf:type` unit must not lead ahead of the `VALUES`
@@ -247,6 +249,34 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
   private val luceneLeadsUnconnectedInput: Seq[QueryPattern]      = Seq(connectedPlainStmt, unconnectedLuceneStmt)
   private val unconnectedLuceneGroup                              = GroupPattern(Seq(unconnectedLuceneStmt))
   private val luceneGroupLeadsUnconnectedInput: Seq[QueryPattern] = Seq(connectedPlainStmt, unconnectedLuceneGroup)
+
+  // A GraphPattern wrapping text:query is T1 like the bare statement, also as the innermost element of the
+  // matchFulltext nesting (GroupPattern -> SubSelectPattern -> GraphPattern -> text:query).
+  private val dataGraph                                             = InternalIri("http://www.knora.org/data/0801/beol")
+  private val wrappedUnconnectedLucene                              = GraphPattern(dataGraph, unconnectedLuceneStmt)
+  private val wrappedLuceneLeadsUnconnectedInput: Seq[QueryPattern] = Seq(connectedPlainStmt, wrappedUnconnectedLucene)
+  private val matchFulltextShapeGroup                               = GroupPattern(
+    Seq(
+      SubSelectPattern(
+        letter,
+        Seq(GraphPattern(dataGraph, StatementPattern(letter, luceneQueryIri, LuceneQueryArgs("test", 10)))),
+      ),
+    ),
+  )
+  private val matchFulltextShapeInput: Seq[QueryPattern] = Seq(luceneLeadT2Stmt, matchFulltextShapeGroup)
+
+  // Two T1 units: wrapping either one must not change their order. Unwrapped, `?letter ...` sorts before
+  // `?res ...` on the rendered-text tie-break; a key rendered from `GRAPH <...>` would sort after `?res ...`.
+  private val luceneOnRes                       = StatementPattern(res, luceneQueryIri, LuceneQueryArgs("alpha", 10))
+  private val luceneOnLetter                    = StatementPattern(letter, luceneQueryIri, LuceneQueryArgs("beta", 10))
+  private val twoLuceneInput: Seq[QueryPattern] = Seq(
+    luceneOnRes,
+    luceneOnLetter,
+    StatementPattern(letter, hasAuthorIri, res),
+    StatementPattern(letter, titleIri, title),
+  )
+  private def wrap(statement: StatementPattern)(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
+    patterns.map(p => if (p == statement) GraphPattern(dataGraph, statement) else p)
 
   // Attached VALUES adjacency: the VALUES on ?subj is emitted immediately before the statement
   // using ?subj, wherever that statement lands.
@@ -622,6 +652,9 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
     varPredInput,
     luceneLeadsUnconnectedInput,
     luceneGroupLeadsUnconnectedInput,
+    wrappedLuceneLeadsUnconnectedInput,
+    matchFulltextShapeInput,
+    wrap(luceneOnLetter)(twoLuceneInput),
     permutationBase,
     resourceBannedInput,
     listNodeTypeLeadsInput,
@@ -682,6 +715,23 @@ class PrequeryPatternOrderingSpec extends ZIOSpecDefault {
       assertTrue(
         actual.head == unconnectedLuceneGroup,
         actual.head.asInstanceOf[GroupPattern].patterns == Seq(unconnectedLuceneStmt),
+      )
+    },
+    test("let a GraphPattern wrapping text:query lead even when unconnected, over a connected plain statement") {
+      val actual = PrequeryPatternOrdering.order(wrappedLuceneLeadsUnconnectedInput, luceneOuterBound)
+      assertTrue(actual.head == wrappedUnconnectedLucene)
+    },
+    test("let the matchFulltext nesting with a GraphPattern around text:query lead over a T2 statement") {
+      assertTrue(
+        PrequeryPatternOrdering.order(matchFulltextShapeInput) == Seq(matchFulltextShapeGroup, luceneLeadT2Stmt),
+      )
+    },
+    test("keep the unwrapped order of two T1 units when either is wrapped, for every permutation of the input") {
+      val reference = PrequeryPatternOrdering.order(twoLuceneInput)
+      val cases     = Seq(luceneOnRes, luceneOnLetter).map(s => (wrap(s)(twoLuceneInput), wrap(s)(reference)))
+      assertTrue(
+        reference.take(2) == Seq(luceneOnLetter, luceneOnRes),
+        cases.forall((input, expected) => input.permutations.forall(p => PrequeryPatternOrdering.order(p) == expected)),
       )
     },
     test("attach a unit-referenced VALUES immediately before the statement using it") {

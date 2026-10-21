@@ -552,8 +552,8 @@ case class SubSelectPattern(variable: QueryVariable, patterns: Seq[QueryPattern]
  * Opaque like [[GroupPattern]]: [[QueryTraverser]] and
  * [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]] pass it through unchanged, so
  * inference never expands the wrapped statement. Unlike a [[SubSelectPattern]] it exposes the bindings of its
- * statement: [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]] treats it as a
- * unit whose variables are the statement's.
+ * statement: [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]] ranks it exactly
+ * as it ranks the bare statement.
  *
  * @param graph     the named graph, e.g. a project's data graph.
  * @param statement the single wrapped statement.
