@@ -53,7 +53,7 @@ object SearchFulltextQuery {
         sparql"""|GRAPH ${Iri.unsafeFrom(dataGraph.value)} {
                  |    ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .
                  |}"""
-      case _ =>
+      case None | Some(FulltextProjectRestriction.Unresolved(_)) =>
         sparql"?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) ."
     }
   }
@@ -211,8 +211,10 @@ object SearchFulltextQuery {
                  |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
                  |    ?resource knora-base:creationDate ?resourceCreationDate .
                  |    ${List(
-            restriction.collect { case FulltextProjectRestriction.Unresolved(project) =>
-              sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(project.value)} ."
+            restriction.flatMap {
+              case FulltextProjectRestriction.Scoped(_, _)        => None
+              case FulltextProjectRestriction.Unresolved(project) =>
+                Some(sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(project.value)} .")
             },
             limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
                      |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),

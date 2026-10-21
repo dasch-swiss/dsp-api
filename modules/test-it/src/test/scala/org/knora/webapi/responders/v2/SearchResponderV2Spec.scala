@@ -217,8 +217,9 @@ class SearchResponderV2Spec extends E2EZSpec {
       } yield assertTrue(inAnything.size == 0, anywhere.size > 0)
     },
 
-    // Two terms, so the breadth probe runs, and it runs scoped. "Narr" has hits only in incunabula, "blue" only in
-    // anything ("A blue thing"), so the scoped lookup must keep the anything match and drop every incunabula one.
+    // Two terms, so the scoped path includes the breadth probe (whose scoping FulltextBreadthGuardSpec pins). "Narr" has
+    // hits only in incunabula, "blue" only in anything, so the scoped lookup must keep the anything match and drop
+    // every incunabula one.
     test("a scoped two-term fulltext search returns the in-project match") {
       for {
         result <- searchResponder(

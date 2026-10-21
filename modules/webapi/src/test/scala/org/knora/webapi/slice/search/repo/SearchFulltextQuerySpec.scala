@@ -83,7 +83,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   //    class walk reads ontology graphs, so a wider GRAPH returns no rows. An Unresolved project keeps the unscoped
   //    lookup and the attachedToProject line (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
   //
-  // The scoped cases are exact-text goldens (`GoldenTest`); the legacy fixtures above predate them.
+  // New cases use exact-text goldens (`GoldenTest`), not legacy fixtures.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchFulltextQuery")(
     suite("count query")(
       test("minimal count query") {
