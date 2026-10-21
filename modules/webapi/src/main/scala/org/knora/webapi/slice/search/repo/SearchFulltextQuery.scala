@@ -39,6 +39,25 @@ object SearchFulltextQuery {
   private def failIf(condition: Boolean, message: String): IO[SparqlGenerationException, Unit] =
     ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
+  // The Lucene lookup that opens the inner subquery. Shared by build and buildProbe so the breadth probe counts the
+  // same (scoped or unscoped) candidate set the real query starts from. A Scoped restriction wraps only this
+  // statement in GRAPH: the patterns around it read ontology graphs or are bound-subject lookups, and a blanket
+  // GRAPH returns no rows (docs/adr/0012-graph-scoped-lucene-text-lookups.md, Decision 2).
+  private def luceneLookupClause(
+    searchTerms: LuceneQueryString,
+    restriction: Option[FulltextProjectRestriction],
+  ): Fragment = {
+    val searchLiteral = Literal.string(searchTerms.getQueryString)
+    restriction match {
+      case Some(FulltextProjectRestriction.Scoped(_, dataGraph)) =>
+        sparql"""|GRAPH ${Iri.unsafeFrom(dataGraph.value)} {
+                 |    ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .
+                 |}"""
+      case _ =>
+        sparql"?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) ."
+    }
+  }
+
   // The standoff restriction, mirrored inside the inner Lucene subquery. Shared by build and buildProbe so the
   // breadth probe measures exactly the candidate set the real query starts from and cannot drift from it.
   private def standoffFilterClause(
@@ -64,13 +83,19 @@ object SearchFulltextQuery {
 
   /**
    * The breadth probe (DEV-6864, PROBE): a `COUNT(*)` over the exact inner Lucene subquery of [[build]] — the
-   * post-Lucene candidate count, before the value/list/resource joins the real query pays. It mirrors only the
-   * standoff filter, which lives inside that subquery; `limitToProject` / `limitToResourceClass` live in the outer
-   * query and are not mirrored (they filter after the joins and do not reduce the candidate count — see the plan).
-   * Run raced against the real query, this measures how broad a term is without paying the joins.
+   * post-Lucene candidate count, before the value/list/resource joins the real query pays. Run concurrently with
+   * the real query, it measures how broad a term is without paying the joins.
+   *
+   * It mirrors the two restrictions that live inside that subquery: the standoff filter, and a
+   * [[FulltextProjectRestriction.Scoped]] project, whose `GRAPH` around the Lucene statement makes the probe count
+   * only in-project candidates. An `Unresolved` project is not mirrored (its `attachedToProject` filters after the
+   * joins), and neither is `limitToResourceClass`, which also lives in the outer query.
    */
-  def buildProbe(searchTerms: LuceneQueryString, limitToStandoffClass: Option[SmartIri]): Select = {
-    val searchLiteral = Literal.string(searchTerms.getQueryString)
+  def buildProbe(
+    searchTerms: LuceneQueryString,
+    limitToStandoffClass: Option[SmartIri],
+    restriction: Option[FulltextProjectRestriction],
+  ): Select =
     Select.searchProbe(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -78,13 +103,12 @@ object SearchFulltextQuery {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .
+               |            ${luceneLookupClause(searchTerms, restriction)}
                |            ${standoffFilterClause(searchTerms, limitToStandoffClass)}
                |        }
                |    }
                |}""".render,
     )
-  }
 
   // The overall query structure (SELECT with GROUP_CONCAT, subqueries, BIND/COALESCE, SUBSTR) is written as a
   // whole-query `sparql"..."` template: the fixed SPARQL stays SPARQL, and only dynamic values and dynamic
@@ -124,12 +148,18 @@ object SearchFulltextQuery {
    *
    * `?resource a ?resourceClass` sits inside the class-restriction hole rather than in the query body so the type
    * join is only paid when a class restriction is actually requested — the resource-ness probe is unconditional
-   * and stands alone. The project restriction is emitted before the class join: `attachedToProject` on the
-   * already-bound `?resource` is a cheap, selective probe (engine Fact 1 — order relative to the joins is the plan).
+   * and stands alone.
+   *
+   * A `Scoped` project restriction scopes the Lucene lookup to the project's data graph (luceneLookupClause) and
+   * emits no `attachedToProject`: a hit's value, list value and resource all live in the hit's data graph, so every
+   * resource reached from an in-graph hit belongs to the project and the join would only repeat the restriction
+   * (docs/adr/0012-graph-scoped-lucene-text-lookups.md). An `Unresolved` restriction keeps the unscoped lookup and
+   * emits `attachedToProject` before the class join, a cheap probe on the already-bound `?resource` (engine Fact 1 —
+   * order relative to the joins is the plan); for an unknown project it matches nothing.
    */
   def build(
     searchTerms: LuceneQueryString,
-    limitToProject: Option[ProjectIri],
+    restriction: Option[FulltextProjectRestriction],
     limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
@@ -141,8 +171,6 @@ object SearchFulltextQuery {
     for {
       _ <- failIf(!countQuery && separator.isEmpty, "Separator expected for non count query, but none given")
     } yield {
-      val searchLiteral = Literal.string(searchTerms.getQueryString)
-
       Select.search(
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -156,7 +184,7 @@ object SearchFulltextQuery {
                  |WHERE {
                  |    {
                  |        SELECT DISTINCT ?matchingSubject WHERE {
-                 |            ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .
+                 |            ${luceneLookupClause(searchTerms, restriction)}
                  |            ${standoffFilterClause(searchTerms, limitToStandoffClass)}
                  |        }
                  |    }
@@ -183,9 +211,9 @@ object SearchFulltextQuery {
                  |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
                  |    ?resource knora-base:creationDate ?resourceCreationDate .
                  |    ${List(
-            limitToProject.map(project =>
-              sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(project.value)} .",
-            ),
+            restriction.collect { case FulltextProjectRestriction.Unresolved(project) =>
+              sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(project.value)} ."
+            },
             limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
                      |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
           ).flatten.joinLines}

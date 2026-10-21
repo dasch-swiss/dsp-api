@@ -595,9 +595,10 @@ final class SearchResponderV2Live(
       _                    <- validateSearchString(searchValue)
       _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
+      restriction          <- SearchResponderV2Live.resolveRestriction(projectDataGraphs, limitToProject)
       countSparql          <- SearchFulltextQuery.build(
                        searchTerms = LuceneQueryString(searchValue),
-                       limitToProject = limitToProject,
+                       restriction = restriction,
                        limitToResourceClass = limitToResourceClass,
                        limitToStandoffClass = limitToStandoffClass,
                        returnFiles = false, // not relevant for a count query
@@ -608,7 +609,7 @@ final class SearchResponderV2Live(
                      )
       bindings <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, restriction, limitToResourceClass)(
             triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
@@ -650,9 +651,10 @@ final class SearchResponderV2Live(
       _                    <- validateSearchString(searchValue)
       _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
+      restriction          <- SearchResponderV2Live.resolveRestriction(projectDataGraphs, limitToProject)
       searchSparql         <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
-                        limitToProject = limitToProject,
+                        restriction = restriction,
                         limitToResourceClass = limitToResourceClass,
                         limitToStandoffClass = limitToStandoffClass,
                         returnFiles = returnFiles,
@@ -664,7 +666,7 @@ final class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, restriction, limitToResourceClass)(
             triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 

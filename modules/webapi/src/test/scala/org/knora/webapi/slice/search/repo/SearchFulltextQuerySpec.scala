@@ -18,6 +18,7 @@ import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.search.repo.FulltextProjectRestriction.Unresolved
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
@@ -78,7 +79,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            limitToProject = None,
+            restriction = None,
             limitToResourceClass = None,
             limitToStandoffClass = None,
             returnFiles = false,
@@ -94,7 +95,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            limitToProject = Some(testProjectIri),
+            restriction = Some(Unresolved(testProjectIri)),
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = None,
             returnFiles = false,
@@ -112,7 +113,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            limitToProject = None,
+            restriction = None,
             limitToResourceClass = None,
             limitToStandoffClass = None,
             returnFiles = false,
@@ -128,7 +129,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = LuceneQueryString("test search"),
-            limitToProject = Some(testProjectIri),
+            restriction = Some(Unresolved(testProjectIri)),
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = Some(testStandoffIri),
             returnFiles = true,
@@ -143,11 +144,11 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
     ),
     suite("probe query")(
       test("probe query without standoff") {
-        val query = SearchFulltextQuery.buildProbe(searchTerms, None)
+        val query = SearchFulltextQuery.buildProbe(searchTerms, None, None)
         matchesLegacy(query, "probeNoStandoff") && assertTrue(query.timeout == SparqlTimeout.SearchProbe)
       },
       test("probe query with standoff") {
-        val query = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri))
+        val query = SearchFulltextQuery.buildProbe(LuceneQueryString("test search"), Some(testStandoffIri), None)
         matchesLegacy(query, "probeWithStandoff")
       },
     ),
@@ -156,7 +157,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
         // The caller passes the raw user input — the typed Literal hole handles SPARQL escaping.
         val actual = SearchFulltextQuery.build(
           searchTerms = LuceneQueryString("Knight's"),
-          limitToProject = None,
+          restriction = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
@@ -172,7 +173,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
       test("double quote in search term is correctly escaped") {
         val actual = SearchFulltextQuery.build(
           searchTerms = LuceneQueryString("""say "hello""""),
-          limitToProject = None,
+          restriction = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
@@ -189,7 +190,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault {
       test("should fail when separator is missing for non-count query") {
         val effect = SearchFulltextQuery.build(
           searchTerms = searchTerms,
-          limitToProject = None,
+          restriction = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
