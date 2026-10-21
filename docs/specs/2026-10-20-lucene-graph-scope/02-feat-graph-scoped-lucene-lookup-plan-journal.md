@@ -28,6 +28,7 @@ status: in-progress
 | 2 | reviewed | dsp-api@c9b97fe9d | 2 |
 | 3 | reviewed | dsp-api@485ded859 | 1 |
 | 4 | reviewed | dsp-api@0345a24a9 | 2 |
+| 5 | reviewed | dsp-api@d6f61856e | 1 |
 | 7 | gated (H1) | — | 0 |
 
 ## Chunk queue
@@ -53,6 +54,9 @@ status: in-progress
 | 4.3 | dsp-api | webapi test: FulltextBreadthGuardSpec | 4.1 | "`FulltextBreadthGuardSpec`: … add one test with a probe double" | unscoped refused, scoped admitted | FulltextBreadthGuardSpec | — |
 | 4.4 | dsp-api | test-it: SearchResponderV2Spec | 4.1 | "`SearchResponderV2Spec` …: add a scoped two-term search", "`SearchResponderV2Spec`: a scoped search with a standoff restriction …" | both green against Fuseki with graphField | SearchResponderV2Spec § restricted search (~163-239) | — |
 | 4.5 | dsp-api | — (verification runs) | 4.1-4.4 | "Run `bazel test //modules/webapi:test`", "Run `bazel test //modules/test-it:test --test_filter='.*SearchResponderV2Spec.*'`" | both green | — | — |
+| 5.1 | dsp-api | test-e2e: MatchFulltextE2ESpec, matchfulltext-data.ttl, new matchfulltext-crossproject-data.ttl | — | "Keep the existing match-path tests unrestricted", "Add a cross-project anchor case" | linked 0803 resource found by `matchFulltext(?other)` with limitToProject 0001; existing tests unchanged | MatchFulltextE2ESpec § non-main-resource, fixture § Resource F | — |
+| 5.2 | dsp-api | test-e2e: MatchFulltextE2ESpec | 5.1 | "Add: the same terms with limitToProject … each remaining match path", "Add: scoped matchLabel and matchText counts", "Add: scoped matchLabel inside FILTER NOT EXISTS", "Add: /v2/search/count/{term} with limitToProject", "Add: limitToProject naming a nonexistent project", "Add: limitToProject naming knora-admin:SystemProject", "Add: an invalid Lucene term with limitToProject 0001" | 1 for 0001 / 0 for 0803; FNE count equals the lookup-free equivalent under limitToProject 0001; unknown and SystemProject 200 + 0; invalid term 400 | MatchFulltextE2ESpec § project scoping, errors (D7 term) | — |
+| 5.3 | dsp-api | — (verification runs) | 5.1-5.2 | "Run the Phase 2 E2E command", "Run the same command with --test_filter='.*Search.*'", "If no unsandboxed shell is available …" | both green (Sipi failures under the port override recorded) | — | — |
 
 ## Chunks
 
@@ -84,6 +88,10 @@ status: in-progress
 | 4.5 | dsp-api | done | — (verification) | At 2e8a2a033: `//modules/webapi:test` 2621/2621, `//modules/test-it:test --test_filter=.*SearchResponderV2Spec.*` green (Docker via `--test_env`), `just check` green | — |
 | 4.6 | dsp-api | done | 3aff7a3b3 | Review fix round 1: `luceneLookupClause` and the `attachedToProject` line match every `FulltextProjectRestriction` case explicitly (dune DUNE-001, consistency, scala-zio); spec comment states the goldens rule instead of history (simplicity, DUNE-004); two-term IT comment says the probe's scoping is pinned by `FulltextBreadthGuardSpec` (consistency, scala-zio); rendered SPARQL unchanged, specs green, `just check` green | — |
 | 4.7 | dsp-api | done | 6808d5aef | Review fix round 2 (cap reached): `SearchResponderV2Live.luceneScopeFor` matches both restriction cases instead of a partial `collect` (dune re-review DUNE-002); canary with a dummy third enum case fails the build at all three sites; `SearchResponderV2*` webapi specs green, test-it builds, `just check` green | — |
+| 5.1 | dsp-api | done | 2b71daab5 | Existing match-path tests stay unrestricted (unchanged); new fixture `matchfulltext-crossproject-data.ttl` (0803 resource in 0803's data graph) linked from 0001 fixture resource G via `hasOtherThing`; `matchFulltext(?other)` with limitToProject 0001 → 1; MatchFulltext E2E 27/27; canary (scope every resource lookup) fails exactly the new test | — |
+| 5.2 | dsp-api | done | 9c3ee8909 | MatchFulltextE2ESpec "project scoping": scoped text/comment/list-node paths → 1; scoped matchLabel and matchText 1 (0001) / 0 (0803); FNE matchLabel scoped equals the exact-label-filter count under limitToProject 0001 (the lookup-free form of "unscoped filtered to 0001") and is all − 1; GET /v2/search/count 0001 → 1, 0803 → 0 (stale-image detector), two terms → 1; nonexistent and SystemProject → 200 + 0 on both count endpoints; D7 term + limitToProject → 400 on /v2/search and Gravsearch page; E2E 35/35; canary (wrong graph in the generator, no wrap in /v2/search) fails the 7 scoped cases | — |
+| 5.3 | dsp-api | done | — (verification) | At 9c3ee8909, unsandboxed, API on port 3399 (a local stack holds 3333): `--test_filter='.*MatchFulltext.*'` 35/35, `--test_filter='.*Search.*'` 258/258 (no books-graph dependency surfaced; the filter does not match MatchFulltextE2ESpec, run separately); the fallback item does not apply (an unsandboxed shell was available) | — |
+| 5.4 | dsp-api | done | 027f16ecc | Review fix round 1: linked-resource test also requires `/v2/search` scoped to 0803 to find the 0803 resource (canary: fixture loaded into the 0001 graph fails it; dune DUNE-002), load-site comment says why the graph differs; shared `invalidLuceneTerm` / `invalidLuceneTermInSparql` (simplicity); comments: which test detects a graph-field-less index, why SystemProject counts 0, the FNE baseline (consistency, simplicity); E2E MatchFulltext 35/35, `just check` green | — |
 
 ## Deferrals
 
@@ -181,3 +189,25 @@ status: in-progress
   (cap of 2 fix rounds). Suggestion not fixed: `SearchFulltextQuerySpec` "New cases use exact-text goldens" could read
   "Prefer exact-text goldens over the legacy fixtures above".
 - Phase 4 verification at 3aff7a3b3: `//modules/webapi:test` 2621/2621, test-it `SearchResponderV2Spec` green.
+- Phase 5 review (4 lenses: consistency, simplicity, dune, scala-zio; 1 fix round, 027f16ecc). Refuted or plan-decided
+  (not fixed): `ARCH-MAP.md` test-e2e / shared-fixtures entries "stale" (dune DUNE-001: a spec-private fixture adds no
+  component or boundary; ARCH-MAP webapi-search is a Phase 6 checkbox); the 400 test asserts status only (scala-zio,
+  consistency: the same request with a valid term is 200 in the neighbouring tests, and the pre-existing D7 test is
+  equally loose); the Gravsearch "0 for 0803" halves and the FNE equality cannot detect a graph-field-less index
+  (plan-specified; attachedToProject backs them, and the `/v2/search` 0803 count is the named detector); two-term count
+  equal under AND and OR (the item only needs the probe to run scoped).
+- Phase 5 finding: Gravsearch with `limitToProject` limits class inference to that project's ontologies
+  (`SearchResponderV2` `getProjectOntologies`), so a resource of project 0803 typed with the 0001 anything ontology is
+  invisible to a Gravsearch query scoped to 0803 (count 0) while `/v2/search` scoped to 0803 finds it. Pre-existing,
+  unrelated to the GRAPH scoping; it is why the cross-project fixture's graph is pinned through `/v2/search`.
+- Phase 5 review suggestions (not fixed): `matchfulltext-data.ttl` header says every resource carries a nonce token (F
+  and G do not; F predates this phase); the hand-written fixtures live under `generated_test_data/` (DUNE-003,
+  pre-existing directory); the pre-existing D7 test keeps its own copy of the invalid term; trim the cross-project
+  explanation repeated in the two TTL headers and the spec; a project-pair helper for the paired count calls.
+- Phase 5 re-review of 027f16ecc (consistency, simplicity, dune): no Critical. One simplicity Warning refuted: the
+  load-site comment on the cross-project fixture states the constraint (keep it out of 0001's graph) and what breaks;
+  not a session log. Suggestions not fixed: derive the SPARQL-escaped invalid term from the raw one, or reuse the shared
+  vals in the pre-existing D7 test; name the detector test instead of "below". The SystemProject comment is confirmed by
+  the 5.2 canary: with the `/v2/search` wrap disabled the SystemProject count became 1, so it resolves `Scoped`.
+- Phase 5 E2E run at 027f16ecc: MatchFulltext 35/35, `just check` green; the `.*Search.*` run (258/258) was at
+  9c3ee8909, before the test-only review fix.

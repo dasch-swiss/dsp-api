@@ -399,28 +399,28 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 5: E2E coverage with the fixture in the project data graph
 
-- [ ] Keep the existing match-path tests unrestricted: they are the "unscoped search still finds it" cases; the
+- [x] Keep the existing match-path tests unrestricted: they are the "unscoped search still finds it" cases; the
   existing `limitToProject` test (fixture moved in Phase 2) is the scoped `matchFulltext` label case
-- [ ] Add: the same terms with `limitToProject=http://rdfh.ch/projects/0001` find each remaining match path (text
+- [x] Add: the same terms with `limitToProject=http://rdfh.ch/projects/0001` find each remaining match path (text
   value, value comment, list node), proving the scoped lookup sees the fixture
-- [ ] Add: scoped `matchLabel` and `matchText` counts (1 for 0001, 0 for 0803)
-- [ ] Add: scoped `matchLabel` inside `FILTER NOT EXISTS` on the main resource; the count equals the unscoped
+- [x] Add: scoped `matchLabel` and `matchText` counts (1 for 0001, 0 for 0803)
+- [x] Add: scoped `matchLabel` inside `FILTER NOT EXISTS` on the main resource; the count equals the unscoped
   count filtered to 0001
-- [ ] Add a cross-project anchor case: a second fixture file, loaded into 0803's data graph by this spec only, with
+- [x] Add a cross-project anchor case: a second fixture file, loaded into 0803's data graph by this spec only, with
   one resource attached to 0803 and linked from a 0001 fixture resource (link property and class to confirm during
   implementation); `matchFulltext(?other, ...)` on the linked resource with `limitToProject` 0001 still finds it
-- [ ] Add: `/v2/search/count/{term}` with `limitToProject` 0001 → 1 and 0803 → 0, including one two-term search so
+- [x] Add: `/v2/search/count/{term}` with `limitToProject` 0001 → 1 and 0803 → 0, including one two-term search so
   the probe runs scoped; comment that the 0803 case is the E2E stale-image detector (no `attachedToProject` there)
-- [ ] Add: `limitToProject` naming a nonexistent project returns 200 with count 0 on `/v2/searchextended/count`
+- [x] Add: `limitToProject` naming a nonexistent project returns 200 with count 0 on `/v2/searchextended/count`
   and `/v2/search/count/{term}`
-- [ ] Add: `limitToProject` naming `knora-admin:SystemProject` returns 200 with count 0 on both count endpoints
-- [ ] Add: an invalid Lucene term with `limitToProject` 0001 returns 400 on `/v2/search` and on Gravsearch
+- [x] Add: `limitToProject` naming `knora-admin:SystemProject` returns 200 with count 0 on both count endpoints
+- [x] Add: an invalid Lucene term with `limitToProject` 0001 returns 400 on `/v2/search` and on Gravsearch
   `matchFulltext` (reuse the term the unscoped 400 tests use)
-- [ ] Run the Phase 2 E2E command; it passes
-- [ ] Run the same command with `--test_filter='.*Search.*'`; it passes (catches a hidden books-graph dependency)
-- [ ] If no unsandboxed shell is available, the Phase 2 fallback applies to both runs: the phase review lists the
+- [x] Run the Phase 2 E2E command; it passes
+- [x] Run the same command with `--test_filter='.*Search.*'`; it passes (catches a hidden books-graph dependency)
+- [x] If no unsandboxed shell is available, the Phase 2 fallback applies to both runs: the phase review lists the
   new E2E cases that did not run locally, and CI runs them on the PR
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 6: Docs
 
