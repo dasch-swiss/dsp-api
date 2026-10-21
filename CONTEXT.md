@@ -75,9 +75,10 @@ cross-domain test support.
 - **Resources & Values to Projects + Identity & Access + Data Model + Assets**: Resources are
   project-owned, conform to a Data Model, are protected by permission profiles/policy, and may
   reference Assets.
-- **Search to Data Model + Resources & Values, through ports**: Search declares a `ResourceSearch`
-  port that Resources & Values implements, and consumes the Data Model projection port. Search no
-  longer depends on the RDF platform.
+- **Search to Data Model + Resources & Values + Projects, through ports**: Search declares a
+  `ResourceSearch` port that Resources & Values implements, consumes the Data Model projection port, and
+  declares a `ProjectDataGraphs` port that Projects implements. Search no longer depends on the RDF
+  platform.
 - **Project Migration to Projects + Identity & Access + Data Model + Resources & Values + Assets +
   RDF platform**: migration coordinates the VRE contexts through ports; its RDF platform edge covers
   whole-graph movement only.
@@ -146,6 +147,7 @@ graph TD
     RV --> DM
     RV --> ASSETS
     RV --> PP
+    SEARCH --> PROJECTS
     SEARCH --> DM
     SEARCH --> RV
     FAIR --> FP
