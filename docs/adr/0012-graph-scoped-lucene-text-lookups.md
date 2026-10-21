@@ -7,7 +7,7 @@ DEV-6809 (c) (GRAPH-scoping the post-Lucene patterns), `modules/fuseki/dsp-repo.
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -24,16 +24,17 @@ graph, `http://www.knora.org/data/{shortcode}/{shortname}`, and no list value po
 graph or into the system lists (0 of 1.69 M on stage, 2026-10-20). So "the project" and "the project data
 graph" are the same thing.
 
-Measured on stage (a prod mirror) with 14 real slow prod cases across 7 projects, by emulating the scoped
-lookup in SPARQL, which is a pessimistic bound:
+Measured with 14 real slow prod cases across 7 projects: the hit ratios on stage (a prod mirror), the times on
+dev with real scoping, after dev's index was rebuilt with the graph field (count queries, warm medians; the full
+tables are on DEV-7377):
 
 - Out-of-project hits are 1.1–4× the in-project ones for LIMC, the largest project, and 6–247× for the others.
-- At today's 10k hit cap, scoping saves at most about 1.6 s, because the matchFulltext prequery rewrite
-  (DEV-7491) already took most of the cost; slow restricted searches dropped from about 13 % to 3 % of requests
-  when it reached prod on 2026-10-14.
-- With the full hit limit, restricted searches cost 30–55 s unscoped and at most 8 s scoped (Gravsearch) or
-  17.5 s (`/v2/search` with a class restriction). The limit applied after scoping also makes 6 of the 11
-  truncated cases complete without lifting the cap.
+- At today's 10k hit cap, scoping is 1.0–8.8× faster (median 1.8×), and every scoped case runs in at most 1.7 s.
+  The gain is modest because the matchFulltext prequery rewrite (DEV-7491) already took most of the cost; slow
+  restricted searches dropped from about 13 % to 3 % of requests when it reached prod on 2026-10-14.
+- With the full hit limit, restricted Gravsearch searches go from up to 18.7 s unscoped to at most 4.7 s scoped,
+  and `/v2/search` from up to 30 s to at most 4.6 s, except one class-restricted `/v2/search` case at 13.8 s.
+  The limit applied after scoping also makes 6 of the 11 truncated cases complete without lifting the cap.
 
 Verified on a local Fuseki 6.2.0 (the stack's image) loaded with 1.17 M quads pulled from stage: scoped lookups
 return only in-graph hits; unscoped lookups are byte-identical with and without the field; `text:query` ignores
@@ -53,9 +54,12 @@ existing data, while new writes are indexed with their graph, so the index is si
    `text:graphField "graph"`. The container entrypoint installs the configuration from the image on every start
    and rebuilds the index first when it changed (DEV-7589), so the field and a complete index arrive together.
 2. **A project-restricted text lookup is wrapped in `GRAPH <projectDataGraph> { ... }`, and nothing else is.**
-   Gravsearch `matchFulltext` (and `matchText`/`matchLabel` where a project restriction is known) and
-   `/v2/search` with `limitToProject` scope only the Lucene statement. All other patterns stay on the union
-   graph; a blanket GRAPH scope returns zero rows because the ontology patterns resolve against other graphs.
+   Gravsearch `matchFulltext`, `matchText`, `matchTextInStandoff` and `matchLabel` where the lookup is anchored on
+   the main resource of a project-restricted query, and `/v2/search` with `limitToProject`, scope only the Lucene
+   statement. All other patterns stay on the union graph; a blanket GRAPH scope returns zero rows because the
+   ontology patterns resolve against other graphs. Scoping to the data graph is exact because of the one-graph
+   rule in [Resources & Values](../contexts/resources-values/CONTEXT.md): a project's resources, values and list
+   nodes live in exactly one data graph.
 3. **The list-node branch is scoped to the project data graph alone.** No union with the system-lists graph,
    because no cross-graph list references exist and the platform does not allow them.
 4. **The breadth probe of `/v2/search` mirrors the restriction.** Otherwise it keeps refusing scoped searches
@@ -64,23 +68,34 @@ existing data, while new writes are indexed with their graph, so the index is si
    after that host runs a Fuseki image with the field, which rebuilds the index on the start that installs it.
    The order "rebuild, then revert the configuration" is safe (the GRAPH clause becomes a no-op again); the
    order "configure, then skip the rebuild" (`SKIP_AUTO_INDEX_REBUILD`) is not.
-6. **The reindex is shared with DEV-6851.** `rdfs:label` gets its own index field in the same rebuild, and the
-   fulltext lookup is changed to search both fields. `text:propField`, which DEV-6851 proposed, does not exist
-   in Jena 6.2.0 and is silently ignored.
+6. **DEV-6851's label field needs its own reindex.** Giving `rdfs:label` its own index field was meant to ride
+   the same rebuild, but the graph field shipped without it (dsp-api#4393), so DEV-6851 needs a second rebuild,
+   which runs automatically like the first (Decision 1). The fulltext lookup then has to search both fields.
+   `text:propField`, which DEV-6851 proposed, does not exist in Jena 6.2.0 and is silently ignored.
 7. **Unscoped searches are out of scope.** Scoping gains them nothing; lifting the hit limit for them is
    DEV-7492's own decision.
 
 ## Consequences
 
-- Project-restricted fulltext searches can take the full Lucene hit limit without the 30–55 s cost, and most
-  of them stop being silently truncated. Unrestricted searches are unchanged.
+- Project-restricted fulltext searches can take the full Lucene hit limit without paying for every
+  out-of-project hit, and most of them stop being silently truncated. Unrestricted searches are unchanged.
+- Scoping applies only to Lucene lookups anchored on the main resource. `limitToProject` restricts the main
+  resource; a lookup anchored elsewhere (`matchFulltext` on a linked resource, `matchText` on a linked resource's
+  value) may legitimately hit another project's graph, because links across projects are allowed, so it stays
+  unscoped.
 - Each environment rebuilds its index once, automatically, on the first deploy of an image whose configuration
   differs from the host's, with the database down for the rebuild (about 6.5 minutes plus container start).
   This has to be visible in the release notes.
-- `MatchFulltextE2ESpec` loads its fixture into a graph that is not the project data graph; it must move, and
-  every test of a scoped lookup needs the target graph to exist.
-- DEV-6809 (c) is superseded for the main cost. What remains of it is dropping the `attachedToProject` join
-  once the hits are already project-local.
+- A test of a scoped lookup needs its fixture in the project data graph (`MatchFulltextE2ESpec` loads it there),
+  and the target graph has to exist.
+- DEV-6809 (c) is superseded for the main cost. What remained of it, dropping the `attachedToProject` join once
+  the hits are project-local, applies to `/v2/search` only. Gravsearch keeps the join on the main resource,
+  which need not be the Lucene anchor.
+- The scoped `/v2/search` breadth probe is 1.0–4.3× cheaper and counts exactly the in-project hits; the unscoped
+  probe overstated small projects 14–74×. The breadth cap therefore applies to the in-project candidate count.
+- Once scoped, the remaining cost of a class-restricted `/v2/search` is its per-candidate `rdfs:subClassOf*` walk
+  (the 13.8 s case above runs in 4.6 s without it). Gravsearch avoids the walk with a `VALUES` list of classes.
+  Removing it from `/v2/search` is tracked separately.
 - With the field on, `GRAPH ?g { text:query }` binds each hit to its graph. Without it that shape is a silent
   cross product (every hit bound to every graph). Nothing in dsp-api uses it; hand-written passthrough queries
   should know. `FROM NAMED <g>` does not scope a text lookup in either configuration.
