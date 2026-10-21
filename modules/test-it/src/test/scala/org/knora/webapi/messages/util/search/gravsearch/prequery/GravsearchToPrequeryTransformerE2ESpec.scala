@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
@@ -47,6 +48,7 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
                        typeInspectionResult = typeInspectionResult,
                        querySchema = querySchema,
                        appConfig = appConfig,
+                       luceneScope = None,
                      ),
                    )
     preQuery <- queryTraverser(
@@ -58,21 +60,25 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
   private def transformQueryWithInference(
     query: String,
     limitResultsToProject: Option[ProjectIri] = None,
+    scopeLuceneToProject: Boolean = false,
   ): ZIO[
-    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService &
+      KnoraProjectService,
     Throwable,
     SelectQuery,
   ] =
     GravsearchInferencePipelineTestSupport.transformQueryWithInference(
       query,
-      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+      (constructClause, typeInspectionResult, querySchema, appConfig, luceneScope) =>
         new GravsearchToPrequeryTransformer(
           constructClause = constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema,
           appConfig = appConfig,
+          luceneScope = luceneScope,
         ),
       limitResultsToProject = limitResultsToProject,
+      scopeLuceneToProject = scopeLuceneToProject,
     )
 
   val inputQueryWithDateNonOptionalSortCriterion: String =

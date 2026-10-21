@@ -38,6 +38,8 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.ProjectDataGraphsLive
 
 /**
  * Shared by [[GravsearchToPrequeryTransformerE2ESpec]] and [[GravsearchToCountPrequeryTransformerE2ESpec]]:
@@ -81,13 +83,16 @@ object GravsearchInferencePipelineTestSupport {
       GravsearchTypeInspectionResult,
       ApiV2Schema,
       AppConfig,
+      Option[LuceneScope],
     ) => AbstractPrequeryGenerator,
     dropOrderBy: Boolean = false,
     limitResultsToProject: Option[ProjectIri] = None,
+    scopeLuceneToProject: Boolean = false,
   )(implicit
     sf: StringFormatter,
   ): ZIO[
-    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService &
+      KnoraProjectService,
     Throwable,
     SelectQuery,
   ] = for {
@@ -99,8 +104,11 @@ object GravsearchInferencePipelineTestSupport {
     querySchema <-
       ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
     appConfig           <- ZIO.service[AppConfig]
+    luceneScope         <- luceneScopeFor(limitResultsToProject, scopeLuceneToProject, sanitizedWhereClause.patterns)
     prequeryTransformer <-
-      ZIO.attempt(buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig))
+      ZIO.attempt(
+        buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig, luceneScope),
+      )
     // Count queries don't need sorting (there's only ever one result row), mirroring
     // SearchResponderV2.fulltextSearchCountV2, which drops orderBy the same way.
     queryForPrequery = parsedQuery.copy(
@@ -128,6 +136,28 @@ object GravsearchInferencePipelineTestSupport {
                              ),
                            )
   } yield transformedPrequery
+
+  /**
+   * Derives the scope from the same project as `limitResultsToProject`, through the production adapter, so a golden
+   * never pairs a data graph with a missing `attachedToProject` or the reverse.
+   */
+  private def luceneScopeFor(
+    limitResultsToProject: Option[ProjectIri],
+    scopeLuceneToProject: Boolean,
+    inputWhere: Seq[QueryPattern],
+  ): ZIO[KnoraProjectService, Throwable, Option[LuceneScope]] =
+    if (!scopeLuceneToProject) ZIO.none
+    else
+      for {
+        project <- ZIO
+                     .fromOption(limitResultsToProject)
+                     .orElseFail(AssertionException("scopeLuceneToProject needs limitResultsToProject"))
+        graph <- ZIO
+                   .serviceWithZIO[KnoraProjectService](ProjectDataGraphsLive(_).dataGraphOf(project))
+                   .someOrFail(
+                     AssertionException(s"Unknown project ${project.value}"),
+                   )
+      } yield Some(LuceneScope(graph, inputWhere))
 
   /**
    * Renders one line per top-level pattern of `query.whereClause.patterns`, in traversal order, so pattern

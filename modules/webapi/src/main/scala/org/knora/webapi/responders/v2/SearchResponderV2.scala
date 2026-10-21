@@ -782,6 +782,7 @@ final class SearchResponderV2Live(
                                typeInspectionResult = typeInspectionResult,
                                querySchema = querySchema,
                                searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
+                               luceneScope = None,
                              ),
                            )
                          prequery <-
@@ -866,6 +867,7 @@ final class SearchResponderV2Live(
                                      typeInspectionResult = typeInspectionResult,
                                      querySchema = querySchema,
                                      appConfig = appConfig,
+                                     luceneScope = None,
                                    ),
                                  )
                                ontologiesForInferenceMaybe <-

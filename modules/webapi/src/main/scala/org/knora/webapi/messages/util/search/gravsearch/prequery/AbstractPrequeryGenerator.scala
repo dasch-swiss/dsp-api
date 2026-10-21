@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTrans
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
@@ -32,12 +33,15 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * @param querySchema           the ontology schema used in the input Gravsearch query.
  * @param searchValueMinLength  the minimum length required for a `matchFulltext` search term
  *                              (`appConfig.v2.fulltextSearch.searchValueMinLength`).
+ * @param luceneScope           set when the query is restricted to a project whose data graph is known; scopes the
+ *                              Lucene lookups anchored on the main resource to that graph.
  */
 abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
   searchValueMinLength: Int,
+  luceneScope: Option[LuceneScope],
 ) extends WhereTransformer {
 
   /**
@@ -2065,6 +2069,11 @@ abstract class AbstractPrequeryGenerator(
    * be hoisted above the `OPTIONAL`s it depends on by the optimizer passes. See
    * docs/05-internals/design/api-v2/gravsearch.md for the full rationale.
    *
+   * With a [[LuceneScope]] and `resourceVar` the main resource, only the Lucene statement goes into the project's
+   * data graph (see [[matchFulltextLuceneLookup]]); the branches, the `BIND` and the `creationDate` probe stay on the
+   * union graph. The main resource's `attachedToProject` stays too: it is what restricts a lookup anchored elsewhere,
+   * which is left unscoped because links may cross projects.
+   *
    * @param resourceVar the user's resource variable, bound by the group's closing `BIND`.
    * @param searchTerm  the raw (unescaped) Lucene query string, exactly as passed to `matchFulltext`.
    */
@@ -2072,6 +2081,7 @@ abstract class AbstractPrequeryGenerator(
     val matchVar          = matchFulltextVar("match")
     val containingResVar  = matchFulltextVar("containingRes")
     val resWithListValVar = matchFulltextVar("resWithListVal")
+    val dataGraph         = luceneScope.filter(_ => resourceVar == mainResourceVariable).map(_.dataGraph)
 
     val bindResource = BindPattern(
       variable = resourceVar,
@@ -2081,7 +2091,7 @@ abstract class AbstractPrequeryGenerator(
 
     GroupPattern(
       Seq(
-        matchFulltextLuceneLookup(matchVar, searchTerm),
+        matchFulltextLuceneLookup(matchVar, searchTerm, dataGraph),
         matchFulltextValueBranch(matchVar, containingResVar),
         matchFulltextListBranch(matchVar, resWithListValVar),
         bindResource,
@@ -2097,19 +2107,23 @@ abstract class AbstractPrequeryGenerator(
 
   /**
    * The Lucene lookup, deduplicated so that a subject matching through several literals is joined only once.
+   * With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`, inside the subselect,
+   * so the index returns only that graph's hits; nothing else may go into the GRAPH block, since ontology-backed
+   * patterns match nothing in a data graph.
    * TODO(DEV-7492): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits.
    */
-  private def matchFulltextLuceneLookup(matchVar: QueryVariable, searchTerm: String): SubSelectPattern =
-    SubSelectPattern(
-      matchVar,
-      Seq(
-        StatementPattern(
-          subj = matchVar,
-          pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-          obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
-        ),
-      ),
+  private def matchFulltextLuceneLookup(
+    matchVar: QueryVariable,
+    searchTerm: String,
+    dataGraph: Option[InternalIri],
+  ): SubSelectPattern = {
+    val lookup = StatementPattern(
+      subj = matchVar,
+      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+      obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
     )
+    SubSelectPattern(matchVar, Seq(dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup))))
+  }
 
   /** A text value or value comment containing the match, and the resource that owns it. */
   private def matchFulltextValueBranch(matchVar: QueryVariable, containingResVar: QueryVariable): OptionalPattern = {

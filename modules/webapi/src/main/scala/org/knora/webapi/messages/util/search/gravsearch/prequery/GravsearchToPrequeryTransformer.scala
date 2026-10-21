@@ -29,17 +29,20 @@ import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
  * @param typeInspectionResult the result of type inspection of the input query.
  * @param querySchema          the ontology schema used in the input query.
  * @param appConfig             application configuration.
+ * @param luceneScope           see [[AbstractPrequeryGenerator]].
  */
 class GravsearchToPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
   appConfig: AppConfig,
+  luceneScope: Option[LuceneScope],
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
       querySchema = querySchema,
       searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
+      luceneScope = luceneScope,
     ) {
 
   /**

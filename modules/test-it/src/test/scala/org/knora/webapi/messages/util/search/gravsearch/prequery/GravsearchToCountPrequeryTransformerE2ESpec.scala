@@ -18,6 +18,7 @@ import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
@@ -28,22 +29,26 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
   private def transformQueryWithInference(
     query: String,
     limitResultsToProject: Option[ProjectIri] = None,
+    scopeLuceneToProject: Boolean = false,
   ): ZIO[
-    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService &
+      KnoraProjectService,
     Throwable,
     SelectQuery,
   ] =
     GravsearchInferencePipelineTestSupport.transformQueryWithInference(
       query,
-      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+      (constructClause, typeInspectionResult, querySchema, appConfig, luceneScope) =>
         new GravsearchToCountPrequeryTransformer(
           constructClause,
           typeInspectionResult,
           querySchema,
           appConfig.v2.fulltextSearch.searchValueMinLength,
+          luceneScope,
         ),
       dropOrderBy = true,
       limitResultsToProject = limitResultsToProject,
+      scopeLuceneToProject = scopeLuceneToProject,
     )
 
   val queryClasslessMatchFulltext: String =
