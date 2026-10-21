@@ -230,41 +230,41 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 1: GRAPH pattern in the prequery model
 
-- [ ] Check the one-graph-per-project invariant on stage, read-only (`dsp vre sparql query -s stage`, each query
+- [x] Check the one-graph-per-project invariant on stage, read-only (`dsp vre sparql query -s stage`, each query
   with a `LIMIT` on the exception rows): resources (`knora-base:creationDate`) grouped by `attachedToProject` and
   graph, compared with `http://www.knora.org/data/{shortcode}/{shortname}` from the admin graph; values in the same
   graph as their owning resource; expect no exception
-- [ ] Same stage check for lists: every list node reached by a project's list values (`valueHasListNode`) lives in
+- [x] Same stage check for lists: every list node reached by a project's list values (`valueHasListNode`) lives in
   the value's graph; expect 0 exceptions, as on 2026-10-20
-- [ ] If either check finds exceptions, or `dsp vre sparql` is unavailable (record "not run"), do not stop: Phase 4
+- [x] If either check finds exceptions, or `dsp vre sparql` is unavailable (record "not run"), do not stop: Phase 4
   keeps the `attachedToProject` line for `Scoped` (the lookup is still wrapped), and the phase review records the
   counts and the affected projects
-- [ ] Add `GraphPattern(graph: InternalIri, statement: StatementPattern)` to
+- [x] Add `GraphPattern(graph: InternalIri, statement: StatementPattern)` to
   `modules/webapi/src/main/scala/org/knora/webapi/messages/util/search/SparqlQuery.scala`, rendered
   `GRAPH <g> { ... }`, with Scaladoc naming it opaque like `GroupPattern` and listing the sites that match on it
-- [ ] Extend the `GroupPattern` Scaladoc's "a new opaque pattern needs a case in each" sentence to cover
+- [x] Extend the `GroupPattern` Scaladoc's "a new opaque pattern needs a case in each" sentence to cover
   `GraphPattern`
-- [ ] `QueryTraverser.transformWherePatterns`: pass `GraphPattern` through unchanged
-- [ ] `GravsearchTypeInspectionUtil.transformPattern`: pass `GraphPattern` through unchanged
-- [ ] `PrequeryPatternOrdering`: `partition` puts it in `units`; `vars` returns the inner statement's variables;
+- [x] `QueryTraverser.transformWherePatterns`: pass `GraphPattern` through unchanged
+- [x] `GravsearchTypeInspectionUtil.transformPattern`: pass `GraphPattern` through unchanged
+- [x] `PrequeryPatternOrdering`: `partition` puts it in `units`; `vars` returns the inner statement's variables;
   `containsLucene` reaches it; `tierNum` and `hasProjectDataPredicate` delegate to the inner statement
-- [ ] `PrequeryPatternOrdering.unitKey`: `unitKey(g.statement, ...).copy(unit = g)`, so every field of the key,
+- [x] `PrequeryPatternOrdering.unitKey`: `unitKey(g.statement, ...).copy(unit = g)`, so every field of the key,
   including the `sparql` tie-break, comes from the inner statement and wrapping changes no ranking
-- [ ] Update the `PrequeryPatternOrdering` Scaladoc: the tier table (T1 includes a `GraphPattern` and a
+- [x] Update the `PrequeryPatternOrdering` Scaladoc: the tier table (T1 includes a `GraphPattern` and a
   `text:query` inside one) and the reorder Scaladoc ("A [[GroupPattern]] or [[SubSelectPattern]] is an opaque
   leaf", add `GraphPattern`); the `SubSelectPattern` Scaladoc ("only emitted inside a `GroupPattern`"); the
   comment at `ConstructTransformer.scala:35` (lists the patterns that cannot reach the main query)
-- [ ] `GravsearchInferencePipelineTestSupport.shapeSummary` (test-it): add the `GraphPattern` case; grep the test
+- [x] `GravsearchInferencePipelineTestSupport.shapeSummary` (test-it): add the `GraphPattern` case; grep the test
   sources for other exhaustive `QueryPattern` matches
-- [ ] Unit test under `modules/webapi/src/test/scala/org/knora/webapi/messages/util/search/` for
+- [x] Unit test under `modules/webapi/src/test/scala/org/knora/webapi/messages/util/search/` for
   `GraphPattern.toSparql` (golden or exact string)
-- [ ] `PrequeryPatternOrderingSpec`: a block with a `GraphPattern` wrapping `text:query` leads; so does the
+- [x] `PrequeryPatternOrderingSpec`: a block with a `GraphPattern` wrapping `text:query` leads; so does the
   `GroupPattern` → `SubSelectPattern` → `GraphPattern` → `text:query` nesting (the `matchFulltext` shape)
-- [ ] `PrequeryPatternOrderingSpec`: two T1 units, one wrapped and one bare, get the order they have unwrapped, for
+- [x] `PrequeryPatternOrderingSpec`: two T1 units, one wrapped and one bare, get the order they have unwrapped, for
   every input permutation (like the existing permutation-invariance tests)
-- [ ] Run `bazel test //modules/webapi:test`; it passes
-- [ ] Run `bazel build //modules/test-it/...`; it compiles
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/webapi:test`; it passes
+- [x] Run `bazel build //modules/test-it/...`; it compiles
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: Scope the matchFulltext lookup in Gravsearch
 
