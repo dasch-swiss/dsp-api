@@ -23,6 +23,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class SearchResponderV2Spec extends E2EZSpec {
@@ -193,6 +195,25 @@ class SearchResponderV2Spec extends E2EZSpec {
         inIncunabula.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0803/")),
         inAnything.resources.isEmpty,
       )
+    },
+
+    // Detects a Fuseki image whose text index has no graph field: there GRAPH around text:query is a no-op, and the
+    // project-scoped lookups silently stop scoping. "Narr" has hits in incunabula and none in anything (see above).
+    test("the text index scopes a Lucene lookup to a named graph") {
+      val scoped =
+        """SELECT ?s WHERE {
+          |  GRAPH <http://www.knora.org/data/0001/anything> {
+          |    ?s <http://jena.apache.org/text#query> ("Narr" 1000000) .
+          |  }
+          |}""".stripMargin
+      val unscoped =
+        """SELECT ?s WHERE {
+          |  ?s <http://jena.apache.org/text#query> ("Narr" 1000000) .
+          |}""".stripMargin
+      for {
+        inAnything <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(scoped)))
+        anywhere   <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(unscoped)))
+      } yield assertTrue(inAnything.size == 0, anywhere.size > 0)
     },
 
     // DEV-6864. Project and class restriction combined, again with a class two hops up, must still
