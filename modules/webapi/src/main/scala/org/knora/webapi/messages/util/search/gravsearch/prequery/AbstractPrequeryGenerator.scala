@@ -1608,7 +1608,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value),
+      lucenePattern(textValueVar, searchTerm.value, luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar))),
     )
   }
 
@@ -1665,7 +1665,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value),
+      lucenePattern(textValueVar, searchTerm.value, luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar))),
     )
   }
 
@@ -1742,7 +1742,11 @@ abstract class AbstractPrequeryGenerator(
     val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
     // Generate a Lucene statement, to assert that text value contains the search terms.
-    val luceneStatement = lucenePattern(textValueVar, searchTermStr.value)
+    val luceneStatement = lucenePattern(
+      textValueVar,
+      searchTermStr.value,
+      luceneDataGraph(mainResourceAnchoredValues.contains(textValueVar)),
+    )
 
     // Generate query patterns to assign the text in the standoff tag to a variable, if we
     // haven't done so already.
@@ -1906,17 +1910,35 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
       None, // The FILTER has been replaced by statements.
-      lucenePattern(resourceVar, searchTerm.value),
+      lucenePattern(resourceVar, searchTerm.value, luceneDataGraph(resourceVar == mainResourceVariable)),
     )
   }
 
-  private def lucenePattern(subj: QueryVariable, queryString: String): Seq[StatementPattern] =
-    Seq(
-      StatementPattern(
-        subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
-        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
-      ),
+  /** With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`. */
+  private def lucenePattern(
+    subj: QueryVariable,
+    queryString: String,
+    dataGraph: Option[InternalIri],
+  ): Seq[QueryPattern] = {
+    val lookup = StatementPattern(
+      subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
+      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+      obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
+    )
+    Seq(dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup)))
+  }
+
+  /**
+   * The data graph a Lucene lookup is scoped to: only with a [[LuceneScope]], and only for a lookup anchored on the
+   * main resource. A lookup anchored elsewhere stays unscoped, since links may cross projects.
+   */
+  private def luceneDataGraph(anchoredOnMainResource: Boolean): Option[InternalIri] =
+    luceneScope.filter(_ => anchoredOnMainResource).map(_.dataGraph)
+
+  // Read from the input WHERE, never from state filled during generation, which is incomplete at a FILTER.
+  private lazy val mainResourceAnchoredValues: Set[QueryVariable] =
+    luceneScope.fold(Set.empty[QueryVariable])(scope =>
+      LuceneScope.mainResourceAnchoredValues(scope.inputWhere, mainResourceVariable),
     )
 
   // Fixed suffix for the internal variables introduced by the matchFulltext expansion. A fixed suffix
@@ -2081,7 +2103,7 @@ abstract class AbstractPrequeryGenerator(
     val matchVar          = matchFulltextVar("match")
     val containingResVar  = matchFulltextVar("containingRes")
     val resWithListValVar = matchFulltextVar("resWithListVal")
-    val dataGraph         = luceneScope.filter(_ => resourceVar == mainResourceVariable).map(_.dataGraph)
+    val dataGraph         = luceneDataGraph(resourceVar == mainResourceVariable)
 
     val bindResource = BindPattern(
       variable = resourceVar,
