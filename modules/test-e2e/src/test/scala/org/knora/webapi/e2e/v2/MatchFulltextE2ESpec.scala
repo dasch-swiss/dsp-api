@@ -22,13 +22,18 @@ import org.knora.webapi.testservices.TestApiClient
 @RunWith(classOf[DspZTestJUnitRunner])
 class MatchFulltextE2ESpec extends E2EZSpec {
 
-  // The fixture goes into the anything project's data graph, next to anything-data.ttl: a lookup scoped to the
-  // project sees only that graph's Lucene hits.
-  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects :+
+  // Each fixture goes into its project's data graph, next to that project's data: a lookup scoped to a project
+  // sees only that graph's Lucene hits.
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects ++ List(
     RdfDataObject(
       path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-data.ttl",
       name = "http://www.knora.org/data/0001/anything",
-    )
+    ),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-crossproject-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
+  )
 
   private def scopedCount(project: String, query: String) = for {
     response <- TestApiClient.postJsonLdDocument(
@@ -152,6 +157,22 @@ class MatchFulltextE2ESpec extends E2EZSpec {
         // attachedToProject also yields 0, so this does not detect a text index without the graph field.
         scopedCount("http://rdfh.ch/projects/0803", matchFulltextCountQuery("Zqxvnonce7f3Label"))
           .map(actualCount => assertTrue(actualCount == 0))
+      },
+      test("limitToProject leaves a lookup on a linked resource of another project unscoped") {
+        // The linked resource is attached to 0803 and indexed in 0803's data graph. Links across projects are
+        // allowed, so only a lookup on the main resource may be scoped to the main resource's project.
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |CONSTRUCT {
+            |    ?thing knora-api:isMainResource true .
+            |    ?thing anything:hasOtherThing ?other .
+            |} WHERE {
+            |    ?thing a anything:Thing .
+            |    ?thing anything:hasOtherThing ?other .
+            |    FILTER knora-api:matchFulltext(?other, "Zqxvnonce7f3CrossProject")
+            |}""".stripMargin
+        scopedCount("http://rdfh.ch/projects/0001", query).map(actualCount => assertTrue(actualCount == 1))
       },
     ),
     suite("non-main-resource variable usage")(

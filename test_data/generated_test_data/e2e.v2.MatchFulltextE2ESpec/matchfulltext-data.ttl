@@ -191,3 +191,32 @@
     knora-base:valueHasString    "http://rdfh.ch/0001/matchfulltextA" ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
+
+# --- Resource G: links to a resource of project 0803 that lives in 0803's data graph
+# (matchfulltext-crossproject-data.ttl), for a lookup on a linked resource outside the main
+# resource's project.
+
+<http://rdfh.ch/0001/matchfulltextG>
+    a                            anything:Thing ;
+    rdfs:label                   "matchfulltextG (links to a resource in project 0803)" ;
+    knora-base:isDeleted         false ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:creationDate      "2026-07-01T00:00:00.000000Z"^^xsd:dateTime ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    anything:hasOtherThing       <http://rdfh.ch/0803/matchfulltextCrossProject> ;
+    anything:hasOtherThingValue  <http://rdfh.ch/0001/matchfulltextG/values/link1> .
+
+<http://rdfh.ch/0001/matchfulltextG/values/link1>
+    a                            knora-base:LinkValue ;
+    knora-base:valueHasUUID      "mftG0link1UUID000000"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    rdf:subject                  <http://rdfh.ch/0001/matchfulltextG> ;
+    rdf:predicate                anything:hasOtherThing ;
+    rdf:object                   <http://rdfh.ch/0803/matchfulltextCrossProject> ;
+    knora-base:valueCreationDate "2026-07-01T00:00:00.000000Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasRefCount  1 ;
+    knora-base:valueHasString    "http://rdfh.ch/0803/matchfulltextCrossProject" ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
