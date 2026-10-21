@@ -29,6 +29,8 @@ class MatchFulltextE2ESpec extends E2EZSpec {
       path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-data.ttl",
       name = "http://www.knora.org/data/0001/anything",
     ),
+    // Deliberately not the main resource's graph: the linked-resource test below proves nothing if this resource is
+    // indexed in 0001's graph, so that test also checks the resource is found when scoped to 0803.
     RdfDataObject(
       path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-crossproject-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula",
@@ -66,6 +68,11 @@ class MatchFulltextE2ESpec extends E2EZSpec {
   private val incunabulaProject  = "http://rdfh.ch/projects/0803"
   private val nonexistentProject = "http://rdfh.ch/projects/matchfulltextNoSuchProject"
   private val systemProject      = "http://www.knora.org/ontology/knora-admin#SystemProject"
+
+  // An unbalanced quote and a backslash: invalid Lucene syntax. The second form is the same term escaped for a
+  // SPARQL string literal.
+  private val invalidLuceneTerm         = "foo\"bar\\baz"
+  private val invalidLuceneTermInSparql = """foo\"bar\\baz"""
 
   // A count query over anything:Thing in the simple schema, with the given WHERE patterns after the class statement.
   private def thingCountQuery(where: String): String =
@@ -173,7 +180,8 @@ class MatchFulltextE2ESpec extends E2EZSpec {
       },
       test("limitToProject to another project finds nothing") {
         // The target project's data graph must exist: GRAPH <g> on a missing graph returns 0 whatever the scoping.
-        // attachedToProject also yields 0, so this does not detect a text index without the graph field.
+        // attachedToProject also yields 0, so this does not detect a text index without the graph field; the
+        // GET /v2/search/count test below does.
         scopedCount(incunabulaProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
           .map(actualCount => assertTrue(actualCount == 0))
       },
@@ -202,7 +210,7 @@ class MatchFulltextE2ESpec extends E2EZSpec {
         } yield assertTrue(inProject == 1, otherProject == 0)
       },
       test("a scoped matchLabel inside FILTER NOT EXISTS excludes the same resources as an exact label filter") {
-        // The exact label filter uses no Lucene lookup, so its count is the unscoped answer restricted to 0001.
+        // The exact label filter is the same filter without a Lucene lookup.
         val withLookup = thingCountQuery(
           """FILTER NOT EXISTS {
             |        FILTER knora-api:matchLabel(?thing, "Zqxvnonce7f3Label")
@@ -237,17 +245,19 @@ class MatchFulltextE2ESpec extends E2EZSpec {
         } yield assertTrue(gravsearch == 0, fulltext == 0)
       },
       test("limitToProject naming the system project counts nothing on both count endpoints") {
+        // A built-in project resolves to its derived data graph, which holds no data.
         for {
           gravsearch <- scopedCount(systemProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
           fulltext   <- oldEndpointCount("Zqxvnonce7f3Label", Some(systemProject))
         } yield assertTrue(gravsearch == 0, fulltext == 0)
       },
       test("an invalid Lucene term with limitToProject is a 400 on /v2/search and on Gravsearch matchFulltext") {
-        val rawTerm = "foo\"bar\\baz" // the term of the D7 escaping test below, invalid Lucene syntax
         for {
-          fulltext   <- TestApiClient.getJsonLd(uri"/v2/search/$rawTerm".addParam("limitToProject", anythingProject))
+          fulltext <- TestApiClient.getJsonLd(
+                        uri"/v2/search/$invalidLuceneTerm".addParam("limitToProject", anythingProject),
+                      )
           gravsearch <- postGravsearchQuery(
-                          matchFulltextCountQuery("""foo\"bar\\baz"""),
+                          matchFulltextCountQuery(invalidLuceneTermInSparql),
                           limitToProject = Some(anythingProject),
                         )
         } yield assertTrue(fulltext.code.code == 400, gravsearch.code.code == 400)
@@ -266,7 +276,12 @@ class MatchFulltextE2ESpec extends E2EZSpec {
             |    ?thing anything:hasOtherThing ?other .
             |    FILTER knora-api:matchFulltext(?other, "Zqxvnonce7f3CrossProject")
             |}""".stripMargin
-        scopedCount(anythingProject, query).map(actualCount => assertTrue(actualCount == 1))
+        for {
+          linked <- scopedCount(anythingProject, query)
+          // Found by /v2/search scoped to 0803, so its hit is indexed in 0803's graph, not in the scoped one above.
+          // Gravsearch cannot check this: limitToProject 0803 limits class inference to 0803's ontologies.
+          inOwnProject <- oldEndpointCount("Zqxvnonce7f3CrossProject", Some(incunabulaProject))
+        } yield assertTrue(linked == 1, inOwnProject == 1)
       },
     ),
     suite("non-main-resource variable usage")(
