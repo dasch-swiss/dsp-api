@@ -91,7 +91,14 @@ existing data, while new writes are indexed with their graph, so the index is si
   and the target graph has to exist.
 - DEV-6809 (c) is superseded for the main cost. What remained of it, dropping the `attachedToProject` join once
   the hits are project-local, applies to `/v2/search` only. Gravsearch keeps the join on the main resource,
-  which need not be the Lucene anchor.
+  which need not be the Lucene anchor. Without the join, `/v2/search` relies on the one-graph rule rather than
+  enforcing it: a resource whose values or list nodes sat in another project's graph would be found by the wrong
+  project's scoped search (stage had none on 2026-10-21).
+- Search now emits SPARQL that names a project data graph, which ADR-0011 assigns to Resources & Values. This
+  extends the Lucene queries Search already ran, which ADR-0011's ratchet leaves in place, and the
+  `ProjectDataGraphs` port only resolves the graph's IRI. The GRAPH wrap moves with the Lucene queries when they
+  go behind the `ResourceSearch` port; a new scoped lookup (such as `/v2/searchbylabel`) is the same temporary
+  exception, not a precedent for new cross-context SPARQL.
 - The scoped `/v2/search` breadth probe is 1.0–4.3× cheaper and counts exactly the in-project hits; the unscoped
   probe overstated small projects 14–74×. The breadth cap therefore applies to the in-project candidate count.
 - Once scoped, the remaining cost of a class-restricted `/v2/search` is its per-candidate `rdfs:subClassOf*` walk

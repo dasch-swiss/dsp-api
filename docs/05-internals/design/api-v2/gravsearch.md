@@ -560,7 +560,7 @@ Both problems disappear if nothing after the handler ever looks inside the expan
 unchanged, or (for the two passes that match exhaustively — `QueryTraverser.transformWherePatterns` and
 `GravsearchTypeInspectionUtil.transformPattern`) has an explicit case added that does the same. The inner
 `SELECT DISTINCT` is a `SubSelectPattern`, opaque in the same way and only ever emitted inside the group. A
-`GraphPattern` (see [Project scoping](#project-scoping), below) is opaque in the same way too: both exhaustive
+`GraphPattern` (see [Project scoping](#project-scoping), above) is opaque in the same way too: both exhaustive
 passes return it unchanged, and `PrequeryPatternOrdering`'s exhaustive matches treat it as one unit that, unlike a
 subquery, exposes the variables of the statement it wraps. The `OntologyInferencer`, `GravsearchQueryOptimisation`,
 and `InferenceOptimizationService` passes never see a `GroupPattern`'s interior at all, so the handler can emit

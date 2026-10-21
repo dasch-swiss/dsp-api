@@ -158,7 +158,8 @@ essentially no penalty — adding `GRAPH` to a point lookup buys nothing measura
 cost and benefit from scoping. And since a project's data graph *is* the project,
 `GRAPH <projectDataGraph>` **replaces** an `attachedToProject` join — dropping that redundant
 join (plus a dead `DISTINCT`) took the class-browsing prequery from 1.66s to 310ms on stage
-(DEV-6827).
+(DEV-6827). This holds when the scoped patterns reach the resource itself; a Gravsearch Lucene lookup
+scoped to the graph keeps the join, because its anchor need not be the main resource (Fact 10).
 
 A project has exactly one data graph, and `ProjectService.projectDataNamedGraphV2` derives it from the project. Do
 not query the store to find it. For a project-wide read, scope with `GRAPH <projectDataGraph> { … }`. Inside the

@@ -513,20 +513,20 @@ the Lucene index once (about 6.5 minutes on prod, database unavailable meanwhile
 
 ## Acceptance Criteria
 
-- [ ] Project-restricted `matchFulltext` / `matchText` / `matchTextInStandoff` / `matchLabel` prequeries anchored
+- [x] Project-restricted `matchFulltext` / `matchText` / `matchTextInStandoff` / `matchLabel` prequeries anchored
   on the main resource contain `GRAPH <projectDataGraph>` around the `text:query` statement only (goldens)
-- [ ] Unrestricted prequeries, and lookups not anchored on the main resource, are unchanged (goldens)
-- [ ] `/v2/search` page, count and probe contain `GRAPH <projectDataGraph>` around the Lucene statement only, and
+- [x] Unrestricted prequeries, and lookups not anchored on the main resource, are unchanged (goldens)
+- [x] `/v2/search` page, count and probe contain `GRAPH <projectDataGraph>` around the Lucene statement only, and
   page and count no longer join `attachedToProject` when scoped (goldens), unless Phase 1 found exceptions
-- [ ] An unknown `limitToProject` behaves as before (unscoped lookup plus `attachedToProject`, 200 with 0 results;
+- [x] An unknown `limitToProject` behaves as before (unscoped lookup plus `attachedToProject`, 200 with 0 results;
   E2E)
-- [ ] E2E: the fixture is in the 0001 data graph, and the unscoped, scoped, other-project and cross-project-anchor
+- [x] E2E: the fixture is in the 0001 data graph, and the unscoped, scoped, other-project and cross-project-anchor
   cases pass
-- [ ] Search resolves the project's data graph through the `ProjectDataGraphs` port, not by importing admin
+- [x] Search resolves the project's data graph through the `ProjectDataGraphs` port, not by importing admin
   services
 - [ ] On dev, the verified cases return the same-day scoped counts (e.g. M1 44 → 802 resources at the cap in the
   baseline) within tolerance of the measured times
-- [ ] ADR-0012 Accepted; docs updated as in Phase 6
+- [x] ADR-0012 Accepted; docs updated as in Phase 6
 
 ## Dependencies & Risks
 
