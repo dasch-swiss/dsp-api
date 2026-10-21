@@ -184,9 +184,8 @@ Enabling the passthrough on a host has a precondition that the flag itself does 
 **1. Confirm the store refuses federated `SERVICE` calls.** ARQ executes `SERVICE` by default, which means a plain
 `SELECT` can make the *store* issue outbound HTTP to a target the query author chooses -- reach the caller does not
 otherwise have, and a path that bypasses the response ceiling while logging almost nothing. `modules/fuseki/dsp-repo.ttl`
-sets `arq:httpServiceAllowed` to `false`, but the Fuseki entrypoint copies that file only when none exists and
-`/fuseki` is a persistent volume, so **an environment created before that change keeps its old configuration across
-redeploys.** The container logs a warning when that is the case, but verify per host rather than trusting the image:
+sets `arq:httpServiceAllowed` to `false`, and the Fuseki entrypoint installs that file on every start. Still, verify
+per host rather than trusting the image, since the host may run an older image:
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST "$STORE/dsp-repo/query" \
@@ -196,8 +195,8 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST "$STORE/dsp-repo/query" \
 ```
 
 `422` (body: `SERVICE execution disabled`) means the mitigation is active. `502`, or a connection error to
-`127.0.0.1:1`, means it is **not**: the store attempted the outbound call. Fix the on-disk `dsp-repo.ttl` and restart
-before enabling the flag.
+`127.0.0.1:1`, means it is **not**: the store attempted the outbound call. Deploy a current Fuseki image before
+enabling the flag.
 
 **2. Consider a server-side query-timeout floor.** dsp-api sends the timeout as Fuseki's per-request `timeout`
 parameter, which that parameter's own documentation notes can be capped or ignored

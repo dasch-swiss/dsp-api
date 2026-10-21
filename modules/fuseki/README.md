@@ -17,7 +17,9 @@ Fuseki is a SPARQL 1.1 server backed by Apache Jena TDB. This image extends the 
 
 ## Pre-configured dataset
 
-The `dsp-repo` dataset is created automatically on first start from `dsp-repo.ttl`. It is mounted at `/fuseki/configuration/dsp-repo.ttl` inside the container. The data volume is persisted at `/fuseki`.
+The `dsp-repo` dataset is defined by `dsp-repo.ttl`, which the entrypoint installs at
+`/fuseki/configuration/dsp-repo.ttl` on every start. The data volume is persisted at `/fuseki`.
+See [Configuration changes](#configuration-changes) for what happens when the file changes.
 
 ## Configuration
 
@@ -26,19 +28,32 @@ The `dsp-repo` dataset is created automatically on first start from `dsp-repo.tt
 | `ADMIN_PASSWORD` | Fuseki admin password | value from `shiro.ini` |
 | `JVM_ARGS` | JVM heap and flags | `-Xmx4G` |
 | `REBUILD_INDEX_OF_DATASET` | Dataset name to rebuild Lucene index for | unset |
+| `REBUILD_INDEX_MARKER_FILE` | File whose presence (content: dataset name) triggers a one-off rebuild | unset |
+| `SKIP_AUTO_INDEX_REBUILD` | `true`: install a changed `dsp-repo.ttl` without rebuilding the index | unset |
 
-## Lucene index configuration changes
+## Configuration changes
 
-The `dsp-repo.ttl` copy on the `/fuseki` volume is authoritative once it exists: the entrypoint copies the bundled file
-only when the target is missing, so a new image does **not** change the configuration of an existing host. A change
-to the text index description (`:indexLucene` / `:entMap`) must be applied by editing
-`/fuseki/configuration/dsp-repo.ttl` on each host by hand.
+The image's `dsp-repo.ttl` is the source of truth: a configuration change ships with the image, with no manual
+step on the hosts, and an edit made to `/fuseki/configuration/dsp-repo.ttl` on a host is overwritten.
+On every start the entrypoint compares the file on the `/fuseki` volume with the image's, ignoring comments
+and whitespace:
 
-Changes that alter what is stored per Lucene document — such as `text:graphField "graph"`, which lets
-`GRAPH <g> { ?s text:query ... }` filter inside Lucene — also need a full index rebuild, because existing
-documents lack the new field. Trigger it with `make db-rebuild-index` on the host (sets the marker file and
-restarts the DB) or with `REBUILD_INDEX_OF_DATASET=dsp-repo`; the entrypoint deletes the old index directory and
-runs `jena.textindexer`. The database is down for the duration of the rebuild.
+- **No file yet** (fresh volume): the image's file is copied, nothing else happens.
+- **Unchanged**: nothing happens. A comment-only change is not installed, which is harmless.
+- **Changed**: the image's file is staged in `/fuseki/configuration.next/`, the Lucene index is deleted and
+  rebuilt from it (`jena.textindexer`), and only then is it moved over `/fuseki/configuration/dsp-repo.ttl`.
+  Most of the file describes the index, and an index built with a different description is silently wrong
+  (for example, an index without `text:graphField` returns nothing for `GRAPH <g> { ?s text:query ... }`).
+  If the rebuild fails, the container exits and the host keeps its old file, so the next start retries.
+- **Changed, while a rebuild of another dataset is requested** (`REBUILD_INDEX_OF_DATASET` or the marker file):
+  a warning is logged and the file is installed on the next start.
+
+So **a release that changes `dsp-repo.ttl` takes the database down for a full index rebuild** on deploy
+(about 6.5 minutes on prod, plus container start). Call this out in the release notes.
+
+Setting `SKIP_AUTO_INDEX_REBUILD=true` installs a changed file without the rebuild and logs a warning that the
+index is stale. Rebuild it later with `make db-rebuild-index` on the host (sets the marker file and restarts
+the DB) or with `REBUILD_INDEX_OF_DATASET=dsp-repo`.
 
 ## Updating Jena/Fuseki
 

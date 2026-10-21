@@ -42,15 +42,16 @@ correct; the real query shapes return identical sets scoped and unscoped. A full
 index takes about 6.5 minutes (30 nightly mirror runs, 390–408 s).
 
 Two constraints come from how the configuration is deployed. `dsp-repo.ttl` lives on each host's persistent
-`/fuseki` volume and is copied from the image only when missing, so a new image does not change a running
-host. And the field only exists in Lucene documents written after it was enabled: a host with the field
-configured but the index not rebuilt returns zero scoped hits for all existing data, while new writes are
-indexed with their graph, so the index is silently partial.
+`/fuseki` volume and was copied from the image only when missing, so a new image did not change a running
+host (DEV-7589 changed that, see Decision 1). And the field only exists in Lucene documents written after
+it was enabled: a host with the field configured but the index not rebuilt returns zero scoped hits for all
+existing data, while new writes are indexed with their graph, so the index is silently partial.
 
 ## Decision
 
 1. **The text index stores the named graph.** `:entMap` in `modules/fuseki/dsp-repo.ttl` carries
-   `text:graphField "graph"`. The container entrypoint warns when a host's existing configuration lacks it.
+   `text:graphField "graph"`. The container entrypoint installs the configuration from the image on every start
+   and rebuilds the index first when it changed (DEV-7589), so the field and a complete index arrive together.
 2. **A project-restricted text lookup is wrapped in `GRAPH <projectDataGraph> { ... }`, and nothing else is.**
    Gravsearch `matchFulltext` (and `matchText`/`matchLabel` where a project restriction is known) and
    `/v2/search` with `limitToProject` scope only the Lucene statement. All other patterns stay on the union
@@ -60,9 +61,9 @@ indexed with their graph, so the index is silently partial.
 4. **The breadth probe of `/v2/search` mirrors the restriction.** Otherwise it keeps refusing scoped searches
    on unscoped breadth.
 5. **Rollout order is a hard constraint.** The dsp-api query change that relies on scoping reaches a host only
-   after that host's configuration has been edited and its index rebuilt. The order "rebuild, then revert the
-   configuration" is safe (the GRAPH clause becomes a no-op again); the order "configure, then skip the rebuild"
-   is not.
+   after that host runs a Fuseki image with the field, which rebuilds the index on the start that installs it.
+   The order "rebuild, then revert the configuration" is safe (the GRAPH clause becomes a no-op again); the
+   order "configure, then skip the rebuild" (`SKIP_AUTO_INDEX_REBUILD`) is not.
 6. **The reindex is shared with DEV-6851.** `rdfs:label` gets its own index field in the same rebuild, and the
    fulltext lookup is changed to search both fields. `text:propField`, which DEV-6851 proposed, does not exist
    in Jena 6.2.0 and is silently ignored.
@@ -73,9 +74,9 @@ indexed with their graph, so the index is silently partial.
 
 - Project-restricted fulltext searches can take the full Lucene hit limit without the 30–55 s cost, and most
   of them stop being silently truncated. Unrestricted searches are unchanged.
-- Each environment needs a one-off manual step: edit `/fuseki/configuration/dsp-repo.ttl` on the host and run
-  `make db-rebuild-index`, with the database down for the rebuild (about 6.5 minutes plus container start).
-  Mirrored environments pick the change up with their nightly rebuild once the file is edited.
+- Each environment rebuilds its index once, automatically, on the first deploy of an image whose configuration
+  differs from the host's, with the database down for the rebuild (about 6.5 minutes plus container start).
+  This has to be visible in the release notes.
 - `MatchFulltextE2ESpec` loads its fixture into a graph that is not the project data graph; it must move, and
   every test of a scoped lookup needs the target graph to exist.
 - DEV-6809 (c) is superseded for the main cost. What remains of it is dropping the `attachedToProject` join
