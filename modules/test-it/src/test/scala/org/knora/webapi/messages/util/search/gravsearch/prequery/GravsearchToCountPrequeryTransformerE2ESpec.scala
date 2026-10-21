@@ -124,6 +124,13 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
       transformQueryWithInference(queryClasslessMatchFulltext)
         .map(actual => assertGolden(actual.toSparql, "classlessMatchFulltext"))
     },
+    test("scope only the Lucene statement of a classless matchFulltext count query to the project's data graph") {
+      transformQueryWithInference(
+        queryClasslessMatchFulltext,
+        limitResultsToProject = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")),
+        scopeLuceneToProject = true,
+      ).map(actual => assertGolden(actual.toSparql, "classlessMatchFulltextScoped"))
+    },
     test("pass the Lucene hit limit for a matchLabel count query") {
       transformQueryWithInference(queryMatchLabel)
         .map(actual => assertGolden(actual.toSparql, "matchLabel"))

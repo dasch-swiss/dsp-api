@@ -627,6 +627,23 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    }
       |}""".stripMargin
 
+  val queryMatchFulltextOnLinkedResource: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasOtherThing ?other .
+      |    FILTER knora-api:matchFulltext(?other, "Zeitglöcklein")
+      |}""".stripMargin
+
+  private val anythingProject = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"))
+
+  /** Restricted to the anything project, with its matchFulltext lookup scoped to the project's data graph. */
+  private def transformScoped(query: String) =
+    transformQueryWithInference(query, limitResultsToProject = anythingProject, scopeLuceneToProject = true)
+
   val queryMatchTextSimple: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -934,6 +951,31 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     test("generate the matchFulltext expansion when the FILTER is inside a UNION block") {
       transformQueryWithInference(queryMatchFulltextInUnion)
         .map(actual => assertGolden(actual.toSparql, "matchFulltextInUnion"))
+    },
+    test("scope only the Lucene statement of a classless matchFulltext to the project's data graph") {
+      transformScoped(queryClasslessMatchFulltext).map(actual =>
+        assertGolden(actual.toSparql, "classlessMatchFulltextScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "classlessMatchFulltextScopedShape"),
+      )
+    },
+    test("scope only the Lucene statement of a class-restricted matchFulltext to the project's data graph") {
+      transformScoped(queryClassRestrictedMatchFulltext).map(actual =>
+        assertGolden(actual.toSparql, "classRestrictedMatchFulltextScoped") &&
+          assertGolden(
+            GravsearchInferencePipelineTestSupport.shapeSummary(actual),
+            "classRestrictedMatchFulltextScopedShape",
+          ),
+      )
+    },
+    test("leave a matchFulltext on a linked resource unscoped, since links may cross projects") {
+      transformScoped(queryMatchFulltextOnLinkedResource)
+        .map(actual => assertGolden(actual.toSparql, "matchFulltextOnLinkedResourceScoped"))
+    },
+    test("scope a matchFulltext on the main resource inside a UNION branch") {
+      transformScoped(queryMatchFulltextInUnion).map(actual =>
+        assertGolden(actual.toSparql, "matchFulltextInUnionScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchFulltextInUnionScopedShape"),
+      )
     },
     test("pass the Lucene hit limit for matchText in the simple schema") {
       transformQueryWithInference(queryMatchTextSimple)
