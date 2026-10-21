@@ -385,17 +385,17 @@ Each phase leaves the build green and lands as one reviewable commit group on
 - [x] `SearchFulltextQuerySpec`: new `GoldenTest` cases for `Scoped` (count with class, search with all filters,
   probe), `GRAPH` around the Lucene statement only and no `attachedToProject` (with it, if Phase 1 found
   exceptions); add the scoping rule to the invariants comment above the suite
-- [ ] `FulltextBreadthGuardSpec`: the existing `guarded(..., None, ...)` calls still compile; add one test with a
+- [x] `FulltextBreadthGuardSpec`: the existing `guarded(..., None, ...)` calls still compile; add one test with a
   probe double
   (`FulltextBreadthGuard.make(...)(probe)`) that returns over-cap for the unscoped probe SPARQL and under-cap for
   the scoped one: the unscoped search is refused, the scoped one admitted
-- [ ] `SearchResponderV2Spec` (test-it, real Fuseki): add a scoped two-term search (so the probe runs) that still
+- [x] `SearchResponderV2Spec` (test-it, real Fuseki): add a scoped two-term search (so the probe runs) that still
   returns the anything match; the existing restricted "Narr" test must keep passing
-- [ ] `SearchResponderV2Spec`: a scoped search with a standoff restriction returns the same resources as the
+- [x] `SearchResponderV2Spec`: a scoped search with a standoff restriction returns the same resources as the
   unscoped search filtered to the project
-- [ ] Run `bazel test //modules/webapi:test`; it passes
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*SearchResponderV2Spec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/webapi:test`; it passes
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*SearchResponderV2Spec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 5: E2E coverage with the fixture in the project data graph
 

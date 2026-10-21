@@ -27,7 +27,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@4f77b8b49 | 2 |
 | 2 | reviewed | dsp-api@c9b97fe9d | 2 |
 | 3 | reviewed | dsp-api@485ded859 | 1 |
-| 4 | in-progress | dsp-api@0345a24a9 | 0 |
+| 4 | reviewed | dsp-api@0345a24a9 | 2 |
 | 7 | gated (H1) | — | 0 |
 
 ## Chunk queue
@@ -79,6 +79,11 @@ status: in-progress
 | 3.4 | dsp-api | done | 6f8eed4ee | Review fix round 1: anchoring fold exhaustive over `QueryPattern` (recurses into Group/SubSelect/Graph; dune DUNE-001, consistency); `resourceDataGraph` / `valueDataGraph` replace the Boolean built at each call site (simplicity, DUNE-002, scala-zio, consistency); 3 more unit cases; `transformScoped(query, project)`; prequery suites green, goldens unchanged | — |
 | 4.1 | dsp-api | done | ec2c5d621 | `build`/`buildProbe` take `Option[FulltextProjectRestriction]`; shared `luceneLookupClause` wraps only text:query in GRAPH for `Scoped`; `build` drops `attachedToProject` for `Scoped` (Phase 1: 0 exceptions), keeps it for `Unresolved`; `guarded` takes the restriction, key project from `restriction.map(_.project.value)`; both fulltext responder methods resolve once via `resolveRestriction`; Scaladocs/comments updated; legacy fixtures byte-unchanged and green | — |
 | 4.2 | dsp-api | done | c197a63c7 | 3 exact-text goldens (scoped count+class, page with all filters, probe with standoff): GRAPH around text:query only, no attachedToProject; invariants comment gains the scoping rule; canary (wrapping disabled) fails exactly the 3 scoped cases; webapi `GoldenTest` rewrite cannot write from the Bazel sandbox (relative source path), so the content was printed once and written by hand, then a clean run | — |
+| 4.3 | dsp-api | done | 5240b58f2 | FulltextBreadthGuardSpec: probe double over-cap for the unscoped probe SPARQL, under-cap otherwise; unscoped refused, scoped admitted; canary (guard passes `None` to `buildProbe`) fails it | — |
+| 4.4 | dsp-api | done | 2e8a2a033 | SearchResponderV2Spec: scoped "blue Narr" (probe runs scoped) keeps a-blue-thing, no incunabula hit; "Verbindung Region" under StandoffRootTag (incunabula only): scoped to 0803 and to 0001 equal the unscoped result filtered to each project; canary (wrapping disabled) fails both and the existing restricted "Narr" test | — |
+| 4.5 | dsp-api | done | — (verification) | At 2e8a2a033: `//modules/webapi:test` 2621/2621, `//modules/test-it:test --test_filter=.*SearchResponderV2Spec.*` green (Docker via `--test_env`), `just check` green | — |
+| 4.6 | dsp-api | done | 3aff7a3b3 | Review fix round 1: `luceneLookupClause` and the `attachedToProject` line match every `FulltextProjectRestriction` case explicitly (dune DUNE-001, consistency, scala-zio); spec comment states the goldens rule instead of history (simplicity, DUNE-004); two-term IT comment says the probe's scoping is pinned by `FulltextBreadthGuardSpec` (consistency, scala-zio); rendered SPARQL unchanged, specs green, `just check` green | — |
+| 4.7 | dsp-api | done | 6808d5aef | Review fix round 2 (cap reached): `SearchResponderV2Live.luceneScopeFor` matches both restriction cases instead of a partial `collect` (dune re-review DUNE-002); canary with a dummy third enum case fails the build at all three sites; `SearchResponderV2*` webapi specs green, test-it builds, `just check` green | — |
 
 ## Deferrals
 
@@ -154,3 +159,25 @@ status: in-progress
   (same helpers as the tested ones); `lucenePattern` keeps the `fold[QueryPattern]` idiom of `matchFulltextLuceneLookup`.
 - Phase 3 verification at 6f8eed4ee: `//modules/webapi:test` 2617/2617, `just test-gravsearch-prequery` green
   (existing goldens byte-identical), `just check` green. E2E not run for Phase 3 (no E2E checkbox; Phase 5 owns it).
+- Phase 4 review (4 lenses: consistency, simplicity, dune, scala-zio; 1 fix round, 3aff7a3b3). Refuted or
+  plan-decided (not fixed): `BreadthKey.project` / `resourceClass` redundant with `probeSparql` (plan item fills
+  `project` from the restriction; an `Unresolved` search gets its own cache entry, harmless); IT pagination and
+  vacuity (only one standoff value holds both "Verbindung" and "Region", so the result is one resource; the
+  wrapping-disabled canary failed both new ITs and the restricted "Narr" test); cross-graph list-node hits once
+  `attachedToProject` is dropped for `Scoped` (ADR-0012 Decision 3, Phase 1 stage check: 0 exceptions);
+  `resolveRestriction` runs one project lookup per count and per page request (accepted in the plan).
+- Phase 4 review suggestions (not fixed): `FulltextBreadthGuardSpec` could add two Scoped graphs not sharing a cache
+  entry and an `Unresolved` restriction using the unscoped probe; trim the `build` / `buildProbe` Scaladocs and the
+  repeated ADR rationale (`luceneLookupClause`, `build`, spec invariants); `scopedCountWithClass` golden overlaps
+  `scopedSearchWithAllFilters`; the guard spec's `scoped` fixture duplicates `SearchFulltextQuerySpec.scopedToProject`;
+  `Iri.unsafeFrom(dataGraph.value)` in a pure builder (validated input). ADR-0012 status/consequences, Fuseki query
+  execution doc Fact 10 and `ARCH-MAP.md` webapi-search are Phase 6 checkboxes.
+- Phase 4 verification at 2e8a2a033: `//modules/webapi:test` 2621/2621, test-it `SearchResponderV2Spec` green,
+  `just check` green; after 3aff7a3b3: `SearchFulltextQuerySpec` + `FulltextBreadthGuardSpec` green, test-it builds,
+  `just check` green.
+- Phase 4 re-review of 3aff7a3b3 (consistency, simplicity, dune): no Critical; one Warning (partial `collect` in
+  `luceneScopeFor`, Phase 2 code) fixed in round 2 (6808d5aef); the scalac options suppress warnings only under
+  `external/` (`bazel/toolchains/BUILD.bazel`), so exhaustivity is enforced by `-Werror`. Round 2 was not re-reviewed
+  (cap of 2 fix rounds). Suggestion not fixed: `SearchFulltextQuerySpec` "New cases use exact-text goldens" could read
+  "Prefer exact-text goldens over the legacy fixtures above".
+- Phase 4 verification at 3aff7a3b3: `//modules/webapi:test` 2621/2621, test-it `SearchResponderV2Spec` green.
