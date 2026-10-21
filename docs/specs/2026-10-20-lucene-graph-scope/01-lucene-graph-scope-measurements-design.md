@@ -221,9 +221,10 @@ unscoped probe overstates small projects by 14–74×. The full tables are on DE
   truncation even at the cap (confirmed on dev). It is also the cheapest lever for LIMC: the ratio is only
   1.1–4×, yet the 1M-limit cases still get 4–6×, because the per-hit join cost is what scoping removes.
 - **Recommendation: go, bundled.** Ship `graphField` in the same reindex as DEV-6851's label field (superseded:
-  the graph field shipped alone, see ADR-0012 Decision 6; not `propField`: that property does not exist in
-  Jena 6.2.0, see the correctness section below). Then plan DEV-7492 so that project-restricted searches get the full limit with scoping; unrestricted searches need their
-  own answer (AND semantics or a latency budget). Scope the list-node branch to the project data graph only.
+  the graph field shipped alone, see ADR-0012 Decision 6), not `propField` (that property does not exist in
+  Jena 6.2.0, see the correctness section below). Then plan DEV-7492 so that project-restricted searches get the
+  full limit with scoping; unrestricted searches need their own answer (AND semantics or a latency budget). The
+  list-node branch needs no scope of its own: it starts from the scoped hit (ADR-0012 Decision 3).
 - **DEV-6809 (c):** scoping the Lucene lookup supersedes GRAPH-scoping the post-Lucene patterns for the main cost.
   What remains of (c) is dropping the `attachedToProject` join once the hits are already project-local, in
   `/v2/search` only: Gravsearch keeps it on the main resource, which need not be the Lucene anchor.
@@ -289,7 +290,7 @@ Every item below passes with `graphField` on, and each one was compared against 
   section is wrong. Giving `rdfs:label` its own field does make the list-form label lookup label-only (1,397 →
   146 hits for a common word), but the unchanged fulltext lookup then loses label matches (1,046 → 680; a
   label-only term 1 → 0), so DEV-6851 needs the fulltext query to search both fields. It needs its own
-  reindex as `graphField`.
+  reindex, separate from `graphField`'s.
 - **Rollout hazard.** Config edited but index not rebuilt: scoped lookups return 0 for all existing data while
   new writes are indexed with their graph, so the index becomes silently partial. Index rebuilt but config
   reverted: safe, the GRAPH clause is a no-op again. The dsp-api scoping change must therefore only reach a host

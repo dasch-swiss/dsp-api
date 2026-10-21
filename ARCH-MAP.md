@@ -1011,8 +1011,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - A `GraphPattern` (the GRAPH-wrapped Lucene statement) is an opaque leaf ranked as the statement it wraps;
         the T1 check must also find it inside the `GroupPattern` → `SubSelectPattern` nesting of the scoped
         `matchFulltext` expansion - enforcement: static-analysis (`PrequeryPatternOrderingSpec`).
-    - Search reaches a project's data graph only through the `ProjectDataGraphs` port, never through
-        `ProjectService` or another admin service - enforcement: review.
+    - Search reaches a project's data graph only through the `ProjectDataGraphs` port; it never derives one
+        through `ProjectService` or `KnoraProjectService` - enforcement: review.
     - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
         scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change).
