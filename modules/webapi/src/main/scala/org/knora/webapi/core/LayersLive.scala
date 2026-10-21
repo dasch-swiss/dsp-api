@@ -161,6 +161,7 @@ object LayersLive { self =>
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,
       PredicateObjectMapper.layer,
+      ProjectDataGraphsLive.layer,
       ProjectExportServiceLive.layer,
       ReadResourcesServiceLive.layer,
       RepositoryUpdater.layer,

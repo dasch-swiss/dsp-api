@@ -24,11 +24,12 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.search.FulltextBreadthGuard
+import org.knora.webapi.slice.search.ports.ProjectDataGraphs
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object SearchResponderV2Module {
   type Dependencies = StandoffTagUtilV2 & AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCache &
-    OntologyCacheHelpers & OntologyRepo & IriConverter & StringFormatter & ProjectService & Tracing
+    OntologyCacheHelpers & OntologyRepo & IriConverter & StringFormatter & ProjectService & ProjectDataGraphs & Tracing
 
   type Provided = GravsearchTypeInspectionRunner & InferenceOptimizationService & InferringGravsearchTypeInspector &
     OntologyInferencer & QueryTraverser & SearchResponderV2Live

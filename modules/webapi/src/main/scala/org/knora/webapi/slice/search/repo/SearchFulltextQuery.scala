@@ -14,8 +14,23 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+
+/**
+ * A fulltext search's `limitToProject`, resolved once per request, so that a scoped lookup and an unknown project
+ * cannot be confused (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`).
+ */
+enum FulltextProjectRestriction {
+  def project: ProjectIri
+
+  /** A known project: its Lucene lookup may be wrapped in `GRAPH <dataGraph> { }`. */
+  case Scoped(project: ProjectIri, dataGraph: InternalIri)
+
+  /** An unknown project: the query keeps the unscoped lookup plus `attachedToProject`, which matches nothing. */
+  case Unresolved(project: ProjectIri)
+}
 
 object SearchFulltextQuery {
 
