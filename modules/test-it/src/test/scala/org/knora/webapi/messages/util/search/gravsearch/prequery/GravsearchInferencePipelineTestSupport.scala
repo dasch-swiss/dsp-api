@@ -141,7 +141,8 @@ object GravsearchInferencePipelineTestSupport {
 
   /**
    * Derives the scope from the same project as `limitResultsToProject`, the way the responder does, so a golden never
-   * pairs a data graph with a missing `attachedToProject` or the reverse.
+   * pairs a data graph with a missing `attachedToProject` or the reverse. A requested scope that does not resolve
+   * fails, so a golden cannot silently pin an unscoped prequery.
    */
   private def luceneScopeFor(
     limitResultsToProject: Option[ProjectIri],
@@ -149,11 +150,15 @@ object GravsearchInferencePipelineTestSupport {
     inputWhere: WhereClause,
   ): ZIO[KnoraProjectService, Throwable, Option[LuceneScope]] =
     ZIO.serviceWithZIO[KnoraProjectService] { projectService =>
-      SearchResponderV2Live.luceneScopeFor(
-        ProjectDataGraphsLive(projectService),
-        limitResultsToProject.filter(_ => scopeLuceneToProject),
-        inputWhere,
-      )
+      SearchResponderV2Live
+        .luceneScopeFor(
+          ProjectDataGraphsLive(projectService),
+          limitResultsToProject.filter(_ => scopeLuceneToProject),
+          inputWhere,
+        )
+        .filterOrFail(scope => scope.isDefined || !scopeLuceneToProject)(
+          AssertionException(s"No Lucene scope for limitResultsToProject = $limitResultsToProject"),
+        )
     }
 
   /**
