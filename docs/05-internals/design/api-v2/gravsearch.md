@@ -321,12 +321,12 @@ statement-hoisting passes for `BIND` and Lucene statements — with a single gre
 
 #### The tier table
 
-Every unit (a `StatementPattern`, an opaque `GroupPattern`, or a `GraphPattern`) is assigned a tier; lower tiers
-lead:
+Every unit (a `StatementPattern`, an opaque `GroupPattern` or `SubSelectPattern`, or a `GraphPattern`) is
+assigned a tier; lower tiers lead:
 
 | Tier | Unit |
 | --- | --- |
-| T1 | Lucene: a `text:query` statement, a `GraphPattern` wrapping one (a project-scoped lookup), or a `GroupPattern` containing either directly or in a nested `GroupPattern` or `SubSelectPattern` — the scoped `matchFulltext` expansion nests `GroupPattern` → `SubSelectPattern` → `GraphPattern`; a `text:query` inside an `OPTIONAL`, `UNION`, or `MINUS` within the group is not found |
+| T1 | Lucene: a `text:query` statement, a `GraphPattern` wrapping one (a project-scoped lookup), or a `GroupPattern` or `SubSelectPattern` containing either directly or in a nested `GroupPattern` or `SubSelectPattern` — the scoped `matchFulltext` expansion nests `GroupPattern` → `SubSelectPattern` → `GraphPattern`; a `text:query` inside an `OPTIONAL`, `UNION`, or `MINUS` within the group is not found |
 | T2 | Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object, whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type` statement with an `IriRef` subject |
 | T3 | Bound literal: a non-type statement with an `XsdLiteral` object |
 | T4 | Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal ontology IRI carrying a project shortcode), either directly or as the sole content of an enumerating `VALUES` |
@@ -534,7 +534,7 @@ across projects are allowed:
   predicate `rdfs:label`. `LuceneScope.mainResourceAnchoredValues`
   decides this in one pass over the whole input WHERE clause, `OPTIONAL`, `UNION`, `MINUS` and
   `FILTER NOT EXISTS` included, before generation.
-- Any other lookup, for example `matchFulltext` on a linked resource, stays unscoped as before.
+- Any other lookup, for example `matchFulltext` on a linked resource, stays unscoped.
 
 `SearchResponderV2` resolves the project's data graph once per request through the `ProjectDataGraphs` port. An
 unknown project yields no graph, so the query is exactly the unscoped one, and `attachedToProject` returns

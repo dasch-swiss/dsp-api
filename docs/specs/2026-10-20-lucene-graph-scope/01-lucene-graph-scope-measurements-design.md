@@ -214,19 +214,19 @@ unscoped probe overstates small projects by 14–74×. The full tables are on DE
 
 - **As a standalone latency fix at today's cap: not worth a reindex.** After DEV-7491, restricted searches are
   0.6–2.5 s warm on stage, and scoping saves about 1.6× (1.8× median with real scoping on dev, at most about
-  3 s). The slow share of restricted searches in
-  prod has already dropped from about 13 % to about 3 %.
+  3 s). The slow share of restricted searches in prod has already dropped from about 13 % to about 3 %.
 - **As the enabler for the full hit limit: yes.** With the 1M limit, scoping turns 30–55 s restricted searches
   into ≤ 8 s ones under the emulation and ≤ 5 s with real scoping on dev (Gravsearch and `/v2/search`; the one
   exception is `/v2/search` with a class restriction, see L4 on dev), and in 6 of 11 truncated cases it fixes the
   truncation even at the cap (confirmed on dev). It is also the cheapest lever for LIMC: the ratio is only
   1.1–4×, yet the 1M-limit cases still get 4–6×, because the per-hit join cost is what scoping removes.
-- **Recommendation: go, bundled.** Ship `graphField` in the same reindex as DEV-6851's label field (not
-  `propField`: that property does not exist in Jena 6.2.0, see the correctness section below). Then plan
-  DEV-7492 so that project-restricted searches get the full limit with scoping; unrestricted searches need their
+- **Recommendation: go, bundled.** Ship `graphField` in the same reindex as DEV-6851's label field (superseded:
+  the graph field shipped alone, see ADR-0012 Decision 6; not `propField`: that property does not exist in
+  Jena 6.2.0, see the correctness section below). Then plan DEV-7492 so that project-restricted searches get the full limit with scoping; unrestricted searches need their
   own answer (AND semantics or a latency budget). Scope the list-node branch to the project data graph only.
 - **DEV-6809 (c):** scoping the Lucene lookup supersedes GRAPH-scoping the post-Lucene patterns for the main cost.
-  What remains of (c) is dropping the `attachedToProject` join once the hits are already project-local.
+  What remains of (c) is dropping the `attachedToProject` join once the hits are already project-local, in
+  `/v2/search` only: Gravsearch keeps it on the main resource, which need not be the Lucene anchor.
 - **Reindex duration (DEV-7377 acceptance):** about 6.5 minutes on prod-sized data, see below.
 - **Rollout order is a hard constraint:** the dsp-api scoping change must only reach a host after that host's
   config edit and reindex, see the correctness section.
@@ -288,7 +288,7 @@ Every item below passes with `graphField` on, and each one was compared against 
   assembler and from the documentation, and is silently ignored. DEV-6851's "propField moots the open question"
   section is wrong. Giving `rdfs:label` its own field does make the list-form label lookup label-only (1,397 →
   146 hits for a common word), but the unchanged fulltext lookup then loses label matches (1,046 → 680; a
-  label-only term 1 → 0), so DEV-6851 needs the fulltext query to search both fields. It still rides the same
+  label-only term 1 → 0), so DEV-6851 needs the fulltext query to search both fields. It needs its own
   reindex as `graphField`.
 - **Rollout hazard.** Config edited but index not rebuilt: scoped lookups return 0 for all existing data while
   new writes are indexed with their graph, so the index becomes silently partial. Index rebuilt but config

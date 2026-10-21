@@ -60,8 +60,9 @@ existing data, while new writes are indexed with their graph, so the index is si
    ontology patterns resolve against other graphs. Scoping to the data graph is exact because of the one-graph
    rule in the Resources & Values context (`docs/contexts/resources-values/CONTEXT.md`): a project's resources,
    values and list nodes live in exactly one data graph.
-3. **The list-node branch is scoped to the project data graph alone.** No union with the system-lists graph,
-   because no cross-graph list references exist and the platform does not allow them.
+3. **The list-node branch needs no scope of its own.** It starts from the scoped hit, so it only reaches list
+   nodes in the project data graph. No union with the system-lists graph, because no cross-graph list references
+   exist and the platform does not allow them.
 4. **The breadth probe of `/v2/search` mirrors the restriction.** Otherwise it keeps refusing scoped searches
    on unscoped breadth.
 5. **Rollout order is a hard constraint.** The dsp-api query change that relies on scoping reaches a host only

@@ -583,8 +583,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `FairProjectsLive` (`slice/admin/domain/service`) implements the `FairProjects` port declared by
         webapi-fair and is wired only in `core/LayersLive.scala` - enforcement: review.
     - `ProjectDataGraphsLive` (`slice/admin/domain/service`) implements the `ProjectDataGraphs` port declared
-        by webapi-search, derives the graph only through `ProjectService.projectDataNamedGraphV2`, and is wired
-        only in `core/LayersLive.scala` - enforcement: review.
+        by webapi-search, derives the graph through `KnoraProjectService.getDataGraphForProject` (which delegates
+        to `ProjectService.projectDataNamedGraphV2`), and is wired only in `core/LayersLive.scala` - enforcement:
+        review.
     - Outside callers depend on `AdminModule.layer` and the repo traits, never on `slice.admin.repo.**` -
         enforcement: review. Currently violated in main code by `responders/admin/PermissionsResponder.scala`
         line 46 (`DefaultObjectAccessPermissionRepoLive`) and
@@ -974,9 +975,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-common (`StringFormatter`, `SmartIri`, `IriConverter`, `ConstructResponseUtilV2`,
     `ConstructResponseRdfData`, `QueryBuilderHelper`, `KnoraIris`, `dsp.errors.*`), webapi-ontology
     (`OntologyRepo`, `OntologyCacheHelpers`, `OntologyCache`, `ReadClassInfoV2`, `ReadPropertyInfoV2`),
-    webapi-resources, webapi-admin (`ProjectService`, `User`, `ProjectIri`, `Shortcode`; a project's data
-    graph is reached only through the `ProjectDataGraphs` port, with no compile-time import of its adapter),
-    webapi-standoff
+    webapi-resources, webapi-admin (`ProjectService`, `User`, `ProjectIri`, `Shortcode`), webapi-standoff
     (`StandoffTagUtilV2`), webapi-triplestore, webapi-infrastructure (`SanitizedSpan`), webapi-app
     (`AppConfig`), build-toolchain.
 - **Used by**: webapi-api (`SearchRestService`, `SearchEndpoints`, `ResourcesRestService`,
@@ -1008,15 +1007,15 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `GetIncomingImageLinksGravsearchQuerySpec`); a change to emitted SPARQL shows up as a golden diff -
         enforcement: review (`REVIEW.md` section SPARQL).
     - `PrequeryPatternOrdering`, applied at the single seam `QueryTraverser.transformSelectToSelect`, is the
-        only pass that orders prequery WHERE-block patterns - enforcement: review. A `GraphPattern` (the
-        GRAPH-wrapped Lucene statement of a project-scoped lookup) is opaque like `GroupPattern` and
-        `SubSelectPattern`: the ordering ranks it as the statement it wraps, and its T1 Lucene check must
-        reach it inside the `GroupPattern` → `SubSelectPattern` nesting, or the `matchFulltext` expansion loses
-        T1 - enforcement: static-analysis (`PrequeryPatternOrderingSpec`).
-    - Search resolves a project's data graph once per request through the `ProjectDataGraphs` port and
-        wraps only the `text:query` statement in `GRAPH`, and only for lookups anchored on the main resource
-        ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: static-analysis (the
-        scoped prequery and `SearchFulltextQuerySpec` goldens).
+        only pass that orders prequery WHERE-block patterns - enforcement: review.
+    - A `GraphPattern` (the GRAPH-wrapped Lucene statement) is an opaque leaf ranked as the statement it wraps;
+        the T1 check must also find it inside the `GroupPattern` → `SubSelectPattern` nesting of the scoped
+        `matchFulltext` expansion - enforcement: static-analysis (`PrequeryPatternOrderingSpec`).
+    - Search reaches a project's data graph only through the `ProjectDataGraphs` port, never through
+        `ProjectService` or another admin service - enforcement: review.
+    - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
+        resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
+        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
