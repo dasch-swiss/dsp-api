@@ -7,9 +7,11 @@
 
 # Self-contained fixture for matchFulltext E2E tests (DEV-6715). Reuses the existing "anything"
 # project (0001), its default users, and the anything:Thing/anything:hasText ontology terms —
-# no new project/ontology registration needed — but is its own data file/graph so it never
-# touches the shared test_data/project_data/anything-data.ttl (per CLAUDE.md: shared datasets are
-# loaded by many tests; a new record there can cause cascading failures across unrelated specs).
+# no new project/ontology registration needed — but is its own data file so it never touches the
+# shared test_data/project_data/anything-data.ttl (per CLAUDE.md: shared datasets are loaded by
+# many tests; a new record there can cause cascading failures across unrelated specs). Only
+# MatchFulltextE2ESpec loads it, into the anything data graph (http://www.knora.org/data/0001/anything)
+# next to anything-data.ttl, because a project-scoped Lucene lookup sees only that graph.
 #
 # Every resource/value/list-node below carries a token from the "Zqxvnonce7f3" nonce family, each
 # with a distinct suffix so tests can search for one distinguishing token and know exactly which

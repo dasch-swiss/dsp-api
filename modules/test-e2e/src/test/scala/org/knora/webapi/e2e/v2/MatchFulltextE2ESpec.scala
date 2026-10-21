@@ -22,11 +22,22 @@ import org.knora.webapi.testservices.TestApiClient
 @RunWith(classOf[DspZTestJUnitRunner])
 class MatchFulltextE2ESpec extends E2EZSpec {
 
+  // The fixture goes into the anything project's data graph, next to anything-data.ttl: a lookup scoped to the
+  // project sees only that graph's Lucene hits.
   override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects :+
     RdfDataObject(
       path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-data.ttl",
-      name = "http://www.knora.org/data/0001/matchfulltexttest",
+      name = "http://www.knora.org/data/0001/anything",
     )
+
+  private def scopedCount(project: String, query: String) = for {
+    response <- TestApiClient.postJsonLdDocument(
+                  uri"/v2/searchextended/count".addParam("limitToProject", project),
+                  query,
+                )
+    jsonLd      <- response.assert200
+    actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+  } yield actualCount
 
   private def matchFulltextCountQuery(
     term: String,
@@ -133,14 +144,14 @@ class MatchFulltextE2ESpec extends E2EZSpec {
     ),
     suite("project scoping")(
       test("limitToProject scopes results to the given project") {
-        for {
-          response <- TestApiClient.postJsonLdDocument(
-                        uri"/v2/searchextended/count".addParam("limitToProject", "http://rdfh.ch/projects/0001"),
-                        matchFulltextCountQuery("Zqxvnonce7f3Label"),
-                      )
-          jsonLd      <- response.assert200
-          actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
-        } yield assertTrue(actualCount == 1)
+        scopedCount("http://rdfh.ch/projects/0001", matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          .map(actualCount => assertTrue(actualCount == 1))
+      },
+      test("limitToProject to another project finds nothing") {
+        // The target project's data graph must exist: GRAPH <g> on a missing graph returns 0 whatever the scoping.
+        // attachedToProject also yields 0, so this does not detect a text index without the graph field.
+        scopedCount("http://rdfh.ch/projects/0803", matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          .map(actualCount => assertTrue(actualCount == 0))
       },
     ),
     suite("non-main-resource variable usage")(
