@@ -424,54 +424,54 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 6: Docs
 
-- [ ] ADR-0012 Context: replace the emulated figures with the dev measurements (at the cap 1.0–8.8×, median
+- [x] ADR-0012 Context: replace the emulated figures with the dev measurements (at the cap 1.0–8.8×, median
   1.8×, all ≤ 1.7 s; with the 1M limit Gravsearch ≤ 4.7 s from up to 18.7 s and `/v2/search` ≤ 4.6 s from up to
   30 s, except class-restricted L4 at 13.8 s; 6 of 11 truncated cases complete at the cap); keep the stage
   hit-ratio and DEV-7491 bullets
-- [ ] ADR-0012 Consequences: add the probe result (scoped probe 1.0–4.3× cheaper and counting exactly the
+- [x] ADR-0012 Consequences: add the probe result (scoped probe 1.0–4.3× cheaper and counting exactly the
   in-project hits; the unscoped probe overstates small projects 14–74×)
-- [ ] ADR-0012 Consequences: add the class-walk finding (the remaining `/v2/search` cost once scoped; Gravsearch
+- [x] ADR-0012 Consequences: add the class-walk finding (the remaining `/v2/search` cost once scoped; Gravsearch
   avoids it with `VALUES`; tracked separately, with the ticket ID if H4 has created it)
-- [ ] ADR-0012 Consequences: scoping applies only to Lucene lookups anchored on the main resource
-- [ ] ADR-0012 Decision 2: "`matchText`/`matchLabel` where a project restriction is known" becomes "where the
+- [x] ADR-0012 Consequences: scoping applies only to Lucene lookups anchored on the main resource
+- [x] ADR-0012 Decision 2: "`matchText`/`matchLabel` where a project restriction is known" becomes "where the
   lookup is anchored on the main resource of a project-restricted query"; refer to the one-graph rule in the
   Resources & Values CONTEXT.md
-- [ ] ADR-0012 Consequences, the "dropping the `attachedToProject` join" bullet: `/v2/search` only; Gravsearch keeps
+- [x] ADR-0012 Consequences, the "dropping the `attachedToProject` join" bullet: `/v2/search` only; Gravsearch keeps
   it on the main resource
-- [ ] ADR-0012 Decision 6: state that DEV-6851's label field did not ride the #4393 rebuild and needs its own
+- [x] ADR-0012 Decision 6: state that DEV-6851's label field did not ride the #4393 rebuild and needs its own
   (automatic) rebuild; keep the `propField` finding
-- [ ] ADR-0012 Status: Accepted
-- [ ] `docs/contexts/resources-values/CONTEXT.md`: state the rule "a project's resources, values and list nodes
+- [x] ADR-0012 Status: Accepted
+- [x] `docs/contexts/resources-values/CONTEXT.md`: state the rule "a project's resources, values and list nodes
   live in exactly one data graph, derived only by `ProjectService.projectDataNamedGraphV2`; graph-scoped text
   lookups rely on it"
-- [ ] `docs/contexts/search/CONTEXT.md`: "Full-text retrieval" says a project-restricted lookup is scoped to the
+- [x] `docs/contexts/search/CONTEXT.md`: "Full-text retrieval" says a project-restricted lookup is scoped to the
   project's data graph (ADR-0012); add a **ProjectDataGraphs** port entry (provider: Projects; returns an IRI only)
   to the list of Search-declared ports, and adjust "Search depends on no other context" accordingly
-- [ ] Root `CONTEXT.md` context map (the "Search to Data Model + Resources & Values, through ports" line): add
+- [x] Root `CONTEXT.md` context map (the "Search to Data Model + Resources & Values, through ports" line): add
   Projects
-- [ ] `ARCH-MAP.md`: webapi-search "Key entities", "Depends on" (add the port; `ProjectService` stays) and "Wiring",
+- [x] `ARCH-MAP.md`: webapi-search "Key entities", "Depends on" (add the port; `ProjectService` stays) and "Wiring",
   plus the `GraphPattern` opaque pattern in the ordering rule; webapi-admin: the `ProjectDataGraphsLive` adapter;
   the cross-cutting ports sentence ("webapi-fair is the first consumer") names Search as the second consumer; the
   stale line that calls `SearchFulltextQuery.scala` a grandfathered RDF4J SparqlBuilder site (it uses `sparql"..."`)
-- [ ] `REVIEW.md`, the "`GRAPH`-scoped patterns don't also carry an `attachedToProject` join" item: note the
+- [x] `REVIEW.md`, the "`GRAPH`-scoped patterns don't also carry an `attachedToProject` join" item: note the
   exception, a GRAPH-scoped Gravsearch Lucene lookup keeps the main resource's `attachedToProject`
-- [ ] Measurements spec: add the short "Measured on dev with real graphField scoping (2026-10-21)" section from
+- [x] Measurements spec: add the short "Measured on dev with real graphField scoping (2026-10-21)" section from
   Appendix A (keep the heading; the Method bullet links to its anchor)
-- [ ] Measurements spec: apply the corrected sentences in Method, go/no-go and Caveats from Appendix A; the full
+- [x] Measurements spec: apply the corrected sentences in Method, go/no-go and Caveats from Appendix A; the full
   dev tables stay on DEV-7377
-- [ ] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10: one sentence that dsp-api now emits the scoped
+- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10: one sentence that dsp-api now emits the scoped
   form for project-restricted lookups, Lucene statement only
-- [ ] `docs/05-internals/design/api-v2/gravsearch.md`: the T1 row (l. 328) includes a `GraphPattern` and the
+- [x] `docs/05-internals/design/api-v2/gravsearch.md`: the T1 row (l. 328) includes a `GraphPattern` and the
   `GroupPattern` → `SubSelectPattern` → `GraphPattern` nesting; the
   opaque-leaf paragraph (~l. 378), the passage on the passes that match `QueryPattern` exhaustively
   (~l. 513–518) and the T1 recognition sentence (~l. 531) name `GraphPattern`
-- [ ] `docs/05-internals/design/api-v2/gravsearch.md`: the `matchFulltext` expansion section shows the scoped
+- [x] `docs/05-internals/design/api-v2/gravsearch.md`: the `matchFulltext` expansion section shows the scoped
   lookup and the main-resource rule
-- [ ] `docs/03-endpoints/api-v2/query-language.md` (the `matchFulltext` cap notes near lines 408 and 726): with
+- [x] `docs/03-endpoints/api-v2/query-language.md` (the `matchFulltext` cap notes near lines 408 and 726): with
   `limitToProject` the 10,000-hit cap counts only that project's hits, for lookups on the main resource and its
   own values (a lookup on a linked resource is not scoped)
-- [ ] Run `nix develop --command just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `nix develop --command just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 7: Verification against dev data
 
