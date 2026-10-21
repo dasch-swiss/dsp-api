@@ -268,73 +268,73 @@ Each phase leaves the build green and lands as one reviewable commit group on
 
 #### Phase 2: Scope the matchFulltext lookup in Gravsearch
 
-- [ ] Add the port `modules/webapi/src/main/scala/org/knora/webapi/slice/search/ports/ProjectDataGraphs.scala`:
+- [x] Add the port `modules/webapi/src/main/scala/org/knora/webapi/slice/search/ports/ProjectDataGraphs.scala`:
   `trait ProjectDataGraphs { def dataGraphOf(project: ProjectIri): Task[Option[InternalIri]] }` (`None` = unknown
   project; any other failure fails the effect), modelled on `slice/fair/ports/FairProjects.scala`, plus an
   in-memory double in the webapi tests (modelled on `FairProjectsInMemory`) for the resolution test below
-- [ ] Add the adapter `ProjectDataGraphsLive(projectService: KnoraProjectService)` in
+- [x] Add the adapter `ProjectDataGraphsLive(projectService: KnoraProjectService)` in
   `slice/admin/domain/service/`, modelled on `FairProjectsLive`: `findById`, then the existing
   `KnoraProjectService.getDataGraphForProject` (which wraps `ProjectService.projectDataNamedGraphV2`); wire its
   layer in `LayersLive` next to `FairProjectsLive.layer`
-- [ ] Unit test the adapter in webapi over a directly constructed `KnoraProjectService(<KnoraProjectRepoInMemory>,
+- [x] Unit test the adapter in webapi over a directly constructed `KnoraProjectService(<KnoraProjectRepoInMemory>,
   null, null)` (`findById` and `getDataGraphForProject` use neither other repo; precedent
   `ProjectMigrationImportServiceSpec.scala:297`), with a project seeded via `save`: known project → its data graph,
   unknown project → `None`; the in-memory repo has no built-in fallback, so the built-in case is the Phase 5
   `SystemProject` E2E
-- [ ] Add `ProjectDataGraphs` to `SearchResponderV2Module.Dependencies` and to `SearchResponderV2Live` (built by
+- [x] Add `ProjectDataGraphs` to `SearchResponderV2Module.Dependencies` and to `SearchResponderV2Live` (built by
   `ZLayer.derive`, so no other layer changes; `ProjectService` stays, `InferenceOptimizationService` uses it)
-- [ ] Add `FulltextProjectRestriction` (see Technical Considerations) to `SearchFulltextQuery.scala` and
+- [x] Add `FulltextProjectRestriction` (see Technical Considerations) to `SearchFulltextQuery.scala` and
   `resolveRestriction` to the `SearchResponderV2Live` companion; unit-test it with the in-memory port: known →
   `Scoped`, unknown → `Unresolved`, a failing port fails the effect, `None` → `None`
-- [ ] Check: `grep -rn "KnoraProjectService" modules/webapi/src/main/scala/org/knora/webapi/responders/v2/` and the
+- [x] Check: `grep -rn "KnoraProjectService" modules/webapi/src/main/scala/org/knora/webapi/responders/v2/` and the
   same grep over `slice/search/` return nothing
-- [ ] Add `LuceneScope(dataGraph: InternalIri, inputWhere: Seq[QueryPattern])` and a constructor parameter
+- [x] Add `LuceneScope(dataGraph: InternalIri, inputWhere: Seq[QueryPattern])` and a constructor parameter
   `luceneScope: Option[LuceneScope]` (no default, so the compiler lists every site) to `AbstractPrequeryGenerator`,
   `GravsearchToPrequeryTransformer` and `GravsearchToCountPrequeryTransformer`; the anchored-variable set it feeds
   is filled in Phase 3 (Phase 2 needs only `dataGraph`)
-- [ ] In `gravsearchV2` and `gravsearchCountV2`, inside the `gravsearch.prequery.generate` stage span and before
+- [x] In `gravsearchV2` and `gravsearchCountV2`, inside the `gravsearch.prequery.generate` stage span and before
   the transformer is constructed, resolve the restriction and pass `LuceneScope(graph,
   whereClauseWithoutAnnotations.patterns)` for `Scoped`, `None` otherwise
-- [ ] Update the three test-it construction sites (`GravsearchToPrequeryTransformerE2ESpec.scala:45, 69`,
+- [x] Update the three test-it construction sites (`GravsearchToPrequeryTransformerE2ESpec.scala:45, 69`,
   `GravsearchToCountPrequeryTransformerE2ESpec.scala:39`) and the `buildTransformer` lambdas of
   `GravsearchInferencePipelineTestSupport.transformQueryWithInference` (its `sanitizedWhereClause` is the input
   WHERE), so both prequery specs' wrappers accept the scope
-- [ ] `matchFulltextLuceneLookup`: when `luceneScope` is set and the resource variable is the main resource, wrap
+- [x] `matchFulltextLuceneLookup`: when `luceneScope` is set and the resource variable is the main resource, wrap
   the `text:query` statement inside the subselect in `GraphPattern`
-- [ ] Update the Scaladoc of `matchFulltextLuceneLookup` and `matchFulltextExpansion`: what is inside and outside
+- [x] Update the Scaladoc of `matchFulltextLuceneLookup` and `matchFulltextExpansion`: what is inside and outside
   the GRAPH block, and why the main resource's `attachedToProject` stays (the anchor need not be the main resource)
-- [ ] New goldens in `GravsearchToPrequeryTransformerE2ESpec`: classless and class-restricted `matchFulltext` with
+- [x] New goldens in `GravsearchToPrequeryTransformerE2ESpec`: classless and class-restricted `matchFulltext` with
   `limitResultsToProject` and a scope (`GRAPH` around the Lucene statement only, `attachedToProject` still there),
   each with its `...Shape` golden
-- [ ] New golden: `matchFulltext` on a linked (non-main) resource with a scope set renders no `GRAPH`
-- [ ] New golden (with `...Shape`): scoped `matchFulltext` with the main resource's FILTER inside a UNION branch
-- [ ] New golden in `GravsearchToCountPrequeryTransformerE2ESpec`: scoped classless `matchFulltext` count
-- [ ] Run `just test-gravsearch-prequery`; every existing golden is byte-identical (none combines a project limit
+- [x] New golden: `matchFulltext` on a linked (non-main) resource with a scope set renders no `GRAPH`
+- [x] New golden (with `...Shape`): scoped `matchFulltext` with the main resource's FILTER inside a UNION branch
+- [x] New golden in `GravsearchToCountPrequeryTransformerE2ESpec`: scoped classless `matchFulltext` count
+- [x] Run `just test-gravsearch-prequery`; every existing golden is byte-identical (none combines a project limit
   with a Lucene lookup) and only the new ones are added
-- [ ] `MatchFulltextE2ESpec`: load `matchfulltext-data.ttl` into `http://www.knora.org/data/0001/anything`, the
+- [x] `MatchFulltextE2ESpec`: load `matchfulltext-data.ttl` into `http://www.knora.org/data/0001/anything`, the
   0001 data graph (the loader POSTs to the graph store, so it appends to `anything-data.ttl` in the same graph);
   the existing "limitToProject scopes results to the given project" test returns 0 with the fixture in its own
   graph once the lookup is scoped, so the move belongs here
-- [ ] Update the fixture's header comment, which says it lives in its own graph
-- [ ] `MatchFulltextE2ESpec`: add scoped to another existing project (`http://rdfh.ch/projects/0803`, whose data
+- [x] Update the fixture's header comment, which says it lives in its own graph
+- [x] `MatchFulltextE2ESpec`: add scoped to another existing project (`http://rdfh.ch/projects/0803`, whose data
   graph is loaded) → count 0, with a comment that the target graph must exist (`GRAPH <g>` on a missing graph
   returns 0 anyway); `attachedToProject` also makes it 0, so it does not detect a stale image
-- [ ] Load the test images, Fuseki with `graphField` among them, into the local Docker daemon
+- [x] Load the test images, Fuseki with `graphField` among them, into the local Docker daemon
   (`just docker-load-test-images`) and check that the loaded `daschswiss/apache-jena-fuseki:latest` carries
   `text:graphField` in its `dsp-repo.ttl` (path inside the image to confirm during implementation)
-- [ ] test-it stale-index detector in a spec that loads the anything and incunabula data (e.g.
+- [x] test-it stale-index detector in a spec that loads the anything and incunabula data (e.g.
   `SearchResponderV2Spec`), with `TriplestoreService` obtained via `ZIO.serviceWithZIO[TriplestoreService]`
   (confirm the spec's environment provides it) and its `Select` API: for "Narr" (413 hits in incunabula, none in
   anything, per the comment above the spec's restricted-search test), `SELECT ?s { GRAPH
   <http://www.knora.org/data/0001/anything> { ?s text:query ("Narr" 1000) } }` returns 0, while the same lookup
   without GRAPH returns more than 0 (copy the Lucene term form `build` emits)
-- [ ] Run `bazel test //modules/test-it:test_gravsearch_span` (it calls `gravsearchV2` with a project restriction
+- [x] Run `bazel test //modules/test-it:test_gravsearch_span` (it calls `gravsearchV2` with a project restriction
   through the real module layer); it passes
-- [ ] From an unsandboxed shell under Colima, run `bazel test //modules/test-e2e:test
+- [x] From an unsandboxed shell under Colima, run `bazel test //modules/test-e2e:test
   --test_filter='.*MatchFulltext.*' --test_env=DOCKER_HOST
   --test_env=TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock --test_env=HOME`; it passes. If no
   unsandboxed shell is available, record "not run" in the phase review; CI runs it on the PR
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 3: Scope matchText, matchTextInStandoff and matchLabel
 
