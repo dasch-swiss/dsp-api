@@ -548,7 +548,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `AdministrativePermissionRepo`, `DefaultObjectAccessPermissionRepo`, `PermissionIri`, `RestrictedView`,
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
     `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`,
-    `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`, `ViewRestrictionsClassification`
+    `ProjectDataGraphsLive`, `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`,
+    `ViewRestrictionsClassification`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
@@ -572,7 +573,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     (`config.AppConfig`, `DspIngestConfig`), webapi-api (inverted: the domain imports
     `slice.api.admin.model.Project`, `UserDto`, `Codecs`, `PagedResponse`), webapi-resources (reach-in:
     `ListsResponder` imports 13 query classes from `slice.resources.repo`), webapi-fair (`FairProjectsLive`
-    implements the `FairProjects` port), ingest (remote-owned via `DspIngestClient`), build-toolchain.
+    implements the `FairProjects` port), webapi-search (`ProjectDataGraphsLive` implements the
+    `ProjectDataGraphs` port), ingest (remote-owned via `DspIngestClient`), build-toolchain.
 - **Used by**: webapi-api, webapi-resources, webapi-export, webapi-ontology, webapi-search, webapi-security,
     webapi-standoff, webapi-common, webapi-triplestore, webapi-sipi-client, webapi-infrastructure,
     webapi-fair (the `Shortcode` and `Permission` types), webapi-app, sipi (remote-owned, the Lua scripts
@@ -580,6 +582,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Boundary rules**:
     - `FairProjectsLive` (`slice/admin/domain/service`) implements the `FairProjects` port declared by
         webapi-fair and is wired only in `core/LayersLive.scala` - enforcement: review.
+    - `ProjectDataGraphsLive` (`slice/admin/domain/service`) implements the `ProjectDataGraphs` port declared
+        by webapi-search, derives the graph only through `ProjectService.projectDataNamedGraphV2`, and is wired
+        only in `core/LayersLive.scala` - enforcement: review.
     - Outside callers depend on `AdminModule.layer` and the repo traits, never on `slice.admin.repo.**` -
         enforcement: review. Currently violated in main code by `responders/admin/PermissionsResponder.scala`
         line 46 (`DefaultObjectAccessPermissionRepoLive`) and
@@ -942,15 +947,17 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `GravsearchToCountPrequeryTransformer`, `GravsearchQueryOptimisation`, `GravsearchMainQueryGenerator`,
     `MainQueryResultProcessor`, `QueryTraverser`, `PrequeryPatternOrdering`, `ConstructTransformer`,
     `SelectTransformer`, `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`,
-    `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`, `SearchQueries`, `ApacheLuceneSupport`,
-    `LuceneQueryString`, `SearchTimeoutException`, `ResourceCountV2`
+    `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`, `FulltextProjectRestriction`,
+    `LuceneScope`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
+    `SearchTimeoutException`, `ResourceCountV2`, and the port `ProjectDataGraphs`
 - **Public interface**: the `SearchResponderV2` trait (`gravsearchV2`, `gravsearchCountV2`,
     `fulltextSearchV2`, `fulltextSearchCountV2`, `searchResourcesByLabelV2`,
     `searchResourcesByLabelCountV2`, `searchIncomingLinksV2`, `searchIncomingRegionsV2`,
     `searchStillImageRepresentationsV2`, `searchStillImageRepresentationsCountV2`);
     `SearchResponderV2Module.layer` / `.Dependencies` / `.Provided`; `SearchResponderV2.QueryResultType`;
     `ResourceCountV2`; `SearchTimeoutException`; `GravsearchParser.parseQuery` and the `ConstructQuery` /
-    `SelectQuery` AST in `messages.util.search`.
+    `SelectQuery` AST in `messages.util.search`; the `ProjectDataGraphs` port trait (`slice/search/ports`),
+    which webapi-admin implements.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/responders/v2/SearchResponderV2Module.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/responders/v2/SearchResponderV2.scala`
@@ -967,12 +974,15 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-common (`StringFormatter`, `SmartIri`, `IriConverter`, `ConstructResponseUtilV2`,
     `ConstructResponseRdfData`, `QueryBuilderHelper`, `KnoraIris`, `dsp.errors.*`), webapi-ontology
     (`OntologyRepo`, `OntologyCacheHelpers`, `OntologyCache`, `ReadClassInfoV2`, `ReadPropertyInfoV2`),
-    webapi-resources, webapi-admin (`ProjectService`, `User`, `ProjectIri`, `Shortcode`), webapi-standoff
+    webapi-resources, webapi-admin (`ProjectService`, `User`, `ProjectIri`, `Shortcode`; a project's data
+    graph is reached only through the `ProjectDataGraphs` port, with no compile-time import of its adapter),
+    webapi-standoff
     (`StandoffTagUtilV2`), webapi-triplestore, webapi-infrastructure (`SanitizedSpan`), webapi-app
     (`AppConfig`), build-toolchain.
 - **Used by**: webapi-api (`SearchRestService`, `SearchEndpoints`, `ResourcesRestService`,
     `ResourcesServerEndpoints`, `ApiV2Module`), webapi-resources (`ResourcesResponderV2`,
-    `ValuesResponderV2`), webapi-app, testkit, test-it, test-e2e.
+    `ValuesResponderV2`), webapi-admin (`ProjectDataGraphsLive` implements the `ProjectDataGraphs` port),
+    webapi-app, testkit, test-it, test-e2e.
 - **Boundary rules**:
     - Outside callers reach search through the `SearchResponderV2` trait and `SearchResponderV2Module.layer`,
         never through `SearchResponderV2Live` or the transformer and type-inspector classes - enforcement:
@@ -998,17 +1008,28 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `GetIncomingImageLinksGravsearchQuerySpec`); a change to emitted SPARQL shows up as a golden diff -
         enforcement: review (`REVIEW.md` section SPARQL).
     - `PrequeryPatternOrdering`, applied at the single seam `QueryTraverser.transformSelectToSelect`, is the
-        only pass that orders prequery WHERE-block patterns - enforcement: review.
+        only pass that orders prequery WHERE-block patterns - enforcement: review. A `GraphPattern` (the
+        GRAPH-wrapped Lucene statement of a project-scoped lookup) is opaque like `GroupPattern` and
+        `SubSelectPattern`: the ordering ranks it as the statement it wraps, and its T1 Lucene check must
+        reach it inside the `GroupPattern` → `SubSelectPattern` nesting, or the `matchFulltext` expansion loses
+        T1 - enforcement: static-analysis (`PrequeryPatternOrderingSpec`).
+    - Search resolves a project's data graph once per request through the `ProjectDataGraphs` port and
+        wraps only the `text:query` statement in `GRAPH`, and only for lookups anchored on the main resource
+        ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: static-analysis (the
+        scoped prequery and `SearchFulltextQuerySpec` goldens).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
         inference variable naming shows up as a golden diff - enforcement: review (`REVIEW.md` section
         SPARQL).
-    - New queries use the `sparql"..."` interpolator; `SearchQueries.scala` and `SearchFulltextQuery.scala`
-        are grandfathered RDF4J `SparqlBuilder` sites - enforcement: review.
+    - New queries use the `sparql"..."` interpolator; no file of this component imports the RDF4J
+        `SparqlBuilder` (`git grep -l 'org.eclipse.rdf4j.sparqlbuilder' -- <its paths>`, 2026-10-21) -
+        enforcement: review.
     - Wiring: shared inventory. A new search service is added to `SearchResponderV2Module.layer` and, if
         externally visible, to `.Provided`; that layer is listed in `core/LayersLive.scala` and the HTTP
-        surface in `slice/api/v2/ApiV2Module.scala`.
+        surface in `slice/api/v2/ApiV2Module.scala`. A port it declares goes into
+        `SearchResponderV2Module.Dependencies`, and its adapter into `core/LayersLive.scala`
+        (`ProjectDataGraphsLive`).
 - **Durable state**: none written. Search is read-only over Fuseki named graphs, issuing only `Select` and
     `Construct`. In memory: `FulltextBreadthGuard`'s `zio.cache.Cache` of per-term breadth probes, single
     writer inside `FulltextBreadthGuard`. `OntologyCache` is read-only here; its writer is webapi-ontology.
@@ -2023,7 +2044,8 @@ New work is registered in a shared inventory, not discovered from a reserved pat
     visibility. webapi-fair is the first consumer of this pattern: it declares `FairResources`,
     `FairProjects`, `FairClasses` and `FairAssets`, and the adapters `FairResourcesLive`, `FairProjectsLive`,
     `FairClassesLive` and `FairAssetsLive` sit in their providers (not yet in a `repo` package) and are
-    wired in `LayersLive`.
+    wired in `LayersLive`. webapi-search is the second: it declares `ProjectDataGraphs`, implemented by
+    `ProjectDataGraphsLive` in `slice/admin/domain/service`.
 
 Enforcement: `structure` where the compiler forces registration, since a ZLayer that is not provided fails at
 compile time in `LayersLive`; otherwise `review`. The two exceptions to the inventory rule are sipi, where any
