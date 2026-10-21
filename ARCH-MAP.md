@@ -1314,24 +1314,26 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     image emits), test-it, test-e2e.
 - **Boundary rules**:
     - `dsp-repo.ttl`'s text dataset sets `arq:httpServiceAllowed` to `"false"` so a forwarded SystemAdmin
-        SPARQL query cannot make the server issue arbitrary outbound HTTP - enforcement: docs-only, though
-        `docker-entrypoint.sh` runs a grep-based check on every container start and warns, without blocking,
-        if a persisted `/fuseki` volume predates the setting.
+        SPARQL query cannot make the server issue arbitrary outbound HTTP - enforcement: test
+        (`TriplestoreServiceRawQueryIT` asserts a `SERVICE` query is refused with 422 against the built image;
+        the entrypoint installs the image's `dsp-repo.ttl` on every start, so every host running the image has it).
     - `shiro.ini`'s `admin=pw,...` and `healthcheck=pw,...` placeholders must never reach a running container
         unreplaced - enforcement: static-analysis (`docker-entrypoint.sh` exits 1 at startup if the literal
         `=pw` is still present after substitution, so the container fails to boot).
     - The Jena engine version (`FUSEKI_DIST_VERSION`) and the image's own OCI tag are two deliberately
         separate version spaces and must not be conflated - enforcement: docs-only.
     - Wiring: shared inventory. The dataset assembly is one hand-maintained Turtle file loaded from
-        `/fuseki/configuration/` on first boot; image layers are individually named `pkg_tar` and `pkg_files`
-        targets registered by hand in the `oci_image.tars` list.
+        `/fuseki/configuration/`, installed from the image on every start; image layers are individually
+        named `pkg_tar` and `pkg_files` targets registered by hand in the `oci_image.tars` list.
 - **Durable state**: the TDB2 dataset (`tdb2:location "/fuseki/databases/dsp-repo"`) and the Lucene text
     index (`text:directory "/fuseki/lucene/dsp-repo"`), both under the single `/fuseki` volume mount. Single
     writer: the Fuseki JVM process for this deployment; webapi-triplestore is the only application-level
     writer of RDF content into it.
-    - `docker-entrypoint.sh` copies `dsp-repo.ttl` only if the target does not already exist in the
-        persistent volume, so a config change does not retroactively apply to existing deployments. This is
-        the source of the startup warning above and is a known operational gotcha, not a bug.
+    - `docker-entrypoint.sh` is the single writer of `/fuseki/configuration/dsp-repo.ttl`: it installs the
+        image's file on every start, overwriting any edit made on the host. When the two differ (ignoring
+        comments and whitespace), the Lucene index is rebuilt from the staged file in
+        `/fuseki/configuration.next/` before the file is moved into place, so config and index agree;
+        `SKIP_AUTO_INDEX_REBUILD=true` opts out and leaves the index stale.
     - The image keeps no `USER` directive because ops-deploy expects the root-uid contract, a different
         constraint from sipi's NFS rationale.
 

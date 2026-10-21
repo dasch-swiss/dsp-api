@@ -48,41 +48,40 @@ if grep -Fq "=pw" "$FUSEKI_BASE/shiro.ini"; then
   exit 1
 fi
 
-# copy dsp-repo.ttl
-if [ ! -e "$FUSEKI_BASE/configuration/dsp-repo.ttl" ]; then
-  mkdir -p "$FUSEKI_BASE/configuration"
-  cp "$FUSEKI_HOME/dsp-repo.ttl" "$FUSEKI_BASE/configuration/dsp-repo.ttl"
-fi
-
-# The copy above is deliberately conditional and /fuseki is a persistent volume, so an environment created before a
-# configuration change keeps its old file forever. That is fine for tuning, but not for arq:httpServiceAllowed, which
-# is what stops a query from making this server issue outbound HTTP to a target the query author chose. Nothing here
-# can safely rewrite an operator's configuration, so warn instead: the setting has to be applied by hand, and verified
-# with a live SERVICE probe, before the dsp-api SPARQL passthrough is enabled against this host.
-# Matching the *value*, not just the key: the property name also appears in this file's own explanatory comment,
-# and `ja:cxtValue "true"` would contain the key while meaning the opposite. Comments are stripped first and newlines
-# folded, because the name and the value sit on separate lines of one `ja:context [ ... ]` block.
-if ! sed 's/#.*$//' "$FUSEKI_BASE/configuration/dsp-repo.ttl" | tr -d '\n' |
-  grep -qE '"arq:httpServiceAllowed"[[:space:]]*;[[:space:]]*ja:cxtValue[[:space:]]*"false"'; then
-  warn "Existing dsp-repo.ttl does not set arq:httpServiceAllowed to \"false\": federated SERVICE calls are ALLOWED."
-  warn "Add it to $FUSEKI_BASE/configuration/dsp-repo.ttl and restart before enabling the dsp-api SPARQL passthrough."
-fi
-
-# Same staleness problem for text:graphField: without it a `GRAPH <g> { ?s text:query ... }` pattern is NOT scoped to <g>
-# (hits come from every graph), so a host still on the old file would silently ignore the scoping. Match the key with
-# its value on comment-stripped, newline-folded content, as above. The file also needs a full index rebuild after the
-# edit; the entrypoint cannot tell whether the existing index was built with the field, so that part stays in the message.
-if ! sed 's/#.*$//' "$FUSEKI_BASE/configuration/dsp-repo.ttl" | tr -d '\n' |
-  grep -qE 'text:graphField[[:space:]]*"graph"'; then
-  warn "Existing dsp-repo.ttl does not set text:graphField \"graph\": GRAPH-scoped text queries will NOT be scoped."
-  warn "Add it to $FUSEKI_BASE/configuration/dsp-repo.ttl, then run \`make db-rebuild-index\` to rebuild the Lucene index."
-fi
-
 # Check if index rebuild marker file exists
 if [ ! -n "$REBUILD_INDEX_OF_DATASET" ] && [ -f "$REBUILD_INDEX_MARKER_FILE" ] ; then
   info "Detected index rebuild marker file ${REBUILD_INDEX_MARKER_FILE}"
   REBUILD_INDEX_OF_DATASET="$(sed "s/[^[:alpha:]_-]/_/g" "$REBUILD_INDEX_MARKER_FILE")"
   remove_marker_file=true
+fi
+
+# Install dsp-repo.ttl from the image on every start, rebuilding the Lucene index first when it changed (see README).
+# A changed file is moved into configuration/ only after a successful rebuild, so a failed rebuild is retried on the
+# next start. It is staged in a sibling directory because Fuseki loads every configuration/*.ttl (a second copy would
+# declare the dataset twice) and jena.textindexer picks the syntax from the file extension.
+config_file="$FUSEKI_BASE/configuration/dsp-repo.ttl"
+staged_config_file="$FUSEKI_BASE/configuration.next/dsp-repo.ttl"
+# Ignores comments and whitespace, so a comment-only change does not take the database down for a rebuild
+normalised_config() {
+  sed -E 's/(^|[[:space:]])#.*$//' "$1" | tr -s '[:space:]' ' '
+}
+rm -rf "$FUSEKI_BASE/configuration.next"
+if [ ! -e "$config_file" ] ; then
+  mkdir -p "$FUSEKI_BASE/configuration"
+  cp "$FUSEKI_HOME/dsp-repo.ttl" "$config_file"
+elif [ "$(normalised_config "$config_file")" != "$(normalised_config "$FUSEKI_HOME/dsp-repo.ttl")" ] ; then
+  if [ "$SKIP_AUTO_INDEX_REBUILD" = true ] ; then
+    warn "dsp-repo.ttl changed, but SKIP_AUTO_INDEX_REBUILD is set: installing it WITHOUT rebuilding the Lucene index."
+    warn "The index is STALE until it is rebuilt (start with REBUILD_INDEX_OF_DATASET=dsp-repo or the marker file)."
+    cp "$FUSEKI_HOME/dsp-repo.ttl" "$config_file"
+  elif [ -n "$REBUILD_INDEX_OF_DATASET" ] && [ "$REBUILD_INDEX_OF_DATASET" != dsp-repo ] ; then
+    warn "dsp-repo.ttl changed, but a rebuild of ${REBUILD_INDEX_OF_DATASET} was requested: installing it on the next start."
+  else
+    info "dsp-repo.ttl changed: rebuilding the Lucene index before installing it"
+    mkdir -p "$FUSEKI_BASE/configuration.next"
+    cp "$FUSEKI_HOME/dsp-repo.ttl" "$staged_config_file"
+    REBUILD_INDEX_OF_DATASET=dsp-repo
+  fi
 fi
 
 # Rebuild lucene index of the dataset specified
@@ -96,9 +95,21 @@ if [ -n "$REBUILD_INDEX_OF_DATASET" ] ; then
       exit 1
     fi
   fi
+  # Build from the staged dsp-repo.ttl if there is one, see above
+  index_config="${FUSEKI_BASE}/configuration/${REBUILD_INDEX_OF_DATASET}.ttl"
+  if [ -e "$staged_config_file" ] ; then
+    index_config="$staged_config_file"
+  fi
   info "Rebuilding index of dataset ${REBUILD_INDEX_OF_DATASET}..."
-  if java -cp "${FUSEKI_HOME}/fuseki-server.jar" jena.textindexer --desc="${FUSEKI_BASE}/configuration/${REBUILD_INDEX_OF_DATASET}.ttl" ; then
+  if java -cp "${FUSEKI_HOME}/fuseki-server.jar" jena.textindexer --desc="$index_config" ; then
     info "Successfully rebuilt index"
+    if [ -e "$staged_config_file" ] ; then
+      if ! mv "$staged_config_file" "$config_file" ; then
+        error "Failed installing ${staged_config_file}"
+        exit 1
+      fi
+      rmdir "$FUSEKI_BASE/configuration.next"
+    fi
     # Remove marker on successful rebuild
     if [ "$remove_marker_file" = true ] && ! rm "$REBUILD_INDEX_MARKER_FILE" ; then
       warn "Failed removing index rebuild marker file ${REBUILD_INDEX_MARKER_FILE}"

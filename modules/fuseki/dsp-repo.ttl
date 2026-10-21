@@ -7,6 +7,9 @@
 @prefix text:       <http://jena.apache.org/text#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
+# NOTE: any change to this file other than comments and whitespace makes every host delete and rebuild its Lucene
+# index on the next start (about 6.5 minutes of database downtime on prod), see modules/fuseki/README.md.
+
 :service_tdb_all        a                                   fuseki:Service ;
                         rdfs:label                          "TDB2 dsp-repo" ;
                         fuseki:dataset                      :text_dataset ;
@@ -35,12 +38,6 @@
                         # "SERVICE execution disabled", while ordinary queries and the Lucene text index are
                         # unaffected. A JVM system property is not an alternative -- ARQ does not read this symbol
                         # from one, and neither does this version's fuseki-server have a --set option.
-                        #
-                        # CAVEAT: docker-entrypoint.sh copies this file only when the target does not already exist,
-                        # and /fuseki is a persistent volume, so an environment created before this change keeps its
-                        # old configuration across redeploys. The entrypoint warns when that is the case. Verify per
-                        # host with a live SERVICE probe before enabling the passthrough there; see
-                        # docs/03-endpoints/api-admin/sparql-passthrough.md.
                         ja:context                          [ ja:cxtName  "arq:httpServiceAllowed" ;
                                                               ja:cxtValue "false" ] .
 
@@ -71,11 +68,6 @@
 #
 # Adding (or changing) graphField requires a full index rebuild; existing Lucene documents have no
 # graph field, so a GRAPH-scoped lookup against an old index returns nothing.
-#
-# CAVEAT: as with the setting above, docker-entrypoint.sh copies this file only when the target does
-# not exist and /fuseki is a persistent volume, so a new image does not deliver this change to an
-# existing host. Add the line to /fuseki/configuration/dsp-repo.ttl on each host by hand, then run
-# `make db-rebuild-index` (deletes the index and reindexes; the DB is down for the duration).
 :entMap                 a                                   text:EntityMap ;
                         text:entityField                    "uri" ;
                         text:defaultField                   "text" ;

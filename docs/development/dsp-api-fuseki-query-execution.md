@@ -238,8 +238,8 @@ filters inside Lucene — the graph term is ANDed into the query before the hit 
 only hits from `<g>`. Without the field, a `GRAPH` clause around `text:query` is a no-op and hits
 come from every graph, so never rely on it for scoping against an index built without it. Queries
 with no `GRAPH` clause are unchanged under `unionDefaultGraph`. Like any entity-map change, the
-field only takes effect after a full reindex, and the on-disk `dsp-repo.ttl` of every existing
-host must be edited by hand (see `modules/fuseki/README.md`, "Lucene index configuration changes").
+field only takes effect after a full reindex, which the Fuseki entrypoint runs on the first start
+with the changed configuration (see `modules/fuseki/README.md`, "Configuration changes").
 
 ## Fact 11 — Replacing a property path with a plain pattern can be much slower
 
