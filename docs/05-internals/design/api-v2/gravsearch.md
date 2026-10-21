@@ -321,11 +321,12 @@ statement-hoisting passes for `BIND` and Lucene statements — with a single gre
 
 #### The tier table
 
-Every unit (a `StatementPattern` or an opaque `GroupPattern`) is assigned a tier; lower tiers lead:
+Every unit (a `StatementPattern`, an opaque `GroupPattern`, or a `GraphPattern`) is assigned a tier; lower tiers
+lead:
 
 | Tier | Unit |
 | --- | --- |
-| T1 | Lucene: a `text:query` statement, or a `GroupPattern` containing one directly or in a nested `GroupPattern`; a `text:query` inside an `OPTIONAL`, `UNION`, or `MINUS` within the group is not found |
+| T1 | Lucene: a `text:query` statement, a `GraphPattern` wrapping one (a project-scoped lookup), or a `GroupPattern` containing either directly or in a nested `GroupPattern` or `SubSelectPattern` — the scoped `matchFulltext` expansion nests `GroupPattern` → `SubSelectPattern` → `GraphPattern`; a `text:query` inside an `OPTIONAL`, `UNION`, or `MINUS` within the group is not found |
 | T2 | Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object, whose predicate is a bound IRI other than `knora-base:attachedToProject`; also an `rdf:type` statement with an `IriRef` subject |
 | T3 | Bound literal: a non-type statement with an `XsdLiteral` object |
 | T4 | Project-class type unit: `rdf:type` naming a class in a project data ontology (an internal ontology IRI carrying a project shortcode), either directly or as the sole content of an enumerating `VALUES` |
@@ -376,7 +377,11 @@ step and terminates on any input — cycles included — without needing a DAG.
 expression is always a constant, never a variable read); `ValuesPattern`s are re-attached immediately before
 the first unit or block that references their variable; `FilterPattern`s and `FilterNotExistsPattern`s follow
 the ordered units. A `GroupPattern` (used by the `matchFulltext` expansion, below) is an opaque leaf: its
-contents are never inspected beyond the T1 Lucene check, and it is never recursed into.
+contents are never inspected beyond the T1 Lucene check, and it is never recursed into. A `GraphPattern` (the
+`GRAPH <projectDataGraph> { }` around the one `text:query` statement of a project-scoped lookup, see
+[Project scoping](#project-scoping), below) is a leaf too, and it ranks exactly like the statement it wraps:
+tier, tie-breaks and the final rendered-SPARQL tie-break all come from the inner statement, so a query with one
+scoped and one unscoped Lucene unit keeps the order it would have unscoped.
 
 #### Recursion into nested blocks
 
@@ -496,6 +501,45 @@ Like `SearchFulltextQuery`, the expansion asserts resource-ness and value-ness b
 `knora-base:creationDate` / `knora-base:valueCreationDate` rather than by walking `rdfs:subClassOf*` once per
 Lucene hit; `SearchFulltextQuery`'s source comment explains why these substitutions are exact.
 
+### Project Scoping
+
+With `limitToProject`, the prequery restricts the main resource with `?mainRes knora-base:attachedToProject <p>`.
+If the `matchFulltext` resource variable is the main resource, the expansion also scopes its Lucene lookup to the
+project's data graph ([ADR-0012](../../../adr/0012-graph-scoped-lucene-text-lookups.md)): only the `text:query`
+statement inside the subselect is wrapped, so the index returns that graph's hits alone, and the hit cap applies
+after that filter.
+
+```sparql
+{
+  SELECT DISTINCT ?match__matchFulltext WHERE {
+    GRAPH <http://www.knora.org/data/0001/anything> {
+      ?match__matchFulltext <http://jena.apache.org/text#query> "Zeitglöcklein"^^<http://www.w3.org/2001/XMLSchema#string> .
+    }
+  }
+}
+```
+
+Everything after the lookup (the value branch, the list-node branch, the `BIND(COALESCE(...))` and the
+`creationDate` check) stays on the union graph, and so does the main resource's `attachedToProject`. Nothing else
+may go into the GRAPH block: the patterns that check types or walk the class hierarchy resolve against ontology
+graphs and match nothing inside a data graph. The list-node branch needs no scope of its own: a list value never
+points into another project's graph or into the system lists.
+
+The scope follows the main-resource rule, because `limitToProject` restricts only the main resource and links
+across projects are allowed:
+
+- `matchFulltext(?r, ...)` and `matchLabel(?r, ...)` are scoped iff `?r` is the main resource.
+- `matchText(?v, ...)` and `matchTextInStandoff(?v, ...)` are scoped iff `?v` is the object of at least one
+  statement, every statement with object `?v` has the main resource as its subject, and none of them has the
+  predicate `rdfs:label`. `LuceneScope.mainResourceAnchoredValues`
+  decides this in one pass over the whole input WHERE clause, `OPTIONAL`, `UNION`, `MINUS` and
+  `FILTER NOT EXISTS` included, before generation.
+- Any other lookup, for example `matchFulltext` on a linked resource, stays unscoped as before.
+
+`SearchResponderV2` resolves the project's data graph once per request through the `ProjectDataGraphs` port. An
+unknown project yields no graph, so the query is exactly the unscoped one, and `attachedToProject` returns
+nothing.
+
 ### Why the Expansion Needs an Opaque Group
 
 A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once
@@ -515,10 +559,12 @@ Both problems disappear if nothing after the handler ever looks inside the expan
 `{ ... }`, and every pass that matches on `QueryPattern` either has a wildcard fallback that returns it
 unchanged, or (for the two passes that match exhaustively — `QueryTraverser.transformWherePatterns` and
 `GravsearchTypeInspectionUtil.transformPattern`) has an explicit case added that does the same. The inner
-`SELECT DISTINCT` is a `SubSelectPattern`, opaque in the same way and only ever emitted inside the group. The
-`OntologyInferencer`, `GravsearchQueryOptimisation`, and `InferenceOptimizationService` passes never see a
-`GroupPattern`'s interior at all, so the handler can emit the same statement shapes `SearchFulltextQuery` already
-proves correct, unmodified.
+`SELECT DISTINCT` is a `SubSelectPattern`, opaque in the same way and only ever emitted inside the group. A
+`GraphPattern` (see [Project scoping](#project-scoping), below) is opaque in the same way too: both exhaustive
+passes return it unchanged, and `PrequeryPatternOrdering`'s exhaustive matches treat it as one unit that, unlike a
+subquery, exposes the variables of the statement it wraps. The `OntologyInferencer`, `GravsearchQueryOptimisation`,
+and `InferenceOptimizationService` passes never see a `GroupPattern`'s interior at all, so the handler can emit
+the same statement shapes `SearchFulltextQuery` already proves correct, unmodified.
 
 ### Why the Expansion Must Be Hoisted
 
@@ -529,8 +575,9 @@ enumerating every resource class in the repository. Evaluating that block before
 Lucene lookup measured roughly 300× slower in the performance spike behind this feature — the classic
 join-order pessimization `PrequeryPatternOrdering`'s T1 Lucene tier (above) already exists to prevent for a
 bare Lucene `StatementPattern`. T1 also recognizes a `GroupPattern` whose contents include a Lucene statement
-at any depth, and T1 pre-empts the connectivity rule unconditionally, so the whole expansion — not just a
-bare statement — leads its block ahead of patterns like the class-enumeration `VALUES` block.
+at any depth of nested `GroupPattern`, `SubSelectPattern` and `GraphPattern`, and T1 pre-empts the connectivity
+rule unconditionally, so the whole expansion — not just a bare statement — leads its block ahead of patterns like
+the class-enumeration `VALUES` block.
 
 ### Determinism for Snapshot Testing
 

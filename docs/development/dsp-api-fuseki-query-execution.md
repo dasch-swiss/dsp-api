@@ -240,6 +240,9 @@ come from every graph, so never rely on it for scoping against an index built wi
 with no `GRAPH` clause are unchanged under `unionDefaultGraph`. Like any entity-map change, the
 field only takes effect after a full reindex, which the Fuseki entrypoint runs on the first start
 with the changed configuration (see `modules/fuseki/README.md`, "Configuration changes").
+dsp-api emits the scoped form for project-restricted lookups (ADR-0012): `/v2/search` with `limitToProject`,
+and the Gravsearch text functions when anchored on the main resource, wrap only the `text:query` statement in
+`GRAPH <projectDataGraph> { }`, never the patterns that follow it.
 
 ## Fact 11 — Replacing a property path with a plain pattern can be much slower
 
