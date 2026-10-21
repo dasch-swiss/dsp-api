@@ -135,6 +135,16 @@ class GravsearchToCountPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTe
       transformQueryWithInference(queryMatchLabel)
         .map(actual => assertGolden(actual.toSparql, "matchLabel"))
     },
+    test("scope only the Lucene statement of a matchLabel count query to the project's data graph") {
+      transformQueryWithInference(
+        queryMatchLabel,
+        limitResultsToProject = Some(ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")),
+        scopeLuceneToProject = true,
+      ).map(actual =>
+        assertGolden(actual.toSparql, "matchLabelScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchLabelScopedShape"),
+      )
+    },
     test("transform an input query with a decimal as an optional sort criterion and a filter") {
       transformQueryWithInference(inputQueryWithDecimalOptionalSortCriterionAndFilter)
         .map(actual => assertGolden(actual.toSparql, "decimalOptionalSortCriterionAndFilter"))
