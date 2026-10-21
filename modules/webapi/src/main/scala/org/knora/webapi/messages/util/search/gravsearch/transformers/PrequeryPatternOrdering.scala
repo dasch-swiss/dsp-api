@@ -214,7 +214,7 @@ object PrequeryPatternOrdering {
     case StatementPattern(_, pred, _) => isLuceneQueryPredicate(pred)
     case inner: GroupPattern          => containsLucene(inner.patterns)
     case sub: SubSelectPattern        => containsLucene(sub.patterns)
-    case g: GraphPattern              => containsLucene(Seq(g.statement))
+    case g: GraphPattern              => isLuceneQueryPredicate(g.statement.pred)
     case _                            => false
   }
 
@@ -257,7 +257,6 @@ object PrequeryPatternOrdering {
     case g: GroupPattern       => if (containsLucene(g.patterns)) 1 else 7
     case sub: SubSelectPattern => if (containsLucene(sub.patterns)) 1 else 7
     case s: StatementPattern   => statementTier(s, valuesByVar)
-    case g: GraphPattern       => statementTier(g.statement, valuesByVar)
     case _                     => 7
   }
 
@@ -289,8 +288,7 @@ object PrequeryPatternOrdering {
       case StatementPattern(_, v: QueryVariable, _) =>
         val iris = valuesByVar.getOrElse(v, Seq.empty).flatMap(_.values).map(_.iri.toIri)
         iris.nonEmpty && iris.forall(isProjectDataOntologyIri)
-      case g: GraphPattern => hasProjectDataPredicate(g.statement, valuesByVar)
-      case _               => false
+      case _ => false
     }
 
   /**
@@ -346,6 +344,7 @@ object PrequeryPatternOrdering {
     case _               => plainUnitKey(u, valuesByVar)
   }
 
+  /** Never sees a [[GraphPattern]]: `unitKey` unwraps it, so the helpers below need no case for it. */
   private def plainUnitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
     val t                                                      = tierNum(u, valuesByVar)
     val (restrictedCount, loopVars): (Int, Seq[QueryVariable]) = u match {
