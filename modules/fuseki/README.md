@@ -52,8 +52,8 @@ So **a release that changes `dsp-repo.ttl` takes the database down for a full in
 (about 6.5 minutes on prod, plus container start). Call this out in the release notes.
 
 Setting `SKIP_AUTO_INDEX_REBUILD=true` installs a changed file without the rebuild and logs a warning that the
-index is stale. Rebuild it later with `make db-rebuild-index` on the host (sets the marker file and restarts
-the DB) or with `REBUILD_INDEX_OF_DATASET=dsp-repo`.
+index is stale. Rebuild it later by starting the container with `REBUILD_INDEX_OF_DATASET=dsp-repo`, or by
+writing `dsp-repo` to the file `REBUILD_INDEX_MARKER_FILE` points to before a restart.
 
 ## Updating Jena/Fuseki
 

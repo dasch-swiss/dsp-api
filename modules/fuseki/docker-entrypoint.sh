@@ -72,7 +72,7 @@ if [ ! -e "$config_file" ] ; then
 elif [ "$(normalised_config "$config_file")" != "$(normalised_config "$FUSEKI_HOME/dsp-repo.ttl")" ] ; then
   if [ "$SKIP_AUTO_INDEX_REBUILD" = true ] ; then
     warn "dsp-repo.ttl changed, but SKIP_AUTO_INDEX_REBUILD is set: installing it WITHOUT rebuilding the Lucene index."
-    warn "The index is STALE until it is rebuilt (\`make db-rebuild-index\` or REBUILD_INDEX_OF_DATASET=dsp-repo)."
+    warn "The index is STALE until it is rebuilt (start with REBUILD_INDEX_OF_DATASET=dsp-repo or the marker file)."
     cp "$FUSEKI_HOME/dsp-repo.ttl" "$config_file"
   elif [ -n "$REBUILD_INDEX_OF_DATASET" ] && [ "$REBUILD_INDEX_OF_DATASET" != dsp-repo ] ; then
     warn "dsp-repo.ttl changed, but a rebuild of ${REBUILD_INDEX_OF_DATASET} was requested: installing it on the next start."
