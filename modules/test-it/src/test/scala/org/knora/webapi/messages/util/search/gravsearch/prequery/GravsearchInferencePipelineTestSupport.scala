@@ -16,6 +16,7 @@ import org.knora.webapi.messages.util.search.ConstructClause
 import org.knora.webapi.messages.util.search.Entity
 import org.knora.webapi.messages.util.search.FilterNotExistsPattern
 import org.knora.webapi.messages.util.search.FilterPattern
+import org.knora.webapi.messages.util.search.GraphPattern
 import org.knora.webapi.messages.util.search.GroupPattern
 import org.knora.webapi.messages.util.search.IriRef
 import org.knora.webapi.messages.util.search.MinusPattern
@@ -162,6 +163,7 @@ object GravsearchInferencePipelineTestSupport {
       case _: MinusPattern                   => "MINUS"
       case _: GroupPattern                   => "GROUP"
       case _: SubSelectPattern               => "SUBSELECT"
+      case _: GraphPattern                   => "GRAPH"
     }
 
     query.whereClause.patterns.map(patternSummary).mkString("\n")

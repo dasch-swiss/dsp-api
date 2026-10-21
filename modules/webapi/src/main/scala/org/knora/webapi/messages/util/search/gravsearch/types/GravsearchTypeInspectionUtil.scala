@@ -255,5 +255,6 @@ object GravsearchTypeInspectionUtil {
       // Opaque: cannot contain a type annotation, and never appears before function expansion anyway.
       case groupPattern: GroupPattern  => Seq(groupPattern)
       case subSelect: SubSelectPattern => Seq(subSelect)
+      case graph: GraphPattern         => Seq(graph)
     }
 }

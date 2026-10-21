@@ -156,6 +156,7 @@ object PrequeryPatternOrdering {
           case s: StatementPattern         => acc.copy(units = acc.units :+ s)
           case g: GroupPattern             => acc.copy(units = acc.units :+ g)
           case sub: SubSelectPattern       => acc.copy(units = acc.units :+ sub)
+          case g: GraphPattern             => acc.copy(units = acc.units :+ g)
           case blk: OptionalPattern        => acc.copy(blocks = acc.blocks :+ blk)
           case blk: UnionPattern           => acc.copy(blocks = acc.blocks :+ blk)
           case blk: MinusPattern           => acc.copy(blocks = acc.blocks :+ blk)
@@ -176,6 +177,7 @@ object PrequeryPatternOrdering {
     case fne: FilterNotExistsPattern       => fne.patterns.flatMap(vars).toSet
     case g: GroupPattern                   => g.patterns.flatMap(vars).toSet
     case sub: SubSelectPattern             => Set(sub.variable) // only the projection is visible outside
+    case g: GraphPattern                   => vars(g.statement)
   }
 
   /** `Some(subj)` iff `u` is an `rdf:type` statement with variable subject `subj`; see the object's Scaladoc. */
