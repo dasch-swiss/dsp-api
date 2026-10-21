@@ -753,14 +753,6 @@ final class SearchResponderV2Live(
     } yield apiResponse
   }
 
-  /** Scopes the Lucene lookups of a query restricted to a known project; an unknown project leaves them unscoped. */
-  private def luceneScopeFor(limitToProject: Option[ProjectIri], inputWhere: WhereClause): Task[Option[LuceneScope]] =
-    SearchResponderV2Live
-      .resolveRestriction(projectDataGraphs, limitToProject)
-      .map(_.collect { case FulltextProjectRestriction.Scoped(_, dataGraph) =>
-        LuceneScope(dataGraph, inputWhere.patterns)
-      })
-
   override def gravsearchCountV2(
     query: ConstructQuery,
     user: User,
@@ -787,7 +779,11 @@ final class SearchResponderV2Live(
 
       countSparql <- stageSpan("gravsearch.prequery.generate") {
                        for {
-                         luceneScope                  <- luceneScopeFor(limitToProject, whereClauseWithoutAnnotations)
+                         luceneScope <- SearchResponderV2Live.luceneScopeFor(
+                                          projectDataGraphs,
+                                          limitToProject,
+                                          whereClauseWithoutAnnotations,
+                                        )
                          gravsearchToCountTransformer <-
                            ZIO.succeed(
                              new GravsearchToCountPrequeryTransformer(
@@ -873,7 +869,11 @@ final class SearchResponderV2Live(
       // turn the input query into a triplestore-specific SELECT prequery.
       prequeryGenerated <- stageSpan("gravsearch.prequery.generate") {
                              for {
-                               luceneScope                     <- luceneScopeFor(limitToProject, whereClauseWithoutAnnotations)
+                               luceneScope <- SearchResponderV2Live.luceneScopeFor(
+                                                projectDataGraphs,
+                                                limitToProject,
+                                                whereClauseWithoutAnnotations,
+                                              )
                                gravsearchToPrequeryTransformer <-
                                  ZIO.attempt(
                                    new GravsearchToPrequeryTransformer(
@@ -1738,4 +1738,17 @@ object SearchResponderV2Live {
           ),
         )
     }
+
+  /**
+   * The Gravsearch [[LuceneScope]] of a query restricted to a known project; `None` without a restriction or for an
+   * unknown project. The one derivation the responder and the prequery goldens share.
+   */
+  def luceneScopeFor(
+    port: ProjectDataGraphs,
+    limitToProject: Option[ProjectIri],
+    inputWhere: WhereClause,
+  ): Task[Option[LuceneScope]] =
+    resolveRestriction(port, limitToProject).map(_.collect { case FulltextProjectRestriction.Scoped(_, dataGraph) =>
+      LuceneScope(dataGraph, inputWhere.patterns)
+    })
 }

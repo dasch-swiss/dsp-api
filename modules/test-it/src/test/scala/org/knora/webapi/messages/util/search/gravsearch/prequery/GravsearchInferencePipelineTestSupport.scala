@@ -29,6 +29,7 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.SubSelectPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
+import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.messages.util.search.XsdLiteral
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
@@ -37,6 +38,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTrans
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.responders.v2.SearchResponderV2Live
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectDataGraphsLive
@@ -104,7 +106,7 @@ object GravsearchInferencePipelineTestSupport {
     querySchema <-
       ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
     appConfig           <- ZIO.service[AppConfig]
-    luceneScope         <- luceneScopeFor(limitResultsToProject, scopeLuceneToProject, sanitizedWhereClause.patterns)
+    luceneScope         <- luceneScopeFor(limitResultsToProject, scopeLuceneToProject, sanitizedWhereClause)
     prequeryTransformer <-
       ZIO.attempt(
         buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig, luceneScope),
@@ -138,26 +140,21 @@ object GravsearchInferencePipelineTestSupport {
   } yield transformedPrequery
 
   /**
-   * Derives the scope from the same project as `limitResultsToProject`, through the production adapter, so a golden
-   * never pairs a data graph with a missing `attachedToProject` or the reverse.
+   * Derives the scope from the same project as `limitResultsToProject`, the way the responder does, so a golden never
+   * pairs a data graph with a missing `attachedToProject` or the reverse.
    */
   private def luceneScopeFor(
     limitResultsToProject: Option[ProjectIri],
     scopeLuceneToProject: Boolean,
-    inputWhere: Seq[QueryPattern],
+    inputWhere: WhereClause,
   ): ZIO[KnoraProjectService, Throwable, Option[LuceneScope]] =
-    if (!scopeLuceneToProject) ZIO.none
-    else
-      for {
-        project <- ZIO
-                     .fromOption(limitResultsToProject)
-                     .orElseFail(AssertionException("scopeLuceneToProject needs limitResultsToProject"))
-        graph <- ZIO
-                   .serviceWithZIO[KnoraProjectService](ProjectDataGraphsLive(_).dataGraphOf(project))
-                   .someOrFail(
-                     AssertionException(s"Unknown project ${project.value}"),
-                   )
-      } yield Some(LuceneScope(graph, inputWhere))
+    ZIO.serviceWithZIO[KnoraProjectService] { projectService =>
+      SearchResponderV2Live.luceneScopeFor(
+        ProjectDataGraphsLive(projectService),
+        limitResultsToProject.filter(_ => scopeLuceneToProject),
+        inputWhere,
+      )
+    }
 
   /**
    * Renders one line per top-level pattern of `query.whereClause.patterns`, in traversal order, so pattern

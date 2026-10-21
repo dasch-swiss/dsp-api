@@ -14,7 +14,8 @@ import org.knora.webapi.slice.common.domain.InternalIri
  * to a project whose data graph is known; the caller keeps the main resource's `attachedToProject` either way.
  *
  * @param dataGraph  the data graph of the project the query is restricted to.
- * @param inputWhere the input WHERE patterns, type annotations removed, from which the generator decides which
- *                   lookups are anchored on the main resource.
+ * @param inputWhere the input WHERE patterns, type annotations removed. `matchFulltext` and `matchLabel` are anchored
+ *                   on the main resource by their resource variable alone; a value-anchored lookup (`matchText`,
+ *                   `matchTextInStandoff`) needs the statements that bind its value, taken from these patterns.
  */
 final case class LuceneScope(dataGraph: InternalIri, inputWhere: Seq[QueryPattern])
