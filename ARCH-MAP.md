@@ -1024,7 +1024,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
         runs a `matchFulltext` prequery behind `FulltextBreadthGuard` - enforcement: static-analysis, textual
         (`//tools/lint:gravsearch_prequery_seam`, part of `just check`; a prequery path in a file that builds no
-        transformer is review). The probe uses the lookup's own scope - enforcement: static-analysis
+        transformer is review). The probe uses the lookup's own scope - enforcement: test
         (`GravsearchFulltextBreadthGuardSpec`).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
