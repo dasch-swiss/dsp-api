@@ -36,6 +36,7 @@ import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.slice.search.FulltextBreadthGuard.BreadthKey
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
@@ -66,6 +67,23 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
        |    FILTER knora-api:matchFulltext(?mainRes, "$term")
        |}""".stripMargin
 
+  // The lookup is anchored on a linked resource, which may sit in another project, so it stays unscoped even when
+  // the query is restricted to a project.
+  private val linkedMatchFulltextQuery =
+    s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+       |CONSTRUCT {
+       |    ?page knora-api:isMainResource true .
+       |} WHERE {
+       |    ?page a incunabula:page .
+       |    ?page incunabula:partOf ?book .
+       |    ?book a incunabula:book .
+       |    FILTER knora-api:matchFulltext(?book, "$term")
+       |}""".stripMargin
+
+  // One plain word, so FulltextSearchTerms.shouldProbe does not hold.
+  private val singleTermQuery = matchFulltextQuery.replace(term, "Zeitglöcklein")
+
   private val plainQuery =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -80,6 +98,8 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
     None,
     Some(InternalIri("http://www.knora.org/data/0803/incunabula")),
   )
+
+  private val unscopedProbe = SearchFulltextQuery.buildProbe(LuceneQueryString(term), None, None)
 
   // What SearchResponderV2Live needs from the spec environment besides the guard double.
   private type ResponderDeps = AppConfig & TriplestoreService & ConstructResponseUtilV2 & OntologyCacheHelpers &
@@ -152,6 +172,22 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         scoped    <- page(responder, matchFulltextQuery, Some(incunabulaProjectIri))
         unscoped  <- page(responder, matchFulltextQuery).exit
       } yield assertTrue(scoped.resources.nonEmpty) && assert(unscoped)(failsWithA[BadRequestException])
+    },
+    test("measures a matchFulltext on a linked resource with the unscoped probe, even in a project-scoped query") {
+      for {
+        probed    <- Ref.make(List.empty[Select])
+        responder <- responderWith(key => probed.update(_ :+ key.probeSparql).as(1L))
+        counted   <- count(responder, linkedMatchFulltextQuery, Some(incunabulaProjectIri))
+        keys      <- probed.get
+      } yield assertTrue(counted.numberOfResources > 0, keys == List(unscopedProbe))
+    },
+    test("never probes a single plain term") {
+      for {
+        (probes, probe) <- countingProbe(cap.toLong + 1)
+        responder       <- responderWith(probe)
+        resources       <- page(responder, singleTermQuery)
+        probed          <- probes.get
+      } yield assertTrue(resources.resources.nonEmpty, probed == 0)
     },
   )
 }
