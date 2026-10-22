@@ -98,6 +98,15 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val refCountResourceIri = "http://rdfh.ch/9999/f0khY71NRBqJ7noQj-YHpQ"
   private val refCountTargetIri   = "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
 
+  // Number of formatted (textValueAsXml) values in the bulk fixture; each must carry stored XML on both paths.
+  private val formattedValueCount  = 11
+  private val testRichtextInternal = "http://www.knora.org/ontology/9999/onto#testRichtext"
+  private val testSimpleInternal   = "http://www.knora.org/ontology/9999/onto#testSimpleText"
+  private val allStandoffIri       = "http://rdfh.ch/9999/jgih4kJRSA2306qegfp1qA"
+  private val allStandoffTargetIri = "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
+  // Three <p> paragraphs in one formatted value, next to one plain-text value.
+  private val multiParagraphMixedIri = "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g"
+
   private val dataTtl = RdfDataObject(initGraphBase + "data.ttl", projectDataGraph)
 
   override def rdfDataObjects: List[RdfDataObject] = List(
@@ -129,6 +138,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     "private_property_resource",
     "richtext_all_standoff",
     "richtext_standoff_refcount",
+    "richtext_multi_paragraph_mixed",
     "second_onto_class",
     "image_still",
     "image_still_svg",
@@ -190,6 +200,15 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         val valuePermA    = valuePermissionsOf(graphA, explicitValuePermIri, testBooleanInternal)
         val valuePermB    = valuePermissionsOf(graphB, explicitValuePermIri, testBooleanInternal)
 
+        val xmlCountA = valueHasXmlCount(graphA)
+        val xmlCountB = valueHasXmlCount(graphB)
+
+        val multiXmlA = valueXmls(graphA, multiParagraphMixedIri, testRichtextInternal)
+        val multiXmlB = valueXmls(graphB, multiParagraphMixedIri, testRichtextInternal)
+
+        val linkXmlA = valueXmls(graphA, allStandoffIri, testRichtextInternal) ++
+          valueXmls(graphA, refCountResourceIri, testRichtextInternal)
+
         val diff =
           if (iso) ""
           else
@@ -223,15 +242,44 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         // text values has a refcount of 2.
         val standoffRefCountsMatch = assertTrue(refCountA.contains(2), refCountB.contains(2))
 
+        // The isomorphism would also pass with no XML on either side, so require the stored XML to be there.
+        val storedXmlPresent = assertTrue(xmlCountA >= formattedValueCount, xmlCountB >= formattedValueCount)
+        // Several <p> paragraphs are the highest-risk rendering case; the stored XML must keep all three and
+        // equal what the create path stored.
+        val multiParagraphXmlStored = assertTrue(
+          multiXmlA.size == 1,
+          multiXmlA.forall(_.split("<p>", -1).length - 1 == 3),
+          multiXmlA == multiXmlB,
+        )
+        // Targets created in the same payload are linked by their real resource IRI, never a client ID.
+        val sameCallLinkResolved = assertTrue(
+          linkXmlA.size == 3,
+          linkXmlA.forall(xml => salsahLinkHrefs(xml) == List(allStandoffTargetIri)),
+          linkXmlA.forall(xml => salsahLinkHrefs(xml).forall(ResourceIri.from(_).isRight)),
+          linkXmlA.forall(xml => !xml.contains("ref:") && !xml.contains("clientId")),
+        )
+        // Only the formatted value carries valueHasXml; the plain-text value beside it has none.
+        val onlyFormattedHasXml = assertTrue(
+          valueHasXmlPresence(graphA, multiParagraphMixedIri, testRichtextInternal) == List(true),
+          valueHasXmlPresence(graphA, multiParagraphMixedIri, testSimpleInternal) == List(false),
+          valueHasXmlPresence(graphB, multiParagraphMixedIri, testRichtextInternal) == List(true),
+          valueHasXmlPresence(graphB, multiParagraphMixedIri, testSimpleInternal) == List(false),
+        )
+
         (twoStepCreatesRan &&
           tripleCountsMatch &&
           resourceSetsMatch &&
           creationDateSurvives &&
           payloadPermissionsWin &&
           graphsAreIsomorphic &&
-          standoffRefCountsMatch).label(
+          standoffRefCountsMatch &&
+          storedXmlPresent &&
+          multiParagraphXmlStored &&
+          sameCallLinkResolved &&
+          onlyFormattedHasXml).label(
           s"""|counts: A=${normA.size} B=${normB.size}
               |standoff-link refCount A=$refCountA B=$refCountB
+              |valueHasXml triples A=$xmlCountA B=$xmlCountB
               |resources only in A: ${(resourcesA -- resourcesB).toList.sorted.mkString(", ")}
               |resources only in B: ${(resourcesB -- resourcesA).toList.sorted.mkString(", ")}
               |$diff""".stripMargin,
@@ -485,6 +533,33 @@ class BulkImportParityE2ESpec extends E2EZSpec {
       .headOption
       .map(_.asLiteral().getInt)
   }
+
+  private def valueHasXmlCount(model: Model): Int =
+    model.listStatements(null, model.createProperty(kb + "valueHasXml"), null.asInstanceOf[RDFNode]).asScala.size
+
+  // The value nodes a resource holds under a property, reached through the resource because the
+  // single-create path mints its own value IRIs.
+  private def valuesOf(model: Model, resourceIri: String, propertyUri: String): List[Resource] =
+    model
+      .listObjectsOfProperty(model.createResource(resourceIri), model.createProperty(propertyUri))
+      .asScala
+      .collect { case n if n.isResource => n.asResource }
+      .toList
+
+  private def valueXmls(model: Model, resourceIri: String, propertyUri: String): List[String] =
+    valuesOf(model, resourceIri, propertyUri)
+      .flatMap(v => firstObjectOf(model, v, kb + "valueHasXml"))
+      .map(_.asLiteral().getLexicalForm)
+
+  private def valueHasXmlPresence(model: Model, resourceIri: String, propertyUri: String): List[Boolean] =
+    valuesOf(model, resourceIri, propertyUri).map(v => firstObjectOf(model, v, kb + "valueHasXml").isDefined)
+
+  private val salsahLinkTag = """<a [^>]*class="salsah-link"[^>]*>""".r
+  private val hrefAttribute = """href="([^"]*)"""".r
+
+  // Attribute order in the stored XML is not significant, so hrefs are read per tag.
+  private def salsahLinkHrefs(xml: String): List[String] =
+    salsahLinkTag.findAllIn(xml).flatMap(tag => hrefAttribute.findFirstMatchIn(tag).map(_.group(1))).toList
 
   private def canonicalNTriples(model: Model): String = {
     val out = new ByteArrayOutputStream()
