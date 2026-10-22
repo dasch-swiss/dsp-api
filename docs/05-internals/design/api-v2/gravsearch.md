@@ -546,9 +546,10 @@ nothing.
 With the full hit limit, a broad term can make the prequery slow, so a `matchFulltext` query runs behind the
 same `FulltextBreadthGuard` as `/v2/search`. While generating, `handleMatchFulltextFunction` records the
 lookup's raw term and the data graph it is scoped to (`MatchFulltextLookup`, `None` when unscoped); the
-generator exposes it once the query has been traversed. `gravsearchV2` and `gravsearchCountV2` then run the
-prequery through `FulltextBreadthGuard.guarded` with that term and graph, so the probe counts exactly the
-candidates the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
+generator exposes it once the query has been traversed. `gravsearchV2` and `gravsearchCountV2` run every
+prequery through `SearchResponderV2Live.executePrequery`, which, given the generator, wraps a `matchFulltext`
+prequery in `FulltextBreadthGuard.guarded` with that term and graph, so the probe counts exactly the candidates
+the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
 wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
 ### Why the Expansion Needs an Opaque Group

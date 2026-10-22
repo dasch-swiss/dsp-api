@@ -1023,7 +1023,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
     - Every Gravsearch `matchFulltext` lookup passes `luceneHitLimit`, and its prequery runs behind
         `FulltextBreadthGuard`, probed in the lookup's own scope (`MatchFulltextLookup`). A Gravsearch prequery
-        reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which owns the guard -
+        reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which takes the generator and owns the guard -
         enforcement: static-analysis (the `*MatchFulltext*` prequery goldens, `GravsearchFulltextBreadthGuardSpec`)
         for page and count; review for a new prequery path.
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
