@@ -124,14 +124,17 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         resources       <- page(responder, matchFulltextQuery)
         counted         <- count(responder, matchFulltextQuery)
         probed          <- probes.get
-      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed >= 1)
+      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 1)
     },
+    // A failed probe is not cached, so page and count each probe once.
     test("fails open when the probe errors") {
       for {
-        responder <- responderWith(_ => ZIO.fail(new RuntimeException("probe down")))
+        probes    <- Ref.make(0)
+        responder <- responderWith(_ => probes.update(_ + 1) *> ZIO.fail(new RuntimeException("probe down")))
         resources <- page(responder, matchFulltextQuery)
         counted   <- count(responder, matchFulltextQuery)
-      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0)
+        probed    <- probes.get
+      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 2)
     },
     test("never probes a query without matchFulltext") {
       for {

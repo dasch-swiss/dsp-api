@@ -1951,9 +1951,9 @@ abstract class AbstractPrequeryGenerator(
   // more than one expansion whose internal variables could collide.
   private val matchFulltextVariableSuffix = "__matchFulltext"
 
-  // Set once handleMatchFulltextFunction has processed a call, so a second call in the same query can
-  // be rejected: the performance spike for DEV-6715 measured a second call at 17-38s, since Jena
-  // substitution-joins the second block, re-running its Lucene lookups per candidate row of the first.
+  // The lookup of the query's single permitted matchFulltext call; once set, a second call is rejected: the
+  // performance spike for DEV-6715 measured a second call at 17-38s, since Jena substitution-joins the second
+  // block, re-running its Lucene lookups per candidate row of the first.
   private var recordedMatchFulltextLookup: Option[MatchFulltextLookup] = None
 
   /**

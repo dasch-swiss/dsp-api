@@ -585,10 +585,21 @@ final class SearchResponderV2Live(
       ZIO.logErrorCause(s"Gravsearch prequery failed:\n$prequerySparql", Cause.fail(e))
   }
 
-  // A matchFulltext prequery runs behind the same breadth guard as /v2/search, probing the scope its lookup runs in;
-  // a prequery without matchFulltext runs unguarded.
-  private def breadthGuarded[A](lookup: Option[MatchFulltextLookup])(prequery: Task[A]): Task[A] =
-    lookup.fold(prequery)(l => fulltextBreadthGuard.guarded(l.searchTerm, None, l.dataGraph, None)(prequery))
+  // The one place a Gravsearch prequery (page or count) reaches the triplestore. A matchFulltext prequery runs behind
+  // the same breadth guard as /v2/search, probing the scope its lookup runs in; any other prequery runs unguarded.
+  private def executePrequery(prequerySparql: String, matchFulltextLookup: Option[MatchFulltextLookup]) = {
+    val prequery = triplestore.query(Select.gravsearch(prequerySparql)).tapError(logPrequeryFailure(prequerySparql))
+    stageSpan("gravsearch.prequery.execute")(
+      matchFulltextLookup.fold(prequery)(lookup =>
+        fulltextBreadthGuard.guarded(
+          lookup.searchTerm,
+          limitToStandoffClass = None,
+          dataGraph = lookup.dataGraph,
+          limitToResourceClass = None,
+        )(prequery),
+      ),
+    )
+  }
 
   override def fulltextSearchCountV2(
     searchValue: IRI,
@@ -874,14 +885,7 @@ final class SearchResponderV2Live(
 
       _ <- recordPrequeryOnRoot(countSparql)
 
-      countResponse <-
-        stageSpan("gravsearch.prequery.execute")(
-          breadthGuarded(matchFulltextLookup)(
-            triplestore
-              .query(Select.gravsearch(countSparql))
-              .tapError(logPrequeryFailure(countSparql)),
-          ),
-        )
+      countResponse <- executePrequery(countSparql, matchFulltextLookup)
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -973,14 +977,7 @@ final class SearchResponderV2Live(
 
       _ <- recordPrequeryOnRoot(prequerySparql)
 
-      prequeryResponseNotMerged <-
-        stageSpan("gravsearch.prequery.execute")(
-          breadthGuarded(gravsearchToPrequeryTransformer.matchFulltextLookup)(
-            triplestore
-              .query(Select.gravsearch(prequerySparql))
-              .tapError(logPrequeryFailure(prequerySparql)),
-          ),
-        )
+      prequeryResponseNotMerged <- executePrequery(prequerySparql, gravsearchToPrequeryTransformer.matchFulltextLookup)
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
 
