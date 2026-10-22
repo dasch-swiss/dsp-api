@@ -41,6 +41,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCou
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.prequery.LuceneScope
+import org.knora.webapi.messages.util.search.gravsearch.prequery.MatchFulltextLookup
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
@@ -584,6 +585,11 @@ final class SearchResponderV2Live(
       ZIO.logErrorCause(s"Gravsearch prequery failed:\n$prequerySparql", Cause.fail(e))
   }
 
+  // A matchFulltext prequery runs behind the same breadth guard as /v2/search, probing the scope its lookup runs in;
+  // a prequery without matchFulltext runs unguarded.
+  private def breadthGuarded[A](lookup: Option[MatchFulltextLookup])(prequery: Task[A]): Task[A] =
+    lookup.fold(prequery)(l => fulltextBreadthGuard.guarded(l.searchTerm, None, l.dataGraph, None)(prequery))
+
   override def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[ProjectIri],
@@ -820,58 +826,61 @@ final class SearchResponderV2Live(
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
 
-      countSparql <- stageSpan("gravsearch.prequery.generate") {
-                       for {
-                         luceneScope <- SearchResponderV2Live.luceneScopeFor(
-                                          projectDataGraphs,
-                                          limitToProject,
-                                          whereClauseWithoutAnnotations,
-                                        )
-                         gravsearchToCountTransformer <-
-                           ZIO.succeed(
-                             new GravsearchToCountPrequeryTransformer(
-                               constructClause = query.constructClause,
-                               typeInspectionResult = typeInspectionResult,
-                               querySchema = querySchema,
-                               searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
-                               luceneScope = luceneScope,
-                             ),
-                           )
-                         prequery <-
-                           queryTraverser.transformConstructToSelect(
-                             inputQuery = query.copy(
-                               whereClause = whereClauseWithoutAnnotations,
-                               orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
-                             ),
-                             transformer = gravsearchToCountTransformer,
-                           )
-                         selectTransformer: SelectTransformer =
-                           new SelectTransformer(
-                             simulateInference = gravsearchToCountTransformer.useInference,
-                             sparqlTransformerLive,
-                             gravsearchToCountTransformer.mainResourceVariable,
-                             stringFormatter,
-                           )
-                         ontologiesForInferenceMaybe <-
-                           limitToProject.fold(
-                             inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
-                           )(getProjectOntologies)
-                         countQuery <- queryTraverser.transformSelectToSelect(
-                                         inputQuery = prequery,
-                                         transformer = selectTransformer,
-                                         ontologiesForInferenceMaybe,
-                                         limitToProject,
-                                       )
-                       } yield countQuery.toSparql
-                     }
+      countGenerated <- stageSpan("gravsearch.prequery.generate") {
+                          for {
+                            luceneScope <- SearchResponderV2Live.luceneScopeFor(
+                                             projectDataGraphs,
+                                             limitToProject,
+                                             whereClauseWithoutAnnotations,
+                                           )
+                            gravsearchToCountTransformer <-
+                              ZIO.succeed(
+                                new GravsearchToCountPrequeryTransformer(
+                                  constructClause = query.constructClause,
+                                  typeInspectionResult = typeInspectionResult,
+                                  querySchema = querySchema,
+                                  searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
+                                  luceneScope = luceneScope,
+                                ),
+                              )
+                            prequery <-
+                              queryTraverser.transformConstructToSelect(
+                                inputQuery = query.copy(
+                                  whereClause = whereClauseWithoutAnnotations,
+                                  orderBy = Seq.empty[OrderCriterion], // count queries do not need any sorting criteria
+                                ),
+                                transformer = gravsearchToCountTransformer,
+                              )
+                            selectTransformer: SelectTransformer =
+                              new SelectTransformer(
+                                simulateInference = gravsearchToCountTransformer.useInference,
+                                sparqlTransformerLive,
+                                gravsearchToCountTransformer.mainResourceVariable,
+                                stringFormatter,
+                              )
+                            ontologiesForInferenceMaybe <-
+                              limitToProject.fold(
+                                inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause),
+                              )(getProjectOntologies)
+                            countQuery <- queryTraverser.transformSelectToSelect(
+                                            inputQuery = prequery,
+                                            transformer = selectTransformer,
+                                            ontologiesForInferenceMaybe,
+                                            limitToProject,
+                                          )
+                          } yield (countQuery.toSparql, gravsearchToCountTransformer.matchFulltextLookup)
+                        }
+      (countSparql, matchFulltextLookup) = countGenerated
 
       _ <- recordPrequeryOnRoot(countSparql)
 
       countResponse <-
         stageSpan("gravsearch.prequery.execute")(
-          triplestore
-            .query(Select.gravsearch(countSparql))
-            .tapError(logPrequeryFailure(countSparql)),
+          breadthGuarded(matchFulltextLookup)(
+            triplestore
+              .query(Select.gravsearch(countSparql))
+              .tapError(logPrequeryFailure(countSparql)),
+          ),
         )
 
       _ <- // query response should contain one result with one row with the name "count"
@@ -966,9 +975,11 @@ final class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         stageSpan("gravsearch.prequery.execute")(
-          triplestore
-            .query(Select.gravsearch(prequerySparql))
-            .tapError(logPrequeryFailure(prequerySparql)),
+          breadthGuarded(gravsearchToPrequeryTransformer.matchFulltextLookup)(
+            triplestore
+              .query(Select.gravsearch(prequerySparql))
+              .tapError(logPrequeryFailure(prequerySparql)),
+          ),
         )
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
