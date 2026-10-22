@@ -99,10 +99,13 @@ object ValueHasXmlE2E {
   }
 
   /**
-   * Creates the mapping `mappingName` in project 0001 from `test_data/test_route/texts/mappingForHTML.xml`.
-   * A mapping name can be created only once per project.
+   * Creates the mapping `mappingName` in project 0001 from `mappingFile`, by default
+   * `test_data/test_route/texts/mappingForHTML.xml`. A mapping name can be created only once per project.
    */
-  def createCustomMapping(mappingName: String): RIO[TestApiClient, StandoffMappingIri] = {
+  def createCustomMapping(
+    mappingName: String,
+    mappingFile: java.nio.file.Path = Paths.get("test_data/test_route/texts/mappingForHTML.xml"),
+  ): RIO[TestApiClient, StandoffMappingIri] = {
     val params =
       s"""{
          |  "knora-api:mappingHasName": "$mappingName",
@@ -115,7 +118,7 @@ object ValueHasXmlE2E {
          |}""".stripMargin
     val body = Seq(
       multipart("json", params).contentType("application/json"),
-      multipartFile("xml", Paths.get("test_data/test_route/texts/mappingForHTML.xml")).contentType("text/xml(UTF-8)"),
+      multipartFile("xml", mappingFile).contentType("text/xml(UTF-8)"),
     )
     TestApiClient
       .postMultiPart[Json](uri"/v2/mapping", body, anythingUser1)
