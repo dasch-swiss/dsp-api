@@ -1022,8 +1022,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). This GRAPH-naming
         SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
     - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
-        runs a `matchFulltext` prequery behind `FulltextBreadthGuard`, probed in the lookup's own scope -
-        enforcement: static-analysis (`//tools/lint:gravsearch_prequery_seam`, part of `just check`).
+        runs a `matchFulltext` prequery behind `FulltextBreadthGuard` - enforcement: static-analysis, textual
+        (`//tools/lint:gravsearch_prequery_seam`, part of `just check`; a prequery path in a file that builds no
+        transformer is review). The probe uses the lookup's own scope - enforcement: static-analysis
+        (`GravsearchFulltextBreadthGuardSpec`).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
