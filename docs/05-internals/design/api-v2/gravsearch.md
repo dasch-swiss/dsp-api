@@ -506,14 +506,15 @@ Lucene hit; `SearchFulltextQuery`'s source comment explains why these substituti
 With `limitToProject`, the prequery restricts the main resource with `?mainRes knora-base:attachedToProject <p>`.
 If the `matchFulltext` resource variable is the main resource, the expansion also scopes its Lucene lookup to the
 project's data graph ([ADR-0012](../../../adr/0012-graph-scoped-lucene-text-lookups.md)): only the `text:query`
-statement inside the subselect is wrapped, so the index returns that graph's hits alone, and the hit cap applies
-after that filter.
+statement inside the subselect is wrapped, so the index returns that graph's hits alone. A scoped lookup also
+passes the explicit hit limit (`OntologyConstants.Fuseki.luceneHitLimit`), which applies after that filter; an
+unscoped one still inherits Jena's 10,000-hit default.
 
 ```sparql
 {
   SELECT DISTINCT ?match__matchFulltext WHERE {
     GRAPH <http://www.knora.org/data/0001/anything> {
-      ?match__matchFulltext <http://jena.apache.org/text#query> "Zeitglöcklein"^^<http://www.w3.org/2001/XMLSchema#string> .
+      ?match__matchFulltext <http://jena.apache.org/text#query> ("Zeitglöcklein" 1000000) .
     }
   }
 }
