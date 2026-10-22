@@ -1021,11 +1021,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
         scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). This GRAPH-naming
         SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
-    - Every Gravsearch `matchFulltext` lookup passes `luceneHitLimit`, and its prequery runs behind
-        `FulltextBreadthGuard`, probed in the lookup's own scope (`MatchFulltextLookup`). A Gravsearch prequery
-        reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which takes the generator and owns the guard -
-        enforcement: static-analysis (the `*MatchFulltext*` prequery goldens, `GravsearchFulltextBreadthGuardSpec`)
-        for page and count; review for a new prequery path.
+    - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
+        runs a `matchFulltext` prequery behind `FulltextBreadthGuard`, probed in the lookup's own scope -
+        enforcement: static-analysis (`//tools/lint:gravsearch_prequery_seam`, part of `just check`).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
@@ -1726,8 +1724,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     released through. It underpins Application composition operationally without hosting domain logic.
 - **Key entities**: `bazel_dep`, `scala_config`, `scala_deps`, `image_versions`, `FUSEKI_DIST_VERSION`,
     `buildinfo`, `oci_config_label`, `ext_scalafmt`, the wrapped `scala_library` / `scala_binary` macros in
-    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `require-bazel`,
-    `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
+    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `gravsearch_prequery_seam`,
+    `require-bazel`, `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
 - **Public interface**: `just <recipe>`, the sole entry point, enumerated by `just --list` (`fmt`, `check`,
     `header-fix`; `test`, `test-unit`, `test-it`, `test-e2e`, `test-ingest*`; `docker-build*`,
     `docker-publish*`; the `stack-*` lifecycle; `docs-*`; `markdownlint`; `structurizer`; `clean*`); the
