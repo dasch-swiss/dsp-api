@@ -76,7 +76,7 @@ class ValueHasXmlReadContractE2ESpec extends E2EZSpec {
     } yield Seq(complexXml, complexStandoff, simple)
 
   override val e2eSpec: Spec[env, Any] = suite("valueHasXml is invisible to the read path")(
-    test("a stored valueHasXml changes no client-visible form of the text value") {
+    test("REQ-4.1 a stored valueHasXml changes no client-visible form of the text value") {
       for {
         created         <- createResource
         (resource, vIri) = created

@@ -98,14 +98,16 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val refCountResourceIri = "http://rdfh.ch/9999/f0khY71NRBqJ7noQj-YHpQ"
   private val refCountTargetIri   = "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
 
-  // Number of formatted (textValueAsXml) values in the bulk fixture; each must carry stored XML on both paths.
+  // Number of `textValueAsXml` values in bulk-import/data.jsonld; each must carry stored XML on both paths.
   private val formattedValueCount  = 11
   private val testRichtextInternal = "http://www.knora.org/ontology/9999/onto#testRichtext"
   private val testSimpleInternal   = "http://www.knora.org/ontology/9999/onto#testSimpleText"
   private val allStandoffIri       = "http://rdfh.ch/9999/jgih4kJRSA2306qegfp1qA"
-  private val allStandoffTargetIri = "http://rdfh.ch/9999/ylMWInTAQxqQcPc51UqwPQ"
   // Three <p> paragraphs in one formatted value, next to one plain-text value.
   private val multiParagraphMixedIri = "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g"
+  private val multiParagraphXml      =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<text><p>Zebra crossing at <em>dawn</em>.</p><p>Seventh lantern, then <strong>nine</strong> kites.</p><p>Quartz after <u>midnight</u>; mango last.</p></text>""".stripMargin
 
   private val dataTtl = RdfDataObject(initGraphBase + "data.ttl", projectDataGraph)
 
@@ -160,7 +162,8 @@ class BulkImportParityE2ESpec extends E2EZSpec {
   private val plainResources = tier0 ++ tier1 ++ tier2
 
   override val e2eSpec: Spec[env, Any] = suite("Bulk import vs single-resource create parity")(
-    test("both paths produce isomorphic graphs") {
+    // REQ-2.4: the isomorphism carries valueHasXml, and resource create stores byte-identical XML (REQ-2.3).
+    test("REQ-2.4 both paths produce isomorphic graphs") {
       for {
         tester <- ZIO
                     .serviceWithZIO[UserService](_.findUserByIri(UserIri.unsafeFrom(testerUserIri)))
@@ -243,20 +246,19 @@ class BulkImportParityE2ESpec extends E2EZSpec {
         val standoffRefCountsMatch = assertTrue(refCountA.contains(2), refCountB.contains(2))
 
         // The isomorphism would also pass with no XML on either side, so require the stored XML to be there.
-        val storedXmlPresent = assertTrue(xmlCountA >= formattedValueCount, xmlCountB >= formattedValueCount)
+        val storedXmlPresent = assertTrue(xmlCountA == formattedValueCount, xmlCountB == formattedValueCount)
         // Several <p> paragraphs are the highest-risk rendering case; the stored XML must keep all three and
         // equal what the create path stored.
         val multiParagraphXmlStored = assertTrue(
           multiXmlA.size == 1,
-          multiXmlA.forall(_.split("<p>", -1).length - 1 == 3),
+          multiXmlA == List(multiParagraphXml),
           multiXmlA == multiXmlB,
         )
         // Targets created in the same payload are linked by their real resource IRI, never a client ID.
         val sameCallLinkResolved = assertTrue(
           linkXmlA.size == 3,
-          linkXmlA.forall(xml => salsahLinkHrefs(xml) == List(allStandoffTargetIri)),
+          linkXmlA.forall(xml => salsahLinkHrefs(xml) == List(refCountTargetIri)),
           linkXmlA.forall(xml => salsahLinkHrefs(xml).forall(ResourceIri.from(_).isRight)),
-          linkXmlA.forall(xml => !xml.contains("ref:") && !xml.contains("clientId")),
         )
         // Only the formatted value carries valueHasXml; the plain-text value beside it has none.
         val onlyFormattedHasXml = assertTrue(

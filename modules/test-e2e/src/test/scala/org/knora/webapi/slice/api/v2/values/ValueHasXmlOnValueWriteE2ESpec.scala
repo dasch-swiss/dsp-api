@@ -76,20 +76,28 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
       iri <- ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)).mapError(new RuntimeException(_))
     } yield iri
 
+  private val templateXslIri = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
+
   /** Registers a mapping whose default XSL transformation is `xslIri`, derived from the freetest fixture. */
   private def createMappingWithTransformation(
     mappingName: String,
     xslIri: String,
   ): RIO[TestApiClient, StandoffMappingIri] =
-    for {
-      template <-
-        ZIO.attempt(
-          Files.readString(Paths.get("test_data/test_route/texts/freetestCustomMappingWithTransformation.xml")),
-        )
-      file <- ZIO.attempt(Files.createTempFile("mapping-with-xsl", ".xml"))
-      _    <- ZIO.attempt(Files.writeString(file, template.replace("http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA", xslIri)))
-      iri  <- createCustomMapping(mappingName, file: Path).ensuring(ZIO.attempt(Files.deleteIfExists(file)).ignore)
-    } yield iri
+    ZIO.acquireReleaseWith(ZIO.attempt(Files.createTempFile("mapping-with-xsl", ".xml")))(file =>
+      ZIO.attempt(Files.deleteIfExists(file)).ignore,
+    ) { file =>
+      for {
+        template <-
+          ZIO.attempt(
+            Files.readString(Paths.get("test_data/test_route/texts/freetestCustomMappingWithTransformation.xml")),
+          )
+        _ <- ZIO
+               .fail(new RuntimeException(s"The mapping template does not contain $templateXslIri"))
+               .unless(template.contains(templateXslIri))
+        _   <- ZIO.attempt(Files.writeString(file, template.replace(templateXslIri, xslIri)))
+        iri <- createCustomMapping(mappingName, file: Path)
+      } yield iri
+    }
 
   private def servedHtml(resourceIri: String): RIO[TestApiClient, Option[String]] =
     for {
@@ -106,17 +114,23 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
     """<p>She said "hi" and 'bye' \ back\\slash &amp; 🦉 owl, 🦉🦉 flock</p><p>C:\dir\\file "q" 'a' &amp;amp;</p>""",
   )
 
+  private def standoffTagCount(valueIri: String): RIO[TriplestoreService, Option[Int]] =
+    selectFirst(
+      s"SELECT (COUNT(?n) AS ?count) WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasStandoff> ?n } }",
+      "count",
+    ).map(_.flatMap(_.toIntOption))
+
   private def largeXml(offset: Int) =
     xmlDoc((1 to 3000).map(i => s"<p>line ${i + offset}: <em>${i * 7 + offset}</em></p>").mkString)
 
   override val e2eSpec: Spec[env, Any] = suite("valueHasXml written by POST and PUT /v2/values")(
-    test("create stores valueHasXml byte-identical to the served textValueAsXml") {
+    test("REQ-1.2 REQ-2.1 create stores valueHasXml byte-identical to the served textValueAsXml") {
       for {
         (resource, value) <- resourceWithCreatedValue(xmlDoc("<p>one <strong>2</strong> three: <em>4</em>.</p>"))
         result            <- storedByteIdenticalToServed(resource, value)
       } yield result
     },
-    test("an edit stores the new version's own valueHasXml and the previous version keeps its own") {
+    test("REQ-2.2 an edit stores the new version's own valueHasXml and the previous version keeps its own") {
       for {
         (resource, v1) <- resourceWithCreatedValue(xmlDoc("<p>v1 <strong>first</strong> (1)</p>"))
         v1Created      <- creationDateOf(v1)
@@ -142,8 +156,14 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
         v2             <- updateValue(resource, plainTextJson("now plain: 1, 2, 3", Some(v1)))
         v1Stored       <- storedXml(v1)
         v2Stored       <- storedXml(v2)
+        v2String       <- valueHasString(v2)
         oldVersion     <- storedByteIdenticalToServed(resource, v1, Some(v1Created))
-      } yield oldVersion && assertTrue(v1 != v2, v1Stored.isDefined, v2Stored.isEmpty)
+      } yield oldVersion && assertTrue(
+        v1 != v2,
+        v1Stored.isDefined,
+        v2Stored.isEmpty,
+        v2String.contains("now plain: 1, 2, 3"),
+      )
     },
     test("a custom mapping stores valueHasXml byte-identical to the served textValueAsXml") {
       for {
@@ -157,7 +177,9 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
         result            <- storedByteIdenticalToServed(resource, value)
       } yield result
     },
-    test("with an XSL transformation valueHasXml equals the served textValueAsXml, not the served textValueAsHtml") {
+    test(
+      "REQ-1.2 with an XSL transformation valueHasXml equals the served textValueAsXml, not the served textValueAsHtml",
+    ) {
       for {
         mappingName <- freshMappingName("OnWriteXsl")
         xslIri      <- createXslTransformation
@@ -190,29 +212,26 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
         result            <- storedByteIdenticalToServed(resource, value)
       } yield result && assertTrue(
         stored.exists(s => s.contains("\uD83E\uDD89") && s.contains("\\\\slash") && s.contains("&amp;")),
+        stored.exists(_.contains("She said &quot;hi&quot; and &apos;bye&apos;")),
+        stored.exists(_.contains("&quot;q&quot; &apos;a&apos;")),
       )
     },
     test("a document of 6000 standoff tags is created and edited with valueHasXml identical to the served XML") {
       for {
-        started        <- Clock.nanoTime
         (resource, v1) <- resourceWithCreatedValue(largeXml(0))
         created        <- storedByteIdenticalToServed(resource, v1)
-        createdAt      <- Clock.nanoTime
         _              <- updateText(resource, v1, largeXml(100000), standard)
         v2             <- currentValueOf(resource)
         edited         <- storedByteIdenticalToServed(resource, v2)
-        finished       <- Clock.nanoTime
-        tags           <- selectFirst(
-                  s"SELECT (COUNT(?n) AS ?count) WHERE { GRAPH <$dataGraph> { <$v2> <${kb}valueHasStandoff> ?n } }",
-                  "count",
-                )
-        _ <-
-          ZIO.logInfo(
-            s"large document: create ${(createdAt - started) / 1000000} ms, edit ${(finished - createdAt) / 1000000} ms",
-          )
-      } yield created && edited && assertTrue(v1 != v2, tags.exists(_.toInt >= 6000))
-    },
-    test("an unformatted text value has no valueHasXml while a formatted sibling has one") {
+        tagsV1         <- standoffTagCount(v1)
+        tagsV2         <- standoffTagCount(v2)
+      } yield created && edited && assertTrue(
+        v1 != v2,
+        tagsV1.exists(_ >= 6000),
+        tagsV2.exists(_ >= 6000),
+      )
+    } @@ TestAspect.timeout(10.minutes),
+    test("REQ-2.5 an unformatted text value has no valueHasXml while a formatted sibling has one") {
       for {
         resource    <- createThing()
         plain       <- createValue(resource, plainTextJson("just text; 2 + 2 = 4"))

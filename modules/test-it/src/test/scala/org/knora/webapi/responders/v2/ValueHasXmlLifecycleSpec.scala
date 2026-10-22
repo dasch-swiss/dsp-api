@@ -35,7 +35,7 @@ class ValueHasXmlLifecycleSpec extends E2EZSpec {
   private val emXml2     = xml("""<p><em>Kursiv</em> verdreht</p><p>Drei <strong>Worte</strong></p>""")
 
   override val e2eSpec: Spec[env, Any] = suite("ValueHasXmlLifecycleSpec")(
-    test("mark-delete keeps the valueHasXml literal unchanged") {
+    test("REQ-2.6 mark-delete keeps the valueHasXml literal unchanged") {
       for {
         res     <- TestHelper.createResource
         value   <- TestHelper.createTextValueWithStandoff(res, strongXml1)
@@ -111,6 +111,8 @@ class ValueHasXmlLifecycleSpec extends E2EZSpec {
         xmlAfter == xmlBefore,
       )
     },
+    // `reorder` calls `ValueRepo.reorderValues`, the method `ValuesRestService.reorderValues` calls (line 129), so the
+    // REST endpoint is covered by equivalence.
     test("reordering formatted values leaves their valueHasXml unchanged") {
       for {
         res       <- TestHelper.createResource

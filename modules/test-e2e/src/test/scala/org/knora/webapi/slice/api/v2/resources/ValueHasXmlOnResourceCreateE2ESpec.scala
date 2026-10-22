@@ -79,14 +79,27 @@ class ValueHasXmlOnResourceCreateE2ESpec extends E2EZSpec {
       .toList
   }
 
+  // The same document as the multi-paragraph value of BulkImportParityE2ESpec.
+  private val multiParagraphXml =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<text><p>Zebra crossing at <em>dawn</em>.</p><p>Seventh lantern, then <strong>nine</strong> kites.</p><p>Quartz after <u>midnight</u>; mango last.</p></text>""".stripMargin
+
   override val e2eSpec: Spec[env, Any] = suite("valueHasXml written by POST /v2/resources")(
-    test("a formatted value stores valueHasXml byte-identical to the served textValueAsXml") {
+    test("REQ-2.3 a formatted value stores valueHasXml byte-identical to the served textValueAsXml") {
       for {
         resource <-
           createResourceWithText(xmlDoc("<p>no. 1: <strong>two</strong>, (3); <em>4</em>?</p>"), standard)
         value  <- currentValueOf(resource)
         result <- storedByteIdenticalToServed(resource, value)
       } yield result
+    },
+    test("REQ-2.3 a multi-paragraph value stores valueHasXml byte-identical to the served textValueAsXml") {
+      for {
+        resource <- createResourceWithText(multiParagraphXml, standard)
+        value    <- currentValueOf(resource)
+        stored   <- storedXml(value)
+        result   <- storedByteIdenticalToServed(resource, value)
+      } yield result && assertTrue(stored.contains(multiParagraphXml))
     },
     test("a custom mapping stores valueHasXml byte-identical to the served textValueAsXml") {
       for {
