@@ -2146,24 +2146,16 @@ abstract class AbstractPrequeryGenerator(
    * With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`, inside the subselect,
    * so the index returns only that graph's hits; nothing else may go into the GRAPH block, since ontology-backed
    * patterns match nothing in a data graph.
-   *
-   * Only a scoped lookup passes [[OntologyConstants.Fuseki.luceneHitLimit]]; an unscoped one keeps Jena's default
-   * cap of 10,000 hits (ADR-0012).
-   * TODO(DEV-7492): pass the limit unscoped too, behind the fulltext breadth guard.
    */
   private def matchFulltextLuceneLookup(
     matchVar: QueryVariable,
     searchTerm: String,
     dataGraph: Option[InternalIri],
   ): SubSelectPattern = {
-    val luceneQuery: Entity = dataGraph match {
-      case Some(_) => LuceneQueryArgs(searchTerm, OntologyConstants.Fuseki.luceneHitLimit)
-      case None    => XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri)
-    }
     val lookup = StatementPattern(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-      obj = luceneQuery,
+      obj = LuceneQueryArgs(searchTerm, OntologyConstants.Fuseki.luceneHitLimit),
     )
     SubSelectPattern(matchVar, Seq(GraphPattern.scoped(lookup, dataGraph)))
   }
