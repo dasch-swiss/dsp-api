@@ -111,7 +111,7 @@ class ValueHasXmlLifecycleSpec extends E2EZSpec {
         xmlAfter == xmlBefore,
       )
     },
-    // `reorder` calls `ValueRepo.reorderValues`, the method `ValuesRestService.reorderValues` calls (line 129), so the
+    // `reorder` calls `ValueRepo.reorderValues`, the method `ValuesRestService.reorderValues` calls, so the
     // REST endpoint is covered by equivalence.
     test("reordering formatted values leaves their valueHasXml unchanged") {
       for {
