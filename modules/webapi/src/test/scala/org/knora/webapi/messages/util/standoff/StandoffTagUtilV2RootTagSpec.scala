@@ -21,7 +21,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.common.StandoffMappingIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class StandoffTagUtilV2Spec extends ZIOSpecDefault {
+class StandoffTagUtilV2RootTagSpec extends ZIOSpecDefault {
 
   private val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
