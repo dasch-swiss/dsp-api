@@ -2,7 +2,7 @@
 title: "Gravsearch matchFulltext: pass the Lucene hit limit unscoped, behind the fulltext breadth guard"
 date: 2026-10-22
 author: Balduin Landolt
-status: approved
+status: implemented
 linear: DEV-7492
 repositories: []
 ---

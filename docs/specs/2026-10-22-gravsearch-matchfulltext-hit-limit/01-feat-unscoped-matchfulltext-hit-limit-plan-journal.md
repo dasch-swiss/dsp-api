@@ -9,7 +9,7 @@ problem: >
   inherits Jena's silent 10,000-hit Lucene cap and returns truncated results for broad terms. The plan lifts the
   cap for every matchFulltext lookup and puts Gravsearch matchFulltext behind the FulltextBreadthGuard that
   /v2/search already has, so an over-broad term is refused with a 400 instead of running unbounded.
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-feat-unscoped-matchfulltext-hit-limit-plan
@@ -36,17 +36,18 @@ status: in-progress
 
 ## Chunks
 
-| id  | repo    | status   | commit(s) | summary                                                                                                                                                                                                                  | blocker |
-|-----|---------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| 1.1 | dsp-api | complete | 0f25b4dd3 | generator records MatchFulltextLookup; gravsearchV2/CountV2 run the prequery behind FulltextBreadthGuard when present; GravsearchFulltextBreadthGuardSpec (probe double) covers refuse/admit/fail-open/not-probed/scoped | none    |
-| 1.2 | dsp-api | complete | a49701f40 | matchFulltextLuceneLookup always emits LuceneQueryArgs(term, luceneHitLimit); five unscoped goldens updated; LuceneQueryArgs scaladoc exception removed                                                                  | none    |
-| 1.3 | dsp-api | complete | 233d7c03b | docs, ARCH-MAP Search rule and FulltextBreadthGuard scaladoc describe the limit + guard for matchFulltext (400 for over-broad terms); ADR-0012 left as is                                                                | none    |
-| 1.4 | dsp-api | complete | 00717a445 | review fix round 1: single guarded executePrequery seam, named guard args, discriminating fail-open/admit probe counts, ARCH-MAP bullet + entity, tier/config/AppConfig wording                                          | none    |
-| 1.5 | dsp-api | complete | 919dbf41c | review fix round 2: executePrequery takes the generator (lookup no longer a free argument), scaladoc + return type, doc/scaladoc reflow                                                                                  | none    |
-| 1.6 | dsp-api | complete | 0112687a1 | final-review fix: guard spec covers a linked-resource matchFulltext (unscoped probe in a scoped query) and a single plain term (not probed); both checked to fail against a broken expectation                           | none    |
-| 1.7 | dsp-api | complete | e85e168f7 | final-review fix: //tools/lint:gravsearch_prequery_seam in just check enforces the executePrequery seam; ARCH-MAP Search rule rewritten to 3 lines with that label                                                       | none    |
-| 1.8 | dsp-api | complete | 2eb573065 | final-review fix: ADR-0012 dated notes, trace runbook (probe in prequery.execute, refusal is a 400), Fact 9 pointer, config and guard comments trimmed                                                                   | none    |
-| 1.9 | dsp-api | complete | df559cbbe | self-review fix: seam lint also catches Select( and constructions without new, requires one guarded seam; ARCH-MAP label split (lint vs spec); ADR note wording                                                          | none    |
+| id   | repo    | status   | commit(s) | summary                                                                                                                                                                                                                  | blocker |
+|------|---------|----------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| 1.1  | dsp-api | complete | 0f25b4dd3 | generator records MatchFulltextLookup; gravsearchV2/CountV2 run the prequery behind FulltextBreadthGuard when present; GravsearchFulltextBreadthGuardSpec (probe double) covers refuse/admit/fail-open/not-probed/scoped | none    |
+| 1.2  | dsp-api | complete | a49701f40 | matchFulltextLuceneLookup always emits LuceneQueryArgs(term, luceneHitLimit); five unscoped goldens updated; LuceneQueryArgs scaladoc exception removed                                                                  | none    |
+| 1.3  | dsp-api | complete | 233d7c03b | docs, ARCH-MAP Search rule and FulltextBreadthGuard scaladoc describe the limit + guard for matchFulltext (400 for over-broad terms); ADR-0012 left as is                                                                | none    |
+| 1.4  | dsp-api | complete | 00717a445 | review fix round 1: single guarded executePrequery seam, named guard args, discriminating fail-open/admit probe counts, ARCH-MAP bullet + entity, tier/config/AppConfig wording                                          | none    |
+| 1.5  | dsp-api | complete | 919dbf41c | review fix round 2: executePrequery takes the generator (lookup no longer a free argument), scaladoc + return type, doc/scaladoc reflow                                                                                  | none    |
+| 1.6  | dsp-api | complete | 0112687a1 | final-review fix: guard spec covers a linked-resource matchFulltext (unscoped probe in a scoped query) and a single plain term (not probed); both checked to fail against a broken expectation                           | none    |
+| 1.7  | dsp-api | complete | e85e168f7 | final-review fix: //tools/lint:gravsearch_prequery_seam in just check enforces the executePrequery seam; ARCH-MAP Search rule rewritten to 3 lines with that label                                                       | none    |
+| 1.8  | dsp-api | complete | 2eb573065 | final-review fix: ADR-0012 dated notes, trace runbook (probe in prequery.execute, refusal is a 400), Fact 9 pointer, config and guard comments trimmed                                                                   | none    |
+| 1.9  | dsp-api | complete | df559cbbe | self-review fix: seam lint also catches Select( and constructions without new, requires one guarded seam; ARCH-MAP label split (lint vs spec); ADR note wording                                                          | none    |
+| 1.10 | dsp-api | complete | e506b04ac | final-review fix 2: seam lint fails when nothing constructs a transformer (no vacuous pass), ignores comment lines, clearer messages; ARCH-MAP probe-scope label is test                                                 | none    |
 
 ## Deferrals
 
@@ -88,3 +89,17 @@ status: in-progress
   constraint is refused even if the join would be cheap (follows decided behaviour 2).
 - Local E2E: MatchFulltextE2ESpec fails identically on the phase base and on HEAD (31 assertions) while a local
   dsp-api stack occupies port 3333; not caused by this phase. Re-run it in CI or with the stack stopped.
+
+## Closeout
+
+- **Outcome:** every Gravsearch `matchFulltext` lookup passes `luceneHitLimit`, and every Gravsearch prequery runs
+  through `SearchResponderV2Live.executePrequery`, which puts a `matchFulltext` prequery behind
+  `FulltextBreadthGuard` (scoped or unscoped probe to match the lookup). An over-broad term is refused with a 400.
+  `//tools/lint:gravsearch_prequery_seam` keeps the seam the only path.
+- **Review:** phase review (2 fix rounds) plus final review with five lenses and two fix rounds, the second
+  re-reviewed until nothing substantial remained. No deviations from the decided behaviours.
+- **Left open:** the guard-design items under `## Deferrals` (fork before cache check, shared probe semaphore,
+  fail-open under load, Gravsearch-specific cap validation, lookup carried by value, 4xx span status), and the
+  after-ship human actions H1 (re-measure on stage) and H2 (release note).
+- **Lessons:** the Bazel test filter is a Java regex, not a glob; local E2E needs port 3399 while a stack holds
+  3333; markdownlint MD060 requires pipe-aligned tables in journals.
