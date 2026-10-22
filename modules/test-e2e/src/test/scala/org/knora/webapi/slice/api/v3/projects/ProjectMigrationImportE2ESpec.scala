@@ -7,7 +7,6 @@ package org.knora.webapi.slice.api.v3.projects
 
 import org.junit.runner.RunWith
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.model.*
 import zio.*
 import zio.json.*
@@ -16,14 +15,12 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.e2ez.ProjectExportTestSupport.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.api.v3.Conflict
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestApiClient
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -61,16 +58,16 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
         result      <- {
                     for {
                       // Step 1: Trigger export of Incunabula
-                      exportStatus <- triggerExportWithCleanup()
+                      exportStatus <- triggerExport(projectIri)
                       exportId      = exportStatus.id
                       _            <- exportIdRef.set(Some(exportId))
 
                       // Step 2: Poll export until completed
-                      _ <- pollExportUntilCompleted(exportId)
+                      _ <- pollUntilCompleted(projectIri, exportId)
                              .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
                       // Step 3: Download the export zip bytes
-                      zipBytes <- downloadExportBytes(exportId)
+                      zipBytes <- downloadExport(projectIri, exportId)
 
                       // Step 4: POST the zip to import endpoint
                       importStatus <- triggerImportWithCleanup(zipBytes)
@@ -87,7 +84,7 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                                           rootUser,
                                         )
                       _ <- importIdRef.set(None)
-                      _ <- deleteExport(exportId)
+                      _ <- deleteExport(projectIri, exportId)
                       _ <- exportIdRef.set(None)
                     } yield assertTrue(
                       importStatus.status == DataTaskStatus.InProgress || importStatus.status == DataTaskStatus.Completed || importStatus.status == DataTaskStatus.Failed,
@@ -104,7 +101,7 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                                .ignore *> deleteImport(id)
                            }
                       exportId <- exportIdRef.get
-                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport(projectIri, _))
                     } yield ()
                   }
       } yield result
@@ -116,12 +113,12 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
         result      <- {
                     for {
                       // First, get a zip to import (use minimal approach — export then download)
-                      exportStatus <- triggerExportWithCleanup()
+                      exportStatus <- triggerExport(projectIri)
                       exportId      = exportStatus.id
                       _            <- exportIdRef.set(Some(exportId))
-                      _            <- pollExportUntilCompleted(exportId)
+                      _            <- pollUntilCompleted(projectIri, exportId)
                              .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-                      zipBytes <- downloadExportBytes(exportId)
+                      zipBytes <- downloadExport(projectIri, exportId)
 
                       // Trigger first import (with cleanup of stale imports)
                       firstImport <- triggerImportWithCleanup(zipBytes)
@@ -141,7 +138,7 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                              .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
                       _ <- deleteImport(firstImport.id)
                       _ <- importIdRef.set(None)
-                      _ <- deleteExport(exportId)
+                      _ <- deleteExport(projectIri, exportId)
                       _ <- exportIdRef.set(None)
                     } yield assertTrue(
                       r2.code == StatusCode.Conflict,
@@ -155,7 +152,7 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                                .ignore *> deleteImport(id)
                            }
                       exportId <- exportIdRef.get
-                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport(projectIri, _))
                     } yield ()
                   }
       } yield result
@@ -167,12 +164,12 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
         result      <- {
                     for {
                       // Get a zip to import
-                      exportStatus <- triggerExportWithCleanup()
+                      exportStatus <- triggerExport(projectIri)
                       exportId      = exportStatus.id
                       _            <- exportIdRef.set(Some(exportId))
-                      _            <- pollExportUntilCompleted(exportId)
+                      _            <- pollUntilCompleted(projectIri, exportId)
                              .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
-                      zipBytes <- downloadExportBytes(exportId)
+                      zipBytes <- downloadExport(projectIri, exportId)
 
                       // Trigger import (with cleanup of stale imports)
                       importStatus <- triggerImportWithCleanup(zipBytes)
@@ -192,7 +189,7 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                                deleteImport(importId)
                            }
                       _ <- importIdRef.set(None)
-                      _ <- deleteExport(exportId)
+                      _ <- deleteExport(projectIri, exportId)
                       _ <- exportIdRef.set(None)
                     } yield assertTrue(
                       // Accept both 409 (in-progress) and 204 (already completed) — timing dependent
@@ -207,36 +204,12 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
                                .ignore *> deleteImport(id)
                            }
                       exportId <- exportIdRef.get
-                      _        <- ZIO.foreachDiscard(exportId)(deleteExport)
+                      _        <- ZIO.foreachDiscard(exportId)(deleteExport(projectIri, _))
                     } yield ()
                   }
       } yield result
     },
   )
-
-  // === Export helpers (reused from export E2E spec patterns) ===
-
-  private def triggerExportWithCleanup(): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
-    TestApiClient
-      .postJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/exports", rootUser)
-      .flatMap { response =>
-        if (response.code == StatusCode.Conflict) {
-          val existingId = for {
-            errorStr <- response.body.left.toOption
-            json     <- errorStr.fromJson[Conflict].toOption
-            first    <- json.errors.headOption
-            id       <- first.details.get("id")
-          } yield id
-          for {
-            _ <- ZIO.foreachDiscard(existingId)(id => deleteExport(DataTaskId.unsafeFrom(id)))
-            r <- TestApiClient.postJson[DataTaskStatusResponse](
-                   uri"/v3/projects/$projectIri/exports",
-                   rootUser,
-                 )
-            status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))
-          } yield status
-        } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
-      }
 
   private def triggerImportWithCleanup(
     zipBytes: Array[Byte],
@@ -273,21 +246,6 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
         } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
       }
 
-  private def pollExportUntilCompleted(exportId: DataTaskId) =
-    TestApiClient
-      .getJson[DataTaskStatusResponse](
-        uri"/v3/projects/$projectIri/exports/${exportId.value}",
-        rootUser,
-      )
-      .flatMap(r => ZIO.fromEither(r.body).mapError(new RuntimeException(_)))
-      .flatMap { status =>
-        status.status match {
-          case DataTaskStatus.Completed => ZIO.succeed(status)
-          case DataTaskStatus.Failed    => ZIO.die(new RuntimeException("Export failed"))
-          case _                        => ZIO.fail(new RuntimeException("Export still in progress"))
-        }
-      }
-
   private def pollImportUntilDone(importId: DataTaskId) =
     TestApiClient
       .getJson[DataTaskStatusResponse](
@@ -302,30 +260,6 @@ class ProjectMigrationImportE2ESpec extends E2EZSpec {
           case _                        => ZIO.fail(new RuntimeException("Import still in progress"))
         }
       }
-
-  private def downloadExportBytes(exportId: DataTaskId) =
-    for {
-      apiConfig     <- ZIO.service[KnoraApi]
-      jwtService    <- ZIO.service[JwtService]
-      scopeResolver <- ZIO.service[ScopeResolver]
-      scope         <- scopeResolver.resolve(rootUser)
-      jwt           <- jwtService.createJwt(rootUser.userIri, scope)
-      be            <- HttpClientZioBackend()
-      downloadUrl    =
-        uri"${apiConfig.externalKnoraApiBaseUrl}/v3/projects/$projectIri/exports/${exportId.value}/download"
-      response <- basicRequest
-                    .get(downloadUrl)
-                    .auth
-                    .bearer(jwt.jwtString)
-                    .response(asByteArray)
-                    .send(be)
-      bytes <- ZIO.fromEither(response.body).mapError(new RuntimeException(_))
-    } yield bytes
-
-  private def deleteExport(exportId: DataTaskId) =
-    TestApiClient
-      .deleteJson[Json](uri"/v3/projects/$projectIri/exports/${exportId.value}", rootUser)
-      .ignore
 
   private def deleteImport(importId: DataTaskId) =
     TestApiClient
