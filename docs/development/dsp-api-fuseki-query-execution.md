@@ -206,10 +206,9 @@ what the predicate argument suggests (Fact 10).
 
 Every `text:query` emission passes `OntologyConstants.Fuseki.luceneHitLimit` — `/v2/search`,
 search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff`, `matchLabel`
-and `matchFulltext`. Because the full limit makes broad multi-word terms several times slower,
-`/v2/search` and Gravsearch `matchFulltext` both run behind `FulltextBreadthGuard`, which probes
-the term's candidate count (in the lookup's own scope, see `text:graphField` under Fact 10) and
-refuses a term over the cap with a 400.
+and `matchFulltext`. Broad terms are kept in check by `FulltextBreadthGuard` instead, for
+`/v2/search` and Gravsearch `matchFulltext` alike; see
+`docs/05-internals/design/api-v2/gravsearch.md` § Breadth Guard.
 
 ## Fact 10 — `text:query`'s predicate argument does not narrow the search
 

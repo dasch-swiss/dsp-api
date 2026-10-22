@@ -2,8 +2,9 @@
 
 Date: 2026-10-20
 
-Relates to: DEV-7377 (spike), DEV-7492 (lifting the Lucene hit limit), DEV-6851 (label search field),
-DEV-6809 (c) (GRAPH-scoping the post-Lucene patterns), `modules/fuseki/dsp-repo.ttl` (the index configuration).
+Relates to: DEV-7377 (spike), DEV-7492 (lifting the Lucene hit limit behind the breadth guard),
+DEV-6851 (label search field), DEV-6809 (c) (GRAPH-scoping the post-Lucene patterns),
+`modules/fuseki/dsp-repo.ttl` (the index configuration).
 
 ## Status
 
@@ -75,11 +76,15 @@ existing data, while new writes are indexed with their graph, so the index is si
    `text:propField`, which DEV-6851 proposed, does not exist in Jena 6.2.0 and is silently ignored.
 7. **Unscoped searches are out of scope.** Scoping gains them nothing; lifting the hit limit for them is
    DEV-7492's own decision.
+   *Note (2026-10-22):* DEV-7492 lifted the limit for every Gravsearch `matchFulltext` lookup, scoped or not,
+   and runs those queries behind the `/v2/search` breadth guard (`FulltextBreadthGuard`), which refuses an
+   over-broad term with a 400.
 
 ## Consequences
 
 - Project-restricted fulltext searches can take the full Lucene hit limit without paying for every
   out-of-project hit, and most of them stop being silently truncated. Unrestricted searches are unchanged.
+  *Note (2026-10-22):* no longer true for Gravsearch `matchFulltext`, see the note under Decision 7.
 - Scoping applies only to Lucene lookups anchored on the main resource. `limitToProject` restricts the main
   resource; a lookup anchored elsewhere (`matchFulltext` on a linked resource, `matchText` on a linked resource's
   value) may legitimately hit another project's graph, because links across projects are allowed, so it stays
