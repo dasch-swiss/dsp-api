@@ -502,7 +502,7 @@ runs after one warm-up; "within tolerance" means at most 1.5× the Success Metri
 
 | Id | Action | Who | When | Why not the agent |
 | --- | --- | --- | --- | --- |
-| H1 | Put `DEV_DB_PASSWORD` in the `.env` at the root of the worktree that runs Phase 7 (from `ops-deploy/host_vars`); confirm Appendix B's files are still on disk | Balduin | before Phase 7 (Why mid-plan: only the dev check needs it, so the credential is on disk for the shortest time) | Credential |
+| H1 | Superseded 2026-10-22: the dev DB password is not available locally any more, so Phase 7 runs against dev through the API after the merge is deployed there; Appendix B's files are the input | Balduin | after merge | No local credentials |
 | H2 | Plan the one-off index rebuild (about 6.5 min DB downtime) into the deploy of the first release carrying #4393/#4394; not a release-notes item (not user-facing) | Balduin | after ship | Deploy planning is the release owner's call |
 | H3 | Ship this PR only in a release at or after the one that delivers #4393/#4394's Fuseki image to each environment (dev is already rebuilt); never deploy it with `SKIP_AUTO_INDEX_REBUILD=true` | Balduin | after ship | Release and deploy decision |
 | H4 | Create the Linear ticket for the `/v2/search` `subClassOf*` class walk, and, per Open question 2, one for `/v2/searchbylabel` | Balduin | before start | Ticket triage is the author's call |

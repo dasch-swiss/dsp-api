@@ -30,7 +30,7 @@ status: in-progress
 | 4 | reviewed | dsp-api@0345a24a9 | 2 |
 | 5 | reviewed | dsp-api@d6f61856e | 1 |
 | 6 | reviewed | dsp-api@d837d4b51 | 2 |
-| 7 | gated (H1) | — | 0 |
+| 7 | deferred to dev after merge | — | 0 |
 
 ## Chunk queue
 
@@ -116,6 +116,8 @@ status: in-progress
 ## Deferrals
 
 - Phase 7 (dev verification) gated on H1: no `.env` with `DEV_DB_PASSWORD`; the run must not create one. Not run;
+  2026-10-22 (Balduin): the dev DB password is no longer available locally, so Phase 7 is done against
+  dev after the merge deploys there, through the API. Not run before merge;
   pending human action.
 
 ## Deviations
@@ -124,7 +126,8 @@ status: in-progress
 
 ## Side findings
 
-- Phase 1 stage check (2026-10-21, `dsp vre sparql query -s stage`, read-only, each exception query `GROUP BY` + `LIMIT 100`):
+- Phase 1 stage check (2026-10-21, `dsp vre sparql query -s stage`, read-only, each exception query
+  `GROUP BY` + `LIMIT 100`):
   resources (`attachedToProject` + `creationDate`) outside `http://www.knora.org/data/{shortcode}/{shortname}`
   of their project: **0** (positive canary: 1,277,910 resources in their derived graph; 21 s); values whose
   `?r ?prop ?v` triple is in a different graph from the value's `valueCreationDate`: **0** (canary returned matching
