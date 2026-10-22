@@ -43,6 +43,10 @@ status: in-progress
 | 1.3 | dsp-api | complete | 233d7c03b | docs, ARCH-MAP Search rule and FulltextBreadthGuard scaladoc describe the limit + guard for matchFulltext (400 for over-broad terms); ADR-0012 left as is                                                                | none    |
 | 1.4 | dsp-api | complete | 00717a445 | review fix round 1: single guarded executePrequery seam, named guard args, discriminating fail-open/admit probe counts, ARCH-MAP bullet + entity, tier/config/AppConfig wording                                          | none    |
 | 1.5 | dsp-api | complete | 919dbf41c | review fix round 2: executePrequery takes the generator (lookup no longer a free argument), scaladoc + return type, doc/scaladoc reflow                                                                                  | none    |
+| 1.6 | dsp-api | complete | 0112687a1 | final-review fix: guard spec covers a linked-resource matchFulltext (unscoped probe in a scoped query) and a single plain term (not probed); both checked to fail against a broken expectation                           | none    |
+| 1.7 | dsp-api | complete | e85e168f7 | final-review fix: //tools/lint:gravsearch_prequery_seam in just check enforces the executePrequery seam; ARCH-MAP Search rule rewritten to 3 lines with that label                                                       | none    |
+| 1.8 | dsp-api | complete | 2eb573065 | final-review fix: ADR-0012 dated notes, trace runbook (probe in prequery.execute, refusal is a 400), Fact 9 pointer, config and guard comments trimmed                                                                   | none    |
+| 1.9 | dsp-api | complete | df559cbbe | self-review fix: seam lint also catches Select( and constructions without new, requires one guarded seam; ARCH-MAP label split (lint vs spec); ADR note wording                                                          | none    |
 
 ## Deferrals
 
@@ -52,6 +56,18 @@ status: in-progress
 - (review, after the cap) ARCH-MAP Search rule for the guard is labelled static-analysis though its evidence is
   goldens and an integration spec (consistent with the map's other spec-backed rules); a CI grep asserting a
   single `Select.gravsearch(` call site in SearchResponderV2.scala would make the label exact.
+
+- (final review, resolved) The CI check the deferral above asked for landed as
+  `//tools/lint:gravsearch_prequery_seam` (1.7, 1.9). It is textual: a prequery run from a file that constructs
+  no prequery transformer is still review-only, which the ARCH-MAP rule states.
+- (final review, deferred by the session) Guard forks the query before the cache check; shared probe semaphore
+  and unbounded verdict wait; fail-open amplification under Fuseki stress; a Gravsearch-specific cap
+  validation; carrying the lookup by value instead of passing the generator (DUNE-002). All touch the shared
+  `/v2/search` guard or QueryTraverser.
+- (final review, observability) A breadth refusal ends `gravsearch.prequery.execute` with span status
+  `ERROR "gravsearch.prequery.execute: BadRequestException"`, like any typed failure; the instrumentation recipe
+  mandates no different status for a client 400, so only the runbook was changed. Whether 4xx refusals should
+  stay `ERROR` is open.
 
 ## Deviations
 
