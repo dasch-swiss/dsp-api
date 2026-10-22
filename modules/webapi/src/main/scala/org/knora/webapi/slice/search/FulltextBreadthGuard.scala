@@ -25,6 +25,9 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * and refuses with a 400 when the count exceeds the cap. The probe fails open — any probe error leaves the real
  * query untouched — and measured breadth is cached (single-flight) so a repeated term does not re-probe.
  *
+ * It guards both `/v2/search` and Gravsearch `matchFulltext` queries; the probe always counts the `/v2/search`
+ * candidate set, which is the same Lucene lookup `matchFulltext` expands to.
+ *
  * For a search scoped to a project's data graph the probe counts only that project's candidates, so the cap
  * applies to the in-project count: a term refused unscoped can pass when scoped to a project where it is rare.
  *

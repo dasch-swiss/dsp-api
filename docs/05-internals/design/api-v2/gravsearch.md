@@ -506,9 +506,9 @@ Lucene hit; `SearchFulltextQuery`'s source comment explains why these substituti
 With `limitToProject`, the prequery restricts the main resource with `?mainRes knora-base:attachedToProject <p>`.
 If the `matchFulltext` resource variable is the main resource, the expansion also scopes its Lucene lookup to the
 project's data graph ([ADR-0012](../../../adr/0012-graph-scoped-lucene-text-lookups.md)): only the `text:query`
-statement inside the subselect is wrapped, so the index returns that graph's hits alone. A scoped lookup also
-passes the explicit hit limit (`OntologyConstants.Fuseki.luceneHitLimit`), which applies after that filter; an
-unscoped one still inherits Jena's 10,000-hit default.
+statement inside the subselect is wrapped, so the index returns that graph's hits alone. Every `matchFulltext`
+lookup passes the explicit hit limit (`OntologyConstants.Fuseki.luceneHitLimit`); in a scoped lookup it applies
+after that filter.
 
 ```sparql
 {
@@ -540,6 +540,16 @@ across projects are allowed:
 `SearchResponderV2` resolves the project's data graph once per request through the `ProjectDataGraphs` port. An
 unknown project yields no graph, so the query is exactly the unscoped one, and `attachedToProject` returns
 nothing.
+
+### Breadth Guard
+
+With the full hit limit, a broad term can make the prequery slow, so a `matchFulltext` query runs behind the
+same `FulltextBreadthGuard` as `/v2/search`. While generating, `handleMatchFulltextFunction` records the
+lookup's raw term and the data graph it is scoped to (`MatchFulltextLookup`, `None` when unscoped); the
+generator exposes it once the query has been traversed. `gravsearchV2` and `gravsearchCountV2` then run the
+prequery through `FulltextBreadthGuard.guarded` with that term and graph, so the probe counts exactly the
+candidates the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
+wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
 ### Why the Expansion Needs an Opaque Group
 

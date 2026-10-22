@@ -204,11 +204,11 @@ Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it. N
 what the predicate argument suggests (Fact 10).
 
 Every `text:query` emission passes `OntologyConstants.Fuseki.luceneHitLimit` — `/v2/search`,
-search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff` and
-`matchLabel` — except an unscoped Gravsearch `matchFulltext`, which still inherits the cap: even
-with the DEV-7491 prequery rewrite, the full limit makes broad multi-word terms several times
-slower than today (DEV-7492). A `matchFulltext` lookup scoped to a project's data graph (see
-`text:graphField` under Fact 10) passes the limit.
+search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff`, `matchLabel`
+and `matchFulltext`. Because the full limit makes broad multi-word terms several times slower,
+`/v2/search` and Gravsearch `matchFulltext` both run behind `FulltextBreadthGuard`, which probes
+the term's candidate count (in the lookup's own scope, see `text:graphField` under Fact 10) and
+refuses a term over the cap with a 400.
 
 ## Fact 10 — `text:query`'s predicate argument does not narrow the search
 

@@ -1019,9 +1019,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         through `ProjectService` or `KnoraProjectService` - enforcement: review.
     - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
-        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). A scoped Gravsearch
-        `matchFulltext` lookup passes `luceneHitLimit`; an unscoped one still inherits Jena's 10k default
-        (DEV-7492) - enforcement: review (the `*MatchFulltext*` prequery goldens). This GRAPH-naming
+        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). Every Gravsearch
+        `matchFulltext` lookup passes `luceneHitLimit` and runs behind `FulltextBreadthGuard`, probed in the
+        lookup's own scope - enforcement: static-analysis (the `*MatchFulltext*` prequery goldens,
+        `GravsearchFulltextBreadthGuardSpec`). This GRAPH-naming
         SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
