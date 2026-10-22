@@ -17,11 +17,8 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.search.repo.FulltextProjectRestriction.Scoped
-import org.knora.webapi.slice.search.repo.FulltextProjectRestriction.Unresolved
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlTimeout
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
@@ -32,9 +29,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val searchTerms     = LuceneQueryString("test")
-  private val testProjectIri  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val scopedToProject =
-    Some(Scoped(testProjectIri, InternalIri("http://www.knora.org/data/0001/anything")))
+  private val scopedToProject = Some(InternalIri("http://www.knora.org/data/0001/anything"))
   private val testResourceIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
   private val testStandoffIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag".toSmartIri
@@ -65,6 +60,20 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   private def matchesLegacy(actual: Select, name: String) =
     assertTrue(canonical(actual.sparql) == canonical(legacy(name)))
 
+  // The predecessor emitted `attachedToProject` for a project limit; the builder no longer does (a known project is a
+  // data graph, an unknown one never reaches the builder). The fixtures that carry the join are compared without that
+  // one statement, so every other part of them stays pinned.
+  private val legacyProjectJoin =
+    "?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> ."
+
+  private def matchesLegacyWithoutProjectJoin(actual: Select, name: String) = {
+    val fixture = legacy(name)
+    assertTrue(
+      fixture.contains(legacyProjectJoin),
+      canonical(actual.sparql) == canonical(fixture.replace(legacyProjectJoin, "")),
+    )
+  }
+
   // Invariants these fixtures exist to protect. A fixture pins the query and cannot tell a correct query from a
   // plausible one — check them by eye when changing a query:
   //
@@ -78,10 +87,10 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
   //    that DEV-6864 measured at 2.2-6.3x their cost for identical results. See SearchFulltextQuery and DEV-6850.
   //  - There is no outer SELECT DISTINCT: GROUP BY ?resource already deduplicates. The inner SELECT DISTINCT
   //    ?matchingSubject and the count branch's COUNT(DISTINCT ?resource) stay (DEV-6809 (d)).
-  //  - A Scoped project wraps only the text:query statement in GRAPH <dataGraph> { }, in the page, count and probe
-  //    queries alike, and emits no attachedToProject. The standoff filter and every outer pattern stay outside: the
-  //    class walk reads ontology graphs, so a wider GRAPH returns no rows. An Unresolved project keeps the unscoped
-  //    lookup and the attachedToProject line (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
+  //  - A data graph wraps only the text:query statement in GRAPH <dataGraph> { }, in the page, count and probe
+  //    queries alike, and no attachedToProject is emitted. The standoff filter and every outer pattern stay outside:
+  //    the class walk reads ontology graphs, so a wider GRAPH returns no rows. Without a data graph the lookup is
+  //    unscoped (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
   //
   // New cases use exact-text goldens (`GoldenTest`), not legacy fixtures.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchFulltextQuery")(
@@ -90,7 +99,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            restriction = None,
+            dataGraph = None,
             limitToResourceClass = None,
             limitToStandoffClass = None,
             returnFiles = false,
@@ -102,11 +111,11 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         )
         matchesLegacy(query, "countNoFilters") && assertTrue(query.timeout == SparqlTimeout.Search)
       },
-      test("count query with project and resource class limit") {
+      test("count query with resource class limit") {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            restriction = Some(Unresolved(testProjectIri)),
+            dataGraph = None,
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = None,
             returnFiles = false,
@@ -116,7 +125,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = true,
           ),
         )
-        matchesLegacy(query, "countWithProjectAndClass")
+        matchesLegacyWithoutProjectJoin(query, "countWithProjectAndClass")
       },
     ),
     suite("regular query")(
@@ -124,7 +133,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            restriction = None,
+            dataGraph = None,
             limitToResourceClass = None,
             limitToStandoffClass = None,
             returnFiles = false,
@@ -136,11 +145,11 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         )
         matchesLegacy(query, "searchNoFilters")
       },
-      test("regular query with all filters") {
+      test("regular query with all unscoped filters") {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = LuceneQueryString("test search"),
-            restriction = Some(Unresolved(testProjectIri)),
+            dataGraph = None,
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = Some(testStandoffIri),
             returnFiles = true,
@@ -150,7 +159,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
             countQuery = false,
           ),
         )
-        matchesLegacy(query, "searchWithAllFilters")
+        matchesLegacyWithoutProjectJoin(query, "searchWithAllFilters")
       },
     ),
     suite("probe query")(
@@ -168,7 +177,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = searchTerms,
-            restriction = scopedToProject,
+            dataGraph = scopedToProject,
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = None,
             returnFiles = false,
@@ -184,7 +193,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         val query = render(
           SearchFulltextQuery.build(
             searchTerms = LuceneQueryString("test search"),
-            restriction = scopedToProject,
+            dataGraph = scopedToProject,
             limitToResourceClass = Some(testResourceIri),
             limitToStandoffClass = Some(testStandoffIri),
             returnFiles = true,
@@ -207,7 +216,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
         // The caller passes the raw user input — the typed Literal hole handles SPARQL escaping.
         val actual = SearchFulltextQuery.build(
           searchTerms = LuceneQueryString("Knight's"),
-          restriction = None,
+          dataGraph = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
@@ -223,7 +232,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
       test("double quote in search term is correctly escaped") {
         val actual = SearchFulltextQuery.build(
           searchTerms = LuceneQueryString("""say "hello""""),
-          restriction = None,
+          dataGraph = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
@@ -240,7 +249,7 @@ class SearchFulltextQuerySpec extends ZIOSpecDefault with GoldenTest {
       test("should fail when separator is missing for non-count query") {
         val effect = SearchFulltextQuery.build(
           searchTerms = searchTerms,
-          restriction = None,
+          dataGraph = None,
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,

@@ -14,7 +14,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.search.ports.ProjectDataGraphs
 import org.knora.webapi.slice.search.ports.ProjectDataGraphsInMemory
-import org.knora.webapi.slice.search.repo.FulltextProjectRestriction
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class SearchResponderV2LiveSpec extends ZIOSpecDefault {
@@ -29,26 +28,39 @@ class SearchResponderV2LiveSpec extends ZIOSpecDefault {
       ZIO.fail(new RuntimeException("triplestore down"))
   }
 
-  val spec = suite("SearchResponderV2Live.resolveRestriction")(
-    test("resolves a known project to Scoped with its data graph") {
+  // Records the data graph the search ran with; an unknown project must not run it at all.
+  private def withProjectDataGraph(
+    port: ProjectDataGraphs,
+    limitToProject: Option[ProjectIri],
+  ): Task[(String, List[Option[InternalIri]])] =
+    for {
+      runs   <- Ref.make(List.empty[Option[InternalIri]])
+      result <- SearchResponderV2Live.withProjectDataGraph(port, limitToProject, ifUnknown = "empty") { graph =>
+                  runs.update(_ :+ graph).as("searched")
+                }
+      ran <- runs.get
+    } yield (result, ran)
+
+  val spec = suite("SearchResponderV2Live.withProjectDataGraph")(
+    test("runs the search with a known project's data graph") {
       for {
-        restriction <- SearchResponderV2Live.resolveRestriction(port, Some(known))
-      } yield assertTrue(restriction.contains(FulltextProjectRestriction.Scoped(known, dataGraph)))
+        (result, ran) <- withProjectDataGraph(port, Some(known))
+      } yield assertTrue(result == "searched", ran == List(Some(dataGraph)))
     },
-    test("resolves an unknown project to Unresolved") {
+    test("answers an unknown project with the empty result, without running the search") {
       for {
-        restriction <- SearchResponderV2Live.resolveRestriction(port, Some(unknown))
-      } yield assertTrue(restriction.contains(FulltextProjectRestriction.Unresolved(unknown)))
+        (result, ran) <- withProjectDataGraph(port, Some(unknown))
+      } yield assertTrue(result == "empty", ran.isEmpty)
     },
     test("fails when the lookup fails, instead of falling back to an unscoped search") {
       for {
-        exit <- SearchResponderV2Live.resolveRestriction(failingPort, Some(known)).exit
+        exit <- withProjectDataGraph(failingPort, Some(known)).exit
       } yield assertTrue(exit.isFailure)
     },
-    test("returns None without a project restriction, without asking the port") {
+    test("runs the search unscoped without a project limit, without asking the port") {
       for {
-        restriction <- SearchResponderV2Live.resolveRestriction(failingPort, None)
-      } yield assertTrue(restriction.isEmpty)
+        (result, ran) <- withProjectDataGraph(failingPort, None)
+      } yield assertTrue(result == "searched", ran == List(None))
     },
   )
 }

@@ -12,25 +12,10 @@ import dsp.errors.SparqlGenerationException
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-
-/**
- * A fulltext search's `limitToProject`, resolved once per request, so that a scoped lookup and an unknown project
- * cannot be confused (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`).
- */
-enum FulltextProjectRestriction {
-  def project: ProjectIri
-
-  /** A known project: its Lucene lookup may be wrapped in `GRAPH <dataGraph> { }`. */
-  case Scoped(project: ProjectIri, dataGraph: InternalIri)
-
-  /** An unknown project: the query keeps the unscoped lookup plus `attachedToProject`, which matches nothing. */
-  case Unresolved(project: ProjectIri)
-}
 
 object SearchFulltextQuery {
 
@@ -40,21 +25,18 @@ object SearchFulltextQuery {
     ZIO.fail(SparqlGenerationException(message)).when(condition).unit
 
   // The Lucene lookup that opens the inner subquery. Shared by build and buildProbe so the breadth probe counts the
-  // same (scoped or unscoped) candidate set the real query starts from. A Scoped restriction wraps only this
-  // statement in GRAPH: the patterns around it read ontology graphs or are bound-subject lookups, and a blanket
-  // GRAPH returns no rows (docs/adr/0012-graph-scoped-lucene-text-lookups.md, Decision 2).
-  private def luceneLookupClause(
-    searchTerms: LuceneQueryString,
-    restriction: Option[FulltextProjectRestriction],
-  ): Fragment = {
+  // same (scoped or unscoped) candidate set the real query starts from. A data graph wraps only this statement in
+  // GRAPH: the patterns around it read ontology graphs or are bound-subject lookups, and a blanket GRAPH returns no
+  // rows (docs/adr/0012-graph-scoped-lucene-text-lookups.md, Decision 2).
+  private def luceneLookupClause(searchTerms: LuceneQueryString, dataGraph: Option[InternalIri]): Fragment = {
     val searchLiteral = Literal.string(searchTerms.getQueryString)
-    restriction match {
-      case Some(FulltextProjectRestriction.Scoped(_, dataGraph)) =>
-        sparql"""|GRAPH ${Iri.unsafeFrom(dataGraph.value)} {
-                 |    ?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) .
+    val lookup        = sparql"?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) ."
+    dataGraph match {
+      case Some(graph) =>
+        sparql"""|GRAPH ${Iri.unsafeFrom(graph.value)} {
+                 |    $lookup
                  |}"""
-      case None | Some(FulltextProjectRestriction.Unresolved(_)) =>
-        sparql"?matchingSubject <http://jena.apache.org/text#query> ($searchLiteral $luceneHitLimit) ."
+      case None => lookup
     }
   }
 
@@ -86,15 +68,14 @@ object SearchFulltextQuery {
    * post-Lucene candidate count, before the value/list/resource joins the real query pays. Run concurrently with
    * the real query, it measures how broad a term is without paying the joins.
    *
-   * It mirrors the two restrictions that live inside that subquery: the standoff filter, and a
-   * [[FulltextProjectRestriction.Scoped]] project, whose `GRAPH` around the Lucene statement makes the probe count
-   * only in-project candidates. An `Unresolved` project is not mirrored (its `attachedToProject` filters after the
-   * joins), and neither is `limitToResourceClass`, which also lives in the outer query.
+   * It mirrors the two restrictions that live inside that subquery: the standoff filter, and the data graph of the
+   * project the search is limited to, whose `GRAPH` around the Lucene statement makes the probe count only
+   * in-project candidates. `limitToResourceClass` is not mirrored: it lives in the outer query.
    */
   def buildProbe(
     searchTerms: LuceneQueryString,
     limitToStandoffClass: Option[SmartIri],
-    restriction: Option[FulltextProjectRestriction],
+    dataGraph: Option[InternalIri],
   ): Select =
     Select.searchProbe(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -103,7 +84,7 @@ object SearchFulltextQuery {
                |WHERE {
                |    {
                |        SELECT DISTINCT ?matchingSubject WHERE {
-               |            ${luceneLookupClause(searchTerms, restriction)}
+               |            ${luceneLookupClause(searchTerms, dataGraph)}
                |            ${standoffFilterClause(searchTerms, limitToStandoffClass)}
                |        }
                |    }
@@ -140,7 +121,7 @@ object SearchFulltextQuery {
   // when it lands. See also SearchQueries.selectCountByLabel and AbstractPrequeryGenerator.matchFulltextExpansion,
   // which carry the same stopgap.
   /*
-   * The optional project and resource-class restrictions below are written out here rather than shared with
+   * The optional resource-class restriction below are written out here rather than shared with
    * SearchQueries.selectCountByLabel (D6): the two queries are separate and a shared helper would couple them,
    * but they must agree on the load-bearing detail — the class restriction walks the whole `rdfs:subClassOf*`
    * closure, never `subClassOf?`. The subclass closure is not materialised and there is no query-time inference,
@@ -150,16 +131,15 @@ object SearchFulltextQuery {
    * join is only paid when a class restriction is actually requested — the resource-ness probe is unconditional
    * and stands alone.
    *
-   * A `Scoped` project restriction scopes the Lucene lookup to the project's data graph (luceneLookupClause) and
-   * emits no `attachedToProject`: a hit's value, list value and resource all live in the hit's data graph, so every
-   * resource reached from an in-graph hit belongs to the project and the join would only repeat the restriction
-   * (docs/adr/0012-graph-scoped-lucene-text-lookups.md). An `Unresolved` restriction keeps the unscoped lookup and
-   * emits `attachedToProject` before the class join, a cheap probe on the already-bound `?resource` (engine Fact 1 —
-   * order relative to the joins is the plan); for an unknown project it matches nothing.
+   * `dataGraph` is the data graph of the project the search is limited to. It scopes the Lucene lookup
+   * (luceneLookupClause), and no `attachedToProject` is emitted: a hit's value, list value and resource all live in
+   * the hit's data graph, so every resource reached from an in-graph hit belongs to the project and the join would
+   * only repeat the restriction (docs/adr/0012-graph-scoped-lucene-text-lookups.md). An unknown project never
+   * reaches this builder: the responder answers it with no results.
    */
   def build(
     searchTerms: LuceneQueryString,
-    restriction: Option[FulltextProjectRestriction],
+    dataGraph: Option[InternalIri],
     limitToResourceClass: Option[ResourceClassIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
@@ -171,6 +151,7 @@ object SearchFulltextQuery {
     for {
       _ <- failIf(!countQuery && separator.isEmpty, "Separator expected for non count query, but none given")
     } yield {
+      val luceneLookup = luceneLookupClause(searchTerms, dataGraph)
       Select.search(
         sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -184,7 +165,7 @@ object SearchFulltextQuery {
                  |WHERE {
                  |    {
                  |        SELECT DISTINCT ?matchingSubject WHERE {
-                 |            ${luceneLookupClause(searchTerms, restriction)}
+                 |            $luceneLookup
                  |            ${standoffFilterClause(searchTerms, limitToStandoffClass)}
                  |        }
                  |    }
@@ -210,15 +191,8 @@ object SearchFulltextQuery {
                  |    }
                  |    BIND(COALESCE(?containingResource, ?subjectWithListValue, ?matchingSubject) AS ?resource)
                  |    ?resource knora-base:creationDate ?resourceCreationDate .
-                 |    ${List(
-            restriction.flatMap {
-              case FulltextProjectRestriction.Scoped(_, _)        => None
-              case FulltextProjectRestriction.Unresolved(project) =>
-                Some(sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(project.value)} .")
-            },
-            limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
-                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
-          ).flatten.joinLines}
+                 |    ${limitToResourceClass.whenSome(cls => sparql"""|?resource a ?resourceClass .
+                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} .""")}
                  |    ${sparql"""|OPTIONAL {
                                        |    ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
                                        |    ?resource ?fileValueProp ?valueObject .
