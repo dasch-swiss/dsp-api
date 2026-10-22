@@ -84,7 +84,8 @@ existing data, while new writes are indexed with their graph, so the index is si
 
 - Project-restricted fulltext searches can take the full Lucene hit limit without paying for every
   out-of-project hit, and most of them stop being silently truncated. Unrestricted searches are unchanged.
-  *Note (2026-10-22):* no longer true for Gravsearch `matchFulltext`, see the note under Decision 7.
+  *Note (2026-10-22):* "Unrestricted searches are unchanged" no longer holds for Gravsearch `matchFulltext`,
+  see the note under Decision 7.
 - Scoping applies only to Lucene lookups anchored on the main resource. `limitToProject` restricts the main
   resource; a lookup anchored elsewhere (`matchFulltext` on a linked resource, `matchText` on a linked resource's
   value) may legitimately hit another project's graph, because links across projects are allowed, so it stays
