@@ -24,6 +24,10 @@ aggregate root and the consistency scope for everything a researcher edits.
   through a port that the consuming context declares.
 - Resources & Values is the sole reader and writer of the project data graphs
   ([ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md) decision 1).
+- A project's Resources, Values and list nodes live in exactly one data graph, derived only by
+  `ProjectService.projectDataNamedGraphV2`. Graph-scoped text lookups rely on it
+  ([ADR-0012](../../adr/0012-graph-scoped-lucene-text-lookups.md)): a Resource, Value or list node stored
+  in any other graph is invisible to a lookup scoped to its project.
 - It implements the `InstanceUsage` port that Data Model declares, as an adapter next to its own
   data.
 - It implements the `ResourceSearch` port that Search declares. The SPARQL generation and result

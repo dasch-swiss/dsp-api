@@ -1,0 +1,31 @@
+SELECT DISTINCT ?thing
+WHERE {
+?text <http://jena.apache.org/text#query> ("Zeitglöcklein" 1000000) .
+?other <http://www.knora.org/ontology/0001/anything#hasText> ?text .
+VALUES ?thing__subProp__848b7c28 { <http://www.knora.org/ontology/0001/anything#hasBlueThing> <http://www.knora.org/ontology/0001/anything#hasOtherThing> }
+?thing ?thing__subProp__848b7c28 ?other .
+?thing <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
+VALUES ?thing__subProp__fc0818e6 { <http://www.knora.org/ontology/0001/anything#hasBlueThingValue> <http://www.knora.org/ontology/0001/anything#hasOtherThingValue> }
+?thing ?thing__subProp__fc0818e6 ?thing__httpwwwknoraorgontology0001anythinghasOtherThing__other__LinkValue .
+?thing__httpwwwknoraorgontology0001anythinghasOtherThing__other__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#object> ?other .
+?thing__httpwwwknoraorgontology0001anythinghasOtherThing__other__LinkValue <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?thing__httpwwwknoraorgontology0001anythinghasOtherThing__other__LinkValue <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?other <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?text <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+GROUP BY ?thing
+ORDER BY ASC(?thing)
+LIMIT 25

@@ -22,11 +22,29 @@ import org.knora.webapi.testservices.TestApiClient
 @RunWith(classOf[DspZTestJUnitRunner])
 class MatchFulltextE2ESpec extends E2EZSpec {
 
-  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects :+
+  // Each fixture goes into its project's data graph, next to that project's data: a lookup scoped to a project
+  // sees only that graph's Lucene hits.
+  override val rdfDataObjects: List[RdfDataObject] = SearchEndpointE2ESpecHelper.rdfDataObjects ++ List(
     RdfDataObject(
       path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-data.ttl",
-      name = "http://www.knora.org/data/0001/matchfulltexttest",
-    )
+      name = "http://www.knora.org/data/0001/anything",
+    ),
+    // Deliberately not the main resource's graph: the linked-resource test below proves nothing if this resource is
+    // indexed in 0001's graph, so that test also checks the resource is found when scoped to 0803.
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-crossproject-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula",
+    ),
+  )
+
+  private def scopedCount(project: String, query: String) = for {
+    response <- TestApiClient.postJsonLdDocument(
+                  uri"/v2/searchextended/count".addParam("limitToProject", project),
+                  query,
+                )
+    jsonLd      <- response.assert200
+    actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+  } yield actualCount
 
   private def matchFulltextCountQuery(
     term: String,
@@ -46,11 +64,35 @@ class MatchFulltextE2ESpec extends E2EZSpec {
        |}""".stripMargin
   }
 
+  private val anythingProject    = "http://rdfh.ch/projects/0001"
+  private val incunabulaProject  = "http://rdfh.ch/projects/0803"
+  private val nonexistentProject = "http://rdfh.ch/projects/matchfulltextNoSuchProject"
+  private val systemProject      = "http://www.knora.org/ontology/knora-admin#SystemProject"
+
+  // An unbalanced quote and a backslash: invalid Lucene syntax. The second form is the same term escaped for a
+  // SPARQL string literal.
+  private val invalidLuceneTerm         = "foo\"bar\\baz"
+  private val invalidLuceneTermInSparql = """foo\"bar\\baz"""
+
+  // A count query over anything:Thing in the simple schema, with the given WHERE patterns after the class statement.
+  private def thingCountQuery(where: String): String =
+    s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |CONSTRUCT {
+       |    ?thing knora-api:isMainResource true .
+       |} WHERE {
+       |    ?thing a anything:Thing .
+       |    $where
+       |}""".stripMargin
+
   private def verifyCount(query: String, expectedCount: Int) =
     newEndpointCount(query).map(actualCount => assertTrue(actualCount == expectedCount))
 
-  private def oldEndpointCount(term: String) = for {
-    response    <- TestApiClient.getJsonLdDocument(uri"/v2/search/count/$term")
+  private def oldEndpointCount(term: String, limitToProject: Option[String] = None) = for {
+    response <- TestApiClient.getJsonLdDocument(
+                  uri"/v2/search/count/$term".addParam("limitToProject", limitToProject),
+                )
     jsonLd      <- response.assert200
     actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
   } yield actualCount
@@ -133,14 +175,113 @@ class MatchFulltextE2ESpec extends E2EZSpec {
     ),
     suite("project scoping")(
       test("limitToProject scopes results to the given project") {
+        scopedCount(anythingProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          .map(actualCount => assertTrue(actualCount == 1))
+      },
+      test("limitToProject to another project finds nothing") {
+        // The target project's data graph must exist: GRAPH <g> on a missing graph returns 0 whatever the scoping.
+        // attachedToProject also yields 0, so this does not detect a text index without the graph field; the
+        // GET /v2/search/count test below does.
+        scopedCount(incunabulaProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          .map(actualCount => assertTrue(actualCount == 0))
+      },
+      test("a scoped matchFulltext finds the text value, value comment and list node paths") {
         for {
-          response <- TestApiClient.postJsonLdDocument(
-                        uri"/v2/searchextended/count".addParam("limitToProject", "http://rdfh.ch/projects/0001"),
-                        matchFulltextCountQuery("Zqxvnonce7f3Label"),
+          text     <- scopedCount(anythingProject, matchFulltextCountQuery("Zqxvnonce7f3Text"))
+          comment  <- scopedCount(anythingProject, matchFulltextCountQuery("Zqxvnonce7f3Comment"))
+          listNode <- scopedCount(anythingProject, matchFulltextCountQuery("Zqxvnonce7f3Listnode"))
+        } yield assertTrue(text == 1, comment == 1, listNode == 1)
+      },
+      test("a scoped matchLabel finds the resource in its project only") {
+        val query = thingCountQuery("""FILTER knora-api:matchLabel(?thing, "Zqxvnonce7f3Label")""")
+        for {
+          inProject    <- scopedCount(anythingProject, query)
+          otherProject <- scopedCount(incunabulaProject, query)
+        } yield assertTrue(inProject == 1, otherProject == 0)
+      },
+      test("a scoped matchText finds the value in its project only") {
+        val query = thingCountQuery(
+          """?thing anything:hasText ?text .
+            |    FILTER knora-api:matchText(?text, "Zqxvnonce7f3Text")""".stripMargin,
+        )
+        for {
+          inProject    <- scopedCount(anythingProject, query)
+          otherProject <- scopedCount(incunabulaProject, query)
+        } yield assertTrue(inProject == 1, otherProject == 0)
+      },
+      test("a scoped matchLabel inside FILTER NOT EXISTS excludes the same resources as an exact label filter") {
+        // The exact label filter is the same filter without a Lucene lookup.
+        val withLookup = thingCountQuery(
+          """FILTER NOT EXISTS {
+            |        FILTER knora-api:matchLabel(?thing, "Zqxvnonce7f3Label")
+            |    }""".stripMargin,
+        )
+        val withoutLookup = thingCountQuery(
+          """FILTER NOT EXISTS {
+            |        ?thing rdfs:label ?label .
+            |        FILTER(?label = "Zqxvnonce7f3Label")
+            |    }""".stripMargin,
+        )
+        for {
+          scoped   <- scopedCount(anythingProject, withLookup)
+          expected <- scopedCount(anythingProject, withoutLookup)
+          all      <- scopedCount(anythingProject, thingCountQuery(""))
+        } yield assertTrue(scoped == expected, expected == all - 1)
+      },
+      test("GET /v2/search/count with limitToProject counts the project's hits only") {
+        // No attachedToProject join backs up the scoped /v2/search lookup, so the 0803 count is 1 instead of 0
+        // on a text index without the graph field: this is the E2E check that the Fuseki image carries it.
+        for {
+          inProject    <- oldEndpointCount("Zqxvnonce7f3Label", Some(anythingProject))
+          otherProject <- oldEndpointCount("Zqxvnonce7f3Label", Some(incunabulaProject))
+          // Two terms, so the breadth probe runs, scoped as well.
+          twoTerms <- oldEndpointCount("Zqxvnonce7f3Label Zqxvnonce7f3Text", Some(anythingProject))
+        } yield assertTrue(inProject == 1, otherProject == 0, twoTerms == 1)
+      },
+      test("limitToProject naming a nonexistent project counts nothing on both count endpoints") {
+        for {
+          gravsearch <- scopedCount(nonexistentProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          fulltext   <- oldEndpointCount("Zqxvnonce7f3Label", Some(nonexistentProject))
+        } yield assertTrue(gravsearch == 0, fulltext == 0)
+      },
+      test("limitToProject naming the system project counts nothing on both count endpoints") {
+        // A built-in project resolves to its derived data graph, which holds no data.
+        for {
+          gravsearch <- scopedCount(systemProject, matchFulltextCountQuery("Zqxvnonce7f3Label"))
+          fulltext   <- oldEndpointCount("Zqxvnonce7f3Label", Some(systemProject))
+        } yield assertTrue(gravsearch == 0, fulltext == 0)
+      },
+      test("an invalid Lucene term with limitToProject is a 400 on /v2/search and on Gravsearch matchFulltext") {
+        for {
+          fulltext <- TestApiClient.getJsonLd(
+                        uri"/v2/search/$invalidLuceneTerm".addParam("limitToProject", anythingProject),
                       )
-          jsonLd      <- response.assert200
-          actualCount <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
-        } yield assertTrue(actualCount == 1)
+          gravsearch <- postGravsearchQuery(
+                          matchFulltextCountQuery(invalidLuceneTermInSparql),
+                          limitToProject = Some(anythingProject),
+                        )
+        } yield assertTrue(fulltext.code.code == 400, gravsearch.code.code == 400)
+      },
+      test("limitToProject leaves a lookup on a linked resource of another project unscoped") {
+        // The linked resource is attached to 0803 and indexed in 0803's data graph. Links across projects are
+        // allowed, so only a lookup on the main resource may be scoped to the main resource's project.
+        val query =
+          """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+            |CONSTRUCT {
+            |    ?thing knora-api:isMainResource true .
+            |    ?thing anything:hasOtherThing ?other .
+            |} WHERE {
+            |    ?thing a anything:Thing .
+            |    ?thing anything:hasOtherThing ?other .
+            |    FILTER knora-api:matchFulltext(?other, "Zqxvnonce7f3CrossProject")
+            |}""".stripMargin
+        for {
+          linked <- scopedCount(anythingProject, query)
+          // Found by /v2/search scoped to 0803, so its hit is indexed in 0803's graph, not in the scoped one above.
+          // Gravsearch cannot check this: limitToProject 0803 limits class inference to 0803's ontologies.
+          inOwnProject <- oldEndpointCount("Zqxvnonce7f3CrossProject", Some(incunabulaProject))
+        } yield assertTrue(linked == 1, inOwnProject == 1)
       },
     ),
     suite("non-main-resource variable usage")(

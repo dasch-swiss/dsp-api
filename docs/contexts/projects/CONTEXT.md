@@ -52,8 +52,8 @@ _Avoid_: Object-access permission
   project-scoped.
 - **Assets** depends on **Projects**: asset settings and policies are project-scoped.
 - **Resources & Values** depends on **Projects**: every **Resource** is project-owned.
-- **Project Migration** and **Operations** read **Projects** through ports they declare and
-  **Projects** implements.
+- **Project Migration**, **Operations** and **Search** read **Projects** through ports they declare
+  and **Projects** implements; **Search**'s `ProjectDataGraphs` port returns only a Project's data graph.
 - **Restricted View** is configured as a **Project setting** and enforced by **Assets**.
 
 ## Example dialogue

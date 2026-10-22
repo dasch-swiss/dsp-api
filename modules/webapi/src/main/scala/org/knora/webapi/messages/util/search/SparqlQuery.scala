@@ -6,11 +6,13 @@
 package org.knora.webapi.messages.util.search
 
 import dsp.errors.GravsearchException
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.*
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.domain.InternalIri
 
 /**
  * Represents something that can generate SPARQL source code.
@@ -519,8 +521,8 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
  * inference pass, and [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]])
  * treats a `GroupPattern` as an opaque leaf and passes it through unchanged. [[QueryTraverser]],
  * [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]] and `PrequeryPatternOrdering`
- * match on it explicitly (the first two exhaustively), as they do for [[SubSelectPattern]]; a new opaque pattern needs
- * a case in each. Used to emit hand-proven SPARQL
+ * match on it explicitly (the first two exhaustively), as they do for [[SubSelectPattern]] and [[GraphPattern]]; a new
+ * opaque pattern needs a case in each. Used to emit hand-proven SPARQL
  * shapes whose interior must survive unmodified, e.g. the `matchFulltext` function's expansion.
  *
  * @param patterns the patterns contained in the group, rendered verbatim in document order.
@@ -532,6 +534,7 @@ case class GroupPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 /**
  * A subquery `{ SELECT DISTINCT ?variable WHERE { ... } }`. Like [[GroupPattern]] it is opaque to every pass, and by
  * convention it is only emitted inside a [[GroupPattern]], e.g. to deduplicate the `matchFulltext` Lucene hits before they are joined.
+ * Its patterns may include a [[GraphPattern]].
  *
  * @param variable the single projected variable.
  * @param patterns the subquery's WHERE patterns, rendered verbatim in document order.
@@ -539,6 +542,43 @@ case class GroupPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 case class SubSelectPattern(variable: QueryVariable, patterns: Seq[QueryPattern]) extends QueryPattern {
   override def toSparql: String =
     s"{\nSELECT DISTINCT ${variable.toSparql} WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n}\n"
+}
+
+/**
+ * `GRAPH <graph> { statement }`: evaluates one statement against a single named graph instead of the union graph.
+ * Wraps only the Lucene `text:query` statement of a project-scoped fulltext lookup, and the constructor rejects any
+ * other statement (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`): every other pattern stays on the union
+ * graph, because ontology-backed patterns (`rdf:type`, `rdfs:subClassOf*`) match nothing inside a project data graph.
+ * The graph is rendered through the validated sparql-builder [[Iri]], so it cannot break out of `<...>`.
+ *
+ * Opaque like [[GroupPattern]]: [[QueryTraverser]] and
+ * [[org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil]] pass it through unchanged, so
+ * inference never expands the wrapped statement. Unlike a [[SubSelectPattern]] it exposes the bindings of its
+ * statement: [[org.knora.webapi.messages.util.search.gravsearch.transformers.PrequeryPatternOrdering]] ranks it exactly
+ * as it ranks the bare statement.
+ *
+ * @param graph     the named graph, e.g. a project's data graph.
+ * @param statement the single wrapped statement.
+ */
+case class GraphPattern(graph: InternalIri, statement: StatementPattern) extends QueryPattern {
+  require(
+    statement.pred match {
+      case IriRef(pred, None) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+      case _                  => false
+    },
+    s"GraphPattern wraps only a Lucene text:query statement, got: ${statement.toSparql}",
+  )
+
+  private val graphIri: Iri = Iri.unsafeFrom(graph.value)
+
+  override def toSparql: String = s"GRAPH ${graphIri.render} {\n${statement.toSparql}}\n"
+}
+
+object GraphPattern {
+
+  /** The Lucene `lookup`, wrapped in `GRAPH <dataGraph> { }` when a data graph is given. */
+  def scoped(lookup: StatementPattern, dataGraph: Option[InternalIri]): QueryPattern =
+    dataGraph.fold[QueryPattern](lookup)(GraphPattern(_, lookup))
 }
 
 /**

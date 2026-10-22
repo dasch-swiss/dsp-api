@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
@@ -47,6 +48,7 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
                        typeInspectionResult = typeInspectionResult,
                        querySchema = querySchema,
                        appConfig = appConfig,
+                       luceneScope = None,
                      ),
                    )
     preQuery <- queryTraverser(
@@ -58,21 +60,25 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
   private def transformQueryWithInference(
     query: String,
     limitResultsToProject: Option[ProjectIri] = None,
+    scopeLuceneToProject: Boolean = false,
   ): ZIO[
-    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService &
+      KnoraProjectService,
     Throwable,
     SelectQuery,
   ] =
     GravsearchInferencePipelineTestSupport.transformQueryWithInference(
       query,
-      (constructClause, typeInspectionResult, querySchema, appConfig) =>
+      (constructClause, typeInspectionResult, querySchema, appConfig, luceneScope) =>
         new GravsearchToPrequeryTransformer(
           constructClause = constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema,
           appConfig = appConfig,
+          luceneScope = luceneScope,
         ),
       limitResultsToProject = limitResultsToProject,
+      scopeLuceneToProject = scopeLuceneToProject,
     )
 
   val inputQueryWithDateNonOptionalSortCriterion: String =
@@ -621,6 +627,24 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    }
       |}""".stripMargin
 
+  val queryMatchFulltextOnLinkedResource: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasOtherThing ?other .
+      |    FILTER knora-api:matchFulltext(?other, "Zeitglöcklein")
+      |}""".stripMargin
+
+  private val anythingProject   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val incunabulaProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+
+  /** Restricted to a project, with its main-resource-anchored Lucene lookups scoped to the project's data graph. */
+  private def transformScoped(query: String, project: ProjectIri = anythingProject) =
+    transformQueryWithInference(query, limitResultsToProject = Some(project), scopeLuceneToProject = true)
+
   val queryMatchTextSimple: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -694,6 +718,60 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       |    ?text knora-api:textValueHasStandoff ?standoffTag .
       |    ?standoffTag a standoff:StandoffItalicTag .
       |    FILTER knora-api:matchTextInStandoff(?text, ?standoffTag, "\"interesting text\" c\\d")
+      |}""".stripMargin
+
+  val queryMatchTextOnLinkedResource: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasOtherThing ?other .
+      |    ?other anything:hasText ?text .
+      |    FILTER knora-api:matchText(?text, "Zeitglöcklein")
+      |}""".stripMargin
+
+  val queryMatchTextInUnionWithLinkedResource: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasOtherThing ?other .
+      |    {
+      |        ?thing anything:hasText ?text .
+      |    }
+      |    UNION
+      |    {
+      |        ?other anything:hasText ?text .
+      |    }
+      |    FILTER knora-api:matchText(?text, "Zeitglöcklein")
+      |}""".stripMargin
+
+  val queryMatchTextBeforeLabel: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    FILTER knora-api:matchText(?label, "Zeitglöcklein")
+      |    ?thing rdfs:label ?label .
+      |}""".stripMargin
+
+  val queryMatchLabelInFilterNotExists: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    FILTER NOT EXISTS {
+      |        FILTER knora-api:matchLabel(?thing, "Zeitglöck*")
+      |    }
       |}""".stripMargin
 
   val queryLinkTargetAnchor: String =
@@ -929,6 +1007,31 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
       transformQueryWithInference(queryMatchFulltextInUnion)
         .map(actual => assertGolden(actual.toSparql, "matchFulltextInUnion"))
     },
+    test("scope only the Lucene statement of a classless matchFulltext to the project's data graph") {
+      transformScoped(queryClasslessMatchFulltext).map(actual =>
+        assertGolden(actual.toSparql, "classlessMatchFulltextScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "classlessMatchFulltextScopedShape"),
+      )
+    },
+    test("scope only the Lucene statement of a class-restricted matchFulltext to the project's data graph") {
+      transformScoped(queryClassRestrictedMatchFulltext).map(actual =>
+        assertGolden(actual.toSparql, "classRestrictedMatchFulltextScoped") &&
+          assertGolden(
+            GravsearchInferencePipelineTestSupport.shapeSummary(actual),
+            "classRestrictedMatchFulltextScopedShape",
+          ),
+      )
+    },
+    test("leave a matchFulltext on a linked resource unscoped, since links may cross projects") {
+      transformScoped(queryMatchFulltextOnLinkedResource)
+        .map(actual => assertGolden(actual.toSparql, "matchFulltextOnLinkedResourceScoped"))
+    },
+    test("scope a matchFulltext on the main resource inside a UNION branch") {
+      transformScoped(queryMatchFulltextInUnion).map(actual =>
+        assertGolden(actual.toSparql, "matchFulltextInUnionScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchFulltextInUnionScopedShape"),
+      )
+    },
     test("pass the Lucene hit limit for matchText in the simple schema") {
       transformQueryWithInference(queryMatchTextSimple)
         .map(actual => assertGolden(actual.toSparql, "matchText"))
@@ -952,6 +1055,45 @@ class GravsearchToPrequeryTransformerE2ESpec extends E2EZSpec with GoldenTest {
     test("keep the SPARQL valid for a quote and a backslash in a matchTextInStandoff term") {
       transformQueryWithInference(queryMatchTextInStandoffEscaped)
         .map(actual => assertGolden(actual.toSparql, "matchTextInStandoffEscaped"))
+    },
+    test("scope only the Lucene statement of a matchText on the main resource's value, in the simple schema") {
+      transformScoped(queryMatchTextSimple).map(actual =>
+        assertGolden(actual.toSparql, "matchTextScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchTextScopedShape"),
+      )
+    },
+    test("scope only the Lucene statement of a matchText on the main resource's value, in the complex schema") {
+      transformScoped(queryMatchTextComplex).map(actual =>
+        assertGolden(actual.toSparql, "matchTextScoped") &&
+          assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchTextScopedShape"),
+      )
+    },
+    test("scope only the Lucene statement of a matchLabel on the main resource") {
+      transformScoped(queryMatchLabel, incunabulaProject)
+        .map(actual =>
+          assertGolden(actual.toSparql, "matchLabelScoped") &&
+            assertGolden(GravsearchInferencePipelineTestSupport.shapeSummary(actual), "matchLabelScopedShape"),
+        )
+    },
+    test("scope only the Lucene statement of a matchTextInStandoff on the main resource's value") {
+      transformScoped(queryMatchTextInStandoff)
+        .map(actual => assertGolden(actual.toSparql, "matchTextInStandoffScoped"))
+    },
+    test("leave a matchText on a linked resource's value unscoped, since links may cross projects") {
+      transformScoped(queryMatchTextOnLinkedResource)
+        .map(actual => assertGolden(actual.toSparql, "matchTextOnLinkedResourceScoped"))
+    },
+    test("leave a matchText unscoped when a UNION branch binds its value from a linked resource") {
+      transformScoped(queryMatchTextInUnionWithLinkedResource)
+        .map(actual => assertGolden(actual.toSparql, "matchTextInUnionWithLinkedResourceScoped"))
+    },
+    test("leave a matchText on the main resource's label unscoped, even when the FILTER precedes the label") {
+      transformScoped(queryMatchTextBeforeLabel)
+        .map(actual => assertGolden(actual.toSparql, "matchTextBeforeLabelScoped"))
+    },
+    test("scope a matchLabel on the main resource inside FILTER NOT EXISTS") {
+      transformScoped(queryMatchLabelInFilterNotExists)
+        .map(actual => assertGolden(actual.toSparql, "matchLabelInFilterNotExistsScoped"))
     },
     test("transform a query anchored on a list-node value") {
       transformQueryWithInference(GravsearchInferencePipelineTestSupport.queryListNodeAnchor)

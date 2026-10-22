@@ -48,8 +48,10 @@ DEV-6851's label-field reindex and with DEV-7492, not as a standalone latency fi
 - **Emulation:** only the inner Lucene subselect changes, to
   `{ SELECT DISTINCT ?m WHERE { ?m text:query (...) . GRAPH <dataGraph> { ?m ?p ?o } } }`, with the same hit
   limit as the control. Everything else stays identical and on the union graph. Without `graphField`, Lucene
-  still returns every hit and each one pays a GRAPH probe, so the emulation is a **pessimistic upper bound** on
-  the time a real graph-scoped lookup takes.
+  still returns every hit and each one pays a GRAPH probe. The dev re-run with real scoping (see
+  [the dev measurements](#measured-on-dev-with-real-graphfield-scoping-2026-10-21)) shows the emulation is a
+  pessimistic upper bound with the full limit and for cases under 10k in-project hits; at the cap, the five
+  cases above 10k pay up to 1.5× more with real scoping, because they get more (complete-er) results.
 - **Correctness:** control and emulation returned byte-identical results (count and page) in every case and
   every shape. With the cap, both see the same global top 10k; a real scoped lookup would apply the cap after
   scoping and could return more (see [The hit limit](#the-hit-limit)).
@@ -173,6 +175,18 @@ are 26k–52k.
 `/v2/search` already runs with the full limit, so it gets the same 1.0–6.7× today. L4 stays at 17.5 s scoped
 because its class restriction walks `subClassOf*` per candidate (Gravsearch uses a `VALUES` list instead).
 
+## Measured on dev with real graphField scoping (2026-10-21)
+
+Dev's text index was rebuilt with `text:graphField "graph"`, and the same 14 cases ran with real scoping (only
+the inner Lucene statement wrapped in `GRAPH <dataGraph> { }`). Hit counts and every 1M-limit result match
+stage. Emulated and real scoped results are identical with the 1M limit. At the cap, real scoping returns more
+wherever the control is truncated: the six predicted cases (L1, L6, W1, W2, M1, F1) come back complete, while
+L2, L3, L4, D1 and E1 still lose 355–42,046 in-project hits (DEV-7492). With the 1M limit, real scoping is
+1.2–3.9× faster than the emulation: Gravsearch ≤ 4.7 s, `/v2/search` ≤ 4.6 s except the class-restricted L4
+(13.8 s; 4.6 s without the `rdfs:subClassOf*` walk). At the cap, control → real is 1.0–8.8× (median 1.8×), all
+≤ 1.7 s. The scoped breadth probe is 1.0–4.3× cheaper and counts exactly the in-project hits, while the
+unscoped probe overstates small projects by 14–74×. The full tables are on DEV-7377.
+
 ## The hit limit
 
 - Today the 10k cap is applied to the **global** hit list, and the project restriction filters afterwards. A
@@ -199,18 +213,21 @@ because its class restriction walks `subClassOf*` per candidate (Gravsearch uses
 ## What this means for go/no-go
 
 - **As a standalone latency fix at today's cap: not worth a reindex.** After DEV-7491, restricted searches are
-  0.6–2.5 s warm on stage, and scoping saves about 1.6× (at most 1.6 s). The slow share of restricted searches in
-  prod has already dropped from about 13 % to about 3 %.
+  0.6–2.5 s warm on stage, and scoping saves about 1.6× (1.8× median with real scoping on dev, at most about
+  3 s). The slow share of restricted searches in prod has already dropped from about 13 % to about 3 %.
 - **As the enabler for the full hit limit: yes.** With the 1M limit, scoping turns 30–55 s restricted searches
-  into ≤ 8 s ones (Gravsearch and `/v2/search`), and in 6 of 11 truncated cases it fixes the truncation even at
-  the cap. It is also the cheapest lever for LIMC: the ratio is only 1.1–4×, yet the 1M-limit cases still get
-  4–6×, because the per-hit join cost is what scoping removes.
-- **Recommendation: go, bundled.** Ship `graphField` in the same reindex as DEV-6851's label field (not
-  `propField`: that property does not exist in Jena 6.2.0, see the correctness section below). Then plan
-  DEV-7492 so that project-restricted searches get the full limit with scoping; unrestricted searches need their
-  own answer (AND semantics or a latency budget). Scope the list-node branch to the project data graph only.
+  into ≤ 8 s ones under the emulation and ≤ 5 s with real scoping on dev (Gravsearch and `/v2/search`; the one
+  exception is `/v2/search` with a class restriction, see L4 on dev), and in 6 of 11 truncated cases it fixes the
+  truncation even at the cap (confirmed on dev). It is also the cheapest lever for LIMC: the ratio is only
+  1.1–4×, yet the 1M-limit cases still get 4–6×, because the per-hit join cost is what scoping removes.
+- **Recommendation: go, bundled.** Ship `graphField` in the same reindex as DEV-6851's label field (superseded:
+  the graph field shipped alone, see ADR-0012 Decision 6), not `propField` (that property does not exist in
+  Jena 6.2.0, see the correctness section below). Then plan DEV-7492 so that project-restricted searches get the
+  full limit with scoping; unrestricted searches need their own answer (AND semantics or a latency budget). The
+  list-node branch needs no scope of its own: it starts from the scoped hit (ADR-0012 Decision 3).
 - **DEV-6809 (c):** scoping the Lucene lookup supersedes GRAPH-scoping the post-Lucene patterns for the main cost.
-  What remains of (c) is dropping the `attachedToProject` join once the hits are already project-local.
+  What remains of (c) is dropping the `attachedToProject` join once the hits are already project-local, in
+  `/v2/search` only: Gravsearch keeps it on the main resource, which need not be the Lucene anchor.
 - **Reindex duration (DEV-7377 acceptance):** about 6.5 minutes on prod-sized data, see below.
 - **Rollout order is a hard constraint:** the dsp-api scoping change must only reach a host after that host's
   config edit and reindex, see the correctness section.
@@ -272,8 +289,8 @@ Every item below passes with `graphField` on, and each one was compared against 
   assembler and from the documentation, and is silently ignored. DEV-6851's "propField moots the open question"
   section is wrong. Giving `rdfs:label` its own field does make the list-form label lookup label-only (1,397 →
   146 hits for a common word), but the unchanged fulltext lookup then loses label matches (1,046 → 680; a
-  label-only term 1 → 0), so DEV-6851 needs the fulltext query to search both fields. It still rides the same
-  reindex as `graphField`.
+  label-only term 1 → 0), so DEV-6851 needs the fulltext query to search both fields. It needs its own
+  reindex, separate from `graphField`'s.
 - **Rollout hazard.** Config edited but index not rebuilt: scoped lookups return 0 for all existing data while
   new writes are indexed with their graph, so the index becomes silently partial. Index rebuilt but config
   reverted: safe, the GRAPH clause is a no-op again. The dsp-api scoping change must therefore only reach a host
@@ -284,10 +301,11 @@ Every item below passes with `graphField` on, and each one was compared against 
 ## Caveats
 
 - The emulation pays Lucene retrieval of every hit plus a GRAPH probe per hit, which a real `graphField` lookup
-  avoids. The real scoped times should be lower, especially for terms with many out-of-project hits. For
+  avoids. Measured on dev, real scoped times are 1.2–3.9× lower than the emulation with the 1M limit. For
   reference, the bare 1M-limit Lucene lookup alone takes up to about 2 s for the broadest terms here.
-- At the cap, a real scoped lookup can return **more** results than the control (the cap applies after scoping),
-  so its cost can be somewhat higher than the emulated number for projects with more than 10k in-project hits.
+- At the cap, a real scoped lookup returns **more** results than the control (the cap applies after scoping).
+  Measured on dev, this makes it up to 1.5× slower than the emulated number for the five cases with more
+  than 10k in-project hits (still ≤ 1.7 s).
 - Stage is warm after the first run, and prod durations include cold caches and concurrent load. The traced prod
   durations (up to 69 s) mostly reflect the old shape. Stage cold first runs of the old shape were 3.7–24 s.
 - The Tempo sample is capped at 1,000 spans, and 0102 was not in it. Before/after shares come from TraceQL metric

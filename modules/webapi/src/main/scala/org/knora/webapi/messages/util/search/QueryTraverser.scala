@@ -142,6 +142,7 @@ final class QueryTraverser()(implicit stringFormatter: StringFormatter) {
                                // Opaque: rendered verbatim, never optimised or inference-expanded.
                                case groupPattern: GroupPattern  => ZIO.succeed(Seq(groupPattern))
                                case subSelect: SubSelectPattern => ZIO.succeed(Seq(subSelect))
+                               case graph: GraphPattern         => ZIO.succeed(Seq(graph))
                              }
     } yield transformedPatterns.flatten
 

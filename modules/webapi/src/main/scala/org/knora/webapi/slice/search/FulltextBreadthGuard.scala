@@ -12,8 +12,8 @@ import zio.cache.Lookup
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -24,6 +24,9 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * measures breadth with a fast `COUNT` — [[SearchFulltextQuery.buildProbe]] — concurrently with the real query,
  * and refuses with a 400 when the count exceeds the cap. The probe fails open — any probe error leaves the real
  * query untouched — and measured breadth is cached (single-flight) so a repeated term does not re-probe.
+ *
+ * For a search scoped to a project's data graph the probe counts only that project's candidates, so the cap
+ * applies to the in-project count: a term refused unscoped can pass when scoped to a project where it is rare.
  *
  * Only queries that can be broad are probed ([[FulltextSearchTerms.shouldProbe]] — a wildcard or more than one
  * term); a single plain term runs unguarded. Running the probe concurrently with (not before) the query is what
@@ -46,16 +49,14 @@ final case class FulltextBreadthGuard(
   def guarded[A](
     searchTerms: LuceneQueryString,
     limitToStandoffClass: Option[SmartIri],
-    limitToProject: Option[ProjectIri],
+    dataGraph: Option[InternalIri],
     limitToResourceClass: Option[ResourceClassIri],
   )(query: Task[A]): Task[A] =
     if (!FulltextSearchTerms.shouldProbe(searchTerms)) query
     else {
-      // The probe SPARQL encodes term + standoff (all the probe measures); project and resource class are carried
-      // in the key too so a future project-scoped probe (DEV-6809 (c)) can vary the value without a stale-cache bug.
+      // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
       val key = BreadthKey(
-        SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass),
-        limitToProject.map(_.value),
+        SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph),
         limitToResourceClass.map(_.toString),
       )
       // Start the real query immediately (as a structured child fiber), then await the breadth probe and decide on
@@ -85,12 +86,12 @@ final case class FulltextBreadthGuard(
 object FulltextBreadthGuard {
 
   /**
-   * The cache key. `probeSparql` uniquely encodes the term and the standoff restriction — the only inputs the
-   * current probe measures — so it doubles as the query the lookup runs. `project` / `resourceClass` are part of
-   * the key but not the current probe: they are future-proofing (Spike A), keeping the cache correct if the probe
-   * ever becomes restriction-aware.
+   * The cache key. `probeSparql` uniquely encodes the term, the standoff restriction and the data graph — the
+   * inputs the probe measures — so it doubles as the query the lookup runs, and a scoped and an unscoped probe of
+   * the same term never share an entry. `resourceClass` is not measured by the probe at all; it keeps the cache
+   * correct if the probe ever mirrors the class restriction.
    */
-  final case class BreadthKey(probeSparql: Select, project: Option[String], resourceClass: Option[String])
+  final case class BreadthKey(probeSparql: Select, resourceClass: Option[String])
 
   /**
    * Testable core. `probe` is injected so a unit test can supply a counting or failing double — the in-memory

@@ -1,0 +1,2 @@
+STMT var attachedToProject iri
+UNION

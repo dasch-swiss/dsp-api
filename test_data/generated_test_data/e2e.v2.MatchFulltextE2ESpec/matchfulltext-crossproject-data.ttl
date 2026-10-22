@@ -1,0 +1,18 @@
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+
+# Companion to matchfulltext-data.ttl: the target of matchfulltextG's link, attached to project
+# 0803. Only MatchFulltextE2ESpec loads it, into 0803's data graph
+# (http://www.knora.org/data/0803/incunabula), so its label is indexed outside project 0001's graph.
+# Its class is anything:Thing because that is the object class anything:hasOtherThing requires.
+
+<http://rdfh.ch/0803/matchfulltextCrossProject>
+    a                            anything:Thing ;
+    rdfs:label                   "Zqxvnonce7f3CrossProject" ;
+    knora-base:isDeleted         false ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
+    knora-base:creationDate      "2026-07-01T00:00:00.000000Z"^^xsd:dateTime ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .

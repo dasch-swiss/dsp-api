@@ -1,0 +1,63 @@
+SELECT DISTINCT ?thing
+WHERE {
+?thing <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> .
+{
+{
+{
+SELECT DISTINCT ?match__matchFulltext WHERE {
+GRAPH <http://www.knora.org/data/0001/anything> {
+?match__matchFulltext <http://jena.apache.org/text#query> "Zeitglöcklein"^^<http://www.w3.org/2001/XMLSchema#string> .
+}
+}
+}
+OPTIONAL {
+?match__matchFulltext <http://www.knora.org/ontology/knora-base#valueCreationDate> ?valueCreationDate__matchFulltext .
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#LinkValue> .
+
+}
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListValue> .
+
+}
+?containingRes__matchFulltext ?prop__matchFulltext ?match__matchFulltext .
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+OPTIONAL {
+?match__matchFulltext <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/knora-base#ListNode> .
+?match__matchFulltext <http://www.knora.org/ontology/knora-base#hasSubListNode>* ?subNode__matchFulltext .
+?listVal__matchFulltext <http://www.knora.org/ontology/knora-base#valueHasListNode> ?subNode__matchFulltext .
+?resWithListVal__matchFulltext ?pred__matchFulltext ?listVal__matchFulltext .
+FILTER NOT EXISTS {
+ ?match__matchFulltext <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+BIND(COALESCE(?containingRes__matchFulltext, ?resWithListVal__matchFulltext, ?match__matchFulltext) AS ?thing)
+?thing <http://www.knora.org/ontology/knora-base#creationDate> ?resourceCreationDate__matchFulltext .
+}
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int1 .
+FILTER NOT EXISTS {
+ ?thing <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+FILTER NOT EXISTS {
+ ?int1 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+} UNION {
+?thing <http://www.knora.org/ontology/0001/anything#hasInteger> ?int2 .
+?int2 <http://www.knora.org/ontology/knora-base#valueHasInteger> ?int2__valueHasInteger .
+FILTER((?int2__valueHasInteger = "1"^^<http://www.w3.org/2001/XMLSchema#integer>))
+FILTER NOT EXISTS {
+ ?int2 <http://www.knora.org/ontology/knora-base#isDeleted> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+}
+}
+}
+GROUP BY ?thing
+ORDER BY ASC(?thing)
+LIMIT 25

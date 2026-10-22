@@ -406,6 +406,9 @@ This function can only be used as the top-level expression in a `FILTER`.
 explicit hit limit of 1,000,000 to the full-text index instead of inheriting its silent
 default of 10,000, so a broad or wildcard term is not truncated to an arbitrary subset.
 `knora-api:matchFulltext` does not pass this limit and still inherits the 10,000-hit default (DEV-7492).
+With the `limitToProject` parameter, a lookup on the main resource or on one of its own values counts only
+that project's hits against either limit; a lookup on a linked resource or its values is not scoped and counts
+hits from every project.
 
 In all four full-text functions (`knora-api:matchText`, `knora-api:matchLabel`,
 `knora-api:matchTextInStandoff` and `knora-api:matchFulltext`), a search term containing
@@ -725,6 +728,9 @@ structured criteria in one query.
 two do not necessarily return the same result set on large data: `matchFulltext` still
 inherits Jena's silent ~10,000-hit Lucene cap, whereas `/v2/search` passes an explicit
 hit limit and returns the full set (DEV-7492). For a term below the cap the results match.
+With the `limitToProject` parameter and `matchFulltext` on the main resource, the 10,000-hit cap counts only
+that project's hits, so a term that is broad across the repository but not within the project is not truncated.
+`matchFulltext` on a linked resource is not scoped, because a linked resource may belong to another project.
 `matchFulltext` is the only Gravsearch text function with this cap: `matchText`,
 `matchLabel` and `matchTextInStandoff` pass the same explicit limit as `/v2/search`.
 

@@ -20,6 +20,8 @@ a body of logic with its own shape, distinct from both the model and the instanc
 - Search therefore holds no low-level RDF execution of its own.
 - Data Model implements the **Data Model projection** port that Search declares for type
   inspection.
+- Projects implements the **ProjectDataGraphs** port that Search declares for scoping full-text
+  lookups.
 
 ## Language
 
@@ -28,7 +30,9 @@ dsp-api's Data-Model-aware query language for retrieving Resources.
 _Avoid_: SPARQL public interface
 
 **Full-text retrieval**:
-Text-oriented Resource retrieval that currently requires little Data Model knowledge.
+Text-oriented Resource retrieval that currently requires little Data Model knowledge. A
+project-restricted lookup is scoped to the project's data graph
+([ADR-0012](../../adr/0012-graph-scoped-lucene-text-lookups.md)).
 _Avoid_: Gravsearch
 
 **Type inspection**:
@@ -45,6 +49,13 @@ The Search-declared port through which Resources & Values answers Gravsearch, fu
 incoming-link queries.
 _Avoid_: SPARQL access, triplestore service
 
+**ProjectDataGraphs port**:
+A Search-declared port, implemented by Projects, that resolves a Project to the IRI of its data graph
+and returns nothing else; it returns nothing for an unknown Project. A full-text search limited to an
+unknown Project then answers with no Resources without querying; a Gravsearch query runs unscoped and
+finds no Resource of that Project.
+_Avoid_: Project service
+
 Search remains one provisional context while full-text, Gravsearch, filtering, and faceting converge.
 
 ## Relationships
@@ -58,7 +69,10 @@ Search remains one provisional context while full-text, Gravsearch, filtering, a
   which Resources & Values implements.
 - **Search** asks **Data Model** for Class and Property meaning through the **Data Model
   projection** port, which Data Model implements.
-- **Search** depends on no other context and on no low-level RDF execution.
+- **Search** asks **Projects** for a Project's data graph through the **ProjectDataGraphs** port,
+  which Projects implements.
+- **Search** depends on other contexts only through the ports it declares, and on no low-level RDF
+  execution.
 
 ## Example dialogue
 
