@@ -251,6 +251,5 @@ status: in-progress
   `InferenceOptimizationService` still injects `ProjectService` (pre-existing); the root CONTEXT.md mermaid graph
   gained `SEARCH --> PROJECTS` beyond the plan's "context map line" item, to keep the diagram in step; Appendix A's
   "five projects" became "five cases" (L2–L4 are one project). Round 2 was not re-reviewed (cap of 2).
-- Release-notes draft for H2 (human action after ship; no file in the repo carries it, release-please owns the
-  CHANGELOG): "The Fuseki image now stores each text-index entry's named graph. On its first start, each host rebuilds
-  the Lucene index once (about 6.5 minutes on prod, database unavailable meanwhile)."
+- H2 reworded 2026-10-22 (Balduin): the one-off rebuild downtime is a deploy-checklist item, not a release-notes
+  item, because it is not user-facing. The earlier release-notes draft is withdrawn.

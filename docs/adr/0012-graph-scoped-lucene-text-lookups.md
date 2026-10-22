@@ -86,7 +86,7 @@ existing data, while new writes are indexed with their graph, so the index is si
   unscoped.
 - Each environment rebuilds its index once, automatically, on the first deploy of an image whose configuration
   differs from the host's, with the database down for the rebuild (about 6.5 minutes plus container start).
-  This has to be visible in the release notes.
+  That is an item for the deploy checklist, not for the release notes: users do not see it.
 - A test of a scoped lookup needs its fixture in the project data graph (`MatchFulltextE2ESpec` loads it there),
   and the target graph has to exist.
 - DEV-6809 (c) is superseded for the main cost. What remained of it, dropping the `attachedToProject` join once
