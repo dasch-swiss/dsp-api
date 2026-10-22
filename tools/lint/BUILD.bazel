@@ -25,3 +25,14 @@ py_test(
     data = _LINT_SRCS,
     main = "check_relative_imports.py",
 )
+
+# Enforce that a Gravsearch prequery reaches the triplestore only through
+# SearchResponderV2Live.executePrequery, which owns the matchFulltext breadth
+# guard. Only webapi constructs prequery transformers. Wired into `just check`.
+py_test(
+    name = "gravsearch_prequery_seam",
+    srcs = ["check_gravsearch_prequery_seam.py"],
+    args = ["$(rootpaths //modules/webapi:license_srcs)"],
+    data = ["//modules/webapi:license_srcs"],
+    main = "check_gravsearch_prequery_seam.py",
+)

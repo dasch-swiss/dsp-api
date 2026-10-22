@@ -88,7 +88,8 @@ check *FLAGS='': require-bazel
     # source against a generated `.fmt.output`, which under RBE build-without-the-bytes is never
     # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
     for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
-    bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports
+    bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports \
+      //tools/lint:gravsearch_prequery_seam
     # markdownlint (from the Nix dev shell, flake.nix) over every tracked markdown file; the
     # release-please CHANGELOGs are generated and excluded.
     markdownlint --config .markdownlint.yml --disable MD013 MD040 \
