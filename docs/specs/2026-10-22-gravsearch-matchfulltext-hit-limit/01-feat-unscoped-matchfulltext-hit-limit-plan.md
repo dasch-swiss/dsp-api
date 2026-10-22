@@ -63,25 +63,25 @@ query and refuses with a 400 when the count exceeds the configured cap (`v2.full
 
 ### Phase 1: Lift the cap behind the breadth guard
 
-- [ ] Phase review
+- [x] Phase review
 
-- [ ] Generator always passes `luceneHitLimit` in `matchFulltextLuceneLookup`; remove the scoped/unscoped branch,
+- [x] Generator always passes `luceneHitLimit` in `matchFulltextLuceneLookup`; remove the scoped/unscoped branch,
       the `TODO(DEV-7492)` and the temporary scaladoc sentence.
-- [ ] Record the `matchFulltext` term and data graph on the generator and expose it from both prequery
+- [x] Record the `matchFulltext` term and data graph on the generator and expose it from both prequery
       transformers.
-- [ ] Wrap prequery execution in `gravsearchV2` and `gravsearchCountV2` with `FulltextBreadthGuard.guarded` when a
+- [x] Wrap prequery execution in `gravsearchV2` and `gravsearchCountV2` with `FulltextBreadthGuard.guarded` when a
       `matchFulltext` lookup is present.
-- [ ] Update the unscoped prequery goldens in `modules/test-it/src/test/resources/.../gravsearch/prequery/`
+- [x] Update the unscoped prequery goldens in `modules/test-it/src/test/resources/.../gravsearch/prequery/`
       (`GravsearchToPrequeryTransformerE2ESpec__classlessMatchFulltext.txt`, `__classRestrictedMatchFulltext.txt`,
       `__matchFulltextInUnion.txt`, `__matchFulltextOnLinkedResourceScoped.txt`,
       `GravsearchToCountPrequeryTransformerE2ESpec__classlessMatchFulltext.txt`) to the
       `("term" 1000000)` form. Golden rewrite cannot write from the Bazel sandbox: edit the files directly.
-- [ ] Tests for the wiring: a Gravsearch `matchFulltext` query whose probe is over the cap is refused with a 400
+- [x] Tests for the wiring: a Gravsearch `matchFulltext` query whose probe is over the cap is refused with a 400
       (page and count); an admitted one returns results; a probe error fails open; a query without
       `matchFulltext` is never probed; a scoped query uses the scoped probe. Prefer a test-it responder spec with an
       injected `FulltextBreadthGuard` double (`FulltextBreadthGuard.make(cap, ...)(probe)`, see
       `FulltextBreadthGuardSpec` and `SearchResponderV2Spec`) over E2E data volume.
-- [ ] Docs: remove every "unscoped `matchFulltext` keeps the 10,000-hit cap" statement and describe the breadth
+- [x] Docs: remove every "unscoped `matchFulltext` keeps the 10,000-hit cap" statement and describe the breadth
       guard for Gravsearch `matchFulltext` instead — `docs/03-endpoints/api-v2/query-language.md` (both
       `matchFulltext` passages; document the possible 400 for over-broad terms), `docs/05-internals/design/api-v2/gravsearch.md`
       (Project Scoping), `docs/development/dsp-api-fuseki-query-execution.md` (Fact 9),
