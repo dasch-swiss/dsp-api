@@ -1954,7 +1954,13 @@ abstract class AbstractPrequeryGenerator(
   // Set once handleMatchFulltextFunction has processed a call, so a second call in the same query can
   // be rejected: the performance spike for DEV-6715 measured a second call at 17-38s, since Jena
   // substitution-joins the second block, re-running its Lucene lookups per candidate row of the first.
-  private var matchFulltextFunctionCalled = false
+  private var recordedMatchFulltextLookup: Option[MatchFulltextLookup] = None
+
+  /**
+   * The query's `matchFulltext` lookup, if it has one; the caller runs the prequery behind the fulltext breadth guard
+   * with it. Complete only once the whole query has been traversed.
+   */
+  def matchFulltextLookup: Option[MatchFulltextLookup] = recordedMatchFulltextLookup
 
   /**
    * Checks that the query is in the simple schema, then calls `handleMatchFulltextFunction`.
@@ -2036,10 +2042,9 @@ abstract class AbstractPrequeryGenerator(
       throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
     }
 
-    if (matchFulltextFunctionCalled) {
+    if (recordedMatchFulltextLookup.isDefined) {
       throw GravsearchException(s"Function ${functionIri.toSparql} may only be used once per query")
     }
-    matchFulltextFunctionCalled = true
 
     // Two arguments are expected:
     // 1. a variable representing a resource
@@ -2068,6 +2073,10 @@ abstract class AbstractPrequeryGenerator(
         s"A search value for ${functionIri.toSparql} is expected to have at least length of $searchValueMinLength, but '$searchTerm' given of length ${searchTerm.length}.",
       )
     }
+
+    recordedMatchFulltextLookup = Some(
+      MatchFulltextLookup(LuceneQueryString(searchTerm), resourceDataGraph(resourceVar)),
+    )
 
     // Replace the filter with the fulltext-index-anchored expansion.
     TransformedFilterPattern(
