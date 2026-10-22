@@ -16,7 +16,8 @@ Lucene field, which has consequences (Fact 10) — (`modules/fuseki/dsp-repo.ttl
 and **no `stats.opt` statistics file** — so the BGP optimizer runs on the `fixed`
 variable-counting heuristic, not cost estimates. The API sends every query with a server-side
 `timeout` form parameter in tiers (Standard 20s, Maintenance 120s, Gravsearch 120s, Search 60s,
-ViewRestrictions 40s, ViewRestrictionsCounts 120s; `application.conf`). The fulltext prequery and count run on the Search tier; the fulltext breadth probe
+ViewRestrictions 40s, ViewRestrictionsCounts 120s; `application.conf`). The fulltext prequery and count run on the Search tier, every Gravsearch prequery (`matchFulltext` included)
+on the Gravsearch tier; the fulltext breadth probe
 (DEV-6864) reuses the Search timeout value under a distinct `SearchProbe` tier so its samples stay out of
 the Search-tier metric.
 
