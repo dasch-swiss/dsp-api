@@ -37,11 +37,11 @@ import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
+import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.prequery.LuceneScope
-import org.knora.webapi.messages.util.search.gravsearch.prequery.MatchFulltextLookup
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
@@ -585,12 +585,18 @@ final class SearchResponderV2Live(
       ZIO.logErrorCause(s"Gravsearch prequery failed:\n$prequerySparql", Cause.fail(e))
   }
 
-  // The one place a Gravsearch prequery (page or count) reaches the triplestore. A matchFulltext prequery runs behind
-  // the same breadth guard as /v2/search, probing the scope its lookup runs in; any other prequery runs unguarded.
-  private def executePrequery(prequerySparql: String, matchFulltextLookup: Option[MatchFulltextLookup]) = {
+  /**
+   * The one place a Gravsearch prequery (page or count) reaches the triplestore; never run one any other way. A
+   * prequery whose `generator` recorded a `matchFulltext` lookup runs behind the same breadth guard as /v2/search,
+   * probing the scope that lookup runs in; any other prequery runs unguarded.
+   */
+  private def executePrequery(
+    prequerySparql: String,
+    generator: AbstractPrequeryGenerator,
+  ): Task[SparqlSelectResult] = {
     val prequery = triplestore.query(Select.gravsearch(prequerySparql)).tapError(logPrequeryFailure(prequerySparql))
     stageSpan("gravsearch.prequery.execute")(
-      matchFulltextLookup.fold(prequery)(lookup =>
+      generator.matchFulltextLookup.fold(prequery)(lookup =>
         fulltextBreadthGuard.guarded(
           lookup.searchTerm,
           limitToStandoffClass = None,
@@ -879,13 +885,13 @@ final class SearchResponderV2Live(
                                             ontologiesForInferenceMaybe,
                                             limitToProject,
                                           )
-                          } yield (countQuery.toSparql, gravsearchToCountTransformer.matchFulltextLookup)
+                          } yield (countQuery.toSparql, gravsearchToCountTransformer)
                         }
-      (countSparql, matchFulltextLookup) = countGenerated
+      (countSparql, gravsearchToCountTransformer) = countGenerated
 
       _ <- recordPrequeryOnRoot(countSparql)
 
-      countResponse <- executePrequery(countSparql, matchFulltextLookup)
+      countResponse <- executePrequery(countSparql, gravsearchToCountTransformer)
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -977,7 +983,7 @@ final class SearchResponderV2Live(
 
       _ <- recordPrequeryOnRoot(prequerySparql)
 
-      prequeryResponseNotMerged <- executePrequery(prequerySparql, gravsearchToPrequeryTransformer.matchFulltextLookup)
+      prequeryResponseNotMerged <- executePrequery(prequerySparql, gravsearchToPrequeryTransformer)
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.size
 
