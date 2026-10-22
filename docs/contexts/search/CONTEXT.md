@@ -51,7 +51,8 @@ _Avoid_: SPARQL access, triplestore service
 
 **ProjectDataGraphs port**:
 A Search-declared port, implemented by Projects, that resolves a Project to the IRI of its data graph
-and returns nothing else; it returns nothing for an unknown Project, whose search then runs unscoped and
+and returns nothing else; it returns nothing for an unknown Project. A full-text search limited to an
+unknown Project then answers with no Resources without querying; a Gravsearch query runs unscoped and
 finds no Resource of that Project.
 _Avoid_: Project service
 

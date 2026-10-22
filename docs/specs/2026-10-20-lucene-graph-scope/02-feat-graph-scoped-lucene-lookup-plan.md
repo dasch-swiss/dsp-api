@@ -583,6 +583,8 @@ Through the API, times include the main query and HTTP. Compare the prequery sta
    but none is linked. H4 creates it; the ADR text works without the ID.
 6. **Unknown project.** Kept as today (unscoped lookup, 200 with 0 results). A 404 would be cleaner but changes
    the API; short-circuiting to an empty result without a Lucene call would be cheaper but is a separate change.
+   Revised after review (2026-10-22, see the journal): `/v2/search` now short-circuits in the responder (still 200
+   with 0 results); Gravsearch keeps the unscoped lookup plus `attachedToProject`.
 
 Resolved by code reading during review (former question 7): the lookup uses `KnoraProjectService.findById`
 (cached, no ontology lookups, `KnoraProjectService.scala:36`) rather than `ProjectService.findById` (which also

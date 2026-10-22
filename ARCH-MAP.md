@@ -948,7 +948,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `GravsearchToCountPrequeryTransformer`, `GravsearchQueryOptimisation`, `GravsearchMainQueryGenerator`,
     `MainQueryResultProcessor`, `QueryTraverser`, `PrequeryPatternOrdering`, `ConstructTransformer`,
     `SelectTransformer`, `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`,
-    `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`, `FulltextProjectRestriction`,
+    `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`,
     `LuceneScope`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
     `SearchTimeoutException`, `ResourceCountV2`, and the port `ProjectDataGraphs`
 - **Public interface**: the `SearchResponderV2` trait (`gravsearchV2`, `gravsearchCountV2`,

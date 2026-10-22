@@ -256,3 +256,25 @@ status: in-progress
   "five projects" became "five cases" (L2–L4 are one project). Round 2 was not re-reviewed (cap of 2).
 - H2 reworded 2026-10-22 (Balduin): the one-off rebuild downtime is a deploy-checklist item, not a release-notes
   item, because it is not user-facing. The earlier release-notes draft is withdrawn.
+
+## Post-review changes (2026-10-22)
+
+The author's review of `SearchFulltextQuery` found two smells: pattern matches inside `sparql"""..."""` templates,
+and a three-state `Option[FulltextProjectRestriction]` (`None`, `Unresolved`, `Scoped`) for a query with only two
+SPARQL shapes. Changes:
+
+- `FulltextProjectRestriction` is deleted. `build`, `buildProbe` and `FulltextBreadthGuard.guarded` take
+  `dataGraph: Option[InternalIri]`: `Some` wraps the Lucene statement in `GRAPH`, `None` is the unscoped query of
+  `main`. No `attachedToProject` is emitted by `SearchFulltextQuery` any more.
+- The varying Lucene lookup is computed once above the template (`val luceneLookup`); the class restriction hole
+  uses `whenSome` instead of a match. The scoped goldens are byte-unchanged.
+- An unknown project is decided in the responder: `SearchResponderV2Live.withProjectDataGraph` answers
+  `/v2/search` and its count with the empty result (200, 0 results, as before) without running the query or the
+  breadth probe; it replaces `resolveRestriction`. One consequence: an invalid Lucene term limited to an unknown
+  project now gets 200 with 0 results instead of a 400, because no query runs.
+- `BreadthKey` drops its `project` field: the probe SPARQL already encodes the data graph, so a scoped and an
+  unscoped probe of the same term cannot share an entry.
+- Gravsearch only changes type: `luceneScopeFor` reads the port directly; an unknown project still runs the
+  unscoped lookup plus the main resource's `attachedToProject`.
+- The two legacy fixtures with a project limit (`countWithProjectAndClass`, `searchWithAllFilters`) stay
+  byte-unchanged and are compared without their `attachedToProject` statement, which the builder no longer emits.
