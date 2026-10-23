@@ -147,7 +147,7 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
 | Phase | Status |
 | --- | --- |
 | 1: Query, repo, service, endpoint | reviewed |
-| 2: E2E test and docs | pending |
+| 2: E2E test and docs | reviewed |
 
 #### Phase 1: Query, repo, service, endpoint
 
@@ -186,11 +186,13 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
 
 #### Phase 2: E2E test and docs
 
-- [ ] New E2E spec `ResourcesInfoE2ESpec` under `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/`, against
+- [x] New E2E spec `ResourcesInfoE2ESpec` under `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/`, against
   project 0001:
     - a project-wide call returns entries of more than one class, each with `resourceClass` set, and at least as
       many entries as a single-class call
     - a single-class call returns only that class
+    - a single-class call for `anything:Thing` does not list the `anything:BlueThing` (subclass) instance
+      `http://rdfh.ch/0001/a-blue-thing`, which the project-wide call lists
     - a cutoff in the future returns an empty list
     - create a resource, take its `lastModificationDate` (effective date) from a listing, poll with exactly that
       instant as cutoff: it is listed
@@ -203,11 +205,11 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
       (confirm the current behaviour for the header and assert it)
     - a cutoff with a URL-encoded `+02:00` offset is accepted
     - an unknown project and an unknown but well-formed class both give an empty list
-- [ ] Check what `POST /v2/resources/batch` returns for a soft-deleted IRI (code or a quick E2E assertion), for the
+- [x] Check what `POST /v2/resources/batch` returns for a soft-deleted IRI (code or a quick E2E assertion), for the
   docs
-- [ ] Run the new spec: `just docker-load-test-images`, then
+- [x] Run the new spec: `just docker-load-test-images`, then
   `bazel test //modules/test-e2e:test --test_filter='.*ResourcesInfoE2ESpec.*'`; it passes
-- [ ] Docs: new section in `docs/03-endpoints/api-v2/reading-and-searching-resources.md`, after "Reading Resources
+- [x] Docs: new section in `docs/03-endpoints/api-v2/reading-and-searching-resources.md`, after "Reading Resources
   by Class from a Project", for `GET /v2/resources/info`. Cover the header, parameters, response shape
   (`resourceClass`, `asOf`), at-or-after semantics and effective date, and timestamp format and precision. Add a
   "Polling for changes" subsection:
@@ -219,8 +221,8 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
     - gaps: erased resources never appear (compare a full listing now and then), ontology changes don't count,
       back-dated writes (client-supplied creation dates, e.g. imports) are missed, no permission filtering, each
       poll scans the whole project, no paging (large first sync)
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Out of scope
 

@@ -26,6 +26,7 @@ status: in-progress
 | phase | status | phase_base | review_fix_rounds |
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@a2a0f6732 | 2 |
+| 2 | reviewed | dsp-api@561bbc909 | 1 |
 
 ## Chunk queue
 
@@ -49,6 +50,14 @@ status: in-progress
 - **1.5** (dsp-api) files: none; depends_on: 1.4; checkboxes: "Run bazel test //modules/webapi:test";
   acceptance: suite passes; context: —; replaces: —
 
+- **2.1** (dsp-api) files: `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/ResourcesInfoE2ESpec.scala` (new);
+  depends_on: —; checkboxes: "New E2E spec ResourcesInfoE2ESpec ...", "Check what POST /v2/resources/batch returns
+  for a soft-deleted IRI", "Run the new spec ..."; acceptance: every listed case plus the no-subclass case green
+  against real Fuseki; context: plan § Phase 2, `ResourcesEndpointsPostBatchE2ESpec.scala`; replaces: —
+- **2.2** (dsp-api) files: `docs/03-endpoints/api-v2/reading-and-searching-resources.md`; depends_on: 2.1 (batch
+  tombstone behaviour); checkboxes: "Docs: new section ...", "Run just check"; acceptance: section after "Reading
+  Resources by Class from a Project", `just check` green; context: plan § Decisions, § Phase 2; replaces: —
+
 ## Chunks
 
 | id | repo | status | commit(s) | summary | blocker |
@@ -60,6 +69,9 @@ status: in-progress
 | 1.5 | dsp-api | complete | — | `bazel test //modules/webapi:test` passes at 4094beafe; license + relative-import gates pass | none |
 | 1.6 | dsp-api | complete | 4e5801516 | Review fix round 1: no ?resourceClass column on class-restricted query (perf), one ZIO.attempt for row parsing (perf + typed failure), named stored-class conversion helper, IRI tiebreak direction documented | none |
 | 1.7 | dsp-api | complete | a01f810e3 | Review fix round 2 (re-review of 1.6, dune): row mapper returns Either, missing class column is a named InconsistentRepositoryDataException, Scaladoc points at the query's conditional column | none |
+| 2.1 | dsp-api | complete | 43f1353c7 | ResourcesInfoE2ESpec, 11 tests green on Fuseki (port 3399 override); covers boundary cutoff = stored timestamp, +1 ms excludes, no-subclass, soft delete; batch returns knora-api:DeletedResource tombstone (isDeleted, no values); canary `>` for `>=` fails it; missing project header is a 400 | none |
+| 2.2 | dsp-api | complete | c76319568 | Docs section `### Listing the Resources of a Project with Their Dates` + `#### Polling for Changes` in reading-and-searching-resources.md; `just check` equivalent green (format-test needs `--remote_download_outputs=all` locally) | none |
+| 2.3 | dsp-api | complete | cb7ebac90 | Review fix round 1: +02:00 test now distinguishes offset applied vs ignored (newest date at +02:00 listed, same wall clock as Z not listed); entryOf fails with Exception; docs add malformed-project / invalid order 400s and IRI tiebreak also when descending | none |
 
 ## Deferrals
 
@@ -68,6 +80,8 @@ status: in-progress
 - Phase 2 E2E must carry the real-SPARQL boundary cases the unit tests only check against the fake: cutoff equal to a
   stored timestamp, a resource with no `lastModificationDate`, a deleted resource, a class filter not matching
   subclasses (already in the Phase 2 checklist except the no-subclass case).
+- Phase 2 dune review (DUNE-001): ARCH-MAP.md test-e2e entry does not list `ResourcesInfoE2ESpec`;
+  same `/dune:dune-map update` as the GetResourceInfoQuery deferral, left for the session.
 
 ## Deviations
 
@@ -79,6 +93,26 @@ status: in-progress
 
 ## Side findings
 
+- Phase 2 re-review of cb7ebac90 (consistency, simplicity, dune): no Critical or Warning. Suggestions not acted on: the
+  "any other value of order/orderBy is a 400" sentence sits under the orderBy bullet and does not say matching is
+  case-insensitive; the E2E has no 400 case for a malformed project header or invalid order/orderBy (tapir default
+  decode failure).
+- Phase 2 review, not acted on (suggestions / refuted): single-use payload helpers and the two overlapping listing
+  tests in `ResourcesInfoE2ESpec` (kept: one behaviour per test, two extra round trips); docs section length and some
+  restatement between the parameter list and the polling gaps (kept: plan asks for both); 400 tests do not assert which
+  parameter caused the 400; a pointer from code to the docs section (DUNE-003); the spec could live under
+  `slice/api/v2/resources/` instead of the legacy `e2e/v2/` (DUNE-002, siblings are in `e2e/v2/`).
+- Phase 2 review, unverified edge case: `ReadResourceV2.asDeletedResource` substitutes the tombstone only when
+  `deleteDate` is before now, so a resource soft-deleted with a future custom delete date is listed with
+  `isDeleted = true` but fetched by `POST /v2/resources/batch` as a full resource. Not documented.
+- The docs claim that every resource-level write (permissions, links, metadata) sets `lastModificationDate` comes from
+  the plan's code reading; the E2E only exercises create, add value and soft delete.
+- Local test recipe: E2E needs `--test_env=DOCKER_HOST --test_env=TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+  --test_env=HOME` plus `KNORA_WEBAPI_KNORA_API_{INTERNAL,EXTERNAL}_PORT=3399` (an ssh tunnel holds 3333).
+  `just check` fails locally only because `.format-test` needs `--remote_download_outputs=all`; with it every
+  format-test, the license/relative-import tests and markdownlint pass.
+- `ResourcesEndpointsPostBatchE2ESpec` is an `object` without `@RunWith(classOf[DspZTestJUnitRunner])`, unlike the
+  other 63 E2E specs; unverified whether Bazel's JUnit runner executes it at all.
 - Stage re-time (2026-10-23, `dsp vre sparql query -s stage --accept csv`, project 0807, class `mls:Article`,
   17,096 rows, 4–6 runs each, interleaved): old `s"..."` query 1.62–2.09 s; new rendered template (leading
   `VALUES ?resourceClass`) 1.84–2.55 s; `?resource a <C>` + `BIND(<C> AS ?resourceClass)` fallback 2.03–2.17 s.
