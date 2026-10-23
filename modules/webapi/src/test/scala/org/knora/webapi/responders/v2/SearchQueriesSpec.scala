@@ -27,8 +27,8 @@ class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
   private val resourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
 
-  // The `SearchQueriesSpec__*.txt` files next to this spec are the verbatim output of the string-interpolating
-  // predecessor of SearchQueries — they are kept byte-unchanged and are compared after canonicalisation by Jena,
+  // The legacy `SearchQueriesSpec__*.txt` fixtures (those read by `legacy`, not the `__scoped*` goldens) are the
+  // verbatim output of the string-interpolating predecessor of SearchQueries — they are kept byte-unchanged and are compared after canonicalisation by Jena,
   // which normalises whitespace and prefix expansion but nothing else. Every invariant listed below is visible in
   // the canonical form, so it is still pinned.
   private def legacy(name: String): String = {

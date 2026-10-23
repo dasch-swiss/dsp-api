@@ -1799,7 +1799,7 @@ object SearchResponderV2Live {
   /**
    * Runs a `/v2/search` or `/v2/searchbylabel` query with the data graph of `limitToProject` (`None` without a
    * project limit). An unknown project has no resources, so the search answers `ifUnknown` (200 with zero results,
-   * as the endpoints always have, not 404) without running any query (nor `/v2/search`'s breadth probe). A failing
+   * as the endpoints always have, not 404) without running any query, including `/v2/search`'s breadth probe. A failing
    * lookup fails the request rather than falling back to an unscoped search.
    */
   def withProjectDataGraph[A](port: ProjectDataGraphs, limitToProject: Option[ProjectIri], ifUnknown: => A)(
