@@ -395,20 +395,20 @@ Chunks: 2 (config, then guard).
 
 Chunks: 1.
 
-- [ ] `failure-ttl = 30 seconds` in `application.conf`; `failureTtl` in `FulltextSearchProbe` (and its
+- [x] `failure-ttl = 30 seconds` in `application.conf`; `failureTtl` in `FulltextSearchProbe` (and its
   scaladoc); validation `> 0` and `<= cache-ttl`; `AppConfigSpec` asserts default and both rejections
-- [ ] `Cache.makeWith` maps `Exit.Failure` to `failureTtl`; `make`/`layer` pass it
-- [ ] Unit test with a failing probe: call 1 admitted; `TestClock.adjust(failureTtl / 2)`; call 2 admitted
+- [x] `Cache.makeWith` maps `Exit.Failure` to `failureTtl`; `make`/`layer` pass it
+- [x] Unit test with a failing probe: call 1 admitted; `TestClock.adjust(failureTtl / 2)`; call 2 admitted
   and the probe count is still 1; `TestClock.adjust(failureTtl / 2 + 1.milli)`; call 3 re-probes (count 2)
-- [ ] `GravsearchFulltextBreadthGuardSpec` "fails open when the probe errors" expects one probe for page + count
+- [x] `GravsearchFulltextBreadthGuardSpec` "fails open when the probe errors" expects one probe for page + count
   (comment updated)
-- [ ] The `make` scaladoc sentence "a probe error is given `Duration.Zero` and re-probed next time", the `probe`
+- [x] The `make` scaladoc sentence "a probe error is given `Duration.Zero` and re-probed next time", the `probe`
   config comment and `gravsearch.md` § Breadth Guard describe the negative TTL
-- [ ] Canary: set the failure TTL back to `Duration.Zero`; the in-window assertion (count still 1) fails; revert
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*(FulltextBreadthGuardSpec|AppConfigSpec).*'`; it
+- [x] Canary: set the failure TTL back to `Duration.Zero`; the in-window assertion (count still 1) fails; revert
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*(FulltextBreadthGuardSpec|AppConfigSpec).*'`; it
   passes
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 5: A client rejection does not mark a Gravsearch span ERROR (item 5)
 

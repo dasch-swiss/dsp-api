@@ -33,6 +33,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@32422663 | 0 |
 | 2 | reviewed | dsp-api@b08f5582 | 1 |
 | 3 | reviewed | dsp-api@582b7d50 | 1 |
+| 4 | reviewed | dsp-api@ce521c20 | 0 |
 
 ## Chunk queue
 
@@ -42,6 +43,7 @@ status: in-progress
 | 2.1 | dsp-api | FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, gravsearch.md, gravsearch-trace-runbook.md | 1.1 | all Phase 2 boxes except Phase review | memo checked before fork; repeat over-cap refusal starts no query and no probe; TTL and capacity bound tested; canary fails the counter test | `slice/search/FulltextBreadthGuard.scala` § guarded, make; gravsearch.md § Breadth Guard; runbook §3, §4 | — |
 | 3.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala | 2.1 | Phase 3 box 1 (verdict-wait config) | `verdict-wait = 5 seconds` loaded; `> 0` validated; AppConfigSpec asserts default and rejection | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe, validations | — |
 | 3.2 | dsp-api | FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md, gravsearch-trace-runbook.md, query-language.md, dsp-api-fuseki-query-execution.md | 3.1 | all other Phase 3 boxes except Phase review | probe forked into guard scope, observed with await; bounded verdict wait after query success; failed query returns at once; seven new unit tests with timeout aspect; scope size does not grow; canary fails the TestClock test | `slice/search/FulltextBreadthGuard.scala` § guarded, make, layer; spec § guardWith | — |
+| 4.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala, FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md | 3.2 | all Phase 4 boxes except Phase review | `failure-ttl = 30 seconds` loaded, validated `> 0` and `<= cache-ttl`; a failed probe is cached for `failureTtl`; unit test re-probes only past the TTL; IT expects one probe for page + count; canary fails the in-window assertion | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe; `FulltextBreadthGuard.scala` § make, layer | — |
 
 ## Chunks
 
@@ -53,12 +55,16 @@ status: in-progress
 | 3.1 | dsp-api | complete | 53d943f92 | `verdict-wait = 5 seconds` in the probe block, `FulltextSearchProbe.verdictWait`, validated positive; AppConfigSpec asserts default and rejection (`OK (29 tests)`) | none |
 | 3.2 | dsp-api | complete | 59d1b5043 | probe forked with `forkIn` into the guard's scope and observed with `await`; `raceEither` decides; a succeeded query waits at most `verdictWait`, a failed one returns at once; awaits explicitly interruptible; `make` takes `verdictWait` and needs `Scope`; nine new unit tests under a 30 s timeout aspect; gravsearch.md, runbook §3 and query-language.md updated | none |
 | 3.R1 | dsp-api | complete | a76e732d2 | review fix: guard scaladoc says only closing the guard's scope interrupts the probe and names the trace its span lands in (a Phase 3 checkbox asked for it); AppConfig validation comment no longer says a zero-permit semaphore hangs searches; `verdictWait` scaladoc sentence reordered | none |
+| 4.1 | dsp-api | complete | 7614b67f7 | `failure-ttl = 30 seconds` (positive, at most `cache-ttl`); `Cache.makeWith` keeps a failed probe for `failureTtl`; unit test: in-window call does not re-probe, past TTL + 1 ms it does; IT fail-open test expects one probe for page + count; gravsearch.md and config comments updated (`OK (53 tests)`, IT `OK (8 tests)`) | none |
 
 ## Deferrals
 
 - ARCH-MAP.md `webapi-search` (Durable state, about line 1044) does not mention the over-cap memo (Phase 2) or the
   background probe fibers in the guard's layer scope (Phase 3). ARCH-MAP.md is owned by `/dune:dune-map`; left for the
   session (dune review DUNE-001, Warning).
+- ARCH-MAP.md `webapi-search` also does not say a failed probe is cached for `failure-ttl` (Phase 4), and the
+  fingerprints of `webapi-search` and the config component are stale after it. Same owner and handling as above
+  (Phase 4 dune review DUNE-001, Warning).
 
 ## Deviations
 
@@ -114,3 +120,20 @@ status: in-progress
   under the `fork` canary, and its assertions hold by construction in the new code); the failed-query test builds
   an unused gate; `verdictWaitRegistered` relies on the 30 s aspect as its bound. Re-review of the fix commit was
   skipped (comments only); `OK (50 tests)` after it.
+- Phase 4 canary: with the failure TTL back at zero (written `failureTtl.multipliedBy(0)`, since a literal
+  `Duration.Zero` leaves the parameter unused and fails `-Werror`), the new unit test fails its in-window assertion
+  (`inWindow = 2`) and its past-TTL one (`afterTtl = 3`); restored, `OK (53 tests)` for guard + AppConfig specs; IT
+  `OK (8 tests)`.
+- Phase 4 markdownlint: `gravsearch.md` has pre-existing MD013/MD040 errors (lines 49–144) outside the edited
+  section; the new paragraph is clean. Left as is.
+- Phase 4 review (consistency, code-simplicity, dune, scala-zio; all sonnet): no Critical. Warnings: DUNE-001
+  (ARCH-MAP staleness) deferred above, as the brief forbids editing ARCH-MAP.md; scala-zio's "an interrupt cause
+  raised inside the lookup is cached for `failure-ttl`" is not fixed: it fails open, decided behaviour 5 caches a
+  failed probe, and a probe interrupted from outside (scope close) is never cached because zio-cache 0.2.4 removes
+  the key on an interrupt-only lookup exit (re-confirmed in Phase 3; the closed-scope test still passes). The
+  consistency reviewer's matching suggestion (scope-close interruptions now cached for 30 s) is refuted by the same
+  source. Suggestions kept, not fixed: the AppConfig block comment still says "Guard all four" (six probe
+  validations now; stale since Phase 3); `failure-ttl` semantics are stated in the conf comment, the AppConfig and
+  `make` scaladoc and gravsearch.md; `make` takes six tuning parameters (pass `FulltextSearchProbe` if a seventh
+  arrives); `make` does not itself enforce `failureTtl <= cacheTtl` (AppConfig does); the IT's `probed == 1` relies
+  on page and count finishing within the live 30 s window; no unit case for a defect probe. No fix round.
