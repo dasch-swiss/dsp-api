@@ -12,6 +12,7 @@ import zio.*
 import zio.test.*
 
 import java.time.Instant
+import java.time.ZoneOffset
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
@@ -75,7 +76,7 @@ class ResourcesInfoE2ESpec extends E2EZSpec {
   private def entryOf(resourceIri: String)(list: ListResponseDto): Task[ResourceInfoDto] =
     ZIO
       .fromOption(list.resources.find(_.resourceIri == resourceIri))
-      .orElseFail(new AssertionError(s"$resourceIri is not listed"))
+      .orElseFail(Exception(s"$resourceIri is not listed"))
 
   private def createThing: ZIO[TestApiClient, Throwable, String] = {
     val payload =
@@ -152,11 +153,21 @@ class ResourcesInfoE2ESpec extends E2EZSpec {
         after  <- Clock.instant
       } yield assertTrue(!list.asOf.isBefore(before), !list.asOf.isAfter(after))
     },
-    test("a cutoff with a URL-encoded +02:00 offset is accepted") {
-      val uri = infoUri(cutoff = Some("2000-01-01T02:00:00+02:00"))
+    test("a cutoff with a URL-encoded +02:00 offset is applied as that offset") {
       for {
-        list <- listInfo(uri)
-      } yield assertTrue(uri.toString.contains("%2B02:00"), list.resources.nonEmpty)
+        all       <- listInfo(infoUri())
+        newest     = all.resources.maxBy(_.lastModificationDate)
+        withOffset = newest.lastModificationDate.atOffset(ZoneOffset.ofHours(2)).toString
+        offsetUri  = infoUri(cutoff = Some(withOffset))
+        atOffset  <- listInfo(offsetUri)
+        // The same wall-clock time read as UTC lies two hours later.
+        asUtc <- listInfo(infoUri(cutoff = Some(withOffset.replace("+02:00", "Z"))))
+      } yield assertTrue(
+        withOffset.endsWith("+02:00"),
+        offsetUri.toString.contains("%2B02:00"),
+        atOffset.resources.exists(_.resourceIri == newest.resourceIri),
+        !asUtc.resources.exists(_.resourceIri == newest.resourceIri),
+      )
     },
     test("an unknown project and an unknown but well-formed class both give an empty list") {
       val unknownClass = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost + "#NoSuchClass"

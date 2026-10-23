@@ -619,7 +619,8 @@ HTTP GET to http://host/v2/resources/info[?resourceClass=RESOURCE_CLASS_IRI][&cu
 ```
 
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is a DSP project IRI.
-Without it the request is answered with `400 Bad Request`; an unknown project gives an empty list.
+Without it, or with a malformed project IRI, the request is answered with `400 Bad Request`;
+an unknown project gives an empty list.
 The endpoint is public and does not check permissions: it lists the IRIs of all resources of the project,
 deleted ones included, also those the requesting user may not see.
 
@@ -634,7 +635,8 @@ All query parameters are optional:
   creating a resource counts as modifying it.
 - `order`: `asc` (the default) or `desc`.
 - `orderBy`: `lastModificationDate` (the default) or `creationDate`.
-  Resources with equal dates are ordered by ascending resource IRI.
+  Resources with equal dates are ordered by ascending resource IRI, also when descending.
+  Any other value of `order` or `orderBy` is a `400`.
 
 The response lists the resources, their number, and `asOf`:
 
