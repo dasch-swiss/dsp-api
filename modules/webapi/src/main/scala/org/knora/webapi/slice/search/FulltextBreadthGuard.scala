@@ -104,16 +104,17 @@ object FulltextBreadthGuard {
   /**
    * The keys whose probe counted more than the cap, each until its expiry. It answers the pre-fork check without
    * blocking: zio-cache 0.2.4 has no non-blocking lookup (`get` awaits an in-flight probe, `contains` also sees
-   * pending and expired entries). An entry is live until the clock is strictly after its expiry, the same rule as
-   * zio-cache's `hasExpired`. Bounded by `capacity`: on overflow, expired entries go first, then the
-   * earliest-expiring.
+   * pending and expired entries). An entry is live until the clock is strictly after its expiry (the comparison
+   * zio-cache's `hasExpired` uses); it is stamped just before the cache entry, so it can expire a moment earlier, and
+   * that term is then refused through the cache verdict instead. Bounded by `capacity`: on overflow, expired entries
+   * go first, then the earliest-expiring. Written only by the lookup in `make`.
    */
   final class OverCapMemo private (entries: Ref[Map[BreadthKey, Instant]], capacity: Int, ttl: Duration) {
 
     def contains(key: BreadthKey): UIO[Boolean] =
       Clock.instant.flatMap(now => entries.get.map(_.get(key).exists(expiry => !now.isAfter(expiry))))
 
-    def record(key: BreadthKey): UIO[Unit] =
+    private[search] def record(key: BreadthKey): UIO[Unit] =
       Clock.instant.flatMap { now =>
         entries.update { current =>
           val live = current.filter((_, expiry) => !now.isAfter(expiry)) + (key -> now.plus(ttl))

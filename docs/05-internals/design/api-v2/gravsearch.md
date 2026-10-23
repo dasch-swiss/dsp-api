@@ -556,7 +556,7 @@ The guard checks a memo of known over-cap verdicts before it starts anything: a 
 cap (within `cache-ttl`) is refused at once, without running its prequery or a probe. Only a term with no known
 verdict, or a known within-cap one, starts its prequery concurrently with the probe; the probe writes an over-cap
 count to the memo before its verdict is cached. The memo holds at most `cache-capacity` entries, dropping
-expired ones first and then the oldest.
+expired ones first and then the earliest-expiring.
 
 ### Why the Expansion Needs an Opaque Group
 
