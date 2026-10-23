@@ -9,6 +9,8 @@ import zio.*
 import zio.cache.Cache
 import zio.cache.Lookup
 
+import java.time.Instant
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
@@ -37,18 +39,23 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * keeps an admitted term tax-free: the probe's COUNT is far cheaper than the real query, so awaiting its verdict
  * adds nothing to the latency of the queries this guard exists for. A refused term interrupts its still-running
  * query (the sttp canceller is non-blocking, ~6 ms — Spike A). See the Spike A outcomes in the DEV-6864 plan.
+ *
+ * A term whose over-cap verdict is already known (the [[FulltextBreadthGuard.OverCapMemo]]) is refused before
+ * anything is started: neither its query nor a probe runs, so a repeated broad term costs the triplestore nothing.
  */
 final case class FulltextBreadthGuard(
   private val cap: Int,
   private val cache: Cache[FulltextBreadthGuard.BreadthKey, Throwable, Long],
+  private val overCap: FulltextBreadthGuard.OverCapMemo,
 ) {
   import FulltextBreadthGuard.BreadthKey
 
   /**
-   * Runs `query` concurrently with the term's Lucene candidate-count probe, then decides on the probe's verdict:
-   * refuses with a 400 (interrupting the still-running query) when the count is over the cap, and otherwise returns
-   * the query's result — within the cap, or the probe errored (fail open). Because the two run concurrently, an
-   * admitted term pays no serial probe tax (Spike A).
+   * Refuses a term already known to be over the cap without running `query` or the probe. Otherwise runs `query`
+   * concurrently with the term's Lucene candidate-count probe, then decides on the probe's verdict: refuses with a
+   * 400 (interrupting the still-running query) when the count is over the cap, and otherwise returns the query's
+   * result — within the cap, or the probe errored (fail open). Because the two run concurrently, an admitted term
+   * pays no serial probe tax (Spike A).
    */
   def guarded[A](
     searchTerms: LuceneQueryString,
@@ -68,6 +75,7 @@ final case class FulltextBreadthGuard(
       // a structured child, cleaned up on any exit — and means an over-cap term is always refused (a fast query can
       // never resolve the request before the probe's verdict is known).
       for {
+        _        <- ZIO.fail(tooBroad(searchTerms)).whenZIO(overCap.contains(key))
         queryFib <- query.fork
         result   <- cache.get(key).either.flatMap {
                     case Right(breadth) if breadth > cap => queryFib.interrupt *> ZIO.fail(tooBroad(searchTerms))
@@ -94,21 +102,57 @@ object FulltextBreadthGuard {
   final case class BreadthKey(probeSparql: Select)
 
   /**
+   * The keys whose probe counted more than the cap, each until its expiry. It answers the pre-fork check without
+   * blocking: zio-cache 0.2.4 has no non-blocking lookup (`get` awaits an in-flight probe, `contains` also sees
+   * pending and expired entries). An entry is live until the clock is strictly after its expiry, the same rule as
+   * zio-cache's `hasExpired`. Bounded by `capacity`: on overflow, expired entries go first, then the
+   * earliest-expiring.
+   */
+  final class OverCapMemo private (entries: Ref[Map[BreadthKey, Instant]], capacity: Int, ttl: Duration) {
+
+    def contains(key: BreadthKey): UIO[Boolean] =
+      Clock.instant.flatMap(now => entries.get.map(_.get(key).exists(expiry => !now.isAfter(expiry))))
+
+    def record(key: BreadthKey): UIO[Unit] =
+      Clock.instant.flatMap { now =>
+        entries.update { current =>
+          val live = current.filter((_, expiry) => !now.isAfter(expiry)) + (key -> now.plus(ttl))
+          if (live.size <= capacity) live
+          else live.toSeq.sortBy((_, expiry) => expiry).drop(live.size - capacity).toMap
+        }
+      }
+
+    private[search] def size: UIO[Int] = entries.get.map(_.size)
+  }
+
+  object OverCapMemo {
+    def make(capacity: Int, ttl: Duration): UIO[OverCapMemo] =
+      Ref.make(Map.empty[BreadthKey, Instant]).map(new OverCapMemo(_, capacity, ttl))
+  }
+
+  /**
    * Testable core. `probe` is injected so a unit test can supply a counting or failing double — the in-memory
    * triplestore has no Lucene index, so the real probe fails there by construction, which is exactly the fail-open
    * path. Built with `Cache.makeWith` so only successes are retained (a probe error is given `Duration.Zero` and
    * re-probed next time), capacity is bounded, and concurrent probes are capped by the semaphore.
+   *
+   * An over-cap count is written to the memo inside the lookup, before the lookup completes its cache entry, so any
+   * caller that has seen an over-cap verdict finds it in the memo afterwards.
    */
   def make(cap: Int, cacheCapacity: Int, cacheTtl: Duration, maxConcurrent: Int)(
     probe: BreadthKey => Task[Long],
   ): UIO[FulltextBreadthGuard] =
     for {
       semaphore <- Semaphore.make(maxConcurrent.toLong)
-      cache     <- Cache.makeWith(cacheCapacity, Lookup((key: BreadthKey) => semaphore.withPermit(probe(key)))) {
+      overCap   <- OverCapMemo.make(cacheCapacity, cacheTtl)
+      lookup     = Lookup { (key: BreadthKey) =>
+                 semaphore.withPermit(probe(key)).tap(breadth => overCap.record(key).when(breadth > cap))
+               }
+      cache <- Cache.makeWith(cacheCapacity, lookup) {
                  case Exit.Success(_) => cacheTtl
                  case Exit.Failure(_) => Duration.Zero
                }
-    } yield FulltextBreadthGuard(cap, cache)
+    } yield FulltextBreadthGuard(cap, cache, overCap)
 
   /** The production probe: run the pre-built COUNT query (already on the probe tier) and read the count. */
   private def runProbe(triplestore: TriplestoreService)(key: BreadthKey): Task[Long] =

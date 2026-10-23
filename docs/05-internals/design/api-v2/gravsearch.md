@@ -552,6 +552,12 @@ prequery in `FulltextBreadthGuard.guarded` with that term and graph, so the prob
 the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
 wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
+The guard checks a memo of known over-cap verdicts before it starts anything: a term already measured over the
+cap (within `cache-ttl`) is refused at once, without running its prequery or a probe. Only a term with no known
+verdict, or a known within-cap one, starts its prequery concurrently with the probe; the probe writes an over-cap
+count to the memo before its verdict is cached. The memo holds at most `cache-capacity` entries, dropping
+expired ones first and then the oldest.
+
 ### Why the Expansion Needs an Opaque Group
 
 A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once
