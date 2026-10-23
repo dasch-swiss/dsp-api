@@ -73,6 +73,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport
 import org.knora.webapi.util.ApacheLuceneSupport.*
+import org.knora.webapi.util.FusekiLucenceQuery
 
 /**
  * Represents the number of resources found by a search query.
@@ -1366,22 +1367,30 @@ final class SearchResponderV2Live(
     limitToResourceClass: Option[ResourceClassIri],
     targetSchema: ApiV2Schema,
     requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-    val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
-    val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+  ): Task[ReadResourcesSequenceV2] =
     for {
       _          <- validateSearchString(searchValue)
       _          <- ensureIsFulltextSearch(searchValue)
       searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
-      searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
-                                      searchTerm,
-                                      limitToProject,
-                                      limitToResourceClass,
-                                      searchLimit,
-                                      searchOffset,
-                                    )
+      page <-
+        searchByLabelPage(searchTerm, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
+    } yield page
+
+  private def searchByLabelPage(
+    searchTerm: FusekiLucenceQuery,
+    offset: Int,
+    limitToProject: Option[ProjectIri],
+    limitToResourceClass: Option[ResourceClassIri],
+    targetSchema: ApiV2Schema,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] = {
+    val searchLimit                 = appConfig.v2.resourcesSequence.resultsPerPage
+    val searchOffset                = offset * appConfig.v2.resourcesSequence.resultsPerPage
+    val searchResourceByLabelSparql =
+      SearchQueries.constructSearchByLabel(searchTerm, limitToProject, limitToResourceClass, searchLimit, searchOffset)
+    for {
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
       // collect the IRIs of main resources returned
