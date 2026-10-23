@@ -295,19 +295,19 @@ TestClock rules for every new guard test:
 
 Chunks: 1.
 
-- [ ] `BreadthKey` holds only `probeSparql`; its scaladoc states the key is the probe SPARQL and why that stays
+- [x] `BreadthKey` holds only `probeSparql`; its scaladoc states the key is the probe SPARQL and why that stays
   correct
-- [ ] `guarded` drops `limitToResourceClass`; the two `/v2/search` call sites and `executePrequery` in
+- [x] `guarded` drops `limitToResourceClass`; the two `/v2/search` call sites and `executePrequery` in
   `SearchResponderV2.scala` are updated
-- [ ] `FulltextBreadthGuardSpec` and `GravsearchFulltextBreadthGuardSpec` call sites updated
-- [ ] New responder-level test in `GravsearchFulltextBreadthGuardSpec` (a guard-level test is vacuous once
+- [x] `FulltextBreadthGuardSpec` and `GravsearchFulltextBreadthGuardSpec` call sites updated
+- [x] New responder-level test in `GravsearchFulltextBreadthGuardSpec` (a guard-level test is vacuous once
   `guarded` takes no class): two `fulltextSearchCountV2` calls for the same wildcard term, differing only in
   `limitToResourceClass`, run one probe (counting probe double)
-- [ ] Canary: temporarily give each call a distinct cache key (e.g. append the class IRI to `probeSparql` in the
+- [x] Canary: temporarily give each call a distinct cache key (e.g. append the class IRI to `probeSparql` in the
   responder); the new test fails; revert
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*FulltextBreadthGuardSpec.*'`; it passes
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*FulltextBreadthGuardSpec.*'`; it passes
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: Refuse a known over-cap term before starting its query (item 1)
 
