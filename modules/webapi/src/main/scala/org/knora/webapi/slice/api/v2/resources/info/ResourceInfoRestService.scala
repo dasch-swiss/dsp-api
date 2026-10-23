@@ -46,9 +46,8 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
    *
    * The response's `asOf` is the server time read before the repository is queried.
    *
-   * A stored class that cannot be converted to an external IRI fails the whole listing with an
-   * [[InconsistentRepositoryDataException]] rather than dropping its resources, which a client syncing by cutoff
-   * would never see again.
+   * An unconvertible stored class fails the whole listing ([[InconsistentRepositoryDataException]]), because dropping
+   * its resources would hide them from a client syncing by cutoff for good.
    *
    * @param projectIri    the project; an unknown project gives an empty list
    * @param resourceClass when given, only resources of exactly this class (no subclasses)
