@@ -666,8 +666,9 @@ The response lists the resources, their number, and `asOf`:
 
 - `resourceClass` is the complex-schema IRI of the resource's class, also when the request named a class.
 - `lastModificationDate` is the effective date: it equals `creationDate` for a resource that was never modified.
-  Every write to a resource sets it, including changes to its values, links, permissions or metadata;
-  a soft delete sets it to the `deleteDate`.
+  Every write to a resource through the API sets it, including changes to its values, links, permissions
+  or metadata; a soft delete sets it to the `deleteDate`. A write that carries a client-chosen date sets it
+  to that date instead (see *back-dated writes* below), and an erased resource is no longer listed at all.
 - `deleteDate` is present only for deleted resources.
 - `asOf` is the server's time, read before the resources are queried.
 
