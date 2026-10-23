@@ -598,12 +598,9 @@ final class SearchResponderV2Live(
     val prequery = triplestore.query(Select.gravsearch(prequerySparql)).tapError(logPrequeryFailure(prequerySparql))
     stageSpan("gravsearch.prequery.execute")(
       generator.matchFulltextLookup.fold(prequery)(lookup =>
-        fulltextBreadthGuard.guarded(
-          lookup.searchTerm,
-          limitToStandoffClass = None,
-          dataGraph = lookup.dataGraph,
-          limitToResourceClass = None,
-        )(prequery),
+        fulltextBreadthGuard.guarded(lookup.searchTerm, limitToStandoffClass = None, dataGraph = lookup.dataGraph)(
+          prequery,
+        ),
       ),
     )
   }
@@ -646,7 +643,7 @@ final class SearchResponderV2Live(
                      )
       bindings <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph)(
             triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
@@ -731,7 +728,7 @@ final class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph)(
             triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 

@@ -12,7 +12,6 @@ import zio.cache.Lookup
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -55,15 +54,11 @@ final case class FulltextBreadthGuard(
     searchTerms: LuceneQueryString,
     limitToStandoffClass: Option[SmartIri],
     dataGraph: Option[InternalIri],
-    limitToResourceClass: Option[ResourceClassIri],
   )(query: Task[A]): Task[A] =
     if (!FulltextSearchTerms.shouldProbe(searchTerms)) query
     else {
       // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
-      val key = BreadthKey(
-        SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph),
-        limitToResourceClass.map(_.toString),
-      )
+      val key = BreadthKey(SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph))
       // Start the real query immediately (as a structured child fiber), then await the breadth probe and decide on
       // its verdict. The query and probe run concurrently, so an admitted term pays no serial probe tax on the
       // queries this guard exists for: the probe's COUNT is far cheaper than the real query, so awaiting its verdict
@@ -91,12 +86,12 @@ final case class FulltextBreadthGuard(
 object FulltextBreadthGuard {
 
   /**
-   * The cache key. `probeSparql` uniquely encodes the term, the standoff restriction and the data graph — the
-   * inputs the probe measures — so it doubles as the query the lookup runs, and a scoped and an unscoped probe of
-   * the same term never share an entry. `resourceClass` is not measured by the probe at all; it keeps the cache
-   * correct if the probe ever mirrors the class restriction.
+   * The cache key is the probe SPARQL itself: it encodes exactly the inputs the probe measures (the term, the
+   * standoff restriction and the data graph) and doubles as the query the lookup runs. Keep it that way: an input
+   * the probe does not measure (e.g. a resource class) must not enter the key, or equal verdicts split into separate
+   * entries; an input the probe starts measuring changes the SPARQL and therefore the key.
    */
-  final case class BreadthKey(probeSparql: Select, resourceClass: Option[String])
+  final case class BreadthKey(probeSparql: Select)
 
   /**
    * Testable core. `probe` is injected so a unit test can supply a counting or failing double — the in-memory
