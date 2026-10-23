@@ -103,7 +103,7 @@ mainQueryResults <-
 ```
 
 Absent spans are a documented, legible signal — see the runbook's
-[four absent-data topologies](gravsearch-trace-runbook.md#7-absent-spans-four-normal-topologies).
+[five absent-data topologies](gravsearch-trace-runbook.md#7-absent-spans-five-normal-topologies).
 The triplestore `CLIENT` span nests automatically under the `*.execute` stage because it runs inside
 that stage's effect.
 
@@ -226,6 +226,15 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 
 - **Typed failure** → status `ERROR`, description exactly `"<stage>: <ClassName>"` (e.g.
   `gravsearch.prequery.execute: TriplestoreException`), plus `error.type`. No message, no stacktrace.
+- **Client rejection** → status stays `UNSET`, no description, no `error.type`, and
+  `<vertical>.exit_reason` set to the reason the caller's classifier returned. A caller passes
+  `SanitizedSpan.withSpan` an optional classifier (`Throwable => Option[String]`, default none) for the
+  failures that are the client's input being refused rather than a fault; `SearchResponderV2.stageSpan`
+  maps `BadRequestException` (always a 400) to `bad_request`. It is consulted only for a pure typed
+  failure — no defect, no interruption — so the two branches below never depend on it. It only skips
+  the sanitized status, never writes one, so it cannot leak a message; the failure mapper stays `UNSET`.
+  Classify only a type that is always a client error: `GravsearchException` also signals server-side
+  invariant failures, so it stays `ERROR`.
 - **Defect** → status `ERROR`, description exactly `"<stage>: defect"`, no `error.type`. The status
   mapper alone does *not* achieve this: `zio-telemetry` reaches the mapper through
   `cause.failureOption`, which a `Cause.Die` does not have, so a defect falls through to the same
@@ -263,7 +272,7 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
 - [ ] A bounded shape on the root; no raw text / instance IRIs / user IDs as attributes.
 - [ ] Cardinality split: composite label + booleans are metric-safe; predicate lists are drill-down only.
 - [ ] Raw payload captured as an **event** on the root span, before the first stage — never an attribute, never inside `stageSpan`; `db.query.text` for query text.
-- [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`).
+- [ ] Spans opened through `SanitizedSpan.withSpan` (failure mapper `UNSET`, sanitized `ERROR` + `error.type`, interruption sets `exit_reason`); pass a client-rejection classifier if the vertical has failures that are always a 4xx.
 - [ ] A test asserting the failure status description equals `"<stage>: <Class>"` (no message), and one
       asserting a **defect** yields `"<stage>: defect"` — the two go through different mechanisms.
 - [ ] A test asserting the payload event carries the exact submitted text, on both the success and the parse-failure path.
