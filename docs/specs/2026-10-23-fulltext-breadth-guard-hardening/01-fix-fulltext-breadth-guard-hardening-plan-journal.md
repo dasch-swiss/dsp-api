@@ -15,7 +15,7 @@ symptoms:
   - fast queries stall behind a queued or slow probe
   - every request re-probes a stressed Fuseki when the probe fails
   - a client 400 refusal marks the Gravsearch stage span ERROR
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-fix-fulltext-breadth-guard-hardening-plan
@@ -24,7 +24,7 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | 214a2357c | worktree-DEV-7623 | squash | in-progress | — |
+| dsp-api | 214a2357c | worktree-DEV-7623 | squash | shipped | #4403 (draft) |
 
 ## Phases
 
@@ -222,3 +222,23 @@ canary, not by separate skeptic agents (overkill for findings this size).
     (SanitizedSpanSpec, SearchResponderV2StageSpanSpec) `OK (20 tests)`. GravsearchFulltextBreadthGuardSpec
     `OK (8 tests)`. `test_gravsearch_span` passed. scalafmt `format-test` and the repo's markdownlint passed on the
     touched files.
+
+## Closeout
+
+- **Full suites** (2026-10-23, at d3d1d0e60, after the last code change):
+    - `just test-unit` (six targets) passed.
+    - `just test-it` (`//modules/test-it:test`, `//modules/test-it:test_gravsearch_span`) passed.
+    - The `just check` steps passed when run individually: scalafmt `format-test` on every target with
+      `--disk_cache=` (local cache defect), the license and lint tests, and markdownlint over every tracked file.
+    - `//modules/test-e2e:test` with the API on port 3399 had 18 failures. All are in `KnoraSipiIntegrationV2ITSpec`,
+      `StandoffEndpointsE2ESpec` and `ValueHasXmlOnValueWriteE2ESpec`. Sipi hard-codes port 3333, which a local
+      stack held. This is the same environment-caused set #4401 documents; CI runs the full suite.
+- **Shipped** as draft PR #4403, stacked on #4401 (gh-stack: #4398, #4399, #4401, #4403).
+- **Ship incident:** the local `worktree-DEV-7613` branch had been removed after intake. `gh stack init` silently
+  recreated it from #4399's head, and `gh stack submit --auto` force-pushed that over #4401's branch, so GitHub
+  closed #4401 as empty. With the owner's approval, the branch was restored to `214a2357c` with
+  `--force-with-lease`, #4401 was reopened, and the local stack tracking was re-adopted. No commits were lost.
+- **Open:**
+    - H1: confirm the classless `matchFulltext` per-hit join cost against a prequery captured from a real trace,
+      then file a ticket.
+    - The item-4 measurements are recorded here and in the PR body, not yet on the Linear ticket.
