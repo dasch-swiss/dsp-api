@@ -1,0 +1,42 @@
+# Lucene candidate counts on stage, 2026-10-23, in the breadth-probe shape
+# SELECT (COUNT(*) AS ?count) { { SELECT DISTINCT ?m { ?m text:query ("<term>" 1000000) } } }
+# run with probe.sh (dsp vre sparql query -s stage). Columns: term, candidates, wall-clock seconds (one run).
+term	candidates	seconds
+Zeitglöcklein	4	0.28
+Zeichnung*	1210	0.28
+Papier*	2857	0.33
+Kirche*	4172	0.40
+Zürich	6983	0.72
+Holz*	8274	0.43
+Musik*	10397	0.35
+Brief*	13577	0.45
+Wien*	13702	0.39
+50*	17271	0.84
+kon*	18998	0.65
+Foto*	27123	0.51
+le	43850	0.90
+Bild*	47421	0.75
+die	47887	1.02
+et	52520	1.03
+ver*	63368	1.12
+la	69633	1.21
+the	75899	1.24
+und	88373	1.32
+ge*	125063	1.56
+sch*	126167	1.46
+der	132516	2.34
+Basel*	153441	1.17
+der die	156269	1.74
+ver* ge*	166975	1.87
+of	172549	1.63
+de	177250	1.98
+in	179851	2.11
+und der	184813	2.04
+an*	187134	1.92
+re*	188849	1.96
+de la	199057	2.12
+st*	207209	2.00
+ma*	216446	2.22
+be*	230530	2.25
+un*	248461	2.30
+in de	348567	3.36
