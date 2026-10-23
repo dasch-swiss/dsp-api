@@ -55,7 +55,7 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
       rc <- iriConverter
               .asInternalIri(resourceClass)
               .mapError(err => BadRequestException(s"Invalid resourceClass: ${err.getMessage}"))
-      resources <- repo.findByProjectAndResourceClass(projectIri, rc).map(_.map(ResourceInfoDto.from))
+      resources <- repo.find(projectIri, Some(rc), cutoff = None).map(_.map(ResourceInfoDto.from))
     } yield ListResponseDto(sort(resources, order, orderBy))
 }
 

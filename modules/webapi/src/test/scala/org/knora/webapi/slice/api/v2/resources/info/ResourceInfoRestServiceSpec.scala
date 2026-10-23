@@ -80,16 +80,22 @@ class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
           |""".stripMargin.linesIterator.mkString(""),
       ) {
         val given1 =
-          ResourceInfo(ResourceIri.makeNew(Shortcode.unsafeFrom("0001")), now.minus(10, DAYS), Some(now.minus(9, DAYS)))
+          ResourceInfo(
+            ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            knownResourceClass,
+            now.minus(10, DAYS),
+            Some(now.minus(9, DAYS)),
+          )
         val given2 =
           ResourceInfo(
             ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            knownResourceClass,
             now.minus(20, DAYS),
             Some(now.minus(8, DAYS)),
             now,
           )
         for {
-          _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI)
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Asc, LastModificationDate)
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.lastModificationDate)
@@ -103,16 +109,22 @@ class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
           |""".stripMargin.linesIterator.mkString(""),
       ) {
         val given1 =
-          ResourceInfo(ResourceIri.makeNew(Shortcode.unsafeFrom("0001")), now.minus(10, DAYS), Some(now.minus(9, DAYS)))
+          ResourceInfo(
+            ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            knownResourceClass,
+            now.minus(10, DAYS),
+            Some(now.minus(9, DAYS)),
+          )
         val given2 =
           ResourceInfo(
             ResourceIri.makeNew(Shortcode.unsafeFrom("0001")),
+            knownResourceClass,
             now.minus(20, DAYS),
             Some(now.minus(8, DAYS)),
             now,
           )
         for {
-          _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
+          _      <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI)
           actual <- findByProjectAndResourceClass(knownProjectIRI, knownResourceClass.value, Desc, CreationDate)
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.creationDate).reverse

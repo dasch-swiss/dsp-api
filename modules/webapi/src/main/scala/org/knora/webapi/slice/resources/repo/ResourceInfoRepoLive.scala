@@ -9,7 +9,7 @@ import zio.*
 
 import java.time.Instant
 
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -17,47 +17,36 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends ResourceInfoRepo {
 
-  override def findByProjectAndResourceClass(
+  override def find(
     projectIri: ProjectIri,
-    resourceClass: InternalIri,
-  ): Task[List[ResourceInfo]] = {
-    val select = selectResourcesByCreationDate(resourceClass, projectIri)
-    triplestore.query(select).logError.flatMap(toResourceInfoList)
-  }
+    resourceClass: Option[InternalIri],
+    cutoff: Option[Instant],
+  ): Task[List[ResourceInfo]] =
+    triplestore
+      .query(GetResourceInfoQuery.build(projectIri, resourceClass, cutoff))
+      .logError
+      .flatMap(result => ZIO.foreach(result.results.bindings.toList)(toResourceInfo))
 
-  private def selectResourcesByCreationDate(resourceClassIri: InternalIri, projectIri: ProjectIri): Select = Select(
-    s"""
-       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-       |
-       |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
-       |WHERE {
-       |    ?resource a <${resourceClassIri.value}> ;
-       |              knora-base:attachedToProject <${projectIri.value}> ;
-       |              knora-base:creationDate ?creationDate ;
-       |              knora-base:isDeleted ?isDeleted ;
-       |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate .}
-       |    OPTIONAL { ?resource knora-base:deleteDate ?deleteDate . }
-       |}
-       |""".stripMargin,
-  )
-
-  private def toResourceInfoList(result: SparqlSelectResult) =
-    ZIO.attempt(result.map(toResourceInfo).toList)
-
-  private def toResourceInfo(row: VariableResultsRow) = {
+  private def toResourceInfo(row: VariableResultsRow): Task[ResourceInfo] = {
     val rowMap = row.rowMap
-    ResourceInfo(
-      ResourceIri.unsafeFrom(rowMap("resource")),
-      Instant.parse(rowMap("creationDate")),
-      rowMap.get("lastModificationDate").map(Instant.parse(_)),
-      rowMap.get("deleteDate").map(Instant.parse),
-      rowMap("isDeleted").toBoolean,
-    )
+    for {
+      iri <- ZIO
+               .fromEither(ResourceIri.from(rowMap("resource")))
+               .mapError(msg => InconsistentRepositoryDataException(msg))
+      info <- ZIO.attempt(
+                ResourceInfo(
+                  iri,
+                  InternalIri(rowMap("resourceClass")),
+                  Instant.parse(rowMap("creationDate")),
+                  rowMap.get("lastModificationDate").map(Instant.parse),
+                  rowMap.get("deleteDate").map(Instant.parse),
+                  rowMap("isDeleted").toBoolean,
+                ),
+              )
+    } yield info
   }
 }
 
