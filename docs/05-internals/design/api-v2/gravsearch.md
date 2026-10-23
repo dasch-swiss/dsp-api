@@ -553,11 +553,13 @@ the lookup searches. An over-cap term is refused with a 400, a probe error fails
 wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
 Gravsearch uses the same `probe.cap` (250,000) as `/v2/search`. It bounds the class-restricted shape: measured
-on stage, the count prequery for a term restricted to one resource class took 73 s at 248k candidates, inside the
-120 s Gravsearch tier, and timed out just above the cap (349k). The guard does not bound a classless
-`matchFulltext` (`knora-api:Resource`): its cost comes from the `VALUES` join over every resource class, not from
-the candidate count, and such a prequery exceeded the tier from a few thousand candidates, far below any usable
-cap.
+on stage (one class, unscoped), the count prequery took a median 73 s at 248k candidates (95 s on a cold first
+run), inside the 120 s Gravsearch tier, and timed out above the cap (349k). Cost grows faster than the candidate
+count, and dsp-app sends page and count together, so the cap sits close to the tier's edge. The guard does not
+bound a classless `matchFulltext` (`knora-api:Resource`): in the same measurements a generated classless count
+prequery could exceed the tier from about 2–3k candidates, far below any usable cap, and nearly all of its time
+went to the `VALUES` join over every resource class. This is not yet confirmed against a prequery captured from
+a real request.
 
 A probe error is cached for `failure-ttl` (30 s by default, at most `cache-ttl`): within it the term runs
 unguarded without being probed again, so a struggling triplestore is not hit by one probe per request. Once it
