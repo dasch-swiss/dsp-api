@@ -552,6 +552,10 @@ prequery in `FulltextBreadthGuard.guarded` with that term and graph, so the prob
 the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
 wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
+A probe error is cached for `failure-ttl` (30 s by default, at most `cache-ttl`): within it the term runs
+unguarded without being probed again, so a struggling triplestore is not hit by one probe per request. Once it
+expires, the next request for the term probes again.
+
 The guard checks a memo of known over-cap verdicts before it starts anything: a term already measured over the
 cap (within `cache-ttl`) is refused at once, without running its prequery or a probe. Only a term with no known
 verdict, or a known within-cap one, starts its prequery concurrently with the probe; the probe writes an over-cap

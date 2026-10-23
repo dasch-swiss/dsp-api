@@ -151,8 +151,9 @@ object FulltextBreadthGuard {
   /**
    * Testable core. `probe` is injected so a unit test can supply a counting or failing double — the in-memory
    * triplestore has no Lucene index, so the real probe fails there by construction, which is exactly the fail-open
-   * path. Built with `Cache.makeWith` so only successes are retained (a probe error is given `Duration.Zero` and
-   * re-probed next time), capacity is bounded, and concurrent probes are capped by the semaphore.
+   * path. Built with `Cache.makeWith` so a measured breadth is kept for `cacheTtl` and a probe error for the shorter
+   * `failureTtl` (within it the term fails open without probing again, so a stressed triplestore is not probed by
+   * every request), capacity is bounded, and concurrent probes are capped by the semaphore.
    *
    * An over-cap count is written to the memo inside the lookup, before the lookup completes its cache entry, so any
    * caller that has seen an over-cap verdict finds it in the memo afterwards.
@@ -161,9 +162,14 @@ object FulltextBreadthGuard {
    * gives each probe a child scope that it closes on exit, which also removes it from this scope, so finalizers do
    * not accumulate per call.
    */
-  def make(cap: Int, cacheCapacity: Int, cacheTtl: Duration, maxConcurrent: Int, verdictWait: Duration)(
-    probe: BreadthKey => Task[Long],
-  ): URIO[Scope, FulltextBreadthGuard] =
+  def make(
+    cap: Int,
+    cacheCapacity: Int,
+    cacheTtl: Duration,
+    maxConcurrent: Int,
+    verdictWait: Duration,
+    failureTtl: Duration,
+  )(probe: BreadthKey => Task[Long]): URIO[Scope, FulltextBreadthGuard] =
     for {
       probeScope <- ZIO.scope
       semaphore  <- Semaphore.make(maxConcurrent.toLong)
@@ -173,7 +179,7 @@ object FulltextBreadthGuard {
                }
       cache <- Cache.makeWith(cacheCapacity, lookup) {
                  case Exit.Success(_) => cacheTtl
-                 case Exit.Failure(_) => Duration.Zero
+                 case Exit.Failure(_) => failureTtl
                }
     } yield FulltextBreadthGuard(cap, verdictWait, cache, overCap, probeScope)
 
@@ -189,8 +195,9 @@ object FulltextBreadthGuard {
         config      <- ZIO.service[AppConfig]
         triplestore <- ZIO.service[TriplestoreService]
         cfg          = config.v2.fulltextSearch.probe
-        guard       <-
-          make(cfg.cap, cfg.cacheCapacity, cfg.cacheTtl, cfg.maxConcurrent, cfg.verdictWait)(runProbe(triplestore))
+        guard       <- make(cfg.cap, cfg.cacheCapacity, cfg.cacheTtl, cfg.maxConcurrent, cfg.verdictWait, cfg.failureTtl)(
+                   runProbe(triplestore),
+                 )
       } yield guard
     }
 }

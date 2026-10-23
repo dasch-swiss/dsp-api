@@ -181,7 +181,9 @@ final case class FulltextSearch(
  * measured-breadth cache and its memo of over-cap terms, and `maxConcurrent` bounds how many probes run against Fuseki at once. All live in config
  * so they can be tuned per deployment without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP`
  * override. `verdictWait` bounds how long a query that has already succeeded waits for the probe's verdict before
- * its result is returned (fail open); the probe keeps running and caches its verdict.
+ * its result is returned (fail open); the probe keeps running and caches its verdict. `failureTtl` is how long a
+ * failed probe is cached: within it the term runs unguarded without probing again, so a stressed Fuseki is not
+ * probed by every request.
  */
 final case class FulltextSearchProbe(
   cap: Int,
@@ -189,6 +191,7 @@ final case class FulltextSearchProbe(
   cacheTtl: Duration,
   maxConcurrent: Int,
   verdictWait: Duration,
+  failureTtl: Duration,
 )
 
 final case class GraphRoute(
@@ -348,6 +351,14 @@ object AppConfig {
     // never refused.
     .validate("app.v2.fulltext-search.probe.verdict-wait must be positive")(
       _.v2.fulltextSearch.probe.verdictWait.compareTo(Duration.ZERO) > 0,
+    )
+    // failure-ttl <= 0 re-probes after every failed probe, so a stressed Fuseki gets one probe per request; above
+    // cache-ttl a failed probe would outlive a successful one.
+    .validate("app.v2.fulltext-search.probe.failure-ttl must be positive")(
+      _.v2.fulltextSearch.probe.failureTtl.compareTo(Duration.ZERO) > 0,
+    )
+    .validate("app.v2.fulltext-search.probe.failure-ttl must not exceed cache-ttl")(c =>
+      c.v2.fulltextSearch.probe.failureTtl.compareTo(c.v2.fulltextSearch.probe.cacheTtl) <= 0,
     )
     .validate("app.fair.app-external-base-url must be an absolute http(s) URL when set")(c =>
       c.fair.appExternalBaseUrl.forall(isAbsoluteHttpUrl),
