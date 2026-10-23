@@ -2,7 +2,7 @@
 title: "fix: Harden the fulltext breadth guard for Gravsearch traffic"
 date: 2026-10-23
 author: Balduin Landolt
-status: reviewed
+status: implemented
 linear: DEV-7623
 repositories: []
 ---
@@ -468,15 +468,16 @@ H1 detail: the 936-class `VALUES` type join costs ~70 ms per matched resource on
 
 ## Acceptance Criteria
 
-- [ ] Items 1–3 fixed as decided above; `FulltextBreadthGuardSpec` covers each fix (and `AppConfigSpec` the two
+- [x] Items 1–3 fixed as decided above; `FulltextBreadthGuardSpec` covers each fix (and `AppConfigSpec` the two
   new keys), and each canary made its test fail
-- [ ] Item 4 stage measurements recorded in this folder's `assets/`; cap kept per the decision and recorded in
+- [x] Item 4 stage measurements recorded in this folder's `assets/`; cap kept per the decision and recorded in
   `application.conf` and `gravsearch.md` (Phase 6)
-- [ ] Item 5: code (`SanitizedSpanSpec`, `SearchResponderV2StageSpanSpec`), `instrumentation-recipe.md`,
+- [x] Item 5: code (`SanitizedSpanSpec`, `SearchResponderV2StageSpanSpec`), `instrumentation-recipe.md`,
   `gravsearch-trace-runbook.md`, `traceql-recipes.md` and the `dsp-gravsearch.json` panel descriptions agree;
   the canary made the stage-span test fail
-- [ ] `BreadthKey` carries no resource class
-- [ ] `just check` passes
+- [x] `BreadthKey` carries no resource class
+- [x] `just check` passes (its steps run individually; scalafmt with `--disk_cache=` because of a local cache
+  defect)
 
 ## Dependencies & Risks
 
