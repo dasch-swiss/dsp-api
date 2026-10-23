@@ -67,12 +67,11 @@ object SanitizedSpan {
    * what its trace queries select on.
    *
    * A failure that `clientRejection` maps to a reason is the caller's input being refused, not a fault: the span keeps
-   * status `UNSET`, gets no description and no `error.type`, and carries `exitReasonKey` set to that reason. The
-   * classifier is consulted only for a pure typed failure (failure values only, no defect, no interruption), so the
-   * defect and interruption handling below never depend on it. Every failure value must classify, or a parallel
-   * server fault would hide behind a rejection; the first one's reason is used, and in a mixed cause the first
-   * unclassified failure names the `ERROR`. It only ever skips writes, so it cannot leak a message. The default
-   * classifies nothing.
+   * status `UNSET`, gets no description and no `error.type`, and carries `exitReasonKey` set to that reason. Only a
+   * pure typed failure (no defect, no interruption) whose every failure value classifies is a rejection, so a
+   * parallel server fault never hides behind one; otherwise the first unclassified failure names the `ERROR`, and a
+   * classified one never does (a defect or the interruption does instead). It only ever skips writes, so it cannot
+   * leak a message. The default classifies nothing.
    *
    * The span is captured up front rather than resolved in the finalizer, because during interruption teardown the
    * current span no longer points at this one. Both finalizers run before the library's span-end, so their writes
@@ -131,7 +130,11 @@ object SanitizedSpan {
    */
   private final class SpanScopedDefect(val cause: Cause[Throwable]) extends Exception(cause.squash)
 
-  /** Marks a classified client rejection with its exit reason only; anything else gets [[markSanitizedError]]. */
+  /**
+   * Marks a classified client rejection with its exit reason only; anything else gets [[markSanitizedError]], named
+   * by the first unclassified failure. A classified failure never names an `ERROR`: alongside a defect the defect
+   * does, and alongside an interruption the interrupt branch in [[withSpan]] marks the span alone.
+   */
   private def markFailure(
     span: Span,
     name: String,
@@ -139,12 +142,15 @@ object SanitizedSpan {
     clientRejection: Throwable => Option[String],
     cause: Cause[Throwable],
   ): Unit = {
-    val failures = if (cause.isDie || cause.isInterrupted) Nil else cause.failures
+    val failures = cause.failures
     val fault    = failures.find(clientRejection(_).isEmpty)
-    failures.headOption.flatMap(clientRejection) match {
-      case Some(reason) if fault.isEmpty => val _ = span.setAttribute(exitReasonKey, reason)
-      case _                             => markSanitizedError(span, name, fault.orElse(cause.failureOption))
-    }
+    if (cause.isDie) markSanitizedError(span, name, fault)
+    else if (cause.isInterrupted) fault.foreach(f => markSanitizedError(span, name, Some(f)))
+    else
+      (fault, failures.headOption.flatMap(clientRejection)) match {
+        case (None, Some(reason)) => val _ = span.setAttribute(exitReasonKey, reason)
+        case _                    => markSanitizedError(span, name, fault)
+      }
   }
 
   /**

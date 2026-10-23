@@ -56,6 +56,7 @@ final case class FulltextBreadthGuard(
   private val probeScope: Scope,
 ) {
   import FulltextBreadthGuard.BreadthKey
+  import FulltextBreadthGuard.exceedsCap
 
   /**
    * Refuses a term already known to be over the cap without running `query` or the probe. Otherwise runs `query`
@@ -72,7 +73,7 @@ final case class FulltextBreadthGuard(
   )(query: Task[A]): Task[A] =
     if (!FulltextSearchTerms.shouldProbe(searchTerms)) query
     else {
-      // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
+      // The data graph is part of the probe SPARQL, so a scoped and an unscoped probe never share a cache entry.
       val key = BreadthKey(SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph))
       // The probe must not run in a request fiber: zio-cache 0.2.4 runs a lookup in the first `get` caller's fiber,
       // and interrupting that fiber interrupts every waiter on the entry. Observe it with `await`, never `join`, so a
@@ -97,7 +98,7 @@ final case class FulltextBreadthGuard(
     }
 
   private def isOverCap(verdict: Exit[Throwable, Long]): Boolean = verdict match {
-    case Exit.Success(breadth) => breadth > cap
+    case Exit.Success(breadth) => exceedsCap(cap, breadth)
     case _                     => false
   }
 
@@ -109,6 +110,9 @@ final case class FulltextBreadthGuard(
 }
 
 object FulltextBreadthGuard {
+
+  /** The one over-cap rule, shared by the memo write in `make` and the verdict check in `guarded`. */
+  private def exceedsCap(cap: Int, breadth: Long): Boolean = breadth > cap
 
   /**
    * The cache key is the probe SPARQL itself: it encodes exactly the inputs the probe measures (the term, the
@@ -175,7 +179,7 @@ object FulltextBreadthGuard {
       semaphore  <- Semaphore.make(maxConcurrent.toLong)
       overCap    <- OverCapMemo.make(cacheCapacity, cacheTtl)
       lookup      = Lookup { (key: BreadthKey) =>
-                 semaphore.withPermit(probe(key)).tap(breadth => overCap.record(key).when(breadth > cap))
+                 semaphore.withPermit(probe(key)).tap(breadth => overCap.record(key).when(exceedsCap(cap, breadth)))
                }
       cache <- Cache.makeWith(cacheCapacity, lookup) {
                  case Exit.Success(_) => cacheTtl

@@ -202,9 +202,9 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
           .provide(InMemoryTracing.layer)
       },
-      test("the classifier is not consulted for a defect, alone or alongside a typed failure") {
-        // The classifier matches the failure value in the composite cause; it must still be ignored, because a cause
-        // holding a defect is not a pure client rejection.
+      test("a defect is never a rejection, and a classified failure alongside it does not name the ERROR") {
+        // The classifier matches the failure value in the composite cause; the cause is still not a client rejection,
+        // because it holds a defect, and the defect (the server fault) names the ERROR, not the rejection.
         val classifyAll: Throwable => Option[String] = _ => Some("rejected")
         val defect                                   = Cause.die(new IllegalArgumentException(sentinel))
         val composite                                = Cause.fail(new IllegalArgumentException("typed")) ++ defect
@@ -214,6 +214,8 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
             _       <- SanitizedSpan.withSpan(tracing, spanName, exitReasonKey, classifyAll)(_ => ZIO.failCause(cause)).exit
             spans   <- InMemoryTracing.finishedSpans
           } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+            SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: defect") &&
+            SpanAssertions.hasNoAttributeKey(spans, spanName, errorTypeKey) &&
             SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
             .provide(InMemoryTracing.layer)
         run(defect).zipWith(run(composite))(_ && _)
@@ -246,7 +248,9 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           spans <- InMemoryTracing.finishedSpans
         } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
           SpanAssertions.hasStatusDescription(spans, spanName, "interrupted") &&
-          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted"))
+          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted") &&
+          // The rejection is not a fault, so it leaves no `error.type` on the interrupted span either.
+          SpanAssertions.hasNoAttributeKey(spans, spanName, errorTypeKey))
           .provide(InMemoryTracing.layer)
       },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
