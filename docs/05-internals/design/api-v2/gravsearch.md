@@ -552,6 +552,33 @@ prequery in `FulltextBreadthGuard.guarded` with that term and graph, so the prob
 the lookup searches. An over-cap term is refused with a 400, a probe error fails open, and only a
 wildcard or multi-term query is probed. A query without `matchFulltext` runs unguarded.
 
+Gravsearch uses the same `probe.cap` (250,000) as `/v2/search`. It bounds the class-restricted shape: measured
+on stage (one class, unscoped), the count prequery took a median 73 s at 248k candidates (95 s on a cold first
+run), inside the 120 s Gravsearch tier, and timed out above the cap (349k). Cost grows faster than the candidate
+count, and dsp-app sends page and count together, so the cap sits close to the tier's edge. The guard does not
+bound a classless `matchFulltext` (`knora-api:Resource`): in the same measurements a generated classless count
+prequery could exceed the tier from about 2–3k candidates, far below any usable cap, and nearly all of its time
+went to the `VALUES` join over every resource class. This is not yet confirmed against a prequery captured from
+a real request.
+
+A probe error is cached for `failure-ttl` (30 s by default, at most `cache-ttl`): within it the term runs
+unguarded without being probed again, so a struggling triplestore is not hit by one probe per request. Once it
+expires, the next request for the term probes again.
+
+The guard checks a memo of known over-cap verdicts before it starts anything: a term already measured over the
+cap (within `cache-ttl`) is refused at once, without running its prequery or a probe. Only a term with no known
+verdict, or a known within-cap one, starts its prequery concurrently with the probe; the probe writes an over-cap
+count to the memo before its verdict is cached. The memo holds at most `cache-capacity` entries, dropping
+expired ones first and then the earliest-expiring.
+
+The wait for a verdict is bounded. While the prequery runs, an over-cap verdict interrupts it and refuses the
+request. Once the prequery has succeeded, the guard waits at most `verdict-wait` (5 s by default) for the verdict
+and then returns the prequery's result, so a term whose probe is queued behind the probe semaphore or slow is
+admitted once; a prequery that failed returns its failure without waiting. The probe is not cut short: it runs in
+a fiber forked into the guard's own scope rather than the request's, finishes in the background and caches its
+verdict, so the next request for the term is refused from the memo. Interrupting one request therefore never
+interrupts another request waiting for the same probe.
+
 ### Why the Expansion Needs an Opaque Group
 
 A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once

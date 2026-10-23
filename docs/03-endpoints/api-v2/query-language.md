@@ -732,6 +732,8 @@ project.
 Like `/v2/search`, a `matchFulltext` term with a wildcard or more than one word is checked for breadth: if the
 full-text index matches more candidates than can be searched efficiently (more than 250,000 by default), the
 query, or the count query, is refused with `400 Bad Request` and a message asking for a more specific term.
+The check runs alongside the query; if it has not finished a few seconds after the query has, the query's
+results are returned, and the term is refused on the next request.
 When the lookup is scoped to a project, only that project's candidates count.
 
 The first argument is a variable representing a resource (main or linked). The
