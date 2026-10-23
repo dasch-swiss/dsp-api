@@ -830,9 +830,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ListsResponder`, `StandoffResponderV2`, `ProjectDataImportService.uploadNQuads` (webapi-export),
         `TopLeftCorrectionAction` and `ReplaceUserIriInProjectAction` (webapi-admin) and the upgrade plugins
         under `store/triplestore/upgrade/plugins/**` (webapi-triplestore).
-    - `knora-base:valueHasXml` has two writers: the value and resource write paths (`InsertValueQueryBuilder`,
-        `CreateResourceV2Handler`) and the backfill INSERT (`ValueHasXmlBackfillQuery.insertXml`). Both render
-        through `TextValueContentV2.computedValueHasXml`.
+    - `knora-base:valueHasXml` has three writers: the value and resource write paths (`InsertValueQueryBuilder`,
+        `CreateResourceV2Handler`) and the backfill INSERT (`ValueHasXmlBackfillQuery.insertXml`), which render
+        through `TextValueContentV2.computedValueHasXml`, and the v3 bulk import
+        (`OntologyTransformer.convertRichtextValue`, webapi-ontology), which calls the same
+        `StandoffTagUtilV2.convertStandoffTagV2ToXML` directly. Guards: `ValueHasXmlOnValueWriteE2ESpec`,
+        `ValueHasXmlOnResourceCreateE2ESpec`, `MaintenanceBackfillValueHasXmlE2ESpec` and `BulkImportParityE2ESpec`
+        (test-e2e), over the helpers in `ValueHasXmlTestSupport`.
     - The in-JVM per-IRI write lock `IriLocker.runWithIriLock`, owned by webapi-common, keyed on resource
         IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted at
         `ValuesResponderV2.scala:536`.
@@ -1642,7 +1646,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `E2EZSpec` (inherited), `CORSSupportE2ESpec`, `InstanceChecker`, `AdminFilesE2ESpec`,
     `OntologiesEndpointsE2ESpec`, `ResourcesRouteV2E2ESpec`, `SearchEndpointsGetSearchE2ESpec`,
     `SearchEndpointsPostGravsearchE2ESpec`, `SegmentE2EZSpec`, `SearchE2EZSpec`,
-    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraBaseJsonModels`
+    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraBaseJsonModels`,
+    `ValueHasXmlTestSupport`, `ProjectExportTestSupport`
 - **Public interface**: none. A leaf test target with no downstream dependents; each spec is a
     `class extends E2EZSpec`, or occasionally a plain `ZIOSpecDefault`, annotated
     `@RunWith(classOf[DspZTestJUnitRunner])`.
