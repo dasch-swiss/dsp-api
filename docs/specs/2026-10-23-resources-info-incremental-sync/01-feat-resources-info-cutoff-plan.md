@@ -45,8 +45,10 @@ Two additions:
 - **`resourceClass` in every entry.** Each `ResourceInfoDto` gains `resourceClass`, the complex-schema external
   IRI. Always present, also when a class was requested: an additive JSON field.
 - **Input class handling unchanged.** `resourceClass` becomes `query[Option[IriDto]]` (the convention of the
-  sibling `ResourcesEndpoints`), and the rest service keeps converting it with `IriConverter.asInternalIri`, so
-  every input accepted today stays accepted (no switch to the stricter `asResourceClassIriApiV2Complex`).
+  sibling `ResourcesEndpoints`), and the rest service keeps converting it with `IriConverter.asInternalIri`
+  (no switch to the stricter `asResourceClassIriApiV2Complex`). One narrowing, provisional (owner's answer at
+  the final review): `IriDto` validates the raw string, so a class IRI that was only valid after
+  percent-encoding (raw spaces or non-ASCII) is now a 400, as on the sibling `/v2/resources` endpoint.
 - **Known gaps, documented, not fixed:** erased (hard-deleted) resources leave no trace and never appear, so a
   client that must notice them needs a periodic full listing to compare against; ontology changes don't bump
   resource dates; a write that carries a client-supplied date (a custom resource `creationDate` or
@@ -144,33 +146,33 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
 
 | Phase | Status |
 | --- | --- |
-| 1: Query, repo, service, endpoint | pending |
+| 1: Query, repo, service, endpoint | reviewed |
 | 2: E2E test and docs | pending |
 
 #### Phase 1: Query, repo, service, endpoint
 
-- [ ] Add `resourceClass: InternalIri` to `ResourceInfo`; update its `apply` overloads and all construction sites
-- [ ] Replace `ResourceInfoRepo.findByProjectAndResourceClass` with
+- [x] Add `resourceClass: InternalIri` to `ResourceInfo`; update its `apply` overloads and all construction sites
+- [x] Replace `ResourceInfoRepo.findByProjectAndResourceClass` with
   `find(projectIri: ProjectIri, resourceClass: Option[InternalIri], cutoff: Option[Instant]): Task[List[ResourceInfo]]`
-- [ ] New query object in `slice/resources/repo/` with the single template described under Query shape;
+- [x] New query object in `slice/resources/repo/` with the single template described under Query shape;
   `ResourceInfoRepoLive` uses it; the `s"..."` query is deleted; row parsing uses `from` plus
   `InconsistentRepositoryDataException`
-- [ ] Golden spec for the query object covering the four combinations (class or not, cutoff or not), asserting
+- [x] Golden spec for the query object covering the four combinations (class or not, cutoff or not), asserting
   `VALUES` first, the `FILTER` last, and the cutoff as a typed `xsd:dateTime` literal with fractional seconds kept
-- [ ] Re-time the class-restricted call on stage, old query against the new rendered query, for one class of
+- [x] Re-time the class-restricted call on stage, old query against the new rendered query, for one class of
   0807 (`dsp vre sparql query -s stage`, read-only); record both times in the journal; if the new one is
   clearly slower, fall back to `?resource a <C>` plus `BIND(<C> AS ?resourceClass)` and record why
-- [ ] Update `ResourceInfoRepoFake` to the new signature: filter on class when given, and on cutoff with the
+- [x] Update `ResourceInfoRepoFake` to the new signature: filter on class when given, and on cutoff with the
   same effective date as the query (`lastModificationDate.getOrElse(creationDate) >= cutoff`)
-- [ ] `ResourceInfoDto` gains `resourceClass: IRI`; `ListResponseDto` gains `asOf: Instant`
-- [ ] `ResourceInfoRestService`: one method taking `(ProjectIri, Option[IriDto], Option[Instant], Order, OrderBy)`;
+- [x] `ResourceInfoDto` gains `resourceClass: IRI`; `ListResponseDto` gains `asOf: Instant`
+- [x] `ResourceInfoRestService`: one method taking `(ProjectIri, Option[IriDto], Option[Instant], Order, OrderBy)`;
   reads `asOf` from `Clock` first; converts the class in with `asInternalIri` (failure: `BadRequestException`) and
   each distinct class out with `asExternalIri` (failure: `InconsistentRepositoryDataException`); sorts with the
   IRI as tiebreaker; Scaladoc states the at-or-after semantics and the effective date
-- [ ] `ResourceInfoEndpoints`: `resourceClass` becomes `query[Option[IriDto]]`; add `query[Option[Instant]]("cutoff")`
+- [x] `ResourceInfoEndpoints`: `resourceClass` becomes `query[Option[IriDto]]`; add `query[Option[Instant]]("cutoff")`
   with a description (at-or-after, ISO-8601 with offset, effective date); update the endpoint description
-- [ ] `ResourceInfoServerEndpoints` wired to the new method
-- [ ] `ResourceInfoRestServiceSpec`: existing cases adapted, plus:
+- [x] `ResourceInfoServerEndpoints` wired to the new method
+- [x] `ResourceInfoRestServiceSpec`: existing cases adapted, plus:
     - no class: all classes returned, each with its external `resourceClass`
     - cutoff excludes resources whose effective date is older
     - cutoff exactly equal to a resource's effective date includes it
@@ -179,8 +181,8 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
     - equal dates come back ordered by IRI
     - `asOf` equals the `TestClock` time
     - use resources with distinct, non-alphabetical dates so ordering assertions can't pass by accident
-- [ ] Run `bazel test //modules/webapi:test`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/webapi:test`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: E2E test and docs
 
