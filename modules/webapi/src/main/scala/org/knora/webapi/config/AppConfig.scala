@@ -178,8 +178,8 @@ final case class FulltextSearch(
  *
  * `cap` is the Lucene candidate count above which a fulltext search is refused (raced against the real query so
  * an admitted term pays no tax); it also guards Gravsearch `matchFulltext`. `cacheCapacity` / `cacheTtl` bound the
- * measured-breadth cache and its memo of over-cap terms, and `maxConcurrent` bounds how many probes run against Fuseki at once. All live in config
- * so they can be tuned per deployment without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP`
+ * measured-breadth cache and its memo of over-cap terms, and `maxConcurrent` bounds how many probes run against
+ * Fuseki at once. All live in config so they can be tuned per deployment without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP`
  * override. `verdictWait` bounds how long a query that has already succeeded waits for the probe's verdict before
  * its result is returned (fail open); the probe keeps running and caches its verdict. `failureTtl` is how long a
  * failed probe is cached: within it the term runs unguarded without probing again, so a stressed Fuseki is not
@@ -336,7 +336,8 @@ object AppConfig {
     // against a value that breaks the guard. cap is env-injectable (KNORA_WEBAPI_FULLTEXT_PROBE_CAP): cap < 1
     // refuses every probed search; cache-capacity < 1 is undefined; max-concurrent = 0 is a zero-permit semaphore,
     // so no probe ever completes and every probed search runs unguarded after waiting out verdict-wait;
-    // cache-ttl <= 0 expires each result instantly, defeating the single-flight cache so every request re-probes. Guard all four, as the sibling file-permission-cache guards do (DEV-6864).
+    // cache-ttl <= 0 expires each result instantly, defeating the single-flight cache so every request re-probes.
+    // Guard each, as the sibling file-permission-cache guards do (DEV-6864); verdict-wait and failure-ttl below.
     .validate("app.v2.fulltext-search.probe.cap must be >= 1")(_.v2.fulltextSearch.probe.cap >= 1)
     .validate("app.v2.fulltext-search.probe.cache-capacity must be >= 1")(
       _.v2.fulltextSearch.probe.cacheCapacity >= 1,
