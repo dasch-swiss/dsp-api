@@ -34,21 +34,21 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
     resources.sorted(using byDate.orElseBy(_.resourceIri))
   }
 
-  private def toExternal(resourceClass: InternalIri): Task[(InternalIri, IRI)] =
+  private def toExternal(resourceClass: InternalIri): Task[IRI] =
     iriConverter
       .asExternalIri(resourceClass)
-      .mapBoth(
-        err =>
-          InconsistentRepositoryDataException(
-            s"Invalid stored resource class ${resourceClass.value}: ${err.getMessage}",
-          ),
-        external => resourceClass -> external,
+      .mapError(err =>
+        InconsistentRepositoryDataException(s"Invalid stored resource class ${resourceClass.value}: ${err.getMessage}"),
       )
 
   /**
    * Lists the resources of a project, deleted ones included, each with its class.
    *
    * The response's `asOf` is the server time read before the repository is queried.
+   *
+   * A stored class that cannot be converted to an external IRI fails the whole listing with an
+   * [[InconsistentRepositoryDataException]] rather than dropping its resources, which a client syncing by cutoff
+   * would never see again.
    *
    * @param projectIri    the project; an unknown project gives an empty list
    * @param resourceClass when given, only resources of exactly this class (no subclasses)
@@ -72,7 +72,7 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
                 .mapError(err => BadRequestException(s"Invalid resourceClass: ${err.getMessage}")),
             )
       infos             <- repo.find(projectIri, rc, cutoff)
-      externalClassIris <- ZIO.foreach(infos.map(_.resourceClass).distinct)(toExternal).map(_.toMap)
+      externalClassIris <- ZIO.foreach(infos.map(_.resourceClass).distinct)(c => toExternal(c).map(c -> _)).map(_.toMap)
       resources          = infos.map(info => ResourceInfoDto.from(info, externalClassIris(info.resourceClass)))
     } yield ListResponseDto(sort(resources, order, orderBy), asOf)
 }
