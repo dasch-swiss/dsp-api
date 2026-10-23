@@ -42,7 +42,7 @@ object ResourceInfoRepoLive {
 
   /**
    * [[GetResourceInfoQuery]] selects `?resourceClass` only when no class is requested; otherwise the requested class
-   * is the row's class.
+   * is the row's class. An unbound or malformed variable is an [[InconsistentRepositoryDataException]].
    */
   private[repo] def toResourceInfo(requestedClass: Option[InternalIri])(
     row: VariableResultsRow,

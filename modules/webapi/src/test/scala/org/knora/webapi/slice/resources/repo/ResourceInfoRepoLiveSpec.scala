@@ -55,5 +55,12 @@ class ResourceInfoRepoLiveSpec extends ZIOSpecDefault {
     test("fails with InconsistentRepositoryDataException when a required variable is missing") {
       assertTrue(map(validRow - "isDeleted") == invalid(s"$resource: 'isDeleted' is not bound"))
     },
+    test("fails with InconsistentRepositoryDataException on a non-boolean isDeleted") {
+      assertTrue(map(validRow + ("isDeleted" -> "maybe")) == invalid(s"$resource: 'isDeleted' is not a boolean: maybe"))
+    },
+    test("fails with InconsistentRepositoryDataException on an invalid resource IRI") {
+      val actual = map(validRow + ("resource" -> "not-an-iri"))
+      assertTrue(actual.left.exists(_.message.startsWith("Invalid resource info for not-an-iri: ")))
+    },
   )
 }
