@@ -403,6 +403,91 @@ class SearchResponderV2Spec extends E2EZSpec {
       } yield assertTrue(result.numberOfResources == 1)
     },
 
+    // A project-restricted label search wraps its Lucene lookup in the project's data graph. "Narrenschiff" has label hits
+    // only in incunabula-data, so restricting it to anything must return nothing: a discriminating filter, not a no-op.
+    test("label search restricted to a project returns only that project's resources") {
+      def search(project: ProjectIri) =
+        searchResponder(
+          _.searchResourcesByLabelV2(
+            searchValue = "Narrenschiff",
+            offset = 0,
+            limitToProject = Some(project),
+            limitToResourceClass = None,
+            targetSchema = ApiV2Complex,
+            requestingUser = anonymousUser,
+          ),
+        )
+      for {
+        inIncunabula <- search(incunabulaProjectIri)
+        inAnything   <- search(anythingProjectIri)
+      } yield assertTrue(
+        inIncunabula.resources.nonEmpty,
+        inIncunabula.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0803/")),
+        inAnything.resources.isEmpty,
+      )
+    },
+    test("scoped label count equals the unscoped count filtered to the project") {
+      def count(project: Option[ProjectIri]) =
+        searchResponder(
+          _.searchResourcesByLabelCountV2(
+            searchValue = "Narrenschiff",
+            limitToProject = project,
+            limitToResourceClass = None,
+          ),
+        ).map(_.numberOfResources)
+      for {
+        unscoped     <- count(None)
+        inIncunabula <- count(Some(incunabulaProjectIri))
+        inAnything   <- count(Some(anythingProjectIri))
+      } yield assertTrue(unscoped > 0, inIncunabula == unscoped, inAnything == 0)
+    },
+    test("scoped label search with a class restriction two hops up returns the match") {
+      for {
+        page <- searchResponder(
+                  _.searchResourcesByLabelV2(
+                    searchValue = "blue",
+                    offset = 0,
+                    limitToProject = Some(anythingProjectIri),
+                    limitToResourceClass = Some(resourceBaseClassIri),
+                    targetSchema = ApiV2Complex,
+                    requestingUser = anythingUser1,
+                  ),
+                )
+        count <- searchResponder(
+                   _.searchResourcesByLabelCountV2(
+                     searchValue = "blue",
+                     limitToProject = Some(anythingProjectIri),
+                     limitToResourceClass = Some(resourceBaseClassIri),
+                   ),
+                 )
+      } yield assertTrue(
+        page.resources.map(_.resourceIri.value) == Seq("http://rdfh.ch/0001/a-blue-thing"),
+        count.numberOfResources == 1,
+      )
+    },
+    test("label search restricted to an unknown project answers empty") {
+      val unknownProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")
+      for {
+        page <- searchResponder(
+                  _.searchResourcesByLabelV2(
+                    searchValue = "Narrenschiff",
+                    offset = 0,
+                    limitToProject = Some(unknownProject),
+                    limitToResourceClass = None,
+                    targetSchema = ApiV2Complex,
+                    requestingUser = anonymousUser,
+                  ),
+                )
+        count <- searchResponder(
+                   _.searchResourcesByLabelCountV2(
+                     searchValue = "Narrenschiff",
+                     limitToProject = Some(unknownProject),
+                     limitToResourceClass = None,
+                   ),
+                 )
+      } yield assertTrue(page.resources.isEmpty, count.numberOfResources == 0)
+    },
+
     // DEV-6833. Standoff is excluded from the label-search payload by filtering the predicate
     // (?valueObjectProperty != knora-base:valueHasStandoff). The resource below carries two standoff-bearing text values,
     // so it exercises that filter. The assertion pins what the client actually receives: the text value is still returned
