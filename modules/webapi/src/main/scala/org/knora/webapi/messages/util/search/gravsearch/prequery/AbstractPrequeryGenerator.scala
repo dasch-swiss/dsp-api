@@ -1951,10 +1951,16 @@ abstract class AbstractPrequeryGenerator(
   // more than one expansion whose internal variables could collide.
   private val matchFulltextVariableSuffix = "__matchFulltext"
 
-  // Set once handleMatchFulltextFunction has processed a call, so a second call in the same query can
-  // be rejected: the performance spike for DEV-6715 measured a second call at 17-38s, since Jena
-  // substitution-joins the second block, re-running its Lucene lookups per candidate row of the first.
-  private var matchFulltextFunctionCalled = false
+  // The lookup of the query's single permitted matchFulltext call; once set, a second call is rejected: the
+  // performance spike for DEV-6715 measured a second call at 17-38s, since Jena substitution-joins the second
+  // block, re-running its Lucene lookups per candidate row of the first.
+  private var recordedMatchFulltextLookup: Option[MatchFulltextLookup] = None
+
+  /**
+   * The query's `matchFulltext` lookup, if it has one; the caller runs the prequery behind the fulltext breadth guard
+   * with it. Complete only once the whole query has been traversed.
+   */
+  def matchFulltextLookup: Option[MatchFulltextLookup] = recordedMatchFulltextLookup
 
   /**
    * Checks that the query is in the simple schema, then calls `handleMatchFulltextFunction`.
@@ -2036,10 +2042,9 @@ abstract class AbstractPrequeryGenerator(
       throw GravsearchException(s"Function ${functionIri.toSparql} must be the top-level expression in a FILTER")
     }
 
-    if (matchFulltextFunctionCalled) {
+    if (recordedMatchFulltextLookup.isDefined) {
       throw GravsearchException(s"Function ${functionIri.toSparql} may only be used once per query")
     }
-    matchFulltextFunctionCalled = true
 
     // Two arguments are expected:
     // 1. a variable representing a resource
@@ -2068,6 +2073,10 @@ abstract class AbstractPrequeryGenerator(
         s"A search value for ${functionIri.toSparql} is expected to have at least length of $searchValueMinLength, but '$searchTerm' given of length ${searchTerm.length}.",
       )
     }
+
+    recordedMatchFulltextLookup = Some(
+      MatchFulltextLookup(LuceneQueryString(searchTerm), resourceDataGraph(resourceVar)),
+    )
 
     // Replace the filter with the fulltext-index-anchored expansion.
     TransformedFilterPattern(
@@ -2137,24 +2146,16 @@ abstract class AbstractPrequeryGenerator(
    * With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`, inside the subselect,
    * so the index returns only that graph's hits; nothing else may go into the GRAPH block, since ontology-backed
    * patterns match nothing in a data graph.
-   *
-   * Only a scoped lookup passes [[OntologyConstants.Fuseki.luceneHitLimit]]; an unscoped one keeps Jena's default
-   * cap of 10,000 hits (ADR-0012).
-   * TODO(DEV-7492): pass the limit unscoped too, behind the fulltext breadth guard.
    */
   private def matchFulltextLuceneLookup(
     matchVar: QueryVariable,
     searchTerm: String,
     dataGraph: Option[InternalIri],
   ): SubSelectPattern = {
-    val luceneQuery: Entity = dataGraph match {
-      case Some(_) => LuceneQueryArgs(searchTerm, OntologyConstants.Fuseki.luceneHitLimit)
-      case None    => XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri)
-    }
     val lookup = StatementPattern(
       subj = matchVar,
       pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-      obj = luceneQuery,
+      obj = LuceneQueryArgs(searchTerm, OntologyConstants.Fuseki.luceneHitLimit),
     )
     SubSelectPattern(matchVar, Seq(GraphPattern.scoped(lookup, dataGraph)))
   }

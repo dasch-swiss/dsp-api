@@ -402,13 +402,11 @@ Note that Lucene's default operator is a logical OR when submitting several sear
 
 This function can only be used as the top-level expression in a `FILTER`.
 
-`knora-api:matchText`, `knora-api:matchLabel` and `knora-api:matchTextInStandoff` pass an
-explicit hit limit of 1,000,000 to the full-text index instead of inheriting its silent
+`knora-api:matchText`, `knora-api:matchLabel`, `knora-api:matchTextInStandoff` and `knora-api:matchFulltext`
+pass an explicit hit limit of 1,000,000 to the full-text index instead of inheriting its silent
 default of 10,000, so a broad or wildcard term is not truncated to an arbitrary subset.
-`knora-api:matchFulltext` passes this limit only when the lookup is scoped to a project (see below);
-an unscoped `matchFulltext` lookup still inherits the 10,000-hit default (DEV-7492).
 With the `limitToProject` parameter, a lookup on the main resource or on one of its own values counts only
-that project's hits against either limit; a lookup on a linked resource or its values is not scoped and counts
+that project's hits against the limit; a lookup on a linked resource or its values is not scoped and counts
 hits from every project.
 
 In all four full-text functions (`knora-api:matchText`, `knora-api:matchLabel`,
@@ -725,15 +723,16 @@ of its value comments, or a list node (including sub-nodes) referenced by one of
 list values. It is expressed as a Gravsearch function so it can be combined with
 structured criteria in one query.
 
-`matchFulltext` covers the same fields as the `GET /v2/search/{term}` endpoint, but the
-two do not necessarily return the same result set on large data.
+`matchFulltext` covers the same fields as the `GET /v2/search/{term}` endpoint and passes the same explicit hit
+limit to the full-text index, so a broad term is not silently truncated.
 With the `limitToProject` parameter and `matchFulltext` on the main resource, the lookup is scoped to that
-project and passes the same explicit hit limit as `/v2/search`, so it returns the full set.
-Without `limitToProject`, or with `matchFulltext` on a linked resource (which is not scoped, because a linked
-resource may belong to another project), `matchFulltext` still inherits Jena's silent ~10,000-hit Lucene cap,
-whereas `/v2/search` returns the full set (DEV-7492). For a term below the cap the results match.
-`matchFulltext` is the only Gravsearch text function with this cap: `matchText`,
-`matchLabel` and `matchTextInStandoff` always pass the same explicit limit as `/v2/search`.
+project. `matchFulltext` on a linked resource is not scoped, because a linked resource may belong to another
+project.
+
+Like `/v2/search`, a `matchFulltext` term with a wildcard or more than one word is checked for breadth: if the
+full-text index matches more candidates than can be searched efficiently (more than 250,000 by default), the
+query, or the count query, is refused with `400 Bad Request` and a message asking for a more specific term.
+When the lookup is scoped to a project, only that project's candidates count.
 
 The first argument is a variable representing a resource (main or linked). The
 second argument is a string literal containing the search terms, with the same
