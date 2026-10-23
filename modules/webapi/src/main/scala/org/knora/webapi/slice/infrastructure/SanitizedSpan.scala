@@ -133,7 +133,9 @@ object SanitizedSpan {
   /**
    * Marks a classified client rejection with its exit reason only; anything else gets [[markSanitizedError]], named
    * by the first unclassified failure. A classified failure never names an `ERROR`: alongside a defect the defect
-   * does, and alongside an interruption the interrupt branch in [[withSpan]] marks the span alone.
+   * does, and alongside an interruption the interrupt branch in [[withSpan]] marks the span alone. An unclassified
+   * failure torn down by an interrupt keeps its `error.type` (the interrupt branch overwrites only the status), so
+   * the fault stays visible on the interrupted span. An empty cause is described as a defect.
    */
   private def markFailure(
     span: Span,
