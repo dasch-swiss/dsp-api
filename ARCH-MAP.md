@@ -762,7 +762,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
     `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
     `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
-    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `ResourceMetadataRules`, `FairResourcesLive`
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `GetResourceInfoQuery`, `ResourceMetadataRules`,
+    `FairResourcesLive`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -781,7 +782,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
     webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
-    cyclic), webapi-fair (`FairResourcesLive` implements the `FairResources` port), sparql-builder (34 files
+    cyclic), webapi-fair (`FairResourcesLive` implements the `FairResources` port), sparql-builder (35 files
     under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,
@@ -1646,8 +1647,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `E2EZSpec` (inherited), `CORSSupportE2ESpec`, `InstanceChecker`, `AdminFilesE2ESpec`,
     `OntologiesEndpointsE2ESpec`, `ResourcesRouteV2E2ESpec`, `SearchEndpointsGetSearchE2ESpec`,
     `SearchEndpointsPostGravsearchE2ESpec`, `SegmentE2EZSpec`, `SearchE2EZSpec`,
-    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraBaseJsonModels`,
-    `ValueHasXmlTestSupport`, `ProjectExportTestSupport`
+    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `ResourcesInfoE2ESpec`,
+    `KnoraBaseJsonModels`, `ValueHasXmlTestSupport`, `ProjectExportTestSupport`
 - **Public interface**: none. A leaf test target with no downstream dependents; each spec is a
     `class extends E2EZSpec`, or occasionally a plain `ZIOSpecDefault`, annotated
     `@RunWith(classOf[DspZTestJUnitRunner])`.
