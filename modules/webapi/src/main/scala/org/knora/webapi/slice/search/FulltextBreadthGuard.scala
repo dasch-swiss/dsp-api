@@ -43,11 +43,10 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * A term whose over-cap verdict is already known (the [[FulltextBreadthGuard.OverCapMemo]]) is refused before
  * anything is started: neither its query nor a probe runs, so a repeated broad term costs the triplestore nothing.
  *
- * The verdict wait is bounded: once the query has succeeded, the guard waits at most `verdictWait` for the verdict
- * and then returns the query's result, so an over-cap term whose probe is slower than that (queued behind the
- * semaphore, or a slow Fuseki) is admitted once. A query that fails first returns its failure without waiting.
- * The probe is never cut short by either: it runs in `probeScope` (the layer's, not the request's), finishes in the
- * background and caches its verdict for the next request. Its CLIENT span can end after the request's spans.
+ * The verdict wait is bounded (see `guarded`), so an over-cap term whose probe is slow is admitted once. Neither
+ * that wait nor the request ending cuts the probe short; only closing `probeScope` (the layer's) does. It caches its
+ * verdict for the next request, and its CLIENT span, in the trace of the first request to probe the term, can end
+ * after that request's spans.
  */
 final case class FulltextBreadthGuard(
   private val cap: Int,
@@ -75,12 +74,10 @@ final case class FulltextBreadthGuard(
     else {
       // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
       val key = BreadthKey(SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph))
-      // The query is a structured child of the request; the probe lives in `probeScope` and is only ever observed
-      // with `await`, never `join`, so a probe that fails or ends interrupted (scope closed) fails open instead of
-      // failing or interrupting the request. The cache lookup runs in the fiber that first calls `get` (zio-cache
-      // 0.2.4) and interrupting that fiber interrupts every waiter on the entry, so it must not be a request fiber.
-      // `ZIO.interruptible` keeps the probe fiber and the awaits interruptible under an uninterruptible caller
-      // (zio/zio#11044): otherwise closing the scope, losing the race or timing out would block until the probe ends.
+      // The probe must not run in a request fiber: zio-cache 0.2.4 runs a lookup in the first `get` caller's fiber,
+      // and interrupting that fiber interrupts every waiter on the entry. Observe it with `await`, never `join`, so a
+      // failed or interrupted probe fails open. `ZIO.interruptible` keeps the probe and the awaits interruptible under
+      // an uninterruptible caller (zio/zio#11044), or the race and the timeout would block until the probe ends.
       for {
         _        <- ZIO.fail(tooBroad(searchTerms)).whenZIO(overCap.contains(key))
         queryFib <- query.fork
