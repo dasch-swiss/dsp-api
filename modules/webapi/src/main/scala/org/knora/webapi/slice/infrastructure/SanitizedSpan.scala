@@ -69,10 +69,10 @@ object SanitizedSpan {
    * A failure that `clientRejection` maps to a reason is the caller's input being refused, not a fault: the span keeps
    * status `UNSET`, gets no description and no `error.type`, and carries `exitReasonKey` set to that reason. The
    * classifier is consulted only for a pure typed failure (failure values only, no defect, no interruption), so the
-   * defect and interruption handling below never depend on it; a failure alongside an interruption is marked as an
-   * interruption. Every failure value must classify, or a parallel server fault would hide behind a rejection; the
-   * first one's reason is used. It only ever skips writes, so it cannot leak a message. The default classifies
-   * nothing.
+   * defect and interruption handling below never depend on it. Every failure value must classify, or a parallel
+   * server fault would hide behind a rejection; the first one's reason is used, and in a mixed cause the first
+   * unclassified failure names the `ERROR`. It only ever skips writes, so it cannot leak a message. The default
+   * classifies nothing.
    *
    * The span is captured up front rather than resolved in the finalizer, because during interruption teardown the
    * current span no longer points at this one. Both finalizers run before the library's span-end, so their writes
@@ -139,18 +139,22 @@ object SanitizedSpan {
     clientRejection: Throwable => Option[String],
     cause: Cause[Throwable],
   ): Unit = {
-    val reasons = if (cause.isDie || cause.isInterrupted) Nil else cause.failures.map(clientRejection)
-    (if (reasons.nonEmpty && reasons.forall(_.isDefined)) reasons.head else None) match {
-      case Some(reason) => val _ = span.setAttribute(exitReasonKey, reason)
-      case None         => markSanitizedError(span, name, cause)
+    val failures = if (cause.isDie || cause.isInterrupted) Nil else cause.failures
+    val fault    = failures.find(clientRejection(_).isEmpty)
+    failures.headOption.flatMap(clientRejection) match {
+      case Some(reason) if fault.isEmpty => val _ = span.setAttribute(exitReasonKey, reason)
+      case _                             => markSanitizedError(span, name, fault.orElse(cause.failureOption))
     }
   }
 
-  /** Writes the sanitized `ERROR` status (`"<name>: <ClassName>"`, no message) and `error.type` onto the span. */
-  private def markSanitizedError(span: Span, name: String, cause: Cause[Throwable]): Unit = {
-    val kind = cause.failureOption.map(_.getClass.getSimpleName).getOrElse("defect")
+  /**
+   * Writes the sanitized `ERROR` status (`"<name>: <ClassName>"` of `failure`, no message) and `error.type` onto the
+   * span; with no failure value it is a defect.
+   */
+  private def markSanitizedError(span: Span, name: String, failure: Option[Throwable]): Unit = {
+    val kind = failure.map(_.getClass.getSimpleName).getOrElse("defect")
     val _    = span.setStatus(StatusCode.ERROR, s"$name: $kind")
-    cause.failureOption.foreach { error =>
+    failure.foreach { error =>
       val _ = span.setAttribute("error.type", error.getClass.getSimpleName)
     }
   }
