@@ -12,7 +12,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 final class ResourceInfoServerEndpoints(endpoints: ResourceInfoEndpoints, restService: ResourceInfoRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
-    endpoints.getResourcesInfo.zServerLogic(restService.findByProjectAndResourceClass),
+    endpoints.getResourcesInfo.zServerLogic(restService.find),
   )
 }
 object ResourceInfoServerEndpoints {
