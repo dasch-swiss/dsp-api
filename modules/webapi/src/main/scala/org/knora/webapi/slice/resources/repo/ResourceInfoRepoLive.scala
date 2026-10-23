@@ -5,9 +5,11 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import cats.syntax.traverse.*
 import zio.*
 
 import java.time.Instant
+import scala.util.Try
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -28,38 +30,38 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
     triplestore
       .query(GetResourceInfoQuery.build(projectIri, resourceClass, cutoff))
       .logError
-      .flatMap { result =>
-        ZIO
-          .attempt(result.results.bindings.toList.map(toResourceInfo(resourceClass)))
-          .flatMap(rows =>
-            ZIO.fromEither(rows.collectFirst { case Left(e) => e }.toLeft(rows.collect { case Right(r) => r })),
-          )
-      }
+      .flatMap(result =>
+        ZIO.foreach(result.results.bindings.toList)(row =>
+          ZIO.fromEither(ResourceInfoRepoLive.toResourceInfo(resourceClass)(row)),
+        ),
+      )
+}
+
+object ResourceInfoRepoLive {
+  val layer = ZLayer.derive[ResourceInfoRepoLive]
 
   /**
    * [[GetResourceInfoQuery]] selects `?resourceClass` only when no class is requested; otherwise the requested class
    * is the row's class.
    */
-  private def toResourceInfo(requestedClass: Option[InternalIri])(
+  private[repo] def toResourceInfo(requestedClass: Option[InternalIri])(
     row: VariableResultsRow,
   ): Either[InconsistentRepositoryDataException, ResourceInfo] = {
-    val rowMap = row.rowMap
-    for {
-      iri           <- ResourceIri.from(rowMap("resource")).left.map(InconsistentRepositoryDataException(_))
-      resourceClass <- requestedClass
-                         .orElse(rowMap.get("resourceClass").map(InternalIri.apply))
-                         .toRight(InconsistentRepositoryDataException(s"No resource class bound for ${iri.value}"))
-    } yield ResourceInfo(
-      iri,
-      resourceClass,
-      Instant.parse(rowMap("creationDate")),
-      rowMap.get("lastModificationDate").map(Instant.parse),
-      rowMap.get("deleteDate").map(Instant.parse),
-      rowMap("isDeleted").toBoolean,
+    def required(v: String): Either[String, String]            = row.get(v).toRight(s"'$v' is not bound")
+    def instant(v: String)(s: String): Either[String, Instant] =
+      Try(Instant.parse(s)).toEither.left.map(_ => s"'$v' is not a timestamp: $s")
+    def optionalInstant(v: String): Either[String, Option[Instant]] = row.get(v).traverse(instant(v))
+
+    val parsed = for {
+      iri           <- required("resource").flatMap(ResourceIri.from)
+      resourceClass <- requestedClass.orElse(row.get("resourceClass").map(InternalIri.apply)).toRight("no class bound")
+      creationDate  <- required("creationDate").flatMap(instant("creationDate"))
+      lastModified  <- optionalInstant("lastModificationDate")
+      deleteDate    <- optionalInstant("deleteDate")
+      isDeleted     <- required("isDeleted").flatMap(s => s.toBooleanOption.toRight(s"'isDeleted' is not a boolean: $s"))
+    } yield ResourceInfo(iri, resourceClass, creationDate, lastModified, deleteDate, isDeleted)
+    parsed.left.map(err =>
+      InconsistentRepositoryDataException(s"Invalid resource info for ${row.get("resource").getOrElse("?")}: $err"),
     )
   }
-}
-
-object ResourceInfoRepoLive {
-  val layer = ZLayer.derive[ResourceInfoRepoLive]
 }
