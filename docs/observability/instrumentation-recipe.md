@@ -234,7 +234,7 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
   interruption, and every failure value of a parallel cause classified — is a rejection, so a parallel
   server fault never hides behind one: the first unclassified failure then names the `ERROR`. A
   classified failure never names it; alongside a defect the defect does, and alongside an interrupt the
-  span is marked only as interrupted. It only skips
+  span is marked only as interrupted (an unclassified failure there keeps its `error.type`). It only skips
   the sanitized status, never writes one, so it cannot leak a message; the failure mapper stays `UNSET`.
   Classify only a type that is always a client error: `GravsearchException` also signals server-side
   invariant failures, so it stays `ERROR`.

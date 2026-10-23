@@ -253,6 +253,21 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
           SpanAssertions.hasNoAttributeKey(spans, spanName, errorTypeKey))
           .provide(InMemoryTracing.layer)
       },
+      test("a fault torn down by an interrupt is marked as an interruption and keeps the fault's error.type") {
+        val torn = Cause.fail(new IllegalStateException(sentinel)) ++ Cause.interrupt(FiberId.None)
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withSpan(tracing, spanName, exitReasonKey, rejectIllegalArgument)(_ => ZIO.failCause(torn))
+                 .exit
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, "interrupted") &&
+          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted") &&
+          SpanAssertions.hasAttribute(spans, spanName, errorTypeKey, "IllegalStateException") &&
+          assertTrue(SpanAssertions.findSpan(spans, spanName).exists(s => !s.toString.contains(sentinel))))
+          .provide(InMemoryTracing.layer)
+      },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
         // produces no typed failure, so the sanitized-error path above never runs, and OpenTelemetry has no

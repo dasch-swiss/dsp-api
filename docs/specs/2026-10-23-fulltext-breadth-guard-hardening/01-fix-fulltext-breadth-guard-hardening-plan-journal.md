@@ -177,3 +177,48 @@ status: in-progress
   overstated 349k. Suggestions applied there: "serves class-restricted queries on both", and the nonlinear cost plus
   page/count pairing noted in gravsearch.md. Kept: no user-facing caveat in `query-language.md` for classless
   queries (the internals note covers it). Re-review of the wording-only fix was skipped.
+
+## Final review
+
+Whole-branch review of `214a2357c..HEAD` (unattended). The diff is about 270 KB with the measurement assets and
+153 KB without them, above the review skill's size threshold; it was reviewed in full anyway, without the assets.
+Reviewers ran on sonnet. Findings were culled by the session against the source and, for the span change, by a
+canary, not by separate skeptic agents (overkill for findings this size).
+
+- **ARCH-MAP.md:** the `webapi-search` entry now names the over-cap memo, the breadth cache with `cache-ttl` and
+    `failure-ttl`, the probe fibers in the guard's layer scope and `verdict-wait`, and the `bad_request` stage-span
+    rule (31699348d). The map is still schema 1 with `last_verified_commit` and has no fingerprints; migrating it to
+    schema 2 means fingerprinting every component, which is a whole-map task outside this branch, so the frontmatter
+    is unchanged.
+- **Round 1** (consistency, code-simplicity, dune, scala-zio, observability). Fixed in 7eac06db5:
+    - A rejection torn down by an interrupt left `error.type=BadRequestException` on the interrupted span
+      (observability, Warning). A rejection alongside a defect named the span after the rejection, not the defect
+      (scala-zio and observability, Suggestion). Now a classified failure never names an `ERROR`. Tests pin both
+      shapes. Canary: the old marking fails exactly those two tests.
+    - The over-cap rule was written twice, for the memo write and the verdict check (DUNE-001). It is now one
+      `exceedsCap`.
+    - Stale comments: "see BreadthKey" and AppConfig's "Guard all four" (consistency). The over-long AppConfig
+      comment lines are wrapped.
+
+    Rejected or kept:
+    - DUNE-002, making the "always a 4xx" classifier rule a type-level marker: there is one classifier, it is pinned by
+      `SearchResponderV2StageSpanSpec`, and the rule is in the recipe, so a marker trait is over-engineering.
+    - The simplicity reviewer's request to move the stage measurement out of the `application.conf` probe comment: a
+      Phase 6 checkbox puts it there, and the scaladoc trims it asked for are style only.
+    - The plan's acceptance criteria and status fields stay open until the full suites run.
+    - The `gravsearch.md` "refused with a 400" wording is a nit.
+    - The note that a background probe's CLIENT span can turn `ERROR` after a successful request is not new.
+    - Interrupt-caching in the probe lookup (the Phase 4 warning) is not a defect. Only closing the guard's scope can
+      interrupt a lookup, because it runs in a fiber forked into that scope. zio-cache removes an interrupt-only
+      lookup exit, and a cached mixed cause is a real probe failure (decided behaviour 5). The scala-zio reviewer
+      agreed.
+    - `/v2/search` span status (ticket item 5) is scoped out in the plan (Technical Considerations): the endpoint opens
+      no `SanitizedSpan`, and the HTTP SERVER span leaves a 400 non-`ERROR`. A `grep` confirmed this.
+- **Round 2** (scala-zio on the round-1 delta): one Warning. An unclassified failure torn down by an interrupt keeps
+    its `error.type`. This is kept on purpose, because the fault stays visible on the interrupted span. It is now
+    documented in the scaladoc and recipe and pinned by a new test. Nothing else rose above nit, so the loop stopped
+    after two rounds.
+- Tests: `//modules/webapi:test` (FulltextBreadthGuardSpec, AppConfigSpec) `OK (53 tests)`. `//modules/test-it:test`
+    (SanitizedSpanSpec, SearchResponderV2StageSpanSpec) `OK (20 tests)`. GravsearchFulltextBreadthGuardSpec
+    `OK (8 tests)`. `test_gravsearch_span` passed. scalafmt `format-test` and the repo's markdownlint passed on the
+    touched files.
