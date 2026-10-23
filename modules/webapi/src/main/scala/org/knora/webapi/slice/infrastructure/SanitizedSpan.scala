@@ -44,7 +44,7 @@ import zio.telemetry.opentelemetry.tracing.Tracing
  * overwrites.
  *
  * See `docs/observability/instrumentation-recipe.md`. `SearchResponderV2.stageSpan` delegates here for the Gravsearch
- * stage spans, passing its own `gravsearch.exit_reason` key.
+ * stage spans, passing its own `gravsearch.exit_reason` key and a classifier for its client rejections.
  */
 object SanitizedSpan {
 
@@ -66,18 +66,29 @@ object SanitizedSpan {
    * express the difference. The key is the caller's, because it belongs to the caller's attribute namespace and is
    * what its trace queries select on.
    *
+   * A failure that `clientRejection` maps to a reason is the caller's input being refused, not a fault: the span keeps
+   * status `UNSET`, gets no description and no `error.type`, and carries `exitReasonKey` set to that reason. The
+   * classifier is consulted only for a pure typed failure (a failure value, no defect, no interruption), so the
+   * defect and interruption handling below never depend on it. It only ever skips writes, so it cannot leak a message.
+   * The default classifies nothing.
+   *
    * The span is captured up front rather than resolved in the finalizer, because during interruption teardown the
    * current span no longer points at this one. Both finalizers run before the library's span-end, so their writes
    * land, and the library's own status setter then runs with `unsetOnFailure` (a no-op) and leaves them intact.
    */
-  def withSpan[R, A](tracing: Tracing, name: String, exitReasonKey: String)(
+  def withSpan[R, A](
+    tracing: Tracing,
+    name: String,
+    exitReasonKey: String,
+    clientRejection: Throwable => Option[String] = (_: Throwable) => None,
+  )(
     f: Span => ZIO[R, Throwable, A],
   ): ZIO[R, Throwable, A] =
     tracing
       .span(name, SpanKind.INTERNAL, statusMapper = unsetOnFailure) {
         tracing.getCurrentSpanUnsafe.flatMap { span =>
           f(span)
-            .tapErrorCause(cause => ZIO.succeed(markSanitizedError(span, name, cause)))
+            .tapErrorCause(cause => ZIO.succeed(markFailure(span, name, exitReasonKey, clientRejection, cause)))
             .onExit {
               case Exit.Failure(cause) if cause.isInterrupted =>
                 ZIO.succeed {
@@ -117,6 +128,21 @@ object SanitizedSpan {
    * immediately after the span has ended.
    */
   private final class SpanScopedDefect(val cause: Cause[Throwable]) extends Exception(cause.squash)
+
+  /** Marks a classified client rejection with its exit reason only; anything else gets [[markSanitizedError]]. */
+  private def markFailure(
+    span: Span,
+    name: String,
+    exitReasonKey: String,
+    clientRejection: Throwable => Option[String],
+    cause: Cause[Throwable],
+  ): Unit = {
+    val pureFailure = cause.failureOption.filter(_ => !cause.isDie && !cause.isInterrupted)
+    pureFailure.flatMap(clientRejection) match {
+      case Some(reason) => val _ = span.setAttribute(exitReasonKey, reason)
+      case None         => markSanitizedError(span, name, cause)
+    }
+  }
 
   /** Writes the sanitized `ERROR` status (`"<name>: <ClassName>"`, no message) and `error.type` onto the span. */
   private def markSanitizedError(span: Span, name: String, cause: Cause[Throwable]): Unit = {
