@@ -449,12 +449,12 @@ Chunks: 2 (helper + responder, then docs and dashboard).
 
 Chunks: 1.
 
-- [ ] `application.conf` `probe` comment: the cap was also measured for the Gravsearch count prequery on stage
+- [x] `application.conf` `probe` comment: the cap was also measured for the Gravsearch count prequery on stage
   (class-restricted: 73 s at 248k candidates, timeout at 349k; 2026-10-23), with no link into `docs/specs/`
-- [ ] `gravsearch.md` § Breadth Guard states that the cap bounds the class-restricted shape, and that the guard
+- [x] `gravsearch.md` § Breadth Guard states that the cap bounds the class-restricted shape, and that the guard
   does not bound a classless `matchFulltext`, whose cost comes from the resource-class `VALUES` join
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
