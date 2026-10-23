@@ -41,9 +41,8 @@ final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[ProjectIri, List[Reso
 
 object ResourceInfoRepoFake {
 
-  val knownProjectIRI    = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  val unknownProjectIRI  = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
-  val knownResourceClass = InternalIri("http://some-resource-class")
+  val knownProjectIRI   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  val unknownProjectIRI = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0002")
 
   def add(entity: ResourceInfo, projectIri: ProjectIri): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.serviceWithZIO[ResourceInfoRepoFake](_.add(entity, projectIri))
