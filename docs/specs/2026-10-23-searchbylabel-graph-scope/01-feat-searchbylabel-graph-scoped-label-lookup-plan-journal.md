@@ -102,3 +102,20 @@ status: in-progress
     - Suggestions kept for later: ARCH-MAP webapi-search rule could say `/v2/search` and `/v2/searchbylabel` drop
         `attachedToProject` while Gravsearch keeps it (DUNE-001); drop "since 2026-10-23" from Fact 10 (simplicity);
         if the owner reopens ADR-0012 text, change "applies to `/v2/search` only" (DUNE-002).
+- Final review round 1 (scala-zio, consistency, dune, simplicity, performance, pattern, security; sonnet; diff
+    3e0e2f1ed..603f9eb7f): 5 Warnings raised, all refuted by skeptics; no Critical. Converged.
+    - Refuted: consistency Warning that the `SearchQueriesSpec` fixture comment covers the new `__scoped*` goldens (the
+        comment sits over `legacy`, and the "New cases use exact-text goldens" line qualifies it); simplicity Warnings
+        on the `SearchQueries` scoping paragraph (accurate, constraint-carrying), the `legacyProjectJoin` comment
+        (verbatim sibling of `SearchFulltextQuerySpec`), the legacy test titles (asked for by the plan) and the inline
+        count body (plan chose inline). Performance concern that list nodes skew `mayHaveMoreResults`: refuted, it is
+        computed from main resources only.
+    - Fixed as trivial suggestions (2ec7806a9): the fixture comment now names the legacy fixtures only; the
+        `withProjectDataGraph` Scaladoc grammar ("including `/v2/search`'s breadth probe").
+    - Suggestions recorded, not fixed: Scaladoc on both builders that `dataGraph` comes from `withProjectDataGraph`
+        (dune, security, scala-zio); extract a shared class-walk clause (dune, pattern); ARCH-MAP rule naming which
+        routes drop `attachedToProject` (dune); extract a `searchByLabelCount` helper (pattern, simplicity); rename
+        spec val `scopedToProject` to `anythingDataGraph` (pattern); a sentence on surviving list nodes in the
+        `SearchQueries` comment or Fact 10 (consistency); drop "since 2026-10-23" from Fact 10; scoped no-class
+        goldens; shared IT helpers and the unknown-project IRI constant. All were already on the kept list or are
+        polish below the Warning bar.
