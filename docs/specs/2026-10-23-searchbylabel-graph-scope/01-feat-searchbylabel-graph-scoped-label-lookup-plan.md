@@ -248,11 +248,14 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
 
 #### Phase 4: Final verification
 
-- [ ] Run `just check`; it passes.
-- [ ] Run `bazel test //modules/webapi:test`; it passes.
-- [ ] Run `just test-it`; it passes.
-- [ ] Run `just test-e2e` (with the port 3399 overrides if a local stack holds 3333); it passes, or every failure is
-      shown to be unrelated (exists on `main` too).
+- [x] Run `just check`; it passes. (Local run: each step run separately, scalafmt with `--disk_cache=` because of a
+      local bagit disk-cache defect; all pass.)
+- [x] Run `bazel test //modules/webapi:test`; it passes.
+- [x] Run `just test-it`; it passes.
+- [x] Run `just test-e2e` (with the port 3399 overrides if a local stack holds 3333); it passes, or every failure is
+      shown to be unrelated (exists on `main` too). (18 failures, all in the Sipi-dependent
+      `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `ValueHasXmlOnValueWriteE2ESpec`: Sipi cannot
+      fetch from the API on 3399; shown by cause, not re-run on `main`; CI runs the full suite.)
 - [ ] Draft the PR body: Why (link ADR-0012, DEV-7613), What changes, the Success Metrics table, the Deployment
       constraint verbatim from Dependencies & Risks, and "stacked on #4399 (DEV-7492), restacked at finalization".
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
