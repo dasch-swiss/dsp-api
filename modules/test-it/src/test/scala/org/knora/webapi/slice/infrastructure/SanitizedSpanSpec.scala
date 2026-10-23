@@ -37,6 +37,12 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
 
   private val errorTypeKey = AttributeKey.stringKey("error.type")
 
+  /** A classifier treating `IllegalArgumentException` as a client rejection, as a caller would its own 400s. */
+  private val rejectIllegalArgument: Throwable => Option[String] = {
+    case _: IllegalArgumentException => Some("rejected")
+    case _                           => None
+  }
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("SanitizedSpan.withSpan")(
       test("a typed failure yields an ERROR span whose description is the class name only") {
@@ -160,6 +166,57 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
             exit.causeOption.exists(c => c.isInterrupted && c.dieOption.exists(_.getMessage == sentinel)),
           )
         }).provide(InMemoryTracing.layer)
+      },
+      test("a classified client rejection leaves the status UNSET, writes nothing but the exit reason") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withSpan(tracing, spanName, exitReasonKey, rejectIllegalArgument)(_ =>
+                   ZIO.fail(new IllegalArgumentException(sentinel)),
+                 )
+                 .either
+          spans <- InMemoryTracing.finishedSpans
+        } yield {
+          val span = SpanAssertions.findSpan(spans, spanName)
+          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "rejected") &&
+          SpanAssertions.hasNoAttributeKey(spans, spanName, errorTypeKey) &&
+          assertTrue(
+            span.exists(_.getStatus.getStatusCode == StatusCode.UNSET),
+            span.exists(s => Option(s.getStatus.getDescription).forall(_.isEmpty)),
+            span.exists(s => !s.toString.contains(sentinel)),
+          )
+        }).provide(InMemoryTracing.layer)
+      },
+      test("a failure the classifier does not match keeps the sanitized ERROR status and no exit reason") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withSpan(tracing, spanName, exitReasonKey, rejectIllegalArgument)(_ =>
+                   ZIO.fail(new IllegalStateException(sentinel)),
+                 )
+                 .either
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalStateException") &&
+          SpanAssertions.hasAttribute(spans, spanName, errorTypeKey, "IllegalStateException") &&
+          SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
+          .provide(InMemoryTracing.layer)
+      },
+      test("the classifier is not consulted for a defect, alone or alongside a typed failure") {
+        // The classifier matches the failure value in the composite cause; it must still be ignored, because a cause
+        // holding a defect is not a pure client rejection.
+        val classifyAll: Throwable => Option[String] = _ => Some("rejected")
+        val defect                                   = Cause.die(new IllegalArgumentException(sentinel))
+        val composite                                = Cause.fail(new IllegalArgumentException("typed")) ++ defect
+        def run(cause: Cause[Throwable])             =
+          (for {
+            tracing <- ZIO.service[Tracing]
+            _       <- SanitizedSpan.withSpan(tracing, spanName, exitReasonKey, classifyAll)(_ => ZIO.failCause(cause)).exit
+            spans   <- InMemoryTracing.finishedSpans
+          } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+            SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
+            .provide(InMemoryTracing.layer)
+        run(defect).zipWith(run(composite))(_ && _)
       },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
