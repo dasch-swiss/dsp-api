@@ -35,6 +35,7 @@ status: in-progress
 | 3 | reviewed | dsp-api@582b7d50 | 1 |
 | 4 | reviewed | dsp-api@ce521c20 | 0 |
 | 5 | reviewed | dsp-api@91df469f | 2 |
+| 6 | reviewed | dsp-api@8ae8f8ea | 1 |
 
 ## Chunk queue
 
@@ -47,6 +48,7 @@ status: in-progress
 | 4.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala, FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md | 3.2 | all Phase 4 boxes except Phase review | `failure-ttl = 30 seconds` loaded, validated `> 0` and `<= cache-ttl`; a failed probe is cached for `failureTtl`; unit test re-probes only past the TTL; IT expects one probe for page + count; canary fails the in-window assertion | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe; `FulltextBreadthGuard.scala` § make, layer | — |
 | 5.1 | dsp-api | SanitizedSpan.scala, SearchResponderV2.scala, SanitizedSpanSpec.scala, SearchResponderV2StageSpanSpec.scala | 4.1 | Phase 5 boxes 1–4, canary, both test runs | optional classifier consulted only for a pure typed failure; `BadRequestException` stage and root spans `UNSET` + `exit_reason = bad_request`; `GravsearchException` still `ERROR`; canary fails the stage-span test | `slice/infrastructure/SanitizedSpan.scala` § withSpan; `SearchResponderV2.scala` § stageSpan | — |
 | 5.2 | dsp-api | instrumentation-recipe.md, gravsearch-trace-runbook.md, traceql-recipes.md, dsp-gravsearch.json | 5.1 | Phase 5 boxes 5–8, `just check` | recipe §7 bullet + checklist; runbook §3/§4/§7; TraceQL client-rejection recipe; two panel descriptions; `jq .` succeeds | `docs/observability/` § as listed in the plan's Phase 5 | — |
+| 6.1 | dsp-api | application.conf, gravsearch.md | 5.2 | Phase 6 boxes 1–3 | probe comment records the Gravsearch stage measurement (no `docs/specs/` link); § Breadth Guard says the cap bounds the class-restricted shape, not a classless `matchFulltext`; markdownlint clean on the touched lines | `application.conf` § v2.fulltext-search.probe comment; gravsearch.md § Breadth Guard | — |
 
 ## Chunks
 
@@ -63,6 +65,8 @@ status: in-progress
 | 5.2 | dsp-api | complete | bba701c05 | recipe §7 client-rejection bullet + checklist; runbook §3 probe paragraph, §4 failure table (`bad_request` row, `ERROR` row excludes `BadRequestException`), §7 now five topologies with a client-rejection row and tell-apart bullet (anchor links updated, also in the recipe); TraceQL §5 `bad_request` recipe; two panel descriptions; `jq .` ok; `just check` equivalent passes | none |
 | 5.R1 | dsp-api | complete | 287f9453e | review fix: the classifier applies only when every failure value of the cause classifies, so a parallel server fault never hides behind a rejection; scaladoc and recipe state it and that a rejection alongside an interrupt is an interruption; two new tests, stage-span test asserts an empty description; `OK (22 tests)` | none |
 | 5.R2 | dsp-api | complete | 515e74dc6 | review fix: in a mixed cause (rejection plus unclassified failure) the first unclassified failure names the `ERROR` description and `error.type`; `markFailure` flattened; `OK (22 tests)`, `test_gravsearch_span` `OK` | none |
+| 6.1 | dsp-api | complete | b5117bf66 | probe config comment records the stage measurement for the Gravsearch count prequery (73 s at 248k, timeout at 349k; classless not bounded); gravsearch.md § Breadth Guard states the cap bounds the class-restricted shape, not a classless `matchFulltext`; markdownlint (repo config) clean | none |
+| 6.R1 | dsp-api | complete | dece6ff49 | review fix: the cap note states its conditions (one class, unscoped, median; 95 s cold in gravsearch.md), the classless cost attribution is marked not yet confirmed, and "just above the cap" is gone | none |
 
 ## Deferrals
 
@@ -164,3 +168,12 @@ status: in-progress
   a combined "did not succeed" TraceQL recipe; a throwing classifier would turn into a defect (the one classifier is a
   total match); the recipe §2 sketch still shows the pre-classifier helper; the cause list (breadth refusal, Lucene
   syntax, generator input) is repeated across scaladoc and three docs.
+- Phase 6 `just check`: only `application.conf` (HOCON, not linted) and Markdown changed, so the Markdown step is the
+  only one that sees the diff; the repo's markdownlint invocation (`--config .markdownlint.yml --disable MD013 MD040`)
+  passes on `gravsearch.md`, the plan and this journal. The scalafmt, licence and lint-test steps cover Scala only.
+- Phase 6 review (consistency, sonnet; light review for a docs-only phase, the other lenses skipped): no Critical.
+  Three Warnings fixed in dece6ff49: the classless attribution read as settled though the plan marks it unconfirmed
+  (H1); the measurement conditions (one class, unscoped, median of 3, 95 s cold) were missing; "just above the cap"
+  overstated 349k. Suggestions applied there: "serves class-restricted queries on both", and the nonlinear cost plus
+  page/count pairing noted in gravsearch.md. Kept: no user-facing caveat in `query-language.md` for classless
+  queries (the internals note covers it). Re-review of the wording-only fix was skipped.
