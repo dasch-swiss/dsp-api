@@ -28,6 +28,13 @@ status: in-progress
 | 1 | reviewed | dsp-api@36a3a46ac | 0 |
 | 2 | reviewed | dsp-api@4ea23a8b9 | 0 |
 | 3 | reviewed | dsp-api@dd937a0e6 | 1 |
+| 4 | in-progress | dsp-api@d52e77432 | 0 |
+
+Phase 4 (session, 2026-10-23): the final review loop ran before the full suites so the suites run once.
+`bazel test //modules/webapi:test` and `just test-it` pass. `//modules/test-e2e:test` with the 3399 overrides has
+18 failures, all in Sipi-dependent specs (`KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`,
+`ValueHasXmlOnValueWriteE2ESpec`; `SipiException: Unable to get file … from Sipi`), none touching search;
+`SearchEndpointsGetSearchE2ESpec` passes. `just check` steps pass individually (scalafmt with `--disk_cache=`).
 
 ## Chunk queue
 
