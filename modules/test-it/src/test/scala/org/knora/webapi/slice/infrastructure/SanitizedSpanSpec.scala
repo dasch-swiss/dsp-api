@@ -218,9 +218,9 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
             .provide(InMemoryTracing.layer)
         run(defect).zipWith(run(composite))(_ && _)
       },
-      test("a rejection alongside an unclassified parallel failure is not classified") {
-        // `zipPar` and friends combine both failures in one cause; classifying on the first alone would hide the
-        // server fault behind the client rejection.
+      test("a rejection alongside an unclassified parallel failure is not classified, and the fault names the ERROR") {
+        // `zipPar` and friends combine both failures in one cause; all of them must classify, so the server fault is
+        // not hidden behind the client rejection.
         val both =
           Cause.fail(new IllegalArgumentException("rejected")) && Cause.fail(new IllegalStateException(sentinel))
         (for {
@@ -230,8 +230,10 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
                  .exit
           spans <- InMemoryTracing.finishedSpans
         } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
-          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalArgumentException") &&
-          SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalStateException") &&
+          SpanAssertions.hasAttribute(spans, spanName, errorTypeKey, "IllegalStateException") &&
+          SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)) &&
+          assertTrue(SpanAssertions.findSpan(spans, spanName).exists(s => !s.toString.contains(sentinel))))
           .provide(InMemoryTracing.layer)
       },
       test("a rejection torn down by an interrupt is marked as an interruption, not a rejection") {
