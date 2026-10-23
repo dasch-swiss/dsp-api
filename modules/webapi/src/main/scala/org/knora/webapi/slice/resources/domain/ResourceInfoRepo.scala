@@ -17,7 +17,9 @@ trait ResourceInfoRepo {
   /**
    * Lists the resources of a project, deleted ones included.
    *
-   * @param resourceClass when given, only resources of exactly this class (no subclasses)
+   * @param projectIri    the project the resources are attached to; an unknown project gives an empty list
+   * @param resourceClass when given, only resources of exactly this class (no subclasses), and each returned
+   *                      [[ResourceInfo.resourceClass]] is this class
    * @param cutoff        when given, only resources whose `lastModificationDate`, else `creationDate`, is at or after it
    */
   def find(
