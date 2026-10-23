@@ -558,6 +558,14 @@ verdict, or a known within-cap one, starts its prequery concurrently with the pr
 count to the memo before its verdict is cached. The memo holds at most `cache-capacity` entries, dropping
 expired ones first and then the earliest-expiring.
 
+The wait for a verdict is bounded. While the prequery runs, an over-cap verdict interrupts it and refuses the
+request. Once the prequery has succeeded, the guard waits at most `verdict-wait` (5 s by default) for the verdict
+and then returns the prequery's result, so a term whose probe is queued behind the probe semaphore or slow is
+admitted once; a prequery that failed returns its failure without waiting. The probe is not cut short: it runs in
+a fiber forked into the guard's own scope rather than the request's, finishes in the background and caches its
+verdict, so the next request for the term is refused from the memo. Interrupting one request therefore never
+interrupts another request waiting for the same probe.
+
 ### Why the Expansion Needs an Opaque Group
 
 A naive expansion using ordinary `OptionalPattern`/`BindPattern`/`StatementPattern` nodes breaks in two ways once

@@ -42,20 +42,29 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  *
  * A term whose over-cap verdict is already known (the [[FulltextBreadthGuard.OverCapMemo]]) is refused before
  * anything is started: neither its query nor a probe runs, so a repeated broad term costs the triplestore nothing.
+ *
+ * The verdict wait is bounded: once the query has succeeded, the guard waits at most `verdictWait` for the verdict
+ * and then returns the query's result, so an over-cap term whose probe is slower than that (queued behind the
+ * semaphore, or a slow Fuseki) is admitted once. A query that fails first returns its failure without waiting.
+ * The probe is never cut short by either: it runs in `probeScope` (the layer's, not the request's), finishes in the
+ * background and caches its verdict for the next request. Its CLIENT span can end after the request's spans.
  */
 final case class FulltextBreadthGuard(
   private val cap: Int,
+  private val verdictWait: Duration,
   private val cache: Cache[FulltextBreadthGuard.BreadthKey, Throwable, Long],
   private val overCap: FulltextBreadthGuard.OverCapMemo,
+  private val probeScope: Scope,
 ) {
   import FulltextBreadthGuard.BreadthKey
 
   /**
    * Refuses a term already known to be over the cap without running `query` or the probe. Otherwise runs `query`
-   * concurrently with the term's Lucene candidate-count probe, then decides on the probe's verdict: refuses with a
-   * 400 (interrupting the still-running query) when the count is over the cap, and otherwise returns the query's
-   * result — within the cap, or the probe errored (fail open). Because the two run concurrently, an admitted term
-   * pays no serial probe tax (Spike A).
+   * concurrently with the term's Lucene candidate-count probe. An over-cap verdict while the query runs interrupts
+   * it and refuses with a 400; a within-cap verdict or a probe error (fail open) returns the query's result. Once
+   * the query has finished, a failure is returned at once and a success waits at most `verdictWait` for the verdict
+   * (refused if over the cap, else returned). Because the two run concurrently, an admitted term pays no serial
+   * probe tax (Spike A).
    */
   def guarded[A](
     searchTerms: LuceneQueryString,
@@ -66,23 +75,34 @@ final case class FulltextBreadthGuard(
     else {
       // A scoped and an unscoped probe of the same term never share a cache entry; see BreadthKey.
       val key = BreadthKey(SearchFulltextQuery.buildProbe(searchTerms, limitToStandoffClass, dataGraph))
-      // Start the real query immediately (as a structured child fiber), then await the breadth probe and decide on
-      // its verdict. The query and probe run concurrently, so an admitted term pays no serial probe tax on the
-      // queries this guard exists for: the probe's COUNT is far cheaper than the real query, so awaiting its verdict
-      // adds nothing to a slow query's latency. Over the cap → interrupt the still-running query and refuse; within
-      // the cap → return the query's result; a probe error is swallowed (`.either`), so the guard fails open.
-      // Awaiting the probe rather than racing it keeps the outcome decided by effects this fiber owns — the query is
-      // a structured child, cleaned up on any exit — and means an over-cap term is always refused (a fast query can
-      // never resolve the request before the probe's verdict is known).
+      // The query is a structured child of the request; the probe lives in `probeScope` and is only ever observed
+      // with `await`, never `join`, so a probe that fails or ends interrupted (scope closed) fails open instead of
+      // failing or interrupting the request. The cache lookup runs in the fiber that first calls `get` (zio-cache
+      // 0.2.4) and interrupting that fiber interrupts every waiter on the entry, so it must not be a request fiber.
+      // `ZIO.interruptible` keeps the probe fiber and the awaits interruptible under an uninterruptible caller
+      // (zio/zio#11044): otherwise closing the scope, losing the race or timing out would block until the probe ends.
       for {
         _        <- ZIO.fail(tooBroad(searchTerms)).whenZIO(overCap.contains(key))
         queryFib <- query.fork
-        result   <- cache.get(key).either.flatMap {
-                    case Right(breadth) if breadth > cap => queryFib.interrupt *> ZIO.fail(tooBroad(searchTerms))
-                    case _                               => queryFib.join
+        probeFib <- ZIO.interruptible(cache.get(key)).forkIn(probeScope)
+        first    <- ZIO.interruptible(probeFib.await).raceEither(ZIO.interruptible(queryFib.await))
+        result   <- first match {
+                    case Left(verdict) if isOverCap(verdict)      => queryFib.interrupt *> ZIO.fail(tooBroad(searchTerms))
+                    case Left(_)                                  => queryFib.join
+                    case Right(queryExit) if !queryExit.isSuccess => queryFib.join
+                    case Right(_)                                 =>
+                      ZIO.interruptible(probeFib.await).timeout(verdictWait).flatMap {
+                        case Some(verdict) if isOverCap(verdict) => ZIO.fail(tooBroad(searchTerms))
+                        case _                                   => queryFib.join
+                      }
                   }
       } yield result
     }
+
+  private def isOverCap(verdict: Exit[Throwable, Long]): Boolean = verdict match {
+    case Exit.Success(breadth) => breadth > cap
+    case _                     => false
+  }
 
   private def tooBroad(searchTerms: LuceneQueryString): BadRequestException =
     BadRequestException(
@@ -139,21 +159,26 @@ object FulltextBreadthGuard {
    *
    * An over-cap count is written to the memo inside the lookup, before the lookup completes its cache entry, so any
    * caller that has seen an over-cap verdict finds it in the memo afterwards.
+   *
+   * Probes are forked into the `Scope` this runs in, and closing it interrupts the probes still running. `forkIn`
+   * gives each probe a child scope that it closes on exit, which also removes it from this scope, so finalizers do
+   * not accumulate per call.
    */
-  def make(cap: Int, cacheCapacity: Int, cacheTtl: Duration, maxConcurrent: Int)(
+  def make(cap: Int, cacheCapacity: Int, cacheTtl: Duration, maxConcurrent: Int, verdictWait: Duration)(
     probe: BreadthKey => Task[Long],
-  ): UIO[FulltextBreadthGuard] =
+  ): URIO[Scope, FulltextBreadthGuard] =
     for {
-      semaphore <- Semaphore.make(maxConcurrent.toLong)
-      overCap   <- OverCapMemo.make(cacheCapacity, cacheTtl)
-      lookup     = Lookup { (key: BreadthKey) =>
+      probeScope <- ZIO.scope
+      semaphore  <- Semaphore.make(maxConcurrent.toLong)
+      overCap    <- OverCapMemo.make(cacheCapacity, cacheTtl)
+      lookup      = Lookup { (key: BreadthKey) =>
                  semaphore.withPermit(probe(key)).tap(breadth => overCap.record(key).when(breadth > cap))
                }
       cache <- Cache.makeWith(cacheCapacity, lookup) {
                  case Exit.Success(_) => cacheTtl
                  case Exit.Failure(_) => Duration.Zero
                }
-    } yield FulltextBreadthGuard(cap, cache, overCap)
+    } yield FulltextBreadthGuard(cap, verdictWait, cache, overCap, probeScope)
 
   /** The production probe: run the pre-built COUNT query (already on the probe tier) and read the count. */
   private def runProbe(triplestore: TriplestoreService)(key: BreadthKey): Task[Long] =
@@ -167,7 +192,8 @@ object FulltextBreadthGuard {
         config      <- ZIO.service[AppConfig]
         triplestore <- ZIO.service[TriplestoreService]
         cfg          = config.v2.fulltextSearch.probe
-        guard       <- make(cfg.cap, cfg.cacheCapacity, cfg.cacheTtl, cfg.maxConcurrent)(runProbe(triplestore))
+        guard       <-
+          make(cfg.cap, cfg.cacheCapacity, cfg.cacheTtl, cfg.maxConcurrent, cfg.verdictWait)(runProbe(triplestore))
       } yield guard
     }
 }

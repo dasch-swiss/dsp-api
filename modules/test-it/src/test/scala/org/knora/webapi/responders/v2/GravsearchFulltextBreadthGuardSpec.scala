@@ -108,7 +108,15 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
 
   private def responderWith(probe: BreadthKey => Task[Long]) =
     for {
-      guard     <- FulltextBreadthGuard.make(cap, cacheCapacity = 16, cacheTtl = 1.minute, maxConcurrent = 4)(probe)
+      guard <- FulltextBreadthGuard.make(
+                 cap,
+                 cacheCapacity = 16,
+                 cacheTtl = 1.minute,
+                 maxConcurrent = 4,
+                 verdictWait = 5.seconds,
+               )(
+                 probe,
+               )
       responder <- ZLayer
                      .makeSome[ResponderDeps, SearchResponderV2Live](
                        ZLayer.succeed(guard),

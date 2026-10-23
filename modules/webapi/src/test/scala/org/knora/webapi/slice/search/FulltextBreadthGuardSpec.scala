@@ -20,11 +20,20 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 @RunWith(classOf[DspZTestJUnitRunner])
 class FulltextBreadthGuardSpec extends ZIOSpecDefault {
 
-  private val cap      = 250000
-  private val cacheTtl = 1.minute
+  private val cap         = 250000
+  private val cacheTtl    = 1.minute
+  private val verdictWait = 5.seconds
 
-  private def guardWith(probe: BreadthKey => Task[Long], cacheCapacity: Int = 16): UIO[FulltextBreadthGuard] =
-    FulltextBreadthGuard.make(cap, cacheCapacity, cacheTtl, maxConcurrent = 4)(probe)
+  private def guardWith(probe: BreadthKey => Task[Long], cacheCapacity: Int = 16): URIO[Scope, FulltextBreadthGuard] =
+    FulltextBreadthGuard.make(cap, cacheCapacity, cacheTtl, maxConcurrent = 4, verdictWait)(probe)
+
+  // The guard's verdict-wait timeout registers only once the query has finished; advancing the clock earlier hangs.
+  private val verdictWaitRegistered: UIO[Unit] =
+    TestClock.sleeps.flatMap(s => ZIO.yieldNow.as(s)).repeatUntil(_.nonEmpty).unit
+
+  // A probe that answers `breadth` only once `gate` is released, counting its starts.
+  private def gatedProbe(gate: Promise[Nothing, Unit], probes: Ref[Int], breadth: Long): BreadthKey => Task[Long] =
+    _ => probes.update(_ + 1) *> gate.await.as(breadth)
 
   private def countingOverCapProbe(probes: Ref[Int]): BreadthKey => Task[Long] =
     _ => probes.update(_ + 1).as(cap.toLong + 1)
@@ -39,7 +48,7 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   // A query failure unrelated to the breadth cap (stands in for e.g. a TriplestoreTimeoutException).
   private final class QueryBoom extends Exception("boom")
 
-  override def spec: Spec[TestEnvironment, Any] = suite("FulltextBreadthGuard")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("FulltextBreadthGuard")(
     // An over-cap probe refuses with a 400 and interrupts the still-running query — a query that never completes
     // on its own does not hold the refusal up, and its onInterrupt firing proves it was actually freed.
     test("refuses an over-cap term and interrupts the in-flight query") {
@@ -171,5 +180,127 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         expired <- memo.contains(keys(1))
       } yield assertTrue(size == 1, live, !expired)
     },
+    suite("bounded verdict wait")(
+      test("returns a finished query's result after verdict-wait while the probe is still running") {
+        for {
+          probes <- Ref.make(0)
+          gate   <- Promise.make[Nothing, Unit]
+          guard  <- guardWith(gatedProbe(gate, probes, cap.toLong + 1))
+          fib    <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).fork
+          _      <- verdictWaitRegistered
+          before <- fib.poll
+          _      <- TestClock.adjust(verdictWait)
+          result <- fib.join
+          open   <- gate.isDone
+        } yield assertTrue(before.isEmpty, result == "ok", !open)
+      },
+      // The probe keeps running after the wait times out and caches its verdict: the next call is refused (its
+      // query may start, awaiting the in-flight entry), and the call after that is refused from the memo.
+      test("does not interrupt the probe when the verdict wait times out; its verdict serves later calls") {
+        for {
+          probes      <- Ref.make(0)
+          gate        <- Promise.make[Nothing, Unit]
+          interrupted <- Ref.make(false)
+          guard       <- guardWith(key => gatedProbe(gate, probes, cap.toLong + 1)(key).onInterrupt(interrupted.set(true)))
+          fib         <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).fork
+          _           <- verdictWaitRegistered *> TestClock.adjust(verdictWait)
+          admitted    <- fib.join
+          _           <- gate.succeed(())
+          next        <- guard.guarded(wildcard, None, None)(ZIO.never).exit
+          queryStarts <- Ref.make(0)
+          last        <- guard.guarded(wildcard, None, None)(queryStarts.update(_ + 1).as("ok")).uninterruptible.exit
+          wasInterr   <- interrupted.get
+          startCount  <- queryStarts.get
+          probeCount  <- probes.get
+        } yield assertTrue(admitted == "ok", !wasInterr, startCount == 0, probeCount == 1) &&
+          assert(next)(failsWithA[BadRequestException]) &&
+          assert(last)(failsWithA[BadRequestException])
+      },
+      test("refuses a finished query when the over-cap verdict arrives within verdict-wait") {
+        for {
+          probes <- Ref.make(0)
+          gate   <- Promise.make[Nothing, Unit]
+          guard  <- guardWith(gatedProbe(gate, probes, cap.toLong + 1))
+          fib    <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).fork
+          _      <- verdictWaitRegistered
+          _      <- gate.succeed(())
+          exit   <- fib.join.exit
+        } yield assert(exit)(failsWithA[BadRequestException])
+      },
+      test("returns a failed query's failure at once, without waiting for the verdict") {
+        for {
+          probes <- Ref.make(0)
+          gate   <- Promise.make[Nothing, Unit]
+          guard  <- guardWith(gatedProbe(gate, probes, cap.toLong + 1))
+          exit   <- guard.guarded(wildcard, None, None)(ZIO.fail(new QueryBoom)).exit
+        } yield assert(exit)(failsWithA[QueryBoom])
+      },
+      // An uninterruptible caller (zio/zio#11044) must not turn the bounded wait back into an unbounded one.
+      test("bounds the verdict wait for an uninterruptible caller too") {
+        for {
+          probes <- Ref.make(0)
+          gate   <- Promise.make[Nothing, Unit]
+          guard  <- guardWith(gatedProbe(gate, probes, cap.toLong + 1))
+          fib    <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).uninterruptible.fork
+          _      <- verdictWaitRegistered *> TestClock.adjust(verdictWait)
+          result <- fib.join
+        } yield assertTrue(result == "ok")
+      },
+      test("interrupting a call interrupts its query but not the probe") {
+        for {
+          queryStarted     <- Promise.make[Nothing, Unit]
+          queryInterrupted <- Promise.make[Nothing, Unit]
+          probeStarted     <- Promise.make[Nothing, Unit]
+          probeInterrupted <- Ref.make(false)
+          gate             <- Promise.make[Nothing, Unit]
+          guard            <- guardWith(_ =>
+                     (probeStarted.succeed(()) *> gate.await.as(cap.toLong)).onInterrupt(probeInterrupted.set(true)),
+                   )
+          query           = (queryStarted.succeed(()) *> ZIO.never).onInterrupt(queryInterrupted.succeed(()))
+          fib            <- guard.guarded(wildcard, None, None)(query).fork
+          _              <- queryStarted.await *> probeStarted.await
+          _              <- fib.interrupt
+          _              <- queryInterrupted.await
+          wasInterrupted <- probeInterrupted.get
+        } yield assertTrue(!wasInterrupted)
+      },
+      // zio-cache runs a lookup in the fiber that first calls `get`; interrupting that fiber would interrupt every
+      // other waiter on the entry, so the probe must not run in a request's fiber.
+      test("interrupting one call does not interrupt another call awaiting the same probe") {
+        for {
+          probes       <- Ref.make(0)
+          gate         <- Promise.make[Nothing, Unit]
+          probeStarted <- Promise.make[Nothing, Unit]
+          guard        <- guardWith(key => probeStarted.succeed(()) *> gatedProbe(gate, probes, cap.toLong + 1)(key))
+          first        <- guard.guarded(wildcard, None, None)(ZIO.never).fork
+          _            <- probeStarted.await
+          second       <- guard.guarded(wildcard, None, None)(ZIO.never).fork
+          _            <- first.interrupt
+          _            <- gate.succeed(())
+          exit         <- second.join.exit
+          probeCount   <- probes.get
+        } yield assert(exit)(failsWithA[BadRequestException]) && assertTrue(probeCount == 1)
+      },
+      // `join` on a probe interrupted by its scope closing would interrupt the request; the guard must fail open.
+      test("fails open when the probe ends interrupted because the guard's scope is closed") {
+        for {
+          closed <- Scope.make
+          _      <- closed.close(Exit.unit)
+          guard  <- closed.extend[Any](guardWith(_ => ZIO.never))
+          exit   <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
+        } yield assertTrue(exit == Exit.succeed("ok"))
+      },
+      test("does not accumulate finalizers in the guard's scope per call") {
+        val terms = List("a*", "b*", "c*").map(LuceneQueryString(_))
+        for {
+          scope  <- Scope.make
+          guard  <- scope.extend[Any](guardWith(_ => ZIO.succeed(1L)))
+          initial = scope.size
+          _      <- ZIO.foreachDiscard(terms)(t => guard.guarded(t, None, None)(ZIO.succeed("ok")))
+          after   = scope.size
+          _      <- scope.close(Exit.unit)
+        } yield assertTrue(after == initial)
+      },
+    ) @@ TestAspect.timeout(30.seconds),
   )
 }
