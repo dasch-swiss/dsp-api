@@ -14,6 +14,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit.DAYS
 
 import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -169,6 +170,20 @@ class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(
           iris(asc) == List(mmm, zzz).map(_.iri.value),
           iris(desc) == List(mmm, zzz).map(_.iri.value),
+        )
+      },
+      test("a stored class that cannot be converted to an external IRI fails the whole listing") {
+        val broken = ResourceInfo(iri("ddd"), InternalIri("not-an-iri"), day(6), None)
+        for {
+          _      <- seed
+          _      <- ResourceInfoRepoFake.add(broken, knownProjectIRI)
+          actual <- find().exit
+        } yield assertTrue(
+          actual == Exit.fail(
+            InconsistentRepositoryDataException(
+              "Invalid stored resource class not-an-iri: Couldn't parse IRI: not-an-iri",
+            ),
+          ),
         )
       },
       test("asOf is the server clock time") {
