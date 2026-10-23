@@ -41,27 +41,27 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         interrupted <- Promise.make[Nothing, Unit]
         guard       <- guardWith(_ => ZIO.succeed(cap.toLong + 1))
         query        = ZIO.never.onInterrupt(interrupted.succeed(()))
-        exit        <- guard.guarded(wildcard, None, None, None)(query).exit
+        exit        <- guard.guarded(wildcard, None, None)(query).exit
         _           <- interrupted.await
       } yield assert(exit)(failsWithA[BadRequestException])
     },
     test("admits a query whose probed breadth is exactly at the cap") {
       for {
         guard  <- guardWith(_ => ZIO.succeed(cap.toLong))
-        result <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok"))
+        result <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok"))
       } yield assertTrue(result == "ok")
     },
     test("fails open when the probe errors (the real query is untouched)") {
       for {
         guard  <- guardWith(_ => ZIO.fail(new RuntimeException("no lucene index")))
-        result <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok"))
+        result <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok"))
       } yield assertTrue(result == "ok")
     },
     test("does not probe a single plain term, even one that would be refused") {
       for {
         probes <- Ref.make(0)
         guard  <- guardWith(_ => probes.update(_ + 1).as(cap.toLong + 1))
-        result <- guard.guarded(single, None, None, None)(ZIO.succeed("ok"))
+        result <- guard.guarded(single, None, None)(ZIO.succeed("ok"))
         count  <- probes.get
       } yield assertTrue(result == "ok", count == 0)
     },
@@ -74,7 +74,7 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         probeGate    <- Promise.make[Nothing, Unit]
         guard        <- guardWith(_ => probeGate.await.as(cap.toLong)) // probe blocks until released
         query         = queryStarted.succeed(()) *> ZIO.succeed("ok")
-        fib          <- guard.guarded(wildcard, None, None, None)(query).fork
+        fib          <- guard.guarded(wildcard, None, None)(query).fork
         _            <- queryStarted.await                             // the query ran while the probe was still gated
         _            <- probeGate.succeed(())
         result       <- fib.join
@@ -83,7 +83,7 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
     test("propagates a query failure for an admitted term") {
       for {
         guard <- guardWith(_ => ZIO.succeed(cap.toLong))
-        exit  <- guard.guarded(wildcard, None, None, None)(ZIO.fail(new QueryBoom)).exit
+        exit  <- guard.guarded(wildcard, None, None)(ZIO.fail(new QueryBoom)).exit
       } yield assert(exit)(failsWithA[QueryBoom])
     },
     // Measured breadth is cached single-flight: a repeated term for the same key reuses the cached verdict and
@@ -92,8 +92,8 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
       for {
         probes <- Ref.make(0)
         guard  <- guardWith(_ => probes.update(_ + 1).as(cap.toLong))
-        first  <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("a"))
-        second <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("b"))
+        first  <- guard.guarded(wildcard, None, None)(ZIO.succeed("a"))
+        second <- guard.guarded(wildcard, None, None)(ZIO.succeed("b"))
         count  <- probes.get
       } yield assertTrue(first == "a", second == "b", count == 1)
     },
@@ -103,8 +103,8 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
       val unscopedProbe = SearchFulltextQuery.buildProbe(wildcard, None, None)
       for {
         guard    <- guardWith(key => ZIO.succeed(if (key.probeSparql == unscopedProbe) cap.toLong + 1 else 1L))
-        unscoped <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok")).exit
-        admitted <- guard.guarded(wildcard, None, scoped, None)(ZIO.succeed("ok"))
+        unscoped <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
+        admitted <- guard.guarded(wildcard, None, scoped)(ZIO.succeed("ok"))
       } yield assert(unscoped)(failsWithA[BadRequestException]) && assertTrue(admitted == "ok")
     },
   )

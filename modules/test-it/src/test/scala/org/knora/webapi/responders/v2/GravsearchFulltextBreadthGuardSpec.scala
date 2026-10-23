@@ -181,6 +181,20 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         keys      <- probed.get
       } yield assertTrue(counted.numberOfResources > 0, keys == List(unscopedProbe))
     },
+    // The probe does not measure the resource class, so a class restriction must not split the cache entry.
+    test("probes a /v2/search count once for the same term with and without a resource class") {
+      for {
+        (probes, probe) <- countingProbe(1L)
+        responder       <- responderWith(probe)
+        bookClass       <- ZIO.serviceWithZIO[IriConverter](
+                       _.asResourceClassIri("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
+                         .mapError(BadRequestException(_)),
+                     )
+        _      <- responder.fulltextSearchCountV2("Zeitgl*", None, None, None)
+        _      <- responder.fulltextSearchCountV2("Zeitgl*", None, Some(bookClass), None)
+        probed <- probes.get
+      } yield assertTrue(probed == 1)
+    },
     test("never probes a single plain term") {
       for {
         (probes, probe) <- countingProbe(cap.toLong + 1)
