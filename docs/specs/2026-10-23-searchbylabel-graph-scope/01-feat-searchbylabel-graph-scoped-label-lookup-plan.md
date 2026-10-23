@@ -185,40 +185,41 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
 
 #### Phase 2: Integration and E2E tests for scoped label search
 
-- [ ] `SearchResponderV2Spec` (test-it): "label search restricted to a project returns only that project's resources":
+- [x] `SearchResponderV2Spec` (test-it): "label search restricted to a project returns only that project's resources":
       "Narrenschiff" with `limitToProject = Some(incunabulaProjectIri)` is non-empty and all IRIs start with
       `http://rdfh.ch/0803/`; with `Some(anythingProjectIri)` it is empty.
-- [ ] `SearchResponderV2Spec`: "scoped label count equals the unscoped count filtered to the project": for
+- [x] `SearchResponderV2Spec`: "scoped label count equals the unscoped count filtered to the project": for
       "Narrenschiff", the count under `incunabulaProjectIri` equals the count with `limitToProject = None`, and under
       `anythingProjectIri` it is 0 (all "Narrenschiff" label hits are in incunabula; verify with `grep` over the loaded
       `.ttl` files before relying on it).
-- [ ] `SearchResponderV2Spec`: "scoped label search with a class restriction two hops up": "blue" with `limitToProject =
+- [x] `SearchResponderV2Spec`: "scoped label search with a class restriction two hops up": "blue" with `limitToProject =
       Some(anythingProjectIri)` and `resourceBaseClassIri` returns exactly `http://rdfh.ch/0001/a-blue-thing` (page and
       count).
-- [ ] `SearchResponderV2Spec`: "label search restricted to an unknown project answers empty": page empty, count 0, for
+- [x] `SearchResponderV2Spec`: "label search restricted to an unknown project answers empty": page empty, count 0, for
       `ProjectIri.unsafeFrom("http://rdfh.ch/projects/9999")` (the well-formed unknown IRI `SearchResponderV2LiveSpec`
       uses; a malformed IRI is a 400 at the tapir layer and does not reach the responder).
-- [ ] Canary: temporarily drop the GRAPH wrap and keep no `attachedToProject`; the anything-restricted "Narrenschiff"
+- [x] Canary: temporarily drop the GRAPH wrap and keep no `attachedToProject`; the anything-restricted "Narrenschiff"
       test fails (it then returns incunabula resources); revert.
-- [ ] Run `just docker-load-test-images`, then `bazel test //modules/test-it:test
+- [x] Run `just docker-load-test-images`, then `bazel test //modules/test-it:test
       --test_filter='.*SearchResponderV2Spec.*'`; it passes.
-- [ ] `SearchEndpointsGetSearchE2ESpec`, suite `GET /v2/searchbylabel/:label`: "searchbylabel restricted to a project" —
+- [x] `SearchEndpointsGetSearchE2ESpec`, suite `GET /v2/searchbylabel/:label`: "searchbylabel restricted to a project" —
       "Narrenschiff" with `limitToProject` = incunabula returns resources only under `http://rdfh.ch/0803/`, with
       `limitToProject` = anything returns `{}` (`RdfModel.fromJsonLD("{}")`, as in the wrong-class test). Pass the
       project through the existing `searchByLabel(label, f)` request update (`addQueryParam("limitToProject", …)`).
       The helper runs anonymously; the incunabula "Narrenschiff" label hits carry `V knora-admin:UnknownUser`, so
       they are visible.
-- [ ] `SearchEndpointsGetSearchE2ESpec`: "searchbylabel count restricted to a project" — `GET
+- [x] `SearchEndpointsGetSearchE2ESpec`: "searchbylabel count restricted to a project" — `GET
       /v2/searchbylabel/count/Narrenschiff` with `limitToProject` = incunabula equals the unrestricted count; with
-      anything it is 0 (add a `verifySearchByLabelCount` helper next to `verifySearchCount`).
-- [ ] `SearchEndpointsGetSearchE2ESpec`: "searchbylabel restricted to an unknown project" — page `{}` and count 0, both
+      anything it is 0 (add a `searchByLabelCount` helper next to `searchByLabel`; it returns the count, since the
+      test compares two counts).
+- [x] `SearchEndpointsGetSearchE2ESpec`: "searchbylabel restricted to an unknown project" — page `{}` and count 0, both
       200, for `http://rdfh.ch/projects/9999`.
-- [ ] `SearchEndpointsGetSearchE2ESpec`: comment above the new cases: the fixture must sit in the project's data graph,
+- [x] `SearchEndpointsGetSearchE2ESpec`: comment above the new cases: the fixture must sit in the project's data graph,
       and books-data does not (it is loaded into `.../0001/books`), so these cases use incunabula/anything.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*SearchEndpointsGetSearchE2ESpec.*'` (add
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*SearchEndpointsGetSearchE2ESpec.*'` (add
       `--test_env=KNORA_WEBAPI_KNORA_API_INTERNAL_PORT=3399 --test_env=KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3399` if a
       local stack holds port 3333); it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 3: Documentation of the scope extension
 
