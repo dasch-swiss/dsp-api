@@ -80,6 +80,9 @@ status: in-progress
 | 2.9 | dsp-api | complete | a28a05001 | Final review fix 6: ARCH-MAP hand-edited (dune-map would need confirmation the executor cannot get): count 34 -> 35, GetResourceInfoQuery, ResourcesInfoE2ESpec | none |
 | 2.10 | dsp-api | complete | 619d668fd | Final review fix 7: docs qualify "every write sets lastModificationDate" to writes through the API, pointing at back-dated writes and erasure (both bullets already existed) | none |
 | 2.11 | dsp-api | complete | 507ab1b9f | Final fix round re-review (scala-zio + consistency, sonnet; no Critical/Warning): added non-boolean isDeleted and invalid-IRI cases to `ResourceInfoRepoLiveSpec` (7 tests) and the failure rule to `toResourceInfo`'s Scaladoc | none |
+| 2.12 | dsp-api | complete | cee9b34dc | Final review round 2 fix 1: ARCH-MAP sparql-builder "Used by" counts 34 -> 35 (resources repo), 92 -> 94 (main-source importers), re-grepped | none |
+| 2.13 | dsp-api | complete | 45f3ccfba | Final review round 2 fix 2: `ResourceInfoRestServiceSpec` covers the fail-fast path, stored class `InternalIri("not-an-iri")` fails the listing with InconsistentRepositoryDataException; canary (mutated message in `toExternal`) fails it | none |
+| 2.14 | dsp-api | complete | 39e6c60d4 | Final review round 2 fix 4: fail-fast rationale on `ResourceInfoRestService.find` shortened to one sentence | none |
 
 ## Deferrals
 
@@ -147,3 +150,9 @@ status: in-progress
   `ResourceInfoRepo.find` could state the returned class equals the requested one. Cap of 2 fix rounds reached after
   round 2; round 2 itself was not re-reviewed, so the session's final review covers a01f810e3.
 - Consistency review: the plan's phase table still says Phase 1 `pending`; left for the session, which owns phase status.
+- Final review round 2, refuted (fix 3): the `row.get("resource").getOrElse("?")` fallback in
+  `ResourceInfoRepoLive.toResourceInfo`'s error message is reachable: when `?resource` is unbound, `required("resource")`
+  fails first and the message has no IRI to name. Kept.
+- Final review round 2, fix 2: `IriConverter.asExternalIri` rejects any stored class string that does not parse as an
+  IRI (`Couldn't parse IRI`); a triplestore-bound class is always an IRI, so the path guards against corrupt data
+  rather than a case seen in practice.
