@@ -223,24 +223,28 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
 
 #### Phase 3: Documentation of the scope extension
 
-- [ ] `docs/adr/0012-graph-scoped-lucene-text-lookups.md`: add a dated note (2026-10-23) under Decision 2:
+- [x] `docs/adr/0012-graph-scoped-lucene-text-lookups.md`: add a dated note (2026-10-23) under Decision 2:
       `/v2/searchbylabel` (page and count) with `limitToProject` is scoped the same way and drops `attachedToProject`
       (DEV-7613), with the measured effect in one sentence (1.5–8×, at most 0.5 s on the measured beol/LIMC/ekws cases,
       identical results).
-- [ ] `docs/adr/0012-graph-scoped-lucene-text-lookups.md`: in the Consequences bullet on dropping `attachedToProject`
+- [x] `docs/adr/0012-graph-scoped-lucene-text-lookups.md`: in the Consequences bullet on dropping `attachedToProject`
       ("applies to `/v2/search` only"), add a dated note that it also applies to `/v2/searchbylabel`.
-- [ ] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10 closing paragraph: name `/v2/searchbylabel` with
+- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10 closing paragraph: name `/v2/searchbylabel` with
       `limitToProject` among the lookups that emit the scoped form.
-- [ ] `docs/contexts/search/CONTEXT.md`, **ProjectDataGraphs port**: "A full-text search limited to an unknown Project"
+- [x] `docs/contexts/search/CONTEXT.md`, **ProjectDataGraphs port**: "A full-text search limited to an unknown Project"
       becomes "A full-text or label search limited to an unknown Project".
-- [ ] `ARCH-MAP.md` webapi-search: the "Only the `text:query` statement goes into `GRAPH`" rule names
+- [x] `ARCH-MAP.md` webapi-search: the "Only the `text:query` statement goes into `GRAPH`" rule names
       `SearchQueriesSpec` among the goldens that show a change.
-- [ ] `docs/03-endpoints/api-v2/reading-and-searching-resources.md` search-by-label section: one sentence that
+- [x] `docs/03-endpoints/api-v2/reading-and-searching-resources.md` search-by-label section: one sentence that
       `limitToProject` restricts the lookup to the project's resources and that an unknown project returns no results
       (the section does not mention the hit cap, so nothing about the cap).
-- [ ] Confirm the flatten test: `git grep -n "docs/specs/" -- ':!docs/specs'` returns nothing.
-- [ ] Run `just check`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Confirm the flatten test: `git grep -n "docs/specs/" -- ':!docs/specs'` returns nothing.
+      (It returns only pre-existing non-links: CLAUDE.md's own description of the rule and two
+      `opentelemetry.io/docs/specs/` URLs; this phase adds none.)
+- [x] Run `just check`; it passes. (Locally its steps were run one by one: every scalafmt `format-test` with
+      `--disk_cache=`, since the disk cache serves bagit hits without `.fmt.output`; the license and relative-import
+      tests; markdownlint over all tracked markdown.)
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 4: Final verification
 
