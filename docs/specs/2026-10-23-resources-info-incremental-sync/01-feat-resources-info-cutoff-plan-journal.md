@@ -10,7 +10,7 @@ problem: >
   every resource of the class. The endpoint gains an optional at-or-after `cutoff` and an optional
   `resourceClass` (project-wide listing), each entry says its class, and the response carries the
   server's `asOf` time to anchor the next poll.
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-feat-resources-info-cutoff-plan
@@ -19,7 +19,7 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | 3e0e2f1ed | worktree-DEV-7632 | squash | in-progress | — |
+| dsp-api | 3e0e2f1ed | worktree-DEV-7632 | squash | shipped | <https://github.com/dasch-swiss/dsp-api/pull/4402> |
 
 ## Phases
 
@@ -99,8 +99,8 @@ status: in-progress
 - Decided (2026-10-23): `resourceClass` input via `query[Option[IriDto]]` plus `asInternalIri`, "inputs accepted
   today stay accepted". Committed (4094beafe): `IriDto.from` validates the raw string, whereas the old path
   percent-encoded first, so a class IRI valid only after encoding (raw spaces/non-ASCII) is now a 400. Why: the
-  IriDto convention of the sibling endpoint; reported as a side finding by the Phase 1 executor. Owner's answer:
-  pending (final review).
+  IriDto convention of the sibling endpoint; reported as a side finding by the Phase 1 executor. Owner's answer
+  (2026-10-23, final review): accepted, keep `IriDto`.
 
 ## Side findings
 
@@ -156,3 +156,17 @@ status: in-progress
 - Final review round 2, fix 2: `IriConverter.asExternalIri` rejects any stored class string that does not parse as an
   IRI (`Couldn't parse IRI`); a triplestore-bound class is always an IRI, so the path guards against corrupt data
   rather than a case seen in practice.
+
+## Closeout
+
+- root_cause: `GET /v2/resources/info` could only list every resource of one class, so an external sync client (MLS,
+  0807) had to call it once per class and download everything each time to find what changed.
+- investigation: stage timings on 0807 (42k resources) showed a project-wide scan with a date filter costs ~0.8–0.9 s
+  and a full listing 4–5 s; `GRAPH` scoping and pattern order (type-first vs project-first) made no difference; the
+  stamp-before-commit race and idle-period stall of "newest date seen" led to inclusive cutoffs plus a server `asOf`;
+  client-supplied creation dates were found to stamp `lastModificationDate`, so back-dated writes are a documented gap.
+- solution: one `sparql"..."` template (`GetResourceInfoQuery`) with optional `VALUES` class and a trailing
+  `COALESCE(lastModificationDate, creationDate) >= cutoff` filter; typed row mapping; optional `IriDto` class and
+  `Instant` cutoff on the endpoint; `resourceClass` per entry and `asOf` per response; docs with a polling protocol.
+- prevention: golden spec for all four query shapes, repo-mapping and rest-service specs (boundary, fallback, ties,
+  fail-fast), and `ResourcesInfoE2ESpec` against Fuseki that fails if `>=` becomes `>`; three review rounds converged.

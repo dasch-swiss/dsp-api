@@ -3,7 +3,7 @@ title: "feat: Incremental sync on /v2/resources/info: cutoff parameter and proje
 type: feat
 date: 2026-10-23
 author: "Balduin Landolt"
-status: reviewed
+status: implemented
 repositories: []
 linear: DEV-7632
 ---
@@ -46,8 +46,8 @@ Two additions:
   IRI. Always present, also when a class was requested: an additive JSON field.
 - **Input class handling unchanged.** `resourceClass` becomes `query[Option[IriDto]]` (the convention of the
   sibling `ResourcesEndpoints`), and the rest service keeps converting it with `IriConverter.asInternalIri`
-  (no switch to the stricter `asResourceClassIriApiV2Complex`). One narrowing, provisional (owner's answer at
-  the final review): `IriDto` validates the raw string, so a class IRI that was only valid after
+  (no switch to the stricter `asResourceClassIriApiV2Complex`). One narrowing, accepted by the owner at the final
+  review (2026-10-23): `IriDto` validates the raw string, so a class IRI that was only valid after
   percent-encoding (raw spaces or non-ASCII) is now a 400, as on the sibling `/v2/resources` endpoint.
 - **Known gaps, documented, not fixed:** erased (hard-deleted) resources leave no trace and never appear, so a
   client that must notice them needs a periodic full listing to compare against; ontology changes don't bump
