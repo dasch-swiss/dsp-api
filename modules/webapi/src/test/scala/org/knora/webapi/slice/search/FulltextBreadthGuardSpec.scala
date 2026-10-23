@@ -20,10 +20,16 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 @RunWith(classOf[DspZTestJUnitRunner])
 class FulltextBreadthGuardSpec extends ZIOSpecDefault {
 
-  private val cap = 250000
+  private val cap      = 250000
+  private val cacheTtl = 1.minute
 
-  private def guardWith(probe: BreadthKey => Task[Long]): UIO[FulltextBreadthGuard] =
-    FulltextBreadthGuard.make(cap, cacheCapacity = 16, cacheTtl = 1.minute, maxConcurrent = 4)(probe)
+  private def guardWith(probe: BreadthKey => Task[Long], cacheCapacity: Int = 16): UIO[FulltextBreadthGuard] =
+    FulltextBreadthGuard.make(cap, cacheCapacity, cacheTtl, maxConcurrent = 4)(probe)
+
+  private def countingOverCapProbe(probes: Ref[Int]): BreadthKey => Task[Long] =
+    _ => probes.update(_ + 1).as(cap.toLong + 1)
+
+  private def keyOf(term: LuceneQueryString): BreadthKey = BreadthKey(SearchFulltextQuery.buildProbe(term, None, None))
 
   private val wildcard = LuceneQueryString("der*") // shouldProbe = true
   private val single   = LuceneQueryString("der")  // shouldProbe = false
@@ -106,6 +112,64 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         unscoped <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
         admitted <- guard.guarded(wildcard, None, scoped)(ZIO.succeed("ok"))
       } yield assert(unscoped)(failsWithA[BadRequestException]) && assertTrue(admitted == "ok")
+    },
+    // A known over-cap term is refused before anything starts: the repeat call's query never runs (no HTTP request,
+    // no Fuseki thread) and no second probe is made. The repeat call runs uninterruptibly so a forked query inherits
+    // that and always runs to completion; an interruptible fork could be interrupted before its first step, and the
+    // counter would stay 0 even if the guard had started it.
+    test("refuses a known over-cap term without starting its query or probing") {
+      for {
+        probes        <- Ref.make(0)
+        queryStarts   <- Ref.make(0)
+        guard         <- guardWith(countingOverCapProbe(probes))
+        first         <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
+        second        <- guard.guarded(wildcard, None, None)(queryStarts.update(_ + 1).as("ok")).uninterruptible.exit
+        queryStartCnt <- queryStarts.get
+        probeCount    <- probes.get
+      } yield assert(first)(failsWithA[BadRequestException]) &&
+        assert(second)(failsWithA[BadRequestException]) &&
+        assertTrue(queryStartCnt == 0, probeCount == 1)
+    },
+    test("re-probes an over-cap term once its verdict has expired") {
+      for {
+        probes     <- Ref.make(0)
+        guard      <- guardWith(countingOverCapProbe(probes))
+        first      <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
+        _          <- TestClock.adjust(cacheTtl + 1.milli)
+        second     <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok")).exit
+        probeCount <- probes.get
+      } yield assert(first)(failsWithA[BadRequestException]) &&
+        assert(second)(failsWithA[BadRequestException]) &&
+        assertTrue(probeCount == 2)
+    },
+    // Three live over-cap terms in a capacity-2 guard: the oldest leaves both the memo and the cache, so it is
+    // probed again, while the newest is still refused from the memo.
+    test("bounds the over-cap memo by the cache capacity, evicting the oldest live entry") {
+      val terms = List("a*", "b*", "c*").map(LuceneQueryString(_))
+      for {
+        probes   <- Ref.make(0)
+        guard    <- guardWith(countingOverCapProbe(probes), cacheCapacity = 2)
+        _        <- ZIO.foreachDiscard(terms)(t => guard.guarded(t, None, None)(ZIO.unit).exit *> TestClock.adjust(1.milli))
+        newest   <- guard.guarded(terms.last, None, None)(ZIO.unit).exit
+        afterNew <- probes.get
+        oldest   <- guard.guarded(terms.head, None, None)(ZIO.unit).exit
+        afterOld <- probes.get
+      } yield assert(newest)(failsWithA[BadRequestException]) &&
+        assert(oldest)(failsWithA[BadRequestException]) &&
+        assertTrue(afterNew == 3, afterOld == 4)
+    },
+    // Two entries that expired together are both dropped when a third is recorded, not only the earliest.
+    test("the over-cap memo drops expired entries before evicting a live one") {
+      val keys = List("a*", "b*", "c*").map(t => keyOf(LuceneQueryString(t)))
+      for {
+        memo    <- FulltextBreadthGuard.OverCapMemo.make(capacity = 2, ttl = cacheTtl)
+        _       <- memo.record(keys(0)) *> TestClock.adjust(1.milli) *> memo.record(keys(1))
+        _       <- TestClock.adjust(cacheTtl + 1.milli)
+        _       <- memo.record(keys(2))
+        size    <- memo.size
+        live    <- memo.contains(keys(2))
+        expired <- memo.contains(keys(1))
+      } yield assertTrue(size == 1, live, !expired)
     },
   )
 }

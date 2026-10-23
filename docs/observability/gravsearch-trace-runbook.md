@@ -54,7 +54,8 @@ spent *in the triplestore* from time spent generating SPARQL or transforming res
 For a `matchFulltext` query, `gravsearch.prequery.execute` also covers the fulltext breadth probe, a fast
 Lucene candidate `COUNT` run concurrently with the prequery (skipped when the term's breadth is cached or the term
 is a single plain word). A term over the cap ends the stage early with a 400, see the failure table in
-[§4](#4-root-span-attributes).
+[§4](#4-root-span-attributes). A term already known to be over the cap is refused before the prequery starts, so
+its trace has no prequery CLIENT span (and no probe span) under `gravsearch.prequery.execute`.
 
 A **count** query (`/v2/searchextended/count`) runs only the prequery side: `gravsearch.parse`,
 `gravsearch.type_inspection`, `gravsearch.prequery.generate`, `gravsearch.prequery.execute` under
@@ -103,7 +104,7 @@ On a failed or interrupted stage span you may also see:
 | --- | --- |
 | span status `ERROR`, description `"<stage>: <ClassName>"` | A typed stage failure, e.g. `gravsearch.prequery.execute: TriplestoreException`. The message is sanitized — never the raw SPARQL or FILTER literal |
 | `error.type` | The exception class simple name |
-| `gravsearch.prequery.execute: BadRequestException` | For a `matchFulltext` query, usually the breadth guard refusing an over-broad term (a 400, the prequery is interrupted). Not a triplestore failure |
+| `gravsearch.prequery.execute: BadRequestException` | For a `matchFulltext` query, usually the breadth guard refusing an over-broad term (a 400; on a first refusal the prequery is interrupted, a repeat refusal never starts it). Not a triplestore failure |
 | `gravsearch.exit_reason = interrupted` | The fiber was interrupted (client disconnect / timeout / cancellation) — see [§7](#7-absent-spans-four-normal-topologies) |
 
 ## 5. Read the submitted query
