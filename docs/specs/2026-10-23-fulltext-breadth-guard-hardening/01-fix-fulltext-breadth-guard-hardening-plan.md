@@ -414,36 +414,36 @@ Chunks: 1.
 
 Chunks: 2 (helper + responder, then docs and dashboard).
 
-- [ ] `SanitizedSpan.withSpan` takes an optional client-rejection classifier (`Throwable => Option[String]`,
+- [x] `SanitizedSpan.withSpan` takes an optional client-rejection classifier (`Throwable => Option[String]`,
   default none); it is consulted only for a pure typed failure (`cause.failureOption` defined, no defect, not
   interrupted); a classified failure sets `exitReasonKey` to the classified value and skips
   `markSanitizedError`; `unsetOnFailure` is untouched; scaladoc updated
-- [ ] `SearchResponderV2.stageSpan` classifies `BadRequestException` as `bad_request`; its scaladoc updated
-- [ ] `SanitizedSpanSpec`: a classified failure leaves status `UNSET`, no description, no `error.type`, the exit
+- [x] `SearchResponderV2.stageSpan` classifies `BadRequestException` as `bad_request`; its scaladoc updated
+- [x] `SanitizedSpanSpec`: a classified failure leaves status `UNSET`, no description, no `error.type`, the exit
   reason set; an unclassified failure and a defect are unchanged
-- [ ] `SearchResponderV2StageSpanSpec`: a `BadRequestException` stage failure is `UNSET` with
+- [x] `SearchResponderV2StageSpanSpec`: a `BadRequestException` stage failure is `UNSET` with
   `gravsearch.exit_reason = bad_request`, on the stage span and on an enclosing `gravsearch` root stage span; a
   `GravsearchException` is still `ERROR`
-- [ ] `docs/observability/instrumentation-recipe.md` §7 adds the client-rejection bullet, and the checklist line
+- [x] `docs/observability/instrumentation-recipe.md` §7 adds the client-rejection bullet, and the checklist line
   on `SanitizedSpan.withSpan` mentions the classifier
-- [ ] `docs/observability/gravsearch-trace-runbook.md`: §4 failure table, the refusal row describes `UNSET` +
+- [x] `docs/observability/gravsearch-trace-runbook.md`: §4 failure table, the refusal row describes `UNSET` +
   `exit_reason = bad_request` on the stage and the root, and the generic `ERROR` row says it excludes
   `BadRequestException`; §3 probe paragraph matches; §7 topology table and "How to tell them apart" add the
   client-rejection shape (later stages absent, no `ERROR` span, `exit_reason = bad_request` on the failed stage
   and the root)
-- [ ] `docs/observability/traceql-recipes.md` §5 gains a client-rejection recipe
+- [x] `docs/observability/traceql-recipes.md` §5 gains a client-rejection recipe
   (`span.gravsearch.exit_reason = "bad_request"`), notes the error recipe no longer matches them, and the
   interrupted recipe's wording no longer implies `exit_reason` is interrupt-only
-- [ ] `grafana-dashboards/dsp-api/dsp-gravsearch.json`: the descriptions of "Error / interrupt share (range)"
+- [x] `grafana-dashboards/dsp-api/dsp-gravsearch.json`: the descriptions of "Error / interrupt share (range)"
   and "Query rate by outcome" say `STATUS_CODE_UNSET` includes 400 client rejections (description text only);
   `jq . grafana-dashboards/dsp-api/dsp-gravsearch.json` succeeds (`grafana-dashboards/CLAUDE.md`)
-- [ ] Canary: drop the classifier from `stageSpan`; the stage-span test fails; revert
-- [ ] Run
+- [x] Canary: drop the classifier from `stageSpan`; the stage-span test fails; revert
+- [x] Run
   `bazel test //modules/test-it:test --test_filter='.*(SanitizedSpanSpec|SearchResponderV2StageSpanSpec|SparqlPassthroughSpanSpec).*'`
   (`SparqlPassthroughSpanSpec` guards the unchanged passthrough span); it passes
-- [ ] Run `bazel test //modules/test-it:test_gravsearch_span`; it passes
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-it:test_gravsearch_span`; it passes
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 6: Record the Gravsearch cap decision (item 4)
 

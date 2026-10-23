@@ -34,6 +34,7 @@ status: in-progress
 | 2 | reviewed | dsp-api@b08f5582 | 1 |
 | 3 | reviewed | dsp-api@582b7d50 | 1 |
 | 4 | reviewed | dsp-api@ce521c20 | 0 |
+| 5 | reviewed | dsp-api@91df469f | 2 |
 
 ## Chunk queue
 
@@ -44,6 +45,8 @@ status: in-progress
 | 3.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala | 2.1 | Phase 3 box 1 (verdict-wait config) | `verdict-wait = 5 seconds` loaded; `> 0` validated; AppConfigSpec asserts default and rejection | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe, validations | — |
 | 3.2 | dsp-api | FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md, gravsearch-trace-runbook.md, query-language.md, dsp-api-fuseki-query-execution.md | 3.1 | all other Phase 3 boxes except Phase review | probe forked into guard scope, observed with await; bounded verdict wait after query success; failed query returns at once; seven new unit tests with timeout aspect; scope size does not grow; canary fails the TestClock test | `slice/search/FulltextBreadthGuard.scala` § guarded, make, layer; spec § guardWith | — |
 | 4.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala, FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md | 3.2 | all Phase 4 boxes except Phase review | `failure-ttl = 30 seconds` loaded, validated `> 0` and `<= cache-ttl`; a failed probe is cached for `failureTtl`; unit test re-probes only past the TTL; IT expects one probe for page + count; canary fails the in-window assertion | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe; `FulltextBreadthGuard.scala` § make, layer | — |
+| 5.1 | dsp-api | SanitizedSpan.scala, SearchResponderV2.scala, SanitizedSpanSpec.scala, SearchResponderV2StageSpanSpec.scala | 4.1 | Phase 5 boxes 1–4, canary, both test runs | optional classifier consulted only for a pure typed failure; `BadRequestException` stage and root spans `UNSET` + `exit_reason = bad_request`; `GravsearchException` still `ERROR`; canary fails the stage-span test | `slice/infrastructure/SanitizedSpan.scala` § withSpan; `SearchResponderV2.scala` § stageSpan | — |
+| 5.2 | dsp-api | instrumentation-recipe.md, gravsearch-trace-runbook.md, traceql-recipes.md, dsp-gravsearch.json | 5.1 | Phase 5 boxes 5–8, `just check` | recipe §7 bullet + checklist; runbook §3/§4/§7; TraceQL client-rejection recipe; two panel descriptions; `jq .` succeeds | `docs/observability/` § as listed in the plan's Phase 5 | — |
 
 ## Chunks
 
@@ -56,6 +59,10 @@ status: in-progress
 | 3.2 | dsp-api | complete | 59d1b5043 | probe forked with `forkIn` into the guard's scope and observed with `await`; `raceEither` decides; a succeeded query waits at most `verdictWait`, a failed one returns at once; awaits explicitly interruptible; `make` takes `verdictWait` and needs `Scope`; nine new unit tests under a 30 s timeout aspect; gravsearch.md, runbook §3 and query-language.md updated | none |
 | 3.R1 | dsp-api | complete | a76e732d2 | review fix: guard scaladoc says only closing the guard's scope interrupts the probe and names the trace its span lands in (a Phase 3 checkbox asked for it); AppConfig validation comment no longer says a zero-permit semaphore hangs searches; `verdictWait` scaladoc sentence reordered | none |
 | 4.1 | dsp-api | complete | 7614b67f7 | `failure-ttl = 30 seconds` (positive, at most `cache-ttl`); `Cache.makeWith` keeps a failed probe for `failureTtl`; unit test: in-window call does not re-probe, past TTL + 1 ms it does; IT fail-open test expects one probe for page + count; gravsearch.md and config comments updated (`OK (53 tests)`, IT `OK (8 tests)`) | none |
+| 5.1 | dsp-api | complete | c4b223797 | `SanitizedSpan.withSpan` takes an optional client-rejection classifier, consulted only for a pure typed failure; a classified failure sets the exit reason and skips the sanitized `ERROR`; `stageSpan` classifies `BadRequestException` as `bad_request` (stage and root `UNSET`), `GravsearchException` stays `ERROR`; span specs `OK (20 tests)`, `test_gravsearch_span` `OK (14 tests)` | none |
+| 5.2 | dsp-api | complete | bba701c05 | recipe §7 client-rejection bullet + checklist; runbook §3 probe paragraph, §4 failure table (`bad_request` row, `ERROR` row excludes `BadRequestException`), §7 now five topologies with a client-rejection row and tell-apart bullet (anchor links updated, also in the recipe); TraceQL §5 `bad_request` recipe; two panel descriptions; `jq .` ok; `just check` equivalent passes | none |
+| 5.R1 | dsp-api | complete | 287f9453e | review fix: the classifier applies only when every failure value of the cause classifies, so a parallel server fault never hides behind a rejection; scaladoc and recipe state it and that a rejection alongside an interrupt is an interruption; two new tests, stage-span test asserts an empty description; `OK (22 tests)` | none |
+| 5.R2 | dsp-api | complete | 515e74dc6 | review fix: in a mixed cause (rejection plus unclassified failure) the first unclassified failure names the `ERROR` description and `error.type`; `markFailure` flattened; `OK (22 tests)`, `test_gravsearch_span` `OK` | none |
 
 ## Deferrals
 
@@ -137,3 +144,23 @@ status: in-progress
   `make` scaladoc and gravsearch.md; `make` takes six tuning parameters (pass `FulltextSearchProbe` if a seventh
   arrives); `make` does not itself enforce `failureTtl <= cacheTtl` (AppConfig does); the IT's `probed == 1` relies
   on page and count finishing within the live 30 s window; no unit case for a defect probe. No fix round.
+- Phase 5 canaries (each reverted): dropping the classifier from `stageSpan` fails the `BadRequestException` stage-span
+  test on the stage and the root (status not `UNSET`); classifying on the first failure only fails the parallel-cause
+  test; describing the cause's first failure instead of the first unclassified one fails the mixed-cause test.
+  Restored: span specs `OK (22 tests)`, `test_gravsearch_span` `OK (14 tests)`.
+- Phase 5 `just check`: the recipe hits the local disk-cache defect (`format-test` takes no flags), so its three steps
+  ran by hand with `--disk_cache=`: every `format-test` target, the three lint tests and the repo's markdownlint
+  invocation all pass. §7 of the runbook now lists five topologies; its anchor changed and all four links to it (three
+  in the runbook, one in the recipe) were updated.
+- Phase 5 review (consistency, code-simplicity, dune, scala-zio, observability; all sonnet): no Critical. Fixed in
+  287f9453e: classifying on the first failure only would hide a parallel server fault behind a rejection (scala-zio
+  Warning); the fail-plus-interrupt shape is now pinned by a test. Re-review (consistency, code-simplicity, dune)
+  found the mixed-cause `ERROR` named the rejection, not the fault, and `markFailure` hard to read; fixed in
+  515e74dc6, the second and last fix round, so it was not re-reviewed. Refuted: the simplicity reviewer's
+  test-redundancy Warnings (the plan's checkboxes ask for the unclassified-failure, defect and `GravsearchException`
+  cases). Suggestions kept, not fixed: `exit_reason` values (`interrupted`, `bad_request`) are bare literals (hoist to
+  constants if a third reason appears, DUNE-001); span metrics now count 400 rejections as `STATUS_CODE_UNSET`, so the
+  error-share denominator and any latency quantile include fast rejections (descriptions say so; titles unchanged);
+  a combined "did not succeed" TraceQL recipe; a throwing classifier would turn into a defect (the one classifier is a
+  total match); the recipe §2 sketch still shows the pre-classifier helper; the cause list (breadth refusal, Lucene
+  syntax, generator input) is repeated across scaladoc and three docs.
