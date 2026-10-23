@@ -24,7 +24,7 @@ class GetResourceInfoQuerySpec extends ZIOSpecDefault {
 
   private def build(rc: Option[InternalIri], c: Option[Instant]) = GetResourceInfoQuery.build(project, rc, c).sparql
 
-  private def parses(query: String) = QueryFactory.create(query) != null
+  private def parses(query: String) = QueryFactory.create(query).isSelectType
 
   override def spec: Spec[TestEnvironment, Any] = suite("GetResourceInfoQuery")(
     test("no class, no cutoff") {
@@ -33,7 +33,7 @@ class GetResourceInfoQuerySpec extends ZIOSpecDefault {
         actual ==
           """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
              |
-             |SELECT DISTINCT ?resource ?resourceClass ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+             |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate ?resourceClass
              |WHERE {
              |  ?resource a ?resourceClass ;
              |    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
@@ -45,13 +45,13 @@ class GetResourceInfoQuerySpec extends ZIOSpecDefault {
         parses(actual),
       )
     },
-    test("class, no cutoff: VALUES is the first element of the WHERE block") {
+    test("class, no cutoff: VALUES is the first element of the WHERE block, ?resourceClass is not selected") {
       val actual = build(Some(resourceClass), None)
       assertTrue(
         actual ==
           """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
              |
-             |SELECT DISTINCT ?resource ?resourceClass ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+             |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
              |WHERE {
              |  VALUES ?resourceClass { <http://www.knora.org/ontology/0001/anything#Thing> }
              |  ?resource a ?resourceClass ;
@@ -70,7 +70,7 @@ class GetResourceInfoQuerySpec extends ZIOSpecDefault {
         actual ==
           """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
              |
-             |SELECT DISTINCT ?resource ?resourceClass ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+             |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate ?resourceClass
              |WHERE {
              |  ?resource a ?resourceClass ;
              |    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
@@ -89,7 +89,7 @@ class GetResourceInfoQuerySpec extends ZIOSpecDefault {
         actual ==
           """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
              |
-             |SELECT DISTINCT ?resource ?resourceClass ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+             |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
              |WHERE {
              |  VALUES ?resourceClass { <http://www.knora.org/ontology/0001/anything#Thing> }
              |  ?resource a ?resourceClass ;

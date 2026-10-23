@@ -17,7 +17,8 @@ object GetResourceInfoQuery {
   /**
    * Lists the resources of a project with their class and dates, optionally restricted to one class (exact match, no
    * subclasses) and to resources whose effective date (`lastModificationDate`, else `creationDate`) is at or after
-   * `cutoff`. Deleted resources are included.
+   * `cutoff`. Deleted resources are included. `?resourceClass` is selected only when no class is given, since the
+   * caller already knows it otherwise.
    *
    * `VALUES` must lead the `WHERE` block: a mid-block `VALUES` splits the pattern group. The cutoff `FILTER` must come
    * after both date patterns, since a filter splits the group where its variables are bound.
@@ -28,7 +29,8 @@ object GetResourceInfoQuery {
     Select(
       sparql"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |
-               |SELECT DISTINCT ?resource ?resourceClass ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
+               |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate${sparql" ?resourceClass"
+          .unless(clazz.isDefined)}
                |WHERE {
                |  ${clazz.whenSome(c => sparql"VALUES ?resourceClass { $c }")}
                |  ?resource a ?resourceClass ;

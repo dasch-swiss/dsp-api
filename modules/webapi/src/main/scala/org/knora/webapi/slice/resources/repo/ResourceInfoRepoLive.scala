@@ -28,25 +28,22 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
     triplestore
       .query(GetResourceInfoQuery.build(projectIri, resourceClass, cutoff))
       .logError
-      .flatMap(result => ZIO.foreach(result.results.bindings.toList)(toResourceInfo))
+      .flatMap(result => ZIO.attempt(result.results.bindings.toList.map(toResourceInfo(resourceClass))))
 
-  private def toResourceInfo(row: VariableResultsRow): Task[ResourceInfo] = {
+  /** Throws [[InconsistentRepositoryDataException]] on a malformed stored resource IRI; run inside `ZIO.attempt`. */
+  private def toResourceInfo(requestedClass: Option[InternalIri])(row: VariableResultsRow): ResourceInfo = {
     val rowMap = row.rowMap
-    for {
-      iri <- ZIO
-               .fromEither(ResourceIri.from(rowMap("resource")))
-               .mapError(msg => InconsistentRepositoryDataException(msg))
-      info <- ZIO.attempt(
-                ResourceInfo(
-                  iri,
-                  InternalIri(rowMap("resourceClass")),
-                  Instant.parse(rowMap("creationDate")),
-                  rowMap.get("lastModificationDate").map(Instant.parse),
-                  rowMap.get("deleteDate").map(Instant.parse),
-                  rowMap("isDeleted").toBoolean,
-                ),
-              )
-    } yield info
+    val iri    = ResourceIri
+      .from(rowMap("resource"))
+      .fold(msg => throw InconsistentRepositoryDataException(msg), identity)
+    ResourceInfo(
+      iri,
+      requestedClass.getOrElse(InternalIri(rowMap("resourceClass"))),
+      Instant.parse(rowMap("creationDate")),
+      rowMap.get("lastModificationDate").map(Instant.parse),
+      rowMap.get("deleteDate").map(Instant.parse),
+      rowMap("isDeleted").toBoolean,
+    )
   }
 }
 

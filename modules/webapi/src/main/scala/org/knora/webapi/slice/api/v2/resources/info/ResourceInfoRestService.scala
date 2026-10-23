@@ -11,10 +11,12 @@ import java.time.Instant
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.IRI
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.api.admin.model.Order
 import org.knora.webapi.slice.api.admin.model.OrderBy
 import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 
@@ -32,6 +34,17 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
     resources.sorted(using byDate.orElseBy(_.resourceIri))
   }
 
+  private def toExternal(resourceClass: InternalIri): Task[(InternalIri, IRI)] =
+    iriConverter
+      .asExternalIri(resourceClass)
+      .mapBoth(
+        err =>
+          InconsistentRepositoryDataException(
+            s"Invalid stored resource class ${resourceClass.value}: ${err.getMessage}",
+          ),
+        external => resourceClass -> external,
+      )
+
   /**
    * Lists the resources of a project, deleted ones included, each with its class.
    *
@@ -42,7 +55,7 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
    * @param cutoff        when given, only resources whose effective date is at or after it (inclusive); the effective
    *                      date is `lastModificationDate`, else `creationDate`
    * @param order         ascending or descending
-   * @param orderBy       the date to sort by; equal dates are ordered by resource IRI
+   * @param orderBy       the date to sort by; equal dates are ordered by ascending resource IRI, also when descending
    */
   def find(
     projectIri: ProjectIri,
@@ -59,20 +72,8 @@ final case class ResourceInfoRestService(repo: ResourceInfoRepo, iriConverter: I
                 .mapError(err => BadRequestException(s"Invalid resourceClass: ${err.getMessage}")),
             )
       infos             <- repo.find(projectIri, rc, cutoff)
-      externalClassIris <- ZIO
-                             .foreach(infos.map(_.resourceClass).distinct)(c =>
-                               iriConverter
-                                 .asExternalIri(c)
-                                 .mapBoth(
-                                   err =>
-                                     InconsistentRepositoryDataException(
-                                       s"Invalid stored resource class ${c.value}: ${err.getMessage}",
-                                     ),
-                                   c -> _,
-                                 ),
-                             )
-                             .map(_.toMap)
-      resources = infos.map(info => ResourceInfoDto.from(info, externalClassIris(info.resourceClass)))
+      externalClassIris <- ZIO.foreach(infos.map(_.resourceClass).distinct)(toExternal).map(_.toMap)
+      resources          = infos.map(info => ResourceInfoDto.from(info, externalClassIris(info.resourceClass)))
     } yield ListResponseDto(sort(resources, order, orderBy), asOf)
 }
 
