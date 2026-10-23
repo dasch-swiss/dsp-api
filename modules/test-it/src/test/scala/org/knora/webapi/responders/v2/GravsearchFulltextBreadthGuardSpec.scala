@@ -114,6 +114,7 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
                  cacheTtl = 1.minute,
                  maxConcurrent = 4,
                  verdictWait = 5.seconds,
+                 failureTtl = 30.seconds,
                )(
                  probe,
                )
@@ -154,7 +155,7 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         probed          <- probes.get
       } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 1)
     },
-    // A failed probe is not cached, so page and count each probe once.
+    // A failed probe is cached for failure-ttl, so the count reuses the page's failed probe.
     test("fails open when the probe errors") {
       for {
         probes    <- Ref.make(0)
@@ -162,7 +163,7 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         resources <- page(responder, matchFulltextQuery)
         counted   <- count(responder, matchFulltextQuery)
         probed    <- probes.get
-      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 2)
+      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 1)
     },
     test("never probes a query without matchFulltext") {
       for {

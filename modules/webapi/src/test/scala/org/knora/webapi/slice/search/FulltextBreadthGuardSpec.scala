@@ -23,9 +23,10 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
   private val cap         = 250000
   private val cacheTtl    = 1.minute
   private val verdictWait = 5.seconds
+  private val failureTtl  = 30.seconds
 
   private def guardWith(probe: BreadthKey => Task[Long], cacheCapacity: Int = 16): URIO[Scope, FulltextBreadthGuard] =
-    FulltextBreadthGuard.make(cap, cacheCapacity, cacheTtl, maxConcurrent = 4, verdictWait)(probe)
+    FulltextBreadthGuard.make(cap, cacheCapacity, cacheTtl, maxConcurrent = 4, verdictWait, failureTtl)(probe)
 
   // The guard's verdict-wait timeout registers only once the query has finished; advancing the clock earlier hangs.
   private val verdictWaitRegistered: UIO[Unit] =
@@ -71,6 +72,21 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         guard  <- guardWith(_ => ZIO.fail(new RuntimeException("no lucene index")))
         result <- guard.guarded(wildcard, None, None)(ZIO.succeed("ok"))
       } yield assertTrue(result == "ok")
+    },
+    // The clock is advanced inside the window before the second call: under a frozen TestClock even a zero TTL has
+    // not expired, so a second call at the same instant would pass without the failure being cached at all.
+    test("caches a failed probe for failure-ttl, failing open without re-probing") {
+      for {
+        probes   <- Ref.make(0)
+        guard    <- guardWith(_ => probes.update(_ + 1) *> ZIO.fail(new RuntimeException("no lucene index")))
+        first    <- guard.guarded(wildcard, None, None)(ZIO.succeed("a"))
+        _        <- TestClock.adjust(failureTtl.dividedBy(2))
+        second   <- guard.guarded(wildcard, None, None)(ZIO.succeed("b"))
+        inWindow <- probes.get
+        _        <- TestClock.adjust(failureTtl.dividedBy(2) + 1.milli)
+        third    <- guard.guarded(wildcard, None, None)(ZIO.succeed("c"))
+        afterTtl <- probes.get
+      } yield assertTrue(first == "a", second == "b", third == "c", inWindow == 1, afterTtl == 2)
     },
     test("does not probe a single plain term, even one that would be refused") {
       for {

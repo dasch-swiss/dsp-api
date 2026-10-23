@@ -41,6 +41,7 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.v2.fulltextSearch.probe.cacheTtl == Duration.ofMinutes(10),
           appConfig.v2.fulltextSearch.probe.maxConcurrent == 8,
           appConfig.v2.fulltextSearch.probe.verdictWait == Duration.ofSeconds(5),
+          appConfig.v2.fulltextSearch.probe.failureTtl == Duration.ofSeconds(30),
           appConfig.bcryptPasswordStrength == PasswordStrength.unsafeFrom(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           appConfig.filePermissionCache.ttl == Duration.ofMinutes(2),
@@ -150,6 +151,14 @@ class AppConfigSpec extends ZIOSpecDefault {
     },
     test("reject a probe verdict-wait that is not positive") {
       loadAppConfigWith("app.v2.fulltext-search.probe.verdict-wait = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe failure-ttl that is not positive") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.failure-ttl = 0 seconds").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe failure-ttl above the cache-ttl") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.failure-ttl = 11 minutes").exit
         .map(exit => assertTrue(exit.isFailure))
     },
     test("reject a fair app-external-base-url that is not an absolute http(s) URL") {
