@@ -3,7 +3,7 @@ title: "feat: Project-scope the /v2/searchbylabel Lucene lookup via GRAPH <proje
 type: feat
 date: 2026-10-23
 author: "Balduin Landolt"
-status: reviewed
+status: implemented
 repositories: []
 linear: DEV-7613
 ---
@@ -256,9 +256,9 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
       shown to be unrelated (exists on `main` too). (18 failures, all in the Sipi-dependent
       `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `ValueHasXmlOnValueWriteE2ESpec`: Sipi cannot
       fetch from the API on 3399; shown by cause, not re-run on `main`; CI runs the full suite.)
-- [ ] Draft the PR body: Why (link ADR-0012, DEV-7613), What changes, the Success Metrics table, the Deployment
+- [x] Draft the PR body: Why (link ADR-0012, DEV-7613), What changes, the Success Metrics table, the Deployment
       constraint verbatim from Dependencies & Risks, and "stacked on #4399 (DEV-7492), restacked at finalization".
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Acceptance Criteria
 
