@@ -13,6 +13,7 @@ import zio.test.*
 
 import java.time.Instant
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
@@ -157,11 +158,13 @@ class ResourcesInfoE2ESpec extends E2EZSpec {
       for {
         all       <- listInfo(infoUri())
         newest     = all.resources.maxBy(_.lastModificationDate)
-        withOffset = newest.lastModificationDate.atOffset(ZoneOffset.ofHours(2)).toString
+        plusTwo    = newest.lastModificationDate.atOffset(ZoneOffset.ofHours(2))
+        withOffset = plusTwo.format(ISO_OFFSET_DATE_TIME)
         offsetUri  = infoUri(cutoff = Some(withOffset))
         atOffset  <- listInfo(offsetUri)
         // The same wall-clock time read as UTC lies two hours later.
-        asUtc <- listInfo(infoUri(cutoff = Some(withOffset.replace("+02:00", "Z"))))
+        sameWallClockUtc = plusTwo.withOffsetSameLocal(ZoneOffset.UTC).format(ISO_OFFSET_DATE_TIME)
+        asUtc           <- listInfo(infoUri(cutoff = Some(sameWallClockUtc)))
       } yield assertTrue(
         withOffset.endsWith("+02:00"),
         offsetUri.toString.contains("%2B02:00"),
