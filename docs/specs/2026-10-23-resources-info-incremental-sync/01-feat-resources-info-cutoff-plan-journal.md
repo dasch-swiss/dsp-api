@@ -72,6 +72,14 @@ status: in-progress
 | 2.1 | dsp-api | complete | 43f1353c7 | ResourcesInfoE2ESpec, 11 tests green on Fuseki (port 3399 override); covers boundary cutoff = stored timestamp, +1 ms excludes, no-subclass, soft delete; batch returns knora-api:DeletedResource tombstone (isDeleted, no values); canary `>` for `>=` fails it; missing project header is a 400 | none |
 | 2.2 | dsp-api | complete | c76319568 | Docs section `### Listing the Resources of a Project with Their Dates` + `#### Polling for Changes` in reading-and-searching-resources.md; `just check` equivalent green (format-test needs `--remote_download_outputs=all` locally) | none |
 | 2.3 | dsp-api | complete | cb7ebac90 | Review fix round 1: +02:00 test now distinguishes offset applied vs ignored (newest date at +02:00 listed, same wall clock as Z not listed); entryOf fails with Exception; docs add malformed-project / invalid order 400s and IRI tiebreak also when descending | none |
+| 2.4 | dsp-api | complete | b29a0fe24 | Final review fix 1: `ResourceInfoRepoLive.toResourceInfo` (now in the companion, `private[repo]`) is one Either; missing variables, bad dates/booleans and no class all give InconsistentRepositoryDataException naming the resource; `ZIO.foreach` + `ZIO.fromEither`. The `VariableResultsRow.getRequired`/`get(…, mapper)` helpers throw, so they did not fit. New `ResourceInfoRepoLiveSpec` (5 tests) | none |
+| 2.5 | dsp-api | complete | af38106b4 | Final review fix 2: `toExternal` returns the IRI; map built at the call site; Scaladoc states fail-fast on an unconvertible stored class | none |
+| 2.6 | dsp-api | complete | a561fac52 | Final review fix 3: dropped the duplicate cutoff test; exclusion test renamed to say it judges lastModificationDate first | none |
+| 2.7 | dsp-api | complete | 7159a78e8 | Final review fix 4: +02:00 E2E builds the cutoff with ISO_OFFSET_DATE_TIME, UTC variant via `withOffsetSameLocal`; E2E 11/11 green (port 3399) | none |
+| 2.8 | dsp-api | complete | bd4aabf22 | Final review fix 5: `ResourceInfoRepo.find` Scaladoc documents projectIri and the returned class | none |
+| 2.9 | dsp-api | complete | a28a05001 | Final review fix 6: ARCH-MAP hand-edited (dune-map would need confirmation the executor cannot get): count 34 -> 35, GetResourceInfoQuery, ResourcesInfoE2ESpec | none |
+| 2.10 | dsp-api | complete | 619d668fd | Final review fix 7: docs qualify "every write sets lastModificationDate" to writes through the API, pointing at back-dated writes and erasure (both bullets already existed) | none |
+| 2.11 | dsp-api | complete | 507ab1b9f | Final fix round re-review (scala-zio + consistency, sonnet; no Critical/Warning): added non-boolean isDeleted and invalid-IRI cases to `ResourceInfoRepoLiveSpec` (7 tests) and the failure rule to `toResourceInfo`'s Scaladoc | none |
 
 ## Deferrals
 
