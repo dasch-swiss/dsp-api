@@ -55,7 +55,9 @@ For a `matchFulltext` query, `gravsearch.prequery.execute` also covers the fullt
 Lucene candidate `COUNT` run concurrently with the prequery (skipped when the term's breadth is cached or the term
 is a single plain word). A term over the cap ends the stage early with a 400, see the failure table in
 [§4](#4-root-span-attributes). A term already known to be over the cap is refused before the prequery starts, so
-its trace has no prequery CLIENT span (and no probe span) under `gravsearch.prequery.execute`.
+its trace has no prequery CLIENT span (and no probe span) under `gravsearch.prequery.execute`. When the prequery
+succeeds and the probe still has no verdict after `verdict-wait` (5 s), the request returns the results and the
+probe finishes in the background, so its CLIENT span can end after `gravsearch.prequery.execute` and the root span.
 
 A **count** query (`/v2/searchextended/count`) runs only the prequery side: `gravsearch.parse`,
 `gravsearch.type_inspection`, `gravsearch.prequery.generate`, `gravsearch.prequery.execute` under
