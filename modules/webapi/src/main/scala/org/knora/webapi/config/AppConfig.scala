@@ -178,7 +178,9 @@ final case class FulltextSearch(
  *
  * `cap` is the Lucene candidate count above which a fulltext search is refused (raced against the real query so
  * an admitted term pays no tax); it also guards Gravsearch `matchFulltext`. `cacheCapacity` / `cacheTtl` bound the
- * measured-breadth cache and its memo of over-cap terms, and `maxConcurrent` bounds how many probes run against Fuseki at once. All live in config
+ * measured-breadth cache and its memo of over-cap terms, and `maxConcurrent` bounds how many probes run against Fuseki at once.
+ * `verdictWait` bounds how long a query that has already succeeded waits for the probe's verdict before its result
+ * is returned (fail open); the probe keeps running and caches its verdict. All live in config
  * so they can be tuned per deployment without a code change; `cap` also has a `KNORA_WEBAPI_FULLTEXT_PROBE_CAP`
  * override.
  */
@@ -187,6 +189,7 @@ final case class FulltextSearchProbe(
   cacheCapacity: Int,
   cacheTtl: Duration,
   maxConcurrent: Int,
+  verdictWait: Duration,
 )
 
 final case class GraphRoute(
@@ -342,6 +345,11 @@ object AppConfig {
     )
     .validate("app.v2.fulltext-search.probe.max-concurrent must be >= 1")(
       _.v2.fulltextSearch.probe.maxConcurrent >= 1,
+    )
+    // verdict-wait <= 0 times out every verdict wait at once, so an over-cap term whose query finishes first is
+    // never refused.
+    .validate("app.v2.fulltext-search.probe.verdict-wait must be positive")(
+      _.v2.fulltextSearch.probe.verdictWait.compareTo(Duration.ZERO) > 0,
     )
     .validate("app.fair.app-external-base-url must be an absolute http(s) URL when set")(c =>
       c.fair.appExternalBaseUrl.forall(isAbsoluteHttpUrl),

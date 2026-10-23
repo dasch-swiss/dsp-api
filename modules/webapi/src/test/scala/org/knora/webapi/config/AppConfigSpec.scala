@@ -40,6 +40,7 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.v2.fulltextSearch.probe.cacheCapacity == 1024,
           appConfig.v2.fulltextSearch.probe.cacheTtl == Duration.ofMinutes(10),
           appConfig.v2.fulltextSearch.probe.maxConcurrent == 8,
+          appConfig.v2.fulltextSearch.probe.verdictWait == Duration.ofSeconds(5),
           appConfig.bcryptPasswordStrength == PasswordStrength.unsafeFrom(12).value,
           appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           appConfig.filePermissionCache.ttl == Duration.ofMinutes(2),
@@ -145,6 +146,10 @@ class AppConfigSpec extends ZIOSpecDefault {
     },
     test("reject a probe max-concurrent below 1") {
       loadAppConfigWith("app.v2.fulltext-search.probe.max-concurrent = 0").exit
+        .map(exit => assertTrue(exit.isFailure))
+    },
+    test("reject a probe verdict-wait that is not positive") {
+      loadAppConfigWith("app.v2.fulltext-search.probe.verdict-wait = 0 seconds").exit
         .map(exit => assertTrue(exit.isFailure))
     },
     test("reject a fair app-external-base-url that is not an absolute http(s) URL") {
