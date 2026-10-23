@@ -141,23 +141,23 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
 
 #### Phase 1: Scope the label queries in SearchQueries and the responder
 
-- [ ] `SearchQueries.scala`: add `labelLookupClause(luceneQuery, dataGraph: Option[InternalIri])` as sketched above,
+- [x] `SearchQueries.scala`: add `labelLookupClause(luceneQuery, dataGraph: Option[InternalIri])` as sketched above,
       used by both builders.
-- [ ] `SearchQueries.selectCountByLabel`: replace `limitToProject: Option[ProjectIri]` with `dataGraph:
+- [x] `SearchQueries.selectCountByLabel`: replace `limitToProject: Option[ProjectIri]` with `dataGraph:
       Option[InternalIri]`; emit `labelLookupClause` plus a separate `?resource knora-base:creationDate
       ?resourceCreationDate .`; no `attachedToProject` line.
-- [ ] `SearchQueries.constructSearchByLabel`: same parameter change; inner subquery emits `labelLookupClause` plus a
+- [x] `SearchQueries.constructSearchByLabel`: same parameter change; inner subquery emits `labelLookupClause` plus a
       separate `?resource rdfs:label ?label .`; no `attachedToProject` line; outer query unchanged.
-- [ ] `SearchQueries.scala` Scaladoc: replace the restriction note with the scoping rule (only `text:query` is wrapped;
+- [x] `SearchQueries.scala` Scaladoc: replace the restriction note with the scoping rule (only `text:query` is wrapped;
       no `attachedToProject`, one-graph rule; unknown project never reaches the builder; link
       `docs/adr/0012-graph-scoped-lucene-text-lookups.md`). Keep the DEV-6833 and DEV-6850 notes.
-- [ ] `SearchResponderV2Live.searchResourcesByLabelCountV2`: after validation and the Lucene parse, run the count inside
+- [x] `SearchResponderV2Live.searchResourcesByLabelCountV2`: after validation and the Lucene parse, run the count inside
       `SearchResponderV2Live.withProjectDataGraph(projectDataGraphs, limitToProject, ifUnknown = ResourceCountV2(0))`,
       passing the data graph to `selectCountByLabel` (inline; the count body is short and needs no extracted helper).
-- [ ] `SearchResponderV2Live.searchResourcesByLabelV2`: same, with `ifUnknown =
+- [x] `SearchResponderV2Live.searchResourcesByLabelV2`: same, with `ifUnknown =
       ReadResourcesSequenceV2(Vector.empty[ReadResourceV2])`; extract the existing query + response body into a private
       `searchByLabelPage(searchTerm, dataGraph, limitToResourceClass, …)` the way `fulltextSearchPage` is split out.
-- [ ] `SearchQueriesSpec`: change the two `*WithProjectAndClass` tests to `dataGraph = None` + class and compare them
+- [x] `SearchQueriesSpec`: change the two `*WithProjectAndClass` tests to `dataGraph = None` + class and compare them
       with a `matchesLegacyWithoutProjectJoin` helper copied from `SearchFulltextQuerySpec` (the fixture must contain
       the join, and must equal the output once that one statement is removed); legacy fixtures stay byte-unchanged.
       Retitle the two tests (they no longer pass a project), e.g. "… with a resource class filter (legacy fixture
@@ -165,23 +165,23 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
       and `?resource text:query (…) ; knora-base:creationDate ?x` parses to the same triple sequence as the two
       separate statements, so splitting the `;` list should keep them green (unverified — run them first); if it
       does not, keep the `;` form for the unscoped case.
-- [ ] `SearchQueriesSpec`: mix in `GoldenTest`; add a "scoped to a known project" suite with `scopedCountWithClass` and
+- [x] `SearchQueriesSpec`: mix in `GoldenTest`; add a "scoped to a known project" suite with `scopedCountWithClass` and
       `scopedSearchWithClass` goldens (`dataGraph = Some(InternalIri("http://www.knora.org/data/0001/anything"))`, class
       `anything#Thing`, limit 25, offset 0). The `GoldenTest` rewrite cannot write from the Bazel sandbox: print the
       rendered SPARQL once, write
       `modules/webapi/src/test/resources/org/knora/webapi/responders/v2/SearchQueriesSpec__scoped*.txt` by hand, remove
       the print.
-- [ ] `SearchQueriesSpec`: extend the invariants comment with the scoping rule (only `text:query` inside `GRAPH`, no
+- [x] `SearchQueriesSpec`: extend the invariants comment with the scoping rule (only `text:query` inside `GRAPH`, no
       `attachedToProject`, class walk outside the GRAPH).
-- [ ] Check the goldens by eye: `GRAPH` wraps only the `text:query` statement, the hit limit `1000000` is present,
+- [x] Check the goldens by eye: `GRAPH` wraps only the `text:query` statement, the hit limit `1000000` is present,
       `subClassOf*` (not `?`) is outside the GRAPH, no `attachedToProject <…>` restriction (the CONSTRUCT template's
       `attachedToProject ?resourceProject` stays).
-- [ ] Canary: temporarily make `labelLookupClause` ignore the data graph; the two scoped goldens fail; revert.
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*SearchQueriesSpec.*'`; it passes.
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*SearchResponderV2LiveSpec.*'`; it passes.
-- [ ] Run `bazel build //modules/test-it:test //modules/test-e2e:test`; it builds (callers of the changed signatures
+- [x] Canary: temporarily make `labelLookupClause` ignore the data graph; the two scoped goldens fail; revert.
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*SearchQueriesSpec.*'`; it passes.
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*SearchResponderV2LiveSpec.*'`; it passes.
+- [x] Run `bazel build //modules/test-it:test //modules/test-e2e:test`; it builds (callers of the changed signatures
       compile).
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: Integration and E2E tests for scoped label search
 
