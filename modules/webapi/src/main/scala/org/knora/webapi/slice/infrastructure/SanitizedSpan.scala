@@ -68,9 +68,11 @@ object SanitizedSpan {
    *
    * A failure that `clientRejection` maps to a reason is the caller's input being refused, not a fault: the span keeps
    * status `UNSET`, gets no description and no `error.type`, and carries `exitReasonKey` set to that reason. The
-   * classifier is consulted only for a pure typed failure (a failure value, no defect, no interruption), so the
-   * defect and interruption handling below never depend on it. It only ever skips writes, so it cannot leak a message.
-   * The default classifies nothing.
+   * classifier is consulted only for a pure typed failure (failure values only, no defect, no interruption), so the
+   * defect and interruption handling below never depend on it; a failure alongside an interruption is marked as an
+   * interruption. Every failure value must classify, or a parallel server fault would hide behind a rejection; the
+   * first one's reason is used. It only ever skips writes, so it cannot leak a message. The default classifies
+   * nothing.
    *
    * The span is captured up front rather than resolved in the finalizer, because during interruption teardown the
    * current span no longer points at this one. Both finalizers run before the library's span-end, so their writes
@@ -137,8 +139,8 @@ object SanitizedSpan {
     clientRejection: Throwable => Option[String],
     cause: Cause[Throwable],
   ): Unit = {
-    val pureFailure = cause.failureOption.filter(_ => !cause.isDie && !cause.isInterrupted)
-    pureFailure.flatMap(clientRejection) match {
+    val reasons = if (cause.isDie || cause.isInterrupted) Nil else cause.failures.map(clientRejection)
+    (if (reasons.nonEmpty && reasons.forall(_.isDefined)) reasons.head else None) match {
       case Some(reason) => val _ = span.setAttribute(exitReasonKey, reason)
       case None         => markSanitizedError(span, name, cause)
     }

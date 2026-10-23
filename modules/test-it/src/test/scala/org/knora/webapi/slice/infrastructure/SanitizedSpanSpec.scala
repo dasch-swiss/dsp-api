@@ -218,6 +218,35 @@ class SanitizedSpanSpec extends ZIOSpecDefault {
             .provide(InMemoryTracing.layer)
         run(defect).zipWith(run(composite))(_ && _)
       },
+      test("a rejection alongside an unclassified parallel failure is not classified") {
+        // `zipPar` and friends combine both failures in one cause; classifying on the first alone would hide the
+        // server fault behind the client rejection.
+        val both =
+          Cause.fail(new IllegalArgumentException("rejected")) && Cause.fail(new IllegalStateException(sentinel))
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withSpan(tracing, spanName, exitReasonKey, rejectIllegalArgument)(_ => ZIO.failCause(both))
+                 .exit
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, s"$spanName: IllegalArgumentException") &&
+          SpanAssertions.hasNoAttributeKey(spans, spanName, AttributeKey.stringKey(exitReasonKey)))
+          .provide(InMemoryTracing.layer)
+      },
+      test("a rejection torn down by an interrupt is marked as an interruption, not a rejection") {
+        val torn = Cause.fail(new IllegalArgumentException(sentinel)) ++ Cause.interrupt(FiberId.None)
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SanitizedSpan
+                 .withSpan(tracing, spanName, exitReasonKey, rejectIllegalArgument)(_ => ZIO.failCause(torn))
+                 .exit
+          spans <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, spanName) &&
+          SpanAssertions.hasStatusDescription(spans, spanName, "interrupted") &&
+          SpanAssertions.hasAttribute(spans, spanName, AttributeKey.stringKey(exitReasonKey), "interrupted"))
+          .provide(InMemoryTracing.layer)
+      },
       test("an interrupt marks the open span with the caller's exit reason and ERROR") {
         // Without this branch an abandoned call is indistinguishable from one that simply finished: interruption
         // produces no typed failure, so the sanitized-error path above never runs, and OpenTelemetry has no

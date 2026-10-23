@@ -231,7 +231,8 @@ private def markSanitizedError(span: Span, stage: String, cause: Cause[Throwable
   `SanitizedSpan.withSpan` an optional classifier (`Throwable => Option[String]`, default none) for the
   failures that are the client's input being refused rather than a fault; `SearchResponderV2.stageSpan`
   maps `BadRequestException` (always a 400) to `bad_request`. It is consulted only for a pure typed
-  failure — no defect, no interruption — so the two branches below never depend on it. It only skips
+  failure — no defect, no interruption, and every failure value of a parallel cause classified — so the
+  two branches below never depend on it and a parallel server fault never hides behind a rejection. It only skips
   the sanitized status, never writes one, so it cannot leak a message; the failure mapper stays `UNSET`.
   Classify only a type that is always a client error: `GravsearchException` also signals server-side
   invariant failures, so it stays `ERROR`.

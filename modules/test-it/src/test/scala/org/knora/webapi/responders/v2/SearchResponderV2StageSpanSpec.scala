@@ -65,6 +65,7 @@ class SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
               SpanAssertions.hasNoAttributeKey(spans, name, errorTypeKey) &&
               assertTrue(
                 SpanAssertions.findSpan(spans, name).exists(_.getStatus.getStatusCode == StatusCode.UNSET),
+                SpanAssertions.findSpan(spans, name).exists(s => Option(s.getStatus.getDescription).forall(_.isEmpty)),
                 SpanAssertions.findSpan(spans, name).exists(s => !s.toString.contains(sentinel)),
               )
           SpanAssertions.isParentChild(spans, root, stage) && isClientRejection(stage) && isClientRejection(root)
