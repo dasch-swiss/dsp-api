@@ -120,7 +120,8 @@ class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
           ),
         )
       },
-      test("a cutoff excludes resources whose effective date is older") {
+      test("a cutoff excludes resources whose effective date is older, judging by lastModificationDate first") {
+        // ccc was created long before the cutoff but modified after it; bbb was both created and modified before it.
         for {
           _      <- seed
           actual <- find(cutoff = Some(day(4).plusMillis(1)))
@@ -140,17 +141,6 @@ class ResourceInfoRestServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(
           iris(atCreated) == List(aaa, ccc).map(_.iri.value),
           iris(after) == List(ccc.iri.value),
-        )
-      },
-      test(
-        "lastModificationDate at or after the cutoff includes a resource created before it; both before excludes it",
-      ) {
-        for {
-          _      <- seed
-          actual <- find(cutoff = Some(day(4).plusSeconds(1)))
-        } yield assertTrue(
-          iris(actual).contains(ccc.iri.value), // created day 1, modified day 5
-          !iris(actual).contains(bbb.iri.value), // created day 2, modified day 4
         )
       },
       test("sorted by lastModificationDate descending") {
