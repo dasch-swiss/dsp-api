@@ -1019,8 +1019,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         through `ProjectService` or `KnoraProjectService` - enforcement: review.
     - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
-        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). This GRAPH-naming
-        SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
+        scoped prequery goldens, `SearchFulltextQuerySpec`, `SearchQueriesSpec` and `LuceneScopeSpec` show a
+        change). This GRAPH-naming SPARQL is a temporary ADR-0011 ratchet exception that moves behind
+        `ResourceSearch` with the Lucene queries.
     - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
         runs a `matchFulltext` prequery behind `FulltextBreadthGuard` - enforcement: static-analysis, textual
         (`//tools/lint:gravsearch_prequery_seam`, part of `just check`; a prequery path in a file that builds no

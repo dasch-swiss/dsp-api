@@ -61,6 +61,9 @@ existing data, while new writes are indexed with their graph, so the index is si
    ontology patterns resolve against other graphs. Scoping to the data graph is exact because of the one-graph
    rule in the Resources & Values context (`docs/contexts/resources-values/CONTEXT.md`): a project's resources,
    values and list nodes live in exactly one data graph.
+   *Note (2026-10-23):* `/v2/searchbylabel` (page and count) with `limitToProject` is scoped the same way and
+   drops `attachedToProject` (DEV-7613). Measured on dev over 8 project-restricted cases, it is 1.5–8× faster,
+   at most 0.5 s scoped on the beol, LIMC and ekws cases (1.1 s on lhtt), with identical results.
 3. **The list-node branch needs no scope of its own.** It starts from the scoped hit, so it only reaches list
    nodes in the project data graph. No union with the system-lists graph, because no cross-graph list references
    exist and the platform does not allow them.
@@ -100,6 +103,8 @@ existing data, while new writes are indexed with their graph, so the index is si
   which need not be the Lucene anchor. Without the join, `/v2/search` relies on the one-graph rule rather than
   enforcing it: a resource whose values or list nodes sat in another project's graph would be found by the wrong
   project's scoped search (stage had none on 2026-10-21).
+  *Note (2026-10-23):* dropping the join also applies to `/v2/searchbylabel` (DEV-7613), where a label hit is the
+  resource itself.
 - Search now emits SPARQL that names a project data graph, which ADR-0011 assigns to Resources & Values. This
   extends the Lucene queries Search already ran, which ADR-0011's ratchet leaves in place, and the
   `ProjectDataGraphs` port only resolves the graph's IRI. The GRAPH wrap moves with the Lucene queries when they
