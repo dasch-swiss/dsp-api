@@ -10,7 +10,7 @@ problem: >
   text values share one Lucene field) before the join discards the other projects' hits; on dev a beol-restricted
   "Basel*" takes 2.4 s. DEV-7594 fixed the same shape for /v2/search (ADR-0012); this applies it to the label route.
 symptoms:
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-feat-searchbylabel-graph-scoped-label-lookup-plan
@@ -28,7 +28,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@36a3a46ac | 0 |
 | 2 | reviewed | dsp-api@4ea23a8b9 | 0 |
 | 3 | reviewed | dsp-api@dd937a0e6 | 1 |
-| 4 | in-progress | dsp-api@d52e77432 | 0 |
+| 4 | reviewed | dsp-api@d52e77432 | 0 |
 
 Phase 4 (session, 2026-10-23): the final review loop ran before the full suites so the suites run once.
 `bazel test //modules/webapi:test` and `just test-it` pass. `//modules/test-e2e:test` with the 3399 overrides has
@@ -126,3 +126,10 @@ Phase 4 (session, 2026-10-23): the final review loop ran before the full suites 
         `SearchQueries` comment or Fact 10 (consistency); drop "since 2026-10-23" from Fact 10; scoped no-class
         goldens; shared IT helpers and the unknown-project IRI constant. All were already on the kept list or are
         polish below the Warning bar.
+
+## Closeout
+
+Shipped as draft PR #4401, stacked on #4399 (gh-stack stack #4400) after a restack of this branch from `main`
+onto `dev-7492-unscoped-matchfulltext-limit` (one `ARCH-MAP.md` conflict, both rules kept). After the restack:
+`//modules/webapi:test`, `//tools/lint:gravsearch_prequery_seam`, `SearchResponderV2Spec` and
+`GravsearchFulltextBreadthGuardSpec` pass. Open after ship: deploy only with the #4393/#4394 Fuseki image (PR body).
