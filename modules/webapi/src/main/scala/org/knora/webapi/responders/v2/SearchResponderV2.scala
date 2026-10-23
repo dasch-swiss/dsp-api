@@ -1298,20 +1298,24 @@ final class SearchResponderV2Live(
       searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
-      countSparql    = SearchQueries.selectCountByLabel(searchTerm, limitToProject, limitToResourceClass)
-      countResponse <- triplestore.query(countSparql)
-
-      count <- // query response should contain one result with one row with the name "count"
-        ZIO
-          .fail(
-            GravsearchException(
-              s"Fulltext count query is expected to return exactly one row, but ${countResponse.size} given",
-            ),
-          )
-          .when(countResponse.size != 1)
-          .as(countResponse.getFirstOrThrow("count"))
-
-    } yield ResourceCountV2(count.toInt)
+      count <-
+        SearchResponderV2Live.withProjectDataGraph(projectDataGraphs, limitToProject, ifUnknown = ResourceCountV2(0)) {
+          dataGraph =>
+            for {
+              countResponse <-
+                triplestore.query(SearchQueries.selectCountByLabel(searchTerm, dataGraph, limitToResourceClass))
+              count <- // query response should contain one result with one row with the name "count"
+                ZIO
+                  .fail(
+                    GravsearchException(
+                      s"Fulltext count query is expected to return exactly one row, but ${countResponse.size} given",
+                    ),
+                  )
+                  .when(countResponse.size != 1)
+                  .as(countResponse.getFirstOrThrow("count"))
+            } yield ResourceCountV2(count.toInt)
+        }
+    } yield count
 
   private def ensureStandoffClass(standoffClassIri: SmartIri): Task[SmartIri] = {
     val errMsg = s"Invalid standoff class IRI: $standoffClassIri"
@@ -1374,14 +1378,19 @@ final class SearchResponderV2Live(
       searchTerm <- ApacheLuceneSupport
                       .asLuceneQueryForSearchByLabel(searchValue)
                       .mapError(err => BadRequestException(s"Invalid search string: '$searchValue' ($err)"))
-      page <-
-        searchByLabelPage(searchTerm, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
+      page <- SearchResponderV2Live.withProjectDataGraph(
+                projectDataGraphs,
+                limitToProject,
+                ifUnknown = ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]),
+              ) { dataGraph =>
+                searchByLabelPage(searchTerm, offset, dataGraph, limitToResourceClass, targetSchema, requestingUser)
+              }
     } yield page
 
   private def searchByLabelPage(
     searchTerm: FusekiLucenceQuery,
     offset: Int,
-    limitToProject: Option[ProjectIri],
+    dataGraph: Option[InternalIri],
     limitToResourceClass: Option[ResourceClassIri],
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -1389,7 +1398,7 @@ final class SearchResponderV2Live(
     val searchLimit                 = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset                = offset * appConfig.v2.resourcesSequence.resultsPerPage
     val searchResourceByLabelSparql =
-      SearchQueries.constructSearchByLabel(searchTerm, limitToProject, limitToResourceClass, searchLimit, searchOffset)
+      SearchQueries.constructSearchByLabel(searchTerm, dataGraph, limitToResourceClass, searchLimit, searchOffset)
     for {
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
@@ -1788,10 +1797,10 @@ object SearchResponderV2Live {
   val layer = ZLayer.derive[SearchResponderV2Live]
 
   /**
-   * Runs a `/v2/search` query with the data graph of `limitToProject` (`None` without a project limit). An unknown
-   * project has no resources, so the search answers `ifUnknown` (200 with zero results, as the endpoint always
-   * has, not 404) without running the query or the breadth probe. A failing lookup fails the request rather than
-   * falling back to an unscoped search.
+   * Runs a `/v2/search` or `/v2/searchbylabel` query with the data graph of `limitToProject` (`None` without a
+   * project limit). An unknown project has no resources, so the search answers `ifUnknown` (200 with zero results,
+   * as the endpoints always have, not 404) without running any query (nor `/v2/search`'s breadth probe). A failing
+   * lookup fails the request rather than falling back to an unscoped search.
    */
   def withProjectDataGraph[A](port: ProjectDataGraphs, limitToProject: Option[ProjectIri], ifUnknown: => A)(
     search: Option[InternalIri] => Task[A],
