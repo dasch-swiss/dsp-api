@@ -10,19 +10,20 @@ import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.GoldenTest
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.util.FusekiLucenceQuery
 
 @RunWith(classOf[DspZTestJUnitRunner])
-class SearchQueriesSpec extends ZIOSpecDefault {
+class SearchQueriesSpec extends ZIOSpecDefault with GoldenTest {
 
   implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val luceneQuery      = FusekiLucenceQuery.unsafeFrom("Anton*")
-  private val projectIri       = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val scopedToProject  = Some(InternalIri("http://www.knora.org/data/0001/anything"))
   private val resourceClassIri =
     ResourceClassIri.unsafeFrom("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
 
@@ -44,6 +45,20 @@ class SearchQueriesSpec extends ZIOSpecDefault {
     parsed.toString
   }
 
+  // The predecessor emitted `attachedToProject` for a project limit; the builders no longer do (a known project is a
+  // data graph, an unknown one never reaches the builders). The fixtures that carry the join are compared without that
+  // one statement, so every other part of them stays pinned.
+  private val legacyProjectJoin =
+    "?resource <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0001> ."
+
+  private def matchesLegacyWithoutProjectJoin(actual: String, name: String) = {
+    val fixture = legacy(name)
+    assertTrue(
+      fixture.contains(legacyProjectJoin),
+      canonical(actual) == canonical(fixture.replace(legacyProjectJoin, "")),
+    )
+  }
+
   // Invariants these fixtures exist to protect. All were once broken silently, because a fixture pins the query
   // and cannot tell a correct query from a plausible one — check them by eye when changing a query:
   //
@@ -57,19 +72,28 @@ class SearchQueriesSpec extends ZIOSpecDefault {
   //    subclass types and nothing infers the base class (DEV-6833).
   //  - The count query asserts resource-ness via knora-base:creationDate rather than a subClassOf* walk to
   //    knora-base:Resource; see the note on selectCountByLabel and DEV-6850.
+  //  - A data graph wraps only the text:query statement in GRAPH <dataGraph> { }, in the count and page queries
+  //    alike, and no attachedToProject restriction is emitted. The class walk and every other pattern stay outside:
+  //    the class walk reads ontology graphs, so a wider GRAPH returns no rows. Without a data graph the lookup is
+  //    unscoped (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
+  //
+  // New cases use exact-text goldens (`GoldenTest`), not legacy fixtures.
   override def spec: Spec[TestEnvironment, Any] = suite("SearchQueriesSpec")(
-    test("selectCountByLabel should produce the correct query with project and resource class filters") {
-      val query = SearchQueries.selectCountByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri))
-      assertTrue(canonical(query.sparql) == canonical(legacy("countWithProjectAndClass")))
+    test(
+      "selectCountByLabel should produce the correct query with a resource class filter (legacy fixture without the project join)",
+    ) {
+      val query = SearchQueries.selectCountByLabel(luceneQuery, None, Some(resourceClassIri))
+      matchesLegacyWithoutProjectJoin(query.sparql, "countWithProjectAndClass")
     },
     test("selectCountByLabel should produce the correct query without filters") {
       val query = SearchQueries.selectCountByLabel(luceneQuery, None, None)
       assertTrue(canonical(query.sparql) == canonical(legacy("countNoFilters")))
     },
-    test("constructSearchByLabel should produce the correct query with project and resource class filters") {
-      val query =
-        SearchQueries.constructSearchByLabel(luceneQuery, Some(projectIri), Some(resourceClassIri), 25, 0)
-      assertTrue(canonical(query.sparql) == canonical(legacy("searchWithProjectAndClass")))
+    test(
+      "constructSearchByLabel should produce the correct query with a resource class filter (legacy fixture without the project join)",
+    ) {
+      val query = SearchQueries.constructSearchByLabel(luceneQuery, None, Some(resourceClassIri), 25, 0)
+      matchesLegacyWithoutProjectJoin(query.sparql, "searchWithProjectAndClass")
     },
     test("constructSearchByLabel should produce the correct query without filters") {
       val query = SearchQueries.constructSearchByLabel(luceneQuery, None, None, 25, 0)
@@ -83,5 +107,15 @@ class SearchQueriesSpec extends ZIOSpecDefault {
         !query.sparql.contains("""\\'"""),
       )
     },
+    suite("scoped to a known project")(
+      test("count query with class limit") {
+        val query = SearchQueries.selectCountByLabel(luceneQuery, scopedToProject, Some(resourceClassIri))
+        assertGolden(query.sparql, "scopedCountWithClass")
+      },
+      test("page query with class limit") {
+        val query = SearchQueries.constructSearchByLabel(luceneQuery, scopedToProject, Some(resourceClassIri), 25, 0)
+        assertGolden(query.sparql, "scopedSearchWithClass")
+      },
+    ),
   )
 }
