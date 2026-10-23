@@ -316,30 +316,30 @@ Chunks: 1.
 The lookup still runs in the request fiber in this phase, so the cross-request interrupt bug (Proposed
 Solution, item 2) persists until Phase 3.
 
-- [ ] Over-cap memo in `FulltextBreadthGuard.make`: a `Ref` of key → expiry instant, bounded by `cacheCapacity`
+- [x] Over-cap memo in `FulltextBreadthGuard.make`: a `Ref` of key → expiry instant, bounded by `cacheCapacity`
   (drop expired entries, then the oldest), expiry `cacheTtl` with strict `isAfter` semantics, read with `Clock`;
   written inside the cache lookup when the count exceeds the cap, before the lookup completes (see Technical
   Considerations)
-- [ ] `guarded` checks the memo before forking; a hit fails with the existing `tooBroad` 400 without running
+- [x] `guarded` checks the memo before forking; a hit fails with the existing `tooBroad` 400 without running
   the query or the probe
-- [ ] Unit test: a first call for an over-cap term is refused; a second call, with a fresh query effect that
+- [x] Unit test: a first call for an over-cap term is refused; a second call, with a fresh query effect that
   counts its starts in a `Ref`, is refused, that counter stays 0, and the probe ran once in total
-- [ ] Unit test: after `TestClock.adjust(cacheTtl + 1.milli)` the memo and cache entries have expired and the
+- [x] Unit test: after `TestClock.adjust(cacheTtl + 1.milli)` the memo and cache entries have expired and the
   term is probed again (probe count 2)
-- [ ] Unit test: the memo bound (capacity 2): an expired entry is dropped before a live one; with three live
+- [x] Unit test: the memo bound (capacity 2): an expired entry is dropped before a live one; with three live
   over-cap terms the oldest is probed again while the newest is refused without a probe
-- [ ] Unit test: a within-cap verdict still runs the query concurrently with the probe (existing concurrency
+- [x] Unit test: a within-cap verdict still runs the query concurrently with the probe (existing concurrency
   test kept green)
-- [ ] Guard scaladoc and `docs/05-internals/design/api-v2/gravsearch.md` § Breadth Guard describe the pre-fork
+- [x] Guard scaladoc and `docs/05-internals/design/api-v2/gravsearch.md` § Breadth Guard describe the pre-fork
   check; `docs/observability/gravsearch-trace-runbook.md` §3 (the probe paragraph under the stage table) adds
   that a known over-cap term is refused before the prequery starts, so its trace has no prequery CLIENT span;
   the §4 refusal row ("the prequery is interrupted") says the prequery is interrupted only on a first refusal.
   `docs/03-endpoints/api-v2/query-language.md` (`matchFulltext` breadth paragraph) needs no change: the
   user-visible 400 is unchanged
-- [ ] Canary: remove the pre-fork memo check; the "counter stays 0" test fails; revert
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*FulltextBreadthGuardSpec.*'`; it passes
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Canary: remove the pre-fork memo check; the "counter stays 0" test fails; revert
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*FulltextBreadthGuardSpec.*'`; it passes
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: Bound the verdict wait after the query finishes (item 2)
 
