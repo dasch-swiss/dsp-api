@@ -1500,8 +1500,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `docs/development/dsp-api-sparql-queries.md`
 - **Depends on**: build-toolchain. No other inventory component; zero main-source deps, with RDF4J's
     `sparqlbuilder` present only as a test-scope escaping oracle.
-- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (34 files under
-    `slice/resources/repo`), among 92 main-source importers of `org.knora.sparqlbuilder` in total;
+- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (35 files under
+    `slice/resources/repo`), among 94 main-source importers of `org.knora.sparqlbuilder` in total;
     other sites still build queries with RDF4J `SparqlBuilder`.
 - **Boundary rules**:
     - New SPARQL query code uses the `sparql"..."` interpolator, not string concatenation or the legacy RDF4J
