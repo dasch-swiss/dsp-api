@@ -15,6 +15,7 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.checkSearchResponseNumberOfResults
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.IriNode
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
@@ -69,6 +70,14 @@ class SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
     response <- TestApiClient.getJsonLd(uri"/v2/searchbylabel/$label", None, f)
     model    <- response.assert200.mapAttempt(RdfModel.fromJsonLD)
   } yield model
+
+  private def searchByLabelCount(label: String, f: RequestUpdate[JsonLDDocument] = identity) = for {
+    response <- TestApiClient.getJsonLdDocument(uri"/v2/searchbylabel/count/$label", None, f)
+    jsonLd   <- response.assert200
+    count    <- ZIO.fromEither(jsonLd.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems))
+  } yield count
+
+  private def iriSubjects(model: RdfModel): Set[String] = model.getSubjects.collect { case iri: IriNode => iri.iri }
 
   override def e2eSpec =
     suite("SearchEndpoints")(
@@ -205,6 +214,34 @@ class SearchEndpointsGetSearchE2ESpec extends E2EZSpec {
                           addQueryParam("offset", "0"),
                       )
           } yield assertTrue(actual == RdfModel.fromJsonLD("{}"))
+        },
+        // A project restriction scopes the label lookup to the project's data graph, so a fixture only counts if it is
+        // loaded into that graph. books-data is not (it sits in .../0001/books, not .../0001/anything), so these cases
+        // use incunabula and anything. "Narrenschiff" has label hits only in incunabula.
+        test("searchbylabel restricted to a project") {
+          for {
+            inIncunabula <- searchByLabel("Narrenschiff", addQueryParam("limitToProject", incunabulaProjectIri.value))
+            inAnything   <- searchByLabel("Narrenschiff", addQueryParam("limitToProject", anythingProjectIri.value))
+          } yield assertTrue(
+            iriSubjects(inIncunabula).nonEmpty,
+            iriSubjects(inIncunabula).forall(_.startsWith("http://rdfh.ch/0803/")),
+            inAnything == RdfModel.fromJsonLD("{}"),
+          )
+        },
+        test("searchbylabel count restricted to a project") {
+          for {
+            unrestricted <- searchByLabelCount("Narrenschiff")
+            inIncunabula <-
+              searchByLabelCount("Narrenschiff", addQueryParam("limitToProject", incunabulaProjectIri.value))
+            inAnything <- searchByLabelCount("Narrenschiff", addQueryParam("limitToProject", anythingProjectIri.value))
+          } yield assertTrue(unrestricted > 0, inIncunabula == unrestricted, inAnything == 0)
+        },
+        test("searchbylabel restricted to an unknown project") {
+          val unknownProject = "http://rdfh.ch/projects/9999"
+          for {
+            page  <- searchByLabel("Narrenschiff", addQueryParam("limitToProject", unknownProject))
+            count <- searchByLabelCount("Narrenschiff", addQueryParam("limitToProject", unknownProject))
+          } yield assertTrue(page == RdfModel.fromJsonLD("{}"), count == 0)
         },
       ),
     )
