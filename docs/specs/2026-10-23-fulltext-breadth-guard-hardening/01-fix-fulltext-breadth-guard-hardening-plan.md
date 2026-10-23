@@ -345,51 +345,51 @@ Solution, item 2) persists until Phase 3.
 
 Chunks: 2 (config, then guard).
 
-- [ ] `verdict-wait = 5 seconds` in `application.conf` (`probe` block, with a comment); `verdictWait` in
+- [x] `verdict-wait = 5 seconds` in `application.conf` (`probe` block, with a comment); `verdictWait` in
   `FulltextSearchProbe` (and its scaladoc); `AppConfig` validation `> 0`; `AppConfigSpec` asserts default and
   rejection
-- [ ] `make` takes `verdictWait` and returns `URIO[Scope, FulltextBreadthGuard]`, capturing `ZIO.scope`; `layer`
+- [x] `make` takes `verdictWait` and returns `URIO[Scope, FulltextBreadthGuard]`, capturing `ZIO.scope`; `layer`
   passes both (it is already `ZLayer.scoped`); `FulltextBreadthGuardSpec` becomes
   `Spec[TestEnvironment & Scope, Any]` and `GravsearchFulltextBreadthGuardSpec` gets a `Scope` where it builds
   the guard
-- [ ] `guarded` follows the shape in Proposed Solution, item 2: the probe is forked with
+- [x] `guarded` follows the shape in Proposed Solution, item 2: the probe is forked with
   `ZIO.interruptible(cache.get(key)).forkIn(scope)` and observed only with `await` (never `join`), the query
   with `fork`; `raceEither` decides which finished first; after the query succeeds the verdict is awaited at
   most `verdictWait`, then the query's result is returned; a failed query returns at once. Scaladoc notes the
   probe inherits the first requester's trace context and interruptibility is reset explicitly (zio/zio#11044)
-- [ ] Unit test: query done, probe gated on a `Promise` → once the timeout is registered, `fib.poll` is `None`;
+- [x] Unit test: query done, probe gated on a `Promise` → once the timeout is registered, `fib.poll` is `None`;
   after `TestClock.adjust(verdictWait)` the result is returned while the probe gate is still closed
-- [ ] Unit test: the probe is not interrupted by that timeout (its `onInterrupt` flag stays unset); after
+- [x] Unit test: the probe is not interrupted by that timeout (its `onInterrupt` flag stays unset); after
   releasing it with an over-cap count, one further call is refused (it may still start its query, awaiting the
   in-flight entry) and a call after that is refused with its query counter at 0 and the probe count at 1
-- [ ] Unit test: query done, over-cap verdict arrives within `verdictWait` → refused (determinism kept)
-- [ ] Unit test: a query that fails while the probe is gated returns its failure at once (no clock advance, no
+- [x] Unit test: query done, over-cap verdict arrives within `verdictWait` → refused (determinism kept)
+- [x] Unit test: a query that fails while the probe is gated returns its failure at once (no clock advance, no
   verdict wait; decided behaviour 2)
-- [ ] Unit test: interrupting the `guarded` fiber while query and probe run interrupts the query (its
+- [x] Unit test: interrupting the `guarded` fiber while query and probe run interrupts the query (its
   `onInterrupt` fires) but not the probe
-- [ ] Unit test: two concurrent calls for the same term share one gated probe; interrupting the first call does
+- [x] Unit test: two concurrent calls for the same term share one gated probe; interrupting the first call does
   not interrupt the second, which gets the verdict once the probe is released, and the probe count is 1 (this
   fails before the change: the zio-cache lookup runs in the first caller's fiber)
-- [ ] Unit test: a probe fiber that ends interrupted (the guard's scope closed before the call, e.g. a
+- [x] Unit test: a probe fiber that ends interrupted (the guard's scope closed before the call, e.g. a
   `Scope.make` closed in the test) fails open: the query's result is returned, the request is not interrupted
-- [ ] Scope finalizers do not accumulate per call. Review believes ZIO 2's `forkIn` forks a child scope and
+- [x] Scope finalizers do not accumulate per call. Review believes ZIO 2's `forkIn` forks a child scope and
   closes it when the fiber exits (unverified). The executor confirms it from the ZIO `forkIn` source via
   Context7 or the ZIO GitHub repository (not through `bazel-*` paths); if it cannot be confirmed, use the
   fallback instead: `forkDaemon` plus a guard-owned `Ref` of live probe fibers (each removes itself on exit)
   that one finalizer on the guard's scope interrupts. Either way, record which in the phase review
-- [ ] Guard class scaladoc and `gravsearch.md` § Breadth Guard describe the bounded wait;
+- [x] Guard class scaladoc and `gravsearch.md` § Breadth Guard describe the bounded wait;
   `gravsearch-trace-runbook.md` §3 probe paragraph notes the probe's CLIENT span can end after
   `gravsearch.prequery.execute`; re-read the breadth paragraphs in `docs/03-endpoints/api-v2/query-language.md`
   and `docs/development/dsp-api-fuseki-query-execution.md` and soften any "always refused" wording (an
   over-cap term is now admitted when its probe is slower than `verdict-wait`)
-- [ ] Every test that waits on a gate or the `TestClock` carries `@@ TestAspect.timeout(30.seconds)` (live
+- [x] Every test that waits on a gate or the `TestClock` carries `@@ TestAspect.timeout(30.seconds)` (live
   clock), so a regression fails instead of hanging the suite
-- [ ] Canary: replace the bounded wait with an unbounded `await`; the `TestClock` test fails (by its timeout
+- [x] Canary: replace the bounded wait with an unbounded `await`; the `TestClock` test fails (by its timeout
   aspect); revert
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*(FulltextBreadthGuardSpec|AppConfigSpec).*'`; it
+- [x] Run `bazel test //modules/webapi:test --test_filter='.*(FulltextBreadthGuardSpec|AppConfigSpec).*'`; it
   passes
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*GravsearchFulltextBreadthGuardSpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 4: Cache a failed probe briefly (item 3)
 

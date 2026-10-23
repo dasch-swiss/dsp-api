@@ -32,6 +32,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@32422663 | 0 |
 | 2 | reviewed | dsp-api@b08f5582 | 1 |
+| 3 | reviewed | dsp-api@582b7d50 | 1 |
 
 ## Chunk queue
 
@@ -39,6 +40,8 @@ status: in-progress
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1.1 | dsp-api | FulltextBreadthGuard.scala, SearchResponderV2.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala | — | all Phase 1 boxes except Phase review | `BreadthKey(probeSparql)` only; `guarded` takes no class; responder test: two class-differing counts run one probe; canary fails it | `slice/search/FulltextBreadthGuard.scala` § guarded, BreadthKey; `SearchResponderV2.scala` § executePrequery, fulltextSearchCount, fulltextSearchPage | — |
 | 2.1 | dsp-api | FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, gravsearch.md, gravsearch-trace-runbook.md | 1.1 | all Phase 2 boxes except Phase review | memo checked before fork; repeat over-cap refusal starts no query and no probe; TTL and capacity bound tested; canary fails the counter test | `slice/search/FulltextBreadthGuard.scala` § guarded, make; gravsearch.md § Breadth Guard; runbook §3, §4 | — |
+| 3.1 | dsp-api | application.conf, AppConfig.scala, AppConfigSpec.scala | 2.1 | Phase 3 box 1 (verdict-wait config) | `verdict-wait = 5 seconds` loaded; `> 0` validated; AppConfigSpec asserts default and rejection | `application.conf` § v2.fulltext-search.probe; `AppConfig.scala` § FulltextSearchProbe, validations | — |
+| 3.2 | dsp-api | FulltextBreadthGuard.scala, FulltextBreadthGuardSpec.scala, GravsearchFulltextBreadthGuardSpec.scala, gravsearch.md, gravsearch-trace-runbook.md, query-language.md, dsp-api-fuseki-query-execution.md | 3.1 | all other Phase 3 boxes except Phase review | probe forked into guard scope, observed with await; bounded verdict wait after query success; failed query returns at once; seven new unit tests with timeout aspect; scope size does not grow; canary fails the TestClock test | `slice/search/FulltextBreadthGuard.scala` § guarded, make, layer; spec § guardWith | — |
 
 ## Chunks
 
@@ -47,10 +50,15 @@ status: in-progress
 | 1.1 | dsp-api | complete | 2b56d5962 | `BreadthKey` is the probe SPARQL only; `guarded` takes no class; responder IT: class-differing counts share one probe | none |
 | 2.1 | dsp-api | complete | fbd8e5b64 | over-cap memo (key -> expiry, bounded by cache-capacity, expired-first) checked before fork; a repeat refusal runs no query and no probe; gravsearch.md and runbook §3/§4 updated | none |
 | 2.R1 | dsp-api | complete | efd8e6d53 | review fix: `OverCapMemo.record` is `private[search]` (single writer); memo scaladoc states its expiry can precede the cache entry's; `cache-*` config comments cover the memo | none |
+| 3.1 | dsp-api | complete | 53d943f92 | `verdict-wait = 5 seconds` in the probe block, `FulltextSearchProbe.verdictWait`, validated positive; AppConfigSpec asserts default and rejection (`OK (29 tests)`) | none |
+| 3.2 | dsp-api | complete | 59d1b5043 | probe forked with `forkIn` into the guard's scope and observed with `await`; `raceEither` decides; a succeeded query waits at most `verdictWait`, a failed one returns at once; awaits explicitly interruptible; `make` takes `verdictWait` and needs `Scope`; nine new unit tests under a 30 s timeout aspect; gravsearch.md, runbook §3 and query-language.md updated | none |
+| 3.R1 | dsp-api | complete | a76e732d2 | review fix: guard scaladoc says only closing the guard's scope interrupts the probe and names the trace its span lands in (a Phase 3 checkbox asked for it); AppConfig validation comment no longer says a zero-permit semaphore hangs searches; `verdictWait` scaladoc sentence reordered | none |
 
 ## Deferrals
 
-- none
+- ARCH-MAP.md `webapi-search` (Durable state, about line 1044) does not mention the over-cap memo (Phase 2) or the
+  background probe fibers in the guard's layer scope (Phase 3). ARCH-MAP.md is owned by `/dune:dune-map`; left for the
+  session (dune review DUNE-001, Warning).
 
 ## Deviations
 
@@ -79,3 +87,30 @@ status: in-progress
   CAS retry (fine at 1024); `size` is test-only but is the only way to observe expired-first eviction; nothing
   tests the accepted memo/cache divergence; seeding calls in the capacity test do not assert their exits. Re-review
   of the fix commit was skipped (wording and visibility only); `OK (40 tests)` for guard + AppConfig specs.
+- Phase 3 `forkIn` check (ZIO 2.1.26 source, fetched from GitHub): `forkIn` forks a child scope whose entry in the parent
+  is registered with `releaseMap.add`, and the child closes on fiber exit, which releases that entry, so finalizers
+  do not accumulate. A unit test asserts the guard scope's `size` is unchanged after three calls; the plan's
+  fallback (`forkDaemon` plus a fiber registry) was not needed. zio-cache 0.2.4 `lookupValueOf` re-confirmed: the
+  lookup runs in the first `get` caller's fiber, and an interrupt-only exit interrupts the promise and removes the key.
+- Phase 3: the awaits in the race and the verdict wait are wrapped in `ZIO.interruptible` (not in the plan's sketch):
+  under an uninterruptible caller (zio/zio#11044) the race and `timeout` would otherwise block on interrupting the
+  losing `await` until the probe ends. Guarded by an extra test ("bounds the verdict wait for an uninterruptible
+  caller too").
+- Phase 3 canaries (each reverted, then `OK (50 tests)` for guard + AppConfig specs; IT `OK (8 tests)`):
+  unbounded `await` instead of the bounded wait times out the four `TestClock` wait tests (30 s aspect);
+  `fork` instead of `forkIn` fails the probe-not-interrupted, background-probe, closed-scope and second-waiter
+  tests; awaits without `ZIO.interruptible` time out only the uninterruptible-caller test; a per-call
+  `forkDaemon` plus scope finalizer fails the finalizer test (`3 was not equal to 0`).
+- Phase 3: `docs/development/dsp-api-fuseki-query-execution.md` re-read; its breadth paragraph has no "always
+  refused" wording, so it is unchanged. ADR-0012 also says the guard "refuses" broad terms; ADRs are not edited.
+- Phase 3 review (consistency, code-simplicity, dune, scala-zio; all sonnet): no Critical. Fixed in a76e732d2: the
+  trace-context sentence the plan asked for was missing from the scaladoc; "never cut short" was false for scope
+  close; the AppConfig comment still said `max-concurrent = 0` hangs searches; scaladoc repetition trimmed.
+  Not fixed, with reasons: the query fork inheriting an uninterruptible caller's status (so `queryFib.interrupt`
+  waits for the query) is the plan's explicit "unchanged here" choice (Technical Considerations, Interruptibility);
+  unbounded background probe backlog and no timeout around `cache.get` are the plan's accepted risk (Backlog);
+  "make needs a Scope in the IT" is refuted (IT compiled and passed). Suggestions kept: the second-waiter test has
+  no sync point forcing the second call onto the pending entry before the first is interrupted (it still fails
+  under the `fork` canary, and its assertions hold by construction in the new code); the failed-query test builds
+  an unused gate; `verdictWaitRegistered` relies on the 30 s aspect as its bound. Re-review of the fix commit was
+  skipped (comments only); `OK (50 tests)` after it.
