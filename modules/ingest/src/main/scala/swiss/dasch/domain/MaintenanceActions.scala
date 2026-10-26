@@ -32,7 +32,6 @@ trait MaintenanceActions {
       .foreach(projectPath)(applyTopLeftCorrections)
       .map(_.sum)
       .tap(sum => ZIO.logInfo(s"Finished ${ActionName.ApplyTopLeftCorrection} for $sum files"))
-  def importProjectsToDb(): Task[Unit]
 }
 
 final case class MaintenanceActionsLive(
@@ -185,12 +184,6 @@ final case class MaintenanceActionsLive(
         .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in ${projectPath.path}"))
 
   private def findJpeg2000Files(projectPath: ProjectFolder) = StorageService.findInPath(projectPath.path, isJpeg2000)
-
-  override def importProjectsToDb(): Task[Unit] = for {
-    prjFolders <- projectService.listAllProjects()
-    _          <- ZIO.foreachDiscard(prjFolders.map(_.shortcode))(projectService.addProjectToDb)
-  } yield ()
-
 }
 object MaintenanceActionsLive {
   val layer = ZLayer.derive[MaintenanceActionsLive]
