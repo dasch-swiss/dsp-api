@@ -220,10 +220,6 @@ maven.install(
         # spring-security-crypto and not spring-security-core: crypto has no
         # dependencies of its own, while core drags in the Spring context.
         "org.springframework.security:spring-security-crypto:7.0.6",
-        # -- dsp-ingest db (Java) --
-        "org.xerial:sqlite-jdbc:3.53.2.0",
-        "org.flywaydb:flyway-core:12.10.0",
-        "com.zaxxer:HikariCP:7.1.0",
         # -- test-only Java libs --
         "org.xmlunit:xmlunit-core:2.12.0",
         "net.datafaker:datafaker:2.7.0",
