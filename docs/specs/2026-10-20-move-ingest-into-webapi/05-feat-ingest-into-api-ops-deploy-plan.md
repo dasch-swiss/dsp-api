@@ -294,18 +294,16 @@ separate housekeeping step, outside this plan.
 
 ## Dependencies & Risks
 
-**Contract with the parallel plans** (A1 to A5 are settled; only the A1 Sentry point is checked before H1):
+**Contract with the parallel plans** (A1 to A5 are settled):
 
 - **A1. Ingest env var names (dsp-api plan, settled).** dsp-api reads ingest's settings under an `INGEST_` prefix:
   `INGEST_STORAGE_ASSET_DIR`, `INGEST_STORAGE_TEMP_DIR` (both mounted read-write), and optionally
   `INGEST_BULK_MAX_PARALLEL`, `INGEST_ALLOW_ERASE_PROJECTS`, `INGEST_EXECUTOR_CPU_SHARE` (default `0.5`).
   `INGEST_SIPI_USE_LOCAL_DEV` must stay unset or `false`. The old unprefixed ingest names are ignored, and
   unprefixed `ALLOW_ERASE_PROJECTS` drives only dsp-api's own flag. `KNORA_WEBAPI_DSP_INGEST_AUDIENCE` stays;
-  `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, `..._EXTERNAL_BASE_URL` and `..._ASSET_DIR` are removed. Still to verify:
-  the dsp-api plan does not say how the Sipi CLI gets `SIPI_SENTRY_*`. This plan assumes the CLI child process
-  inherits the `api` container's environment, as it did in the ingest container, and keeps passing them through.
-  If dsp-api drops them from the child environment, or the CLI no longer reports to Sentry, remove the three
-  variables.
+  `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, `..._EXTERNAL_BASE_URL` and `..._ASSET_DIR` are removed. The Sipi CLI
+  child processes inherit the `api` container's environment (dsp-api plan, Dependencies & Risks), so the
+  `SIPI_SENTRY_*` variables are passed through to the `api` container as before.
 - **A2. `ingestUrl` shape (dsp-app plan, settled).** `https://{{ DSP_API_HOST }}/ingest`, with no trailing slash;
   dsp-app keeps the `ingestUrl` key and appends paths such as `/projects/...`.
 - **A3. Health and metrics (dsp-api plan, settled).** dsp-api serves `GET /ingest/health` on port 3333, `200`
