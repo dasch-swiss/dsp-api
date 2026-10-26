@@ -204,35 +204,38 @@ separate housekeeping step, outside this plan.
 
 #### ops-deploy
 
-- [ ] `docker-compose-svc.yml.j2`: replace the `api-img` NFS volume with new `ingest-img` (`rw`, `media/images`) and
+- [x] `docker-compose-svc.yml.j2`: replace the `api-img` NFS volume with new `ingest-img` (`rw`, `media/images`) and
   `ingest-tmp` (`rw`, `media/ingest-tmp`) volumes
-- [ ] `docker-compose-svc.yml.j2`: mount `/opt/img` read-write and `/opt/tmp` on `api` for both the NFS and the
+- [x] `docker-compose-svc.yml.j2`: mount `/opt/img` read-write and `/opt/tmp` on `api` for both the NFS and the
   bind-mount branches
-- [ ] `docker-compose-svc.yml.j2`: add the `INGEST_*` and `SIPI_SENTRY_*` settings listed under Proposed Solution to the
+- [x] `docker-compose-svc.yml.j2`: add the `INGEST_*` and `SIPI_SENTRY_*` settings listed under Proposed Solution to the
   `api` environment
-- [ ] `docker-compose-svc.yml.j2`: remove `KNORA_WEBAPI_DSP_INGEST_BASE_URL`,
+- [x] `docker-compose-svc.yml.j2`: remove `KNORA_WEBAPI_DSP_INGEST_BASE_URL`,
   `KNORA_WEBAPI_DSP_INGEST_EXTERNAL_BASE_URL` and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR` from `api`, keeping
   `KNORA_WEBAPI_DSP_INGEST_AUDIENCE`
-- [ ] `docker-compose-svc.yml.j2`: set the `api` memory limit to `DSP_API_MEMORY_LIMIT + DSP_API_INGEST_MEMORY` (bytes)
+- [x] `docker-compose-svc.yml.j2`: set the `api` memory limit to `DSP_API_MEMORY_LIMIT + DSP_API_INGEST_MEMORY` (bytes)
   and append `-XX:MaxRAM=<DSP_API_MEMORY_LIMIT bytes>` to `JAVA_TOOL_OPTIONS`
-- [ ] `docker-compose-svc.yml.j2`: add the `{{ STACK }}-ingest` router on `DSP_INGEST_HOST` with the
+- [x] `docker-compose-svc.yml.j2`: add the `{{ STACK }}-ingest` router on `DSP_INGEST_HOST` with the
   `{{ STACK }}-ingest-addprefix` (`/ingest`) middleware, targeting `{{ STACK }}-api`
-- [ ] `docker-compose-svc.yml.j2`: add the `{{ STACK }}-api-ingest` router
+- [x] `docker-compose-svc.yml.j2`: add the `{{ STACK }}-api-ingest` router
   (`Host(DSP_API_HOST) && PathPrefix(/ingest/)`, priority 100, no rate limit)
-- [ ] `defaults/main.yml`: rename `DSP_INGEST_MEMORY_LIMIT` to `DSP_API_INGEST_MEMORY` (default `"2G"`) and update the
+- [x] `defaults/main.yml`: rename `DSP_INGEST_MEMORY_LIMIT` to `DSP_API_INGEST_MEMORY` (default `"2G"`) and update the
   overrides in `host_vars/vre-prod-01.yml`, `host_vars/vre-stage-01.yml` and `host_vars/vre-rdu-01.yml`
-- [ ] `app/conf/config.json.j2`: set `ingestUrl` to `https://{{ DSP_API_HOST }}/ingest` (per A2) and drop the ingest
+- [x] `app/conf/config.json.j2`: set `ingestUrl` to `https://{{ DSP_API_HOST }}/ingest` (per A2) and drop the ingest
   host from `tracingCorsUrls`
-- [ ] Render `docker-compose-svc.yml.j2` and `app/conf/config.json.j2` offline twice, once with `DSP_NFS_PATH` defined
+- [x] Render `docker-compose-svc.yml.j2` and `app/conf/config.json.j2` offline twice, once with `DSP_NFS_PATH` defined
   and once without, using `ansible localhost -c local -i localhost, -m ansible.builtin.template -a
   "src=... dest=<scratch>/..." -e @roles/dsp-deploy/defaults/main.yml -e @<scratch>/render-vars.yml` from the `.ansible-venv`.
   The vars file supplies `STACK`, `DSP_DOMAIN`, `DSP_VERSIONS`, `ENVIRONMENT`, `DSP_PROXY_NET`, `DSP_JWT_TOKEN`,
   `DSP_DB_PASSWORD`, `DSP_RELEASE` and `DSP_API_MEMORY_LIMIT: "8G"`, `DSP_API_INGEST_MEMORY: "4G"`. Expect a memory
   limit of `12884901888` and `-XX:MaxRAM=8589934592`
-- [ ] Run `docker compose -f <scratch>/svc-nfs.yml config -q` and `docker compose -f <scratch>/svc-local.yml config -q`
+- [x] Run `docker compose -f <scratch>/svc-nfs.yml config -q` and `docker compose -f <scratch>/svc-local.yml config -q`
   on the rendered files; both exit 0. Run `jq . <scratch>/config.json`; it parses
-- [ ] Run `just lint dsp-deploy`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just lint dsp-deploy`; it reports no violation beyond those already on `origin/main` (c4d9d52e: 239,
+  mostly `var-naming` on every upper-case variable, none from this phase)
+- [ ] Run `just lint dsp-deploy`; it passes (blocked by the 239 pre-existing violations above; needs a lint cleanup
+  outside this plan, or the gate redefined as "no new violations")
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: remove the ingest service and follow-on references
 
