@@ -19,7 +19,7 @@ It is to be included in the webapi module and its routes are to be prefixed unde
 ## Why
 
 - One service fewer to build, deploy, version and monitor
-- Shared auth, config, observability and test setup instead of two copies
+- Shared auth, observability and test setup instead of two copies
 - Clients talk to one API base URL
 
 ## Tasks
@@ -27,19 +27,19 @@ It is to be included in the webapi module and its routes are to be prefixed unde
 - Move the ingest codebase into the webapi module
 - Prefix the routes under `/ingest/`
 - Ship Sipi, ffmpeg and ffprobe in the webapi image, which ingest needs for file conversion
-- Assess the possibility of removing the SQLite database, remove it if it's not needed
+- Remove the SQLite database (nothing reads it to decide behaviour)
 - Migrate DaSCH's clients (dsp-app, dsp-tools) to the new endpoints
-- Keep the existing ingest container and its unprefixed routes working alongside the new `/ingest/` routes
+- Proxy the old `ingest.<domain>` URLs to `/ingest/` permanently and retire the ingest container
 - Update ops-deploy: route `/ingest/` to the API
 - Run ingest work on a dedicated ZIO executor sized as a share of the available CPUs, so large ingests don't starve
   the API
 
 ## Success criteria
 
-- dsp-app and dsp-tools use only the `/ingest/` routes
+- dsp-app uses only the `/ingest/` routes; the dsp-tools change is ready and merged once prod serves `/ingest/`
 - The design keeps large-project ingests through `/ingest/` from slowing down regular API traffic (checked in design
   review, not by load tests)
-- The old ingest container keeps serving its unprefixed routes unchanged
+- Old `ingest.<domain>` URLs, including published download links, keep resolving through the proxy
 
 ## Out of scope
 
