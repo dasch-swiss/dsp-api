@@ -92,35 +92,35 @@ can drop the `https://{{ DSP_INGEST_HOST }}/.*` entry, because the API host entr
 
 All changes are in dsp-app. Deliverables:
 
-- [ ] `libs/vre/core/config/src/lib/app-config/dsp-ingest-config.ts`: `url` returns `_ingestUrl` with trailing `/`
+- [x] `libs/vre/core/config/src/lib/app-config/dsp-ingest-config.ts`: `url` returns `_ingestUrl` with trailing `/`
   removed.
-- [ ] `libs/vre/core/config/src/lib/app-config/app-config.service.spec.ts`: fixtures use
+- [x] `libs/vre/core/config/src/lib/app-config/app-config.service.spec.ts`: fixtures use
   `ingestUrl: 'http://0.0.0.0:3333/ingest'`, and the expectation at line 163 matches it.
-- [ ] Add a spec case asserting that `ingestUrl: 'http://0.0.0.0:3333/ingest/'` yields
+- [x] Add a spec case asserting that `ingestUrl: 'http://0.0.0.0:3333/ingest/'` yields
   `dspIngestConfig.url === 'http://0.0.0.0:3333/ingest'`.
-- [ ] `apps/dsp-app/src/config/config.dev.json`: `"ingestUrl": "http://0.0.0.0:3333/ingest"`.
-- [ ] `apps/dsp-app/src/config/config.prod.json`: `"ingestUrl": "http://0.0.0.0:3333/ingest"` (used by
+- [x] `apps/dsp-app/src/config/config.dev.json`: `"ingestUrl": "http://0.0.0.0:3333/ingest"`.
+- [x] `apps/dsp-app/src/config/config.prod.json`: `"ingestUrl": "http://0.0.0.0:3333/ingest"` (used by
   `serve:production` in CI).
-- [ ] `apps/dsp-app/src/config/config.dev-server.json`: `"ingestUrl": "https://api.dev.dasch.swiss/ingest"`.
-- [ ] `config.dev-server.json`: drop `https://ingest.dev.dasch.swiss` from `tracingCorsUrls`.
-- [ ] `apps/dsp-app/src/config/config.stage-server.json`: `"ingestUrl": "https://api.stage.dasch.swiss/ingest"`.
-- [ ] `apps/dsp-app/src/config/config.ls-test-server.json`: `"ingestUrl"` set to `https://<its apiHost>/ingest`,
+- [x] `apps/dsp-app/src/config/config.dev-server.json`: `"ingestUrl": "https://api.dev.dasch.swiss/ingest"`.
+- [x] `config.dev-server.json`: drop `https://ingest.dev.dasch.swiss` from `tracingCorsUrls`.
+- [x] `apps/dsp-app/src/config/config.stage-server.json`: `"ingestUrl": "https://api.stage.dasch.swiss/ingest"`.
+- [x] `apps/dsp-app/src/config/config.ls-test-server.json`: `"ingestUrl"` set to `https://<its apiHost>/ingest`,
   that is `https://api.ls-test-server.dasch.swiss/ingest`.
-- [ ] `libs/vre/shared/app-common-to-move/src/lib/header/header-stories.helper.ts`: story fixture
+- [x] `libs/vre/shared/app-common-to-move/src/lib/header/header-stories.helper.ts`: story fixture
   `ingestUrl: 'https://api.example.com/ingest'`.
-- [ ] `apps/dsp-app/cypress.config.ts`: `env.dspIngestUrl` becomes `'http://0.0.0.0:3333/ingest'`.
-- [ ] `apps/dsp-app/cypress/support/pages/still-image.page.ts:19`: replace the hard-coded
+- [x] `apps/dsp-app/cypress.config.ts`: `env.dspIngestUrl` becomes `'http://0.0.0.0:3333/ingest'`.
+- [x] `apps/dsp-app/cypress/support/pages/still-image.page.ts:19`: replace the hard-coded
   `http://0.0.0.0:3340/...` with `` `${Cypress.env('dspIngestUrl')}/projects/0803/assets/ingest/screen.png` ``.
-- [ ] `apps/dsp-app/cypress/e2e/system-admin/file-representation.cy.ts:40`: intercept
+- [x] `apps/dsp-app/cypress/e2e/system-admin/file-representation.cy.ts:40`: intercept
   `**/ingest/projects/*/assets/ingest/**`.
-- [ ] `.github/workflows/ci.yml`, step "Start API": `docker compose -f docker-compose.yml up -d sipi api`.
-- [ ] `CONTEXT.md`, **dsp-ingest** entry: say that ingest is served by dsp-api under `/ingest/` and that `ingestUrl`
+- [x] `.github/workflows/ci.yml`, step "Start API": `docker compose -f docker-compose.yml up -d sipi api`.
+- [x] `CONTEXT.md`, **dsp-ingest** entry: say that ingest is served by dsp-api under `/ingest/` and that `ingestUrl`
   names that base URL.
-- [ ] Run `git grep -nE "3340|ingest\.(dev|stage|ls-test|example)" -- ':!CHANGELOG.md' ':!k6'`; it returns nothing.
-- [ ] Run `npm run lint-all`; it is clean.
-- [ ] Run `npm run test-ci-all`; it passes.
-- [ ] Run `npx nx build dsp-app`; it succeeds.
-- [ ] Run `npx tsc --noEmit -p apps/dsp-app/cypress/tsconfig.json`; it passes.
+- [x] Run `git grep -nE "3340|ingest\.(dev|stage|ls-test|example)" -- ':!CHANGELOG.md' ':!k6'`; it returns nothing.
+- [x] Run `npm run lint-all`; it is clean.
+- [x] Run `npm run test-ci-all`; it passes.
+- [x] Run `npx nx build dsp-app`; it succeeds.
+- [x] Run `npx tsc --noEmit -p apps/dsp-app/cypress/tsconfig.json`; it passes.
 - [ ] The PR's `DSP-APP E2E tests` CI check passes against dsp-api `main` serving `/ingest/`.
 
 ## Human Actions
