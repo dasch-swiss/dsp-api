@@ -2,7 +2,7 @@
 title: "Ingest runs inside dsp-api under /ingest/"
 date: 2026-10-20
 author: "Raitis Veinbahs"
-status: draft
+status: reviewed
 brief: 00-project-brief.md
 repositories:
   - dsp-app
@@ -27,7 +27,7 @@ permanently as a proxy to those routes. The ingest container and its SQLite data
 1. Ingest runs inside dsp-api as one service: one container, one authentication.
 2. All existing ingest URLs keep working permanently, including the download links already published in FAIR
    metadata and exports.
-3. Large ingests don't degrade regular API traffic.
+3. Large ingests can't take over the API's CPU.
 4. dsp-app uses only the `/ingest/` routes. dsp-tools has a ready, unmerged change that does the same, to merge once
    prod serves `/ingest/`.
 5. The ingest SQLite database is removed.
@@ -36,7 +36,9 @@ permanently as a proxy to those routes. The ingest container and its SQLite data
 
 1. **Ingest slice in webapi.** Every ingest endpoint (projects, assets, bulk ingest, export, import, erase, reports,
    maintenance, info, health, metrics) is served by dsp-api under `/ingest/`, with the same requests and responses
-   as today. The endpoints use dsp-api's authentication; the tokens and scopes they accept are unchanged.
+   as today, except for two deliberate changes: the `ImportProjectsToDb` maintenance action is removed, and `/health`
+   no longer reports a database. The endpoints use dsp-api's authentication; the tokens and scopes they accept are
+   unchanged.
 2. **Separate configuration.** Ingest keeps its own configuration inside dsp-api, separate from dsp-api's; no
    setting is shared or merged. Ingest settings that no longer apply (its own server address, database, JWT and API
    URL) are dropped.
@@ -76,13 +78,14 @@ that I talk to one address.
 
 - REQ-1.1 (Ubiquitous): dsp-api shall serve every ingest endpoint under the `/ingest/` path prefix.
 - REQ-1.2 (Ubiquitous): For each ingest endpoint, dsp-api shall accept the same requests and return the same
-  responses as the standalone ingest service.
+  responses as the standalone ingest service, except that the `ImportProjectsToDb` maintenance action is removed and
+  `/health` reports no database.
 - REQ-1.3 (Event-driven): When a request to an `/ingest/` endpoint carries a token the standalone ingest service
   accepts, dsp-api shall accept that token with the same scopes.
 - REQ-1.4 (Unwanted-behaviour): If a request to a secured `/ingest/` endpoint has no valid token, then dsp-api shall
   reject it with HTTP 401.
-- REQ-1.5 (Event-driven): When a client uploads a file with a declared size above 1 MiB, dsp-api shall stream the
-  body to storage without holding it fully in memory.
+- REQ-1.5 (Event-driven): When a client uploads a file larger than a small buffer (ballpark 1 MiB), dsp-api shall
+  stream the body to storage without holding it fully in memory.
 
 ### US-2: Old ingest URLs keep working
 
@@ -90,10 +93,13 @@ As an existing client, or someone following a published download link, I want th
 working, so that nothing already out there breaks.
 
 - REQ-2.1 (Event-driven): When a request arrives at `ingest.<domain>/<path>`, the proxy shall forward it to dsp-api's
-  `/ingest/<path>`, with method, query, headers and body unchanged.
+  `/ingest/<path>`, with method, query, body and `Authorization` header unchanged (the proxy may add the usual
+  `X-Forwarded-*` headers).
 - REQ-2.2 (Ubiquitous): The proxy shall return dsp-api's response to the caller unchanged.
 - REQ-2.3 (Event-driven): When dsp-api generates an original-file download link in FAIR metadata or an export, dsp-api
   shall build it on the API's public URL under `/ingest/`.
+- REQ-2.4 (State-driven): While dsp-api is healthy, `ingest.<domain>/health` shall answer with HTTP 200, so released
+  dsp-tools versions that check it keep working.
 
 ### US-3: The API stays responsive during large ingests
 
@@ -138,7 +144,7 @@ and monitor.
   `start-stack`.
 - Prod runs no ingest container, and existing `ingest.<domain>` URLs, including published download links, still
   resolve.
-- A design review confirms that large ingests can't slow down regular API traffic (REQ-3.1 to REQ-3.4).
+- A design review confirms that large ingests can't take over the API's CPU or crash it (REQ-3.1 to REQ-3.4).
 - dsp-api runs without the ingest SQLite database.
 
 ## Out of scope

@@ -37,8 +37,8 @@ It is to be included in the webapi module and its routes are to be prefixed unde
 ## Success criteria
 
 - dsp-app uses only the `/ingest/` routes; the dsp-tools change is ready and merged once prod serves `/ingest/`
-- The design keeps large-project ingests through `/ingest/` from slowing down regular API traffic (checked in design
-  review, not by load tests)
+- The design keeps large-project ingests through `/ingest/` from taking over the API's CPU (checked in design review,
+  not by load tests)
 - Old `ingest.<domain>` URLs, including published download links, keep resolving through the proxy
 
 ## Out of scope
