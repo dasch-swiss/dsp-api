@@ -11,18 +11,6 @@ import eu.timepit.refined.string.MatchesRegex
 import zio.json.JsonCodec
 import zio.schema.Schema
 
-import java.time.Instant
-
-final case class Project(id: ProjectId, shortcode: ProjectShortcode, createdAt: Instant)
-
-type ProjectId = PositiveInt
-object ProjectId extends RefinedTypeOps[ProjectId, Int] {
-  extension (i: Int) {
-    inline def toProjectIdUnsafe = ProjectId.unsafeFrom(i)
-    inline def toProjectId       = ProjectId.from(i)
-  }
-}
-
 type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
 object ProjectShortcode extends RefinedTypeOps[ProjectShortcode, String] {
 

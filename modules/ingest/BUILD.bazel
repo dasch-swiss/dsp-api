@@ -45,7 +45,7 @@ scala_library(
     name = "ingest",
     srcs = glob(["src/main/scala/**/*.scala"]),
     format = True,
-    # db/migration/*.sql must land at the classpath key Flyway expects (db/migration/...).
+    # application.conf and logback.xml must land at the classpath root.
     resource_strip_prefix = "modules/ingest/src/main/resources",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
@@ -62,7 +62,6 @@ scala_library(
         "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
         "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
         "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
-        "@maven//:com_zaxxer_HikariCP",
         "@maven//:commons_io_commons_io",
         "@maven//:dev_zio_zio_3",
         "@maven//:dev_zio_zio_config_3",
@@ -85,8 +84,6 @@ scala_library(
         "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
         "@maven//:io_opentelemetry_opentelemetry_sdk",
         "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
-        "@maven//:org_flywaydb_flyway_core",
-        "@maven//:org_xerial_sqlite_jdbc",
     ],
 )
 
@@ -111,7 +108,6 @@ scala_library(
         "@maven//:com_softwaremill_sttp_tapir_tapir_swagger_ui_bundle_3",
         "@maven//:com_softwaremill_sttp_tapir_tapir_zio_http_server_3",
         "@maven//:com_softwaremill_sttp_tapir_tapir_zio_metrics_3",
-        "@maven//:com_zaxxer_HikariCP",
         "@maven//:commons_io_commons_io",
         "@maven//:dev_zio_zio_3",
         "@maven//:dev_zio_zio_config_3",
@@ -134,8 +130,6 @@ scala_library(
         "@maven//:io_opentelemetry_opentelemetry_exporter_otlp",
         "@maven//:io_opentelemetry_opentelemetry_sdk",
         "@maven//:io_opentelemetry_semconv_opentelemetry_semconv",
-        "@maven//:org_flywaydb_flyway_core",
-        "@maven//:org_xerial_sqlite_jdbc",
     ],
 )
 

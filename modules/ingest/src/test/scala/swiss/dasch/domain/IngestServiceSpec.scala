@@ -10,7 +10,6 @@ import swiss.dasch.api.SipiClientMock
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.ZIO
 import zio.nio.file.Files
 import zio.test.Spec
@@ -105,13 +104,11 @@ class IngestServiceSpec extends ZIOSpecDefault {
     MimeTypeGuesser.layer,
     MovingImageService.layer,
     OtherFilesService.layer,
-    ProjectRepositoryLive.layer,
     ProjectService.layer,
     SipiClientMock.layer,
     SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
     StorageServiceLive.layer,
-    TestUtils.testDbLayerWithEmptyDb,
   )
 }

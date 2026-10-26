@@ -9,7 +9,6 @@ import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.config.Configuration.ServiceConfig
 import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.db.Db
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
@@ -61,10 +60,8 @@ object MigrateSizes extends ZIOAppDefault {
         AssetInfoServiceLive.layer,
         AssetSizeMigrationService.layer,
         Configuration.layer,
-        Db.dataSourceLive,
         FileChecksumServiceLive.layer,
         MimeTypeGuesser.layer,
-        ProjectRepositoryLive.layer,
         ProjectService.layer,
         StorageServiceLive.layer,
       )

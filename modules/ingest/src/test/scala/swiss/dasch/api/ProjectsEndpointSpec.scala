@@ -26,7 +26,6 @@ import swiss.dasch.test.SpecConstants.Projects.emptyProject
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import swiss.dasch.test.SpecConstants.Projects.nonExistentProject
 import swiss.dasch.test.SpecPaths
-import swiss.dasch.util.TestUtils
 import zio.Chunk
 import zio.UIO
 import zio.ZIO
@@ -477,7 +476,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     MimeTypeGuesser.layer,
     MovingImageService.layer,
     OtherFilesService.layer,
-    ProjectRepositoryLive.layer,
     ProjectService.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
@@ -489,7 +487,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
     StorageServiceLive.layer,
-    TestUtils.testDbLayerWithEmptyDb,
     ZLayer.succeed(Features(allowEraseProjects = true)),
   ) + suite("ProjectsEndpoint with SttpStub")(
     // NOTE: only difference in the provide()s is the fakeSttp. Whoever can help me refactor this gets a beer.
@@ -508,7 +505,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     MimeTypeGuesser.layer,
     MovingImageService.layer,
     OtherFilesService.layer,
-    ProjectRepositoryLive.layer,
     ProjectService.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
@@ -520,7 +516,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
     StorageServiceLive.layer,
-    TestUtils.testDbLayerWithEmptyDb,
     ZLayer.succeed(Features(allowEraseProjects = true)),
     fakeSttp,
   )

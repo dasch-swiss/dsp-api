@@ -20,7 +20,6 @@ object Configuration {
     sipi: SipiConfig,
     ingest: IngestConfig,
     features: Features,
-    db: DbConfig,
     dspApi: DspApiConfig,
   )
 
@@ -49,16 +48,14 @@ object Configuration {
 
   final case class Features(allowEraseProjects: Boolean)
 
-  final case class DbConfig(jdbcUrl: String)
-
   final case class DspApiConfig(
     url: String,
   )
 
   private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
 
-  private type AllConfigs = ServiceConfig & JwtConfig & StorageConfig & SipiConfig & IngestConfig & Features &
-    DbConfig & DspApiConfig
+  private type AllConfigs =
+    ServiceConfig & JwtConfig & StorageConfig & SipiConfig & IngestConfig & Features & DspApiConfig
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(
@@ -66,7 +63,6 @@ object Configuration {
         .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
     )
     applicationConf.project(_.service) ++
-      applicationConf.project(_.db) ++
       applicationConf.project(_.storage) ++
       applicationConf.project(_.jwt) ++
       applicationConf.project(_.sipi) ++

@@ -36,12 +36,6 @@ The layout in these folders is explained in detail in the chapter ["Filesystem S
 | `JWT_AUDIENCE`     | `http://localhost:3340`                             | Expected audience claim in the JWT                                                                                                                        |
 | `JWT_DISABLE_AUTH` | `false`                                             | Disable JWT authentication, useful for local development. <br/>When set to `true` protected routes still expect a `Bearer` token but it can be any value. |
 
-## Database
-
-| Variable      | Default                                         | Description                                                                                                         |
-|---------------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `DB_JDBC_URL` | `jdbc:sqlite:localdev/storage/db/ingest.sqlite` | Jdbc Url for the sqlite database. Everything after `jdbc:sqlite:` is the path to the file where the data is stored. |
-
 ## Features
 
 | Variable               | Default | Description                                                                                                                                             |

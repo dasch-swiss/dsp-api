@@ -12,7 +12,6 @@ import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.http.*
 import zio.nio.file.Files
@@ -82,12 +81,10 @@ class MaintenanceEndpointsSpec extends ZIOSpecDefault {
       MovingImageService.layer,
       OtherFilesService.layer,
       ProjectService.layer,
-      ProjectRepositoryLive.layer,
       SipiClientMock.layer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
       SpecConfigurations.storageConfigLayer,
       StillImageService.layer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     )
 }

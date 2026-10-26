@@ -12,7 +12,6 @@ import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPa
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
 import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -60,10 +59,11 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
         _           <- TestClock.adjust(700.second)
 
         // then
-        failed       <- failed.join.exit
-        ingestResult <- ingestFiber.join
-        project      <- ZIO.serviceWithZIO[ProjectRepository](_.findByShortcode(shortcode))
-      } yield assertTrue(ingestResult == IngestResult.success, failed.isFailure, project.nonEmpty)
+        failed        <- failed.join.exit
+        ingestResult  <- ingestFiber.join
+        projectDir    <- storageService(_.getProjectFolder(shortcode))
+        projectExists <- Files.isDirectory(projectDir.path)
+      } yield assertTrue(ingestResult == IngestResult.success, failed.isFailure, projectExists)
     },
     test("fail when import folder does not exist") {
       for {
@@ -161,11 +161,9 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     BulkIngestService.layer,
     FileChecksumServiceLive.layer,
     MockIngestServiceLayer,
-    ProjectRepositoryLive.layer,
     ProjectService.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-    TestUtils.testDbLayerWithEmptyDb,
   ) @@ TestAspect.timeout(10.seconds)
 }
