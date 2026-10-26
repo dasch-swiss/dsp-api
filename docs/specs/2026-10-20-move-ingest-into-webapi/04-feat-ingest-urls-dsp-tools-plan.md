@@ -179,37 +179,37 @@ start-stack today, and none is added.
 
 #### dsp-tools
 
-- [ ] `src/dsp_tools/cli/utils.py`: `LOCALHOST_INGEST` becomes `http://0.0.0.0:3333/ingest`
-- [ ] `src/dsp_tools/cli/utils.py`: `get_canonical_server_and_dsp_ingest_url` derives the ingest URL as
+- [x] `src/dsp_tools/cli/utils.py`: `LOCALHOST_INGEST` becomes `http://0.0.0.0:3333/ingest`
+- [x] `src/dsp_tools/cli/utils.py`: `get_canonical_server_and_dsp_ingest_url` derives the ingest URL as
   `f"{server}/ingest"`, drops the `default_dsp_ingest_url` parameter, and has its docstring rewritten for the new
   derivation
-- [ ] `src/dsp_tools/cli/entry_point.py`: remove `default_dsp_ingest_url` from `run` and `_derive_dsp_ingest_url`
-- [ ] `src/dsp_tools/cli/args.py`: `ServerCredentials.dsp_ingest_url` default becomes `http://0.0.0.0:3333/ingest`
-- [ ] `src/dsp_tools/cli/exceptions.py`: the local `IngestNotReachableError` message stops referring to an
+- [x] `src/dsp_tools/cli/entry_point.py`: remove `default_dsp_ingest_url` from `run` and `_derive_dsp_ingest_url`
+- [x] `src/dsp_tools/cli/args.py`: `ServerCredentials.dsp_ingest_url` default becomes `http://0.0.0.0:3333/ingest`
+- [x] `src/dsp_tools/cli/exceptions.py`: the local `IngestNotReachableError` message stops referring to an
   ingest container and says the local DSP-API must serve `/ingest/` (restart with `dsp-tools start-stack`)
-- [ ] `src/dsp_tools/commands/ingest_xmlupload/upload_files/upload_failures.py`: the CSV filename built from
+- [x] `src/dsp_tools/commands/ingest_xmlupload/upload_files/upload_failures.py`: the CSV filename built from
   `dsp_ingest_url` replaces `/` so it stays a single file name; unit test for an `https://api.dasch.swiss/ingest`
   URL with more than `maximum_prints` failures
-- [ ] `test/unittests/cli/test_helper_functions.py`: expected ingest URLs become `https://api.<x>.dasch.swiss/ingest`
+- [x] `test/unittests/cli/test_helper_functions.py`: expected ingest URLs become `https://api.<x>.dasch.swiss/ingest`
   and `http://0.0.0.0:3333/ingest`, including the `ingest.<x>.dasch.swiss` input rows
-- [ ] `test/unittests/cli/test_utils.py`: ingest health-check expectations become `.../ingest/health`
-- [ ] `test/unittests/cli/test_cli_with_network.py`: every expected `dsp_ingest_url` becomes `http://0.0.0.0:3333/ingest`
+- [x] `test/unittests/cli/test_utils.py`: ingest health-check expectations become `.../ingest/health`
+- [x] `test/unittests/cli/test_cli_with_network.py`: every expected `dsp_ingest_url` becomes `http://0.0.0.0:3333/ingest`
   or `server + "/ingest"` (replacing `server.replace("api", "ingest")` and `https://ingest.<x>.dasch.swiss`)
-- [ ] `test/unittests/clients/test_bulk_ingest_client.py`: `DSP_INGEST_URL` becomes `https://example.com/ingest`
-- [ ] `test/integration/commands/ingest_xmlupload/test_ingest_xmlupload.py`: `dsp_ingest_url` becomes
+- [x] `test/unittests/clients/test_bulk_ingest_client.py`: `DSP_INGEST_URL` becomes `https://example.com/ingest`
+- [x] `test/integration/commands/ingest_xmlupload/test_ingest_xmlupload.py`: `dsp_ingest_url` becomes
   `http://0.0.0.0:3333/ingest`
-- [ ] `src/dsp_tools/cli/CLAUDE.md`: the URL-derivation bullets (lines ~214-217) describe `<server>/ingest`
-- [ ] `src/dsp_tools/commands/ingest_xmlupload/upload_files/CLAUDE.md`: `creds.dsp_ingest_url` described as the
+- [x] `src/dsp_tools/cli/CLAUDE.md`: the URL-derivation bullets (lines ~214-217) describe `<server>/ingest`
+- [x] `src/dsp_tools/commands/ingest_xmlupload/upload_files/CLAUDE.md`: `creds.dsp_ingest_url` described as the
   `/ingest` base URL on the API host
-- [ ] `docs/developers/start-stack.md`: the subdomain section says ingest is reached at `https://api.<domain>/ingest`
+- [x] `docs/developers/start-stack.md`: the subdomain section says ingest is reached at `https://api.<domain>/ingest`
   and that `ingest.<domain>` input is still accepted
-- [ ] `ARCH-MAP.md`: `ingest_xmlupload`'s durable-state line names `/ingest/` on dsp-api instead of a dsp-ingest server
-- [ ] Run `just unittests`; it passes
-- [ ] Run `just integration-tests`; it passes
-- [ ] Run `just lint`; it passes
-- [ ] Run `change-blast-radius` on the phase's changes; no unhandled ingest-URL consumer reported
-- [ ] Run `update-docs` on the phase's changes; no missing user-facing doc update reported
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ARCH-MAP.md`: `ingest_xmlupload`'s durable-state line names `/ingest/` on dsp-api instead of a dsp-ingest server
+- [x] Run `just unittests`; it passes
+- [x] Run `just integration-tests`; it passes
+- [x] Run `just lint`; it passes
+- [x] Run `change-blast-radius` on the phase's changes; no unhandled ingest-URL consumer reported
+- [x] Run `update-docs` on the phase's changes; no missing user-facing doc update reported
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: start-stack runs without the ingest container
 
