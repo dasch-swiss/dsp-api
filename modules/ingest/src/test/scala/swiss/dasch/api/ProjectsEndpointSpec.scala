@@ -15,6 +15,7 @@ import swiss.dasch.FetchAssetPermissionsLive
 import swiss.dasch.FetchAssetPermissionsMock
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.DspApiConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.test.SpecConfigurations
@@ -469,6 +470,7 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     BaseEndpoints.layer,
     BulkIngestService.layer,
     CommandExecutorLive.layer,
+    Configuration.ingestExecutorLayer,
     CsvService.layer,
     FetchAssetPermissionsMock.layer(true),
     FileChecksumServiceLive.layer,
@@ -499,6 +501,7 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     BaseEndpoints.layer,
     BulkIngestService.layer,
     CommandExecutorLive.layer,
+    Configuration.ingestExecutorLayer,
     CsvService.layer,
     FileChecksumServiceLive.layer,
     ImportServiceLive.layer,

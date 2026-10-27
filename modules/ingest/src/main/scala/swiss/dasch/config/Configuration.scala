@@ -15,8 +15,10 @@ import zio.config.typesafe.*
 import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
+import org.knora.webapi.slice.ingest.config.ExecutorConfig
 import org.knora.webapi.slice.ingest.config.SipiConfig
 import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 
 object Configuration {
   final private case class ApplicationConf(
@@ -75,4 +77,8 @@ object Configuration {
       applicationConf.project(_.features) ++
       applicationConf.project(_.dspApi)
   }
+
+  /** The standalone service has its process to itself, so ingest work may use every processor. */
+  val ingestExecutorLayer: ULayer[IngestExecutor] =
+    ZLayer.succeed(ExecutorConfig(cpuShare = 1.0)) >>> IngestExecutor.layer
 }

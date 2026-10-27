@@ -453,6 +453,7 @@ class IngestProjectsEndpointsSpec extends ZIOSpecDefault {
       SipiClientMock.layer,
       SpecConfigurations.ingestConfigLayer,
       SpecConfigurations.jwtConfigLayer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.sipiConfigLayer,
       SpecConfigurations.storageConfigLayer,
       StillImageService.layer,

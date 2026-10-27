@@ -34,6 +34,7 @@ object Main extends ZIOAppDefault {
         BulkIngestService.layer,
         CommandExecutorLive.layer,
         Configuration.layer,
+        Configuration.ingestExecutorLayer,
         CsvService.layer,
         Endpoints.layer,
         FetchAssetPermissions.layer,

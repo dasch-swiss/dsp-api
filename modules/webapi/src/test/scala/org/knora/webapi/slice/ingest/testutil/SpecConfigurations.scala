@@ -20,6 +20,7 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
 import org.knora.webapi.slice.ingest.config.SipiConfig
 import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 
 object SpecConfigurations {
 
@@ -35,6 +36,8 @@ object SpecConfigurations {
   }
 
   val ingestConfigLayer = ZLayer.succeed(BulkIngestConfig(2))
+
+  val ingestExecutorLayer: ULayer[IngestExecutor] = ZLayer.scoped(IngestExecutor.make(2))
 
   val jwtConfig: JwtConfig =
     JwtConfig("secret-key", 1.day, Some("https://admin.dev.dasch.swiss"))
