@@ -12,6 +12,7 @@ import swiss.dasch.domain.AssetRef
 import swiss.dasch.domain.ImportService
 import swiss.dasch.domain.ProjectService as IngestProjectService
 import swiss.dasch.domain.ProjectShortcode
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -48,12 +49,16 @@ trait DspIngestClient {
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
 
-/** Calls ingest in-process. A failed import is logged, not raised; erasing is gated by ingest's allow-erase-projects. */
+/**
+ * Calls ingest in-process. A failed import is logged, not raised; erasing is gated by ingest's allow-erase-projects.
+ * Export, import and erase run on the ingest executor.
+ */
 final class DspIngestClientLive(
   assetInfos: AssetInfoService,
   projects: IngestProjectService,
   imports: ImportService,
   features: Features,
+  executor: IngestExecutor,
 ) extends DspIngestClient {
 
   private def ingestShortcode(shortcode: Shortcode): Task[ProjectShortcode] =
@@ -82,18 +87,20 @@ final class DspIngestClientLive(
       r.originalMimeType,
     )
 
-  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
+  def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] = executor.run {
     for {
       code   <- ingestShortcode(shortcode)
       zipped <- projects.zipProject(code)
       result <- ZIO.foreach(zipped)(Files.move(_, outputFile, StandardCopyOption.REPLACE_EXISTING).as(outputFile))
     } yield result
+  }
 
-  def eraseProject(shortcode: Shortcode): Task[Unit] =
+  def eraseProject(shortcode: Shortcode): Task[Unit] = executor.run {
     if (features.allowEraseProjects) ingestShortcode(shortcode).flatMap(projects.deleteProject)
     else ZIO.logWarning(s"Not erasing the assets of project $shortcode: allow-erase-projects is off in ingest")
+  }
 
-  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = executor.run {
     ingestShortcode(shortcode)
       .flatMap(imports.importZipStream(_, ZStream.fromFile(fileToImport.toFile).orDie))
       .foldZIO(
@@ -101,6 +108,7 @@ final class DspIngestClientLive(
         _ => ZIO.logInfo(s"Imported the assets of project $shortcode"),
       )
       .as(fileToImport)
+  }
 }
 
 object DspIngestClientLive {

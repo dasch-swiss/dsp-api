@@ -82,7 +82,7 @@ class IngestModuleSpec extends ZIOSpecDefault {
 object IngestModuleSpec {
 
   /** Ingest over empty temporary storage, behind an authenticator and permission cache that refuse everything. */
-  val layer: ULayer[AppConfig.AppConfigurations & IngestServerEndpoints] = {
+  val layer: ULayer[AppConfig.AppConfigurations & IngestServerEndpoints & StorageConfig] = {
     val storage = ZLayer.scoped(
       Files.createTempDirectoryScoped(None, List.empty).map(dir => StorageConfig(dir.toString, dir.toString)),
     )
@@ -91,7 +91,7 @@ object IngestModuleSpec {
     ) ++ ZLayer(
       AssetPermissionsCache.makeCache(1, 1.minute)(_ => ZIO.dieMessage("unused")).map(AssetPermissionsCache(_)),
     )
-    AppConfig.layer >+> ZLayer.makeSome[AppConfig, IngestServerEndpoints](
+    AppConfig.layer >+> ZLayer.makeSome[AppConfig, IngestServerEndpoints & StorageConfig](
       IngestModule.layer,
       IngestModule.endpointsLayer,
       prometheus.publisherLayer,

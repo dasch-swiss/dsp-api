@@ -46,6 +46,7 @@ object IngestModule {
     BulkIngestService &
     Features &
     ImportService &
+    IngestExecutor &
     IngestService &
     MaintenanceEndpointsHandler &
     MonitoringEndpointsHandler &
