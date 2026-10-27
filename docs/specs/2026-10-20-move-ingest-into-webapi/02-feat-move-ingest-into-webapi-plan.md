@@ -193,58 +193,58 @@ because the testkit runs the Sipi image `SipiTestContainer` uses, not the git-ve
 
 Ingest library:
 
-- [ ] `git mv modules/ingest/src/main/resources/application.conf modules/ingest/src/main/resources/ingest.conf` and rewrite it under a root `ingest` block with the keys, defaults and `INGEST_*` variables of the Configuration mapping table; drop the `service`, `jwt` and `dsp-api` blocks
-- [ ] In `config/Configuration.scala`, read `ConfigFactory.parseResources("ingest.conf").resolve().getConfig("ingest")`; remove `ServiceConfig` and `DspApiConfig` and their projections; add `SipiConfig.localDevImage` and `ExecutorConfig(cpuShare)` (failing to load outside `(0, 1]`); keep `JwtConfig` as a type (no longer loaded) and project `IngestConfig(bulkMaxParallel)` from the root key
-- [ ] Use `SipiConfig.localDevImage` instead of `BuildInfo.knoraSipiVersion` in `CommandExecutorLive.buildCommand`
-- [ ] Delete `Main.scala`, `Endpoints.scala`, `infrastructure/IngestApiServer.scala`, `infrastructure/Logger.scala`, `infrastructure/Metrics.scala`, `infrastructure/OtelSetup.scala` and `src/main/resources/logback.xml`
-- [ ] Delete `FetchAssetPermissionsLive`, `AssetAccessResponse` and the HTTP layer from `FetchAssetPermissions.scala`, keeping the trait; switch `ProjectsEndpointSpec` from the sttp stub to `FetchAssetPermissionsMock`
-- [ ] Remove the `bootstrap` override (`Configuration.layer >+> Logger.layer`) from `MigrateSizes.scala` and `MigrateMimeTypes.scala`; they keep their `scala_binary` targets
-- [ ] In `modules/ingest/BUILD.bazel`, delete `ingest_classes`, the `app` binary and the image section (`runtime_jars` through `oci_push`); keep `ingest`, `ingest_buildinfo`, the two migration binaries, `test` and `license_srcs`
-- [ ] Add a `ConfigurationSpec`: defaults load from `ingest.conf`, an `INGEST_*` override applies, `cpu-share` outside `(0, 1]` fails, and webapi's `ConfigFactory.load()` sees no `ingest` key
+- [x] `git mv modules/ingest/src/main/resources/application.conf modules/ingest/src/main/resources/ingest.conf` and rewrite it under a root `ingest` block with the keys, defaults and `INGEST_*` variables of the Configuration mapping table; drop the `service`, `jwt` and `dsp-api` blocks
+- [x] In `config/Configuration.scala`, read `ConfigFactory.parseResources("ingest.conf").resolve().getConfig("ingest")`; remove `ServiceConfig` and `DspApiConfig` and their projections; add `SipiConfig.localDevImage` and `ExecutorConfig(cpuShare)` (failing to load outside `(0, 1]`); keep `JwtConfig` as a type (no longer loaded) and project `IngestConfig(bulkMaxParallel)` from the root key
+- [x] Use `SipiConfig.localDevImage` instead of `BuildInfo.knoraSipiVersion` in `CommandExecutorLive.buildCommand`
+- [x] Delete `Main.scala`, `Endpoints.scala`, `infrastructure/IngestApiServer.scala`, `infrastructure/Logger.scala`, `infrastructure/Metrics.scala`, `infrastructure/OtelSetup.scala` and `src/main/resources/logback.xml`
+- [x] Delete `FetchAssetPermissionsLive`, `AssetAccessResponse` and the HTTP layer from `FetchAssetPermissions.scala`, keeping the trait; switch `ProjectsEndpointSpec` from the sttp stub to `FetchAssetPermissionsMock`
+- [x] Remove the `bootstrap` override (`Configuration.layer >+> Logger.layer`) from `MigrateSizes.scala` and `MigrateMimeTypes.scala`; they keep their `scala_binary` targets
+- [x] In `modules/ingest/BUILD.bazel`, delete `ingest_classes`, the `app` binary and the image section (`runtime_jars` through `oci_push`); keep `ingest`, `ingest_buildinfo`, the two migration binaries, `test` and `license_srcs`
+- [x] Add a `ConfigurationSpec`: defaults load from `ingest.conf`, an `INGEST_*` override applies, `cpu-share` outside `(0, 1]` fails, and webapi's `ConfigFactory.load()` sees no `ingest` key
 
 dsp-api side:
 
-- [ ] Replace `//modules/ingest:ingest_classes` with `//modules/ingest` in `//modules/webapi:webapi` deps and drop its comment
-- [ ] Add `slice/ingest/IngestServerEndpoints.scala`: takes ingest's four `*EndpointsHandler`s and returns their endpoints with `prependSecurityIn("ingest")`
-- [ ] Add `slice/admin/domain/service/IngestFetchAssetPermissions.scala` implementing `swiss.dasch.FetchAssetPermissions`: authenticate a present token with `Authenticator.authenticate`, use `AnonymousUser` when absent, and return whether `AssetPermissionsCache.getAssetAccess(user)(shortcode, filename).original` is granted
-- [ ] Rewrite `DspIngestClientLive` in `slice/admin/domain/service/DspIngestClient.scala` in-process: `getAssetInfo` maps `AssetInfoService.findByAssetRef` to `AssetInfoResponse` (`NotFoundException` when absent); `exportProject` moves `ProjectService.zipProject`'s result to `outputFile` (`None` without a project folder); `importProject` runs `ImportService.importZipStream` over the file, logging a failure and returning `fileToImport`; `eraseProject` deletes the project folder only when ingest's `allow-erase-projects` is on, logging otherwise; drop the sttp backend
-- [ ] Add `slice/ingest/IngestModule.scala`: one `ZLayer.makeSome` over the ingest layers `Main` listed, plus `JwtConfig(app.jwt.secret, app.dsp-ingest.audience, app.jwt.issuer)`, `IngestFetchAssetPermissions` and `DspIngestClientLive`, exposing `IngestServerEndpoints & AssetInfoService & DspIngestClient`
-- [ ] Wire `IngestModule` in `core/LayersLive.scala` in place of `AssetInfoServiceLayer.layer` and `DspIngestClientLive.layer`, add the ingest-config parameter to `remainingLayer`, and delete `store/iiif/impl/AssetInfoServiceLayer.scala`
-- [ ] Register `IngestServerEndpoints` in `slice/api/Endpoints.scala`
-- [ ] Remove `baseUrl` and `assetDir` from `DspIngestConfig` (`config/AppConfig.scala`) and `base-url` and `asset-dir` from `app.dsp-ingest` in `application.conf`; update `AppConfigSpec`
+- [x] Replace `//modules/ingest:ingest_classes` with `//modules/ingest` in `//modules/webapi:webapi` deps and drop its comment
+- [x] Add `slice/ingest/IngestServerEndpoints.scala`: takes ingest's four `*EndpointsHandler`s and returns their endpoints with `prependSecurityIn("ingest")`
+- [x] Add `slice/admin/domain/service/IngestFetchAssetPermissions.scala` implementing `swiss.dasch.FetchAssetPermissions`: authenticate a present token with `Authenticator.authenticate`, use `AnonymousUser` when absent, and return whether `AssetPermissionsCache.getAssetAccess(user)(shortcode, filename).original` is granted
+- [x] Rewrite `DspIngestClientLive` in `slice/admin/domain/service/DspIngestClient.scala` in-process: `getAssetInfo` maps `AssetInfoService.findByAssetRef` to `AssetInfoResponse` (`NotFoundException` when absent); `exportProject` moves `ProjectService.zipProject`'s result to `outputFile` (`None` without a project folder); `importProject` runs `ImportService.importZipStream` over the file, logging a failure and returning `fileToImport`; `eraseProject` deletes the project folder only when ingest's `allow-erase-projects` is on, logging otherwise; drop the sttp backend
+- [x] Add `slice/ingest/IngestModule.scala`: one `ZLayer.makeSome` over the ingest layers `Main` listed, plus `JwtConfig(app.jwt.secret, app.dsp-ingest.audience, app.jwt.issuer)`, `IngestFetchAssetPermissions` and `DspIngestClientLive`, exposing `IngestServerEndpoints & AssetInfoService & DspIngestClient`
+- [x] Wire `IngestModule` in `core/LayersLive.scala` in place of `AssetInfoServiceLayer.layer` and `DspIngestClientLive.layer`, add the ingest-config parameter to `remainingLayer`, and delete `store/iiif/impl/AssetInfoServiceLayer.scala`
+- [x] Register `IngestServerEndpoints` in `slice/api/Endpoints.scala`
+- [x] Remove `baseUrl` and `assetDir` from `DspIngestConfig` (`config/AppConfig.scala`) and `base-url` and `asset-dir` from `app.dsp-ingest` in `application.conf`; update `AppConfigSpec`
 
 Testkit and tests:
 
-- [ ] Delete `modules/testkit/.../testcontainers/DspIngestTestContainer.scala`; drop it and the `dsp-ingest.base-url` override from `core/TestContainerLayers.scala` and `TestContainerLayersSpec`
-- [ ] Pass the testkit ingest config to `remainingLayer` from `E2EZSpec`: asset dir = `SharedVolumes.Images` host path, temp dir = `SharedVolumes.Temp` host path, `use-local-dev = true`, `local-dev-image` = the Sipi image `SipiTestContainer` runs
-- [ ] Point `testservices/TestDspIngestClient.scala` at the test API's `/ingest/` (`KnoraApi` host and port) instead of `DspIngestConfig.baseUrl`, and update `TestClientsModule`
-- [ ] Update the specs that referenced the removed container or config (`ProjectMigrationExportServiceSpec`, `ProjectMigrationImportServiceSpec`, `MetadataEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`), changing only setup
-- [ ] Replace `DspIngestClientLiveSpec` with a spec of the in-process client: asset info found and not found, export with and without a project folder, refused erase, and a failing import that is logged and returns `fileToImport`
-- [ ] Add `IngestFetchAssetPermissionsSpec`: granted, denied, anonymous, invalid token fails
-- [ ] Add `IngestServerEndpointsSpec`: every handler endpoint is served under `/ingest/`, and the path template starts with `/ingest/`
-- [ ] Add `IngestModuleSpec` with a token from `JwtService.createJwt` and one from `createJwtForDspIngest`: both are accepted by `/ingest/projects`; a token with a foreign audience or issuer is `401`
-- [ ] Add `modules/test-e2e/.../slice/ingest/IngestEndpointsE2ESpec.scala`: upload above 1 MiB with `Content-Length` through `POST /ingest/projects/0001/assets/ingest/{filename}` and read its info back with a matching checksum; no token is `401`; a token without write scope is `401` with ingest's body; `/ingest/health` is `200` without a `db` entry; `/ingest/maintenance/ImportProjectsToDb` is `400`; the original download is `200` for a permitted user and `403` for an anonymous caller on a restricted asset from the loaded test data
+- [x] Delete `modules/testkit/.../testcontainers/DspIngestTestContainer.scala`; drop it and the `dsp-ingest.base-url` override from `core/TestContainerLayers.scala` and `TestContainerLayersSpec`
+- [x] Pass the testkit ingest config to `remainingLayer` from `E2EZSpec`: asset dir = `SharedVolumes.Images` host path, temp dir = `SharedVolumes.Temp` host path, `use-local-dev = true`, `local-dev-image` = the Sipi image `SipiTestContainer` runs
+- [x] Point `testservices/TestDspIngestClient.scala` at the test API's `/ingest/` (`KnoraApi` host and port) instead of `DspIngestConfig.baseUrl`, and update `TestClientsModule`
+- [x] Update the specs that referenced the removed container or config (`ProjectMigrationExportServiceSpec`, `ProjectMigrationImportServiceSpec`, `MetadataEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`), changing only setup
+- [x] Replace `DspIngestClientLiveSpec` with a spec of the in-process client: asset info found and not found, export with and without a project folder, refused erase, and a failing import that is logged and returns `fileToImport`
+- [x] Add `IngestFetchAssetPermissionsSpec`: granted, denied, anonymous, invalid token fails
+- [x] Add `IngestServerEndpointsSpec`: every handler endpoint is served under `/ingest/`, and the path template starts with `/ingest/`
+- [x] Add `IngestModuleSpec` with a token from `JwtService.createJwt` and one from `createJwtForDspIngest`: both are accepted by `/ingest/projects`; a token with a foreign audience or issuer is `401`
+- [x] Add `modules/test-e2e/.../slice/ingest/IngestEndpointsE2ESpec.scala`: upload above 1 MiB with `Content-Length` through `POST /ingest/projects/0001/assets/ingest/{filename}` and read its info back with a matching checksum; no token is `401`; a token without write scope is `401` with ingest's body; `/ingest/health` is `200` without a `db` entry; `/ingest/maintenance/ImportProjectsToDb` is `400`; the original download is `200` for a permitted user and `403` for an anonymous caller on a restricted asset from the loaded test data
 
 Removal of the standalone run path:
 
-- [ ] Delete `modules/test-ingest-integration/` (the upload path is covered by `IngestEndpointsE2ESpec` and the E2E specs that upload through `TestDspIngestClient`)
-- [ ] Remove `//modules/test-ingest-integration:license_srcs` from `tools/license/BUILD.bazel` and `tools/lint/BUILD.bazel`, and its `.bazelignore` entry
-- [ ] Remove `//modules/ingest:load` from `docker-load-test-images` and the `test-ingest-integration`, `docker-build-ingest-image` and `docker-publish-ingest-image` recipes from `justfile`, with their uses in `docker-build` and `docker-publish`
-- [ ] Remove `ingest` from the `docker compose up` service lists and recipe comments in `justfile`
-- [ ] Remove the `ingest` service and the `ingest-db` volume from `docker-compose.yml`; give the `api` service `./modules/sipi/images:/opt/images` read-write and `./modules/sipi/tmp-dsp-ingest:/opt/temp`, `INGEST_ALLOW_ERASE_PROJECTS=true`, drop `KNORA_WEBAPI_DSP_INGEST_BASE_URL` and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR`, and raise its memory limit by ingest's 2G
-- [ ] Remove the `test-ingest-integration` job from `.github/workflows/build-and-test.yml` and the "sipi/ingest/fuseki images" wording; rename the "dsp-api/dsp-ingest/sipi/fuseki" step in `.github/workflows/docker-publish.yml`
-- [ ] Remove `//modules/ingest:__pkg__` from the `runtime_fs_*` visibility in `modules/sipi/BUILD.bazel`
+- [x] Delete `modules/test-ingest-integration/` (the upload path is covered by `IngestEndpointsE2ESpec` and the E2E specs that upload through `TestDspIngestClient`)
+- [x] Remove `//modules/test-ingest-integration:license_srcs` from `tools/license/BUILD.bazel` and `tools/lint/BUILD.bazel`, and its `.bazelignore` entry
+- [x] Remove `//modules/ingest:load` from `docker-load-test-images` and the `test-ingest-integration`, `docker-build-ingest-image` and `docker-publish-ingest-image` recipes from `justfile`, with their uses in `docker-build` and `docker-publish`
+- [x] Remove `ingest` from the `docker compose up` service lists and recipe comments in `justfile`
+- [x] Remove the `ingest` service and the `ingest-db` volume from `docker-compose.yml`; give the `api` service `./modules/sipi/images:/opt/images` read-write and `./modules/sipi/tmp-dsp-ingest:/opt/temp`, `INGEST_ALLOW_ERASE_PROJECTS=true`, drop `KNORA_WEBAPI_DSP_INGEST_BASE_URL` and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR`, and raise its memory limit by ingest's 2G
+- [x] Remove the `test-ingest-integration` job from `.github/workflows/build-and-test.yml` and the "sipi/ingest/fuseki images" wording; rename the "dsp-api/dsp-ingest/sipi/fuseki" step in `.github/workflows/docker-publish.yml`
+- [x] Remove `//modules/ingest:__pkg__` from the `runtime_fs_*` visibility in `modules/sipi/BUILD.bazel`
 
 Checks:
 
-- [ ] Run `git grep -n -e "ingest_classes" -e "dsp-ingest:latest" -e "test-ingest-integration" -e "swiss.dasch.Main" -- ':!docs/specs' ':!*CHANGELOG.md'`; it returns only documentation updated in Phase 6
-- [ ] Run `bazel build //...`; it builds
-- [ ] Run `just test-unit`; it passes (includes `//modules/ingest:test`)
-- [ ] Run `just test-it`; it passes
-- [ ] Run `just test-e2e`; it passes, including `EndpointsE2ESpec` (every endpoint declares a method) and the project export and import round trips
-- [ ] Run `just stack-start`, then upload an image with `curl` to `http://localhost:3333/ingest/projects/0001/assets/ingest/<name>` with a login token and read `GET /ingest/projects/0001/assets/<id>`; both succeed
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `git grep -n -e "ingest_classes" -e "dsp-ingest:latest" -e "test-ingest-integration" -e "swiss.dasch.Main" -- ':!docs/specs' ':!*CHANGELOG.md'`; it returns only documentation updated in Phase 6
+- [x] Run `bazel build //...`; it builds
+- [x] Run `just test-unit`; it passes (includes `//modules/ingest:test`)
+- [x] Run `just test-it`; it passes
+- [x] Run `just test-e2e`; it passes, including `EndpointsE2ESpec` (every endpoint declares a method) and the project export and import round trips (1025/1026; `ValueHasXmlOnValueWriteE2ESpec` "6000 standoff tags" times out on the phase base too, not from this diff)
+- [x] Run `just stack-start`, then upload an image with `curl` to `http://localhost:3333/ingest/projects/0001/assets/ingest/<name>` with a login token and read `GET /ingest/projects/0001/assets/<id>`; both succeed
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 4: Contain ingest work
 
