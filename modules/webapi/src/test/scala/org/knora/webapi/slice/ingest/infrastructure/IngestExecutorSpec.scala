@@ -46,6 +46,21 @@ class IngestExecutorSpec extends ZIOSpecDefault {
         } yield assertTrue(max == 2)
       }
     } @@ TestAspect.withLiveClock,
+    test("a nested withPermit section dies instead of waiting for a permit") {
+      ZIO.scoped {
+        IngestExecutor.make(2).flatMap(executor => executor.withPermit(executor.withPermit(ZIO.unit)).exit)
+      }.map(exit => assertTrue(exit.isFailure, exit.causeOption.exists(_.isDie)))
+    },
+    test("sequential withPermit sections, and a section after a dead nested one, still get a permit") {
+      ZIO.scoped {
+        for {
+          executor <- IngestExecutor.make(1)
+          _        <- executor.withPermit(ZIO.unit) *> executor.withPermit(ZIO.unit)
+          _        <- executor.withPermit(executor.withPermit(ZIO.unit)).exit
+          _        <- executor.withPermit(ZIO.unit)
+        } yield assertCompletes
+      }
+    } @@ TestAspect.timeout(10.seconds),
     test("the pool size is the floored share of the processors, at least one") {
       assertTrue(
         IngestExecutor.poolSize(4, 0.5) == 2,

@@ -22,18 +22,21 @@ import org.knora.webapi.slice.ingest.config.ExecutorConfig
  * blocking pool) to as many concurrent sections as the pool has threads.
  *
  * A permit section must be leaf-level: it must never call code that takes a permit itself. The semaphore is not
- * reentrant, so a nested section deadlocks once every permit is held.
+ * reentrant, so a nested section would deadlock once every permit is held; `withPermit` dies at once instead.
  */
-final class IngestExecutor private (executor: Executor, semaphore: Semaphore) {
+final class IngestExecutor private (executor: Executor, semaphore: Semaphore, inPermit: FiberRef[Boolean]) {
 
   def run[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] = zio.onExecutor(executor)
 
-  def withPermit[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] = semaphore.withPermit(zio)
+  def withPermit[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] =
+    ZIO.whenZIODiscard(inPermit.get)(
+      ZIO.dieMessage("IngestExecutor.withPermit inside a permit section: permit sections must be leaf-level"),
+    ) *> semaphore.withPermit(inPermit.locally(true)(zio))
 }
 
 object IngestExecutor {
 
-  def poolSize(availableProcessors: Int, cpuShare: Double): Int =
+  private[infrastructure] def poolSize(availableProcessors: Int, cpuShare: Double): Int =
     math.max(1, math.floor(availableProcessors * cpuShare).toInt)
 
   /** An executor of `size` threads and permits, shut down when the scope closes. */
@@ -42,7 +45,8 @@ object IngestExecutor {
     for {
       pool      <- ZIO.acquireRelease(newPool)(pool => ZIO.succeed(pool.shutdown()))
       semaphore <- Semaphore.make(size.toLong)
-    } yield IngestExecutor(Executor.fromJavaExecutor(pool), semaphore)
+      inPermit  <- FiberRef.make(false)
+    } yield IngestExecutor(Executor.fromJavaExecutor(pool), semaphore, inPermit)
   }
 
   private def threadFactory: ThreadFactory = {
