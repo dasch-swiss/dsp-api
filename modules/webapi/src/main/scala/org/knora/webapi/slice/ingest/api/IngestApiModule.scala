@@ -13,6 +13,7 @@ import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.slice.ingest.config.IngestFeatures
 import org.knora.webapi.slice.ingest.domain.*
 import org.knora.webapi.slice.ingest.infrastructure.HealthCheckService
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.ports.OriginalAccess
 import org.knora.webapi.slice.ingest.repo.AssetInfoService
 import org.knora.webapi.slice.ingest.repo.StorageService
@@ -29,6 +30,7 @@ object IngestApiModule { self =>
     DspIngestConfig &
     HealthCheckService &
     ImportService &
+    IngestExecutor &
     IngestFeatures &
     IngestService &
     JwtConfig &

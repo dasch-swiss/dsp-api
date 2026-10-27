@@ -24,6 +24,7 @@ import org.knora.webapi.slice.ingest.domain.Asset.StillImageAsset
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.JpxDerivativeFile
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.OrigFile
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
 import org.knora.webapi.slice.ingest.repo.FileChecksumServiceLive
 import org.knora.webapi.slice.ingest.repo.StorageService
@@ -150,10 +151,46 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     }
   }
 
+  private val ingestThreadSuite = suite("bulk ingest started on the ingest executor")(
+    test("runs the bulk-ingest fiber on an ingest thread") {
+      for {
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- Files.createFile(importDir / "0001.tif")
+        executor  <- ZIO.service[IngestExecutor]
+        fiber     <- executor.run(bulkIngestService(_.startBulkIngest(shortcode)))
+        result    <- fiber.join
+        threads   <- ZIO.serviceWithZIO[ThreadRecordingIngestService](_.threads.get)
+      } yield assertTrue(result == IngestResult.success, threads.nonEmpty, threads.forall(_.startsWith("ingest-")))
+    },
+  ).provide(
+    BulkIngestService.layer,
+    FileChecksumServiceLive.layer,
+    AssetInfoServiceLive.layer,
+    MimeTypeGuesser.layer,
+    ProjectService.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+    ThreadRecordingIngestService.layer,
+  )
+
+  final class ThreadRecordingIngestService(val threads: Ref[List[String]]) extends IngestService {
+    override def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
+      ZIO
+        .succeed(Thread.currentThread().getName)
+        .flatMap(name => threads.update(name :: _))
+        .as(TestData.stillImageAsset)
+  }
+  object ThreadRecordingIngestService {
+    val layer: ULayer[ThreadRecordingIngestService & IngestService] =
+      ZLayer.fromZIO(Ref.make(List.empty[String]).map(ThreadRecordingIngestService(_)))
+  }
+
   private val deleteProjectFolder =
     storageService(_.getProjectFolder(shortcode)).tap(p => Files.deleteRecursive(p).whenZIO(Files.exists(p)))
 
-  val spec = (suite("BulkIngestServiceLive")(
+  val spec = ((suite("BulkIngestServiceLive")(
     startBulkIngestSuite,
     finalizeBulkIngestSuite,
     getBulkIngestMappingCsvSuite,
@@ -170,5 +207,5 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-  ) @@ TestAspect.timeout(10.seconds)
+  ) + ingestThreadSuite) @@ TestAspect.timeout(10.seconds)
 }

@@ -22,6 +22,7 @@ import org.knora.webapi.slice.ingest.config.IngestFeatures
 import org.knora.webapi.slice.ingest.domain.*
 import org.knora.webapi.slice.ingest.domain.BulkIngestError.BulkIngestInProgress
 import org.knora.webapi.slice.ingest.domain.BulkIngestError.ImportFolderDoesNotExist
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.ports.OriginalAccess
 import org.knora.webapi.slice.ingest.repo.*
 
@@ -35,11 +36,12 @@ final class IngestProjectsRestService(
   projectService: ProjectService,
   reportService: ReportService,
   storageService: StorageService,
+  ingestExecutor: IngestExecutor,
 ) {
 
   private type FileDownload = (String, String, ZStream[Any, Throwable, Byte])
 
-  def listProjects(principal: IngestPrincipal): IO[ApiProblem, (Chunk[ProjectResponse], String)] =
+  def listProjects(principal: IngestPrincipal): IO[ApiProblem, (Chunk[ProjectResponse], String)] = ingestExecutor.run {
     ensureAdminScope(principal) *>
       projectService
         .listAllProjects()
@@ -47,35 +49,43 @@ final class IngestProjectsRestService(
           InternalServerError(_),
           list => (list.map(ProjectResponse.from), ContentRange("items", Some(0, list.size), Some(list.size)).toString),
         )
+  }
 
   def getProject(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, ProjectResponse] =
-    ensureProjectReadable(principal, shortcode) *>
-      projectService
-        .findProject(shortcode)
-        .some
-        .mapBoth(projectNotFoundOrServerError(_, shortcode), _ => ProjectResponse.from(shortcode))
+    ingestExecutor.run {
+      ensureProjectReadable(principal, shortcode) *>
+        projectService
+          .findProject(shortcode)
+          .some
+          .mapBoth(projectNotFoundOrServerError(_, shortcode), _ => ProjectResponse.from(shortcode))
+    }
 
   def getChecksumReport(principal: IngestPrincipal)(
     shortcode: ProjectShortcode,
-  ): IO[ApiProblem, AssetCheckResultResponse] =
+  ): IO[ApiProblem, AssetCheckResultResponse] = ingestExecutor.run {
     ensureProjectReadable(principal, shortcode) *>
       reportService
         .checksumReport(shortcode)
         .some
         .mapBoth(projectNotFoundOrServerError(_, shortcode), AssetCheckResultResponse.from)
+  }
 
   def eraseProject(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, ProjectResponse] =
-    ensureAdminScope(principal) *>
-      projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode)) *> {
-        if (features.allowEraseProjects)
-          projectService.deleteProject(shortcode).mapBoth(InternalServerError(_), _ => ProjectResponse.from(shortcode))
-        else ZIO.fail(Forbidden("The feature to erase projects is not enabled."))
-      }
+    ingestExecutor.run {
+      ensureAdminScope(principal) *>
+        projectService.findProject(shortcode).some.mapError(projectNotFoundOrServerError(_, shortcode)) *> {
+          if (features.allowEraseProjects)
+            projectService
+              .deleteProject(shortcode)
+              .mapBoth(InternalServerError(_), _ => ProjectResponse.from(shortcode))
+          else ZIO.fail(Forbidden("The feature to erase projects is not enabled."))
+        }
+    }
 
   def getAssetInfo(principal: IngestPrincipal)(
     shortcode: ProjectShortcode,
     assetId: AssetId,
-  ): IO[ApiProblem, AssetInfoResponse] = {
+  ): IO[ApiProblem, AssetInfoResponse] = ingestExecutor.run {
     val ref = AssetRef(assetId, shortcode)
     ensureProjectReadable(principal, shortcode) *>
       assetInfoService.findByAssetRef(ref).some.mapBoth(assetRefNotFoundOrServerError(_, ref), AssetInfoResponse.from)
@@ -84,7 +94,7 @@ final class IngestProjectsRestService(
   def getAssetOriginal(principal: Option[IngestPrincipal])(
     shortcode: ProjectShortcode,
     assetId: AssetId,
-  ): IO[ApiProblem, FileDownload] = {
+  ): IO[ApiProblem, FileDownload] = ingestExecutor.run {
     val ref = AssetRef(assetId, shortcode)
     for {
       assetInfo <- assetInfoService.findByAssetRef(ref).some.mapError(assetRefNotFoundOrServerError(_, ref))
@@ -105,7 +115,7 @@ final class IngestProjectsRestService(
     shortcode: ProjectShortcode,
     filename: AssetFilename,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ApiProblem, AssetInfoResponse] =
+  ): IO[ApiProblem, AssetInfoResponse] = ingestExecutor.run {
     ensureProjectWritable(principal, shortcode) *>
       ZIO.scoped {
         for {
@@ -119,58 +129,68 @@ final class IngestProjectsRestService(
           info   <- assetInfoService.findByAssetRef(asset.ref).someOrFailException.orDie
         } yield AssetInfoResponse.from(info)
       }
+  }
 
   def startBulkIngest(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, ProjectResponse] =
-    ensureProjectWritable(principal, shortcode) *>
-      bulkIngestService
-        .startBulkIngest(shortcode)
-        .mapBoth(bulkIngestFailure(shortcode), _ => ProjectResponse.from(shortcode))
+    ingestExecutor.run {
+      ensureProjectWritable(principal, shortcode) *>
+        bulkIngestService
+          .startBulkIngest(shortcode)
+          .mapBoth(bulkIngestFailure(shortcode), _ => ProjectResponse.from(shortcode))
+    }
 
   def finalizeBulkIngest(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, ProjectResponse] =
-    ensureProjectWritable(principal, shortcode) *>
-      bulkIngestService
-        .finalizeBulkIngest(shortcode)
-        .mapBoth(bulkIngestFailure(shortcode), _ => ProjectResponse.from(shortcode))
+    ingestExecutor.run {
+      ensureProjectWritable(principal, shortcode) *>
+        bulkIngestService
+          .finalizeBulkIngest(shortcode)
+          .mapBoth(bulkIngestFailure(shortcode), _ => ProjectResponse.from(shortcode))
+    }
 
   def getBulkIngestMappingCsv(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, String] =
-    ensureProjectWritable(principal, shortcode) *>
-      bulkIngestService
-        .getBulkIngestMappingCsv(shortcode)
-        .mapError {
-          case None                           => bulkIngestInProgress(shortcode)
-          case Some(ioException: IOException) => InternalServerError(ioException)
-        }
-        .someOrFail(NotFound(shortcode))
+    ingestExecutor.run {
+      ensureProjectWritable(principal, shortcode) *>
+        bulkIngestService
+          .getBulkIngestMappingCsv(shortcode)
+          .mapError {
+            case None                           => bulkIngestInProgress(shortcode)
+            case Some(ioException: IOException) => InternalServerError(ioException)
+          }
+          .someOrFail(NotFound(shortcode))
+    }
 
   def uploadBulkIngestFile(principal: IngestPrincipal)(
     shortcode: ProjectShortcode,
     filename: String,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ApiProblem, UploadResponse] =
+  ): IO[ApiProblem, UploadResponse] = ingestExecutor.run {
     ensureProjectWritable(principal, shortcode) *>
       bulkIngestService
         .uploadSingleFile(shortcode, filename, stream)
         .mapError(_.getOrElse(bulkIngestInProgress(shortcode)))
+  }
 
   def exportProject(principal: IngestPrincipal)(shortcode: ProjectShortcode): IO[ApiProblem, FileDownload] =
-    ensureAdminScope(principal) *>
-      projectService
-        .zipProject(shortcode)
-        .some
-        .mapBoth(
-          projectNotFoundOrServerError(_, shortcode),
-          path =>
-            (
-              s"attachment; filename=export-$shortcode.bagit.zip",
-              "application/zip",
-              ZStream.fromFile(path.toFile).orDie,
-            ),
-        )
+    ingestExecutor.run {
+      ensureAdminScope(principal) *>
+        projectService
+          .zipProject(shortcode)
+          .some
+          .mapBoth(
+            projectNotFoundOrServerError(_, shortcode),
+            path =>
+              (
+                s"attachment; filename=export-$shortcode.bagit.zip",
+                "application/zip",
+                ZStream.fromFile(path.toFile).orDie,
+              ),
+          )
+    }
 
   def importProject(principal: IngestPrincipal)(
     shortcode: ProjectShortcode,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ApiProblem, UploadResponse] =
+  ): IO[ApiProblem, UploadResponse] = ingestExecutor.run {
     ensureAdminScope(principal) *>
       importService
         .importZipStream(shortcode, stream.orDie)
@@ -183,6 +203,7 @@ final class IngestProjectsRestService(
           },
           _ => UploadResponse(),
         )
+  }
 
   private val ChunkSize = 64 * 1024
 

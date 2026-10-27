@@ -9,8 +9,13 @@ import zio.*
 import zio.stream.ZStream
 
 import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 
-final class IngestReportRestService(reportService: ReportService, projectService: ProjectService) {
+final class IngestReportRestService(
+  reportService: ReportService,
+  projectService: ProjectService,
+  ingestExecutor: IngestExecutor,
+) {
 
   private val createReports: Task[Unit] =
     for {
@@ -25,7 +30,7 @@ final class IngestReportRestService(reportService: ReportService, projectService
 
   /** Any authenticated caller may start it: the standalone service never checked the scope it documents. */
   val createAssetOverviewReport: UIO[String] =
-    createReports.logError.forkDaemon.as("work in progress")
+    ingestExecutor.run(createReports.logError.forkDaemon.as("work in progress"))
 }
 
 object IngestReportRestService {
