@@ -15,6 +15,8 @@ import zio.schema.Schema
 enum ActionName {
   case ApplyTopLeftCorrection extends ActionName
   case UpdateAssetMetadata    extends ActionName
+  case MigrateSizes           extends ActionName
+  case MigrateMimeTypes       extends ActionName
 }
 
 object ActionName {

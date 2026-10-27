@@ -35,7 +35,7 @@ object AssetSizeMigrationReport {
 /**
  * Backfills `sizeOriginal`/`sizeDerivative` into `.info` sidecars written before those fields existed.
  * Checksums are left alone, so a corrupted asset stays detectable.
- * Entrypoint: the standalone `swiss.dasch.MigrateSizes` main.
+ * Entrypoint: the `MigrateSizes` ingest maintenance action.
  */
 final case class AssetSizeMigrationService(
   assetInfoService: AssetInfoService,

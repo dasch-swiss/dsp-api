@@ -12,6 +12,8 @@ import zio.ZLayer
 import org.knora.webapi.slice.ingest.api.ApiProblem
 import org.knora.webapi.slice.ingest.domain.*
 import org.knora.webapi.slice.ingest.domain.ActionName.ApplyTopLeftCorrection
+import org.knora.webapi.slice.ingest.domain.ActionName.MigrateMimeTypes
+import org.knora.webapi.slice.ingest.domain.ActionName.MigrateSizes
 import org.knora.webapi.slice.ingest.domain.ActionName.UpdateAssetMetadata
 import org.knora.webapi.slice.ingest.infrastructure.*
 import org.knora.webapi.slice.ingest.repo.*
@@ -40,8 +42,13 @@ final case class MaintenanceEndpointsHandler(
               .mapError(ApiProblem.InternalServerError(_))
           _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
           _ <- action match {
-                 case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
-                 case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
+                 case UpdateAssetMetadata             => maintenanceActions.updateAssetMetadata(paths).forkDaemon.logError
+                 case ApplyTopLeftCorrection          => maintenanceActions.applyTopLeftCorrections(paths).forkDaemon.logError
+                 case MigrateSizes | MigrateMimeTypes =>
+                   ZIO.fail(
+                     ApiProblem.BadRequest
+                       .invalidPathVariable("name", action.toString, "only supported by dsp-api's /ingest/ routes"),
+                   )
                }
         } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
       })

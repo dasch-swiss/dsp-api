@@ -50,7 +50,7 @@ object AssetMimeTypeMigrationReport {
  * from `originalFilename`'s extension via [[MimeTypeGuesser]] — the same mapping the ingest pipeline
  * uses, so a backfilled sidecar is indistinguishable from a freshly written one and no mime type
  * outside `SupportedFileType` can enter the store. Every other field, checksums included, is left
- * alone. Entrypoint: the standalone `swiss.dasch.MigrateMimeTypes` main.
+ * alone. Entrypoint: the `MigrateMimeTypes` ingest maintenance action.
  */
 final case class AssetMimeTypeMigrationService(
   assetInfoService: AssetInfoService,
