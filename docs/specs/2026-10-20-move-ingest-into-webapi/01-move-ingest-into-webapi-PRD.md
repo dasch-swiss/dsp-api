@@ -12,6 +12,13 @@ repositories:
 
 # Ingest runs inside dsp-api under /ingest/
 
+## Revisions
+
+- 2026-10-27, owner decision: minimal diff. Ingest's code stays in `modules/ingest` with its structure and package,
+  as a library dsp-api builds in and serves under `/ingest/`; it is not moved into a webapi slice and its API layer is
+  not rebuilt. The context, core feature 1 and the dsp-api repository impact are reworded accordingly; the
+  requirements are unchanged.
+
 ## Context
 
 dsp-ingest runs as its own service, with its own container, configuration and database. Its work is close to the
@@ -19,8 +26,8 @@ API's: it authenticates with tokens the API already issues, and it writes the as
 Running it separately means two services to build, deploy and monitor, a second configuration, and a second address
 for clients.
 
-The move turns ingest into a slice of the webapi module, served under `/ingest/`. The `ingest.<domain>` host stays
-permanently as a proxy to those routes. The ingest container and its SQLite database go away.
+The move builds ingest's existing code into dsp-api as a library, served under `/ingest/`. The `ingest.<domain>`
+host stays permanently as a proxy to those routes. The ingest container and its SQLite database go away.
 
 ## Goals
 
@@ -34,11 +41,11 @@ permanently as a proxy to those routes. The ingest container and its SQLite data
 
 ## Core features
 
-1. **Ingest slice in webapi.** Every ingest endpoint (projects, assets, bulk ingest, export, import, erase, reports,
+1. **Ingest served by dsp-api.** Every ingest endpoint (projects, assets, bulk ingest, export, import, erase, reports,
    maintenance, info, health, metrics) is served by dsp-api under `/ingest/`, with the same requests and responses
    as today, except for two deliberate changes: the `ImportProjectsToDb` maintenance action is removed, and `/health`
-   no longer reports a database. The endpoints use dsp-api's authentication; the tokens and scopes they accept are
-   unchanged.
+   no longer reports a database. The endpoints keep ingest's own token check, configured with dsp-api's JWT
+   settings; the tokens and scopes they accept are unchanged.
 2. **Separate configuration.** Ingest keeps its own configuration inside dsp-api, separate from dsp-api's; no
    setting is shared or merged. Ingest settings that no longer apply (its own server address, database, JWT and API
    URL) are dropped.
@@ -56,9 +63,9 @@ permanently as a proxy to those routes. The ingest container and its SQLite data
 
 ## Repository impact
 
-- **dsp-api:** the ingest slice, ingest's configuration kept separate inside dsp-api, Sipi/ffmpeg in the dsp-api
-  image, and removal of the standalone ingest application, its image and its publishing, and of the ingest container
-  from the local stack.
+- **dsp-api:** ingest's code built into dsp-api as a library and served under `/ingest/`, ingest's configuration
+  kept separate inside dsp-api, Sipi/ffmpeg in the dsp-api image, and removal of the standalone ingest application,
+  its image and its publishing, and of the ingest container from the local stack.
 - **dsp-app:** the upload paths (including the Cypress helpers) and the `ingestUrl` configuration point at
   `/ingest/` on the API host.
 - **dsp-tools:** the ingest client paths and the ingest URL derivation point at `/ingest/` on the API host;

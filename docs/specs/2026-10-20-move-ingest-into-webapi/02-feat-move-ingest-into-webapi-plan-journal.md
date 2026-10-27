@@ -51,7 +51,10 @@ status: in-progress
 
 ## Deferrals
 
-- none
+- 2026-10-27: Phases 2-4 of the previous plan shape (slice move, rebuilt API layer, executor) were discarded by owner
+  decision (minimal diff; `modules/ingest` keeps its structure). Their commits are preserved on branch
+  `backup/docs/move-ingest-into-webapi-brief` (tip `11c2df207`); the Phases table rows 2-3 recorded there are reset,
+  and Phase 2 onwards restarts from the rewritten plan at `99963d79e`.
 
 ## Deviations
 
