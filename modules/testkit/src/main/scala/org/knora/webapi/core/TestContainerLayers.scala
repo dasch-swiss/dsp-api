@@ -13,6 +13,8 @@ import zio.config.typesafe.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
+import org.knora.webapi.slice.ingest.config.IngestConfig
+import org.knora.webapi.slice.ingest.config.IngestConfig.IngestConfigs
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
@@ -21,7 +23,7 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 object TestContainerLayers { self =>
 
   type Environment = SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer &
-    SipiTestContainer & AppConfigurations
+    SipiTestContainer & AppConfigurations & IngestConfigs
 
   private type ContainersEnv =
     SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer & SipiTestContainer
@@ -45,7 +47,8 @@ object TestContainerLayers { self =>
     }
 
   val all: ULayer[self.Environment] =
-    ZLayer.succeedEnvironment(cachedContainers) >+> AppConfigForTestContainers.testcontainers
+    ZLayer.succeedEnvironment(cachedContainers) >+>
+      (AppConfigForTestContainers.testcontainers ++ IngestConfig.layer.orDie)
 
   private object AppConfigForTestContainers {
 

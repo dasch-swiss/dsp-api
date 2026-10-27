@@ -40,6 +40,9 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.slice.ingest.config.IngestConfig
+import org.knora.webapi.slice.ingest.config.IngestConfig.IngestConfigs
+import org.knora.webapi.slice.ingest.config.StorageConfig
 import org.knora.webapi.slice.ontology.DoapResolverLive
 import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
@@ -119,9 +122,10 @@ object LayersLive { self =>
   def remainingLayer(
     otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer,
     sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer,
-  ): URLayer[AppConfigurations, Environment] =
+  ): URLayer[AppConfigurations & IngestConfigs, Environment] =
     ZLayer.makeSome[
-      AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
+      AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig &
+        StorageConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
@@ -182,7 +186,8 @@ object LayersLive { self =>
       ValuesResponderV2.layer,
     )
 
-  private val loggerAndConfig: ULayer[AppConfigurations] = Logger.fromEnv() >>> AppConfig.layer
+  private val loggerAndConfig: ULayer[AppConfigurations & IngestConfigs] =
+    Logger.fromEnv() >>> (AppConfig.layer ++ IngestConfig.layer.orDie)
 
   val bootstrap: ULayer[AppConfigurations & Environment] = loggerAndConfig >+> LayersLive.remainingLayer()
 }
