@@ -247,21 +247,21 @@ outside a container (`bazel run //modules/webapi:app`, the testkit) set it to `t
 
 ### Phase 4: Contain ingest work on a dedicated executor with expendable child processes
 
-- [ ] Add `slice/ingest/infrastructure/IngestExecutor.scala`: a scoped layer creating a fixed pool of `max(1, floor(availableProcessors * cpuShare))` threads named `ingest-<n>`, shut down on release, plus a `Semaphore` with as many permits; expose `run[R, E, A](zio: ZIO[R, E, A])` (`onExecutor`) and `withPermit`
-- [ ] Log the computed pool size once at startup
-- [ ] Wrap every ingest rest-service method except info, health and metrics in `IngestExecutor.run`
-- [ ] Take an `IngestExecutor` permit around `CommandExecutorLive.execute`
-- [ ] Take an `IngestExecutor` permit around every checksum computation: turn the static `FileChecksumService.createSha256Hash` into a service method that takes the permit, and route its callers through it (`AssetInfoService.scala:213,248,251` and `FileChecksumServiceLive`)
-- [ ] Take an `IngestExecutor` permit around BagIt creation in `ProjectService.zipProject` and around BagIt validation and zip extraction in `ImportService.importZipFile`
-- [ ] Keep every permit section leaf-level (no permit section calls code that takes a permit), because ZIO's `Semaphore` is not reentrant and nested sections deadlock once all permits are held; state this rule in `IngestExecutor`'s scaladoc
-- [ ] Add an `IngestServiceSpec` case with an `IngestExecutor` of one permit: an image ingest, a project export and a project import each complete within a timeout (no nested-permit deadlock)
-- [ ] In `CommandExecutorLive`, when `use-local-dev` is false, start the process as `/bin/sh -c 'echo 1000 > /proc/self/oom_score_adj && exec "$0" "$@"' <command> <params...>`
-- [ ] Add `IngestExecutorSpec`: work passed to `run` executes on an `ingest-` thread, a `forkDaemon` inside `run` also does, and no more than the permit count of `withPermit` sections run at once
-- [ ] Add a `BulkIngestServiceSpec` case asserting the bulk-ingest fiber runs on an `ingest-` thread
-- [ ] Extend `CommandExecutorLiveSpec`: the built command carries the `oom_score_adj` wrapper outside local-dev mode and not inside it
-- [ ] Extend `CommandExecutorLiveSpec` with a Linux-only test (`TestAspect.ifProp("os.name", _.contains("Linux"))`) where `cat /proc/self/oom_score_adj` run through the executor prints `1000`
-- [ ] Add a `StillImageServiceLiveSpec` or `IngestServiceSpec` case where a failing `SipiClient` fails only that ingest and leaves a concurrent one unaffected (REQ-3.3)
-- [ ] Add a `BulkIngestServiceSpec` case where a failing `SipiClient` is counted in `IngestResult.failed` and the bulk run continues (REQ-3.3)
+- [x] Add `slice/ingest/infrastructure/IngestExecutor.scala`: a scoped layer creating a fixed pool of `max(1, floor(availableProcessors * cpuShare))` threads named `ingest-<n>`, shut down on release, plus a `Semaphore` with as many permits; expose `run[R, E, A](zio: ZIO[R, E, A])` (`onExecutor`) and `withPermit`
+- [x] Log the computed pool size once at startup
+- [x] Wrap every ingest rest-service method except info, health and metrics in `IngestExecutor.run`
+- [x] Take an `IngestExecutor` permit around `CommandExecutorLive.execute`
+- [x] Take an `IngestExecutor` permit around every checksum computation: turn the static `FileChecksumService.createSha256Hash` into a service method that takes the permit, and route its callers through it (`AssetInfoService.scala:213,248,251` and `FileChecksumServiceLive`)
+- [x] Take an `IngestExecutor` permit around BagIt creation in `ProjectService.zipProject` and around BagIt validation and zip extraction in `ImportService.importZipFile`
+- [x] Keep every permit section leaf-level (no permit section calls code that takes a permit), because ZIO's `Semaphore` is not reentrant and nested sections deadlock once all permits are held; state this rule in `IngestExecutor`'s scaladoc
+- [x] Add an `IngestServiceSpec` case with an `IngestExecutor` of one permit: an image ingest, a project export and a project import each complete within a timeout (no nested-permit deadlock)
+- [x] In `CommandExecutorLive`, when `use-local-dev` is false, start the process as `/bin/sh -c 'echo 1000 > /proc/self/oom_score_adj && exec "$0" "$@"' <command> <params...>`
+- [x] Add `IngestExecutorSpec`: work passed to `run` executes on an `ingest-` thread, a `forkDaemon` inside `run` also does, and no more than the permit count of `withPermit` sections run at once
+- [x] Add a `BulkIngestServiceSpec` case asserting the bulk-ingest fiber runs on an `ingest-` thread
+- [x] Extend `CommandExecutorLiveSpec`: the built command carries the `oom_score_adj` wrapper outside local-dev mode and not inside it
+- [x] Extend `CommandExecutorLiveSpec` with a Linux-only test (`TestAspect.ifProp("os.name", _.contains("Linux"))`) where `cat /proc/self/oom_score_adj` run through the executor prints `1000`
+- [x] Add a `StillImageServiceLiveSpec` or `IngestServiceSpec` case where a failing `SipiClient` fails only that ingest and leaves a concurrent one unaffected (REQ-3.3)
+- [x] Add a `BulkIngestServiceSpec` case where a failing `SipiClient` is counted in `IngestResult.failed` and the bulk run continues (REQ-3.3)
 - [ ] Run `bazel test //modules/webapi:test`; it passes
 - [ ] Run `just test-e2e`; it passes
 - [ ] Run `bazel test //modules/ingest:test`; it passes
