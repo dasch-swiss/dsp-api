@@ -44,6 +44,7 @@ import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.ingest.IngestModule
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
+import org.knora.webapi.slice.ingest.config.ExecutorConfig
 import org.knora.webapi.slice.ingest.config.IngestConfig
 import org.knora.webapi.slice.ingest.config.IngestConfig.IngestConfigs
 import org.knora.webapi.slice.ingest.config.IngestFeatures
@@ -132,7 +133,7 @@ object LayersLive { self =>
   ): URLayer[AppConfigurations & IngestConfigs, Environment] =
     ZLayer.makeSome[
       AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig &
-        BulkIngestConfig & IngestFeatures & SipiConfig & StorageConfig,
+        BulkIngestConfig & ExecutorConfig & IngestFeatures & SipiConfig & StorageConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,

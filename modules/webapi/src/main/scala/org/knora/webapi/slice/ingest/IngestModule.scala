@@ -8,6 +8,7 @@ package org.knora.webapi.slice.ingest
 import zio.*
 
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
+import org.knora.webapi.slice.ingest.config.ExecutorConfig
 import org.knora.webapi.slice.ingest.config.SipiConfig
 import org.knora.webapi.slice.ingest.config.StorageConfig
 import org.knora.webapi.slice.ingest.domain.*
@@ -17,7 +18,7 @@ import org.knora.webapi.slice.ingest.repo.*
 /** The ingest domain, storage and process services. Their one construction, also for the export and FAIR slices. */
 object IngestModule { self =>
 
-  type Dependencies = BulkIngestConfig & SipiConfig & StorageConfig
+  type Dependencies = BulkIngestConfig & ExecutorConfig & SipiConfig & StorageConfig
 
   type Provided =
     // format: off
@@ -28,6 +29,7 @@ object IngestModule { self =>
     FileSystemHealthIndicator &
     HealthCheckService &
     ImportService &
+    IngestExecutor &
     IngestService &
     MaintenanceActions &
     ProjectService &
@@ -47,6 +49,7 @@ object IngestModule { self =>
       FileSystemHealthIndicatorLive.layer,
       HealthCheckServiceLive.layer,
       ImportServiceLive.layer,
+      IngestExecutor.layer,
       IngestService.layer,
       MaintenanceActionsLive.layer,
       MimeTypeGuesser.layer,
