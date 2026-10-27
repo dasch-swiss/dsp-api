@@ -52,10 +52,9 @@ test *FLAGS='': require-bazel
 test-unit *FLAGS='': require-bazel
     bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test //modules/sparql-builder:test {{FLAGS}}
 
-# Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
+# Load the :latest/pinned sipi and fuseki images into the local Docker daemon (needed by test-it/test-e2e)
 docker-load-test-images *FLAGS='': require-bazel
     bazel run {{FLAGS}} //modules/sipi:load
-    bazel run {{FLAGS}} //modules/ingest:load
     bazel run {{FLAGS}} //modules/fuseki:load
 
 # Run integration tests for dsp-api
@@ -75,10 +74,6 @@ test-e2e *FLAGS='': require-bazel (docker-load-test-images FLAGS)
 # Run unit tests for ingest
 test-ingest *FLAGS='': require-bazel
     bazel test //modules/ingest:test {{FLAGS}}
-
-# Run integration tests for ingest
-test-ingest-integration *FLAGS='': require-bazel (docker-load-test-images FLAGS)
-    bazel test //modules/test-ingest-integration:test {{FLAGS}}
 
 # Check Scala formatting (scalafmt via Bazel) + license headers + markdown (CI gate, no writes)
 check *FLAGS='': require-bazel
@@ -138,17 +133,8 @@ docker-build-sipi-image *FLAGS='': require-bazel
     docker tag daschswiss/knora-sipi:latest "daschswiss/knora-sipi:$TAG"
     echo "Loaded daschswiss/knora-sipi: latest + $TAG"
 
-# Build the dsp-ingest image with Bazel + load it into the local Docker daemon (:latest and :<version>)
-docker-build-ingest-image *FLAGS='': require-bazel
-    #!/usr/bin/env bash
-    set -euo pipefail
-    TAG=$(just docker-image-tag)
-    bazel run {{FLAGS}} //modules/ingest:load
-    docker tag daschswiss/dsp-ingest:latest "daschswiss/dsp-ingest:$TAG"
-    echo "Loaded daschswiss/dsp-ingest: latest + $TAG"
-
-# Build dsp-api/sipi/ingest images locally (Fuseki excluded: use docker-build-fuseki-image)
-docker-build *FLAGS='': (docker-build-dsp-api-image FLAGS) (docker-build-sipi-image FLAGS) (docker-build-ingest-image FLAGS)
+# Build dsp-api/sipi images locally (Fuseki excluded: use docker-build-fuseki-image)
+docker-build *FLAGS='': (docker-build-dsp-api-image FLAGS) (docker-build-sipi-image FLAGS)
 
 # Build + publish the multi-arch knora-api image with Bazel (tags: latest + <version>)
 docker-publish-dsp-api-image *FLAGS='': require-bazel
@@ -164,15 +150,8 @@ docker-publish-sipi-image *FLAGS='': require-bazel
     TAG=$(just docker-image-tag)
     bazel run {{FLAGS}} //modules/sipi:push -- -t latest -t "$TAG"
 
-# Build + publish the multi-arch dsp-ingest image with Bazel (tags: latest + <version>)
-docker-publish-ingest-image *FLAGS='': require-bazel
-    #!/usr/bin/env bash
-    set -euo pipefail
-    TAG=$(just docker-image-tag)
-    bazel run {{FLAGS}} //modules/ingest:push -- -t latest -t "$TAG"
-
-# Publish all images (dsp-api/sipi/ingest/fuseki) to Docker Hub
-docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-ingest-image FLAGS) (docker-publish-fuseki-image FLAGS)
+# Publish all images (dsp-api/sipi/fuseki) to Docker Hub
+docker-publish *FLAGS='': (docker-publish-dsp-api-image FLAGS) (docker-publish-sipi-image FLAGS) (docker-publish-fuseki-image FLAGS)
 
 # Build the Fuseki image with Bazel + load it into the local Docker daemon (at :latest)
 docker-build-fuseki-image *FLAGS='': require-bazel
@@ -193,11 +172,11 @@ stack-start:
     ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started"
 
-# Start Stack without API for development: fuseki, sipi, ingest and alloy
+# Start Stack without API for development: fuseki, sipi and alloy
 stack-start-dev:
     @echo "Starting Stack without API"
     docker compose stop api app
-    docker compose up -d db sipi ingest alloy
+    docker compose up -d db sipi alloy
     ./modules/webapi/scripts/wait-for-db.sh
     @echo "Stack started without API"
 
@@ -284,7 +263,7 @@ structurizer:
 
 ## DSP stack (local dev)
 
-# starts the dsp-stack: fuseki, sipi, ingest, api, app and alloy
+# starts the dsp-stack: fuseki, sipi, api, app and alloy
 stack-up: docker-build
     docker compose -f docker-compose.yml up -d db
     ./modules/webapi/scripts/wait-for-db.sh
@@ -295,7 +274,7 @@ stack-up: docker-build
 stack-up-fast: docker-build-dsp-api-image
     docker compose -f docker-compose.yml up -d
 
-# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, ingest, api, app and alloy
+# starts the dsp-stack using the 'dsp-repo' repository: fuseki, sipi, api, app and alloy
 stack-up-ci: docker-build
     docker compose -f docker-compose.yml up -d
 
@@ -352,24 +331,24 @@ stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp
 stack-config:
     docker compose -f docker-compose.yml config
 
-# starts the dsp-stack without dsp-api: fuseki, sipi, ingest and alloy
+# starts the dsp-stack without dsp-api: fuseki, sipi and alloy
 stack-without-api: docker-build
     docker compose -f docker-compose.yml stop api app
-    docker compose -f docker-compose.yml up -d db sipi ingest alloy
+    docker compose -f docker-compose.yml up -d db sipi alloy
     ./modules/webapi/scripts/wait-for-db.sh
 
-# starts the dsp-stack without dsp-app: fuseki, sipi, ingest, api and alloy
+# starts the dsp-stack without dsp-app: fuseki, sipi, api and alloy
 stack-without-app: docker-build
     docker compose -f docker-compose.yml stop app
     docker compose -f docker-compose.yml up -d db
     ./modules/webapi/scripts/wait-for-db.sh
-    docker compose -f docker-compose.yml up -d db sipi ingest api alloy
+    docker compose -f docker-compose.yml up -d db sipi api alloy
     ./modules/webapi/scripts/wait-for-api.sh
 
-# starts the dsp-stack without dsp-api and sipi: fuseki, ingest and alloy
+# starts the dsp-stack without dsp-api and sipi: fuseki and alloy
 stack-without-api-and-sipi: docker-build
     docker compose -f docker-compose.yml stop api sipi app
-    docker compose -f docker-compose.yml up -d db ingest alloy
+    docker compose -f docker-compose.yml up -d db alloy
     ./modules/webapi/scripts/wait-for-db.sh
 
 # starts only fuseki

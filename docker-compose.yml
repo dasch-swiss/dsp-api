@@ -83,54 +83,6 @@ services:
         limits:
           memory: 4G
 
-  ingest:
-    image: daschswiss/dsp-ingest:latest
-    depends_on:
-      - alloy
-    ports:
-      - "3340:3340"
-    volumes:
-      - ./modules/sipi/images:/opt/images:delegated
-      - ./modules/sipi/tmp-dsp-ingest:/opt/temp:delegated
-      - ingest-db:/opt/db:delegated
-    networks:
-      - knora-net
-    environment:
-      - SERVICE_HOST=0.0.0.0
-      - SERVICE_PORT=3340
-      - SERVICE_LOG_FORMAT=text
-      - STORAGE_ASSET_DIR=/opt/images
-      - STORAGE_TEMP_DIR=/opt/temp
-      - JWT_AUDIENCE=http://localhost:3340
-      - JWT_ISSUER=0.0.0.0:3333
-      - JWT_SECRET=dev-only-insecure-jwt-secret-change-me
-      - SIPI_USE_LOCAL_DEV=false
-      - ALLOW_ERASE_PROJECTS=true
-      - DB_JDBC_URL=jdbc:sqlite:/opt/db/ingest.sqlite
-      - DSP_API_URL=http://host.docker.internal:3333
-      # - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
-      - 'JAVA_TOOL_OPTIONS=-javaagent:/usr/local/lib/opentelemetry-javaagent.jar'
-      - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
-      - 'PYROSCOPE_APPLICATION_NAME=DSP_svc_ingest'
-      - 'PYROSCOPE_FORMAT=jfr'
-      - 'PYROSCOPE_PROFILER_ALLOC=512k'
-      - 'OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318'
-      - 'OTEL_SERVICE_NAME=DSP_svc_ingest'
-      - 'OTEL_JAVAAGENT_EXTENSIONS=/usr/local/lib/pyroscope-otel.jar'
-      - 'OTEL_PYROSCOPE_ADD_PROFILE_URL=false'
-      - 'OTEL_PYROSCOPE_ADD_PROFILE_BASELINE_URL=false'
-      - 'OTEL_PYROSCOPE_START_PROFILING=true'
-    healthcheck:
-      test: ["CMD", "/sbin/sipi", "health", "--port", "3340"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-
   api:
     image: daschswiss/knora-api:latest
     # Health-gate the dependencies: the API does a single triplestore availability
@@ -152,8 +104,8 @@ services:
       - /tmp:/tmp
       # Needed for local development when resetting the triplestore
       - ./test_data:/opt/test_data
-      # read-only: ingest owns the writes
-      - ./modules/sipi/images:/opt/images:ro
+      - ./modules/sipi/images:/opt/images:delegated
+      - ./modules/sipi/tmp-dsp-ingest:/opt/temp:delegated
     networks:
       - knora-net
     environment:
@@ -172,9 +124,6 @@ services:
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
-      - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
-      # must always equal ingest's STORAGE_ASSET_DIR
-      - KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images
       - KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL=http://localhost:4200
       # Port 4200 on the host: the `app` service or a dsp-app dev server, which must listen on 0.0.0.0 to be reachable.
       - KNORA_WEBAPI_FAIR_APP_SHELL_URL=http://host.docker.internal:4200/index.html
@@ -182,6 +131,7 @@ services:
       - KNORA_WEBAPI_FAIR_DPE_OAI_SHORTCODES=0803,081C,0868
       - DSP_API_LOG_LEVEL=INFO
       - ALLOW_ERASE_PROJECTS=true
+      - INGEST_ALLOW_ERASE_PROJECTS=true
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
       - 'JAVA_TOOL_OPTIONS=-javaagent:/usr/local/lib/opentelemetry-javaagent.jar -Xmx8G'
       - 'PYROSCOPE_SERVER_ADDRESS=http://alloy:4040'
@@ -203,7 +153,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 12G
+          memory: 14G
 
   alloy:
     container_name: alloy
@@ -228,4 +178,3 @@ networks:
 volumes:
   db-home:
   db-import:
-  ingest-db:
