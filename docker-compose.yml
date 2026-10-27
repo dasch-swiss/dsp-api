@@ -173,7 +173,7 @@ services:
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
-      # must always equal ingest's STORAGE_ASSET_DIR
+      # unused: asset info reads INGEST_STORAGE_ASSET_DIR (default /opt/images)
       - KNORA_WEBAPI_DSP_INGEST_ASSET_DIR=/opt/images
       - KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL=http://localhost:4200
       # Port 4200 on the host: the `app` service or a dsp-app dev server, which must listen on 0.0.0.0 to be reachable.
