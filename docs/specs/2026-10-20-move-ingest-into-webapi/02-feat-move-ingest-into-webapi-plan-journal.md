@@ -43,10 +43,10 @@ status: in-progress
 
 | id | repo | status | commit(s) | summary | blocker |
 | --- | --- | --- | --- | --- | --- |
-| 1.1 | dsp-api | complete | a27bb5ffc | Removed the ImportProjectsToDb action; spec pins it as an unknown action (400) | none |
-| 1.2 | dsp-api | complete | aac120dc4 | Dropped DbHealthIndicator; HealthCheckServiceLive built from the FS indicator; spec runs the real health service (200 UP, 503 lists only folders) | none |
-| 1.3 | dsp-api | complete | 118708824 | Removed the SQLite project table, repository, Flyway/Hikari setup, db config and the three maven deps from both ingest library targets; ProjectService is folder-only | none |
-| 1.4 | dsp-api | complete | 886225413 | Removed sqlite-jdbc, flyway-core and HikariCP from maven.install and re-pinned (deletions only) | none |
+| 1.1 | dsp-api | complete | aa1a0d115 | Removed the ImportProjectsToDb action; spec pins it as an unknown action (400) | none |
+| 1.2 | dsp-api | complete | 1acda15d7 | Dropped DbHealthIndicator; HealthCheckServiceLive built from the FS indicator; spec runs the real health service (200 UP, 503 lists only folders) | none |
+| 1.3 | dsp-api | complete | 488801b68 | Removed the SQLite project table, repository, Flyway/Hikari setup, db config and the three maven deps from both ingest library targets; ProjectService is folder-only | none |
+| 1.4 | dsp-api | complete | 4d45a81a2 | Removed sqlite-jdbc, flyway-core and HikariCP from maven.install and re-pinned (deletions only) | none |
 | 1.5 | dsp-api | complete | — | Verification: bazel test //modules/ingest:test and test-ingest-integration pass (integration needed TESTCONTAINERS_RYUK_DISABLED=true locally); just check fails only on markdownlint of the 03/04/05 plan journals, so its checkbox stays open | none |
 
 ## Deferrals
