@@ -241,30 +241,35 @@ separate housekeeping step, outside this plan.
 
 #### ops-deploy
 
-- [ ] `docker-compose-iiif.yml.j2`: remove the `ingest` service (with its `ingest.<domain>` and local-web
+- [x] `docker-compose-iiif.yml.j2`: remove the `ingest` service (with its `ingest.<domain>` and local-web
   `ingest-metrics-nolog` routers and middleware) and the `ingest-data`, `ingest-img` and `ingest-tmp` volume definitions
-- [ ] `tasks/main.yml`: remove the `DSP_INGEST_IMAGE` pull and the `DSP_INGEST_DATA_DIR` directory creation (keep
+- [x] `tasks/main.yml`: remove the `DSP_INGEST_IMAGE` pull and the `DSP_INGEST_DATA_DIR` directory creation (keep
   `DSP_INGEST_DIR` and `DSP_INGEST_TMP_DIR`)
-- [ ] `defaults/main.yml`: remove `DSP_INGEST_IMAGE`, `DSP_INGEST_SERVICE_HOST`, `DSP_INGEST_SERVICE_PORT`,
+- [x] `defaults/main.yml`: remove `DSP_INGEST_IMAGE`, `DSP_INGEST_SERVICE_HOST`, `DSP_INGEST_SERVICE_PORT`,
   `DSP_INGEST_DATA_DIR`, `DSP_INGEST_DATA_MOUNT_PATH`, `DSP_INGEST_JAVA_TOOL_OPTIONS` and `DSP_INGEST_INSTRUMENTATION`
-- [ ] Remove the `DSP_INGEST_INSTRUMENTATION` overrides from `group_vars/dsp_dev.yml`, `group_vars/dsp_stage.yml` and
+- [x] Remove the `DSP_INGEST_INSTRUMENTATION` overrides from `group_vars/dsp_dev.yml`, `group_vars/dsp_stage.yml` and
   `host_vars/vre-prod-01.yml`
-- [ ] `Makefile.j2`: make `ingest-purge` depend on `down-svc` and empty only the temp volume (`DSP_svc_ingest-tmp`, or
+- [x] `Makefile.j2`: make `ingest-purge` depend on `down-svc` and empty only the temp volume (`DSP_svc_ingest-tmp`, or
   `DSP_INGEST_TMP_DIR`), keeping the prompt text unchanged; drop `INGEST_DATA_VOLUME`
-- [ ] `roles/ingest-rsync/templates/docker-compose.yml`: change the external volume names to `DSP_svc_ingest-tmp` and
+- [x] `roles/ingest-rsync/templates/docker-compose.yml`: change the external volume names to `DSP_svc_ingest-tmp` and
   `DSP_svc_ingest-img`
-- [ ] `maintenance/migrations/INFRA-1404/migrate-sizes.yml` and `INFRA-1413/migrate-mime-types.yml`: add a header note
+- [x] `maintenance/migrations/INFRA-1404/migrate-sizes.yml` and `INFRA-1413/migrate-mime-types.yml`: add a header note
   that they target the pre-move layout and must not be re-run as-is
-- [ ] `roles/dsp-deploy/README.md` and `versions/README.md`: stop listing dsp-ingest as an image published with dsp-api
-- [ ] Run `git grep -n -e DSP_INGEST_IMAGE -e DSP_INGEST_SERVICE_PORT -e DSP_INGEST_DATA -e DSP_INGEST_MEMORY_LIMIT -e
+- [x] `roles/dsp-deploy/README.md` and `versions/README.md`: stop listing dsp-ingest as an image published with dsp-api
+- [x] Run `git grep -n -e DSP_INGEST_IMAGE -e DSP_INGEST_SERVICE_PORT -e DSP_INGEST_DATA -e DSP_INGEST_MEMORY_LIMIT -e
   DSP_INGEST_INSTRUMENTATION -e DSP_iiif_ingest -e 'ingest:3340' -e ingest-metrics-nolog` over the repository, excluding
   `maintenance/migrations/`, `versions/RELEASE.json` and `docs/`; it returns nothing
-- [ ] Render `docker-compose-iiif.yml.j2` and `Makefile.j2` offline as in Phase 1, for both the NFS and the local
+- [x] Render `docker-compose-iiif.yml.j2` and `Makefile.j2` offline as in Phase 1, for both the NFS and the local
   branches; `docker compose -f <scratch>/iiif-*.yml config -q` exits 0, and the rendered iiif file has no `ingest`
   service or volume and no `ingest-metrics-nolog` router
-- [ ] Run `just lint dsp-deploy`; it passes
-- [ ] Run `just lint ingest-rsync`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just lint dsp-deploy`; it reports no violation beyond those already on `origin/main` (c4d9d52e: 239; now
+  232, the removed ingest variables' `var-naming` hits gone, none added)
+- [ ] Run `just lint dsp-deploy`; it passes (blocked by the pre-existing violations above, as in Phase 1)
+- [x] Run `just lint ingest-rsync`; it reports no violation beyond those already on `origin/main` (c4d9d52e: 9, all
+  in `tasks/main.yml` and `defaults/main.yml`, which this phase does not touch)
+- [ ] Run `just lint ingest-rsync`; it passes (blocked by the 9 pre-existing violations above; needs a lint cleanup
+  outside this plan, or the gate redefined as "no new violations")
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 

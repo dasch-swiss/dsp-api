@@ -162,23 +162,23 @@ outside a container (`bazel run //modules/webapi:app`, the testkit) set it to `t
 
 ### Phase 1: Remove the ingest SQLite database
 
-- [ ] Delete `modules/ingest/src/main/scala/swiss/dasch/db/Db.scala` and `db/DbMigrator.scala`
-- [ ] Delete `modules/ingest/src/main/resources/db/migration/V1_0_0__create_project_table.sql`
-- [ ] Delete `domain/ProjectRepositoryLive.scala` (trait + live) and the `Project`/`ProjectId` entity in `domain/Project.scala`, keeping `ProjectShortcode`
-- [ ] Make `ProjectService.findOrCreateProject` only create the project folder, and `deleteProject` only delete it; remove `addProjectToDb`
-- [ ] Remove `SQLException` from error types, including the `"Unable to access database"` branch in `BulkIngestService.startBulkIngest`
-- [ ] Remove `MaintenanceActions.importProjectsToDb` and `ActionName.ImportProjectsToDb` (`api/MaintenanceEndpoints.scala`, `api/MaintenanceEndpointsHandler.scala`)
-- [ ] Delete `infrastructure/DbHealthIndicator.scala` and build `HealthCheckServiceLive` from `FileSystemHealthIndicator` alone
-- [ ] Remove `DbConfig` and the `db` block from `config/Configuration.scala` and `src/main/resources/application.conf`
-- [ ] Remove `Db.dataSourceLive`, `DbMigrator`, `DbHealthIndicator` and `ProjectRepositoryLive` from `Main.scala`, `MigrateSizes.scala` and `MigrateMimeTypes.scala`
-- [ ] Remove `@maven//:org_flywaydb_flyway_core`, `@maven//:org_xerial_sqlite_jdbc` and `@maven//:com_zaxxer_HikariCP` from both `scala_library` targets in `modules/ingest/BUILD.bazel`
-- [ ] Remove the three artifacts from `maven.install` in `MODULE.bazel` (no other module uses them) and re-pin with `bazel run @unpinned_maven//:pin`
-- [ ] Delete `src/test/scala/swiss/dasch/domain/ProjectRepositoryLiveSpec.scala` and drop the DB setup (`DbConfig` and the SQLite file helpers) from `util/TestUtils.scala` and the specs that use it
-- [ ] Add a `MonitoringEndpointsSpec` case: the health body has no `db` entry and is `200` with a healthy file system
-- [ ] Run `bazel test //modules/ingest:test`; it passes
-- [ ] Run `just test-ingest-integration`; it passes
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Delete `modules/ingest/src/main/scala/swiss/dasch/db/Db.scala` and `db/DbMigrator.scala`
+- [x] Delete `modules/ingest/src/main/resources/db/migration/V1_0_0__create_project_table.sql`
+- [x] Delete `domain/ProjectRepositoryLive.scala` (trait + live) and the `Project`/`ProjectId` entity in `domain/Project.scala`, keeping `ProjectShortcode`
+- [x] Make `ProjectService.findOrCreateProject` only create the project folder, and `deleteProject` only delete it; remove `addProjectToDb`
+- [x] Remove `SQLException` from error types, including the `"Unable to access database"` branch in `BulkIngestService.startBulkIngest`
+- [x] Remove `MaintenanceActions.importProjectsToDb` and `ActionName.ImportProjectsToDb` (`api/MaintenanceEndpoints.scala`, `api/MaintenanceEndpointsHandler.scala`)
+- [x] Delete `infrastructure/DbHealthIndicator.scala` and build `HealthCheckServiceLive` from `FileSystemHealthIndicator` alone
+- [x] Remove `DbConfig` and the `db` block from `config/Configuration.scala` and `src/main/resources/application.conf`
+- [x] Remove `Db.dataSourceLive`, `DbMigrator`, `DbHealthIndicator` and `ProjectRepositoryLive` from `Main.scala`, `MigrateSizes.scala` and `MigrateMimeTypes.scala`
+- [x] Remove `@maven//:org_flywaydb_flyway_core`, `@maven//:org_xerial_sqlite_jdbc` and `@maven//:com_zaxxer_HikariCP` from both `scala_library` targets in `modules/ingest/BUILD.bazel`
+- [x] Remove the three artifacts from `maven.install` in `MODULE.bazel` (no other module uses them) and re-pin with `bazel run @unpinned_maven//:pin`
+- [x] Delete `src/test/scala/swiss/dasch/domain/ProjectRepositoryLiveSpec.scala` and drop the DB setup (`DbConfig` and the SQLite file helpers) from `util/TestUtils.scala` and the specs that use it
+- [x] Add a `MonitoringEndpointsSpec` case: the health body has no `db` entry and is `200` with a healthy file system
+- [x] Run `bazel test //modules/ingest:test`; it passes
+- [x] Run `just test-ingest-integration`; it passes
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 2: Move ingest domain code into the webapi slice
 
