@@ -67,12 +67,12 @@ oci_push(
     repository = "index.docker.io/daschswiss/knora-sipi",
 )
 
-# --- Sipi runtime bits, extracted for the dsp-ingest image --------------------
-# dsp-ingest runs on an eclipse-temurin base (Sipi v5 is distroless), so it needs
-# the sipi binary, the whole `/sipi` tree (incl. `/sipi/scripts`, added by this
-# file's overlay — not present in `@sipi_base_*`), and ffmpeg/ffprobe/tini
+# --- Sipi runtime bits, extracted for the dsp-api and dsp-ingest images -------
+# Both images run on an eclipse-temurin base (Sipi v5 is distroless), so ingest
+# needs the sipi binary, the whole `/sipi` tree (incl. `/sipi/scripts`, added by
+# this file's overlay — not present in `@sipi_base_*`), and ffmpeg/ffprobe/tini
 # extracted onto that base. `image_{arch}` is package-private, so the extraction
-# lives here and exports only the flattened result to //modules/ingest.
+# lives here and exports only the flattened result to //modules/{webapi,ingest}.
 [
     (
         oci_load(
@@ -105,7 +105,10 @@ oci_push(
                 "sipi",
                 "usr",
             ],
-            visibility = ["//modules/ingest:__pkg__"],
+            visibility = [
+                "//modules/ingest:__pkg__",
+                "//modules/webapi:__pkg__",
+            ],
         ),
     )
     for arch in [
