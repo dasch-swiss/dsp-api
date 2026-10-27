@@ -209,41 +209,41 @@ outside a container (`bazel run //modules/webapi:app`, the testkit) set it to `t
 
 ### Phase 3: Serve the ingest endpoints under /ingest/ with dsp-api's authentication
 
-- [ ] Add `Scope.parse(String): Either[String, Scope]` (inverse of `toScopeString`, unknown values ignored, invalid shortcode a failure) and `hasAdmin`, `projectReadable`, `projectWritable` to `slice/infrastructure/Scope.scala`, with `ScopeSpec` cases ported from ingest's `AuthScopeSpec`
-- [ ] Replace ingest's `AuthScope` usages in the slice's new code with webapi's `Scope`; leave `AuthScope` in the slice (the standalone `api/` still uses it) and delete it in Phase 8
-- [ ] Add `slice/ingest/api/IngestAuthenticator.scala`: decode with `JwtCodec` and `JwtConfig.secret`, require `iss == JwtConfig.issuer`, `aud` containing `DspIngestConfig.audience` and `sub`, parse `scope`, and return all failures together with ingest's existing messages
-- [ ] Add `IngestAuthenticatorSpec` with the cases of ingest's `AuthServiceLiveSpec`: valid token, wrong audience, wrong issuer, missing subject, bad signature, expired, scope parsing, plus a token from `JwtService.createJwt` and a service-shaped token (subject = issuer, audience = ingest audience only, `admin` scope) built in the spec with `JwtCodec`, so the case survives the removal of `createJwtForDspIngest` in Phase 5
-- [ ] Add `slice/ingest/api/IngestBaseEndpoints.scala`: `publicEndpoint`, `withPrincipalEndpoint` (optional bearer, invalid token -> anonymous) and `securedEndpoint` (bearer required, `401` otherwise), all under the `ingest` path prefix and returning webapi's `RequiresMethod`, with ingest's `ApiProblem` error outputs declared here
-- [ ] Add `IngestProjectsEndpoints`, `IngestProjectsServerEndpoints` and `IngestProjectsRestService` covering every route in ingest's `ProjectsEndpoints` with identical inputs, outputs, examples and descriptions
-- [ ] Add `IngestMaintenanceEndpoints`, `IngestMaintenanceServerEndpoints` and `IngestMaintenanceRestService` (actions `ApplyTopLeftCorrection`, `UpdateAssetMetadata`, plus the two `GET` checks; no `ImportProjectsToDb`)
-- [ ] Add `ActionName.MigrateSizes` and `ActionName.MigrateMimeTypes`, dispatched by `IngestMaintenanceRestService` to `AssetSizeMigrationService` / `AssetMimeTypeMigrationService` (`migrateAll` without `restrictToProjects`, `migrateProject` per listed shortcode), forked like the other actions, logging the migration report and its failure count; this replaces the standalone `MigrateSizes` / `MigrateMimeTypes` mains
-- [ ] Add `IngestMaintenanceEndpointsSpec` cases: `MigrateSizes` and `MigrateMimeTypes` answer `202` for an admin token and run the matching service (restricted to the given projects), and answer `403` without admin scope
-- [ ] Port the scope decisions of ingest's `api/AuthorizationHandlerSpec` (admin, project read, project write, `403` bodies) into an `IngestAuthorizationSpec` over the checks the new rest services use
-- [ ] Add `IngestReportEndpoints`, `IngestReportServerEndpoints` and `IngestReportRestService` (`POST /ingest/report/asset-overview`)
-- [ ] Add `IngestMonitoringEndpoints` and `IngestMonitoringServerEndpoints` for `/ingest/info`, `/ingest/health` (`200` healthy, `503` with the `ApiProblem.Unhealthy` body otherwise) and `/ingest/metrics` (the API's `PrometheusPublisher`)
-- [ ] Add a `gitCommit` stamp field (`STABLE_GIT_COMMIT`) to the webapi `buildinfo` in `modules/webapi/BUILD.bazel` and build the `/ingest/info` response from webapi's `BuildInfo` with `name = "dsp-ingest"` and `sbtVersion = "bazel"`, so the body keeps its fields
-- [ ] Add `slice/ingest/ports/OriginalAccess.scala` (`isOriginalGranted(token: Option[String], shortcode, filename): Task[Boolean]`) and use it in the original-download rest method instead of `FetchAssetPermissions`
-- [ ] Add `OriginalAccessLive` on the admin side in `slice/admin/domain/service/` (ADR-0011 rule 3), over `AssetPermissionsCache` (`responders/admin/`): authenticate a present token with `Authenticator.authenticate`, fall back to `AnonymousUser` when absent, and return `getAssetAccess(user)(shortcode, filename).original` is granted
-- [ ] Add `OriginalAccessInMemory` under the ingest slice's tests and `OriginalAccessLiveSpec` (granted, denied, anonymous, invalid token fails)
-- [ ] Add `IngestServerEndpoints` aggregating the four groups and register it in `slice/api/Endpoints.scala`
-- [ ] Add `IngestModule` and `IngestApiModule` and wire them and `OriginalAccessLive` in `core/LayersLive.scala`
-- [ ] Delete `store/iiif/impl/AssetInfoServiceLayer.scala` and its `LayersLive` entry: `IngestModule` becomes the one provider of `AssetInfoService` for export and FAIR (two providers are an ambiguous-layer error in `ZLayer.makeSome`)
-- [ ] Run the file-system smoke test at API startup as a logged error, not `orDie`, so a missing ingest mount degrades `/ingest/health` instead of stopping dsp-api
-- [ ] Port ingest's `ProjectsEndpointSpec`, `MaintenanceEndpointsSpec` and `MonitoringEndpointsSpec` to the new endpoints under `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/api/`, sending tokens from `SpecJwtTokens` built with webapi's JWT settings
-- [ ] Set the testkit ingest config (`core/TestContainerLayers.scala`, wired in Phase 2): asset dir = `SharedVolumes.Images` host path, temp dir = `SharedVolumes.Temp` host path, `use-local-dev = true`, `local-dev-image` = the Sipi image `SipiTestContainer` runs
-- [ ] Add `modules/test-e2e/src/test/scala/org/knora/webapi/slice/ingest/IngestEndpointsE2ESpec.scala`: upload an image through `POST /ingest/projects/0001/assets/ingest/{filename}` with a login token and read its asset info back
-- [ ] Add a case to `IngestEndpointsE2ESpec`: a request without a token answers `401`, and one with a token lacking write scope answers `403` with ingest's body
-- [ ] Add a case to `IngestEndpointsE2ESpec`: an upload above 1 MiB with `Content-Length` succeeds and the stored checksum matches the source
-- [ ] Add a case to `IngestEndpointsE2ESpec`: `/ingest/health` answers `200` and `/ingest/info` returns the documented fields
-- [ ] Add a case to `IngestEndpointsE2ESpec`: the original download is `200` for a permitted user and `403` for an anonymous caller on a restricted asset, using an asset whose file value exists in the loaded test data (`AssetPermissionsCache` resolves permissions from the file value by filename; a freshly uploaded asset has none)
-- [ ] Port `modules/test-ingest-integration/.../FileUploadSpec.scala` as a test-e2e spec against the in-process API
-- [ ] Run `bazel test //modules/webapi:test`; it passes
-- [ ] Run `just test-e2e`; it passes, including `EndpointsE2ESpec` (every endpoint declares a method)
-- [ ] Run `just test-it`; it passes
-- [ ] Run `bazel test //modules/ingest:test`; it passes
-- [ ] Run `just test-ingest-integration`; it passes (the standalone module and image stay green until Phase 8)
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add `Scope.parse(String): Either[String, Scope]` (inverse of `toScopeString`, unknown values ignored, invalid shortcode a failure) and `hasAdmin`, `projectReadable`, `projectWritable` to `slice/infrastructure/Scope.scala`, with `ScopeSpec` cases ported from ingest's `AuthScopeSpec`
+- [x] Replace ingest's `AuthScope` usages in the slice's new code with webapi's `Scope`; leave `AuthScope` in the slice (the standalone `api/` still uses it) and delete it in Phase 8
+- [x] Add `slice/ingest/api/IngestAuthenticator.scala`: decode with `JwtCodec` and `JwtConfig.secret`, require `iss == JwtConfig.issuer`, `aud` containing `DspIngestConfig.audience` and `sub`, parse `scope`, and return all failures together with ingest's existing messages
+- [x] Add `IngestAuthenticatorSpec` with the cases of ingest's `AuthServiceLiveSpec`: valid token, wrong audience, wrong issuer, missing subject, bad signature, expired, scope parsing, plus a token from `JwtService.createJwt` and a service-shaped token (subject = issuer, audience = ingest audience only, `admin` scope) built in the spec with `JwtCodec`, so the case survives the removal of `createJwtForDspIngest` in Phase 5
+- [x] Add `slice/ingest/api/IngestBaseEndpoints.scala`: `publicEndpoint`, `withPrincipalEndpoint` (optional bearer, invalid token -> anonymous) and `securedEndpoint` (bearer required, `401` otherwise), all under the `ingest` path prefix and returning webapi's `RequiresMethod`, with ingest's `ApiProblem` error outputs declared here
+- [x] Add `IngestProjectsEndpoints`, `IngestProjectsServerEndpoints` and `IngestProjectsRestService` covering every route in ingest's `ProjectsEndpoints` with identical inputs, outputs, examples and descriptions
+- [x] Add `IngestMaintenanceEndpoints`, `IngestMaintenanceServerEndpoints` and `IngestMaintenanceRestService` (actions `ApplyTopLeftCorrection`, `UpdateAssetMetadata`, plus the two `GET` checks; no `ImportProjectsToDb`)
+- [x] Add `ActionName.MigrateSizes` and `ActionName.MigrateMimeTypes`, dispatched by `IngestMaintenanceRestService` to `AssetSizeMigrationService` / `AssetMimeTypeMigrationService` (`migrateAll` without `restrictToProjects`, `migrateProject` per listed shortcode), forked like the other actions, logging the migration report and its failure count; this replaces the standalone `MigrateSizes` / `MigrateMimeTypes` mains
+- [x] Add `IngestMaintenanceEndpointsSpec` cases: `MigrateSizes` and `MigrateMimeTypes` answer `202` for an admin token and run the matching service (restricted to the given projects), and answer `401` with ingest's body without admin scope
+- [x] Port the scope decisions of ingest's `api/AuthorizationHandlerSpec` (admin, project read, project write, `401` refusal bodies) into an `IngestAuthorizationSpec` over the checks the new rest services use
+- [x] Add `IngestReportEndpoints`, `IngestReportServerEndpoints` and `IngestReportRestService` (`POST /ingest/report/asset-overview`)
+- [x] Add `IngestMonitoringEndpoints` and `IngestMonitoringServerEndpoints` for `/ingest/info`, `/ingest/health` (`200` healthy, `503` with the `ApiProblem.Unhealthy` body otherwise) and `/ingest/metrics` (the API's `PrometheusPublisher`)
+- [x] Add a `gitCommit` stamp field (`STABLE_GIT_COMMIT`) to the webapi `buildinfo` in `modules/webapi/BUILD.bazel` and build the `/ingest/info` response from webapi's `BuildInfo` with `name = "dsp-ingest"` and `sbtVersion = "bazel"`, so the body keeps its fields
+- [x] Add `slice/ingest/ports/OriginalAccess.scala` (`isOriginalGranted(token: Option[String], shortcode, filename): Task[Boolean]`) and use it in the original-download rest method instead of `FetchAssetPermissions`
+- [x] Add `OriginalAccessLive` on the admin side in `slice/admin/domain/service/` (ADR-0011 rule 3), over `AssetPermissionsCache` (`responders/admin/`): authenticate a present token with `Authenticator.authenticate`, fall back to `AnonymousUser` when absent, and return `getAssetAccess(user)(shortcode, filename).original` is granted
+- [x] Add `OriginalAccessInMemory` under the ingest slice's tests and `OriginalAccessLiveSpec` (granted, denied, anonymous, invalid token fails)
+- [x] Add `IngestServerEndpoints` aggregating the four groups and register it in `slice/api/Endpoints.scala`
+- [x] Add `IngestModule` and `IngestApiModule` and wire them and `OriginalAccessLive` in `core/LayersLive.scala`
+- [x] Delete `store/iiif/impl/AssetInfoServiceLayer.scala` and its `LayersLive` entry: `IngestModule` becomes the one provider of `AssetInfoService` for export and FAIR (two providers are an ambiguous-layer error in `ZLayer.makeSome`)
+- [x] Run the file-system smoke test at API startup as a logged error, not `orDie`, so a missing ingest mount degrades `/ingest/health` instead of stopping dsp-api
+- [x] Port ingest's `ProjectsEndpointSpec`, `MaintenanceEndpointsSpec` and `MonitoringEndpointsSpec` to the new endpoints under `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/api/`, sending tokens from `SpecJwtTokens` built with webapi's JWT settings
+- [x] Set the testkit ingest config (`core/TestContainerLayers.scala`, wired in Phase 2): asset dir = `SharedVolumes.Images` host path, temp dir = `SharedVolumes.Temp` host path, `use-local-dev = true`, `local-dev-image` = the Sipi image `SipiTestContainer` runs
+- [x] Add `modules/test-e2e/src/test/scala/org/knora/webapi/slice/ingest/IngestEndpointsE2ESpec.scala`: upload an image through `POST /ingest/projects/0001/assets/ingest/{filename}` with a login token and read its asset info back
+- [x] Add a case to `IngestEndpointsE2ESpec`: a request without a token answers `401`, and one with a token lacking write scope answers `401` with ingest's body
+- [x] Add a case to `IngestEndpointsE2ESpec`: an upload above 1 MiB with `Content-Length` succeeds and the stored checksum matches the source
+- [x] Add a case to `IngestEndpointsE2ESpec`: `/ingest/health` answers `200` and `/ingest/info` returns the documented fields
+- [x] Add a case to `IngestEndpointsE2ESpec`: the original download is `200` for a permitted user and `403` for an anonymous caller on a restricted asset, using an asset whose file value exists in the loaded test data (`AssetPermissionsCache` resolves permissions from the file value by filename; a freshly uploaded asset has none)
+- [x] Port `modules/test-ingest-integration/.../FileUploadSpec.scala` as a test-e2e spec against the in-process API
+- [x] Run `bazel test //modules/webapi:test`; it passes
+- [x] Run `just test-e2e`; it passes, including `EndpointsE2ESpec` (every endpoint declares a method)
+- [x] Run `just test-it`; it passes
+- [x] Run `bazel test //modules/ingest:test`; it passes
+- [x] Run `just test-ingest-integration`; it passes (the standalone module and image stay green until Phase 8)
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 4: Contain ingest work on a dedicated executor with expendable child processes
 
