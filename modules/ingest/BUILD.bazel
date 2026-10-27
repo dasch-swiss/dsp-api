@@ -6,7 +6,7 @@ load("//tools/buildinfo:defs.bzl", "buildinfo")
 load("//tools/oci:defs.bzl", "OTEL_DISABLE_ENV", "oci_stamped_labels", "runtime_jars")
 
 # Generates the dsp-ingest buildinfo source (package swiss.dasch.version).
-# knoraSipiVersion is read at RUNTIME (CommandExecutorLive shells out to
+# knoraSipiVersion is read at RUNTIME (Configuration defaults the local-dev Sipi image to
 # `daschswiss/knora-sipi:${knoraSipiVersion}`), so it must equal the git version.
 # gitCommit is the full HEAD -> STABLE_GIT_COMMIT.
 buildinfo(

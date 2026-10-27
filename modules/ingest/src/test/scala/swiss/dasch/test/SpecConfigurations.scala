@@ -42,5 +42,5 @@ object SpecConfigurations {
 
   val ingestConfigLayer = ZLayer.succeed(BulkIngestConfig(2))
 
-  val sipiConfigLayer = ZLayer.succeed(SipiConfig(useLocalDev = true))
+  val sipiConfigLayer = ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:latest"))
 }

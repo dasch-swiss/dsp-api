@@ -32,7 +32,7 @@ class IngestConfigSpec extends ZIOSpecDefault {
       } yield assertTrue(
         c == IngestConfig(
           storage = StorageConfig(assetDir = "/opt/images", tempDir = "/opt/temp"),
-          sipi = SipiConfig(useLocalDev = false),
+          sipi = SipiConfig(useLocalDev = false, localDevImage = "daschswiss/knora-sipi:latest"),
           bulkMaxParallel = 8,
           features = IngestFeatures(allowEraseProjects = false),
           executor = ExecutorConfig(cpuShare = 0.5),
@@ -46,6 +46,7 @@ class IngestConfigSpec extends ZIOSpecDefault {
                  "INGEST_STORAGE_ASSET_DIR"    -> "/assets",
                  "INGEST_STORAGE_TEMP_DIR"     -> "/tmp/ingest",
                  "INGEST_SIPI_USE_LOCAL_DEV"   -> "true",
+                 "INGEST_SIPI_LOCAL_DEV_IMAGE" -> "daschswiss/knora-sipi:v1.2.3",
                  "INGEST_BULK_MAX_PARALLEL"    -> "3",
                  "INGEST_ALLOW_ERASE_PROJECTS" -> "true",
                  "INGEST_EXECUTOR_CPU_SHARE"   -> "0.25",
@@ -54,7 +55,7 @@ class IngestConfigSpec extends ZIOSpecDefault {
       } yield assertTrue(
         c == IngestConfig(
           storage = StorageConfig(assetDir = "/assets", tempDir = "/tmp/ingest"),
-          sipi = SipiConfig(useLocalDev = true),
+          sipi = SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:v1.2.3"),
           bulkMaxParallel = 3,
           features = IngestFeatures(allowEraseProjects = true),
           executor = ExecutorConfig(cpuShare = 0.25),
@@ -76,7 +77,7 @@ class IngestConfigSpec extends ZIOSpecDefault {
       val ingestVars = envVarsIn("ingest.conf")
       val webapiVars = envVarsIn("application.conf")
       assertTrue(
-        ingestVars.size == 6,
+        ingestVars.size == 7,
         webapiVars.contains("KNORA_WEBAPI_DSP_INGEST_AUDIENCE"),
         ingestVars.forall(_.startsWith("INGEST_")),
         ingestVars.intersect(webapiVars).isEmpty,

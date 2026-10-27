@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.ingest.infrastructure
 
-import swiss.dasch.version.BuildInfo
 import zio.IO
 import zio.UIO
 import zio.ZIO
@@ -95,7 +94,7 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
           List(
             List("docker", "run", "--entrypoint", command),
             List("-v", s"$assetDir:$assetDir"),
-            List(s"daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion}"),
+            List(sipiConfig.localDevImage),
             params,
           ).flatten,
         )

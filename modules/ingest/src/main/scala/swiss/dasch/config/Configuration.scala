@@ -6,10 +6,13 @@
 package swiss.dasch.config
 
 import com.typesafe.config.ConfigFactory
+import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.config.*
 import zio.config.magnolia.deriveConfig
 import zio.config.typesafe.*
+
+import scala.jdk.CollectionConverters.*
 
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
 import org.knora.webapi.slice.ingest.config.SipiConfig
@@ -51,9 +54,15 @@ object Configuration {
   private type AllConfigs =
     ServiceConfig & JwtConfig & StorageConfig & SipiConfig & BulkIngestConfig & Features & DspApiConfig
 
+  // Without SIPI_LOCAL_DEV_IMAGE, local-dev mode runs the Sipi image built from the same git version.
+  private val buildDefaults = ConfigFactory.parseMap(
+    Map("sipi.local-dev-image" -> s"daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion}").asJava,
+  )
+
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
+    val config          = ConfigFactory.defaultApplication().withFallback(buildDefaults).resolve()
     val applicationConf = ZLayer.fromZIO(
-      read(configDescriptor from ConfigProvider.fromTypesafeConfig(ConfigFactory.defaultApplication().resolve()))
+      read(configDescriptor from ConfigProvider.fromTypesafeConfig(config))
         .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
     )
     applicationConf.project(_.service) ++

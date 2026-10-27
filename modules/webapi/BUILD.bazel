@@ -58,7 +58,6 @@ scala_library(
     deps = [
         ":buildinfo",
         "//modules/bagit",
-        "//modules/ingest:ingest_buildinfo",
         "//modules/jwt",
         "//modules/shacl-validator",
         "//modules/sparql-builder",

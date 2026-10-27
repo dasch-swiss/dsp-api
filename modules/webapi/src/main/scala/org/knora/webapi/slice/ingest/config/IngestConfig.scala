@@ -19,7 +19,8 @@ final case class StorageConfig(assetDir: String, tempDir: String) {
   val tempPath: Path  = Path(tempDir)
 }
 
-final case class SipiConfig(useLocalDev: Boolean)
+/** `localDevImage` is the Sipi image run through `docker run` when `useLocalDev` is set; otherwise unused. */
+final case class SipiConfig(useLocalDev: Boolean, localDevImage: String)
 
 final case class BulkIngestConfig(bulkMaxParallel: Int)
 
