@@ -28,4 +28,6 @@ final class IngestServerEndpoints(
 
 object IngestServerEndpoints {
   val layer = ZLayer.derive[IngestServerEndpoints]
+
+  def isIngestRoute(ep: AnyEndpoint): Boolean = ep.showPathTemplate(showQueryParam = None).startsWith("/ingest/")
 }

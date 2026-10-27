@@ -50,6 +50,7 @@ import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
+import org.knora.webapi.slice.ingest.IngestServerEndpoints
 
 final class DspApiServer(
   server: Server,
@@ -267,9 +268,10 @@ object DspApiServer {
     }
 
     /**
-     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     * Marks a response produced *before* the request body was read as the last one on its connection, on the
+     * passthrough and on the ingest routes (uploads).
      *
-     * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
+     * Several rejections on these routes answer without consuming the body: the security logic's `401`/`403`, which
      * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
      * Bodies declaring a length above the server's aggregation threshold are streamed, and zio-http leaves such a
      * connection with
@@ -289,7 +291,8 @@ object DspApiServer {
       response: ServerResponse[B],
     ): ServerResponse[B] =
       if (
-        SparqlPassthroughEndpoints.isPassthroughRoute(ep) && bodyPlausiblyUnread(request) &&
+        (SparqlPassthroughEndpoints.isPassthroughRoute(ep) || IngestServerEndpoints.isIngestRoute(ep)) &&
+        bodyPlausiblyUnread(request) &&
         !response.headers.exists(closesConnection)
       )
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
