@@ -182,30 +182,30 @@ outside a container (`bazel run //modules/webapi:app`, the testkit) set it to `t
 
 ### Phase 2: Move ingest domain code into the webapi slice
 
-- [ ] `git mv` the domain files from `modules/ingest/src/main/scala/swiss/dasch/domain/` into `modules/webapi/src/main/scala/org/knora/webapi/slice/ingest/{domain,repo}/` per the layout in Technical Considerations, changing only `package` and `import` lines, as its own commit
-- [ ] `git mv` `infrastructure/CommandExecutorLive.scala`, `Base62.scala`, `Health.scala`, `AggregatedHealth.scala`, `HealthCheckService.scala` and `FileSystemHealthIndicator.scala` into `slice/ingest/infrastructure/`, same rule, same commit
-- [ ] `git mv` `api/ApiProblem.scala` into `slice/ingest/api/`, same rule, same commit: the moved `BulkIngestService` imports `ApiProblem` and `ApiProblem.BadRequest` (`domain/BulkIngestService.scala:8-9`)
-- [ ] Move `ProjectsEndpointsResponses.UploadResponse` (from `api/ProjectsEndpoints.scala`) into `slice/ingest/api/UploadResponse.scala` and `ActionName` (from `api/MaintenanceEndpoints.scala`) into `slice/ingest/domain/ActionName.scala`, same commit: the moved `BulkIngestService` (`:10`) and `MaintenanceActions` (`:8`) import them, and webapi cannot depend on `//modules/ingest`
-- [ ] Point the standalone module's `api/` and `Main` at the moved `ApiProblem`, `UploadResponse`, `ActionName` and `AuthScope` (no copies remain in `modules/ingest`)
-- [ ] `git mv` the matching unit tests from `modules/ingest/src/test/scala/swiss/dasch/{domain,infrastructure}/` into `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/...`, same commit
-- [ ] Copy the test helpers the moved specs use (`test/SpecConfigurations.scala`, `test/SpecPaths.scala`, `test/SpecConstants.scala`, `util/TestUtils.scala`, `api/SipiClientMock.scala`, `infrastructure/CommandExecutorMock.scala`) into `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/testutil/`, adapted to the slice config types; the originals stay for the standalone API specs until Phase 8
-- [ ] Copy the test resources (`test-folder-structure/`, `test-import.zip`, `test.txt`) to `modules/webapi/src/test/resources/org/knora/webapi/slice/ingest/` and point the webapi copy of `SpecPaths` at the new classpath location (the standalone copies stay until Phase 8)
-- [ ] Add `slice/ingest/config/IngestConfig.scala`: case classes `StorageConfig`, `SipiConfig(useLocalDev, localDevImage)`, `BulkIngestConfig(bulkMaxParallel)`, `IngestFeatures(allowEraseProjects)`, `ExecutorConfig(cpuShare)` and a loader reading `ConfigFactory.parseResources("ingest.conf").resolve().getConfig("ingest")` with `deriveConfig(...).mapKey(toKebabCase)`
-- [ ] Add `modules/webapi/src/main/resources/ingest.conf` with the keys and `INGEST_*` env vars from the Configuration mapping table
-- [ ] Add an `IngestConfigSpec`: defaults load, each env override applies, `cpu-share` outside `(0, 1]` fails to load, and webapi's `AppConfig` carries no `ingest` key
-- [ ] Replace `swiss.dasch.version.BuildInfo.knoraSipiVersion` in `CommandExecutorLive` with `SipiConfig.localDevImage`
-- [ ] Point `store/iiif/impl/AssetInfoServiceLayer.scala` at the slice's `StorageConfig` from the ingest config instead of `AppConfig.dspIngest.assetDir`
-- [ ] Wire the ingest config layer in `core/LayersLive.scala` (`remainingLayer`'s `ZLayer.makeSome` input or a layer inside it) and in `modules/testkit/.../core/TestContainerLayers.scala`, so `AssetInfoServiceLayer`'s new `StorageConfig` requirement is met in this phase
-- [ ] Make the `IngestConfig` loader take the `Config` to read (default: `ConfigFactory.parseResources("ingest.conf")` resolved with system environment) so `IngestConfigSpec` can supply env overrides through `resolveWith` instead of the process environment
-- [ ] Update the `swiss.dasch` imports in `slice/export/api/ExportApiModule.scala`, `slice/export/api/service/ExportService.scala`, `store/iiif/impl/FairAssetsLive.scala` and their specs
-- [ ] Remove `//modules/ingest:ingest_classes` (and its comment) from `//modules/webapi:webapi` deps and delete the `ingest_classes` target
-- [ ] Make `//modules/ingest:ingest` depend on `//modules/webapi` and keep `Main`, `api/`, `IngestApiServer`, `Logger`, `Metrics`, `OtelSetup` and the two migration mains compiling against the moved classes, with `Configuration.scala` still reading its own `application.conf` into the moved config types (add `local-dev-image` to it)
-- [ ] Make the standalone `Configuration.layer` read its own keys from a classpath that now also carries webapi's `application.conf` (`ConfigFactory.defaultApplication()` merges both; the `ingest_classes` comment in `modules/ingest/BUILD.bazel` and `AssetInfoServiceLayer.scala:20-22` describe the collision), and add a standalone `ConfigurationSpec` case that loads the standalone keys with webapi on the classpath
-- [ ] Run `bazel test //modules/webapi:test`; it passes, including the moved ingest specs
-- [ ] Run `bazel test //modules/ingest:test`; it passes
-- [ ] Run `just test-ingest-integration`; it passes against the standalone image built with webapi on its classpath
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `git mv` the domain files from `modules/ingest/src/main/scala/swiss/dasch/domain/` into `modules/webapi/src/main/scala/org/knora/webapi/slice/ingest/{domain,repo}/` per the layout in Technical Considerations, changing only `package` and `import` lines, as its own commit
+- [x] `git mv` `infrastructure/CommandExecutorLive.scala`, `Base62.scala`, `Health.scala`, `AggregatedHealth.scala`, `HealthCheckService.scala` and `FileSystemHealthIndicator.scala` into `slice/ingest/infrastructure/`, same rule, same commit
+- [x] `git mv` `api/ApiProblem.scala` into `slice/ingest/api/`, same rule, same commit: the moved `BulkIngestService` imports `ApiProblem` and `ApiProblem.BadRequest` (`domain/BulkIngestService.scala:8-9`)
+- [x] Move `ProjectsEndpointsResponses.UploadResponse` (from `api/ProjectsEndpoints.scala`) into `slice/ingest/api/UploadResponse.scala` and `ActionName` (from `api/MaintenanceEndpoints.scala`) into `slice/ingest/domain/ActionName.scala`, same commit: the moved `BulkIngestService` (`:10`) and `MaintenanceActions` (`:8`) import them, and webapi cannot depend on `//modules/ingest`
+- [x] Point the standalone module's `api/` and `Main` at the moved `ApiProblem`, `UploadResponse`, `ActionName` and `AuthScope` (no copies remain in `modules/ingest`)
+- [x] `git mv` the matching unit tests from `modules/ingest/src/test/scala/swiss/dasch/{domain,infrastructure}/` into `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/...`, same commit
+- [x] Copy the test helpers the moved specs use (`test/SpecConfigurations.scala`, `test/SpecPaths.scala`, `test/SpecConstants.scala`, `util/TestUtils.scala`, `api/SipiClientMock.scala`, `infrastructure/CommandExecutorMock.scala`) into `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/testutil/`, adapted to the slice config types; the originals stay for the standalone API specs until Phase 8
+- [x] Copy the test resources (`test-folder-structure/`, `test-import.zip`, `test.txt`) to `modules/webapi/src/test/resources/org/knora/webapi/slice/ingest/` and point the webapi copy of `SpecPaths` at the new classpath location (the standalone copies stay until Phase 8)
+- [x] Add `slice/ingest/config/IngestConfig.scala`: case classes `StorageConfig`, `SipiConfig(useLocalDev, localDevImage)`, `BulkIngestConfig(bulkMaxParallel)`, `IngestFeatures(allowEraseProjects)`, `ExecutorConfig(cpuShare)` and a loader reading `ConfigFactory.parseResources("ingest.conf").resolve().getConfig("ingest")` with `deriveConfig(...).mapKey(toKebabCase)`
+- [x] Add `modules/webapi/src/main/resources/ingest.conf` with the keys and `INGEST_*` env vars from the Configuration mapping table
+- [x] Add an `IngestConfigSpec`: defaults load, each env override applies, `cpu-share` outside `(0, 1]` fails to load, and webapi's `AppConfig` carries no `ingest` key
+- [x] Replace `swiss.dasch.version.BuildInfo.knoraSipiVersion` in `CommandExecutorLive` with `SipiConfig.localDevImage`
+- [x] Point `store/iiif/impl/AssetInfoServiceLayer.scala` at the slice's `StorageConfig` from the ingest config instead of `AppConfig.dspIngest.assetDir`
+- [x] Wire the ingest config layer in `core/LayersLive.scala` (`remainingLayer`'s `ZLayer.makeSome` input or a layer inside it) and in `modules/testkit/.../core/TestContainerLayers.scala`, so `AssetInfoServiceLayer`'s new `StorageConfig` requirement is met in this phase
+- [x] Make the `IngestConfig` loader take the `Config` to read (default: `ConfigFactory.parseResources("ingest.conf")` resolved with system environment) so `IngestConfigSpec` can supply env overrides through `resolveWith` instead of the process environment
+- [x] Update the `swiss.dasch` imports in `slice/export/api/ExportApiModule.scala`, `slice/export/api/service/ExportService.scala`, `store/iiif/impl/FairAssetsLive.scala` and their specs
+- [x] Remove `//modules/ingest:ingest_classes` (and its comment) from `//modules/webapi:webapi` deps and delete the `ingest_classes` target
+- [x] Make `//modules/ingest:ingest` depend on `//modules/webapi` and keep `Main`, `api/`, `IngestApiServer`, `Logger`, `Metrics`, `OtelSetup` and the two migration mains compiling against the moved classes, with `Configuration.scala` still reading its own `application.conf` into the moved config types (add `local-dev-image` to it)
+- [x] Make the standalone `Configuration.layer` read its own keys from a classpath that now also carries webapi's `application.conf` (`ConfigFactory.defaultApplication()` merges both; the `ingest_classes` comment in `modules/ingest/BUILD.bazel` and `AssetInfoServiceLayer.scala:20-22` describe the collision), and add a standalone `ConfigurationSpec` case that loads the standalone keys with webapi on the classpath
+- [x] Run `bazel test //modules/webapi:test`; it passes, including the moved ingest specs
+- [x] Run `bazel test //modules/ingest:test`; it passes
+- [x] Run `just test-ingest-integration`; it passes against the standalone image built with webapi on its classpath
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: Serve the ingest endpoints under /ingest/ with dsp-api's authentication
 
