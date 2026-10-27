@@ -60,6 +60,8 @@ object Configuration {
   )
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
+    // defaultApplication() merges every application.conf on the classpath, including webapi's, whose
+    // keys all sit under `app`; the top-level keys of ApplicationConf must stay disjoint from it.
     val config          = ConfigFactory.defaultApplication().withFallback(buildDefaults).resolve()
     val applicationConf = ZLayer.fromZIO(
       read(configDescriptor from ConfigProvider.fromTypesafeConfig(config))
