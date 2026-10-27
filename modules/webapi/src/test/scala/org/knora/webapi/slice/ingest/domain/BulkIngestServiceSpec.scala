@@ -24,11 +24,13 @@ import org.knora.webapi.slice.ingest.domain.Asset.StillImageAsset
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.JpxDerivativeFile
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.OrigFile
+import org.knora.webapi.slice.ingest.infrastructure.CommandExecutorMock
 import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
 import org.knora.webapi.slice.ingest.repo.FileChecksumServiceLive
 import org.knora.webapi.slice.ingest.repo.StorageService
 import org.knora.webapi.slice.ingest.repo.StorageServiceLive
+import org.knora.webapi.slice.ingest.testutil.SipiClientMock
 import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -175,6 +177,43 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     ThreadRecordingIngestService.layer,
   )
 
+  private val failingSipiSuite = suite("bulk ingest with a failing Sipi transcode")(
+    test("counts the failed file in IngestResult.failed and ingests the others") {
+      for {
+        _         <- SipiClientMock.setQueryImageDimensions(Dimensions.unsafeFrom(6, 6))
+        _         <- SipiClientMock.failTranscoding(_.filename.toString.endsWith(".tif.orig"))
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- ZIO.foreachDiscard(List("good.jpg", "broken.tif", "other.csv"))(name =>
+               Files.writeBytes(importDir / name, Chunk.fromArray(name.getBytes)),
+             )
+        fiber   <- bulkIngestService(_.startBulkIngest(shortcode))
+        result  <- fiber.join
+        mapping <- getBulkIngestMappingCsv(shortcode).some
+      } yield assertTrue(
+        result == IngestResult(success = 2, failed = 1),
+        mapping.contains("good.jpg"),
+        mapping.contains("other.csv"),
+        !mapping.contains("broken.tif"),
+      )
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    BulkIngestService.layer,
+    CommandExecutorMock.layer,
+    FileChecksumServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectService.layer,
+    SipiClientMock.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+  )
+
   final class ThreadRecordingIngestService(val threads: Ref[List[String]]) extends IngestService {
     override def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
       ZIO
@@ -207,5 +246,5 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-  ) + ingestThreadSuite) @@ TestAspect.timeout(10.seconds)
+  ) + ingestThreadSuite + failingSipiSuite) @@ TestAspect.timeout(10.seconds)
 }

@@ -31,6 +31,7 @@ final case class SipiClientMock(
   invocations: Ref[List[SipiClientMockMethodInvocation]],
   queryImageFileReturnValue: Ref[ProcessOutput],
   dontTranscode: Ref[Boolean],
+  failTranscoding: Ref[Path => Boolean],
 ) extends SipiClient {
 
   override def transcodeImageFile(
@@ -38,6 +39,12 @@ final case class SipiClientMock(
     fileOut: Path,
     outputFormat: SipiImageFormat,
   ): UIO[ProcessOutput] =
+    ZIO.ifZIO(failTranscoding.get.map(_(fileIn)))(
+      onTrue = ZIO.succeed(ProcessOutput("", s"Sipi could not transcode $fileIn", 1)),
+      onFalse = transcode(fileIn, fileOut, outputFormat),
+    )
+
+  private def transcode(fileIn: Path, fileOut: Path, outputFormat: SipiImageFormat): UIO[ProcessOutput] =
     ZIO.ifZIO(dontTranscode.get)(
       onTrue = ZIO.succeed(ProcessOutput("", "", 0)),
       onFalse = Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
@@ -82,6 +89,9 @@ final case class SipiClientMock(
   )
 
   def setDontTranscode(newState: Boolean): UIO[Unit] = this.dontTranscode.set(newState)
+
+  /** Transcoding an input file matching `fails` exits non-zero and writes no output, like a crashed Sipi. */
+  def setFailTranscoding(fails: Path => Boolean): UIO[Unit] = this.failTranscoding.set(fails)
 }
 
 object SipiClientMock {
@@ -116,9 +126,13 @@ object SipiClientMock {
   def dontTranscode(): RIO[SipiClientMock, Unit] =
     ZIO.serviceWithZIO[SipiClientMock](_.setDontTranscode(true))
 
+  def failTranscoding(fails: Path => Boolean): RIO[SipiClientMock, Unit] =
+    ZIO.serviceWithZIO[SipiClientMock](_.setFailTranscoding(fails))
+
   val layer: ULayer[SipiClientMock] = ZLayer.fromZIO(for {
     invocations  <- Ref.make(List.empty[SipiClientMockMethodInvocation])
     querySipiOut <- Ref.make[ProcessOutput](ProcessOutput("", "", 0))
     failSilently <- Ref.make[Boolean](false)
-  } yield SipiClientMock(invocations, querySipiOut, failSilently))
+    failing      <- Ref.make[Path => Boolean](_ => false)
+  } yield SipiClientMock(invocations, querySipiOut, failSilently, failing))
 }
