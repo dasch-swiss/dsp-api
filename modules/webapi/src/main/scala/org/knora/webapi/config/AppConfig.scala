@@ -86,10 +86,8 @@ final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[
 }
 
 /**
- * @param baseUrl         internal URL for server-to-server communication with dsp-ingest.
  * @param externalBaseUrl client-facing URL for download links handed to clients (e.g. OAI file links).
- * @param assetDir        dsp-ingest's asset directory, read directly (sidecar `.info` files). Must be the
- *                        same directory dsp-ingest is configured with (`STORAGE_ASSET_DIR`).
+ * @param audience        the audience dsp-api mints into its tokens for ingest, and ingest's token check requires.
  */
 final case class DspIngestConfig(externalBaseUrl: String, audience: String)
 
