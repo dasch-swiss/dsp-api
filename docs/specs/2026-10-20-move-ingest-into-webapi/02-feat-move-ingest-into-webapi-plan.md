@@ -179,15 +179,15 @@ because the testkit runs the Sipi image `SipiTestContainer` uses, not the git-ve
 
 ### Phase 2: Ship Sipi CLI, ffmpeg and ffprobe in the dsp-api image
 
-- [ ] Add `//modules/sipi:runtime_fs_amd64` / `runtime_fs_arm64` to the `tars` of `image_amd64` / `image_arm64` in `modules/webapi/BUILD.bazel`
-- [ ] Add `//modules/webapi:__pkg__` to the `runtime_fs_*` visibility in `modules/sipi/BUILD.bazel` and update its "dsp-ingest image" comment
-- [ ] Note in the webapi `oci_image` comment that the image runs as root because ingest writes NFS-owned assets
-- [ ] Record the baseline size of `daschswiss/knora-api:latest` (`docker image inspect --format '{{.Size}}'`) after `just docker-build-dsp-api-image` on the commit before this phase
-- [ ] Run `just docker-build-dsp-api-image`, then `docker run --rm --entrypoint /sbin/sipi daschswiss/knora-api:latest --help`, `... --entrypoint ffmpeg ... -version` and `... --entrypoint ffprobe ... -version`; each exits 0
-- [ ] Run `docker run --rm --entrypoint /bin/sh daschswiss/knora-api:latest -c 'echo 1000 > /proc/self/oom_score_adj && cat /proc/self/oom_score_adj'`; it prints `1000`
-- [ ] Compare the image size against the baseline; the growth stays within the `runtime_fs` layer size
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add `//modules/sipi:runtime_fs_amd64` / `runtime_fs_arm64` to the `tars` of `image_amd64` / `image_arm64` in `modules/webapi/BUILD.bazel`
+- [x] Add `//modules/webapi:__pkg__` to the `runtime_fs_*` visibility in `modules/sipi/BUILD.bazel` and update its "dsp-ingest image" comment
+- [x] Note in the webapi `oci_image` comment that the image runs as root because ingest writes NFS-owned assets
+- [x] Record the baseline size of `daschswiss/knora-api:latest` (`docker image inspect --format '{{.Size}}'`) after `just docker-build-dsp-api-image` on the commit before this phase
+- [x] Run `just docker-build-dsp-api-image`, then `docker run --rm --entrypoint /sbin/sipi daschswiss/knora-api:latest --help`, `... --entrypoint ffmpeg ... -version` and `... --entrypoint ffprobe ... -version`; each exits 0
+- [x] Run `docker run --rm --entrypoint /bin/sh daschswiss/knora-api:latest -c 'echo 1000 > /proc/self/oom_score_adj && cat /proc/self/oom_score_adj'`; it prints `1000`
+- [x] Compare the image size against the baseline; the growth stays within the `runtime_fs` layer size
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: Serve ingest from dsp-api under /ingest/ and drop the standalone application
 
@@ -284,6 +284,7 @@ Checks:
 - [ ] Update `modules/ingest/README.md`, `modules/ingest/CLAUDE.md` and `modules/ingest/docs/` where they describe the standalone service (it is now a library served by dsp-api under `/ingest/`); keep `docs-ingest-build` only if the ingest docs site is still published
 - [ ] Update `CLAUDE.md`, `CONVENTIONS.md`, `docs/contexts/assets/CONTEXT.md`, `docs/development/dsp-api-rbe.md`, `flake.nix` and `tools/oci/defs.bzl` comments that name the dsp-ingest image or service
 - [ ] Run `dune:dune-map` to refresh the stale `ARCH-MAP.md` entries (ingest becomes a library of the API deployable; the `DspIngestClient` "remote-owned" notes change)
+- [ ] In that refresh, record `//modules/webapi` as a build-time consumer of `//modules/sipi:runtime_fs_*` (the sipi component's "Used by" and its visibility boundary rule, and the webapi image entry)
 - [ ] Load `eng:grafana-dashboards` and remove or re-point the dsp-ingest panels in `grafana-dashboards/dsp-api/dsp-backend.json`, since ingest no longer has its own JVM or service label
 - [ ] Run `git grep -n -e "dsp-ingest:latest" -e "test-ingest-integration" -e "ingest:3340" -- ':!docs/specs' ':!*CHANGELOG.md'`; it returns nothing
 - [ ] Run `grep -rn "docs/specs/" --exclude-dir=specs docs CLAUDE.md CONVENTIONS.md ARCH-MAP.md`; it returns nothing
