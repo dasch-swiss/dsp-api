@@ -45,11 +45,12 @@ final case class FileChecksumServiceLive(ingestExecutor: IngestExecutor) extends
               .attemptBlocking(new FileInputStream(path.toFile))
               .refineOrDie { case e: FileNotFoundException => e },
           )
-          .flatMap(hashSha256)
+          .flatMap(fis => ZIO.attemptBlocking(hexSha256(fis)).orDie)
+          .flatMap(hex => ZIO.fromEither(Sha256Hash.from(hex)).mapError(IllegalStateException(_)).orDie)
       }
     }
 
-  private def hashSha256(fis: FileInputStream): UIO[Sha256Hash] = {
+  private def hexSha256(fis: FileInputStream): String = {
     val digest    = java.security.MessageDigest.getInstance("SHA-256")
     val buffer    = new Array[Byte](8192)
     var bytesRead = 0
@@ -59,7 +60,7 @@ final case class FileChecksumServiceLive(ingestExecutor: IngestExecutor) extends
     }) digest.update(buffer, 0, bytesRead)
     val sb = new StringBuilder
     for (byte <- digest.digest()) sb.append(String.format("%02x", Byte.box(byte)))
-    ZIO.fromEither(Sha256Hash.from(sb.toString())).mapError(IllegalStateException(_)).orDie
+    sb.toString()
   }
 
   private def verifyChecksum(fileAndChecksum: FileAndChecksum): Task[Boolean] =
