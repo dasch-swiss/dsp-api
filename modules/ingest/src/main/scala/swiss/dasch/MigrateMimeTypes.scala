@@ -7,6 +7,7 @@ package swiss.dasch
 
 import swiss.dasch.config.Configuration
 import swiss.dasch.domain.*
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 
 /**
@@ -55,6 +56,7 @@ object MigrateMimeTypes extends ZIOAppDefault {
         AssetMimeTypeMigrationService.layer,
         Configuration.layer,
         FileChecksumServiceLive.layer,
+        IngestExecutor.layer,
         MimeTypeGuesser.layer,
         ProjectService.layer,
         StorageServiceLive.layer,

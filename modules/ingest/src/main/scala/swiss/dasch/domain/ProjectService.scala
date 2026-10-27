@@ -7,6 +7,7 @@ package swiss.dasch.domain
 
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Files.newDirectoryStream
@@ -26,6 +27,7 @@ final case class ProjectService(
   private val assetInfos: AssetInfoService,
   private val storage: StorageService,
   private val checksum: FileChecksumService,
+  private val ingestExecutor: IngestExecutor,
 ) {
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =
@@ -84,7 +86,7 @@ final case class ProjectService(
       // Assets are already-compressed media; store them (DEFLATE level 0) instead of wasting CPU re-compressing.
       payloadEntries =
         List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path, compression = Compression.Store))
-      resultPath <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
+      resultPath <- ingestExecutor.withPermit(BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo)))
     } yield Some(resultPath)
 
   def deleteProject(shortcode: ProjectShortcode): IO[IOException, Unit] =

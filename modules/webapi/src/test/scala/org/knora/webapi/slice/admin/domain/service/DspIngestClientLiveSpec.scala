@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.junit.runner.RunWith
+import swiss.dasch.config.Configuration.ExecutorConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.AssetInfo
@@ -23,6 +24,7 @@ import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.domain.Sha256Hash
 import swiss.dasch.domain.StorageService
 import swiss.dasch.domain.StorageServiceLive
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 import zio.nio.file.Files
 import zio.test.*
@@ -55,9 +57,11 @@ class DspIngestClientLiveSpec extends ZIOSpecDefault {
       DspIngestClientLive.layer,
       FileChecksumServiceLive.layer,
       ImportServiceLive.layer,
+      IngestExecutor.layer,
       IngestProjectService.layer,
       MimeTypeGuesser.layer,
       StorageServiceLive.layer,
+      ZLayer.succeed(ExecutorConfig(cpuShare = 0.5)),
       ZLayer.succeed(Features(allowEraseProjects)),
       storageConfig,
     )

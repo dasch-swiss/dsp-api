@@ -132,6 +132,7 @@ class ImportServiceSpec extends ZIOSpecDefault {
       FileChecksumServiceLive.layer,
       ImportServiceLive.layer,
       ProjectService.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
     ) @@ TestAspect.sequential

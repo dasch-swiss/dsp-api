@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 import zio.nio.file.*
 import zio.stream.*
@@ -32,6 +33,7 @@ object ImportService {
 final class ImportServiceLive(
   storageService: StorageService,
   projectService: ProjectService,
+  ingestExecutor: IngestExecutor,
 ) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
@@ -66,8 +68,8 @@ final class ImportServiceLive(
       bagItDir <- storageService
                     .createTempDirectoryScoped(s"bagit-$shortcode", Some("import"))
                     .mapError(IoError.apply)
-      result <- BagIt
-                  .readAndValidateZip(zipFile, Some(bagItDir))
+      result <- ingestExecutor
+                  .withPermit(BagIt.readAndValidateZip(zipFile, Some(bagItDir)))
                   .tapError(e => ZIO.logError(s"BagIt validation failed for project $shortcode: $e"))
                   .mapError {
                     case e: java.io.IOException => IoError(e)

@@ -187,6 +187,7 @@ class ProjectServiceSpec extends ZIOSpecDefault {
       MimeTypeGuesser.layer,
       FileChecksumServiceLive.layer,
       ProjectService.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
     )

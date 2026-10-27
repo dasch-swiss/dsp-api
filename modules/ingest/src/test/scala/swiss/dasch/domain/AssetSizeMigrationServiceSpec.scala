@@ -173,6 +173,7 @@ class AssetSizeMigrationServiceSpec extends ZIOSpecDefault {
       FileChecksumServiceLive.layer,
       ProjectService.layer,
       StorageServiceLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
     )
 }

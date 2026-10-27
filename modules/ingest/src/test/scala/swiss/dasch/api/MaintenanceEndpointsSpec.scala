@@ -82,6 +82,7 @@ class MaintenanceEndpointsSpec extends ZIOSpecDefault {
       OtherFilesService.layer,
       ProjectService.layer,
       SipiClientMock.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
       SpecConfigurations.storageConfigLayer,
       StillImageService.layer,

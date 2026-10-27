@@ -163,6 +163,7 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     MockIngestServiceLayer,
     ProjectService.layer,
     SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
   ) @@ TestAspect.timeout(10.seconds)
