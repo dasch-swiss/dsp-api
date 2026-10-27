@@ -7,11 +7,11 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.junit.runner.RunWith
+import swiss.dasch.api.SipiClientMock
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
 import swiss.dasch.domain.AugmentedPath.OrigFile
-import swiss.dasch.api.SipiClientMock
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
 import zio.*
