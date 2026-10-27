@@ -15,6 +15,8 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.slice.ingest.config.IngestConfig
 import org.knora.webapi.slice.ingest.config.IngestConfig.IngestConfigs
+import org.knora.webapi.slice.ingest.config.SipiConfig
+import org.knora.webapi.slice.ingest.config.StorageConfig
 import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
@@ -48,7 +50,26 @@ object TestContainerLayers { self =>
 
   val all: ULayer[self.Environment] =
     ZLayer.succeedEnvironment(cachedContainers) >+>
-      (AppConfigForTestContainers.testcontainers ++ IngestConfig.layer.orDie)
+      (AppConfigForTestContainers.testcontainers ++ IngestConfigForTestContainers.layer)
+
+  /**
+   * Ingest stores into the volume Sipi serves from and runs the Sipi CLI with `docker run` of the image the Sipi
+   * container runs, since the test JVM has no Sipi binary.
+   */
+  private object IngestConfigForTestContainers {
+    val layer: URLayer[SharedVolumes.Images & SharedVolumes.Temp & SipiTestContainer, IngestConfigs] =
+      IngestConfig.provide(ZLayer {
+        for {
+          loaded <- IngestConfig.load().orDie
+          images <- ZIO.service[SharedVolumes.Images]
+          temp   <- ZIO.service[SharedVolumes.Temp]
+          sipi   <- ZIO.service[SipiTestContainer]
+        } yield loaded.copy(
+          storage = StorageConfig(images.hostPath, temp.hostPath),
+          sipi = SipiConfig(useLocalDev = true, localDevImage = sipi.getDockerImageName),
+        )
+      })
+  }
 
   private object AppConfigForTestContainers {
 

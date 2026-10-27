@@ -9,7 +9,10 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.ingest.config.SipiConfig
+import org.knora.webapi.slice.ingest.config.StorageConfig
 import org.knora.webapi.testcontainers.DspIngestTestContainer
+import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object TestContainerLayersSpec extends ZIOSpecDefault {
@@ -21,12 +24,17 @@ object TestContainerLayersSpec extends ZIOSpecDefault {
         sipiContainer      <- ZIO.service[SipiTestContainer]
         dspIngestContainer <- ZIO.service[DspIngestTestContainer]
         configFromRuntime  <- ZIO.config(AppConfig.config).orDie
+        images             <- ZIO.service[SharedVolumes.Images]
+        storage            <- ZIO.service[StorageConfig]
+        sipiConfig         <- ZIO.service[SipiConfig]
       } yield {
         assertTrue(
           appConfig.sipi.internalPort == sipiContainer.getFirstMappedPort,
           appConfig.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
           configFromRuntime.sipi.internalPort == sipiContainer.getFirstMappedPort,
           configFromRuntime.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
+          storage.assetDir == images.hostPath,
+          sipiConfig == SipiConfig(useLocalDev = true, localDevImage = sipiContainer.getDockerImageName),
         )
       }
     },

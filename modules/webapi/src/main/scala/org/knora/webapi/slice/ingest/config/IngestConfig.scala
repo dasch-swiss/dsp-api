@@ -66,12 +66,13 @@ object IngestConfig {
       .mapError(e => Config.Error.InvalidData(message = e.getMessage))
       .flatMap(c => read(descriptor from TypesafeConfigProvider.fromTypesafeConfig(c)))
 
-  val layer: Layer[Config.Error, IngestConfigs] = {
-    val config = ZLayer.fromZIO(load())
+  val layer: Layer[Config.Error, IngestConfigs] = provide(ZLayer.fromZIO(load()))
+
+  /** Provides each part of the given configuration as its own service. */
+  def provide[R, E](config: ZLayer[R, E, IngestConfig]): ZLayer[R, E, IngestConfigs] =
     config.project(_.storage) ++
       config.project(_.sipi) ++
       config.project(c => BulkIngestConfig(c.bulkMaxParallel)) ++
       config.project(_.features) ++
       config.project(_.executor)
-  }
 }
