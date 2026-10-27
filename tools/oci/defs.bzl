@@ -119,7 +119,7 @@ image_rootfs_extract = rule(
         "image_tar": attr.label(allow_single_file = [".tar"], mandatory = True),
         "paths": attr.string_list(mandatory = True, doc = "tar members to extract (no leading /)"),
         "top_level": attr.string_list(mandatory = True, doc = "top-level dirs/files to repack into the output layer"),
-        "rewrites": attr.string_list(doc = "bsdtar -s path substitutions applied when repacking"),
+        "rewrites": attr.string_list(doc = "bsdtar -s substitutions (e.g. \",^sbin,usr/sbin,\") applied only when repacking; `paths` and `top_level` use pre-rewrite names"),
     },
     toolchains = [
         "@rules_oci//oci:crane_toolchain_type",
