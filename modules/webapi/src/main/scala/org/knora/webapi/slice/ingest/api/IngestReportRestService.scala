@@ -25,7 +25,7 @@ final class IngestReportRestService(reportService: ReportService, projectService
 
   /** Any authenticated caller may start it: the standalone service never checked the scope it documents. */
   val createAssetOverviewReport: UIO[String] =
-    createReports.forkDaemon.logError.as("work in progress")
+    createReports.logError.forkDaemon.as("work in progress")
 }
 
 object IngestReportRestService {

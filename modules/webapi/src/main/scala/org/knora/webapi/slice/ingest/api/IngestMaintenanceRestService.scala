@@ -11,7 +11,7 @@ import org.knora.webapi.slice.ingest.api.IngestAuthorization.ensureAdminScope
 import org.knora.webapi.slice.ingest.domain.*
 import org.knora.webapi.slice.ingest.domain.ActionName.*
 
-/** Every action is forked: the response only acknowledges it, and its outcome is logged. */
+/** Every action is forked: the response only acknowledges it, and its outcome, failure included, is logged. */
 final class IngestMaintenanceRestService(
   maintenanceActions: MaintenanceActions,
   mimeTypeMigration: AssetMimeTypeMigrationService,
@@ -32,32 +32,38 @@ final class IngestMaintenanceRestService(
              case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths)
              case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths)
              case MigrateSizes           =>
-               migrate(action, shortcodes)(sizeMigration.migrateAll(), sizeMigration.migrateProject)(
-                 AssetSizeMigrationReport.zero,
-               )(_ + _)(_.failed)
+               (if (shortcodes.isEmpty) sizeMigration.migrateAll()
+                else
+                  ZIO.foldLeft(shortcodes)(AssetSizeMigrationReport.zero)((sum, sc) =>
+                    sizeMigration.migrateProject(sc).map(sum + _),
+                  ))
+                 .flatMap(report => logReport(action, shortcodes, report.failed, report))
              case MigrateMimeTypes =>
-               migrate(action, shortcodes)(mimeTypeMigration.migrateAll(), mimeTypeMigration.migrateProject)(
-                 AssetMimeTypeMigrationReport.zero,
-               )(_ + _)(_.failed)
-           }).forkDaemon.logError
+               (if (shortcodes.isEmpty) mimeTypeMigration.migrateAll()
+                else
+                  ZIO.foldLeft(shortcodes)(AssetMimeTypeMigrationReport.zero)((sum, sc) =>
+                    mimeTypeMigration.migrateProject(sc).map(sum + _),
+                  ))
+                 .flatMap(report => logReport(action, shortcodes, report.failed, report))
+           }).logError.forkDaemon
     } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
 
   def needsTopLeftCorrection(principal: IngestPrincipal): IO[ApiProblem, String] =
     ensureAdminScope(principal) *>
-      maintenanceActions.createNeedsTopLeftCorrectionReport().forkDaemon.logError.as("work in progress")
+      maintenanceActions.createNeedsTopLeftCorrectionReport().logError.forkDaemon.as("work in progress")
 
   def wasTopLeftCorrectionApplied(principal: IngestPrincipal): IO[ApiProblem, String] =
     ensureAdminScope(principal) *>
-      maintenanceActions.createWasTopLeftCorrectionAppliedReport().forkDaemon.logError.as("work in progress")
+      maintenanceActions.createWasTopLeftCorrectionAppliedReport().logError.forkDaemon.as("work in progress")
 
-  /** Runs `all` without a restriction, else `one` per listed project, and logs the summed report. */
-  private def migrate[Report](action: ActionName, shortcodes: List[ProjectShortcode])(
-    all: Task[Report],
-    one: ProjectShortcode => Task[Report],
-  )(zero: Report)(add: (Report, Report) => Report)(failed: Report => Int): Task[Unit] = {
+  private def logReport[R](
+    action: ActionName,
+    shortcodes: List[ProjectShortcode],
+    failed: Int,
+    report: R,
+  ): UIO[Unit] = {
     val target = if (shortcodes.isEmpty) "all projects" else s"projects ${shortcodes.mkString(", ")}"
-    (if (shortcodes.isEmpty) all else ZIO.foldLeft(shortcodes)(zero)((acc, sc) => one(sc).map(add(acc, _))))
-      .flatMap(report => ZIO.logInfo(s"$action for $target finished with ${failed(report)} failed: $report"))
+    ZIO.logInfo(s"$action for $target finished with $failed failed: $report")
   }
 }
 

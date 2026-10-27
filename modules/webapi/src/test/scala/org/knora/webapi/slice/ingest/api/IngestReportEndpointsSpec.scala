@@ -40,7 +40,11 @@ class IngestReportEndpointsSpec extends ZIOSpecDefault {
         token    <- SpecJwtTokens.adminToken()
         response <- executeRequest(Request.post(url, Body.empty).addHeader(Header.Authorization.Bearer(token)))
         body     <- response.body.asString
-        written  <- reportWritten.repeatUntil(identity).timeout(3.seconds).map(_.getOrElse(false))
+        written  <- reportWritten
+                     .repeat(Schedule.recurUntil[Boolean](identity) && Schedule.spaced(50.millis))
+                     .map(_._1)
+                     .timeout(3.seconds)
+                     .map(_.getOrElse(false))
       } yield assertTrue(response.status == Status.Accepted, body == "work in progress", written)
     },
     test("POST /ingest/report/asset-overview answers 401 without a token") {

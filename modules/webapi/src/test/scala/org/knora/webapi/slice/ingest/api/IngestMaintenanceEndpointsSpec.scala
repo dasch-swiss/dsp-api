@@ -27,7 +27,11 @@ class IngestMaintenanceEndpointsSpec extends ZIOSpecDefault {
   private val maintenance = Path.root / "ingest" / "maintenance"
 
   private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 3.seconds): ZIO[R, E, Boolean] =
-    awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
+    awaitThis
+      .repeat(Schedule.recurUntil[Boolean](identity) && Schedule.spaced(50.millis))
+      .map(_._1)
+      .timeout(timeout)
+      .map(_.getOrElse(false))
 
   private def executeRequest(request: Request) = for {
     app <- ZIO.serviceWith[IngestMaintenanceServerEndpoints](se =>
@@ -101,7 +105,7 @@ class IngestMaintenanceEndpointsSpec extends ZIOSpecDefault {
           sizes  <- executeRequest(postAction("MigrateSizes").addHeader(Header.Authorization.Bearer(token)))
           mimes  <- executeRequest(postAction("MigrateMimeTypes").addHeader(Header.Authorization.Bearer(token)))
           body   <- sizes.body.asString
-          logged <- awaitLog("finished").map(!_)
+          logged <- ZTestLogger.logOutput.map(!_.exists(_.message().contains("finished")))
         } yield assertTrue(
           sizes.status == Status.Unauthorized,
           mimes.status == Status.Unauthorized,
