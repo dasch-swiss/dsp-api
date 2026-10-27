@@ -22,6 +22,7 @@ import org.knora.webapi.slice.ingest.domain.AugmentedPath.OrigFile
 import org.knora.webapi.slice.ingest.infrastructure.CommandExecutorMock
 import org.knora.webapi.slice.ingest.infrastructure.ProcessOutput
 import org.knora.webapi.slice.ingest.repo.FileChecksumService
+import org.knora.webapi.slice.ingest.repo.FileChecksumServiceLive
 import org.knora.webapi.slice.ingest.repo.StorageService
 import org.knora.webapi.slice.ingest.repo.StorageServiceLive
 import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
@@ -157,8 +158,10 @@ class MovingImageServiceSpec extends ZIOSpecDefault {
   val spec = suite("MovingImageService")(createDerivativeSuite, extractMetaDataSuite)
     .provide(
       CommandExecutorMock.layer,
+      FileChecksumServiceLive.layer,
       MimeTypeGuesser.layer,
       MovingImageService.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
     )

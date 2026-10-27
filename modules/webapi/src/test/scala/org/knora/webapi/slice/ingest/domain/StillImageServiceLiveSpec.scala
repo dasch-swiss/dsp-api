@@ -70,7 +70,10 @@ class StillImageServiceLiveSpec extends ZIOSpecDefault {
         _                 <- StillImageService.applyTopLeftCorrection(image)
         backupExists      <- Files.exists(backup)
         correctionApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image))
-        checksumUpdated   <- FileChecksumService.verifyChecksumDerivative(asset)
+        updatedInfo       <- AssetInfoService.findByAssetRef(asset).someOrFailException
+        checksumUpdated   <- FileChecksumService
+                             .verifyChecksum(updatedInfo)
+                             .map(_.exists(r => r.file == updatedInfo.derivative.file && r.checksumMatches))
       } yield assertTrue(backupExists, correctionApplied, checksumUpdated)
     },
     test("not apply top left if not necessary") {
@@ -121,6 +124,7 @@ class StillImageServiceLiveSpec extends ZIOSpecDefault {
     },
   ).provide(
     AssetInfoServiceLive.layer,
+    SpecConfigurations.ingestExecutorLayer,
     FileChecksumServiceLive.layer,
     MimeTypeGuesser.layer,
     StillImageService.layer,

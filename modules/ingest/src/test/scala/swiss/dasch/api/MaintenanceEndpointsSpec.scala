@@ -8,6 +8,7 @@ package swiss.dasch.api
 import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.config.Configuration
 import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.http.*
@@ -75,6 +76,7 @@ class MaintenanceEndpointsSpec extends ZIOSpecDefault {
       BaseEndpoints.layer,
       CommandExecutorMock.layer,
       FileChecksumServiceLive.layer,
+      Configuration.ingestExecutorLayer,
       MaintenanceActionsLive.layer,
       MaintenanceEndpoints.layer,
       MaintenanceEndpointsHandler.layer,

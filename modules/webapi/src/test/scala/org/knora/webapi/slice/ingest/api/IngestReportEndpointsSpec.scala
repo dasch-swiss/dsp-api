@@ -52,6 +52,7 @@ class IngestReportEndpointsSpec extends ZIOSpecDefault {
     },
   ).provide(
     AssetInfoServiceLive.layer,
+    SpecConfigurations.ingestExecutorLayer,
     CsvService.layer,
     FileChecksumServiceLive.layer,
     IngestAuthenticator.layer,

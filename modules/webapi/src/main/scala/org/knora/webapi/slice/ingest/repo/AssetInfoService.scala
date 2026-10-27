@@ -151,8 +151,11 @@ object AssetInfoService {
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
 }
 
-final case class AssetInfoServiceLive(storage: StorageService, mimeTypeGuesser: MimeTypeGuesser)
-    extends AssetInfoService {
+final case class AssetInfoServiceLive(
+  storage: StorageService,
+  mimeTypeGuesser: MimeTypeGuesser,
+  checksums: FileChecksumService,
+) extends AssetInfoService {
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
       content   <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
@@ -228,7 +231,7 @@ final case class AssetInfoServiceLive(storage: StorageService, mimeTypeGuesser: 
 
   private def updateDerivativeChecksum(infoFile: Path, derivative: Path) = for {
     content     <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
-    newChecksum <- FileChecksumService.createSha256Hash(derivative)
+    newChecksum <- checksums.createSha256Hash(derivative)
     newSize     <- SizeInBytes.of(derivative)
     _           <- storage.saveJsonFile(infoFile, content.withDerivative(newChecksum, newSize))
   } yield ()
@@ -263,10 +266,10 @@ final case class AssetInfoServiceLive(storage: StorageService, mimeTypeGuesser: 
       .catchAll(e => ZIO.logWarning(s"No size for $role $file: ${e.getClass.getSimpleName}").as(None))
 
   override def createAssetInfo(asset: Asset): IO[IOException, AssetInfo] = for {
-    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file)
+    checksumOriginal   <- checksums.createSha256Hash(asset.original.file)
     sizeOriginal       <- SizeInBytes.of(asset.original.file)
     original            = FileAndChecksum(asset.original.file, checksumOriginal, Some(sizeOriginal))
-    checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative)
+    checksumDerivative <- checksums.createSha256Hash(asset.derivative)
     sizeDerivative     <- SizeInBytes.of(asset.derivative)
     derivative          = FileAndChecksum(asset.derivative, checksumDerivative, Some(sizeDerivative))
   } yield AssetInfo(asset.ref, original, asset.original.originalFilename, derivative, asset.metadata)

@@ -68,7 +68,9 @@ import org.knora.webapi.slice.ingest.domain.MimeTypeGuesser
 import org.knora.webapi.slice.ingest.domain.ProjectShortcode as IngestProjectShortcode
 import org.knora.webapi.slice.ingest.repo.AssetInfoService
 import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
+import org.knora.webapi.slice.ingest.repo.FileChecksumServiceLive
 import org.knora.webapi.slice.ingest.repo.StorageServiceLive
+import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -117,7 +119,8 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
 
   private val assetInfoServiceLayer: ULayer[AssetInfoService] =
     ZLayer.succeed(StorageConfig(assetDir.toString, assetDir.toString)) >>>
-      (StorageServiceLive.layer ++ MimeTypeGuesser.layer) >>> ZLayer.derive[AssetInfoServiceLive]
+      (StorageServiceLive.layer ++ MimeTypeGuesser.layer ++ (SpecConfigurations.ingestExecutorLayer >>> FileChecksumServiceLive.layer)) >>>
+      ZLayer.derive[AssetInfoServiceLive]
 
   private def assetRefOf(assetId: String): IO[IllegalArgumentException, AssetRef] =
     ZIO

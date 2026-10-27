@@ -161,6 +161,7 @@ class AssetMimeTypeMigrationServiceSpec extends ZIOSpecDefault {
       discovery,
     ).provide(
       AssetInfoServiceLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       AssetMimeTypeMigrationService.layer,
       FileChecksumServiceLive.layer,
       MimeTypeGuesser.layer,

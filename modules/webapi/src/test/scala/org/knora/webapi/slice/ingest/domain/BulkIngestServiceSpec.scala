@@ -161,6 +161,7 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     postBulkIngestEndpointSuite,
   ) @@ TestAspect.before(deleteProjectFolder)).provide(
     AssetInfoServiceLive.layer,
+    SpecConfigurations.ingestExecutorLayer,
     MimeTypeGuesser.layer,
     BulkIngestService.layer,
     FileChecksumServiceLive.layer,

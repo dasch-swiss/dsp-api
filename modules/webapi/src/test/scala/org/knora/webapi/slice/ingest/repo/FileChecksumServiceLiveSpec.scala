@@ -6,11 +6,14 @@
 package org.knora.webapi.slice.ingest.repo
 
 import org.junit.runner.RunWith
+import zio.*
+import zio.test.TestAspect
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.slice.ingest.domain.MimeTypeGuesser
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
 import org.knora.webapi.slice.ingest.testutil.SpecConstants.AssetRefs.*
 import org.knora.webapi.slice.ingest.testutil.SpecPaths.pathFromResource
@@ -34,24 +37,34 @@ class FileChecksumServiceLiveSpec extends ZIOSpecDefault {
           FileChecksumService.createSha256Hash(pathFromResource(fileprefix + ".jp2"))
       } yield assertTrue(checksum.toString != checksumOrig)
     },
-    test("should verify the checksums of an asset's original") {
-      for {
-        checksumMatches <- FileChecksumService.verifyChecksumOrig(existingAssetRef)
-      } yield assertTrue(checksumMatches)
-    },
-    test("should verify the checksums of an asset's derivative") {
-      for {
-        checksumMatches <- FileChecksumService.verifyChecksumDerivative(existingAssetRef)
-      } yield assertTrue(checksumMatches)
-    },
     test("should verify the checksums of an asset's derivative and original") {
       for {
         assetInfo      <- AssetInfoService.findByAssetRef(existingAssetRef).map(_.head)
         checksumResult <- FileChecksumService.verifyChecksum(assetInfo)
-      } yield assertTrue(checksumResult.forall(_.checksumMatches == true))
+      } yield assertTrue(
+        checksumResult.map(_.file) == Chunk(assetInfo.original.file, assetInfo.derivative.file),
+        checksumResult.forall(_.checksumMatches),
+      )
     },
+    test("createSha256Hash waits for an IngestExecutor permit") {
+      ZIO.scoped {
+        for {
+          executor <- IngestExecutor.make(1)
+          release  <- Promise.make[Nothing, Unit]
+          held     <- Promise.make[Nothing, Unit]
+          _        <- executor.withPermit(held.succeed(()) *> release.await).fork
+          _        <- held.await
+          hashing  <- FileChecksumServiceLive(executor).createSha256Hash(pathFromResource(fileprefix + ".jp2.orig")).fork
+          _        <- ZIO.sleep(200.millis)
+          early    <- hashing.poll
+          _        <- release.succeed(())
+          checksum <- hashing.join
+        } yield assertTrue(early.isEmpty, checksum.toString == checksumOrig)
+      }
+    } @@ TestAspect.withLiveClock,
   ).provide(
     AssetInfoServiceLive.layer,
+    SpecConfigurations.ingestExecutorLayer,
     MimeTypeGuesser.layer,
     FileChecksumServiceLive.layer,
     StorageServiceLive.layer,

@@ -62,6 +62,7 @@ object MigrateSizes extends ZIOAppDefault {
         AssetInfoServiceLive.layer,
         AssetSizeMigrationService.layer,
         Configuration.layer,
+        Configuration.ingestExecutorLayer,
         FileChecksumServiceLive.layer,
         MimeTypeGuesser.layer,
         ProjectService.layer,

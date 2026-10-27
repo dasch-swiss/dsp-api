@@ -63,6 +63,7 @@ object MigrateMimeTypes extends ZIOAppDefault {
         AssetInfoServiceLive.layer,
         AssetMimeTypeMigrationService.layer,
         Configuration.layer,
+        Configuration.ingestExecutorLayer,
         FileChecksumServiceLive.layer,
         MimeTypeGuesser.layer,
         ProjectService.layer,

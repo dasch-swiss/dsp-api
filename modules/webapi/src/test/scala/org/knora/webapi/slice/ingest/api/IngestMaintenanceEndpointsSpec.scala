@@ -118,6 +118,7 @@ class IngestMaintenanceEndpointsSpec extends ZIOSpecDefault {
   val spec = suite("IngestMaintenanceEndpoints")(needsTopLeftCorrectionSuite, postMaintenanceActionSuite)
     .provide(
       AssetInfoServiceLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       AssetMimeTypeMigrationService.layer,
       AssetSizeMigrationService.layer,
       CommandExecutorMock.layer,

@@ -174,6 +174,7 @@ class AssetSizeMigrationServiceSpec extends ZIOSpecDefault {
       refreshGroupSuite,
     ).provide(
       AssetInfoServiceLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       MimeTypeGuesser.layer,
       AssetSizeMigrationService.layer,
       FileChecksumServiceLive.layer,
