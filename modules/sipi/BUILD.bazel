@@ -68,9 +68,9 @@ oci_push(
 )
 
 # --- Sipi runtime bits, extracted for the dsp-api and dsp-ingest images -------
-# Both images run on an eclipse-temurin base (Sipi v5 is distroless), so ingest
-# needs the sipi binary, the whole `/sipi` tree (incl. `/sipi/scripts`, added by
-# this file's overlay — not present in `@sipi_base_*`), and ffmpeg/ffprobe/tini
+# Both images run ingest on an eclipse-temurin base (Sipi v5 is distroless), so
+# they need the sipi binary, the whole `/sipi` tree (incl. `/sipi/scripts`, added
+# by this file's overlay — not present in `@sipi_base_*`), and ffmpeg/ffprobe/tini
 # extracted onto that base. `image_{arch}` is package-private, so the extraction
 # lives here and exports only the flattened result to //modules/{webapi,ingest}.
 [
@@ -105,6 +105,9 @@ oci_push(
                 "sipi",
                 "usr",
             ],
+            # The temurin base's /sbin is a symlink to usr/sbin; a real sbin/ in
+            # this layer would replace it. /sbin/sipi resolves through the link.
+            rewrites = [",^sbin,usr/sbin,"],
             visibility = [
                 "//modules/ingest:__pkg__",
                 "//modules/webapi:__pkg__",

@@ -237,8 +237,8 @@ oci_stamped_labels(
 
 # No `user`: inherits the temurin base's default (root) — ops-deploy expects
 # knora-api to run as root, and ingest writes assets onto NFS mounts owned by
-# orchestrator-controlled uids. HEALTHCHECK isn't emitted (rules_oci can't); it's a
-# docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
+# orchestrator-controlled uids. HEALTHCHECK isn't emitted (rules_oci can't); it's
+# a docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
 # `-javaagent:... -Xmx...` at runtime.
 oci_image(
     name = "image_amd64",
