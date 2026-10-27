@@ -21,6 +21,7 @@ import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.ProjectFolder
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.repo.AssetInfo
 import org.knora.webapi.slice.ingest.repo.AssetInfoService
 import org.knora.webapi.slice.ingest.repo.FileChecksumService
@@ -30,6 +31,7 @@ final case class ProjectService(
   private val assetInfos: AssetInfoService,
   private val storage: StorageService,
   private val checksum: FileChecksumService,
+  private val ingestExecutor: IngestExecutor,
 ) {
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =
@@ -88,7 +90,7 @@ final case class ProjectService(
       // Assets are already-compressed media; store them (DEFLATE level 0) instead of wasting CPU re-compressing.
       payloadEntries =
         List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path, compression = Compression.Store))
-      resultPath <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
+      resultPath <- ingestExecutor.withPermit(BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo)))
     } yield Some(resultPath)
 
   def deleteProject(shortcode: ProjectShortcode): IO[IOException, Unit] =

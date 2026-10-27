@@ -12,6 +12,7 @@ import zio.stream.*
 import org.knora.bagit.BagIt
 import org.knora.bagit.BagItError
 import org.knora.webapi.slice.ingest.domain.AugmentedPath.ProjectFolder
+import org.knora.webapi.slice.ingest.infrastructure.IngestExecutor
 import org.knora.webapi.slice.ingest.repo.StorageService
 
 sealed trait ImportFailed
@@ -33,6 +34,7 @@ object ImportService {
 final class ImportServiceLive(
   storageService: StorageService,
   projectService: ProjectService,
+  ingestExecutor: IngestExecutor,
 ) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
@@ -67,8 +69,8 @@ final class ImportServiceLive(
       bagItDir <- storageService
                     .createTempDirectoryScoped(s"bagit-$shortcode", Some("import"))
                     .mapError(IoError.apply)
-      result <- BagIt
-                  .readAndValidateZip(zipFile, Some(bagItDir))
+      result <- ingestExecutor
+                  .withPermit(BagIt.readAndValidateZip(zipFile, Some(bagItDir)))
                   .tapError(e => ZIO.logError(s"BagIt validation failed for project $shortcode: $e"))
                   .mapError {
                     case e: java.io.IOException => IoError(e)
