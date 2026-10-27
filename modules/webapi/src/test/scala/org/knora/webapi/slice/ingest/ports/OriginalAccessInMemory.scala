@@ -8,23 +8,31 @@ package org.knora.webapi.slice.ingest.ports
 import zio.*
 
 import org.knora.webapi.slice.ingest.domain.ProjectShortcode
+import org.knora.webapi.slice.ingest.ports.OriginalAccessInMemory.Call
 
-/** Grants the Original to every caller whose token is in `granted`; an absent token is granted when `anonymous`. */
-final class OriginalAccessInMemory(granted: Set[String], anonymous: Boolean) extends OriginalAccess {
+/** Decides from the token alone and records every question it was asked. */
+final class OriginalAccessInMemory(decide: Option[String] => Task[Boolean], calls: Ref[List[Call]])
+    extends OriginalAccess {
+
   override def isOriginalGranted(
     token: Option[String],
     shortcode: ProjectShortcode,
     derivativeFilename: String,
   ): Task[Boolean] =
-    ZIO.succeed(token.fold(anonymous)(granted.contains))
+    calls.update(_ :+ Call(token, shortcode, derivativeFilename)) *> decide(token)
+
+  def getCalls: UIO[List[Call]] = calls.get
 }
 
 object OriginalAccessInMemory {
-  def layer(granted: Set[String] = Set.empty, anonymous: Boolean = false): ULayer[OriginalAccess] =
-    ZLayer.succeed(OriginalAccessInMemory(granted, anonymous))
+  final case class Call(token: Option[String], shortcode: ProjectShortcode, derivativeFilename: String)
 
-  val grantAll: ULayer[OriginalAccess] = ZLayer.succeed(new OriginalAccess {
-    override def isOriginalGranted(token: Option[String], shortcode: ProjectShortcode, filename: String) =
-      ZIO.succeed(true)
-  })
+  def layer(decide: Option[String] => Task[Boolean]): ULayer[OriginalAccessInMemory & OriginalAccess] =
+    ZLayer.fromZIO(Ref.make(List.empty[Call]).map(OriginalAccessInMemory(decide, _))) >+>
+      ZLayer.fromFunction((inMemory: OriginalAccessInMemory) => inMemory: OriginalAccess)
+
+  val grantAll: ULayer[OriginalAccessInMemory & OriginalAccess]    = layer(_ => ZIO.succeed(true))
+  val withholdAll: ULayer[OriginalAccessInMemory & OriginalAccess] = layer(_ => ZIO.succeed(false))
+  val failAll: ULayer[OriginalAccessInMemory & OriginalAccess]     =
+    layer(_ => ZIO.fail(IllegalStateException("the token does not authenticate")))
 }
