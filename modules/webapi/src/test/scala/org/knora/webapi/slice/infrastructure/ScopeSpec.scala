@@ -124,5 +124,69 @@ class ScopeSpec extends ZIOSpecDefault {
     },
   )
 
-  val spec = suite("ScopeSpec")(scopeValueSuite, scopeSuite)
+  private val parseSuite = suite("Scope.parse")(
+    test("should parse the admin scope and ignore unknown values") {
+      assertTrue(
+        Scope.parse("admin profile") == Right(Scope.admin),
+        Scope.parse("admin admin admin") == Right(Scope.admin),
+      )
+    },
+    test("should parse the project write scope") {
+      assertTrue(
+        Scope.parse("write:project:0001") == Right(Scope(Set(writeScopeValue1))),
+        Scope.parse("write:project:0001 write:project:0002") == Right(Scope(Set(writeScopeValue1, writeScopeValue2))),
+      )
+    },
+    test("should parse the project read scope") {
+      assertTrue(
+        Scope.parse("read:project:0001") == Right(Scope(Set(readScopeValue1))),
+        Scope.parse("read:project:0001 write:project:0002") == Right(Scope(Set(readScopeValue1, writeScopeValue2))),
+      )
+    },
+    test("should invert toScopeString") {
+      val scope = Scope(Set(readScopeValue1, writeScopeValue2))
+      assertTrue(Scope.parse(scope.toScopeString) == Right(scope))
+    },
+    test("should ignore unknown keys and report bad project shortcodes") {
+      assertTrue(
+        Scope.parse("write:project:1234x") == Left("Shortcode is invalid: 1234x"),
+        Scope.parse("read:project:12") == Left("Shortcode is invalid: 12"),
+        Scope.parse("write project:1234") == Right(Scope.empty),
+        Scope.parse("write:project1234") == Right(Scope.empty),
+        Scope.parse("") == Right(Scope.empty),
+      )
+    },
+  )
+
+  private val checksSuite = suite("Scope checks")(
+    test("only admin has admin") {
+      assertTrue(
+        Scope.admin.hasAdmin,
+        !Scope.empty.hasAdmin,
+        !Scope(Set(readScopeValue1)).hasAdmin,
+        !Scope(Set(writeScopeValue1)).hasAdmin,
+      )
+    },
+    test("a project is readable with read, write or admin for that project") {
+      assertTrue(
+        !Scope.empty.projectReadable(prj1),
+        !Scope(Set(readScopeValue1)).projectReadable(prj2),
+        !Scope(Set(writeScopeValue1)).projectReadable(prj2),
+        Scope(Set(readScopeValue1)).projectReadable(prj1),
+        Scope(Set(writeScopeValue1)).projectReadable(prj1),
+        Scope.admin.projectReadable(prj1),
+      )
+    },
+    test("a project is writable with write or admin for that project") {
+      assertTrue(
+        !Scope.empty.projectWritable(prj1),
+        !Scope(Set(readScopeValue1)).projectWritable(prj1),
+        !Scope(Set(writeScopeValue1)).projectWritable(prj2),
+        Scope(Set(writeScopeValue1)).projectWritable(prj1),
+        Scope.admin.projectWritable(prj1),
+      )
+    },
+  )
+
+  val spec = suite("ScopeSpec")(scopeValueSuite, scopeSuite, parseSuite, checksSuite)
 }

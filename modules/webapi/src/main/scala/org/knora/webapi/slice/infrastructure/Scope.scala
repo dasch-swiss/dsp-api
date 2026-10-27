@@ -10,6 +10,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 final case class Scope(values: Set[ScopeValue]) { self =>
   def toScopeString: String         = self.values.map(_.toScopeString).mkString(" ")
   def +(addThis: ScopeValue): Scope = Scope(values.foldLeft(Set(addThis)) { case (s, old) => s.flatMap(_.merge(old)) })
+
+  def hasAdmin: Boolean = values.contains(ScopeValue.Admin)
+
+  def projectWritable(project: Shortcode): Boolean = hasAdmin || values.contains(ScopeValue.Write(project))
+
+  def projectReadable(project: Shortcode): Boolean =
+    projectWritable(project) || values.contains(ScopeValue.Read(project))
 }
 
 object Scope {
@@ -19,6 +26,29 @@ object Scope {
   def from(scopeValues: Seq[ScopeValue]): Scope = scopeValues.foldLeft(Scope.empty)(_ + _)
   def read(project: Shortcode): Scope           = Scope(Set(ScopeValue.Read(project)))
   def write(project: Shortcode): Scope          = Scope(Set(ScopeValue.Write(project)))
+
+  private val WriteFormat = "^write:project:([^ ]+)$".r
+  private val ReadFormat  = "^read:project:([^ ]+)$".r
+
+  /**
+   * The inverse of [[Scope.toScopeString]]: space-separated values, unknown values ignored. A `read:project:` or
+   * `write:project:` value with an invalid shortcode fails the whole parse.
+   */
+  def parse(scope: String): Either[String, Scope] =
+    scope
+      .split(' ')
+      .toList
+      .foldLeft[Either[String, List[ScopeValue]]](Right(Nil)) { (acc, value) =>
+        acc.flatMap(values => parseValue(value).map(values ++ _))
+      }
+      .map(from)
+
+  private def parseValue(value: String): Either[String, Option[ScopeValue]] = value match {
+    case "admin"                => Right(Some(ScopeValue.Admin))
+    case WriteFormat(shortcode) => Shortcode.from(shortcode).map(sc => Some(ScopeValue.Write(sc)))
+    case ReadFormat(shortcode)  => Shortcode.from(shortcode).map(sc => Some(ScopeValue.Read(sc)))
+    case _                      => Right(None)
+  }
 }
 
 sealed trait ScopeValue {
