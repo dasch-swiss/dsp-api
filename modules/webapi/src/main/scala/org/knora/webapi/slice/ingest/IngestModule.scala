@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.ingest
 
 import swiss.dasch.api.*
+import swiss.dasch.config.Configuration.ExecutorConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.config.Configuration.JwtConfig
@@ -33,7 +34,8 @@ import org.knora.webapi.slice.security.Authenticator
  */
 object IngestModule {
 
-  type Dependencies = AppConfig & PrometheusPublisher & StorageConfig & SipiConfig & IngestConfig & Features
+  type Dependencies =
+    AppConfig & PrometheusPublisher & StorageConfig & SipiConfig & IngestConfig & Features & ExecutorConfig
 
   type Provided = AssetInfoService & DspIngestClient & Internals
 
@@ -71,6 +73,7 @@ object IngestModule {
     FileSystemHealthIndicatorLive.layer,
     HealthCheckServiceLive.layer,
     ImportServiceLive.layer,
+    IngestExecutor.layer,
     IngestService.layer,
     jwtConfig,
     MaintenanceActionsLive.layer,

@@ -10,6 +10,7 @@ import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.Layer
 import zio.ULayer
 import zio.ZIO
@@ -40,6 +41,8 @@ object SpecConfigurations {
   }
 
   val ingestConfigLayer = ZLayer.succeed(IngestConfig(2))
+
+  val ingestExecutorLayer: ULayer[IngestExecutor] = ZLayer.scoped(IngestExecutor.make(2))
 
   val sipiConfigLayer = ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:latest"))
 }

@@ -7,6 +7,7 @@ package org.knora.webapi.slice.ingest
 
 import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import swiss.dasch.config.Configuration.ExecutorConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.config.Configuration.SipiConfig
@@ -99,6 +100,7 @@ object IngestModuleSpec {
       ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:latest")),
       ZLayer.succeed(IngestConfig(1)),
       ZLayer.succeed(Features(allowEraseProjects = false)),
+      ZLayer.succeed(ExecutorConfig(cpuShare = 0.5)),
     )
   }
 

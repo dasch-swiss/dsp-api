@@ -106,6 +106,7 @@ class IngestServiceSpec extends ZIOSpecDefault {
     OtherFilesService.layer,
     ProjectService.layer,
     SipiClientMock.layer,
+    SpecConfigurations.ingestExecutorLayer,
     SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
