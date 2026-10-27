@@ -12,6 +12,7 @@ import zio.test.*
 
 import scala.io.Source
 import scala.jdk.CollectionConverters.*
+import scala.util.Using
 
 import org.knora.testrunner.DspZTestJUnitRunner
 
@@ -21,7 +22,7 @@ class IngestConfigSpec extends ZIOSpecDefault {
   private def env(vars: (String, String)*) = ConfigFactory.parseMap(vars.toMap.asJava)
 
   private def envVarsIn(resource: String): Set[String] = {
-    val text = Source.fromResource(resource).mkString
+    val text = Using.resource(Source.fromResource(resource))(_.mkString)
     """\$\{\?([A-Za-z0-9_]+)\}""".r.findAllMatchIn(text).map(_.group(1)).toSet
   }
 
@@ -67,7 +68,10 @@ class IngestConfigSpec extends ZIOSpecDefault {
     },
     test("fails to load a cpu-share outside (0, 1]") {
       check(Gen.fromIterable(List("0", "-0.5", "1.01", "2"))) { share =>
-        IngestConfig.load(env("INGEST_EXECUTOR_CPU_SHARE" -> share)).exit.map(exit => assertTrue(exit.isFailure))
+        IngestConfig
+          .load(env("INGEST_EXECUTOR_CPU_SHARE" -> share))
+          .flip
+          .map(error => assertTrue(error.getMessage.contains("cpu-share must be in (0, 1]")))
       }
     },
     test("webapi's app configuration carries no ingest key") {
@@ -77,9 +81,16 @@ class IngestConfigSpec extends ZIOSpecDefault {
       val ingestVars = envVarsIn("ingest.conf")
       val webapiVars = envVarsIn("application.conf")
       assertTrue(
-        ingestVars.size == 7,
+        ingestVars == Set(
+          "INGEST_STORAGE_ASSET_DIR",
+          "INGEST_STORAGE_TEMP_DIR",
+          "INGEST_SIPI_USE_LOCAL_DEV",
+          "INGEST_SIPI_LOCAL_DEV_IMAGE",
+          "INGEST_BULK_MAX_PARALLEL",
+          "INGEST_ALLOW_ERASE_PROJECTS",
+          "INGEST_EXECUTOR_CPU_SHARE",
+        ),
         webapiVars.contains("KNORA_WEBAPI_DSP_INGEST_AUDIENCE"),
-        ingestVars.forall(_.startsWith("INGEST_")),
         ingestVars.intersect(webapiVars).isEmpty,
         !webapiVars.exists(_.startsWith("INGEST_")),
       )
