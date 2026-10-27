@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
+import swiss.dasch.config.Configuration as IngestConfiguration
 import zio.*
 import zio.config.*
 import zio.config.typesafe.*
@@ -46,6 +47,23 @@ object TestContainerLayers { self =>
 
   val all: ULayer[self.Environment] =
     ZLayer.succeedEnvironment(cachedContainers) >+> AppConfigForTestContainers.testcontainers
+
+  /**
+   * Ingest stores into the volume the Sipi container serves from and runs the Sipi CLI with `docker run` of the image
+   * that container runs, since the test JVM has no Sipi binary.
+   */
+  val ingestConfig: ULayer[IngestConfiguration.IngestConfigs] =
+    ZLayer.succeedEnvironment(cachedContainers) >>> IngestConfiguration.layer.orDie.flatMap { loaded =>
+      ZLayer.fromZIOEnvironment(
+        for {
+          images <- ZIO.service[SharedVolumes.Images]
+          temp   <- ZIO.service[SharedVolumes.Temp]
+          sipi   <- ZIO.service[SipiTestContainer]
+        } yield loaded
+          .add(IngestConfiguration.StorageConfig(images.hostPath, temp.hostPath))
+          .add(IngestConfiguration.SipiConfig(useLocalDev = true, localDevImage = sipi.getDockerImageName)),
+      )
+    }
 
   private object AppConfigForTestContainers {
 

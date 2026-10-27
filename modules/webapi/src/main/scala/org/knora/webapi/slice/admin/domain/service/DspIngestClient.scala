@@ -5,27 +5,25 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import sttp.capabilities.zio.ZioStreams
-import sttp.client4.*
-import sttp.model.StatusCode
+import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse as IngestAssetInfoResponse
+import swiss.dasch.config.Configuration.Features
+import swiss.dasch.domain.AssetInfoService
+import swiss.dasch.domain.AssetRef
+import swiss.dasch.domain.ImportService
+import swiss.dasch.domain.ProjectService as IngestProjectService
+import swiss.dasch.domain.ProjectShortcode
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.json.DecoderOps
-import zio.json.DeriveJsonDecoder
-import zio.json.JsonDecoder
+import zio.nio.file.Files
 import zio.nio.file.Path
-import zio.stream.ZSink
+import zio.stream.ZStream
 
-import java.io.IOException
-import scala.concurrent.duration.DurationInt
+import java.nio.file.StandardCopyOption
 
 import dsp.errors.NotFoundException
-import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.infrastructure.TracingHttpClient
 
 final case class AssetInfoResponse(
   internalFilename: String,
@@ -42,9 +40,6 @@ final case class AssetInfoResponse(
   internalMimeType: Option[String] = None,
   originalMimeType: Option[String] = None,
 )
-object AssetInfoResponse {
-  implicit val decoder: JsonDecoder[AssetInfoResponse] = DeriveJsonDecoder.gen[AssetInfoResponse]
-}
 
 trait DspIngestClient {
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
@@ -53,68 +48,61 @@ trait DspIngestClient {
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
 
+/** Calls ingest in-process. A failed import is logged, not raised; erasing is gated by ingest's allow-erase-projects. */
 final class DspIngestClientLive(
-  jwtService: JwtService,
-  dspIngestConfig: DspIngestConfig,
-  backend: StreamBackend[Task, ZioStreams],
+  assetInfos: AssetInfoService,
+  projects: IngestProjectService,
+  imports: ImportService,
+  features: Features,
 ) extends DspIngestClient {
 
-  private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
-
-  private val authenticatedRequest: ZIO[Any, Nothing, PartialRequest[Either[String, String]]] =
-    jwtService
-      .createJwtForDspIngest()
-      .map(_.jwtString)
-      .map(basicRequest.auth.bearer(_))
+  private def ingestShortcode(shortcode: Shortcode): Task[ProjectShortcode] =
+    ZIO.fromEither(ProjectShortcode.from(shortcode.value)).mapError(IllegalArgumentException(_))
 
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
-      request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
-      response <- request.send(backend)
-      _        <- ZIO.logInfo(s"asset info for $shortcode/$assetId")
-      _        <- ZIO.logDebug(s"Response from ingest: ${response.code}")
-      _        <- ZIO.logDebug(s"Response from ingest body: ${response.body.fold(identity, identity)}")
-      result   <- if (response.code == StatusCode.NotFound)
-                  ZIO.fail(NotFoundException(s"Asset $assetId not found in project $shortcode"))
-                else
-                  ZIO
-                    .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
-                    .mapError(err => new IOException(s"Error parsing response: $err"))
-    } yield result
+      code <- ingestShortcode(shortcode)
+      info <- assetInfos
+                .findByAssetRef(AssetRef(assetId, code))
+                .someOrFail(NotFoundException(s"Asset $assetId not found in project $shortcode"))
+      r = IngestAssetInfoResponse.from(info)
+    } yield AssetInfoResponse(
+      r.internalFilename,
+      r.originalInternalFilename,
+      r.originalFilename,
+      r.checksumOriginal,
+      r.checksumDerivative,
+      r.sizeOriginal,
+      r.sizeDerivative,
+      r.width,
+      r.height,
+      r.duration,
+      r.fps,
+      r.internalMimeType,
+      r.originalMimeType,
+    )
 
   def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
     for {
-      request <- authenticatedRequest.map {
-                   _.post(uri"${projectsPath(shortcode)}/export")
-                     .readTimeout(2.hours)
-                     .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(outputFile.toFile))))
-                 }
-      response <- request.send(backend)
-      result   <-
-        if (response.code == StatusCode.NotFound) ZIO.none
-        else if (!response.code.isSuccess)
-          ZIO.fail(new IOException(s"Export asset from ingest project $shortcode failed, code: ${response.code}"))
-        else ZIO.some(outputFile)
+      code   <- ingestShortcode(shortcode)
+      zipped <- projects.zipProject(code)
+      result <- ZIO.foreach(zipped)(Files.move(_, outputFile, StandardCopyOption.REPLACE_EXISTING).as(outputFile))
     } yield result
 
-  def eraseProject(shortcode: Shortcode): Task[Unit] = for {
-    request  <- authenticatedRequest.map(_.delete(uri"${projectsPath(shortcode)}/erase"))
-    response <- request.send(backend)
-    _        <- ZIO.logInfo(s"Response from ingest :${response.body}")
-  } yield ()
+  def eraseProject(shortcode: Shortcode): Task[Unit] =
+    if (features.allowEraseProjects) ingestShortcode(shortcode).flatMap(projects.deleteProject)
+    else ZIO.logWarning(s"Not erasing the assets of project $shortcode: allow-erase-projects is off in ingest")
 
-  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = for {
-    request <- authenticatedRequest.map {
-                 _.post(uri"${projectsPath(shortcode)}/import")
-                   .readTimeout(2.hours)
-                   .contentType("application/zip")
-                   .body(fileToImport.toFile)
-               }
-    response <- request.send(backend)
-    _        <- ZIO.logInfo(s"Response code: ${response.code} body ${response.body.fold(identity, identity)}")
-  } yield fileToImport
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
+    ingestShortcode(shortcode)
+      .flatMap(imports.importZipStream(_, ZStream.fromFile(fileToImport.toFile).orDie))
+      .foldZIO(
+        e => ZIO.logError(s"Importing the assets of project $shortcode failed: $e"),
+        _ => ZIO.logInfo(s"Imported the assets of project $shortcode"),
+      )
+      .as(fileToImport)
 }
 
 object DspIngestClientLive {
-  val layer = TracingHttpClient.layer >>> ZLayer.derive[DspIngestClientLive]
+  val layer = ZLayer.derive[DspIngestClientLive]
 }
