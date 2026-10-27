@@ -9,6 +9,10 @@ import cats.implicits.*
 
 import org.knora.webapi.slice.ingest.domain.AuthScope.ScopeValue.*
 
+/**
+ * The standalone ingest module's scope type. It parses the same grammar as `slice.infrastructure.Scope`, which the
+ * `/ingest/` routes use; a change to the scope grammar applies to both.
+ */
 final case class AuthScope(values: Set[AuthScope.ScopeValue] = Set()) extends AnyVal {
   def hasAdmin: Boolean =
     values.contains(Admin)

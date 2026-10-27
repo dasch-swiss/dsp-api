@@ -30,6 +30,9 @@ enum AuthenticatorError extends Exception {
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
  * session id. All private methods used in this trait can be found in the companion object.
+ *
+ * The `/ingest/` routes verify their tokens with `IngestAuthenticator` instead, which keeps the standalone ingest
+ * service's acceptance rule; a change to how dsp-api's tokens are accepted applies to both.
  */
 trait Authenticator {
 
