@@ -250,7 +250,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       live   = FairResourcesLive(
                new StubReadResources(result, calls),
                IriConverter(sf),
-               DspIngestConfig("http://ingest", ingest, "audience", "/opt/images"),
+               DspIngestConfig(ingest, "audience"),
              )
       iri   = ResourceIri.unsafeFrom("http://rdfh.ch/0803/res")
       out  <- live.readAsAnonymous(iri).exit

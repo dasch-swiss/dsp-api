@@ -14,26 +14,25 @@ import zio.config.typesafe.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object TestContainerLayers { self =>
 
-  type Environment = SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer &
-    SipiTestContainer & AppConfigurations
+  type Environment =
+    SharedVolumes.Images & SharedVolumes.Temp & FusekiTestContainer & SipiTestContainer & AppConfigurations
 
   private type ContainersEnv =
-    SharedVolumes.Images & SharedVolumes.Temp & DspIngestTestContainer & FusekiTestContainer & SipiTestContainer
+    SharedVolumes.Images & SharedVolumes.Temp & FusekiTestContainer & SipiTestContainer
 
   private val containersLayer: ULayer[ContainersEnv] =
-    SharedVolumes.layer >+> DspIngestTestContainer.layer >+> FusekiTestContainer.layer >+> SipiTestContainer.layer
+    SharedVolumes.layer >+> FusekiTestContainer.layer >+> SipiTestContainer.layer
 
   /**
    * The custom JUnit runner ([[zio.test.junit.DspZTestRunnerBase]]) builds each spec class's
    * `bootstrap` against its own fresh `Runtime` - a per-spec `val`/`ZLayer` composition here would
-   * therefore start a new Fuseki/Sipi/dsp-ingest container set per spec class instead of sharing
+   * therefore start a new Fuseki/Sipi container set per spec class instead of sharing
    * one set across the whole test JVM. Cache the *built environment* once per JVM instead: a
    * process-static `lazy val`, built via a one-off `Unsafe.run` extended into [[Scope.global]] -
    * the standing, never-closed scope ZIO provides for exactly this "shared for the life of the
@@ -70,7 +69,6 @@ object TestContainerLayers { self =>
     private def providerFor(
       fusekiContainer: FusekiTestContainer,
       sipiContainer: SipiTestContainer,
-      dspIngestContainer: DspIngestTestContainer,
     ): ConfigProvider =
       TypesafeConfigProvider.fromTypesafeConfig(
         ConfigFactory
@@ -78,24 +76,18 @@ object TestContainerLayers { self =>
           .getConfig("app")
           .resolve()
           .withValue("triplestore.fuseki.port", ConfigValueFactory.fromAnyRef(fusekiContainer.getFirstMappedPort))
-          .withValue("sipi.internal-port", ConfigValueFactory.fromAnyRef(sipiContainer.getFirstMappedPort))
-          .withValue(
-            "dsp-ingest.base-url",
-            ConfigValueFactory.fromAnyRef(s"http://localhost:${dspIngestContainer.getFirstMappedPort}"),
-          ),
+          .withValue("sipi.internal-port", ConfigValueFactory.fromAnyRef(sipiContainer.getFirstMappedPort)),
       )
 
     /**
-     * Altered AppConfig with ports from TestContainers for DSP-Ingest, Fuseki and Sipi.
+     * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
      */
-    val testcontainers
-      : ZLayer[DspIngestTestContainer & FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
+    val testcontainers: ZLayer[FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
       val providerLayer = ZLayer {
         for {
-          fusekiContainer    <- ZIO.service[FusekiTestContainer]
-          sipiContainer      <- ZIO.service[SipiTestContainer]
-          dspIngestContainer <- ZIO.service[DspIngestTestContainer]
-        } yield providerFor(fusekiContainer, sipiContainer, dspIngestContainer)
+          fusekiContainer <- ZIO.service[FusekiTestContainer]
+          sipiContainer   <- ZIO.service[SipiTestContainer]
+        } yield providerFor(fusekiContainer, sipiContainer)
       }
       providerLayer.flatMap { env =>
         val provider       = env.get[ConfigProvider]

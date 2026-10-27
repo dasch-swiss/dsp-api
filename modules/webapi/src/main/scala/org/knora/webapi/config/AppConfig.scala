@@ -91,7 +91,7 @@ final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[
  * @param assetDir        dsp-ingest's asset directory, read directly (sidecar `.info` files). Must be the
  *                        same directory dsp-ingest is configured with (`STORAGE_ASSET_DIR`).
  */
-final case class DspIngestConfig(baseUrl: String, externalBaseUrl: String, audience: String, assetDir: String)
+final case class DspIngestConfig(externalBaseUrl: String, audience: String)
 
 final case class KnoraApi(
   internalHost: String,
