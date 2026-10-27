@@ -14,12 +14,14 @@ import org.knora.webapi.slice.api.management.ManagementServerEndpoints
 import org.knora.webapi.slice.api.v2.ApiV2ServerEndpoints
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
 import org.knora.webapi.slice.fair.api.FairServerEndpoints
+import org.knora.webapi.slice.ingest.api.IngestServerEndpoints
 
 final class Endpoints(
   adminApi: AdminApiServerEndpoints,
   apiV2: ApiV2ServerEndpoints,
   apiV3: ApiV3ServerEndpoints,
   fair: FairServerEndpoints,
+  ingest: IngestServerEndpoints,
   management: ManagementServerEndpoints,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
@@ -27,6 +29,7 @@ final class Endpoints(
       apiV2.serverEndpoints ++
       apiV3.serverEndpoints ++
       fair.serverEndpoints ++
+      ingest.serverEndpoints ++
       management.serverEndpoints
 }
 

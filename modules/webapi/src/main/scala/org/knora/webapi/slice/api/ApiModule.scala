@@ -12,6 +12,7 @@ import org.knora.webapi.slice.api.v2.ApiV2Module
 import org.knora.webapi.slice.api.v3.ApiV3Module
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
 import org.knora.webapi.slice.fair.api.FairApiModule
+import org.knora.webapi.slice.ingest.api.IngestApiModule
 
 object ApiModule {
 
@@ -21,12 +22,13 @@ object ApiModule {
     ApiV2Module.Dependencies &
     ApiV3Module.Dependencies &
     FairApiModule.Dependencies &
+    IngestApiModule.Dependencies &
     ManagementServerEndpoints.Dependencies
     // format: on
 
   type Provided = Endpoints & AdminApiModule.Provided
 
   val layer: URLayer[Dependencies, Provided] =
-    (AdminApiModule.layer ++ ManagementServerEndpoints.layer ++ ApiV2Module.layer ++ ApiV3Module.layer ++ FairApiModule.layer) >+>
+    (AdminApiModule.layer ++ ManagementServerEndpoints.layer ++ ApiV2Module.layer ++ ApiV3Module.layer ++ FairApiModule.layer ++ IngestApiModule.layer) >+>
       Endpoints.layer
 }

@@ -7,11 +7,13 @@ package org.knora.webapi.slice.ingest.infrastructure
 
 import org.junit.runner.RunWith
 import zio.Exit
+import zio.LogLevel
 import zio.Scope
 import zio.ZIO
 import zio.ZLayer
 import zio.nio.file.*
 import zio.test.ZIOSpecDefault
+import zio.test.ZTestLogger
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
@@ -44,6 +46,15 @@ class FileSystemHealthIndicatorLiveSpec extends ZIOSpecDefault {
       for {
         result <- FileSystemHealthIndicator.smokeTestOrDie().exit
       } yield assertTrue(result.isFailure)
+    }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemHealthIndicatorLive.layer),
+    test("should log, not fail, the startup smoke test given the expected folders do not exist") {
+      for {
+        result <- FileSystemHealthIndicator.smokeTestOrLogError().exit
+        logged <- ZTestLogger.logOutput
+      } yield assertTrue(
+        result.isSuccess,
+        logged.exists(e => e.logLevel == LogLevel.Error && e.message().contains("does-not-exist")),
+      )
     }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemHealthIndicatorLive.layer),
   )
 }

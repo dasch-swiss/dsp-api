@@ -12,6 +12,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.core.*
 import org.knora.webapi.slice.api.ApiModule
 import org.knora.webapi.slice.infrastructure.MetricsServer
+import org.knora.webapi.slice.ingest.infrastructure.FileSystemHealthIndicator
 
 object Main extends ZIOApp {
 
@@ -31,6 +32,7 @@ object Main extends ZIOApp {
    *  Entrypoint of our Application
    */
   override def run: ZIO[Environment & ZIOAppArgs & Scope, Any, Any] =
-    (Db.init *> DspApiServer.startup *> MetricsServer.make).provideSomeAuto(DspApiServer.layer)
+    (Db.init *> FileSystemHealthIndicator.smokeTestOrLogError() *> DspApiServer.startup *> MetricsServer.make)
+      .provideSomeAuto(DspApiServer.layer)
 
 }

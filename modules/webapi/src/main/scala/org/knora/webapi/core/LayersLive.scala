@@ -42,8 +42,12 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.slice.ingest.IngestModule
+import org.knora.webapi.slice.ingest.config.BulkIngestConfig
 import org.knora.webapi.slice.ingest.config.IngestConfig
 import org.knora.webapi.slice.ingest.config.IngestConfig.IngestConfigs
+import org.knora.webapi.slice.ingest.config.IngestFeatures
+import org.knora.webapi.slice.ingest.config.SipiConfig
 import org.knora.webapi.slice.ingest.config.StorageConfig
 import org.knora.webapi.slice.ontology.DoapResolverLive
 import org.knora.webapi.slice.ontology.IdSourceLive
@@ -65,7 +69,6 @@ import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceLive
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.AssetInfoServiceLayer
 import org.knora.webapi.store.iiif.impl.FairAssetsLive
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -91,6 +94,7 @@ object LayersLive { self =>
     CreateResourceV2Handler &
     DefaultObjectAccessPermissionService &
     InfrastructureModule.Provided &
+    IngestModule.Provided &
     IriService &
     ListsResponder &
     OntologyInferencer &
@@ -128,13 +132,12 @@ object LayersLive { self =>
   ): URLayer[AppConfigurations & IngestConfigs, Environment] =
     ZLayer.makeSome[
       AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig &
-        StorageConfig,
+        BulkIngestConfig & IngestFeatures & SipiConfig & StorageConfig,
       self.Environment,
     ](
       // ZLayer.Debug.mermaid,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      AssetInfoServiceLayer.layer,
       AssetPermissionsCache.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
@@ -154,6 +157,7 @@ object LayersLive { self =>
       FairProjectsLive.layer,
       FairResourcesLive.layer,
       IdSourceLive.layer,
+      IngestModule.layer,
       InfrastructureModule.layer,
       IriService.layer,
       KnoraResponseRenderer.layer,
@@ -164,6 +168,7 @@ object LayersLive { self =>
       // SipiService (store.iiif slice), so it is wired here rather than inside OntologyModule. No layer cycle: standoff
       // services depend on the lean StandoffEntityInfoService, not on OntologyResponderV2.
       OntologyTransformer.layer,
+      OriginalAccessLive.layer,
       otelLayer,
       PermissionUtilADMLive.layer,
       PermissionsResponder.layer,

@@ -8,6 +8,7 @@ package org.knora.webapi.slice.ingest.infrastructure
 import zio.IO
 import zio.RIO
 import zio.UIO
+import zio.URIO
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
@@ -28,6 +29,10 @@ object FileSystemHealthIndicator {
     ZIO.serviceWithZIO[FileSystemHealthIndicator](_.checkExpectedFoldersExist())
   def smokeTestOrDie(): RIO[FileSystemHealthIndicator, Unit] =
     ZIO.serviceWithZIO[FileSystemHealthIndicator](_.smokeTest()).orDie
+
+  /** A missing ingest mount must not stop dsp-api: it is logged, and `/ingest/health` reports it. */
+  def smokeTestOrLogError(): URIO[FileSystemHealthIndicator, Unit] =
+    ZIO.serviceWithZIO[FileSystemHealthIndicator](_.smokeTest()).catchAll(e => ZIO.logError(e.getMessage))
 }
 
 final case class FileSystemHealthIndicatorLive(config: StorageConfig) extends FileSystemHealthIndicator {
