@@ -13,16 +13,15 @@ import zio.config.typesafe.*
 import zio.nio.file.Path
 
 object Configuration {
-  final private case class ApplicationConf(
-    jwt: JwtConfig,
-    service: ServiceConfig,
+  final private case class IngestConf(
     storage: StorageConfig,
     sipi: SipiConfig,
-    ingest: IngestConfig,
+    bulkMaxParallel: Int,
     features: Features,
-    dspApi: DspApiConfig,
+    executor: ExecutorConfig,
   )
 
+  /** Not loaded from `ingest.conf`: the embedding application provides it from its own token settings. */
   final case class JwtConfig(
     secret: String,
     audience: String,
@@ -30,14 +29,7 @@ object Configuration {
     disableAuth: Boolean = false,
   )
 
-  final case class ServiceConfig(
-    host: String,
-    port: Int,
-    logFormat: String,
-    logLevel: String,
-  )
-
-  final case class SipiConfig(useLocalDev: Boolean)
+  final case class SipiConfig(useLocalDev: Boolean, localDevImage: String)
 
   final case class StorageConfig(assetDir: String, tempDir: String) {
     val assetPath: Path = Path(assetDir)
@@ -48,26 +40,32 @@ object Configuration {
 
   final case class Features(allowEraseProjects: Boolean)
 
-  final case class DspApiConfig(
-    url: String,
-  )
+  final case class ExecutorConfig(cpuShare: Double)
 
-  private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
+  private val configDescriptor = deriveConfig[IngestConf]
+    .mapKey(toKebabCase)
+    .validate("executor.cpu-share must be in (0, 1]")(c => c.executor.cpuShare > 0 && c.executor.cpuShare <= 1)
 
-  private type AllConfigs =
-    ServiceConfig & JwtConfig & StorageConfig & SipiConfig & IngestConfig & Features & DspApiConfig
+  type IngestConfigs = StorageConfig & SipiConfig & IngestConfig & Features & ExecutorConfig
 
-  val layer: ZLayer[Any, Config.Error, AllConfigs] = {
-    val applicationConf = ZLayer.fromZIO(
-      read(configDescriptor from ConfigProvider.fromTypesafeConfig(ConfigFactory.defaultApplication().resolve()))
-        .tap(c => ZIO.logInfo("Feature: ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
+  /** Reads `ingest.conf` only, so no key is shared with the embedding application's `application.conf`. */
+  val layer: ZLayer[Any, Config.Error, IngestConfigs] =
+    fromTypesafeConfig(ConfigFactory.parseResources("ingest.conf").resolve())
+
+  private[config] def fromTypesafeConfig(
+    resolved: => com.typesafe.config.Config,
+  ): ZLayer[Any, Config.Error, IngestConfigs] = {
+    val ingestConf = ZLayer.fromZIO(
+      ZIO
+        .attempt(resolved.getConfig("ingest"))
+        .mapError(e => Config.Error.InvalidData(message = e.getMessage))
+        .flatMap(conf => read(configDescriptor from ConfigProvider.fromTypesafeConfig(conf)))
+        .tap(c => ZIO.logInfo("Feature: INGEST_ALLOW_ERASE_PROJECTS enabled").when(c.features.allowEraseProjects)),
     )
-    applicationConf.project(_.service) ++
-      applicationConf.project(_.storage) ++
-      applicationConf.project(_.jwt) ++
-      applicationConf.project(_.sipi) ++
-      applicationConf.project(_.ingest) ++
-      applicationConf.project(_.features) ++
-      applicationConf.project(_.dspApi)
+    ingestConf.project(_.storage) ++
+      ingestConf.project(_.sipi) ++
+      ingestConf.project(c => IngestConfig(c.bulkMaxParallel)) ++
+      ingestConf.project(_.features) ++
+      ingestConf.project(_.executor)
   }
 }

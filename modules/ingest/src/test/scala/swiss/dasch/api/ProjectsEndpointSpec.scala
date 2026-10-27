@@ -6,16 +6,11 @@
 package swiss.dasch.api
 
 import org.junit.runner.RunWith
-import sttp.client4.impl.zio.RIOMonadAsyncError
-import sttp.client4.testing.BackendStub
-import sttp.client4.testing.ResponseStub
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
-import swiss.dasch.FetchAssetPermissionsLive
 import swiss.dasch.FetchAssetPermissionsMock
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
-import swiss.dasch.config.Configuration.DspApiConfig
 import swiss.dasch.config.Configuration.Features
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
@@ -55,13 +50,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
            )
     response <- app.runZIO(request).logError
   } yield response
-
-  val fakeSttp = {
-    val stub = BackendStub(new RIOMonadAsyncError[Any])
-      .whenRequestMatches(_.uri.path.mkString("/").contains("admin/files/0001"))
-      .thenRespond(ResponseStub.adjust("""{"derivative": "stream", "original": "withhold"}"""))
-    ZLayer.succeed(new FetchAssetPermissionsLive(stub, DspApiConfig("")))
-  }
 
   import zio.Scope
   import zio.test.TestResult
@@ -232,7 +220,7 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
       },
     )
 
-  private val assetOriginalSuiteFakeSttp =
+  private val assetOriginalSuiteDenied =
     suite("/projects/<shortcode>/asset/<assetId>/original")(
       // A streamed derivative is the case most likely to be misread as downloadable: the asset plays, but the
       // Original stays withheld. The two channels never merge, and this gate reads only `original`.
@@ -488,9 +476,9 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     StillImageService.layer,
     StorageServiceLive.layer,
     ZLayer.succeed(Features(allowEraseProjects = true)),
-  ) + suite("ProjectsEndpoint with SttpStub")(
-    // NOTE: only difference in the provide()s is the fakeSttp. Whoever can help me refactor this gets a beer.
-    assetOriginalSuiteFakeSttp,
+  ) + suite("ProjectsEndpoint with the original withheld")(
+    // NOTE: only difference in the provide()s is the denying FetchAssetPermissionsMock.
+    assetOriginalSuiteDenied,
   ).provide(
     AssetInfoServiceLive.layer,
     AuthServiceLive.layer,
@@ -517,6 +505,6 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     StillImageService.layer,
     StorageServiceLive.layer,
     ZLayer.succeed(Features(allowEraseProjects = true)),
-    fakeSttp,
+    FetchAssetPermissionsMock.layer(false),
   )
 }

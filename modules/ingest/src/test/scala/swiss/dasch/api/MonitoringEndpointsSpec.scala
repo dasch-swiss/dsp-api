@@ -14,7 +14,6 @@ import swiss.dasch.infrastructure.FileSystemHealthIndicatorLive
 import swiss.dasch.infrastructure.Health
 import swiss.dasch.infrastructure.HealthCheckService
 import swiss.dasch.infrastructure.HealthCheckServiceLive
-import swiss.dasch.infrastructure.Metrics
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
 import zio.Ref
@@ -30,6 +29,7 @@ import zio.http.URL
 import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
+import zio.metrics.connectors.prometheus
 import zio.nio.file.Files
 import zio.test.Spec
 import zio.test.TestResult
@@ -129,7 +129,7 @@ class MonitoringEndpointsSpec extends ZIOSpecDefault {
     BaseEndpoints.layer,
     AuthServiceLive.layer,
     SpecConfigurations.jwtConfigLayer,
-    Metrics.layer,
+    prometheus.publisherLayer,
   )
 
   val spec = suite("MonitoringEndpoints")(
@@ -140,7 +140,7 @@ class MonitoringEndpointsSpec extends ZIOSpecDefault {
       BaseEndpoints.layer,
       AuthServiceLive.layer,
       SpecConfigurations.jwtConfigLayer,
-      Metrics.layer,
+      prometheus.publisherLayer,
     ),
     healthOverFileSystemSuite,
   )

@@ -58,8 +58,7 @@ scala_library(
     deps = [
         ":buildinfo",
         "//modules/bagit",
-        # not //modules/ingest — see the :ingest_classes comment
-        "//modules/ingest:ingest_classes",
+        "//modules/ingest",
         "//modules/jwt",
         "//modules/shacl-validator",
         "//modules/sparql-builder",

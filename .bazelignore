@@ -13,5 +13,4 @@ modules/shacl-validator/target
 modules/testkit/target
 modules/test-it/target
 modules/test-e2e/target
-modules/test-ingest-integration/target
 modules/ingest/target

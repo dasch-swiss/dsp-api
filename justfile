@@ -4,7 +4,7 @@ openapiDir := "./docs/03-endpoints/generated-openapi"
 # .format-test outputs aren't discovered by `bazel test //...`, so fmt/check
 # drive them explicitly. Keep in sync with the `format = True` targets in the
 # module BUILD files.
-scalafmt_targets := "//modules/bagit:bagit //modules/bagit:test //modules/jwt:jwt //modules/jwt:test //modules/shacl-validator:shacl-validator //modules/shacl-validator:test //modules/sparql-builder:sparql-builder //modules/sparql-builder:test //modules/test-runner:test-runner //modules/testkit:testkit //modules/webapi:webapi //modules/webapi:test //modules/ingest:ingest //modules/ingest:test //modules/test-it:test //modules/test-e2e:test //modules/test-ingest-integration:test"
+scalafmt_targets := "//modules/bagit:bagit //modules/bagit:test //modules/jwt:jwt //modules/jwt:test //modules/shacl-validator:shacl-validator //modules/shacl-validator:test //modules/sparql-builder:sparql-builder //modules/sparql-builder:test //modules/test-runner:test-runner //modules/testkit:testkit //modules/webapi:webapi //modules/webapi:test //modules/ingest:ingest //modules/ingest:test //modules/test-it:test //modules/test-e2e:test"
 
 # List all recipies
 default:

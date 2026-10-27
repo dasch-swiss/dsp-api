@@ -10,7 +10,6 @@ import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
 import swiss.dasch.domain.StorageServiceLive
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.version.BuildInfo
 import zio.ZIO
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
@@ -20,7 +19,8 @@ import org.knora.testrunner.DspZTestJUnitRunner
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class CommandExecutorLiveSpec extends ZIOSpecDefault {
-  val devLayer = ZLayer.succeed(SipiConfig(useLocalDev = true)) >>> CommandExecutorLive.layer
+  val devLayer =
+    ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "sipi:local-dev")) >>> CommandExecutorLive.layer
 
   val spec = suite("CommandExecutorLive")(
     test("buildCommand with docker when useLocalDev is true") {
@@ -28,11 +28,13 @@ class CommandExecutorLiveSpec extends ZIOSpecDefault {
         cmd      <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](devLayer)
         assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
         expected  =
-          s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion} customParams"
+          s"docker run --entrypoint customCommand -v $assetDir:$assetDir sipi:local-dev customParams"
       } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     },
     test("buildCommand without docker when useLocalDev is false") {
-      val prodLayer = ZLayer.succeed(SipiConfig(useLocalDev = false)) >>> CommandExecutorLive.layer
+      val prodLayer = ZLayer.succeed(
+        SipiConfig(useLocalDev = false, localDevImage = "daschswiss/knora-sipi:latest"),
+      ) >>> CommandExecutorLive.layer
       for {
         cmd     <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](prodLayer)
         expected = "customCommand customParams"
