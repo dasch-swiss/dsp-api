@@ -8,9 +8,6 @@ package swiss.dasch.api
 import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
-import swiss.dasch.domain.*
-import swiss.dasch.domain.Exif.Image.OrientationValue
-import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.http.*
@@ -18,6 +15,10 @@ import zio.nio.file.Files
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.domain.Exif.Image.OrientationValue
+import org.knora.webapi.slice.ingest.infrastructure.CommandExecutorMock
+import org.knora.webapi.slice.ingest.repo.*
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class MaintenanceEndpointsSpec extends ZIOSpecDefault {

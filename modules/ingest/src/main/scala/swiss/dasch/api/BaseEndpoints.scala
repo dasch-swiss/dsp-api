@@ -13,9 +13,11 @@ import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
 import zio.*
+
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.api.ApiProblem.Unauthorized
 
 case class BaseEndpoints(authService: AuthService) {
   val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, ApiProblem, Unit, Any]] =

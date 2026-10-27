@@ -10,7 +10,10 @@ import zio.*
 import zio.config.*
 import zio.config.magnolia.deriveConfig
 import zio.config.typesafe.*
-import zio.nio.file.Path
+
+import org.knora.webapi.slice.ingest.config.BulkIngestConfig
+import org.knora.webapi.slice.ingest.config.SipiConfig
+import org.knora.webapi.slice.ingest.config.StorageConfig
 
 object Configuration {
   final private case class ApplicationConf(
@@ -18,7 +21,7 @@ object Configuration {
     service: ServiceConfig,
     storage: StorageConfig,
     sipi: SipiConfig,
-    ingest: IngestConfig,
+    ingest: BulkIngestConfig,
     features: Features,
     dspApi: DspApiConfig,
   )
@@ -37,15 +40,6 @@ object Configuration {
     logLevel: String,
   )
 
-  final case class SipiConfig(useLocalDev: Boolean)
-
-  final case class StorageConfig(assetDir: String, tempDir: String) {
-    val assetPath: Path = Path(assetDir)
-    val tempPath: Path  = Path(tempDir)
-  }
-
-  final case class IngestConfig(bulkMaxParallel: Int)
-
   final case class Features(allowEraseProjects: Boolean)
 
   final case class DspApiConfig(
@@ -55,7 +49,7 @@ object Configuration {
   private val configDescriptor = deriveConfig[ApplicationConf].mapKey(toKebabCase)
 
   private type AllConfigs =
-    ServiceConfig & JwtConfig & StorageConfig & SipiConfig & IngestConfig & Features & DspApiConfig
+    ServiceConfig & JwtConfig & StorageConfig & SipiConfig & BulkIngestConfig & Features & DspApiConfig
 
   val layer: ZLayer[Any, Config.Error, AllConfigs] = {
     val applicationConf = ZLayer.fromZIO(

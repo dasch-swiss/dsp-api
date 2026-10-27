@@ -1,0 +1,33 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ingest.infrastructure
+
+import org.junit.runner.RunWith
+import zio.ZIO
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+import zio.test.check
+
+import java.util.UUID
+
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class Base62Spec extends ZIOSpecDefault {
+
+  private val genUuid = Gen.fromZIO(ZIO.succeed(UUID.randomUUID()))
+
+  val spec = suite("Base62")(
+    test("should encode and decode a UUID") {
+      check(genUuid) { uuid =>
+        val encoded: Base62EncodedUuid = Base62.encode(uuid)
+        val decoded: UUID              = Base62.decode(encoded)
+        assertTrue(uuid == decoded)
+      }
+    },
+  )
+}

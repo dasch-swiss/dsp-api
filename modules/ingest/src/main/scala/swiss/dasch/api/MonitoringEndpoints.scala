@@ -9,12 +9,14 @@ import sttp.tapir.PublicEndpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import swiss.dasch.infrastructure.AggregatedHealth
-import swiss.dasch.infrastructure.Health
 import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.infrastructure.AggregatedHealth
+import org.knora.webapi.slice.ingest.infrastructure.Health
 
 case class InfoEndpointResponse(
   name: String = BuildInfo.name,

@@ -5,10 +5,11 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ApiProblem.InternalServerError
-import swiss.dasch.api.ApiProblem.NotFound
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.api.ApiProblem.InternalServerError
+import org.knora.webapi.slice.ingest.api.ApiProblem.NotFound
+import org.knora.webapi.slice.ingest.domain.AssetRef
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
 
 trait HandlerFunctions {
   def projectNotFoundOrServerError(mayBeError: Option[Throwable], shortcode: ProjectShortcode): ApiProblem =

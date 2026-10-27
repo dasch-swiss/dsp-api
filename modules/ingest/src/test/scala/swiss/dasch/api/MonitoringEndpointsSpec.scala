@@ -8,12 +8,6 @@ package swiss.dasch.api
 import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.infrastructure.AggregatedHealth
-import swiss.dasch.infrastructure.FileSystemHealthIndicatorLive
-import swiss.dasch.infrastructure.Health
-import swiss.dasch.infrastructure.HealthCheckService
-import swiss.dasch.infrastructure.HealthCheckServiceLive
 import swiss.dasch.infrastructure.Metrics
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
@@ -37,6 +31,12 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.infrastructure.AggregatedHealth
+import org.knora.webapi.slice.ingest.infrastructure.FileSystemHealthIndicatorLive
+import org.knora.webapi.slice.ingest.infrastructure.Health
+import org.knora.webapi.slice.ingest.infrastructure.HealthCheckService
+import org.knora.webapi.slice.ingest.infrastructure.HealthCheckServiceLive
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class MonitoringEndpointsSpec extends ZIOSpecDefault {

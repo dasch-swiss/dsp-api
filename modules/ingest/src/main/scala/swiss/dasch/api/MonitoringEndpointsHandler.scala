@@ -6,9 +6,11 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.*
-import swiss.dasch.infrastructure.HealthCheckService
 import zio.*
 import zio.metrics.connectors.prometheus.PrometheusPublisher
+
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.infrastructure.HealthCheckService
 
 case class MonitoringEndpointsHandler(
   monitoringEndpoints: MonitoringEndpoints,

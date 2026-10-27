@@ -7,13 +7,13 @@ package swiss.dasch.api
 
 import swiss.dasch.api.AuthService.JwtContents
 import swiss.dasch.config.Configuration.JwtConfig
-import swiss.dasch.domain.AuthScope
 import zio.*
 import zio.json.*
 import zio.prelude.Validation
 
 import org.knora.jwt.JwtClaim
 import org.knora.jwt.JwtCodec
+import org.knora.webapi.slice.ingest.domain.AuthScope
 
 trait AuthService {
   def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], Principal]

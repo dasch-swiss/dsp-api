@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.`export`.api
 
-import swiss.dasch.domain.AssetInfoService
 import zio.URLayer
 
 import org.knora.webapi.config.AppConfig
@@ -17,6 +16,7 @@ import org.knora.webapi.slice.api.v3.export_.ExportService
 import org.knora.webapi.slice.api.v3.export_.FindResourcesService
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.ingest.repo.AssetInfoService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.store.triplestore.api.TriplestoreService

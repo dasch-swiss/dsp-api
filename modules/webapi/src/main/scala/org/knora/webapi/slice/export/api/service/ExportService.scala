@@ -8,11 +8,6 @@ package org.knora.webapi.slice.api.v3.export_
 import cats.*
 import cats.implicits.*
 import com.github.tototoshi.csv.CSVFormat
-import swiss.dasch.domain.AssetId as IngestAssetId
-import swiss.dasch.domain.AssetInfo
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
 import zio.*
 import zio.ZLayer
 import zio.stream.ZStream
@@ -55,6 +50,11 @@ import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.ingest.domain.AssetId as IngestAssetId
+import org.knora.webapi.slice.ingest.domain.AssetRef
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode as IngestProjectShortcode
+import org.knora.webapi.slice.ingest.repo.AssetInfo
+import org.knora.webapi.slice.ingest.repo.AssetInfoService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resources.domain.ResourceMetadataRules
 import org.knora.webapi.slice.resources.service.ReadResourcesService

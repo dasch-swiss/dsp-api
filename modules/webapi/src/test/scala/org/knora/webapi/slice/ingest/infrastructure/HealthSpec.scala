@@ -1,0 +1,25 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ingest.infrastructure
+
+import org.junit.runner.RunWith
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
+import org.knora.testrunner.DspZTestJUnitRunner
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class HealthSpec extends ZIOSpecDefault {
+  val spec = suite("Health")(test("aggregation") {
+    val up   = Health.up
+    val down = Health.down
+    assertTrue(
+      (up `aggregate` down) == down,
+      (down `aggregate` up) == down,
+      (up `aggregate` up) == up,
+    )
+  })
+}

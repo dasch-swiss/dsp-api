@@ -6,10 +6,11 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
-import swiss.dasch.domain.*
 import zio.ZIO
 import zio.ZLayer
 import zio.stream.ZStream
+
+import org.knora.webapi.slice.ingest.domain.*
 
 final class ReportEndpointsHandler(
   reportEndpoints: ReportEndpoints,

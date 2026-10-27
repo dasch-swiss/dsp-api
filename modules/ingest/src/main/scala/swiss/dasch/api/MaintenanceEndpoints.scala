@@ -9,32 +9,20 @@ import sttp.model.StatusCode
 import sttp.tapir.Codec
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.ztapir.*
-import swiss.dasch.domain.ProjectShortcode
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.schema.DeriveSchema
 import zio.schema.Schema
 
+import org.knora.webapi.slice.ingest.domain.ActionName
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
+
 final case class MappingEntry(internalFilename: String, originalFilename: String)
 
 object MappingEntry {
   given codec: JsonCodec[MappingEntry] = DeriveJsonCodec.gen[MappingEntry]
   given schema: Schema[MappingEntry]   = DeriveSchema.gen[MappingEntry]
-}
-
-enum ActionName {
-  case ApplyTopLeftCorrection extends ActionName
-  case UpdateAssetMetadata    extends ActionName
-}
-
-object ActionName {
-  given codec: JsonCodec[ActionName] = DeriveJsonCodec.gen[ActionName]
-
-  given schema: Schema[ActionName] = DeriveSchema.gen[ActionName]
-
-  given tapirCodec: sttp.tapir.Codec[String, ActionName, TextPlain] =
-    sttp.tapir.Codec.derivedEnumeration[String, ActionName].defaultStringBased
 }
 
 final case class MaintenanceEndpoints(base: BaseEndpoints) {

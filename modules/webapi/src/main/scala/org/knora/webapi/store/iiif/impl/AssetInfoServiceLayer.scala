@@ -5,15 +5,15 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetInfoServiceLive
-import swiss.dasch.domain.MimeTypeGuesser
-import swiss.dasch.domain.StorageServiceLive
 import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.domain.MimeTypeGuesser
+import org.knora.webapi.slice.ingest.repo.AssetInfoService
+import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
+import org.knora.webapi.slice.ingest.repo.StorageServiceLive
 
 /** The one construction of the ingest service's [[AssetInfoService]], shared by the export and FAIR slices. */
 object AssetInfoServiceLayer {

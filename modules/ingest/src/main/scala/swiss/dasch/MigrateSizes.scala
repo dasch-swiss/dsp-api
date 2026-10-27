@@ -8,10 +8,12 @@ package swiss.dasch
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.config.Configuration.ServiceConfig
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
+
+import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.repo.*
 
 /**
  * One-off migration backfilling `sizeOriginal`/`sizeDerivative` into every `.info` sidecar in the store.

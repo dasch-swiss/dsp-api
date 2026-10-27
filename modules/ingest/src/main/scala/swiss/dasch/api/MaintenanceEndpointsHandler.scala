@@ -6,11 +6,15 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
-import swiss.dasch.api.ActionName.ApplyTopLeftCorrection
-import swiss.dasch.api.ActionName.UpdateAssetMetadata
-import swiss.dasch.domain.*
 import zio.ZIO
 import zio.ZLayer
+
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.domain.ActionName.ApplyTopLeftCorrection
+import org.knora.webapi.slice.ingest.domain.ActionName.UpdateAssetMetadata
+import org.knora.webapi.slice.ingest.infrastructure.*
+import org.knora.webapi.slice.ingest.repo.*
 
 final case class MaintenanceEndpointsHandler(
   fileChecksumService: FileChecksumService,

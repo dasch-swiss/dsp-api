@@ -1,0 +1,173 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ingest.domain
+
+import eu.timepit.refined.types.string.NonEmptyString
+import org.junit.runner.RunWith
+import zio.*
+import zio.nio.file.Files
+import zio.nio.file.Path
+import zio.stream.ZStream
+import zio.test.TestAspect
+import zio.test.TestClock
+import zio.test.ZIOSpecDefault
+import zio.test.assertCompletes
+import zio.test.assertTrue
+
+import scala.language.implicitConversions
+
+import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.domain.Asset.StillImageAsset
+import org.knora.webapi.slice.ingest.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
+import org.knora.webapi.slice.ingest.domain.AugmentedPath.JpxDerivativeFile
+import org.knora.webapi.slice.ingest.domain.AugmentedPath.OrigFile
+import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
+import org.knora.webapi.slice.ingest.repo.FileChecksumServiceLive
+import org.knora.webapi.slice.ingest.repo.StorageService
+import org.knora.webapi.slice.ingest.repo.StorageServiceLive
+import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class BulkIngestServiceSpec extends ZIOSpecDefault {
+  // accessor functions for testing
+  private val storageService    = ZIO.serviceWithZIO[StorageService]
+  private val bulkIngestService = ZIO.serviceWithZIO[BulkIngestService]
+
+  private def getBulkIngestMappingCsv(shortcode: ProjectShortcode) =
+    bulkIngestService(_.getBulkIngestMappingCsv(shortcode))
+
+  private val shortcode = ProjectShortcode.unsafeFrom("0001")
+
+  object TestData {
+    val stillImageAsset: StillImageAsset = StillImageAsset(
+      AssetRef(AssetId.unsafeFrom("aaaa"), ProjectShortcode.unsafeFrom("0001")),
+      Original(OrigFile.unsafeFrom("original.jpg.orig"), NonEmptyString.unsafeFrom("original.jpg")),
+      JpxDerivativeFile.unsafeFrom("original.jpx"),
+      StillImageMetadata(Dimensions.unsafeFrom(6, 6), None, None),
+    )
+  }
+
+  private val startBulkIngestSuite = suite("start ingest")(
+    test("lock project while ingesting") {
+      for {
+        // given
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- Files.createFile(importDir / "0001.tif")
+
+        // when
+        ingestFiber <- bulkIngestService(_.startBulkIngest(shortcode))
+        failed      <- bulkIngestService(_.startBulkIngest(shortcode)).fork
+        _           <- TestClock.adjust(700.second)
+
+        // then
+        failed        <- failed.join.exit
+        ingestResult  <- ingestFiber.join
+        projectDir    <- storageService(_.getProjectFolder(shortcode))
+        projectExists <- Files.isDirectory(projectDir.path)
+      } yield assertTrue(ingestResult == IngestResult.success, failed.isFailure, projectExists)
+    },
+    test("fail when import folder does not exist") {
+      for {
+        _    <- storageService(_.getImportFolder(shortcode).tap(Files.deleteIfExists(_)))
+        exit <- bulkIngestService(_.startBulkIngest(shortcode)).exit
+      } yield assertTrue(exit == Exit.fail(BulkIngestError.ImportFolderDoesNotExist))
+    },
+  )
+
+  private val finalizeBulkIngestSuite = suite("finalize bulk ingest should")(
+    test("remove all files") {
+      for {
+        // given
+        importDir     <- storageService(_.getImportFolder(shortcode)).tap(Files.createDirectories(_))
+        _             <- Files.createFile(importDir / "0001.tif")
+        mappingCsvFile = importDir.parent.head / s"mapping-$shortcode.csv"
+        _             <- Files.createFile(mappingCsvFile)
+        // when
+        fork <- bulkIngestService(_.finalizeBulkIngest(shortcode))
+        // then
+        _                  <- fork.join
+        importDirDeleted   <- Files.exists(importDir).negate
+        mappingFileDeleted <- Files.exists(mappingCsvFile).negate
+      } yield assertTrue(importDirDeleted && mappingFileDeleted)
+    },
+    test("fail when import folder does not exist") {
+      for {
+        _    <- storageService(_.getImportFolder(shortcode).tap(Files.deleteIfExists(_)))
+        exit <- bulkIngestService(_.finalizeBulkIngest(shortcode)).exit
+      } yield assertTrue(exit == Exit.fail(BulkIngestError.ImportFolderDoesNotExist))
+    },
+  )
+
+  private val getBulkIngestMappingCsvSuite = suite("getBulkIngestMappingCsv")(test("return the mapping csv file") {
+    val shortcode = ProjectShortcode.unsafeFrom("0001")
+    for {
+      // given
+      importDir     <- storageService(_.getImportFolder(shortcode)).tap(Files.createDirectories(_))
+      mappingCsvFile = importDir.parent.head / s"mapping-$shortcode.csv"
+      _             <- Files.createFile(mappingCsvFile)
+      _             <- Files.writeLines(mappingCsvFile, List("1,2,3"))
+      // when
+      mappingCsv <- getBulkIngestMappingCsv(shortcode)
+      // then
+      mappingCsvFileExists <- Files.exists(mappingCsvFile)
+    } yield assertTrue(mappingCsvFileExists && mappingCsv.contains("1,2,3"))
+  })
+
+  private val checkSemaphoresReleased = suite("check semaphores released")(test("check semaphores") {
+    for {
+      shortcode <- ZIO.succeed(ProjectShortcode.unsafeFrom("0001"))
+      importDir <- storageService(_.getImportFolder(shortcode)).tap(Files.createDirectories(_))
+      _         <- Files.createFile(importDir.parent.head / s"mapping-$shortcode.csv")
+
+      _ <- getBulkIngestMappingCsv(shortcode)
+      _ <- bulkIngestService(_.finalizeBulkIngest(shortcode))
+      _ <- getBulkIngestMappingCsv(shortcode)
+      _ <- storageService(_.getImportFolder(shortcode)).tap(Files.createDirectories(_))
+      _ <- bulkIngestService(_.finalizeBulkIngest(shortcode))
+    } yield assertCompletes
+  })
+
+  private val postBulkIngestEndpointSuite = suite("postBulkIngestEndpoint")(test("test bulk-ingest individual upload") {
+    val shortcode = ProjectShortcode.unsafeFrom("0001")
+    for {
+      // given
+      importDir <- storageService(_.getImportFolder(shortcode))
+      filepath   = "one/two/out.txt"
+      // when
+      _ <- ZIO.serviceWithZIO[BulkIngestService](_.uploadSingleFile(shortcode, filepath, ZStream(0)))
+      // then
+      file <- Files.readAllBytes(importDir / "one" / "two" / "out.txt")
+    } yield assertTrue(file == Chunk(0))
+  })
+
+  val MockIngestServiceLayer: ULayer[IngestService] = ZLayer.succeed {
+    new IngestService {
+      override def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
+        ZIO.sleep(Duration.fromMillis(600)).as(TestData.stillImageAsset)
+    }
+  }
+
+  private val deleteProjectFolder =
+    storageService(_.getProjectFolder(shortcode)).tap(p => Files.deleteRecursive(p).whenZIO(Files.exists(p)))
+
+  val spec = (suite("BulkIngestServiceLive")(
+    startBulkIngestSuite,
+    finalizeBulkIngestSuite,
+    getBulkIngestMappingCsvSuite,
+    checkSemaphoresReleased,
+    postBulkIngestEndpointSuite,
+  ) @@ TestAspect.before(deleteProjectFolder)).provide(
+    AssetInfoServiceLive.layer,
+    MimeTypeGuesser.layer,
+    BulkIngestService.layer,
+    FileChecksumServiceLive.layer,
+    MockIngestServiceLayer,
+    ProjectService.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+  ) @@ TestAspect.timeout(10.seconds)
+}

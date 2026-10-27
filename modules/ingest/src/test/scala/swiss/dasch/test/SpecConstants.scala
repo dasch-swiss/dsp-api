@@ -6,11 +6,12 @@
 package swiss.dasch.test
 
 import eu.timepit.refined.types.string.NonEmptyString
-import swiss.dasch.domain.AssetId
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode
-import swiss.dasch.domain.Sha256Hash
 import swiss.dasch.test.SpecConstants.Projects.existingProject
+
+import org.knora.webapi.slice.ingest.domain.AssetId
+import org.knora.webapi.slice.ingest.domain.AssetRef
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
+import org.knora.webapi.slice.ingest.repo.Sha256Hash
 
 object SpecConstants {
   object Projects {

@@ -17,10 +17,6 @@ import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
 import swiss.dasch.config.Configuration.DspApiConfig
 import swiss.dasch.config.Configuration.Features
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.*
-import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
-import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.emptyProject
 import swiss.dasch.test.SpecConstants.Projects.existingProject
@@ -46,6 +42,11 @@ import org.knora.bagit.BagIt
 import org.knora.bagit.domain.Compression
 import org.knora.bagit.domain.PayloadEntry
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
+import org.knora.webapi.slice.ingest.infrastructure.CommandExecutorLive
+import org.knora.webapi.slice.ingest.repo.*
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class ProjectsEndpointSpec extends ZIOSpecDefault {

@@ -5,8 +5,9 @@
 
 package swiss.dasch
 
-import swiss.dasch.domain.AssetInfo
 import zio.*
+
+import org.knora.webapi.slice.ingest.repo.AssetInfo
 
 class FetchAssetPermissionsMock(granted: Boolean) extends FetchAssetPermissions {
   def isOriginalGranted(

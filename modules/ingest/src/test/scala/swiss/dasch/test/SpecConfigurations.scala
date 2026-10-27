@@ -6,10 +6,7 @@
 package swiss.dasch.test
 
 import org.apache.commons.io.FileUtils
-import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.config.Configuration.JwtConfig
-import swiss.dasch.config.Configuration.SipiConfig
-import swiss.dasch.config.Configuration.StorageConfig
 import zio.Layer
 import zio.ULayer
 import zio.ZIO
@@ -17,6 +14,10 @@ import zio.ZLayer
 import zio.nio.file.Files
 
 import java.io.IOException
+
+import org.knora.webapi.slice.ingest.config.BulkIngestConfig
+import org.knora.webapi.slice.ingest.config.SipiConfig
+import org.knora.webapi.slice.ingest.config.StorageConfig
 
 object SpecConfigurations {
 
@@ -39,7 +40,7 @@ object SpecConfigurations {
     } yield StorageConfig(assetDir.toString, tempDir.toString)
   }
 
-  val ingestConfigLayer = ZLayer.succeed(IngestConfig(2))
+  val ingestConfigLayer = ZLayer.succeed(BulkIngestConfig(2))
 
   val sipiConfigLayer = ZLayer.succeed(SipiConfig(useLocalDev = true))
 }

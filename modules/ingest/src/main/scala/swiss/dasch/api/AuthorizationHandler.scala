@@ -5,12 +5,14 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ApiProblem.Unauthorized
 import swiss.dasch.config.Configuration.JwtConfig
-import swiss.dasch.domain.ProjectShortcode
 import zio.IO
 import zio.ZIO
 import zio.ZLayer
+
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.api.ApiProblem.Unauthorized
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
 
 trait AuthorizationHandler {
   def ensureAdminScope(userSession: Principal): IO[ApiProblem, Unit]

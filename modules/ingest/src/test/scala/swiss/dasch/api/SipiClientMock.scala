@@ -6,13 +6,15 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.SipiClientMockMethodInvocation.*
-import swiss.dasch.domain.*
-import swiss.dasch.domain.Exif.Image.OrientationValue
-import swiss.dasch.infrastructure.ProcessOutput
 import zio.*
 import zio.nio.file.*
 
 import java.nio.file.StandardCopyOption
+
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.domain.Exif.Image.OrientationValue
+import org.knora.webapi.slice.ingest.infrastructure.*
+import org.knora.webapi.slice.ingest.infrastructure.ProcessOutput
 
 sealed trait SipiClientMockMethodInvocation
 object SipiClientMockMethodInvocation {

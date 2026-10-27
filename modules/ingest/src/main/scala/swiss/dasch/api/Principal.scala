@@ -5,7 +5,7 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.domain.AuthScope
+import org.knora.webapi.slice.ingest.domain.AuthScope
 
 final case class Principal(
   subject: String,

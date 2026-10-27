@@ -7,14 +7,6 @@ package org.knora.webapi.slice.api.v3.export_
 
 import _root_.org.knora.webapi.responders.IriService
 import org.junit.runner.RunWith
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.AssetId as IngestAssetId
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetInfoServiceLive
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.MimeTypeGuesser
-import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
-import swiss.dasch.domain.StorageServiceLive
 import zio.*
 import zio.Scope
 import zio.ZIO
@@ -69,6 +61,14 @@ import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.CsvService
+import org.knora.webapi.slice.ingest.config.StorageConfig
+import org.knora.webapi.slice.ingest.domain.AssetId as IngestAssetId
+import org.knora.webapi.slice.ingest.domain.AssetRef
+import org.knora.webapi.slice.ingest.domain.MimeTypeGuesser
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode as IngestProjectShortcode
+import org.knora.webapi.slice.ingest.repo.AssetInfoService
+import org.knora.webapi.slice.ingest.repo.AssetInfoServiceLive
+import org.knora.webapi.slice.ingest.repo.StorageServiceLive
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.domain.service.StandoffEntityInfoServiceLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache

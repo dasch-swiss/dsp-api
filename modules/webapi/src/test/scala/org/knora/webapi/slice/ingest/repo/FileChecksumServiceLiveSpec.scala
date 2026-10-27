@@ -1,0 +1,60 @@
+/*
+ * Copyright © 2021 - 2026 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.knora.webapi.slice.ingest.repo
+
+import org.junit.runner.RunWith
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
+import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.domain.MimeTypeGuesser
+import org.knora.webapi.slice.ingest.testutil.SpecConfigurations
+import org.knora.webapi.slice.ingest.testutil.SpecConstants.AssetRefs.*
+import org.knora.webapi.slice.ingest.testutil.SpecPaths.pathFromResource
+
+@RunWith(classOf[DspZTestJUnitRunner])
+class FileChecksumServiceLiveSpec extends ZIOSpecDefault {
+
+  private val checksumOrig = "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c"
+  private val fileprefix   = "test-folder-structure/0001/fg/il/FGiLaT4zzuV-CqwbEDFAFeS"
+
+  val spec = suite("FileChecksumService")(
+    test("should calculate checksum of .jp2.orig should be correct") {
+      for {
+        checksum <-
+          FileChecksumService.createSha256Hash(pathFromResource(fileprefix + ".jp2.orig"))
+      } yield assertTrue(checksum.toString == checksumOrig)
+    },
+    test("should calculate checksum of .jp2 should not match orig") {
+      for {
+        checksum <-
+          FileChecksumService.createSha256Hash(pathFromResource(fileprefix + ".jp2"))
+      } yield assertTrue(checksum.toString != checksumOrig)
+    },
+    test("should verify the checksums of an asset's original") {
+      for {
+        checksumMatches <- FileChecksumService.verifyChecksumOrig(existingAssetRef)
+      } yield assertTrue(checksumMatches)
+    },
+    test("should verify the checksums of an asset's derivative") {
+      for {
+        checksumMatches <- FileChecksumService.verifyChecksumDerivative(existingAssetRef)
+      } yield assertTrue(checksumMatches)
+    },
+    test("should verify the checksums of an asset's derivative and original") {
+      for {
+        assetInfo      <- AssetInfoService.findByAssetRef(existingAssetRef).map(_.head)
+        checksumResult <- FileChecksumService.verifyChecksum(assetInfo)
+      } yield assertTrue(checksumResult.forall(_.checksumMatches == true))
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    MimeTypeGuesser.layer,
+    FileChecksumServiceLive.layer,
+    StorageServiceLive.layer,
+    SpecConfigurations.storageConfigLayer,
+  )
+}

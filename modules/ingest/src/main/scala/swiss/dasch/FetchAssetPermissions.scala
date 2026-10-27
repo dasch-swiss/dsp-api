@@ -11,7 +11,6 @@ import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.client4.opentelemetry.zio.OpenTelemetryTracingZioBackend
 import swiss.dasch.FetchAssetPermissions.AssetAccessResponse
 import swiss.dasch.config.Configuration
-import swiss.dasch.domain.AssetInfo
 import zio.*
 import zio.json.DecoderOps
 import zio.json.DeriveJsonDecoder
@@ -19,6 +18,8 @@ import zio.json.JsonDecoder
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import scala.concurrent.duration.*
+
+import org.knora.webapi.slice.ingest.repo.AssetInfo
 
 trait FetchAssetPermissions {
 

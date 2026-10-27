@@ -5,15 +5,15 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import swiss.dasch.domain.AssetId as IngestAssetId
-import swiss.dasch.domain.AssetInfoService
-import swiss.dasch.domain.AssetRef
-import swiss.dasch.domain.ProjectShortcode as IngestProjectShortcode
 import zio.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.fair.ports.FairAsset
 import org.knora.webapi.slice.fair.ports.FairAssets
+import org.knora.webapi.slice.ingest.domain.AssetId as IngestAssetId
+import org.knora.webapi.slice.ingest.domain.AssetRef
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode as IngestProjectShortcode
+import org.knora.webapi.slice.ingest.repo.AssetInfoService
 
 /**
  * Reads an asset's sidecar through the ingest service's asset info for the FAIR landing pages.

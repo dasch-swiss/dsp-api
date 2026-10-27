@@ -20,15 +20,17 @@ import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetCheckResultResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.AssetInfoResponse
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
-import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
-import swiss.dasch.domain.*
-import swiss.dasch.domain.AugmentedPath.ProjectFolder
 import zio.Chunk
 import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.schema.DeriveSchema
 import zio.schema.Schema
+
+import org.knora.webapi.slice.ingest.api.UploadResponse
+import org.knora.webapi.slice.ingest.domain.*
+import org.knora.webapi.slice.ingest.domain.AugmentedPath.ProjectFolder
+import org.knora.webapi.slice.ingest.repo.*
 
 object ProjectsEndpointsResponses {
   final case class ProjectResponse(id: String)
@@ -142,14 +144,6 @@ object ProjectsEndpointsResponses {
 
     given codec: JsonCodec[AssetInfoResponse] = DeriveJsonCodec.gen[AssetInfoResponse]
     given schema: Schema[AssetInfoResponse]   = DeriveSchema.gen[AssetInfoResponse]
-  }
-
-  case class UploadResponse(status: String = "ok")
-
-  object UploadResponse {
-    given schema: Schema[UploadResponse] = DeriveSchema.gen[UploadResponse]
-
-    given codec: JsonCodec[UploadResponse] = DeriveJsonCodec.gen[UploadResponse]
   }
 }
 

@@ -6,14 +6,15 @@
 package swiss.dasch.api
 
 import org.junit.runner.RunWith
-import swiss.dasch.domain.AuthScope
-import swiss.dasch.domain.AuthScope.ScopeValue.*
-import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.api.ApiProblem
+import org.knora.webapi.slice.ingest.domain.AuthScope
+import org.knora.webapi.slice.ingest.domain.AuthScope.ScopeValue.*
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class AuthorizationHandlerSpec extends ZIOSpecDefault {

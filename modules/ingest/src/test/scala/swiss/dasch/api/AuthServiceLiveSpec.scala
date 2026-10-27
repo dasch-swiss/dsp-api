@@ -9,9 +9,6 @@ import org.junit.runner.RunWith
 import swiss.dasch.api.AuthenticationError.*
 import swiss.dasch.api.SpecJwtTokens.*
 import swiss.dasch.config.Configuration.JwtConfig
-import swiss.dasch.domain.AuthScope
-import swiss.dasch.domain.AuthScope.ScopeValue.*
-import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*
 import zio.test.TestAspect
@@ -19,6 +16,9 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.ingest.domain.AuthScope
+import org.knora.webapi.slice.ingest.domain.AuthScope.ScopeValue.*
+import org.knora.webapi.slice.ingest.domain.ProjectShortcode
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class AuthServiceLiveSpec extends ZIOSpecDefault {
