@@ -14,6 +14,8 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
 import zio.*
 
+import org.knora.webapi.slice.common.api.ClosesConnectionOnEarlyRejection
+import org.knora.webapi.slice.common.api.EarlyRejectionClosesConnection
 import org.knora.webapi.slice.common.api.RequiresMethod
 
 /**
@@ -23,7 +25,10 @@ import org.knora.webapi.slice.common.api.RequiresMethod
 final class IngestBaseEndpoints(authenticator: IngestAuthenticator) {
   import IngestBaseEndpoints.errorOutputs
 
-  private val base = endpoint.in("ingest").errorOut(errorOutputs)
+  private val base = endpoint
+    .in("ingest")
+    .errorOut(errorOutputs)
+    .attribute(ClosesConnectionOnEarlyRejection.key, EarlyRejectionClosesConnection)
 
   val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, ApiProblem, Unit, Any]] =
     RequiresMethod(base, _.method(_))

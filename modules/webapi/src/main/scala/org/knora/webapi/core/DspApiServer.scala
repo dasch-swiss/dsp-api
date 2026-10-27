@@ -49,6 +49,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
+import org.knora.webapi.slice.common.api.ClosesConnectionOnEarlyRejection
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 
 final class DspApiServer(
@@ -267,9 +268,10 @@ object DspApiServer {
     }
 
     /**
-     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     * Marks a response produced *before* the request body was read as the last one on its connection, on the
+     * passthrough and on endpoints marked [[ClosesConnectionOnEarlyRejection]] (the ingest uploads).
      *
-     * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
+     * Several rejections on these routes answer without consuming the body: the security logic's `401`/`403`, which
      * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
      * Bodies declaring a length above the server's aggregation threshold are streamed, and zio-http leaves such a
      * connection with
@@ -283,13 +285,14 @@ object DspApiServer {
      * `query` form field or an unsupported `Content-Type` on a small body is answered after zio-http has already read
      * the whole thing, so there is nothing left in the channel and nothing to fix.
      */
-    private def closeConnectionIfPassthrough[B](
+    private def closeConnectionIfBodyUnread[B](
       ep: AnyEndpoint,
       request: ServerRequest,
       response: ServerResponse[B],
     ): ServerResponse[B] =
       if (
-        SparqlPassthroughEndpoints.isPassthroughRoute(ep) && bodyPlausiblyUnread(request) &&
+        (SparqlPassthroughEndpoints.isPassthroughRoute(ep) || ClosesConnectionOnEarlyRejection.isSet(ep)) &&
+        bodyPlausiblyUnread(request) &&
         !response.headers.exists(closesConnection)
       )
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
@@ -344,7 +347,7 @@ object DspApiServer {
           // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
           // cannot tell the two apart.
           updateSpanMetadata(ctx.endpoint) *>
-            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, _))
+            delegate.onSecurityFailure(ctx).map(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, _))
 
         // The delegate is consulted first and the entry written only if it answered. `None` means this endpoint
         // did not claim the request at all -- see logRejectedPassthroughDecode.
@@ -360,7 +363,7 @@ object DspApiServer {
           delegate.onDecodeFailure(ctx).flatMap {
             case Some(response) =>
               logRejectedPassthroughDecode(ctx)
-                .as(Some(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, response)))
+                .as(Some(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, response)))
                 .uninterruptible
             case None => ZIO.none
           }
@@ -373,7 +376,7 @@ object DspApiServer {
   // input. If the body bytes arrive after the initial read burst, the channel never reads again and
   // the next keep-alive request on it is silently dropped (the client times out). Hybrid mode
   // aggregates bodies up to this size so they are always fully read, and streams only larger ones
-  // (the project-import zip upload); this was the root cause of the recurring e2e CI timeouts.
+  // (the project-import zip upload and the ingest uploads); this was the root cause of the recurring e2e CI timeouts.
   //
   // Three consequences worth stating, because they are easy to get wrong. Aggregation happens before any
   // tapir logic runs — before the security logic, let alone body decoding — so a body up to this size is
