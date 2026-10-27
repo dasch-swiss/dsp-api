@@ -23,11 +23,13 @@ final class IngestServerEndpoints(
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, ZioStreams]] =
     (monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints ++ reports.endpoints)
-      .map(_.prependSecurityIn("ingest"))
+      .map(_.prependSecurityIn(IngestServerEndpoints.prefix))
 }
 
 object IngestServerEndpoints {
   val layer = ZLayer.derive[IngestServerEndpoints]
 
-  def isIngestRoute(ep: AnyEndpoint): Boolean = ep.showPathTemplate(showQueryParam = None).startsWith("/ingest/")
+  private val prefix = "ingest"
+
+  def isIngestRoute(ep: AnyEndpoint): Boolean = ep.showPathTemplate(showQueryParam = None).startsWith(s"/$prefix/")
 }

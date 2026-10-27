@@ -47,6 +47,7 @@ class IngestServerEndpointsSpec extends ZIOSpecDefault {
         templates  = endpoints.map(e => e.method.fold("")(_.method + " ") + e.showPathTemplate(showQueryParam = None))
       } yield assertTrue(
         templates.forall(_.matches("[A-Z]+ /ingest/.*")),
+        endpoints.forall(IngestServerEndpoints.isIngestRoute),
         templates.sorted == standaloneRoutes.map(_.replace(" /", " /ingest/")).sorted,
       )
     },

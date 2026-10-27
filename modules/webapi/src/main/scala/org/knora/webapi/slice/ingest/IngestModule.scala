@@ -25,8 +25,8 @@ import org.knora.webapi.slice.security.Authenticator
 
 /**
  * Builds ingest from its own layers and exposes only the three types dsp-api uses; ingest's other services stay out
- * of dsp-api's environment. Ingest accepts dsp-api's tokens: its token check reads dsp-api's secret and issuer and the audience
- * dsp-api mints for ingest.
+ * of dsp-api's environment. Ingest accepts dsp-api's tokens: its token check reads dsp-api's secret and issuer and
+ * the audience dsp-api mints for ingest.
  *
  * Two layers, because the admin services need [[DspIngestClient]] while the endpoints need the admin services'
  * permission cache and authenticator. Both share one set of ingest services through [[IngestModule.Internals]].
