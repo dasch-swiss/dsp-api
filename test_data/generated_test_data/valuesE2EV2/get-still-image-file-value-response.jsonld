@@ -24,7 +24,7 @@
         },
         "knora-api:valueHasUUID": "goZ7JFRNSeqF-dNxsqAS7Q",
         "knora-api:fileValueAsUrl": {
-            "@value": "IIIF_BASE_URL/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/512,256/0/default.jpg",
+            "@value": "IIIF_BASE_URL/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg",
             "@type": "xsd:anyURI"
         },
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
