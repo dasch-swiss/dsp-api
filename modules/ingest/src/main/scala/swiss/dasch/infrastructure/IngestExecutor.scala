@@ -17,8 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * Bounds the CPU ingest work may take from the process it is embedded in.
  *
  * `run` moves an effect onto a fixed pool of `ingest-<n>` threads; fibers it forks stay there. `withPermit` bounds
- * work that leaves that pool (child processes, and blocking calls, which `attemptBlocking` shifts to ZIO's unbounded
- * blocking pool) to as many concurrent sections as the pool has threads.
+ * the heavy work that leaves that pool (child processes and BagIt zip and unzip, which `attemptBlocking` shifts to
+ * ZIO's unbounded blocking pool) to as many concurrent sections as the pool has threads; other blocking calls are
+ * not bounded.
  *
  * A permit section must be leaf-level: it must never call code that takes a permit itself. The semaphore is not
  * reentrant, so a nested section deadlocks once every permit is held.

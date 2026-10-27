@@ -101,7 +101,10 @@ class IngestServerEndpointsSpec extends ZIOSpecDefault {
         request  = Request.post(URL(Path.root / "ingest" / "projects" / "0001" / "bulk-ingest"), Body.empty)
         status  <- serve(request.addHeader(Header.Authorization.Bearer(token.jwtString))).map(_.status)
         started  = ZIO.succeed(seen.get().find(_._1.startsWith("Starting bulk ingest")))
-        thread  <- started.repeatUntil(_.isDefined).timeoutFail("no bulk ingest started")(10.seconds).map(_.map(_._2))
+        thread  <- (ZIO.sleep(20.millis) *> started)
+                    .repeatUntil(_.isDefined)
+                    .timeoutFail("no bulk ingest started")(10.seconds)
+                    .map(_.map(_._2))
       } yield assertTrue(status == Status.Accepted, thread.exists(_.startsWith("ingest-")))
     },
     test("runs /ingest/health off the ingest executor") {

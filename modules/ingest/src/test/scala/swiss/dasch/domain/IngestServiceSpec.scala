@@ -33,7 +33,7 @@ class IngestServiceSpec extends ZIOSpecDefault {
     Files.writeBytes(dir / name, Chunk.fromArray(name.getBytes)).as(dir / name)
 
   private val onePermitSuite = suite("IngestService with an IngestExecutor of one permit")(
-    test("an image ingest, a project export and a project import each complete (no nested permit sections)") {
+    test("a project export and import, and an image ingest with Sipi mocked, complete under one permit") {
       ZIO.scoped {
         for {
           executor <- ZIO.service[IngestExecutor]
