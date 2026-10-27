@@ -20,7 +20,7 @@ import java.nio.file.StandardOpenOption
 import org.knora.webapi.slice.ingest.api.ApiProblem
 import org.knora.webapi.slice.ingest.api.ApiProblem.BadRequest
 import org.knora.webapi.slice.ingest.api.UploadResponse
-import org.knora.webapi.slice.ingest.config.BulkIngestConfig as IngestConfig
+import org.knora.webapi.slice.ingest.config.BulkIngestConfig
 import org.knora.webapi.slice.ingest.domain.BulkIngestError.*
 import org.knora.webapi.slice.ingest.repo.StorageService
 
@@ -43,7 +43,7 @@ object BulkIngestError {
 final case class BulkIngestService(
   storage: StorageService,
   ingestService: IngestService,
-  config: IngestConfig,
+  config: BulkIngestConfig,
   projectService: ProjectService,
   semaphoresPerProject: TMap[ProjectShortcode, TSemaphore],
 ) {
