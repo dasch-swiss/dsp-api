@@ -27,24 +27,25 @@ final class IngestMaintenanceRestService(
       _     <- ensureAdminScope(principal)
       paths <- (if (shortcodes.isEmpty) projectService.listAllProjects() else projectService.findProjects(shortcodes))
                  .mapError(ApiProblem.InternalServerError(_))
-      _ <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
-      _ <- (action match {
+      _     <- ZIO.logDebug(s"Maintenance endpoint called $action, $shortcodes, $paths")
+      target = if (shortcodes.isEmpty) "all projects" else s"projects ${shortcodes.mkString(", ")}"
+      _     <- (action match {
              case UpdateAssetMetadata    => maintenanceActions.updateAssetMetadata(paths)
              case ApplyTopLeftCorrection => maintenanceActions.applyTopLeftCorrections(paths)
              case MigrateSizes           =>
                (if (shortcodes.isEmpty) sizeMigration.migrateAll()
                 else
-                  ZIO.foldLeft(shortcodes)(AssetSizeMigrationReport.zero)((sum, sc) =>
-                    sizeMigration.migrateProject(sc).map(sum + _),
-                  ))
-                 .flatMap(report => logReport(action, shortcodes, report.failed, report))
+                  ZIO
+                    .foreach(shortcodes)(sizeMigration.migrateProject)
+                    .map(_.fold(AssetSizeMigrationReport.zero)(_ + _)))
+                 .tap(r => ZIO.logInfo(s"$action for $target finished with ${r.failed} failed: $r"))
              case MigrateMimeTypes =>
                (if (shortcodes.isEmpty) mimeTypeMigration.migrateAll()
                 else
-                  ZIO.foldLeft(shortcodes)(AssetMimeTypeMigrationReport.zero)((sum, sc) =>
-                    mimeTypeMigration.migrateProject(sc).map(sum + _),
-                  ))
-                 .flatMap(report => logReport(action, shortcodes, report.failed, report))
+                  ZIO
+                    .foreach(shortcodes)(mimeTypeMigration.migrateProject)
+                    .map(_.fold(AssetMimeTypeMigrationReport.zero)(_ + _)))
+                 .tap(r => ZIO.logInfo(s"$action for $target finished with ${r.failed} failed: $r"))
            }).logError.forkDaemon
     } yield s"work in progress for projects ${paths.map(_.shortcode).mkString(", ")} (for details see logs)"
 
@@ -56,15 +57,6 @@ final class IngestMaintenanceRestService(
     ensureAdminScope(principal) *>
       maintenanceActions.createWasTopLeftCorrectionAppliedReport().logError.forkDaemon.as("work in progress")
 
-  private def logReport[R](
-    action: ActionName,
-    shortcodes: List[ProjectShortcode],
-    failed: Int,
-    report: R,
-  ): UIO[Unit] = {
-    val target = if (shortcodes.isEmpty) "all projects" else s"projects ${shortcodes.mkString(", ")}"
-    ZIO.logInfo(s"$action for $target finished with $failed failed: $report")
-  }
 }
 
 object IngestMaintenanceRestService {

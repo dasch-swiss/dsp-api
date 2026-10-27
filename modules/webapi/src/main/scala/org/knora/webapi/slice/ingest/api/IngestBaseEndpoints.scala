@@ -28,6 +28,7 @@ final class IngestBaseEndpoints(authenticator: IngestAuthenticator) {
   private val base = endpoint
     .in("ingest")
     .errorOut(errorOutputs)
+    // On every ingest route, not only the uploads: the server closes only when a declared body went unread.
     .attribute(ClosesConnectionOnEarlyRejection.key, EarlyRejectionClosesConnection)
 
   val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, ApiProblem, Unit, Any]] =

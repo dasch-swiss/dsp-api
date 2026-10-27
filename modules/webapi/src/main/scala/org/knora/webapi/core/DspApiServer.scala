@@ -268,8 +268,8 @@ object DspApiServer {
     }
 
     /**
-     * Marks a response produced *before* the request body was read as the last one on its connection, on the
-     * passthrough and on endpoints marked [[ClosesConnectionOnEarlyRejection]] (the ingest uploads).
+     * Marks a response produced *before* the request body was read as the last one on its connection, on endpoints
+     * marked [[ClosesConnectionOnEarlyRejection]] (the SPARQL passthrough and the ingest routes).
      *
      * Several rejections on these routes answer without consuming the body: the security logic's `401`/`403`, which
      * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
@@ -291,8 +291,7 @@ object DspApiServer {
       response: ServerResponse[B],
     ): ServerResponse[B] =
       if (
-        (SparqlPassthroughEndpoints.isPassthroughRoute(ep) || ClosesConnectionOnEarlyRejection.isSet(ep)) &&
-        bodyPlausiblyUnread(request) &&
+        ClosesConnectionOnEarlyRejection.isSet(ep) && bodyPlausiblyUnread(request) &&
         !response.headers.exists(closesConnection)
       )
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
@@ -382,7 +381,7 @@ object DspApiServer {
   // tapir logic runs — before the security logic, let alone body decoding — so a body up to this size is
   // buffered for *any* caller, authenticated or not. The switch is made on the *declared* Content-Length
   // alone, so a chunked body is aggregated too — and one that then outgrows this size is answered by Netty
-  // with a bare 413 that never reaches tapir. And the passthrough's own `Connection: close` handling keys
+  // with a bare 413 that never reaches tapir. And the `Connection: close` handling of marked endpoints keys
   // off this threshold (see `bodyPlausiblyUnread`): only a declared length above it can leave a body unread.
   private[core] val maxAggregatedRequestBodySize: Int = 1024 * 1024
 
