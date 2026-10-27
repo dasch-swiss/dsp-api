@@ -7,12 +7,16 @@ package org.knora.webapi.slice.ingest.testutil
 
 import org.apache.commons.io.FileUtils
 import zio.Layer
+import zio.ULayer
 import zio.ZIO
 import zio.ZLayer
+import zio.durationInt
 import zio.nio.file.Files
 
 import java.io.IOException
 
+import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.slice.ingest.config.BulkIngestConfig
 import org.knora.webapi.slice.ingest.config.SipiConfig
 import org.knora.webapi.slice.ingest.config.StorageConfig
@@ -31,6 +35,15 @@ object SpecConfigurations {
   }
 
   val ingestConfigLayer = ZLayer.succeed(BulkIngestConfig(2))
+
+  val jwtConfig: JwtConfig =
+    JwtConfig("secret-key", 1.day, Some("https://admin.dev.dasch.swiss"))
+
+  val dspIngestConfig: DspIngestConfig =
+    DspIngestConfig("http://localhost:3340", "http://localhost:3340", "https://dsp-ingest.dev.dasch.swiss", "")
+
+  val jwtConfigLayer: ULayer[JwtConfig & DspIngestConfig] =
+    ZLayer.succeed(jwtConfig) ++ ZLayer.succeed(dspIngestConfig)
 
   val sipiConfigLayer = ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:latest"))
 }
