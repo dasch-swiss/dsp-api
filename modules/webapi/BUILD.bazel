@@ -26,6 +26,7 @@ buildinfo(
     stamp_fields = {
         "version": "STABLE_GIT_VERSION",
         "buildCommit": "STABLE_GIT_SHORT",
+        "gitCommit": "STABLE_GIT_COMMIT",
         "buildTime": "STABLE_BUILD_TIME",
     },
     string_fields = {

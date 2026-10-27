@@ -14,6 +14,7 @@ import zio.*
 import zio.http.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus
+import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import org.knora.webapi.config.InstrumentationServerConfig
@@ -33,7 +34,7 @@ object MetricsServer {
       _          <- ZIO.never.unit
     } yield ()
 
-  type MetricsServerEnv = Endpoints & InstrumentationServerConfig & KnoraApi & State
+  type MetricsServerEnv = Endpoints & InstrumentationServerConfig & KnoraApi & PrometheusPublisher & State
 
   val make: ZIO[MetricsServerEnv, Throwable, Unit] =
     for {
@@ -41,6 +42,7 @@ object MetricsServer {
       knoraApiConfig <- ZIO.service[KnoraApi]
       endpoints      <- ZIO.service[Endpoints]
       config         <- ZIO.service[InstrumentationServerConfig]
+      publisher      <- ZIO.service[PrometheusPublisher]
       port            = config.port
       interval        = config.interval
       metricsConfig   = MetricsConfig(interval)
@@ -54,7 +56,7 @@ object MetricsServer {
              ZLayer.succeed(knoraApiConfig),
              ZLayer.succeed(endpoints),
              Server.defaultWithPort(port),
-             prometheus.publisherLayer,
+             ZLayer.succeed(publisher),
              ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
              Runtime.enableRuntimeMetrics,
              Runtime.enableFiberRoots,

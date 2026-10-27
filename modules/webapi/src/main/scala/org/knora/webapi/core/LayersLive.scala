@@ -7,6 +7,8 @@ package org.knora.webapi.core
 
 import io.opentelemetry.api
 import zio.*
+import zio.metrics.connectors.prometheus
+import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
 
@@ -97,6 +99,7 @@ object LayersLive { self =>
     OntologyTransformer &
     PermissionUtilADM &
     PermissionsResponder &
+    PrometheusPublisher &
     ExportModule.Provided &
     ProjectExportService &
     ReadResourcesService &
@@ -167,6 +170,7 @@ object LayersLive { self =>
       PredicateObjectMapper.layer,
       ProjectDataGraphsLive.layer,
       ProjectExportServiceLive.layer,
+      prometheus.publisherLayer,
       ReadResourcesServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceUtilV2.layer,
