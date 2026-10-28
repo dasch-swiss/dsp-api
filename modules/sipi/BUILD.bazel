@@ -106,13 +106,7 @@ oci_push(
                 "sipi",
                 "usr",
             ],
-            # The temurin base's /sbin is a symlink to usr/sbin; a real sbin/ in
-            # this layer would replace it. /sbin/sipi resolves through the link.
-            # `paths` and `top_level` keep the pre-rewrite name `sbin`.
-            rewrites = [",^sbin,usr/sbin,"],
-            visibility = [
-                "//modules/webapi:__pkg__",
-            ],
+            visibility = ["//modules/webapi:__pkg__"],
         ),
     )
     for arch in [

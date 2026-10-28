@@ -86,7 +86,6 @@ def _image_rootfs_extract_impl(ctx):
     img = ctx.file.image_tar
     paths = " ".join([shell.quote(p) for p in ctx.attr.paths])
     tops = " ".join([shell.quote(p) for p in ctx.attr.top_level])
-    rewrites = " ".join(["-s " + shell.quote(r) for r in ctx.attr.rewrites])
 
     # oci_load's default `format = "docker"` tarball is a single-image (docker-save format)
     # archive; `crane export -` auto-detects that format from stdin. If a future rules_oci
@@ -99,8 +98,8 @@ trap 'rm -rf "$work"' EXIT
 "{crane}" export - "$work/full.tar" < "{img}"
 mkdir -p "$work/root"
 "{bsdtar}" -x -f "$work/full.tar" -C "$work/root" {paths}
-"{bsdtar}" -c --uid 0 --gid 0 {rewrites} -f "{out}" -C "$work/root" {tops}
-""".format(crane = crane.path, bsdtar = bsdtar.path, img = img.path, out = out.path, paths = paths, tops = tops, rewrites = rewrites)
+"{bsdtar}" -c --uid 0 --gid 0 -f "{out}" -C "$work/root" {tops}
+""".format(crane = crane.path, bsdtar = bsdtar.path, img = img.path, out = out.path, paths = paths, tops = tops)
 
     ctx.actions.run_shell(
         inputs = [img],
@@ -119,7 +118,6 @@ image_rootfs_extract = rule(
         "image_tar": attr.label(allow_single_file = [".tar"], mandatory = True),
         "paths": attr.string_list(mandatory = True, doc = "tar members to extract (no leading /)"),
         "top_level": attr.string_list(mandatory = True, doc = "top-level dirs/files to repack into the output layer"),
-        "rewrites": attr.string_list(doc = "bsdtar -s substitutions (e.g. \",^sbin,usr/sbin,\") applied only when repacking; `paths` and `top_level` use pre-rewrite names"),
     },
     toolchains = [
         "@rules_oci//oci:crane_toolchain_type",
