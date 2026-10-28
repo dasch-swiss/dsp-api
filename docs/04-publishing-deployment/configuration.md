@@ -21,7 +21,6 @@ A number of core settings is additionally configurable through system environmen
 | app.jwt.expiration                                        | KNORA_WEBAPI_JWT_LONGEVITY                             | 30 days                                           |
 | app.jwt.issuer                                            | KNORA_WEBAPI_JWT_ISSUER                                | 0.0.0.0:3333                                      |
 | app.dsp-ingest.audience                                   | KNORA_WEBAPI_DSP_INGEST_AUDIENCE                       | <http://localhost:3340>                           |
-| app.dsp-ingest.base-url                                   | KNORA_WEBAPI_DSP_INGEST_BASE_URL                       | <http://localhost:3340>                           |
 | app.allow-reload-over-http                                | KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP                    | false                                             |
 | app.allow-sparql-passthrough                              | KNORA_WEBAPI_ALLOW_SPARQL_PASSTHROUGH                  | false                                             |
 | app.triplestore.sparql-passthrough.timeout                | KNORA_WEBAPI_SPARQL_PASSTHROUGH_TIMEOUT                | 120 seconds                                       |
@@ -50,6 +49,55 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.repository-name                    | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME        | dsp-repo                                          |
 | app.triplestore.fuseki.username                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME               | admin                                             |
 | app.triplestore.fuseki.password                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD               | test                                              |
+
+`app.dsp-ingest.audience` is the audience the API writes into every token it issues and the audience ingest requires.
+It is the only `app.dsp-ingest` setting; `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, `KNORA_WEBAPI_DSP_INGEST_EXTERNAL_BASE_URL`
+and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR` are no longer read.
+
+## Ingest
+
+Ingest is served by the API under `/ingest/` (see [Ingest Endpoints](../03-endpoints/ingest.md)) and has its own
+configuration file, `ingest.conf` in the ingest module, set through `INGEST_*` environment variables. No key or
+variable is read by both the API's `application.conf` and `ingest.conf`. Ingest takes the token secret and issuer from
+`app.jwt` and the audience from `app.dsp-ingest.audience`.
+
+| key in ingest.conf                    | environment variable          | default value                  |
+|---------------------------------------|-------------------------------|--------------------------------|
+| ingest.storage.asset-dir              | INGEST_STORAGE_ASSET_DIR      | /opt/images                    |
+| ingest.storage.temp-dir               | INGEST_STORAGE_TEMP_DIR       | /opt/temp                      |
+| ingest.sipi.use-local-dev             | INGEST_SIPI_USE_LOCAL_DEV     | false                          |
+| ingest.sipi.local-dev-image           | INGEST_SIPI_LOCAL_DEV_IMAGE   | daschswiss/knora-sipi:latest   |
+| ingest.bulk-max-parallel              | INGEST_BULK_MAX_PARALLEL      | 8                              |
+| ingest.features.allow-erase-projects  | INGEST_ALLOW_ERASE_PROJECTS   | false                          |
+| ingest.executor.cpu-share             | INGEST_EXECUTOR_CPU_SHARE     | 0.5                            |
+
+- `asset-dir` and `temp-dir` must be mounted read-write into the API container; ingest writes the asset files there.
+  `/ingest/health` answers `503` when either directory is missing.
+- `use-local-dev` must stay `false` in a container: ingest then runs the Sipi CLI, `ffmpeg` and `ffprobe` shipped in
+  the API image. `true` runs Sipi through `docker run` of `local-dev-image`, for a local API outside a container.
+- `allow-erase-projects` enables `DELETE /ingest/projects/{shortcode}/erase` and lets the API's project erasure delete
+  the project's asset folder. It is separate from the API's `ALLOW_ERASE_PROJECTS` feature flag below.
+- `cpu-share` sizes the ingest thread pool and the number of concurrent child processes (Sipi, `ffmpeg`, `ffprobe`)
+  and BagIt exports and imports, as a share of the available processors; it must lie in `(0, 1]`.
+- The old ingest variables without the `INGEST_` prefix (`STORAGE_*`, `SIPI_USE_LOCAL_DEV`, `JWT_*`, `DB_JDBC_URL`,
+  `DSP_API_URL`, `SERVICE_*`) are not read.
+
+The API image runs as `root`, because ingest writes into the asset folders of the storage volume (NFS-owned on the
+DaSCH servers).
+
+### Asset backfills
+
+The size and MIME-type backfills of the asset `.info` files are main classes on the API image's classpath. They read
+the same `INGEST_*` variables, so run them in a container of the API image with the same mounts, for example with
+Docker Compose:
+
+```bash
+docker compose run --rm --no-deps --entrypoint java api -cp '/opt/docker/lib/*' swiss.dasch.MigrateSizes
+docker compose run --rm --no-deps --entrypoint java api -cp '/opt/docker/lib/*' swiss.dasch.MigrateMimeTypes 0801
+```
+
+Without arguments a backfill covers the whole asset store; project shortcodes as arguments restrict it to those
+projects. It exits non-zero when an asset failed.
 
 ## Startup Flags
 
