@@ -50,7 +50,8 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.username                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME               | admin                                             |
 | app.triplestore.fuseki.password                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD               | test                                              |
 
-`app.dsp-ingest.audience` is the audience the API writes into every token it issues and the audience ingest requires.
+`app.dsp-ingest.audience` is the audience the API writes into every token it issues and the audience ingest requires;
+it is an identifier, not an address the API calls.
 It is the only `app.dsp-ingest` setting; `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, `KNORA_WEBAPI_DSP_INGEST_EXTERNAL_BASE_URL`
 and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR` are no longer read.
 

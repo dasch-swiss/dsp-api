@@ -524,8 +524,8 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - Wiring: shared inventory. `SipiServiceLive.layer` is the sole `SipiService` binding, registered once in
         `core/LayersLive.scala`, which also registers `IngestModule.layer` and `FairAssetsLive.layer`.
 - **Durable state**: none owned. This component is stateless; durable asset bytes and metadata live in Sipi's
-    file store and are fetched fresh through `DspIngestClient`, which is the only reader and writer of asset
-    info. `SipiServiceLive` only reads.
+    file store. Asset info is written only by ingest; it is read through `DspIngestClient` and, in-process, through
+    ingest's `AssetInfoService` by `FairAssetsLive` and webapi-export. `SipiServiceLive` only reads.
     - No integration test targets `SipiServiceLive` itself. Live Sipi behavior is exercised indirectly by
         `test-it`'s `SipiIT.scala` and `test-e2e`'s `KnoraSipiIntegrationV2ITSpec`, a coverage gap if the
         error-mapping logic changes.
@@ -2032,6 +2032,10 @@ Observed violations, the wrong-direction edges marked `(inverted)` in the entrie
 - webapi-common additionally depends upward on webapi-admin, webapi-ontology, webapi-resources,
     webapi-standoff, webapi-security, webapi-triplestore and webapi-sipi-client; these are the false
     foundation, not api or app edges, and are marked `(upward)`.
+- ingest's webapi side (`slice/ingest`) depends on webapi-admin, webapi-security and webapi-app, which depend
+    on ingest in turn: a cycle through the component. The library `//modules/ingest` imports no `org.knora.webapi`
+    code and must not - enforcement: structure (its Bazel target has no webapi dependency); the cycle is confined
+    to `slice/ingest` and the two webapi-admin adapters.
 
 Intended promotion path: per-domain Bazel targets with private-by-default `visibility` and allowlisted
 published interfaces, plus Bazel-query checks for forbidden dependency paths, per MODULARIZATION-PLAN.md
