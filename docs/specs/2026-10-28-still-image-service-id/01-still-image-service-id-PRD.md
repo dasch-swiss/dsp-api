@@ -68,15 +68,16 @@ A new property on `StillImageFileValue` in the complex schema,
 - **Value:** `{sipi.externalBaseUrl}/{shortcode}/{internalFilename}`, where the
   shortcode is that of the project the resource belongs to.
 - **Canonical form:** it equals the `id` Sipi reports in that image's
-  `info.json`: no trailing slash, no `/info.json` suffix, no doubled slash when
-  `sipi.externalBaseUrl` ends in a slash, and a path prefix in
-  `sipi.externalBaseUrl` is kept.
+  `info.json`: no trailing slash and no `/info.json` suffix. Like every other
+  Sipi URL dsp-api builds, it assumes `sipi.externalBaseUrl` has no trailing
+  slash; a path prefix in it is kept.
 - **Optional:** the property is absent when the file value has a placeholder
   asset, as there is no service to point at. The ontology declares it
   optional (zero or one).
 - **Wherever the file value appears:** every complex-schema response that
   contains a `StillImageFileValue` carries it: resource reads, single-value
-  reads, value versions, resource previews, full-text and Gravsearch results.
+  reads, value versions, full-text and Gravsearch results. Resource previews
+  (`/v2/resourcespreview`) carry no values, so they have nothing to carry it on.
 - **Computed, not stored:** like `stillImageFileValueHasIIIFBaseUrl`. No data
   migration.
 - **Not queryable:** like `stillImageFileValueHasIIIFBaseUrl`, Gravsearch rejects
@@ -93,9 +94,9 @@ A new property on `StillImageFileValue` in the complex schema,
 ### A3 — `dimX`/`dimY` are metadata
 
 - The `rdfs:comment` of `stillImageFileValueHasDimX`/`DimY` says: the native
-  pixel size of the stored master file, recorded at ingest; not the size a given
-  user is served; do not use it to draw the image, compute tiles or regions, or
-  place overlays; use the image service's `info.json`.
+  pixel size of the stored image file; a user may be served a smaller image, so
+  do not size requests, tiles or regions from it; take the served size from the
+  `info.json` of the image service, when present.
 - `stillImageFileValueHasIIIFBaseUrl` stays, because published clients use it.
   Its comment points to the A1 property as the preferred source. It is not
   marked `owl:deprecated` in this change; removal is a separate decision.
@@ -183,8 +184,8 @@ What changes:
 - WHEN a client reads a resource with a still image in the complex schema, THEN
   the file value SHALL carry `stillImageFileValueHasIIIFImageService` with value
   `{sipi.externalBaseUrl}/{shortcode}/{internalFilename}`.
-- WHEN `sipi.externalBaseUrl` ends in a slash or contains a path prefix, THEN the
-  value SHALL have exactly one slash between segments and keep the prefix.
+- WHEN `sipi.externalBaseUrl` contains a path prefix, THEN the value SHALL keep
+  the prefix.
 - WHEN the value is requested with `/info.json` appended against the local stack
   with Sipi v10, THEN the `id` in the response SHALL equal the property's value
   (integration test).

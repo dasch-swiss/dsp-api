@@ -7,7 +7,7 @@ status: implemented
 repository: dasch-swiss/dsp-api
 repositories:
     - name: dsp-api
-    path: /Users/dominiquesteinbach/workspaces/dev-7660-still-image-service/dsp-api
+      path: /Users/dominiquesteinbach/workspaces/dev-7660-still-image-service/dsp-api
 prd: 01-still-image-service-id-PRD.md
 linear: DEV-7678
 ---
@@ -49,7 +49,9 @@ complex-only, Gravsearch-forbidden property, defined in four places:
 A small pure helper on the `StillImageFileValueContentV2` companion
 (`ValueMessagesV2.scala:2142`) builds the service id from `(externalBaseUrl, shortcode,
 internalFilename)` with single-slash joins: `String` in, `String` out, no effect. It
-drops a trailing slash on the base and keeps any path prefix. It does not go on the
+keeps any path prefix and, like every other Sipi URL in dsp-api, assumes the base has
+no trailing slash (an earlier draft stripped one; review dropped it so the property
+cannot disagree with `stillImageFileValueHasIIIFBaseUrl`). It does not go on the
 sealed `FileValueContentV2` trait or into the shared `toJsonLDObjectMapInComplexSchema`
 (`:2062-2078`), because `StillImageExternalFileValueContentV2` uses both. `fileValueAsUrl` is derived from the same helper
 (`{serviceId}/full/max/0/default.jpg`) so the two cannot drift. For every
@@ -81,7 +83,7 @@ added there, because external IIIF is out of scope.
   property is not rejected, just as with `IIIFBaseUrl` today.
 - **Base URL shape:** `AppConfig.Sipi.externalBaseUrl` is `protocol://host[:port]`
   (`AppConfig.scala:147-148`). It cannot carry a prefix or a trailing slash today, so
-  the PRD's slash and prefix rules are pinned by unit tests on the helper.
+  the PRD's prefix rule is pinned by a unit test on the helper.
 - **How Sipi v10 builds `id`:** from the request, not from its config.
     - **Host:** `X-Forwarded-Host`, or the `Host` header when that is absent.
     - **Scheme:** `https` only when `X-Forwarded-Proto` is `https`, otherwise `http`.
@@ -122,11 +124,11 @@ Covers PRD US-1 and US-2.
 - [x] Define the property in `KnoraBaseToApiV2ComplexTransformationRules.scala`, near `:437`. It is an `XSD.ANYURI` datatype property, a subproperty of `KA.ValueHas`, with subject type `KA.StillImageFileValue`, an English label, and an `rdfs:comment` saying it names the IIIF image service of the file, grants no access, and that the served size comes from the service's `info.json`
 - [x] Register the new property in the property list (`KnoraBaseToApiV2ComplexTransformationRules.scala:865-882`)
 - [x] Add `KA.StillImageFileValueHasIIIFImageService -> ZeroOrOne` to `StillImageFileValueCardinalities` (`:656-660`) only. Leave `StillImageExternalFileValueCardinalities` (`:662-665`) unchanged
-- [x] Add `def serviceId(externalBaseUrl: String, shortcode: Shortcode, internalFilename: String): String` to the `StillImageFileValueContentV2` companion (`ValueMessagesV2.scala:2142`). It joins with single slashes, strips a trailing slash on the base and keeps a path prefix. Its Scaladoc states that the result equals Sipi's `info.json` `id` when Sipi sees the public host
+- [x] Add `def serviceId(externalBaseUrl: String, shortcode: Shortcode, internalFilename: String): String` to the `StillImageFileValueContentV2` companion (`ValueMessagesV2.scala:2142`). It joins with single slashes and keeps a path prefix; the base is assumed to have no trailing slash. Its Scaladoc states that the result equals Sipi's `info.json` `id` when Sipi sees the public host
 - [x] Derive `fileValueAsUrl` in `StillImageFileValueContentV2.makeFileUrl` (`ValueMessagesV2.scala:2106-2107`) as `{serviceId}/full/max/0/default.jpg`. The placeholder path via `fileUrlOrPlaceholder` stays as is
 - [x] In the complex branch of `StillImageFileValueContentV2.toJsonLDValue` (`ValueMessagesV2.scala:2109-2133`), emit the new key as `JsonLDUtil.datatypeValueToJsonLDObject(id, OntologyConstants.Xsd.Uri.toSmartIri)`, through `Option.when(!hasPlaceholderAsset)(...)`. Leave `StillImageExternalFileValueContentV2` unchanged
 - [x] Add `StillImageFileValueHasIIIFImageService` to `GravsearchQueryChecker.forbiddenPredicates` (`GravsearchQueryChecker.scala:174`)
-- [x] Create `StillImageFileValueContentV2Spec` in `modules/webapi/src/test/scala/org/knora/webapi/messages/v2/responder/valuemessages/`, in the `@RunWith(classOf[DspZTestJUnitRunner]) class ... extends ZIOSpecDefault` form of its siblings (`ValueContentV2Spec.scala`). Its helper suite is a table of cases: the plain base, a base with a trailing slash, a base with a path prefix, a prefix plus trailing slash, and an unmodified filename
+- [x] Create `StillImageFileValueContentV2Spec` in `modules/webapi/src/test/scala/org/knora/webapi/messages/v2/responder/valuemessages/`, in the `@RunWith(classOf[DspZTestJUnitRunner]) class ... extends ZIOSpecDefault` form of its siblings (`ValueContentV2Spec.scala`). Its helper suite is a table of cases: the plain base and a base with a path prefix
 - [x] In `StillImageFileValueContentV2Spec`, add a `toJsonLDValue` suite. It uses `TestDataFactory.someProjectADM`, `AppConfig.layer`, `FileValueV2(..., "image/jp2")` and `StringFormatter.getInitializedTestInstance`. It asserts on the returned `JsonLDObject` map that:
     - the complex schema carries the property with `@type` `xsd:anyURI`;
     - a placeholder (`PlaceholderIri.instance.value`) has no property but keeps `stillImageFileValueHasIIIFBaseUrl`;
@@ -156,7 +158,7 @@ because both state the same client contract.
 
 ### dsp-api
 
-- [x] Rewrite the `rdfs:comment` of `StillImageFileValueHasDimX` and `DimY` (`KnoraBaseToApiV2ComplexTransformationRules.scala:425-435`). The comment says the value is the native pixel size of the stored master recorded at ingest, not the size a given user is served, and is not for drawing, tiles, regions or overlays; use the image service's `info.json`
+- [x] Rewrite the `rdfs:comment` of `StillImageFileValueHasDimX` and `DimY` (`KnoraBaseToApiV2ComplexTransformationRules.scala:425-435`). The comment says the value is the native pixel size of the stored image file; a user may be served a smaller image, so requests, tiles and regions are not sized from it; the served size comes from the image service's `info.json`, when present
 - [x] Rewrite the `rdfs:comment` of `StillImageFileValueHasIIIFBaseUrl` (`:437-442`) to name `knora-api:stillImageFileValueHasIIIFImageService` as the preferred source for still image file values. No `owl:deprecated`
 - [x] Regenerate `ontologyR2RV2/knoraApiOntologyWithValueObjects.jsonld`. Run `just test-e2e --test_filter='.*OntologyFormatsE2ESpec.*'` once; on a mismatch it overwrites the file and fails. The `git diff` shows only these three comments
 - [x] Rewrite "File URLs in API v2" in `docs/06-sipi/sipi-and-dsp-api.md:28-34`. It describes `stillImageFileValueHasIIIFImageService` (append `/info.json`), says the property names the service but grants no access, says `info.json` is the source of the served size, and says `dimX`/`dimY` are native-size metadata. Drop the advice to construct IIIF URLs from the base URL and the filename for `StillImageFileValue`, and keep the existing wording correct for `StillImageExternalFileValue`

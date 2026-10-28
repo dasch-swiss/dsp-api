@@ -21,7 +21,7 @@ native-size metadata (DEV-7678, parent DEV-7660).
 
 | repo | path | branch | base_commit | merge_strategy | pr | status |
 | --- | --- | --- | --- | --- | --- | --- |
-| dsp-api | /Users/dominiquesteinbach/workspaces/dev-7660-still-image-service/dsp-api | feature/dev-7678-expose-the-iiif-image-service-id-on-still-image-file-values | 35429e03d | squash | https://github.com/dasch-swiss/dsp-api/pull/4408 | shipped |
+| dsp-api | /Users/dominiquesteinbach/workspaces/dev-7660-still-image-service/dsp-api | feature/dev-7678-expose-the-iiif-image-service-id-on-still-image-file-values | 35429e03d | squash | [#4408](https://github.com/dasch-swiss/dsp-api/pull/4408) | shipped |
 
 ## Phases
 
