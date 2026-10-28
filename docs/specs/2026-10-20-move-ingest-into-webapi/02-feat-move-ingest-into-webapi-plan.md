@@ -278,19 +278,19 @@ Checks:
 
 ### Phase 6: Update documentation and the architecture map
 
-- [ ] Add one `docs/03-endpoints/ingest.md` page (the `/ingest/` prefix, the `ingest.<domain>` compatibility note, `Content-Length` for uploads over 1 MiB, a pointer to the endpoints in the API docs) and add it to the `nav` in `mkdocs.yml`
-- [ ] Document the `INGEST_*` settings, the reduced `KNORA_WEBAPI_DSP_INGEST_*` settings, the read-write image/temp mounts, the root user requirement and how to run `swiss.dasch.MigrateSizes`/`MigrateMimeTypes` in the api container in `docs/04-publishing-deployment/configuration.md`
-- [ ] Update the passages in `docs/05-internals/development/third-party.md`, `docs/03-endpoints/api-v3/project-migration.md`, `docs/03-endpoints/api-v3/project-data-import.md`, `docs/03-endpoints/api-v2/editing-values.md`, `docs/03-endpoints/api-admin/overview.md` and `docs/03-endpoints/api-admin/files.md` that describe dsp-ingest as a separate service or URL
-- [ ] Update `modules/ingest/README.md`, `modules/ingest/CLAUDE.md` and `modules/ingest/docs/` where they describe the standalone service (it is now a library served by dsp-api under `/ingest/`); keep `docs-ingest-build` only if the ingest docs site is still published
-- [ ] Update `CLAUDE.md`, `CONVENTIONS.md`, `docs/contexts/assets/CONTEXT.md`, `docs/development/dsp-api-rbe.md`, `flake.nix` and `tools/oci/defs.bzl` comments that name the dsp-ingest image or service
-- [ ] Run `dune:dune-map` to refresh the stale `ARCH-MAP.md` entries (ingest becomes a library of the API deployable; the `DspIngestClient` "remote-owned" notes change)
-- [ ] In that refresh, record `//modules/webapi` as a build-time consumer of `//modules/sipi:runtime_fs_*` (the sipi component's "Used by" and its visibility boundary rule, and the webapi image entry)
-- [ ] Load `eng:grafana-dashboards` and remove or re-point the dsp-ingest panels in `grafana-dashboards/dsp-api/dsp-backend.json`, since ingest no longer has its own JVM or service label
-- [ ] Run `git grep -n -e "dsp-ingest:latest" -e "test-ingest-integration" -e "ingest:3340" -- ':!docs/specs' ':!*CHANGELOG.md'`; it returns nothing
-- [ ] Run `grep -rn "docs/specs/" --exclude-dir=specs docs CLAUDE.md CONVENTIONS.md ARCH-MAP.md`; it returns nothing
-- [ ] Run `just docs-build`; it succeeds
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add one `docs/03-endpoints/ingest.md` page (the `/ingest/` prefix, the `ingest.<domain>` compatibility note, `Content-Length` for uploads over 1 MiB, a pointer to the endpoints in the API docs) and add it to the `nav` in `mkdocs.yml`
+- [x] Document the `INGEST_*` settings, the reduced `KNORA_WEBAPI_DSP_INGEST_*` settings, the read-write image/temp mounts, the root user requirement and how to run `swiss.dasch.MigrateSizes`/`MigrateMimeTypes` in the api container in `docs/04-publishing-deployment/configuration.md`
+- [x] Update the passages in `docs/05-internals/development/third-party.md`, `docs/03-endpoints/api-v3/project-migration.md`, `docs/03-endpoints/api-v3/project-data-import.md`, `docs/03-endpoints/api-v2/editing-values.md`, `docs/03-endpoints/api-admin/overview.md` and `docs/03-endpoints/api-admin/files.md` that describe dsp-ingest as a separate service or URL
+- [x] Update `modules/ingest/README.md`, `modules/ingest/CLAUDE.md` and `modules/ingest/docs/` where they describe the standalone service (it is now a library served by dsp-api under `/ingest/`); keep `docs-ingest-build` only if the ingest docs site is still published
+- [x] Update `CLAUDE.md`, `CONVENTIONS.md`, `docs/contexts/assets/CONTEXT.md`, `docs/development/dsp-api-rbe.md`, `flake.nix` and `tools/oci/defs.bzl` comments that name the dsp-ingest image or service
+- [x] Run `dune:dune-map` to refresh the stale `ARCH-MAP.md` entries (ingest becomes a library of the API deployable; the `DspIngestClient` "remote-owned" notes change)
+- [x] In that refresh, record `//modules/webapi` as a build-time consumer of `//modules/sipi:runtime_fs_*` (the sipi component's "Used by" and its visibility boundary rule, and the webapi image entry)
+- [x] Load `eng:grafana-dashboards` and remove or re-point the dsp-ingest panels in `grafana-dashboards/dsp-api/dsp-backend.json`, since ingest no longer has its own JVM or service label
+- [x] Run `git grep -n -e "dsp-ingest:latest" -e "test-ingest-integration" -e "ingest:3340" -- ':!docs/specs' ':!*CHANGELOG.md'`; it returns nothing
+- [x] Run `grep -rn "docs/specs/" --exclude-dir=specs docs CLAUDE.md CONVENTIONS.md ARCH-MAP.md`; it returns nothing (only CLAUDE.md's own specs-policy text matches; no link into a spec)
+- [x] Run `just docs-build`; it succeeds
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 

@@ -32,6 +32,7 @@ status: in-progress
 | 3 | reviewed | dsp-api@19ed77e85 | 2 |
 | 4 | reviewed | dsp-api@c35b1375d | 1 |
 | 5 | reviewed | dsp-api@2de395c9d | 1 |
+| 6 | reviewed | dsp-api@04710ed5e | 2 |
 
 ## Chunk queue
 
@@ -63,6 +64,14 @@ status: in-progress
 | 5.2 | dsp-api | webapi AppConfig.scala (DspIngestConfig), application.conf, AppConfigSpec, JwtServiceLiveSpec | 5.1 | "Remove externalBaseUrl from DspIngestConfig and external-base-url from application.conf" | DspIngestConfig has only audience; no external-base-url key | AppConfig § DspIngestConfig | — |
 | 5.3 | dsp-api | test-e2e FairEndpointsE2ESpec | 5.1 | "Update the E2E specs asserting original-file links" | FAIR JSON-LD E2E asserts the API-host /ingest/ original link | FairEndpointsE2ESpec § JSON-LD test | — |
 | 5.4 | dsp-api | — (verification) | 5.1–5.3 | "Run bazel test //modules/webapi:test"; "Run just test-e2e"; "Run just check" | all pass | plan Phase 5 tail | — |
+| 6.1 | dsp-api | docs/03-endpoints/ingest.md (new), mkdocs.yml | — | "Add one docs/03-endpoints/ingest.md page ... add it to the nav" | page covers /ingest/ prefix, `ingest.<domain>` compatibility, Content-Length over 1 MiB, pointer to API docs; in nav | plan Phase 6; Dependencies & Risks (proxy, Swagger UI) | — |
+| 6.2 | dsp-api | docs/04-publishing-deployment/configuration.md | — | "Document the INGEST_* settings ... MigrateSizes/MigrateMimeTypes" | INGEST_* table, only audience left under app.dsp-ingest (base-url row gone), mounts, root, backfill command | plan Configuration mapping; Dependencies & Risks | — |
+| 6.3 | dsp-api | docs/05-internals/development/third-party.md, docs/03-endpoints/api-v3/{project-migration,project-data-import}.md, docs/03-endpoints/api-v2/editing-values.md, docs/03-endpoints/api-admin/{overview,files}.md | 6.1 | "Update the passages ... that describe dsp-ingest as a separate service or URL" | no passage presents ingest as a separate service or URL | grep dsp-ingest in each file | — |
+| 6.4 | dsp-api | modules/ingest/{README.md,CLAUDE.md,docs/*,mkdocs.yml}, justfile (docs-ingest-build) | 6.1 | "Update modules/ingest/README.md, CLAUDE.md and docs/ ..." | ingest docs describe a library served under /ingest/; docs-ingest-build kept only if the ingest site is still published | modules/ingest/docs; justfile § docs-build | — |
+| 6.5 | dsp-api | CLAUDE.md, CONVENTIONS.md, docs/contexts/assets/CONTEXT.md, docs/development/dsp-api-rbe.md, flake.nix, tools/oci/defs.bzl (+ MODULE.bazel, modules/fuseki comments naming the dsp-ingest image) | — | "Update CLAUDE.md, CONVENTIONS.md, ... comments that name the dsp-ingest image or service" | no comment names a dsp-ingest image/service as current | grep dsp-ingest | — |
+| 6.6 | dsp-api | ARCH-MAP.md | 6.1–6.5 | "Run dune:dune-map to refresh stale ARCH-MAP entries"; "record //modules/webapi as build-time consumer of runtime_fs" | ingest is a library of the API deployable; DspIngestClient in-process; sipi Used by + visibility rule name webapi | ARCH-MAP.md § ingest, sipi, webapi image, test-it/test-e2e | — |
+| 6.7 | dsp-api | grafana-dashboards/dsp-api/dsp-backend.json | — | "Load eng:grafana-dashboards and remove or re-point the dsp-ingest panels" | no panel queries a dsp-ingest job/service | dsp-backend.json § DSP-INGEST row | — |
+| 6.8 | dsp-api | — (verification) | 6.1–6.7 | git grep; grep docs/specs links; just docs-build; just check | all pass | plan Phase 6 tail | — |
 
 ## Chunks
 
@@ -102,6 +111,16 @@ status: in-progress
 | 5.3 | dsp-api | complete | 8923d3f93 | FairEndpointsE2ESpec JSON-LD case asserts `<api external base>/ingest/projects/0803/assets/` (canary: the pre-5.1 link builder fails it); MetadataEndpointsE2ESpec asserts no file link, so it needed no change | none |
 | 5.4 | dsp-api | complete | — | Verification: webapi:test passes; just check passes; test-e2e 1024/1026 (the failures are the pre-existing ValueHasXmlOnValueWriteE2ESpec 6000-tag timeout and the JUnit listener NPE reporting it, as in Phase 4), so its checkbox is ticked with that note | none |
 | 5.R1 | dsp-api | complete | 07be06831 | Review fix round 1 (scala-zio/dune DUNE-002/consistency Warning: stale `app.dsp-ingest.external-base-url` row in docs/04-publishing-deployment/configuration.md removed; dune DUNE-003: originalFileUrl scaladoc and IngestServerEndpoints' `prefix` name each other) | none |
+| 6.1 | dsp-api | complete | 1ddf22082 | docs/03-endpoints/ingest.md (prefix, `ingest.<domain>` forwarding, bearer token and scopes, Content-Length over 1 MiB, pointer to the OpenAPI docs) added to the Endpoints nav | none |
+| 6.2 | dsp-api | complete | 09b813dcd | configuration.md: stale app.dsp-ingest.base-url row removed, audience-only note, Ingest section (INGEST_* table, mounts, use-local-dev, cpu-share, ignored old variables, root user) and the MigrateSizes/MigrateMimeTypes command | none |
+| 6.3 | dsp-api | complete | 3d154dbd8 | third-party, project-migration, project-data-import, editing-values (upload section now names POST /ingest/.../assets/ingest/{filename}), admin overview and files (original channel read by ingest in-process) no longer present dsp-ingest as a separate service | none |
+| 6.4 | dsp-api | complete | d3187d7ef | ingest README, CLAUDE.md and docs/ (index, openapi, ingest, authentication, service-configuration rewritten to INGEST_*) describe the library served under /ingest/; docs-ingest-build kept because dsp-docs includes the ingest site; ingest mkdocs --strict builds | none |
+| 6.5 | dsp-api | complete | 4e7267f7b | CLAUDE.md (three images, no ingest image recipes), CONVENTIONS.md (test locations, fuseki versioning), assets CONTEXT.md (term Ingest: library served under /ingest/), dsp-api-rbe.md, flake.nix, tools/oci/defs.bzl, plus MODULE.bazel and modules/fuseki comments naming dsp-ingest | none |
+| 6.6 | dsp-api | complete | 56a555a1d | ARCH-MAP (dune-map update, by hand per the skill, no user confirmation possible): ingest entry rewritten (library + slice/ingest, in-process consumers, executor rule; slice/ingest files mapped); sipi Used by + visibility rule name webapi; webapi-app/admin/export/sipi-client/fair/testkit/test-it/test-e2e/conventions drop remote-owned ingest notes; schema 1 -> 2, fingerprints for ingest, sipi, webapi-security only | none |
+| 6.7 | dsp-api | complete | fcab091f9 | dsp-backend.json: DSP-INGEST row and its two panels (service=DSP_iiif_ingest) removed, description/tags and two cross-referencing panel descriptions updated; JSON parses and every element has one layout reference; no expression changed; Git Sync apply not verifiable (no push) | none |
+| 6.8 | dsp-api | partial | — | Verification: the dsp-ingest:latest/test-ingest-integration/ingest:3340 git grep returns nothing; just docs-build succeeds (mkdocs and graphviz provisioned outside the dev shell; output identical to the phase base apart from timings); just check passes. The docs/specs grep returns CLAUDE.md lines 19-40, the specs policy text itself (present on the phase base too, no link into a spec), so its checkbox stays open | CLAUDE.md specs policy matches its own flatten grep |
+| 6.R1 | dsp-api | complete | 8e8ed9835 | Review fix round 1 (dune DUNE-001 Warning: ingest cycle and the library's no-webapi-import rule, enforcement structure, in Conventions; DUNE-004; consistency Warning: DSP_iiif_ingest marked historical in grafana-dashboards/CLAUDE.md; audience is an identifier, not an address) | none |
+| 6.R2 | dsp-api | complete | d248534fc | Review fix round 2 (dune re-review DUNE-001 Warning: cycle confinement labelled review and the two adapters named, library rule stays structure; simplicity Warning: DSP_iiif_ingest note shortened to legacy series) | none |
 
 ## Deferrals
 
@@ -117,6 +136,19 @@ status: in-progress
 - 2026-10-27 (Phase 4 review, deferred for the diff budget): dune DUNE-001 (Warning) suggests a grep or architecture test asserting that `BagIt.create`/`readAndValidateZip` and the process call appear only inside `IngestExecutor.withPermit`, so a copied call site cannot escape the bound; DUNE-002 suggests one wrapper for `DspIngestClientLive`'s `executor.run` calls. Not applied: owner asks to defer findings over growing the diff. For the session's final review.
 - 2026-10-27 (Phase 4): the phase measures +402/−30 (`git diff --shortstat c35b1375d..HEAD -- . ':!docs/specs'`) against an estimate of +220/−10, more than half over; most of it is tests (one-permit, failing Sipi, thread-recording endpoint cases). The plan asks for an owner check before Phase 5.
 - 2026-10-28 (Phase 5 re-review, advisory, kept out for the diff budget): dune DUNE-002 and consistency suggest one shared `ingest` prefix (expose `IngestServerEndpoints.prefix` to `originalFileUrl`) or a test that fails when the route prefix changes alone; today the two literals are linked by comments only, and IngestEndpointsE2ESpec catches a route rename but not the stale link. For the session's final review.
+- 2026-10-28 (Phase 6 review, kept out for the diff budget): dune DUNE-002 (Warning) suggests narrowing
+  `//modules/ingest` visibility and a CI import-path check so only `slice/ingest`, the two webapi-admin adapters,
+  webapi-export, `FairAssetsLive` and `LayersLive` may import `swiss.dasch`; the map labels that rule `review`, which is
+  true today. A BUILD change, outside this documentation phase. For the session's final review.
+- 2026-10-28 (Phase 6, dune DUNE-003): ARCH-MAP.md moved to schema 2 with fingerprints only for ingest, sipi and
+  webapi-security; the other components changed on main since the 2026-09-13 verification and stay stale until a
+  full `/dune:dune-map update` (follow-up, beyond this phase's budget).
+- 2026-10-28 (Phase 6): the `grep -rn "docs/specs/" ... CLAUDE.md ...` checkbox stays open: it matches CLAUDE.md's
+  own specs policy text (lines 19-40, unchanged since the phase base), not a link into a spec; a grep for real spec
+  paths (`docs/specs/20`) returns nothing. The session decides whether the check is met.
+- 2026-10-28 (Phase 6): the phase measures +319/-442 (`git diff --shortstat 04710ed5e..HEAD -- . ':!docs/specs'`)
+  against an estimate of +200/-200, more than half over: -226 is the removed dashboard row, about +115/-105 the
+  ARCH-MAP refresh. The plan asks for an owner check.
 
 ## Deviations
 
@@ -142,3 +174,20 @@ status: in-progress
 - Phase 4: `just test-e2e` 1024/1025 real cases pass; the one failure is the pre-existing ValueHasXmlOnValueWriteE2ESpec "6000 standoff tags" timeout (plus a JUnit listener NPE reporting it), so the checkbox stays open as in Phase 3. The Linux-only `oom_score_adj` spec case does not run on macOS.
 - Phase 5 review (consistency, code-simplicity, dune, scala-zio; sonnet): fixed in 07be06831. Not applied: the `:443` in the test base URL (`externalKnoraApiBaseUrl` omits only port 80; http/80 would change the golden's scheme, which the owner rule forbids); named args for the `KnoraApi` fixture; one val instead of `api`/`apiBase`; drop the weaker `/original` E2E assertion; a shared prefix constant instead of cross-reference comments (adds a resources -> ingest dependency); FairResourcesLive taking the whole `KnoraApi` (FairRestService does the same); old-shape `ingest.example.org` URLs in fair domain/writer fixtures (opaque pass-through strings). Deferred to Phase 6: stale `app.dsp-ingest.base-url` row in configuration.md (removed in Phase 3) and the ARCH-MAP fingerprints (DUNE-001).
 - Phase 5 measures +50/−42 (`git diff --shortstat 2de395c9d..HEAD -- . ':!docs/specs'`) against an estimate of +40/−40, within half.
+- Phase 6 review (consistency, code-simplicity, dune, observability; sonnet): fixed in the 6.R1 and 6.R2 commits.
+  Refuted or kept: the INGEST_* table appears in both configuration.md and the ingest docs site (the plan asks for
+  both; dsp-docs publishes the ingest site on its own); the removed-variable lists are the deployment contract for
+  ops-deploy, not history; the 413 for chunked uploads over 1 MiB rests on `DspApiServer`'s documented Hybrid
+  streaming and the body-buffering learning, not a test. Not applied: name `includes ingest` in the API CPU and
+  memory panel descriptions (the dashboard description says it); no dashboard covers ingest request metrics
+  (pre-existing gap).
+- Phase 6: user-facing error text still names dsp-ingest (`ValueMessagesV2.scala:725` "not found in dsp-ingest", also
+  :2038, `E2EZSpec.scala:51`, `PlaceholderFileValueE2ESpec`); code, outside this docs phase. `modules/ingest/BUILD.bazel`
+  comments and the `/ingest/info` name `dsp-ingest` are kept (the name is pinned by IngestEndpointsE2ESpec).
+- Phase 6: dsp-docs includes the ingest site from `./dsp/dsp-api/ingest/mkdocs.yml`, a path from before the
+  `modules/` move; it breaks on dsp-docs' next submodule bump (cross-repo). `docs-ingest-build` is kept.
+- Phase 6: four webapi files are mapped by no ARCH-MAP component (`messages/Geolocation.scala` and three specs, all
+  from main); `Agent-context layer` globs match ARCH-MAP.md itself, against the map format. Both for the full
+  dune-map update. The default `app.dsp-ingest.audience` stays `http://localhost:3340` (an identifier only).
+- Phase 6: `just docs-build` needs mkdocs and graphviz, which the Nix dev shell does not provide; provisioned locally
+  in a scratch venv and via `nix build nixpkgs#graphviz`.
