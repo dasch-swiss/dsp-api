@@ -426,20 +426,31 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.StillImageFileValue)
     .withRdfLabelEn("Still image file value has X dimension")
-    .withRdfCommentEn("The horizontal dimension of a still image file value.")
+    .withRdfCommentEn(
+      "The native width in pixels of the stored image file, recorded at ingest. It is not the size served to " +
+        "a given user, which may be smaller, and is not a basis for requests, tiles, regions or overlays: " +
+        "read the served sizes from the info.json of knora-api:stillImageFileValueHasIIIFImageService.",
+    )
 
   private val StillImageFileValueHasDimY = makeOwlDatatypeProperty(KA.StillImageFileValueHasDimY, XSD.INTEGER)
     .withSubPropertyOf(KA.ValueHas)
     .withSubjectType(KA.StillImageFileValue)
     .withRdfLabelEn("Still image file value has Y dimension")
-    .withRdfCommentEn("The vertical dimension of a still image file value.")
+    .withRdfCommentEn(
+      "The native height in pixels of the stored image file, recorded at ingest. It is not the size served to " +
+        "a given user, which may be smaller, and is not a basis for requests, tiles, regions or overlays: " +
+        "read the served sizes from the info.json of knora-api:stillImageFileValueHasIIIFImageService.",
+    )
 
   private val StillImageFileValueHasIIIFBaseUrl =
     makeOwlDatatypeProperty(KA.StillImageFileValueHasIIIFBaseUrl, XSD.ANYURI)
       .withSubPropertyOf(KA.ValueHas)
       .withSubjectType(KA.StillImageFileValue)
       .withRdfLabelEn("Still image file value has IIIF base URL")
-      .withRdfCommentEn("The IIIF base URL of a still image file value.")
+      .withRdfCommentEn(
+        "The IIIF base URL of a still image file value. For a still image file value stored in DSP, " +
+          "prefer knora-api:stillImageFileValueHasIIIFImageService, which names the image service directly.",
+      )
 
   private val StillImageFileValueHasIIIFImageService =
     makeOwlDatatypeProperty(KA.StillImageFileValueHasIIIFImageService, XSD.ANYURI)

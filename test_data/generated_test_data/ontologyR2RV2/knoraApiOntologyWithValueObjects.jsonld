@@ -10760,7 +10760,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:StillImageFileValue"
             },
-            "rdfs:comment": "The horizontal dimension of a still image file value."
+            "rdfs:comment": "The native width in pixels of the stored image file, recorded at ingest. It is not the size served to a given user, which may be smaller, and is not a basis for requests, tiles, regions or overlays: read the served sizes from the info.json of knora-api:stillImageFileValueHasIIIFImageService."
         },
         {
             "rdfs:label": "Still image file value has Y dimension",
@@ -10775,7 +10775,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:StillImageFileValue"
             },
-            "rdfs:comment": "The vertical dimension of a still image file value."
+            "rdfs:comment": "The native height in pixels of the stored image file, recorded at ingest. It is not the size served to a given user, which may be smaller, and is not a basis for requests, tiles, regions or overlays: read the served sizes from the info.json of knora-api:stillImageFileValueHasIIIFImageService."
         },
         {
             "rdfs:label": "External Url to the image",
@@ -10805,7 +10805,7 @@
             "knora-api:subjectType": {
                 "@id": "knora-api:StillImageFileValue"
             },
-            "rdfs:comment": "The IIIF base URL of a still image file value."
+            "rdfs:comment": "The IIIF base URL of a still image file value. For a still image file value stored in DSP, prefer knora-api:stillImageFileValueHasIIIFImageService, which names the image service directly."
         },
         {
             "rdfs:label": "Still image file value has IIIF image service",
