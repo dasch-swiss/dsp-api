@@ -38,6 +38,7 @@ final class IngestServerEndpoints(
 object IngestServerEndpoints {
   val layer = ZLayer.derive[IngestServerEndpoints]
 
+  // ResourceMetadataRules.originalFileUrl builds links under this prefix
   private val prefix = "ingest"
 
   def isIngestRoute(ep: AnyEndpoint): Boolean = ep.showPathTemplate(showQueryParam = None).startsWith(s"/$prefix/")

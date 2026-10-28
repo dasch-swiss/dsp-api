@@ -57,7 +57,7 @@ object ResourceMetadataRules {
     file.fileValue.internalFilename.takeWhile(_ != '.')
 
   /**
-   * The direct URL of the original file on the API's ingest `/original` route.
+   * The direct URL of the original file on the `/original` route under `IngestServerEndpoints`' `ingest` prefix.
    */
   def originalFileUrl(apiExternalBaseUrl: String, shortcode: Shortcode, assetId: String): String =
     s"$apiExternalBaseUrl/ingest/projects/${shortcode.value}/assets/$assetId/original"
