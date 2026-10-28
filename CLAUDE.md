@@ -83,21 +83,21 @@ belongs here even when it touches another repo.
 
 ### Bazel & the Nix dev shell
 
-All four container images (`knora-sipi`, `knora-api`, `dsp-ingest`, `apache-jena-fuseki`) build with
-**Bazel** (`rules_oci`).
+All three container images (`knora-sipi`, `knora-api`, `apache-jena-fuseki`) build with **Bazel** (`rules_oci`).
+Ingest has no image of its own: dsp-api serves it under `/ingest/` (`modules/ingest` is a library).
 Bazel is provided through a **Nix dev shell** (`flake.nix`) that puts `bazel` (a bazelisk wrapper;
 the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PATH`.
 
 - **Enter the shell:** with `direnv` it loads automatically on `cd` into the repo (`.envrc` runs `use flake`; run `direnv allow` once). Without direnv, prefix commands with `nix develop --command`, e.g. `nix develop --command just docker-build-sipi-image`.
-- `just docker-build-sipi-image` / `just docker-build-dsp-api-image` / `just docker-build-ingest-image`
-  build the image and load it into the local Docker daemon (`:latest` plus the git-describe
-  version tag); each runs `bazel run //modules/<sipi|webapi|ingest>:load`. `just docker-publish-*`
-  variants build + push the multi-arch image via `bazel run //modules/<m>:push`.
-- `bazel build //modules/webapi:image_amd64` / `//modules/ingest:image_amd64` - build the knora-api /
-  dsp-ingest images directly; `bazel run //modules/webapi:load` / `//modules/ingest:load` loads
-  them into the local Docker daemon at the same `:latest` tags `docker-compose.yml` uses.
+- `just docker-build-sipi-image` / `just docker-build-dsp-api-image` build the image and load it
+  into the local Docker daemon (`:latest` plus the git-describe version tag); each runs
+  `bazel run //modules/<sipi|webapi>:load`. `just docker-publish-*` variants build + push the
+  multi-arch image via `bazel run //modules/<m>:push`.
+- `bazel build //modules/webapi:image_amd64` - build the knora-api image directly;
+  `bazel run //modules/webapi:load` loads it into the local Docker daemon at the same `:latest` tag
+  `docker-compose.yml` uses.
 - Fuseki's recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) build and
-  publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
+  publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other two.
 - CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
   (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
   sbt has been fully removed: formatting/linting is the rules_scala scalafmt toolchain, license
