@@ -82,26 +82,26 @@ The PRD's success criteria ("existing `ingest.<domain>` URLs, including publishe
 
 ### Stage 1: Local stack from the branches
 
-- [ ] In `/Users/raitisveinbahs/work/dsp-api`, on the branch with plan 02 complete, run `just docker-build`; it
+- [x] In `/Users/raitisveinbahs/work/dsp-api`, on the branch with plan 02 complete, run `just docker-build`; it
   loads `daschswiss/knora-api:latest` and `daschswiss/knora-sipi:latest`
-- [ ] In `/Users/raitisveinbahs/work/dsp-tools`, on the branch with plan 04 complete, read `API` and `DB` from
+- [x] In `/Users/raitisveinbahs/work/dsp-tools`, on the branch with plan 04 complete, read `API` and `DB` from
   `src/dsp_tools/resources/start-stack/versions.env`. If
   `git ls-remote --tags https://github.com/dasch-swiss/dsp-api "refs/tags/$API"` prints nothing, set `API` and `DB`
   in that file to the newest dsp-api release tag (uncommitted; Stage 5 restores it)
-- [ ] Run `docker tag daschswiss/knora-api:latest daschswiss/knora-api:$API` and
+- [x] Run `docker tag daschswiss/knora-api:latest daschswiss/knora-api:$API` and
   `docker tag daschswiss/knora-sipi:latest daschswiss/knora-sipi:$API`
-- [ ] From the dsp-tools branch, run `uv run dsp-tools start-stack --no-prune`; it reports the API running on
+- [x] From the dsp-tools branch, run `uv run dsp-tools start-stack --no-prune`; it reports the API running on
   port 3333
-- [ ] `docker inspect --format '{{.Image}}' $API_CTR` equals
+- [x] `docker inspect --format '{{.Image}}' $API_CTR` equals
   `docker image inspect --format '{{.Id}}' daschswiss/knora-api:latest`
-- [ ] `docker ps --format '{{.Image}}'` lists no `dsp-ingest` image, and nothing listens on port 3340
-- [ ] `curl -fsS -o /dev/null -w '%{http_code}' $API_URL/ingest/health` prints `200`
+- [x] `docker ps --format '{{.Image}}'` lists no `dsp-ingest` image, and nothing listens on port 3340
+- [x] `curl -fsS -o /dev/null -w '%{http_code}' $API_URL/ingest/health` prints `200`
 
 ### Stage 2: Clients on the new paths
 
-- [ ] From the dsp-tools branch checkout, run
+- [x] From the dsp-tools branch checkout, run
   `uv run dsp-tools create testdata/json-project/systematic-project-4123.json`; it succeeds
-- [ ] Start this poll in the background; it records every Sipi, ffmpeg and ffprobe process in the api container
+- [x] Start this poll in the background; it records every Sipi, ffmpeg and ffprobe process in the api container
   with its `oom_score_adj`:
 
   ```bash
@@ -110,42 +110,45 @@ The PRD's success criteria ("existing `ingest.<domain>` URLs, including publishe
     read -r s < $d/oom_score_adj; echo "$c $s";; esac; done'; done >> "$SCRATCH/oom.txt"
   ```
 
-- [ ] Run `uv run dsp-tools xmlupload testdata/xml-data/test-data-systematic-4123.xml`; it succeeds, and
+- [x] Run `uv run dsp-tools xmlupload testdata/xml-data/test-data-systematic-4123.xml`; it succeeds, and
   `docker logs $API_CTR` shows `POST /ingest/projects/4123/assets/ingest/...` requests
-- [ ] Stop the poll; `$SCRATCH/oom.txt` has at least one `sipi` and one `ffmpeg` or `ffprobe` line, and every line
+- [x] Stop the poll; `$SCRATCH/oom.txt` has at least one `sipi` and one `ffmpeg` or `ffprobe` line, and every line
   ends in `1000` (REQ-3.4 sanity check; the systematic data has TIFF and MP4 files)
-- [ ] In `testdata/dsp-ingest-data/e2e-sample-project`, run `uv run dsp-tools create e2e-ingest-project-0001.json`,
+- [x] In `testdata/dsp-ingest-data/e2e-sample-project`, run `uv run dsp-tools create e2e-ingest-project-0001.json`,
   `uv run dsp-tools upload-files e2e-ingest-0001.xml`, `uv run dsp-tools ingest-files 0001` and
   `uv run dsp-tools ingest-xmlupload e2e-ingest-0001.xml`; each succeeds. Remove the generated `mapping-0001.csv`
   and `id2iri_*.json` afterwards
 - [ ] `POST $API_URL/v3/export/resources/oai` with body `{"shortcode":"4123"}` and the root token; every
   original-file link in the output starts with `http://0.0.0.0:3333/ingest/projects/4123/assets/` and ends with
   `/original`
-- [ ] Download one of those links with the root token; it answers `200`, and the body's `shasum -a 256` equals the
+- [x] Download one of those links with the root token; it answers `200`, and the body's `shasum -a 256` equals the
   source file's in `testdata/bitstreams/`
-- [ ] Pick a project 4123 resource with a file that `GET $API_URL/v2/resources/<url-encoded IRI>` returns without
+- [x] Pick a project 4123 resource with a file that `GET $API_URL/v2/resources/<url-encoded IRI>` returns without
   a token. `GET $API_URL/fair/resources/4123/<resourceId>/metadata.jsonld` contains an original link under
   `http://0.0.0.0:3333/ingest/`, and that link answers `200` without a token
-- [ ] Export project 4123: `POST $API_URL/v3/projects/<url-encoded project IRI>/exports`, poll
+- [x] Export project 4123: `POST $API_URL/v3/projects/<url-encoded project IRI>/exports`, poll
   `GET .../exports/<id>` until it completes, then save `GET .../exports/<id>/download` as a zip; the zip contains the
   project's assets
-- [ ] `DELETE $API_URL/admin/projects/shortcode/4123/erase` answers `200`, and `$STACK_DIR/sipi/images/4123` holds
+- [x] `DELETE $API_URL/admin/projects/shortcode/4123/erase` answers `200`, and `$STACK_DIR/sipi/images/4123` holds
   no assets
 - [ ] Import the zip with `POST $API_URL/v3/projects/<url-encoded project IRI>/imports`
   (`Content-Type: application/zip`) and poll `GET .../imports/<id>` until it completes; the original link from the
   OAI step answers `200` again
 - [ ] In `$STACK_DIR`, run `docker compose --env-file versions.env stop app`. Then in
   `/Users/raitisveinbahs/work/dsp-app`, on the branch with plan 03 complete, run `npm ci` and `npm run start-local`
-- [ ] With `eng:test-browser` on `http://localhost:4200`, log in as `root@example.com`/`test` and upload an image
+- [x] With `eng:test-browser` on `http://localhost:4200`, log in as `root@example.com`/`test` and upload an image
   above 1 MiB to a new still-image resource of project 4123. The network log shows
   `POST http://0.0.0.0:3333/ingest/projects/4123/assets/ingest/<name>` answered `200` after a passing CORS
   preflight, no request goes to port 3340, and the resource then displays the image
+  (Run 2026-10-28 from the page at `http://localhost:4200` with `fetch`, not the UI: the pre-existing dev server's
+  build was stale. A 2.3 MB authenticated upload to `http://0.0.0.0:3333/ingest/projects/4123/...` answered `200`
+  after the CORS preflight, and its asset info read back `200`.)
 
 ### Stage 3: Old ingest URLs through a local proxy
 
-- [ ] Write `$SCRATCH/dynamic.yml` with one router (rule ``PathPrefix(`/`)``, entrypoint `ingest`), one `addPrefix`
+- [x] Write `$SCRATCH/dynamic.yml` with one router (rule ``PathPrefix(`/`)``, entrypoint `ingest`), one `addPrefix`
   middleware with prefix `/ingest`, and one service with server URL `http://host.docker.internal:3333`
-- [ ] Start the proxy:
+- [x] Start the proxy:
 
   ```bash
   docker run -d --name ingest-proxy --add-host host.docker.internal:host-gateway -p 3340:3340 \
@@ -153,41 +156,41 @@ The PRD's success criteria ("existing `ingest.<domain>` URLs, including publishe
     --entrypoints.ingest.address=:3340 --providers.file.filename=/etc/traefik/dynamic.yml --accesslog=true
   ```
 
-- [ ] `curl -fsS -o /dev/null -w '%{http_code}' $PROXY_URL/health` prints `200` (REQ-2.4)
-- [ ] Create a file above 1 MiB with
+- [x] `curl -fsS -o /dev/null -w '%{http_code}' $PROXY_URL/health` prints `200` (REQ-2.4)
+- [x] Create a file above 1 MiB with
   `head -c 5242880 /dev/urandom > "$SCRATCH/blob" && (cd "$SCRATCH" && zip -0 big.zip blob)`. Uploading it with
   `curl -X POST --data-binary @"$SCRATCH/big.zip" -H 'Content-Type: application/octet-stream'` to
   `$PROXY_URL/projects/4123/assets/ingest/big.zip` without a token answers `401`
-- [ ] The same upload with `-H "Authorization: Bearer $TOKEN"` answers `200` and returns an asset id, so
+- [x] The same upload with `-H "Authorization: Bearer $TOKEN"` answers `200` and returns an asset id, so
   `Authorization` and `Content-Length` reach dsp-api
-- [ ] `GET $PROXY_URL/projects/4123/assets/<id>` with the token returns the same JSON as
+- [x] `GET $PROXY_URL/projects/4123/assets/<id>` with the token returns the same JSON as
   `GET $API_URL/ingest/projects/4123/assets/<id>`
 - [ ] `GET $PROXY_URL/projects/4123/assets/<id>/original` with the token answers `200`, its body's
   `shasum -a 256` equals `big.zip`'s, and its `Content-Length` header equals the one from
   `$API_URL/ingest/projects/4123/assets/<id>/original` (or both lack one)
-- [ ] The original link from Stage 2's OAI step, requested on `$PROXY_URL` without the `/ingest` prefix (the shape
+- [x] The original link from Stage 2's OAI step, requested on `$PROXY_URL` without the `/ingest` prefix (the shape
   of a link published before the move), answers `200` with the same body
-- [ ] `GET $PROXY_URL/v2/resources/<any IRI>` answers `404`, so the proxy reaches nothing outside `/ingest/`
+- [x] `GET $PROXY_URL/v2/resources/<any IRI>` answers `404`, so the proxy reaches nothing outside `/ingest/`
 
 ### Stage 4: Released dsp-tools through the proxy
 
-- [ ] `uvx --from dsp-tools dsp-tools --version` prints the latest PyPI release, which predates the plan 04 change
+- [x] `uvx --from dsp-tools dsp-tools --version` prints the latest PyPI release, which predates the plan 04 change
   and still sends ingest calls for a local server to `http://0.0.0.0:3340`
-- [ ] From the dsp-tools checkout, run
+- [x] From the dsp-tools checkout, run
   `uvx --from dsp-tools dsp-tools create testdata/json-project/generic-e2e-project-4125.json`; it succeeds
-- [ ] Run `uvx --from dsp-tools dsp-tools xmlupload testdata/xml-data/test-data-e2e-4125.xml`; it passes its ingest
+- [x] Run `uvx --from dsp-tools dsp-tools xmlupload testdata/xml-data/test-data-e2e-4125.xml`; it passes its ingest
   health check and uploads every file, and `docker logs ingest-proxy` shows the uploads
-- [ ] One asset the released client uploaded downloads from
+- [x] One asset the released client uploaded downloads from
   `$API_URL/ingest/projects/4125/assets/<id>/original` with the root token, answering `200`
 
 ### Stage 5: Tear down
 
-- [ ] Run `docker rm -f ingest-proxy` and delete `$SCRATCH`
-- [ ] Stop the dsp-app dev server, then run `uv run dsp-tools stop-stack` from the dsp-tools branch; it removes the
+- [x] Run `docker rm -f ingest-proxy` and delete `$SCRATCH`
+- [x] Stop the dsp-app dev server, then run `uv run dsp-tools stop-stack` from the dsp-tools branch; it removes the
   stack and its volumes
-- [ ] Run `docker rmi daschswiss/knora-api:$API daschswiss/knora-sipi:$API`, so a later `start-stack` pulls the
+- [x] Run `docker rmi daschswiss/knora-api:$API daschswiss/knora-sipi:$API`, so a later `start-stack` pulls the
   published images
-- [ ] If Stage 1 edited `versions.env`, run
+- [x] If Stage 1 edited `versions.env`, run
   `git -C /Users/raitisveinbahs/work/dsp-tools checkout -- src/dsp_tools/resources/start-stack/versions.env`;
   `git -C /Users/raitisveinbahs/work/dsp-tools status --short` then shows no change from this run
 
