@@ -7,7 +7,6 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
-import swiss.dasch.version.BuildInfo
 import zio.IO
 import zio.UIO
 import zio.ZIO
@@ -29,7 +28,8 @@ trait CommandExecutor {
    * The command is built from the given command and parameters.
    *
    * In local development mode, the command is executed in a docker container.
-   * Otherwise, the command is executed directly.
+   * Otherwise, the command is executed directly, through a shell that first raises its `oom_score_adj` to 1000,
+   * so the kernel OOM killer picks the child process before the embedding JVM.
    *
    * @param command the command to execute.
    * @param params  the parameters to pass to the command.
@@ -84,7 +84,11 @@ object CommandExecutor {
     ZIO.serviceWithZIO[CommandExecutor](_.buildCommand(command, params*))
 }
 
-final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: StorageService) extends CommandExecutor {
+final case class CommandExecutorLive(
+  sipiConfig: SipiConfig,
+  storageService: StorageService,
+  ingestExecutor: IngestExecutor,
+) extends CommandExecutor {
   override def buildCommand(command: String, params: String*): UIO[Command] =
     if (sipiConfig.useLocalDev) {
       for {
@@ -94,14 +98,14 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
           List(
             List("docker", "run", "--entrypoint", command),
             List("-v", s"$assetDir:$assetDir"),
-            List(s"daschswiss/knora-sipi:${BuildInfo.knoraSipiVersion}"),
+            List(sipiConfig.localDevImage),
             params,
           ).flatten,
         )
       }
 
     } else {
-      ZIO.succeed(Command(command +: params.toList))
+      ZIO.succeed(Command(CommandExecutorLive.oomExpendable ++ (command +: params.toList)))
     }
 
   private class InMemoryProcessLogger extends ProcessLogger {
@@ -121,7 +125,7 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
     val logger = new InMemoryProcessLogger()
     for {
       _   <- ZIO.logInfo(s"Executing command: ${command.cmd}")
-      out <- ZIO.attemptBlockingIO(command.cmd !< logger).map(logger.buildOutput)
+      out <- ingestExecutor.withPermit(ZIO.attemptBlockingIO(command.cmd !< logger)).map(logger.buildOutput)
       _   <- ZIO.foreachDiscard(parseSipiLogs(out.stdout ++ out.stderr))(ZIO.logInfo(_))
       _   <- ZIO.logWarning(s"Command '${command.cmd}' has err output: '$out'").when(out.stderr.nonEmpty)
     } yield out
@@ -129,5 +133,10 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
 }
 
 object CommandExecutorLive {
+
+  /** `sh -c` binds the arguments after the script to `$0`, `$@`, so `exec` replaces the shell with the command. */
+  private[infrastructure] val oomExpendable: List[String] =
+    List("/bin/sh", "-c", """echo 1000 > /proc/self/oom_score_adj && exec "$0" "$@"""")
+
   val layer = ZLayer.derive[CommandExecutorLive]
 }

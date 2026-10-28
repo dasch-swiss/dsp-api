@@ -1,7 +1,7 @@
 """dsp-api Bazel module.
 
-Builds the full Scala build (knora-api, dsp-ingest, and their libraries/tests)
-with rules_scala, and the container images (knora-sipi, knora-api, dsp-ingest,
+Builds the full Scala build (knora-api, the ingest library, and their libraries/tests)
+with rules_scala, and the container images (knora-sipi, knora-api,
 apache-jena-fuseki) with rules_oci.
 """
 
@@ -220,10 +220,6 @@ maven.install(
         # spring-security-crypto and not spring-security-core: crypto has no
         # dependencies of its own, while core drags in the Spring context.
         "org.springframework.security:spring-security-crypto:7.0.6",
-        # -- dsp-ingest db (Java) --
-        "org.xerial:sqlite-jdbc:3.53.2.0",
-        "org.flywaydb:flyway-core:12.10.0",
-        "com.zaxxer:HikariCP:7.1.0",
         # -- test-only Java libs --
         "org.xmlunit:xmlunit-core:2.12.0",
         "net.datafaker:datafaker:2.7.0",
@@ -274,7 +270,7 @@ use_repo(maven, "maven", "unpinned_maven")
 
 # Single source of truth for the Apache Jena Fuseki dist (jar) version — the one thing we download
 # and pack into the image. The Fuseki OCI *image* is versioned by release-please (git version,
-# stamped into the image label), like knora-api/dsp-ingest — it is NOT derived from this value.
+# stamped into the image label), like knora-api — it is NOT derived from this value.
 # BUILD files can't load() MODULE.bazel, so the value reaches them via the generated
 # @dsp_image_versions//:defs.bzl, feeding the /version report (modules/webapi buildinfo) and the
 # OTLP service.version attribute (modules/fuseki) that shows the deployed engine version.
@@ -313,7 +309,7 @@ use_repo(
 )
 
 #############################################
-# knora-api / dsp-ingest base image (temurin)
+# knora-api base image (temurin)
 #############################################
 
 # eclipse-temurin:25-jre-noble, pinned per-arch by single-manifest digest: the arm64 index entry

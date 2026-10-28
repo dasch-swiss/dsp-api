@@ -50,6 +50,7 @@ import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
+import org.knora.webapi.slice.ingest.IngestServerEndpoints
 
 final class DspApiServer(
   server: Server,
@@ -267,9 +268,10 @@ object DspApiServer {
     }
 
     /**
-     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     * Marks a response produced *before* the request body was read as the last one on its connection, on the
+     * passthrough and on the ingest routes (uploads).
      *
-     * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
+     * Several rejections on these routes answer without consuming the body: the security logic's `401`/`403`, which
      * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
      * Bodies declaring a length above the server's aggregation threshold are streamed, and zio-http leaves such a
      * connection with
@@ -283,13 +285,14 @@ object DspApiServer {
      * `query` form field or an unsupported `Content-Type` on a small body is answered after zio-http has already read
      * the whole thing, so there is nothing left in the channel and nothing to fix.
      */
-    private def closeConnectionIfPassthrough[B](
+    private def closeConnectionIfBodyUnread[B](
       ep: AnyEndpoint,
       request: ServerRequest,
       response: ServerResponse[B],
     ): ServerResponse[B] =
       if (
-        SparqlPassthroughEndpoints.isPassthroughRoute(ep) && bodyPlausiblyUnread(request) &&
+        (SparqlPassthroughEndpoints.isPassthroughRoute(ep) || IngestServerEndpoints.isIngestRoute(ep)) &&
+        bodyPlausiblyUnread(request) &&
         !response.headers.exists(closesConnection)
       )
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
@@ -344,7 +347,7 @@ object DspApiServer {
           // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
           // cannot tell the two apart.
           updateSpanMetadata(ctx.endpoint) *>
-            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, _))
+            delegate.onSecurityFailure(ctx).map(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, _))
 
         // The delegate is consulted first and the entry written only if it answered. `None` means this endpoint
         // did not claim the request at all -- see logRejectedPassthroughDecode.
@@ -360,7 +363,7 @@ object DspApiServer {
           delegate.onDecodeFailure(ctx).flatMap {
             case Some(response) =>
               logRejectedPassthroughDecode(ctx)
-                .as(Some(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, response)))
+                .as(Some(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, response)))
                 .uninterruptible
             case None => ZIO.none
           }
@@ -379,8 +382,8 @@ object DspApiServer {
   // tapir logic runs — before the security logic, let alone body decoding — so a body up to this size is
   // buffered for *any* caller, authenticated or not. The switch is made on the *declared* Content-Length
   // alone, so a chunked body is aggregated too — and one that then outgrows this size is answered by Netty
-  // with a bare 413 that never reaches tapir. And the passthrough's own `Connection: close` handling keys
-  // off this threshold (see `bodyPlausiblyUnread`): only a declared length above it can leave a body unread.
+  // with a bare 413 that never reaches tapir. And the `Connection: close` handling of the passthrough and the
+  // ingest routes keys off this threshold (see `bodyPlausiblyUnread`): only a declared length above it can leave a body unread.
   private[core] val maxAggregatedRequestBodySize: Int = 1024 * 1024
 
   private val serverLayer = ZLayer

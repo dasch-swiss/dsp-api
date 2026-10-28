@@ -1,21 +1,19 @@
-# Dsp-Ingest
+# Ingest
 
-The Dsp-Ingest service is designed to streamline and optimize the process of ingesting and managing data within the
-DaSCH Service Platform.
-
-It provides a RESTful [API](https://ingest.dasch.swiss/docs/#/projects) for the digital asset management.
+Ingest manages the digital assets of the DaSCH Service Platform. It is part of DSP-API, which serves its RESTful
+[API](openapi.md) under the `/ingest/` path prefix.
 
 # Assets
 
-Assets are the core of the Dsp-Ingest service. They can be different sort of files, like: images, videos, audios, etc.
-For each asset, the service stores the metadata, its original file and possibly derivative files such as keyframes for
+Assets are the core of ingest. They can be different sort of files, like: images, videos, audios, etc.
+For each asset, ingest stores the metadata, its original file and possibly derivative files such as keyframes for
 videos.
 
 Assets are identified by a unique identifier, the `internal_filename`, eg. `100W6vpQQtG-Fk81LUxUheF.jp2`.
 
 ## Types of Assets
 
-The service supports several different types of assets:
+Ingest supports several different types of assets:
 
 * Images
 * Videos

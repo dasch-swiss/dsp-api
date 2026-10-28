@@ -85,7 +85,7 @@ built from this base, rather than a pinned version. After bumping, sync the same
 
 ### Bumping Fuseki
 
-The Fuseki image is versioned by release-please like knora-api and dsp-ingest — its tag is the DSP
+The Fuseki image is versioned by release-please like knora-api — its tag is the DSP
 release/git version, not a hand-typed one. The only in-repo Fuseki version is the **Jena dist
 version** (`FUSEKI_DIST_VERSION` in `MODULE.bazel`), which drives the `@fuseki_dist` tarball, the
 `/version` report, and the image's OTLP `service.version` resource attribute. See

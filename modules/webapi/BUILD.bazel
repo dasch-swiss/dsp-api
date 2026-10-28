@@ -58,8 +58,7 @@ scala_library(
     deps = [
         ":buildinfo",
         "//modules/bagit",
-        # not //modules/ingest — see the :ingest_classes comment
-        "//modules/ingest:ingest_classes",
+        "//modules/ingest",
         "//modules/jwt",
         "//modules/shacl-validator",
         "//modules/sparql-builder",
@@ -156,7 +155,6 @@ scala_junit_test(
         "@maven//:dev_zio_zio_test_3",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_networknt_json_schema_validator",
-        "@maven//:org_wiremock_wiremock",
     ],
 )
 
@@ -236,8 +234,9 @@ oci_stamped_labels(
 )
 
 # No `user`: inherits the temurin base's default (root) — ops-deploy expects
-# knora-api to run as root. HEALTHCHECK isn't emitted (rules_oci can't); it's a
-# docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
+# knora-api to run as root, and ingest writes assets onto NFS mounts owned by
+# orchestrator-controlled uids. HEALTHCHECK isn't emitted (rules_oci can't); it's
+# a docker-compose concern. Do NOT bake JAVA_TOOL_OPTIONS -- compose/ops-deploy set
 # `-javaagent:... -Xmx...` at runtime.
 oci_image(
     name = "image_amd64",
@@ -250,6 +249,7 @@ oci_image(
     ],
     labels = ":image_labels",
     tars = [
+        "//modules/sipi:runtime_fs_amd64",  # /sbin/sipi, /sipi/**, /usr/bin/{tini,ffmpeg,ffprobe} for ingest
         ":webapi_lib_layer",
         ":scripts_layer",
         ":otel_layer",
@@ -272,6 +272,7 @@ oci_image(
     ],
     labels = ":image_labels",
     tars = [
+        "//modules/sipi:runtime_fs_arm64",
         ":webapi_lib_layer",
         ":scripts_layer",
         ":otel_layer",

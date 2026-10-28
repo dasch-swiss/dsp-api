@@ -21,7 +21,6 @@ import zio.stream.ZStream
 
 import java.io.IOException
 import java.nio.file.StandardOpenOption
-import java.sql.SQLException
 
 case class IngestResult(success: Int = 0, failed: Int = 0) {
   def +(other: IngestResult): IngestResult = IngestResult(success + other.success, failed + other.failed)
@@ -70,10 +69,9 @@ final case class BulkIngestService(
     shortcode: ProjectShortcode,
   ): IO[ImportFolderDoesNotExist.type | BulkIngestInProgress.type, Fiber.Runtime[IoError, IngestResult]] = for {
     _     <- ensureImportFolderExists(shortcode)
-    fiber <- withSemaphoreDaemon(shortcode)(doBulkIngest(shortcode).mapError {
-               case _: IOException  => IoError("Unable to access file system")
-               case _: SQLException => IoError("Unable to access database")
-             }).orElseFail(BulkIngestInProgress)
+    fiber <- withSemaphoreDaemon(shortcode)(
+               doBulkIngest(shortcode).orElseFail(IoError("Unable to access file system")),
+             ).orElseFail(BulkIngestInProgress)
   } yield fiber
 
   private def ensureImportFolderExists(shortcode: ProjectShortcode) =
@@ -82,7 +80,7 @@ final case class BulkIngestService(
       .flatMap(Files.isDirectory(_))
       .filterOrFail(identity)(ImportFolderDoesNotExist)
 
-  private def doBulkIngest(project: ProjectShortcode): IO[IOException | SQLException, IngestResult] =
+  private def doBulkIngest(project: ProjectShortcode): IO[IOException, IngestResult] =
     for {
       _           <- ZIO.logInfo(s"Starting bulk ingest for project $project.")
       importDir   <- storage.getImportFolder(project)

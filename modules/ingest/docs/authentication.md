@@ -4,13 +4,14 @@
 
 Authentication is done via the `Authorization` header.
 For secured endpoints the value of the header must be `Bearer <token>`,
-where `<token>` is a [JWT](https://jwt.io/) token issued by the DSP-API.
+where `<token>` is a [JWT](https://jwt.io/) token issued by DSP-API, for example at login.
 
 The token is a JSON Web Token (JWT) that must contain the following claims:
 
 * `iss` (issuer): The issuer of the token, the DSP-API
 * `sub` (subject): The subject of the token, grants access to certain routes, format described [below](#authorization-and-subject-format).
-* `aud` (audience): The audience of the token, the Dsp-Ingest service specific audience
+* `aud` (audience): The audience of the token, DSP-API's ingest audience (`app.dsp-ingest.audience`), which DSP-API
+  writes into every token it issues
 * `exp` (expiration time): The expiration time of the token, in seconds since epoch
 * `iat` (issued at): The time at which the token was issued, in seconds since epoch
 * `jti` (JWT ID): A unique identifier for the token

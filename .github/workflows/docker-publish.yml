@@ -31,7 +31,7 @@ jobs:
           ca-cert: ${{ secrets.REMOTEBUILD_CA_CERT }}
           client-cert: ${{ secrets.REMOTEBUILD_CLIENT_CERT }}
           client-key: ${{ secrets.REMOTEBUILD_CLIENT_KEY }}
-      - name: Build and publish dsp-api/dsp-ingest/sipi/fuseki images to Dockerhub
+      - name: Build and publish dsp-api/sipi/fuseki images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           nix develop --command just docker-publish ${{ steps.rbe.outputs.flags }}

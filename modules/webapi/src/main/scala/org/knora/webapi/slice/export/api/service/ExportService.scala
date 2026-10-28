@@ -139,7 +139,7 @@ final case class ExportService(
   }
 
   // A resource has at most one file value, so we expose the first one found.
-  // The direct link points at the dsp-ingest "original" download endpoint, addressed by the asset id.
+  // The direct link points at the API's ingest "original" download endpoint, addressed by the asset id.
   private def fileLinkOf(project: KnoraProject, r: ReadResourceV2): Task[Option[FileLink]] =
     ZIO.foreach(ResourceMetadataRules.selectFileValue(r).map { case (_, fc) => ResourceMetadataRules.assetIdOf(fc) }) {
       assetId =>
@@ -147,8 +147,11 @@ final case class ExportService(
           FileLink(
             // never falls back to the derivative's internalMimeType: the url serves the original
             mimeType = info.flatMap(_.metadata.originalMimeType.map(_.value.value)),
-            url =
-              ResourceMetadataRules.originalFileUrl(appConfig.dspIngest.externalBaseUrl, project.shortcode, assetId),
+            url = ResourceMetadataRules.originalFileUrl(
+              appConfig.knoraApi.externalKnoraApiBaseUrl,
+              project.shortcode,
+              assetId,
+            ),
             checksum = info.map(_.original.checksum.value),
             checksumAlgorithm = info.map(_ => ChecksumAlgorithm),
             fileName = info.map(_.originalFilename.value),

@@ -3,7 +3,7 @@
 Custom container image for [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/) used as the triplestore for dsp-api. Built with Bazel (`//modules/fuseki`, rules_oci).
 
 Published to Docker Hub as `daschswiss/apache-jena-fuseki:<dsp-release-version>` (plus `:latest`). The
-image is versioned by release-please, like `knora-api`/`dsp-ingest` — the tag is the DSP release/git
+image is versioned by release-please, like `knora-api` — the tag is the DSP release/git
 version, not the Jena version.
 
 ## What this image is

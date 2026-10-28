@@ -8,10 +8,12 @@ package swiss.dasch.api
 import org.junit.runner.RunWith
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.AggregatedHealth
+import swiss.dasch.infrastructure.FileSystemHealthIndicatorLive
 import swiss.dasch.infrastructure.Health
 import swiss.dasch.infrastructure.HealthCheckService
-import swiss.dasch.infrastructure.Metrics
+import swiss.dasch.infrastructure.HealthCheckServiceLive
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
 import zio.Ref
@@ -27,6 +29,8 @@ import zio.http.URL
 import zio.json.DecoderOps
 import zio.json.EncoderOps
 import zio.json.ast.Json
+import zio.metrics.connectors.prometheus
+import zio.nio.file.Files
 import zio.test.Spec
 import zio.test.TestResult
 import zio.test.ZIOSpecDefault
@@ -95,16 +99,51 @@ class MonitoringEndpointsSpec extends ZIOSpecDefault {
     },
   )
 
-  val spec = suite("MonitoringEndpoints")(healthEndpointsSuite, infoEndpointSuite)
-    .provide(
+  private val healthOverFileSystemSuite = suite("get /health with the file system indicator")(
+    testWithScope("when the folders exist should return status UP without components") {
+      for {
+        response <- executeRequest(Request.get(URL(Path.root / "health")))
+        bodyJson <- response.body.asString
+      } yield assertTrue(
+        response.status == Status.Ok,
+        bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json],
+      )
+    },
+    testWithScope("when a folder is missing should report only the folders component") {
+      for {
+        _         <- ZIO.serviceWithZIO[StorageConfig](c => Files.deleteRecursive(c.tempPath))
+        response  <- executeRequest(Request.get(URL(Path.root / "health")))
+        bodyJson  <- response.body.asString
+        components = bodyJson.fromJson[Json].toOption.flatMap(_.asObject).flatMap(_.get("components"))
+      } yield assertTrue(
+        response.status == Status.ServiceUnavailable,
+        components.flatMap(_.asObject).map(_.keys.toSet).contains(Set("folders")),
+      )
+    },
+  ).provide(
+    MonitoringEndpointsHandler.layer,
+    MonitoringEndpoints.layer,
+    HealthCheckServiceLive.layer,
+    FileSystemHealthIndicatorLive.layer,
+    SpecConfigurations.storageConfigLayer,
+    BaseEndpoints.layer,
+    AuthServiceLive.layer,
+    SpecConfigurations.jwtConfigLayer,
+    prometheus.publisherLayer,
+  )
+
+  val spec = suite("MonitoringEndpoints")(
+    (healthEndpointsSuite + infoEndpointSuite).provide(
       MonitoringEndpointsHandler.layer,
       MonitoringEndpoints.layer,
       MockHealthCheckService.layer,
       BaseEndpoints.layer,
       AuthServiceLive.layer,
       SpecConfigurations.jwtConfigLayer,
-      Metrics.layer,
-    )
+      prometheus.publisherLayer,
+    ),
+    healthOverFileSystemSuite,
+  )
 }
 
 final class MockHealthCheckService(val statusRef: Ref[Health]) extends HealthCheckService {

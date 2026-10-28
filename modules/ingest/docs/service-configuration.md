@@ -1,49 +1,38 @@
 # Configuration
 
-Configuring the service is done through environment variables.
+Ingest runs inside DSP-API and is configured through `INGEST_*` environment variables of the API container, read from
+its own `ingest.conf`. The listening port, logging and token validation are DSP-API's: ingest accepts the tokens
+DSP-API issues, checked against DSP-API's secret, issuer and ingest audience (`KNORA_WEBAPI_DSP_INGEST_AUDIENCE`).
+The full DSP-API configuration is described in the
+[DSP-API documentation](https://docs.dasch.swiss/DSP-API/04-publishing-deployment/configuration/).
 
 There are a couple of groups of variables:
 
-- [Service](#service) - configuration of the service itself, e.g. ports and logging
 - [Storage](#storage) - configuration of the storage, e.g. file paths to asset folder
-- [Jwt](#jwt) - configuration of the JWT authentication, e.g. secret key
+- [Processing](#processing) - how ingest runs Sipi, `ffmpeg` and `ffprobe`, and how much of the machine it uses
 - [Features](#features) - configuration options for enabling or disabling certain features
-
-## Service
-
-| Variable            | Default   | Description                                                                   |
-|---------------------|-----------|-------------------------------------------------------------------------------|
-| `SERVICE_PORT`      | `3340`    | Port on which the service will listen                                         |
-| `SERVICE_HOST`      | `0.0.0.0` | Host on which the service will listen                                         |
-| `SERVICE_LOG_FORMAT`| `text`    | Log output format: `json` for json logging, `text` for human readable logging |
-| `SERVICE_LOG_LEVEL` | `info`    | Log level (trace, debug, info, warn, error, fatal)                            |
 
 ## Storage
 
-| Variable            | Default                   | Description                                              |
-|---------------------|---------------------------|----------------------------------------------------------|
-| `STORAGE_ASSET_DIR` | `localdev/storage/images` | Path to the folder where the assets will be stored       |
-| `STORAGE_TEMP_DIR`  | `localdev/storage/temp`   | Path to the folder where temporary files will be created |
+| Variable                   | Default       | Description                                              |
+|----------------------------|---------------|----------------------------------------------------------|
+| `INGEST_STORAGE_ASSET_DIR` | `/opt/images` | Path to the folder where the assets will be stored       |
+| `INGEST_STORAGE_TEMP_DIR`  | `/opt/temp`   | Path to the folder where temporary files will be created |
 
+Both folders must be mounted read-write into the API container.
 The layout in these folders is explained in detail in the chapter ["Filesystem Setup"](service-filesystem-setup.md).
 
-## Jwt
+## Processing
 
-| Variable           | Default                                             | Description                                                                                                                                               |
-|--------------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `JWT_SECRET`       | `dev-only-insecure-jwt-secret-change-me`            | Secret key used to sign the JWT tokens, must be a valid H256 secret                                                                                       |
-| `JWT_ISSUER`       | `http://0.0.0.0:3333`                               | Expected issuer claim in the JWT                                                                                                                          |
-| `JWT_AUDIENCE`     | `http://localhost:3340`                             | Expected audience claim in the JWT                                                                                                                        |
-| `JWT_DISABLE_AUTH` | `false`                                             | Disable JWT authentication, useful for local development. <br/>When set to `true` protected routes still expect a `Bearer` token but it can be any value. |
-
-## Database
-
-| Variable      | Default                                         | Description                                                                                                         |
-|---------------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `DB_JDBC_URL` | `jdbc:sqlite:localdev/storage/db/ingest.sqlite` | Jdbc Url for the sqlite database. Everything after `jdbc:sqlite:` is the path to the file where the data is stored. |
+| Variable                      | Default                        | Description                                                                                                                                           |
+|-------------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `INGEST_SIPI_USE_LOCAL_DEV`   | `false`                        | `false` runs the Sipi CLI of the API image; `true` runs it through `docker run`, for local development                                                |
+| `INGEST_SIPI_LOCAL_DEV_IMAGE` | `daschswiss/knora-sipi:latest` | The Sipi image `docker run` starts, read only when `INGEST_SIPI_USE_LOCAL_DEV` is `true`                                                              |
+| `INGEST_BULK_MAX_PARALLEL`    | `8`                            | Number of files a _Bulk Ingest_ processes in parallel                                                                                                 |
+| `INGEST_EXECUTOR_CPU_SHARE`   | `0.5`                          | Share of the available processors, in `(0, 1]`, that sizes the ingest thread pool and the number of concurrent Sipi, `ffmpeg` and `ffprobe` processes |
 
 ## Features
 
-| Variable               | Default | Description                                                                                                                                             |
-|------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ALLOW_ERASE_PROJECTS` | `false` | If set to `true`, the endpoint `DELETE /projects/:shortcode/erase` will be enabled. This endpoint can remove all data related to a project permanently. |
+| Variable                      | Default | Description                                                                                                                                                    |
+|-------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `INGEST_ALLOW_ERASE_PROJECTS` | `false` | If set to `true`, the endpoint `DELETE /ingest/projects/:shortcode/erase` will be enabled. This endpoint can remove all data related to a project permanently. |
