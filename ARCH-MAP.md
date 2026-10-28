@@ -953,7 +953,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `MainQueryResultProcessor`, `QueryTraverser`, `PrequeryPatternOrdering`, `ConstructTransformer`,
     `SelectTransformer`, `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`,
     `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`,
-    `LuceneScope`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
+    `LuceneScope`, `MatchFulltextLookup`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
     `SearchTimeoutException`, `ResourceCountV2`, and the port `ProjectDataGraphs`
 - **Public interface**: the `SearchResponderV2` trait (`gravsearchV2`, `gravsearchCountV2`,
     `fulltextSearchV2`, `fulltextSearchCountV2`, `searchResourcesByLabelV2`,
@@ -1019,10 +1019,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         through `ProjectService` or `KnoraProjectService` - enforcement: review.
     - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
-        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). A scoped Gravsearch
-        `matchFulltext` lookup passes `luceneHitLimit`; an unscoped one still inherits Jena's 10k default
-        (DEV-7492) - enforcement: review (the `*MatchFulltext*` prequery goldens). This GRAPH-naming
+        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). This GRAPH-naming
         SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
+    - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
+        runs a `matchFulltext` prequery behind `FulltextBreadthGuard` - enforcement: static-analysis, textual
+        (`//tools/lint:gravsearch_prequery_seam`, part of `just check`; a prequery path in a file that builds no
+        transformer is review). The probe uses the lookup's own scope - enforcement: test
+        (`GravsearchFulltextBreadthGuardSpec`).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
@@ -1723,8 +1726,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     released through. It underpins Application composition operationally without hosting domain logic.
 - **Key entities**: `bazel_dep`, `scala_config`, `scala_deps`, `image_versions`, `FUSEKI_DIST_VERSION`,
     `buildinfo`, `oci_config_label`, `ext_scalafmt`, the wrapped `scala_library` / `scala_binary` macros in
-    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `require-bazel`,
-    `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
+    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `gravsearch_prequery_seam`,
+    `require-bazel`, `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
 - **Public interface**: `just <recipe>`, the sole entry point, enumerated by `just --list` (`fmt`, `check`,
     `header-fix`; `test`, `test-unit`, `test-it`, `test-e2e`, `test-ingest*`; `docker-build*`,
     `docker-publish*`; the `stack-*` lifecycle; `docs-*`; `markdownlint`; `structurizer`; `clean*`); the
