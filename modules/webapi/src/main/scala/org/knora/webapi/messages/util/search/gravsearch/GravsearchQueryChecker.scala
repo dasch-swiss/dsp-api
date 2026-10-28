@@ -172,5 +172,6 @@ object GravsearchQueryChecker {
     OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
     OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFImageService,
   )
 }

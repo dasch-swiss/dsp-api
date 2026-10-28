@@ -441,6 +441,17 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       .withRdfLabelEn("Still image file value has IIIF base URL")
       .withRdfCommentEn("The IIIF base URL of a still image file value.")
 
+  private val StillImageFileValueHasIIIFImageService =
+    makeOwlDatatypeProperty(KA.StillImageFileValueHasIIIFImageService, XSD.ANYURI)
+      .withSubPropertyOf(KA.ValueHas)
+      .withSubjectType(KA.StillImageFileValue)
+      .withRdfLabelEn("Still image file value has IIIF image service")
+      .withRdfCommentEn(
+        "The id of the IIIF Image API service that serves this still image file. " +
+          "Append /info.json to read the sizes the service offers to the requesting user. " +
+          "The id names the service; it does not grant access to the image.",
+      )
+
   private val StillImageFileValueHasExternalUrl =
     makeOwlDatatypeProperty(KA.StillImageFileValueHasExternalUrl, XSD.ANYURI)
       .withSubPropertyOf(KA.ValueHas)
@@ -657,6 +668,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     KA.StillImageFileValueHasDimX        -> ExactlyOne,
     KA.StillImageFileValueHasDimY        -> ExactlyOne,
     KA.StillImageFileValueHasIIIFBaseUrl -> ExactlyOne,
+    // ZeroOrOne: placeholder file values have no image service.
+    KA.StillImageFileValueHasIIIFImageService -> ZeroOrOne,
   )
 
   private val StillImageExternalFileValueCardinalities = Map(
@@ -866,6 +879,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     StillImageFileValueHasDimY,
     StillImageFileValueHasExternalUrl,
     StillImageFileValueHasIIIFBaseUrl,
+    StillImageFileValueHasIIIFImageService,
     SubjectType,
     TextValueAsHtml,
     TextValueAsXml,

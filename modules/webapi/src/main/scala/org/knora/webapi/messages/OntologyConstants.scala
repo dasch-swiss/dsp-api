@@ -834,9 +834,11 @@ object OntologyConstants {
     // deprecated, use StillImageFileValueHasExternalUrl instead
     val FileValueHasExternalUrl: IRI = KnoraApiV2PrefixExpansion + "fileValueHasExternalUrl"
 
-    val StillImageFileValueHasDimX: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
-    val StillImageFileValueHasDimY: IRI        = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
-    val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
+    val StillImageFileValueHasDimX: IRI             = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
+    val StillImageFileValueHasDimY: IRI             = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
+    val StillImageFileValueHasIIIFBaseUrl: IRI      = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
+    val StillImageFileValueHasIIIFImageService: IRI =
+      KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFImageService"
     val StillImageFileValueHasExternalUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasExternalUrl"
     val ExternalUrl: IRI                       = KnoraApiV2PrefixExpansion + "externalUrl"
 
