@@ -2,7 +2,7 @@
 plan: docs/specs/2026-10-20-move-ingest-into-webapi/02-feat-move-ingest-into-webapi-plan.md
 target_repo: /Users/raitisveinbahs/work/dsp-api
 base_commit: ce8c74195
-branch: docs/move-ingest-into-webapi-brief
+branch: feat/serve-ingest-from-dsp-api
 started: 2026-10-26
 problem: >
   dsp-ingest runs as a second service next to dsp-api: two services to build, deploy, configure and
@@ -21,7 +21,7 @@ status: in-progress
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | ce8c74195 | docs/move-ingest-into-webapi-brief | squash | in-progress | — |
+| dsp-api | ce8c74195 | feat/serve-ingest-from-dsp-api | squash | in-progress | — |
 
 ## Phases
 
@@ -31,6 +31,7 @@ status: in-progress
 | 2 | reviewed | dsp-api@1c0547439 | 2 |
 | 3 | reviewed | dsp-api@19ed77e85 | 2 |
 | 4 | reviewed | dsp-api@c35b1375d | 1 |
+| 5 | reviewed | dsp-api@2de395c9d | 1 |
 
 ## Chunk queue
 
@@ -58,6 +59,10 @@ status: in-progress
 | 4.4 | dsp-api | ingest IngestServiceSpec, BulkIngestServiceSpec, api/SipiClientMock.scala | 4.3 | "Add an IngestServiceSpec case with one permit"; "Add an IngestServiceSpec case where a failing SipiClient fails only that ingest" | one-permit ingest/export/import complete; failing transcode isolated | backup e63626fcf | — |
 | 4.5 | dsp-api | webapi slice/ingest/IngestServerEndpoints.scala(+Spec), IngestModule.scala, DspIngestClient.scala | 4.2 | "In IngestServerEndpoints, run the server logic ... on the ingest pool"; "Add an IngestServerEndpointsSpec case" | non-monitoring logic and forked bulk job on ingest- threads; health not | plan Phase 4 | — |
 | 4.6 | dsp-api | — (verification) | 4.1–4.5 | "Run bazel test ingest+webapi"; "Run just test-e2e"; "Run just check" | all pass | plan Phase 4 tail | — |
+| 5.1 | dsp-api | webapi ResourceMetadataRules.scala, FairResourcesLive.scala, ExportService.scala, slice/fair/ports/FairResources.scala; specs ResourceMetadataRulesSpec, FairResourcesLiveSpec, ExportServiceSpec(+__oai.txt golden) | — | "Change ResourceMetadataRules.originalFileUrl"; "Pass KnoraApi.externalKnoraApiBaseUrl from FairResourcesLive"; "Pass KnoraApi.externalKnoraApiBaseUrl from ExportService"; "Update FairResourcesLiveSpec, ExportServiceSpec and golden files" | links are `<api external base>/ingest/projects/<sc>/assets/<id>/original`; golden diff changes only host and path | ResourceMetadataRules § originalFileUrl; ExportService § fileLinkOf | — |
+| 5.2 | dsp-api | webapi AppConfig.scala (DspIngestConfig), application.conf, AppConfigSpec, JwtServiceLiveSpec | 5.1 | "Remove externalBaseUrl from DspIngestConfig and external-base-url from application.conf" | DspIngestConfig has only audience; no external-base-url key | AppConfig § DspIngestConfig | — |
+| 5.3 | dsp-api | test-e2e FairEndpointsE2ESpec | 5.1 | "Update the E2E specs asserting original-file links" | FAIR JSON-LD E2E asserts the API-host /ingest/ original link | FairEndpointsE2ESpec § JSON-LD test | — |
+| 5.4 | dsp-api | — (verification) | 5.1–5.3 | "Run bazel test //modules/webapi:test"; "Run just test-e2e"; "Run just check" | all pass | plan Phase 5 tail | — |
 
 ## Chunks
 
@@ -92,12 +97,17 @@ status: in-progress
 | 4.5 | dsp-api | complete | 2ad0ec52b | Server logic of every non-monitoring ingest endpoint on IngestExecutor.run (security logic unchanged); DspIngestClientLive export/import/erase on the executor; IngestExecutor in IngestModule's shared services; spec: forked bulk job logs on an ingest thread, health resumes on none (canary: swapped wrapping fails both) | none |
 | 4.R1 | dsp-api | complete | ed62ff19e | Review fix round 1 (consistency + scala-zio Warnings): IngestExecutor doc names the bounded work only; one-permit test name states Sipi is mocked; bulk-ingest log poll spaced 20 ms | none |
 | 4.6 | dsp-api | partial | — | Verification: ingest:test 222 and webapi:test 2642 pass; just check passes after ed62ff19e; test-e2e 1024/1025 pass, the failure is the pre-existing ValueHasXmlOnValueWriteE2ESpec 6000-tag timeout (fails on the Phase 3 base too), so its checkbox stays open | pre-existing E2E failure |
+| 5.1 | dsp-api | complete | eca5d18a3 | originalFileUrl builds `<api external base>/ingest/projects/<sc>/assets/<id>/original`; FairResourcesLive takes KnoraApi (no DspIngestConfig); ExportService uses appConfig.knoraApi; specs and the OAI golden change only host and path (canary: dropping `/ingest` fails ResourceMetadataRulesSpec and 6 ExportServiceSpec cases) | none |
+| 5.2 | dsp-api | complete | 61916359f | DspIngestConfig(audience) only; external-base-url and its env var removed from application.conf; AppConfigSpec and JwtServiceLiveSpec adjusted; webapi:test passes | none |
+| 5.3 | dsp-api | complete | 8923d3f93 | FairEndpointsE2ESpec JSON-LD case asserts `<api external base>/ingest/projects/0803/assets/` (canary: the pre-5.1 link builder fails it); MetadataEndpointsE2ESpec asserts no file link, so it needed no change | none |
+| 5.4 | dsp-api | complete | — | Verification: webapi:test passes; just check passes; test-e2e 1024/1026 (the failures are the pre-existing ValueHasXmlOnValueWriteE2ESpec 6000-tag timeout and the JUnit listener NPE reporting it, as in Phase 4), so its checkbox is ticked with that note | none |
+| 5.R1 | dsp-api | complete | 07be06831 | Review fix round 1 (scala-zio/dune DUNE-002/consistency Warning: stale `app.dsp-ingest.external-base-url` row in docs/04-publishing-deployment/configuration.md removed; dune DUNE-003: originalFileUrl scaladoc and IngestServerEndpoints' `prefix` name each other) | none |
 
 ## Deferrals
 
 - 2026-10-27: Phases 2-4 of the previous plan shape (slice move, rebuilt API layer, executor) were discarded by owner
   decision (minimal diff; `modules/ingest` keeps its structure). Their commits are preserved on branch
-  `backup/docs/move-ingest-into-webapi-brief` (tip `11c2df207`); the Phases table rows 2-3 recorded there are reset,
+  `backup/feat/serve-ingest-from-dsp-api` (tip `11c2df207`); the Phases table rows 2-3 recorded there are reset,
   and Phase 2 onwards restarts from the rewritten plan at `99963d79e`.
 
 - 2026-10-27 (Phase 2 review): `ARCH-MAP.md` still says `//modules/ingest` is the only consumer of `//modules/sipi:runtime_fs_*` (sipi "Used by" and visibility boundary rule). Deferred to Phase 6's dune-map refresh; added as a Phase 6 checkbox.
@@ -106,6 +116,7 @@ status: in-progress
 - 2026-10-27 (Phase 3 review, after the 2-round cap): dune re-review suggests replacing the path-template route check (`IngestServerEndpoints.isIngestRoute`) and the passthrough's attribute check with one shared "closes connection on early rejection" endpoint attribute in `slice/common/api`; untested: early-close on a 415/decode failure of an ingest route. For the session's final review.
 - 2026-10-27 (Phase 4 review, deferred for the diff budget): dune DUNE-001 (Warning) suggests a grep or architecture test asserting that `BagIt.create`/`readAndValidateZip` and the process call appear only inside `IngestExecutor.withPermit`, so a copied call site cannot escape the bound; DUNE-002 suggests one wrapper for `DspIngestClientLive`'s `executor.run` calls. Not applied: owner asks to defer findings over growing the diff. For the session's final review.
 - 2026-10-27 (Phase 4): the phase measures +402/−30 (`git diff --shortstat c35b1375d..HEAD -- . ':!docs/specs'`) against an estimate of +220/−10, more than half over; most of it is tests (one-permit, failing Sipi, thread-recording endpoint cases). The plan asks for an owner check before Phase 5.
+- 2026-10-28 (Phase 5 re-review, advisory, kept out for the diff budget): dune DUNE-002 and consistency suggest one shared `ingest` prefix (expose `IngestServerEndpoints.prefix` to `originalFileUrl`) or a test that fails when the route prefix changes alone; today the two literals are linked by comments only, and IngestEndpointsE2ESpec catches a route rename but not the stale link. For the session's final review.
 
 ## Deviations
 
@@ -129,3 +140,5 @@ status: in-progress
 - Phase 4 review (consistency, code-simplicity, dune, scala-zio; sonnet): fixed in ed62ff19e (overstated IngestExecutor doc; one-permit test name overstated coverage, since Sipi is mocked and CommandExecutorLive's permit is never taken there; hot-spinning log poll). Refuted: the health-off-pool supervisor test passing for the wrong reason (measured: wrapping monitoring instead of the other handlers fails both the health and the bulk-ingest case); inlining the wrapper literal in CommandExecutorLiveSpec as `oomExpendable` (the literal pins the plan's command form). Fail-closed `&&` wrapper recorded under Deviations.
 - Phase 4 review suggestions not applied: kill the child process on interruption (`attemptBlockingIO(cmd !< logger)` leaves an orphan running outside the permit bound; pre-existing); `onExecutor` does not shift back when not locked, so the caller's continuation after `IngestExecutor.run` (tapir response encoding, webapi code after `DspIngestClientLive` calls) stays on an `ingest-` thread until the next yield, `<* ZIO.yieldNow` would hand it back; `pool.shutdown()` does not wait for running daemon jobs; the "Executing command" log now includes the `/bin/sh -c` prefix; trim duplicated failing-Sipi tests and IngestExecutorSpec cases (the plan's checkboxes ask for both Sipi cases).
 - Phase 4: `just test-e2e` 1024/1025 real cases pass; the one failure is the pre-existing ValueHasXmlOnValueWriteE2ESpec "6000 standoff tags" timeout (plus a JUnit listener NPE reporting it), so the checkbox stays open as in Phase 3. The Linux-only `oom_score_adj` spec case does not run on macOS.
+- Phase 5 review (consistency, code-simplicity, dune, scala-zio; sonnet): fixed in 07be06831. Not applied: the `:443` in the test base URL (`externalKnoraApiBaseUrl` omits only port 80; http/80 would change the golden's scheme, which the owner rule forbids); named args for the `KnoraApi` fixture; one val instead of `api`/`apiBase`; drop the weaker `/original` E2E assertion; a shared prefix constant instead of cross-reference comments (adds a resources -> ingest dependency); FairResourcesLive taking the whole `KnoraApi` (FairRestService does the same); old-shape `ingest.example.org` URLs in fair domain/writer fixtures (opaque pass-through strings). Deferred to Phase 6: stale `app.dsp-ingest.base-url` row in configuration.md (removed in Phase 3) and the ARCH-MAP fingerprints (DUNE-001).
+- Phase 5 measures +50/−42 (`git diff --shortstat 2de395c9d..HEAD -- . ':!docs/specs'`) against an estimate of +40/−40, within half.

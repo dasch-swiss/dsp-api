@@ -265,16 +265,16 @@ Checks:
 
 ### Phase 5: Emit new original-file links on the API host
 
-- [ ] Change `ResourceMetadataRules.originalFileUrl` to take the API's external base URL and build `<base>/ingest/projects/<shortcode>/assets/<assetId>/original`
-- [ ] Pass `KnoraApi.externalKnoraApiBaseUrl` from `slice/resources/service/FairResourcesLive.scala` (replacing `ingestConfig.externalBaseUrl`) and drop its `DspIngestConfig` dependency
-- [ ] Pass `KnoraApi.externalKnoraApiBaseUrl` from `slice/export/api/service/ExportService.scala` (`fileLinkOf`) instead of `appConfig.dspIngest.externalBaseUrl`
-- [ ] Remove `externalBaseUrl` from `DspIngestConfig` and `external-base-url` from `application.conf`
-- [ ] Update `FairResourcesLiveSpec`, `ExportServiceSpec` and any golden files they assert; the golden diff only changes the link host and path
-- [ ] Update the E2E specs asserting original-file links (`MetadataEndpointsE2ESpec`, FAIR E2E specs)
-- [ ] Run `bazel test //modules/webapi:test`; it passes
-- [ ] Run `just test-e2e`; it passes
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Change `ResourceMetadataRules.originalFileUrl` to take the API's external base URL and build `<base>/ingest/projects/<shortcode>/assets/<assetId>/original`
+- [x] Pass `KnoraApi.externalKnoraApiBaseUrl` from `slice/resources/service/FairResourcesLive.scala` (replacing `ingestConfig.externalBaseUrl`) and drop its `DspIngestConfig` dependency
+- [x] Pass `KnoraApi.externalKnoraApiBaseUrl` from `slice/export/api/service/ExportService.scala` (`fileLinkOf`) instead of `appConfig.dspIngest.externalBaseUrl`
+- [x] Remove `externalBaseUrl` from `DspIngestConfig` and `external-base-url` from `application.conf`
+- [x] Update `FairResourcesLiveSpec`, `ExportServiceSpec` and any golden files they assert; the golden diff only changes the link host and path
+- [x] Update the E2E specs asserting original-file links (`MetadataEndpointsE2ESpec`, FAIR E2E specs)
+- [x] Run `bazel test //modules/webapi:test`; it passes
+- [x] Run `just test-e2e`; it passes (all but the pre-existing `ValueHasXmlOnValueWriteE2ESpec` "6000 standoff tags" timeout)
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 6: Update documentation and the architecture map
 
