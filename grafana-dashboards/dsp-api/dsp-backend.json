@@ -4,8 +4,8 @@
   "metadata": { "name": "bdpr1ptxz49hcd" },
   "spec": {
     "title": "Backend",
-    "description": "Health and resource overview for the three JVM services of a DSP stack: dsp-api, dsp-ingest and the Fuseki triplestore, selected by the Instance variable. Fuseki request durations come from dsp-api's own instrumentation (fuseki_request_duration, tagged type/isGravsearch/isMaintenance/isSearch in TriplestoreServiceLive), not from Fuseki itself.",
-    "tags": ["dsp-api", "dsp-ingest", "fuseki"],
+    "description": "Health and resource overview for the two JVM services of a DSP stack: dsp-api (whose process also runs ingest) and the Fuseki triplestore, selected by the Instance variable. Fuseki request durations come from dsp-api's own instrumentation (fuseki_request_duration, tagged type/isGravsearch/isMaintenance/isSearch in TriplestoreServiceLive), not from Fuseki itself.",
+    "tags": ["dsp-api", "fuseki"],
     "cursorSync": "Crosshair",
     "editable": true,
     "preload": false,
@@ -226,7 +226,7 @@
         "spec": {
           "id": 1,
           "title": "API JVM Memory",
-          "description": "dsp-api JVM memory: used against max, summed across heap and non-heap (no area filter, matching the INGEST and DB panels). Uses jvm_memory_used_bytes / jvm_memory_max_bytes — the older jvm_memory_bytes_used / jvm_memory_bytes_max spelling this panel previously used no longer exists in Prometheus and rendered nothing.",
+          "description": "dsp-api JVM memory: used against max, summed across heap and non-heap (no area filter, matching the DB panel). Uses jvm_memory_used_bytes / jvm_memory_max_bytes — the older jvm_memory_bytes_used / jvm_memory_bytes_max spelling this panel previously used no longer exists in Prometheus and rendered nothing.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -637,202 +637,12 @@
           }
         }
       },
-      "panel-12": {
-        "kind": "Panel",
-        "spec": {
-          "id": 12,
-          "title": "INGEST CPU usage %",
-          "description": "Process CPU time for dsp-ingest on the selected instance, as a fraction of one core.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "rate(process_cpu_seconds_total{instance=\"$instance\", service=\"DSP_iiif_ingest\"}[6m]) * (6 * 60) / 100",
-                        "instant": false,
-                        "range": true,
-                        "legendFormat": "__auto"
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "timeseries",
-            "version": "12.1.0-88106",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "color": { "mode": "palette-classic" },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "barWidthFactor": 0.6,
-                    "drawStyle": "line",
-                    "fillOpacity": 0,
-                    "gradientMode": "none",
-                    "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-                    "insertNulls": false,
-                    "lineInterpolation": "linear",
-                    "lineWidth": 1,
-                    "pointSize": 5,
-                    "scaleDistribution": { "type": "linear" },
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "stacking": { "group": "A", "mode": "none" },
-                    "thresholdsStyle": { "mode": "off" }
-                  },
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      { "color": "green", "value": null },
-                      { "color": "red", "value": 80 }
-                    ]
-                  },
-                  "unit": "percentunit"
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
-                "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
-              }
-            }
-          }
-        }
-      },
-      "panel-9": {
-        "kind": "Panel",
-        "spec": {
-          "id": 9,
-          "title": "INGEST JVM Memory",
-          "description": "dsp-ingest JVM heap: used against max.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "A",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "avg(jvm_memory_max_bytes{service=\"DSP_iiif_ingest\", instance=\"$instance\"})",
-                        "instant": false,
-                        "range": true,
-                        "legendFormat": "__auto"
-                      }
-                    }
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "refId": "B",
-                    "query": {
-                      "datasource": { "name": "grafanacloud-prom" },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "version": "v0",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "avg(jvm_memory_used_bytes{service=\"DSP_iiif_ingest\", instance=\"$instance\"})",
-                        "instant": false,
-                        "range": true,
-                        "legendFormat": "__auto"
-                      }
-                    }
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "timeseries",
-            "version": "12.1.0-88106",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "color": { "mode": "palette-classic" },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "barWidthFactor": 0.6,
-                    "drawStyle": "line",
-                    "fillOpacity": 0,
-                    "gradientMode": "none",
-                    "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-                    "insertNulls": false,
-                    "lineInterpolation": "linear",
-                    "lineWidth": 1,
-                    "pointSize": 5,
-                    "scaleDistribution": { "type": "linear" },
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "stacking": { "group": "A", "mode": "none" },
-                    "thresholdsStyle": { "mode": "off" }
-                  },
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      { "color": "green", "value": null },
-                      { "color": "red", "value": 80 }
-                    ]
-                  },
-                  "unit": "decbytes"
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
-                "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
-              }
-            }
-          }
-        }
-      },
       "panel-13": {
         "kind": "Panel",
         "spec": {
           "id": 13,
           "title": "DB CPU usage % (per core, add avg() if needed)",
-          "description": "Container CPU for the Fuseki triplestore, per core. Unlike the API and INGEST panels this reads cAdvisor's container_cpu_usage_seconds_total, so it is not aggregated across cores.",
+          "description": "Container CPU for the Fuseki triplestore, per core. Unlike the API panels this reads cAdvisor's container_cpu_usage_seconds_total, so it is not aggregated across cores.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1097,40 +907,6 @@
                         "element": { "kind": "ElementReference", "name": "panel-14" },
                         "x": 12,
                         "y": 22,
-                        "width": 12,
-                        "height": 8
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          {
-            "kind": "RowsLayoutRow",
-            "spec": {
-              "title": "DSP-INGEST",
-              "collapse": false,
-              "layout": {
-                "kind": "GridLayout",
-                "spec": {
-                  "items": [
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": { "kind": "ElementReference", "name": "panel-12" },
-                        "x": 0,
-                        "y": 0,
-                        "width": 12,
-                        "height": 8
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "element": { "kind": "ElementReference", "name": "panel-9" },
-                        "x": 12,
-                        "y": 0,
                         "width": 12,
                         "height": 8
                       }
