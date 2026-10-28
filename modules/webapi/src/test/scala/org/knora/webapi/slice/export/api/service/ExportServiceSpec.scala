@@ -103,8 +103,8 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
   val user       = TestDataFactory.User.rootUser
   val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/Vk0NruDmRyeZCZvOVwXOnw")
 
-  // distinct from base-url so the OAI test proves the file link uses external-base-url
-  val publicIngestUrl = "https://ingest.example.org"
+  // distinct from the internal URL so the OAI test proves the file link uses the API's external base URL
+  val publicApiUrl = "https://api.example.org:443"
 
   // The only asset in the 1612 fixture that has a file value, and so the only OAI record with a `file`.
   val fixtureAssetId   = "B1D0OkEgfFp-Cew2Seur7Wi"
@@ -172,7 +172,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       })
 
   private val expectedUrl =
-    s"$publicIngestUrl/projects/$fixtureShortcode/assets/$fixtureAssetId/original"
+    s"$publicApiUrl/ingest/projects/$fixtureShortcode/assets/$fixtureAssetId/original"
 
   // the resource's creationDate, not a sidecar field
   private val expectedDateCreated = Some("2026-03-19T10:00:00Z")
@@ -387,7 +387,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           exportService <- ZIO.service[ExportService]
           json          <- exportService.exportResourcesOai(project, user)
         } yield assertGolden(json, "oai") &&
-          assertTrue(json.contains(s"$publicIngestUrl/projects/"))
+          assertTrue(json.contains(s"$publicApiUrl/ingest/projects/"))
       },
       test("exportResourcesOai reports the original's mimetype, not the derivative's") {
         for {
@@ -573,7 +573,11 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       assetInfoServiceLayer,
       ConstructResponseUtilV2.layer,
       AppConfig.layer.map(env =>
-        env.update[AppConfig](c => c.copy(dspIngest = c.dspIngest.copy(externalBaseUrl = publicIngestUrl))),
+        env.update[AppConfig](c =>
+          c.copy(knoraApi =
+            c.knoraApi.copy(externalProtocol = "https", externalHost = "api.example.org", externalPort = 443),
+          ),
+        ),
       ),
       CacheManager.layer,
       CsvService.layer,
