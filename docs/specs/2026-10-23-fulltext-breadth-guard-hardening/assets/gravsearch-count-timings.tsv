@@ -1,0 +1,35 @@
+# Gravsearch matchFulltext count prequery on stage, 2026-10-23, sequential runs via timeq.sh
+# (dsp vre sparql query -s stage --timeout 300; the passthrough enforces 120 s server-side, so ERR at ~120 s is
+# a store timeout). Query rendered by gen.py: "classed" = VALUES { ekws:Object } (0812), "classless" = VALUES of
+# all 936 resource classes on stage (resclasses.csv), as the generator emits for knora-api:Resource. Unscoped:
+# stage lacks the Lucene graph field. Candidates: see probe-candidates.tsv.
+# Columns: shape, term, run, count (resources), wall-clock seconds.
+shape	term	run	count	seconds
+classless	Zeitglöcklein	1	2	1.02
+classless	Zeichnung*	1	1054	73.18
+classless	Zeichnung*	2	1054	72.29
+classless	Zeichnung*	3	1054	72.80
+classless	Papier*	1	ERR	120.31
+classless	Brief*	1	ERR	120.34
+classed	Brief*	1	304	1.32
+classed	Bild*	1	37553	15.83
+classed	Bild*	2	37553	5.36
+classed	Bild*	3	37553	4.67
+classed	ver*	1	7883	21.42
+classed	ver*	2	7883	7.96
+classed	ver*	3	7883	6.92
+classed	der	1	48141	33.41
+classed	der	2	48141	15.69
+classed	der	3	48141	12.90
+classed	Basel*	1	2388	28.72
+classed	Basel*	2	2388	15.84
+classed	Basel*	3	2388	13.61
+classed	un*	1	18523	94.56
+classed	un*	2	18523	72.36
+classed	un*	3	18523	73.31
+classed	in de	1	ERR	120.24
+classed	in de	2	ERR	120.22
+classed	in de	3	ERR	120.23
+# Control: classless Zeichnung* with the outer VALUES type join and its isDeleted filter removed
+# (otherwise identical): count 1054 in 0.79 s (one run). The 936-class type join is the classless cost.
+control-no-type-join	Zeichnung*	1	1054	0.79

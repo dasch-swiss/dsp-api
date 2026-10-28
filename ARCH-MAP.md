@@ -1004,8 +1004,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `core/LayersLive.scala` should depend on `SearchResponderV2Module.Provided`, not on individual
         internals - enforcement: docs-only. Currently violated by its direct import of
         `messages.util.search.gravsearch.transformers.OntologyInferencer`.
-    - Every Gravsearch stage opens an INTERNAL span via `stageSpan` and leaves status `UNSET` on user errors -
-        enforcement: review (`docs/observability/instrumentation-recipe.md`).
+    - Every Gravsearch stage opens an INTERNAL span via `stageSpan`; a client rejection (`BadRequestException`)
+        leaves status `UNSET` with `gravsearch.exit_reason = bad_request`, any other failure gets the sanitized
+        `ERROR` - enforcement: review (`docs/observability/instrumentation-recipe.md`) and static-analysis
+        (`SearchResponderV2StageSpanSpec`).
     - Query-builder output is pinned by `GoldenTest` snapshots (`SearchQueriesSpec`,
         `SearchFulltextQuerySpec`, `GetResourceWithSpecifiedPropertiesGravsearchQuerySpec`,
         `GetIncomingImageLinksGravsearchQuerySpec`); a change to emitted SPARQL shows up as a golden diff -
@@ -1041,8 +1043,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `SearchResponderV2Module.Dependencies`, and its adapter into `core/LayersLive.scala`
         (`ProjectDataGraphsLive`).
 - **Durable state**: none written. Search is read-only over Fuseki named graphs, issuing only `Select` and
-    `Construct`. In memory: `FulltextBreadthGuard`'s `zio.cache.Cache` of per-term breadth probes, single
-    writer inside `FulltextBreadthGuard`. `OntologyCache` is read-only here; its writer is webapi-ontology.
+    `Construct`. In memory, all owned by `FulltextBreadthGuard` and written only by its cache lookup (built in
+    `FulltextBreadthGuard.make`): the `zio.cache.Cache` of breadth verdicts keyed by the probe SPARQL
+    (`BreadthKey`; a count kept for `cache-ttl`, a failed probe for `failure-ttl`), and the `OverCapMemo` of
+    over-cap keys that refuses a known-broad term before its query or probe starts. Probe fibers run in the
+    guard's layer scope, not the request's: they outlive a request whose `verdict-wait` ran out and are
+    interrupted only when that scope closes. `OntologyCache` is read-only here; its writer is webapi-ontology.
     - The component spans three package roots (`slice/search`, `messages/util/search`, `responders/v2`) with
         no package-level boundary between them.
     - `SearchResponderV2` is about 1300 lines and owns both the Gravsearch pipeline orchestration and its
