@@ -118,13 +118,13 @@ under an `INGEST_` prefix (REQ-4.1); the old unprefixed ingest variables are ign
       - "3333:3333"                       # 3340 is gone; ingest is under :3333/ingest
     volumes:
       - ./sipi/images:/opt/images         # read-write: ingest writes assets here; sipi reads the same host dir
-      - ./sipi/tmp-dsp-ingest:/opt/tmp    # ingest temp dir; bulk ingest reads <temp>/import/<shortcode>
+      - ./sipi/tmp-dsp-ingest:/opt/temp    # ingest temp dir; bulk ingest reads <temp>/import/<shortcode>
     environment:
       # ...existing KNORA_WEBAPI_* settings unchanged, except:
       # removed: KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340   (dsp-api no longer reads it)
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340       # unchanged; dsp-api mints and checks it
       - INGEST_STORAGE_ASSET_DIR=/opt/images
-      - INGEST_STORAGE_TEMP_DIR=/opt/tmp
+      - INGEST_STORAGE_TEMP_DIR=/opt/temp
       - INGEST_ALLOW_ERASE_PROJECTS=true  # ingest-side erase gate (ingest container set ALLOW_ERASE_PROJECTS)
       - ALLOW_ERASE_PROJECTS=true         # already set on api today; drives dsp-api's own flag only
       # INGEST_SIPI_USE_LOCAL_DEV is left unset (default false): the Sipi CLI shipped in the api image is used
@@ -217,32 +217,32 @@ start-stack today, and none is added.
 
 - [ ] `src/dsp_tools/resources/start-stack/versions.env`: `API` (and `DB`, which dsp-api tags in lockstep) set to the
   dsp-api release from H1
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.yml`: remove the `ingest` service and the `ingest-db`
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.yml`: remove the `ingest` service and the `ingest-db`
   volume
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.yml`: remove `KNORA_WEBAPI_DSP_INGEST_BASE_URL` from `api`
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.yml`: add to `api` the ingest env vars from
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.yml`: remove `KNORA_WEBAPI_DSP_INGEST_BASE_URL` from `api`
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.yml`: add to `api` the ingest env vars from
   *start-stack api service* (`INGEST_STORAGE_ASSET_DIR`, `INGEST_STORAGE_TEMP_DIR`, `INGEST_ALLOW_ERASE_PROJECTS=true`)
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.yml`: mount `./sipi/images:/opt/images` and
-  `./sipi/tmp-dsp-ingest:/opt/tmp` read-write on `api`
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.override.yml`: remove the `ingest` image override
-- [ ] `src/dsp_tools/resources/start-stack/docker-compose.override-host.j2`: remove the `ingest` block
-- [ ] `src/dsp_tools/resources/start-stack/dsp-app-config.json`: `ingestUrl` becomes `http://0.0.0.0:3333/ingest`
-- [ ] `src/dsp_tools/resources/start-stack/dsp-app-config.override-host.j2`: `ingestUrl` becomes
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.yml`: mount `./sipi/images:/opt/images` and
+  `./sipi/tmp-dsp-ingest:/opt/temp` read-write on `api` (`/opt/temp`: dsp-api's `ingest.conf` default)
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.override.yml`: remove the `ingest` image override
+- [x] `src/dsp_tools/resources/start-stack/docker-compose.override-host.j2`: remove the `ingest` block
+- [x] `src/dsp_tools/resources/start-stack/dsp-app-config.json`: `ingestUrl` becomes `http://0.0.0.0:3333/ingest`
+- [x] `src/dsp_tools/resources/start-stack/dsp-app-config.override-host.j2`: `ingestUrl` becomes
   `http://{{ CUSTOM_HOST }}:3333/ingest`
-- [ ] `src/dsp_tools/cli/create_parsers.py`: the start-stack help text listing backend components drops `ingest`
-- [ ] `.github/workflows/bump-stack-versions.yml`: the `api` input description drops "Ingest"
-- [ ] `test/unittests/commands/start_stack/test_start_stack.py`: the override fixture and assertions no longer
+- [x] `src/dsp_tools/cli/create_parsers.py`: the start-stack help text listing backend components drops `ingest`
+- [x] `.github/workflows/bump-stack-versions.yml`: the `api` input description drops "Ingest"
+- [x] `test/unittests/commands/start_stack/test_start_stack.py`: the override fixture and assertions no longer
   carry an `ingest` service
-- [ ] Run `dsp-tools start-stack --no-prune` from the branch (`uv run dsp-tools start-stack --no-prune`); then
+- [x] Run `dsp-tools start-stack --no-prune` from the branch (`uv run dsp-tools start-stack --no-prune`); then
   `curl -f http://0.0.0.0:3333/ingest/health` returns 200 and `docker ps` lists no ingest container
-- [ ] Against that stack, run the command sequence the e2e `ingest_xmlupload` tests use (`create` the project,
+- [x] Against that stack, run the command sequence the e2e `ingest_xmlupload` tests use (`create` the project,
   then `upload-files`, `ingest-files`, `ingest-xmlupload`) on `testdata/dsp-ingest-data/e2e-sample-project`; each
   succeeds and the ingested assets appear under `~/.dsp-tools/start-stack/sipi/images`
-- [ ] Run `uv run dsp-tools stop-stack`; the stack and its volumes are removed without errors
-- [ ] Run `just unittests`; it passes
-- [ ] Run `just lint`; it passes
-- [ ] Run `update-docs` on the phase's changes; no missing user-facing doc update reported
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `uv run dsp-tools stop-stack`; the stack and its volumes are removed without errors
+- [x] Run `just unittests`; it passes
+- [x] Run `just lint`; it passes
+- [x] Run `update-docs` on the phase's changes; no missing user-facing doc update reported
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 3: e2e testcontainers run without the ingest container
 
@@ -252,7 +252,7 @@ start-stack today, and none is added.
   fields of `Containers`, `ImageVersions` and `ContainerNames`
 - [ ] `test/e2e/setup_testcontainers/containers.py`: `_get_api` drops `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, sets the
   ingest env vars from *start-stack api service*, and mounts `artifact_dirs.sipi_images` at `/opt/images` and
-  `artifact_dirs.tmp_ingest` at `/opt/tmp` read-write
+  `artifact_dirs.tmp_ingest` at `/opt/temp` read-write
 - [ ] `test/e2e/setup_testcontainers/setup.py`: drop the ingest image version, container name and stop call
 - [ ] `test/e2e/setup_testcontainers/ports.py`: drop the `ingest` port (three ports reserved and released)
 - [ ] `test/e2e/setup_testcontainers/artifacts.py`: drop the `ingest_db` artifact dir
@@ -300,7 +300,7 @@ start-stack today, and none is added.
 - **Env var contract (dsp-api plan).** Phases 2 and 3 use the names the dsp-api plan fixes: `INGEST_STORAGE_*`,
   `INGEST_ALLOW_ERASE_PROJECTS`, kept `KNORA_WEBAPI_DSP_INGEST_AUDIENCE`, no `KNORA_WEBAPI_DSP_INGEST_*` base URL or
   asset dir. If the API container still carried the old unprefixed names, dsp-api would silently ignore them and
-  ingest would fall back to its defaults (`/opt/images`, `/opt/temp`), so the temp mount path `/opt/tmp` must be
+  ingest would fall back to its defaults (`/opt/images`, `/opt/temp`), so the temp mount path `/opt/temp` must be
   passed through `INGEST_STORAGE_TEMP_DIR`. `INGEST_SIPI_USE_LOCAL_DEV` stays unset, so the image's bundled Sipi
   CLI, ffmpeg and ffprobe are used.
 - **Bump-PR timing.** Between the dsp-api release without the ingest image and this PR's merge, the automated
