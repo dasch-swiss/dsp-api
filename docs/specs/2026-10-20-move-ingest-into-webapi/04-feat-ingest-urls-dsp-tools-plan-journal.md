@@ -27,6 +27,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-tools@c0e6aaeb | 2 |
 | 2 | reviewed | dsp-tools@861f6b90 | 1 |
+| 3 | reviewed | dsp-tools@628fb302 | 1 |
 
 ## Chunk queue
 
@@ -39,6 +40,8 @@ status: in-progress
 | 2.2 | dsp-tools | src/dsp_tools/resources/start-stack/{dsp-app-config.json,dsp-app-config.override-host.j2} | — | dsp-app-config.json ingestUrl; dsp-app-config.override-host.j2 ingestUrl | dsp-app ingestUrl is `<host>:3333/ingest` | dsp-app-config.json § ingestUrl | — |
 | 2.3 | dsp-tools | src/dsp_tools/cli/create_parsers.py, .github/workflows/bump-stack-versions.yml | — | create_parsers.py help text; bump-stack-versions.yml api input | no ingest component named in help or workflow input | create_parsers.py § `_add_start_stack` | — |
 | 2.4 | dsp-tools | (no files; manual start-stack checks) | 2.1, 2.2 | start-stack --no-prune + health; e2e command sequence; stop-stack; just unittests; just lint | stack runs 4 containers; /ingest/health 200; ingest-xmlupload sequence succeeds | plan § Phase 2 run items | — |
+| 3.1 | dsp-tools | test/e2e/setup_testcontainers/{containers,setup,ports,artifacts}.py, test/e2e/commands/conftest.py, test/e2e/commands/ingest_xmlupload/{test_ingest_xmlupload,test_upload_files}.py, justfile, .gitignore | — | containers.py remove ingest; containers.py `_get_api` ingest env + mounts; setup.py; ports.py; artifacts.py; conftest.py creds; test_ingest_xmlupload.py URL; test_upload_files.py URL; justfile clean | testcontainers start fuseki, sipi, api only; api serves /ingest with /opt/images and /opt/temp mounted RW | test/e2e/setup_testcontainers/containers.py § `_get_api` | — |
+| 3.2 | dsp-tools | (no files; e2e and lint runs) | 3.1 | just e2e-test-ingest-xmlupload; just e2e-tests; just lint | e2e suite green on local dsp-api images tagged v40.4.0; lint green | plan § Phase 3 run items | — |
 
 ## Chunks
 
@@ -54,6 +57,9 @@ status: in-progress
 | 2.3 | dsp-tools | complete | a317b593 | start-stack --latest help text and bump-stack-versions api input description no longer name ingest | none |
 | 2.4 | dsp-tools | complete | — (checks only) | start-stack --no-prune with local dsp-api images (feat/serve-ingest-from-dsp-api @ 4ea296d1) tagged v40.4.0: 4 containers (api, sipi, app, db), /ingest/health 200, api mounts /opt/images and /opt/temp RW; create, upload-files, ingest-files, ingest-xmlupload on e2e-sample-project succeed, assets under sipi/images/0001; extra 8.9 MB JPEG uploaded and ingested (Content-Length path); stop-stack clean; just unittests (3081 passed) and just lint green | none |
 | 2.5 | dsp-tools | complete | 628fb302 | review fix round 1: comments on the api service say the 3340 ingest audience is a JWT label, not an address, and that INGEST_ALLOW_ERASE_PROJECTS is ingest's own erase gate | none |
+| 3.1 | dsp-tools | complete | fb8df145 | e2e testcontainers drop the ingest container, its port (three reserved), name, image version and ingest-db artifact dir; api gets INGEST_STORAGE_ASSET_DIR=/opt/images, INGEST_STORAGE_TEMP_DIR=/opt/temp, INGEST_ALLOW_ERASE_PROJECTS=true and RW mounts of sipi_images and tmp_ingest, no KNORA_WEBAPI_DSP_INGEST_BASE_URL; creds and ingest_xmlupload tests use `<api>/ingest`; justfile clean and .gitignore drop ingest-db | none |
+| 3.2 | dsp-tools | complete | — (checks only) | local dsp-api images (feat/serve-ingest-from-dsp-api @ 4ea296d1) tagged v40.4.0: just e2e-test-ingest-xmlupload 2 passed; just e2e-tests 106 passed (with CI's DSP_USER_PASSWORD=pw and TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock for Docker Desktop's Ryuk mount); just lint green | none |
+| 3.3 | dsp-tools | complete | 88eabdc3 | review fix round 1: comment on the e2e api container names start-stack's docker-compose.yml api service as the counterpart of its ingest settings and mounts (DUNE-001) | none |
 
 ## Deferrals
 
@@ -86,3 +92,14 @@ status: in-progress
 - Phase 2 manual run: `ingest-xmlupload` of an XML that references only some of a project's ingested files fails
   by design (mapping CSV covers every file ingested for the shortcode); the plan's sequence on
   `e2e-sample-project` itself succeeded.
+- Phase 3: running the e2e suite locally on Docker Desktop (macOS) needs `DSP_USER_PASSWORD=pw` (CI sets it in
+  `tests-e2e.yml`; without it `create` rejects `testerProjectAdmin`) and
+  `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` (else Ryuk fails to mount
+  `~/.docker/run/docker.sock`).
+- Phase 3 review suggestions not applied: a parity test (or deriving the e2e api env from the packaged compose
+  file) would enforce the start-stack/e2e ingest settings link that the comment only states (DUNE-001); the e2e
+  api container does not set `KNORA_WEBAPI_DSP_INGEST_AUDIENCE` and relies on DSP-API's default, which DSP-API
+  both mints and checks; the `<api>/ingest` URL is built inline in three e2e fixtures; the `tmp_ingest` /
+  `tmp-dsp-ingest` names predate the move (kept for parity with start-stack's `./sipi/tmp-dsp-ingest`); stale
+  local `testdata/e2e/ingest-db/` dirs are no longer ignored or cleaned; ARCH-MAP's tests entry does not name the
+  e2e container set.

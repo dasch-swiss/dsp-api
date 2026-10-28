@@ -248,24 +248,24 @@ start-stack today, and none is added.
 
 #### dsp-tools
 
-- [ ] `test/e2e/setup_testcontainers/containers.py`: remove `_get_ingest`, `INGEST_INTERNAL_PORT` and the `ingest`
+- [x] `test/e2e/setup_testcontainers/containers.py`: remove `_get_ingest`, `INGEST_INTERNAL_PORT` and the `ingest`
   fields of `Containers`, `ImageVersions` and `ContainerNames`
-- [ ] `test/e2e/setup_testcontainers/containers.py`: `_get_api` drops `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, sets the
+- [x] `test/e2e/setup_testcontainers/containers.py`: `_get_api` drops `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, sets the
   ingest env vars from *start-stack api service*, and mounts `artifact_dirs.sipi_images` at `/opt/images` and
   `artifact_dirs.tmp_ingest` at `/opt/temp` read-write
-- [ ] `test/e2e/setup_testcontainers/setup.py`: drop the ingest image version, container name and stop call
-- [ ] `test/e2e/setup_testcontainers/ports.py`: drop the `ingest` port (three ports reserved and released)
-- [ ] `test/e2e/setup_testcontainers/artifacts.py`: drop the `ingest_db` artifact dir
-- [ ] `test/e2e/commands/conftest.py`: `creds` ingest URL becomes `http://0.0.0.0:{container_ports.api}/ingest`
-- [ ] `test/e2e/commands/ingest_xmlupload/test_ingest_xmlupload.py`: ingest URL becomes
+- [x] `test/e2e/setup_testcontainers/setup.py`: drop the ingest image version, container name and stop call
+- [x] `test/e2e/setup_testcontainers/ports.py`: drop the `ingest` port (three ports reserved and released)
+- [x] `test/e2e/setup_testcontainers/artifacts.py`: drop the `ingest_db` artifact dir
+- [x] `test/e2e/commands/conftest.py`: `creds` ingest URL becomes `http://0.0.0.0:{container_ports.api}/ingest`
+- [x] `test/e2e/commands/ingest_xmlupload/test_ingest_xmlupload.py`: ingest URL becomes
   `http://0.0.0.0:{ports.api}/ingest`
-- [ ] `test/e2e/commands/ingest_xmlupload/test_upload_files.py`: ingest URL becomes
+- [x] `test/e2e/commands/ingest_xmlupload/test_upload_files.py`: ingest URL becomes
   `http://0.0.0.0:{ports.api}/ingest`
-- [ ] `justfile`: `clean` stops removing `./testdata/e2e/ingest-db/`
-- [ ] Run `just e2e-test-ingest-xmlupload`; it passes
-- [ ] Run `just e2e-tests`; it passes
-- [ ] Run `just lint`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `justfile`: `clean` stops removing `./testdata/e2e/ingest-db/`
+- [x] Run `just e2e-test-ingest-xmlupload`; it passes
+- [x] Run `just e2e-tests`; it passes
+- [x] Run `just lint`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
