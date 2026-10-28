@@ -107,7 +107,7 @@ status: in-progress
 
 - 2026-10-27: Phases 2-4 of the previous plan shape (slice move, rebuilt API layer, executor) were discarded by owner
   decision (minimal diff; `modules/ingest` keeps its structure). Their commits are preserved on branch
-  `backup/feat/serve-ingest-from-dsp-api` (tip `11c2df207`); the Phases table rows 2-3 recorded there are reset,
+  `backup/docs/move-ingest-into-webapi-brief` (tip `11c2df207`); the Phases table rows 2-3 recorded there are reset,
   and Phase 2 onwards restarts from the rewritten plan at `99963d79e`.
 
 - 2026-10-27 (Phase 2 review): `ARCH-MAP.md` still says `//modules/ingest` is the only consumer of `//modules/sipi:runtime_fs_*` (sipi "Used by" and visibility boundary rule). Deferred to Phase 6's dune-map refresh; added as a Phase 6 checkbox.
