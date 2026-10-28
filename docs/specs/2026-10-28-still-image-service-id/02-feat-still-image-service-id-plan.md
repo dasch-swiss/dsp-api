@@ -3,10 +3,10 @@ title: "feat: Expose the IIIF image service id on still image file values"
 type: feat
 date: 2026-10-28
 author: "Dominique Steinbach"
-status: draft
+status: reviewed
 repository: dasch-swiss/dsp-api
 repositories:
-  - name: dsp-api
+    - name: dsp-api
     path: /Users/dominiquesteinbach/workspaces/dev-7660-still-image-service/dsp-api
 prd: 01-still-image-service-id-PRD.md
 linear: DEV-7678
@@ -46,9 +46,12 @@ complex-only, Gravsearch-forbidden property, defined in four places:
    when `hasPlaceholderAsset`.
 4. An entry in `GravsearchQueryChecker.forbiddenPredicates`.
 
-A small pure helper builds the service id from `(externalBaseUrl, shortcode,
-internalFilename)` with single-slash joins. It drops a trailing slash on the base and
-keeps any path prefix. `fileValueAsUrl` is derived from the same helper
+A small pure helper on the `StillImageFileValueContentV2` companion
+(`ValueMessagesV2.scala:2142`) builds the service id from `(externalBaseUrl, shortcode,
+internalFilename)` with single-slash joins: `String` in, `String` out, no effect. It
+drops a trailing slash on the base and keeps any path prefix. It does not go on the
+sealed `FileValueContentV2` trait or into the shared `toJsonLDObjectMapInComplexSchema`
+(`:2062-2078`), because `StillImageExternalFileValueContentV2` uses both. `fileValueAsUrl` is derived from the same helper
 (`{serviceId}/full/max/0/default.jpg`) so the two cannot drift. For every
 configuration the API can express today, its output is byte-identical.
 
@@ -79,6 +82,20 @@ added there, because external IIIF is out of scope.
 - **Base URL shape:** `AppConfig.Sipi.externalBaseUrl` is `protocol://host[:port]`
   (`AppConfig.scala:147-148`). It cannot carry a prefix or a trailing slash today, so
   the PRD's slash and prefix rules are pinned by unit tests on the helper.
+- **How Sipi v10 builds `id`:** from the request, not from its config.
+    - **Host:** `X-Forwarded-Host`, or the `Host` header when that is absent.
+    - **Scheme:** `https` only when `X-Forwarded-Proto` is `https`, otherwise `http`.
+    - **Path:** `/{prefix}/{identifier}`.
+    - **Allowlist:** an optional `SIPI_PUBLIC_HOSTS` restricts the hosts it accepts.
+
+  Sources, in the Sipi repo at v10.0.0: `src/server/rust/src/routes.rs:2038-2048` and
+  `:2488-2513`, `config.rs:47-61`. `SIPI_EXTERNAL_HOSTNAME`/`_PORT` play no part. So the
+  property equals `id` exactly when Sipi sees the public host and scheme that
+  `sipi.externalBaseUrl` names. In production that is the reverse proxy's job.
+- **The `info.json` test:** the e2e client reaches Sipi at `<local-ip>:<mapped-port>`
+  (`SipiTestContainer.scala`), so the integration test sends
+  `X-Forwarded-Host: 0.0.0.0:1024`, as a proxy would, and then asserts exact
+  equality.
 - **Filenames:** internal filenames are generated at ingest and need no
   percent-encoding. The helper passes them through unchanged.
 - **Fixtures:** JSON-LD expected responses are compared by RDF-model equality, with
@@ -105,25 +122,30 @@ Covers PRD US-1 and US-2.
 - [ ] Define the property in `KnoraBaseToApiV2ComplexTransformationRules.scala`, near `:437`. It is an `XSD.ANYURI` datatype property, a subproperty of `KA.ValueHas`, with subject type `KA.StillImageFileValue`, an English label, and an `rdfs:comment` saying it names the IIIF image service of the file, grants no access, and that the served size comes from the service's `info.json`
 - [ ] Register the new property in the property list (`KnoraBaseToApiV2ComplexTransformationRules.scala:865-882`)
 - [ ] Add `KA.StillImageFileValueHasIIIFImageService -> ZeroOrOne` to `StillImageFileValueCardinalities` (`:656-660`) only. Leave `StillImageExternalFileValueCardinalities` (`:662-665`) unchanged
-- [ ] Add a pure helper (e.g. on the `StillImageFileValueContentV2` companion) that builds the service id from base URL, shortcode and internal filename. It joins with single slashes, strips a trailing slash on the base and keeps a path prefix. Its Scaladoc states that the result equals Sipi's `info.json` `id`
-- [ ] Derive `fileValueAsUrl` in `StillImageFileValueContentV2.makeFileUrl` (`ValueMessagesV2.scala:2106-2107`) from the helper as `{serviceId}/full/max/0/default.jpg`. The placeholder path via `fileUrlOrPlaceholder` stays as is
-- [ ] In the complex branch of `StillImageFileValueContentV2.toJsonLDValue` (`ValueMessagesV2.scala:2109-2133`), emit the new property as `JsonLDUtil.datatypeValueToJsonLDObject(serviceId, Xsd.Uri)` when `!hasPlaceholderAsset`. Leave `StillImageExternalFileValueContentV2` unchanged
+- [ ] Add `def serviceId(externalBaseUrl: String, shortcode: Shortcode, internalFilename: String): String` to the `StillImageFileValueContentV2` companion (`ValueMessagesV2.scala:2142`). It joins with single slashes, strips a trailing slash on the base and keeps a path prefix. Its Scaladoc states that the result equals Sipi's `info.json` `id` when Sipi sees the public host
+- [ ] Derive `fileValueAsUrl` in `StillImageFileValueContentV2.makeFileUrl` (`ValueMessagesV2.scala:2106-2107`) as `{serviceId}/full/max/0/default.jpg`. The placeholder path via `fileUrlOrPlaceholder` stays as is
+- [ ] In the complex branch of `StillImageFileValueContentV2.toJsonLDValue` (`ValueMessagesV2.scala:2109-2133`), emit the new key as `JsonLDUtil.datatypeValueToJsonLDObject(id, OntologyConstants.Xsd.Uri.toSmartIri)`, through `Option.when(!hasPlaceholderAsset)(...)`. Leave `StillImageExternalFileValueContentV2` unchanged
 - [ ] Add `StillImageFileValueHasIIIFImageService` to `GravsearchQueryChecker.forbiddenPredicates` (`GravsearchQueryChecker.scala:174`)
-- [ ] Unit spec for the helper, covering: the plain base, a base with a trailing slash, a base with a path prefix, a prefix plus trailing slash, and an unmodified filename
-- [ ] Unit spec for `StillImageFileValueContentV2.toJsonLDValue`, covering: the complex schema carries the property with the helper's value and `@type` `xsd:anyURI`; a placeholder asset has no property; the simple schema has no property; `fileValueAsUrl` is unchanged
-- [ ] Unit spec for `GravsearchQueryChecker`: the new property is rejected with `GravsearchException` both in the WHERE and in the CONSTRUCT clause, and `stillImageFileValueHasIIIFBaseUrl` stays rejected
-- [ ] Extend `PlaceholderFileValueE2ESpec`: reading back a placeholder still image shows no `stillImageFileValueHasIIIFImageService`, while `stillImageFileValueHasIIIFBaseUrl` is still present
-- [ ] Add a case to `KnoraSipiIntegrationV2ITSpec`. It reads a still image created in the spec, fetches `{stillImageFileValueHasIIIFImageService}/info.json` through `TestSipiApiClient.getFile` with the credentials the spec already uses for Sipi downloads, parses the JSON, and asserts that `id` equals the property byte-for-byte
-- [ ] In the same spec, assert that reading a past version of the image value (`GET /v2/values/...?version=`) and the resource preview (`/v2/resourcespreview`) both carry the property with the same value
-- [ ] Add the property, with `IIIF_BASE_URL/{shortcode}/{filename}` per value, to every non-placeholder still image file value in `searchR2RV2/FulltextSearchWithImage.jsonld` (7 values)
-- [ ] Add the property to `valuesE2EV2/get-still-image-file-value-response.jsonld`
-- [ ] Add the property to `searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld`
-- [ ] Add the property to `resourcesR2RV2/NarrenschiffFirstPage.jsonld` and to `resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld`
-- [ ] Check how `responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld` is used in `ResponseCheckerV2Spec.scala:91`, and add the property there only if the spec's intended difference requires it
-- [ ] Grep `test_data/` for `stillImageFileValueHasDimX` and add the property to any still image value not covered above
-- [ ] Regenerate `ontologyR2RV2/knoraApiOntologyWithValueObjects.jsonld` via `OntologyFormatsE2ESpec`. The diff shows only the new property and its cardinality, and the simple knora-api ontology fixtures are unchanged
-- [ ] Run `bazel test //modules/webapi:test --test_filter='.*(StillImageFileValue|GravsearchQueryChecker).*'`; it passes
-- [ ] Run `just test-e2e --test_filter='.*(KnoraSipiIntegrationV2ITSpec|PlaceholderFileValueE2ESpec|OntologyFormatsE2ESpec|ResourcesEndpointsGetResourcesE2ESpec|SearchEndpoints.*|Values.*|InstanceChecker.*|ResponseCheckerV2Spec).*'`; it passes
+- [ ] Create `StillImageFileValueContentV2Spec` in `modules/webapi/src/test/scala/org/knora/webapi/messages/v2/responder/valuemessages/`, in the `@RunWith(classOf[DspZTestJUnitRunner]) class ... extends ZIOSpecDefault` form of its siblings (`ValueContentV2Spec.scala`). Its helper suite is a table of cases: the plain base, a base with a trailing slash, a base with a path prefix, a prefix plus trailing slash, and an unmodified filename
+- [ ] In `StillImageFileValueContentV2Spec`, add a `toJsonLDValue` suite. It uses `TestDataFactory.someProjectADM`, `AppConfig.layer`, `FileValueV2(..., "image/jp2")` and `StringFormatter.getInitializedTestInstance`. It asserts on the returned `JsonLDObject` map that:
+    - the complex schema carries the property with `@type` `xsd:anyURI`;
+    - a placeholder (`PlaceholderIri.instance.value`) has no property but keeps `stillImageFileValueHasIIIFBaseUrl`;
+    - the simple schema has no property;
+    - `fileValueAsUrl` equals a literal `{base}/0001/{file}/full/max/0/default.jpg`, built in the test without the helper.
+- [ ] Create `GravsearchQueryCheckerSpec` in `modules/webapi/src/test/scala/org/knora/webapi/messages/util/search/gravsearch/`. It calls `GravsearchQueryChecker.checkStatement` with a `StatementPattern` whose predicate is `IriRef` of the new property, `ApiV2Complex` and `GravsearchTypeInspectionResult(Map.empty)`. It asserts that `GravsearchException` says "cannot be used in a Gravsearch query", for both `inConstructClause = false` and `true`, and that `stillImageFileValueHasIIIFBaseUrl` is still rejected
+- [ ] Extend `PlaceholderFileValueE2ESpec` (`modules/test-e2e/.../it/v2/PlaceholderFileValueE2ESpec.scala:66-73`). Parse the created resource IRI from the POST response, read it back with `TestApiClient.getJsonLd(uri"/v2/resources/$resIri")`, and assert that `stillImageFileValueHasIIIFImageService` is absent and `stillImageFileValueHasIIIFBaseUrl` is present
+- [ ] Add a case to `KnoraSipiIntegrationV2ITSpec`. It reads a still image created in the spec and fetches `{stillImageFileValueHasIIIFImageService}/info.json` from Sipi with the header `X-Forwarded-Host: 0.0.0.0:1024` (no user, as the spec's other still image fetches do). It parses the body with `JsonLDUtil.parseJsonLD` or a JSON parser and asserts that `id` equals the property byte-for-byte. If `TestSipiApiClient` cannot set a header, add an overload to `TestSipiApiClient.getFile` in `modules/testkit`
+- [ ] In `KnoraSipiIntegrationV2ITSpec`, assert that a past version of the image value carries the same property value. Use `TestApiClient.getJsonLdDocument(uri"/v2/values/$resourceIri/$valueUuid", user, addVersionQueryParam(timestamp))` (pattern in `ValuesEndpointsE2ESpec.scala:656`)
+- [ ] In `KnoraSipiIntegrationV2ITSpec`, assert that `/v2/resourcespreview/$resourceIri` carries the same property value (pattern in `ValuesEndpointsE2ESpec.scala:175`)
+- [ ] Add the property, with `IIIF_BASE_URL/{shortcode}/{filename}` per value, to every non-placeholder still image file value in `searchR2RV2/FulltextSearchWithImage.jsonld` (7 values; read by `SearchEndpointsGetSearchE2ESpec.scala:131`)
+- [ ] Add the property to `valuesE2EV2/get-still-image-file-value-response.jsonld` (read via the name template in `ValuesEndpointsE2ESpec.scala:640-646`)
+- [ ] Add the property to `searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld` (read by both the simple- and complex-schema Gravsearch specs)
+- [ ] Add the property to `resourcesR2RV2/NarrenschiffFirstPage.jsonld`
+- [ ] Grep `test_data/` for `stillImageFileValueHasDimX` and add the property to any still image value read by a spec and not covered above. `resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld` and `responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld` stay unchanged: the first is read by no spec, and the second is only the "received" side of a check that must fail on a different value count
+- [ ] Regenerate `ontologyR2RV2/knoraApiOntologyWithValueObjects.jsonld`. Run `just test-e2e --test_filter='.*OntologyFormatsE2ESpec.*'` once: on a mismatch the spec overwrites the file and fails. The `git diff` shows only the new property and its cardinality, and the simple knora-api ontology fixtures are unchanged. Run it again; it passes
+- [ ] Run `bazel test //modules/webapi:test --test_filter='.*(StillImageFileValueContentV2Spec|GravsearchQueryCheckerSpec).*'`; it passes
+- [ ] Run `just test-unit`; it passes
+- [ ] Run `just test-e2e`; it passes (the full suite, so that every reader of a changed fixture runs)
 - [ ] Run `just check`; it passes
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
@@ -136,13 +158,19 @@ because both state the same client contract.
 
 - [ ] Rewrite the `rdfs:comment` of `StillImageFileValueHasDimX` and `DimY` (`KnoraBaseToApiV2ComplexTransformationRules.scala:425-435`). The comment says the value is the native pixel size of the stored master recorded at ingest, not the size a given user is served, and is not for drawing, tiles, regions or overlays; use the image service's `info.json`
 - [ ] Rewrite the `rdfs:comment` of `StillImageFileValueHasIIIFBaseUrl` (`:437-442`) to name `knora-api:stillImageFileValueHasIIIFImageService` as the preferred source for still image file values. No `owl:deprecated`
-- [ ] Regenerate `ontologyR2RV2/knoraApiOntologyWithValueObjects.jsonld` via `OntologyFormatsE2ESpec`; the diff shows only these three comments
+- [ ] Regenerate `ontologyR2RV2/knoraApiOntologyWithValueObjects.jsonld`. Run `just test-e2e --test_filter='.*OntologyFormatsE2ESpec.*'` once; on a mismatch it overwrites the file and fails. The `git diff` shows only these three comments
 - [ ] Rewrite "File URLs in API v2" in `docs/06-sipi/sipi-and-dsp-api.md:28-34`. It describes `stillImageFileValueHasIIIFImageService` (append `/info.json`), says the property names the service but grants no access, says `info.json` is the source of the served size, and says `dimX`/`dimY` are native-size metadata. Drop the advice to construct IIIF URLs from the base URL and the filename for `StillImageFileValue`, and keep the existing wording correct for `StillImageExternalFileValue`
 - [ ] Check `docs/03-endpoints/api-v2/` (e.g. `editing-values.md`, `reading-and-searching-resources.md`, `query-language.md`) and `docs/05-internals/design/api-v2/sipi.md` for still image file value or Gravsearch-forbidden-property wording, and update every place that contradicts Phase 1
 - [ ] Run the `fix-markdownlint` skill on the changed docs; it reports no issues
 - [ ] Run `just test-e2e --test_filter='.*OntologyFormatsE2ESpec.*'`; it passes
 - [ ] Run `just check`; it passes
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+
+## Human Actions
+
+| Id | Action | Who | When | Why not the agent |
+| --- | --- | --- | --- | --- |
+| H1 | Once the release is on stage, fetch `{stillImageFileValueHasIIIFImageService}/info.json` for a public still image, and confirm that `id` equals the property. Scheme and host must match. If they differ, the proxy in front of Sipi is not forwarding the public host or `https`, and it needs an ops-deploy fix | Developer | after ship | Stage only carries the change after a merge and a deploy, which the owner decides |
 
 ## Acceptance Criteria
 
@@ -164,11 +192,13 @@ because both state the same client contract.
   `SIPI_USE_EXACT_VERSION=true`. The `info.json` `id` test assumes v10, which is on
   `main` since #4404. If a stale local image fails the test, rebuild with
   `just docker-build-sipi-image`.
-- **What Sipi reports as `id`:** the test container sets `SIPI_EXTERNAL_HOSTNAME=0.0.0.0`
-  and `SIPI_EXTERNAL_PORT=1024`, matching the API's `http://0.0.0.0:1024`. If Sipi
-  instead derives `id` from the request's Host header, the test fails. That would
-  invalidate the PRD's "one public base URL" constraint, so stop and report back
-  rather than relaxing the assertion.
+- **What Sipi reports as `id` depends on the proxy:** Sipi v10 takes host and scheme
+  from `X-Forwarded-Host`/`Host` and `X-Forwarded-Proto` (see Technical
+  Considerations). The PRD's "API and Sipi share one public base URL" constraint holds
+  only if the proxy in front of Sipi forwards the public host and `https`. The
+  integration test pins dsp-api's side. The deployed side is checked after ship (H1).
+  If the test's `id` differs from the property despite the header, stop and report
+  back; do not relax the assertion to a path suffix.
 - **Fixture ripple:** adding a property changes every expected response with a still
   image (learning: shared fixtures ripple). The grep deliverable in Phase 1 catches
   files outside the known list.
