@@ -609,6 +609,108 @@ be sorted alphabetically by resource IRI (an arbitrary but consistent order).
 The value of `page` is a 0-based integer page number. Paging works as it does
 in [Gravsearch](query-language.md)).
 
+### Listing the Resources of a Project with Their Dates
+
+To list the resources of a project with their class, creation, last-modification and delete dates,
+for instance to find out which resources changed since a previous visit:
+
+```text
+HTTP GET to http://host/v2/resources/info[?resourceClass=RESOURCE_CLASS_IRI][&cutoff=INSTANT][&order=ORDER][&orderBy=ORDER_BY]
+```
+
+The HTTP header `X-Knora-Accept-Project` must be submitted; its value is a DSP project IRI.
+Without it, or with a malformed project IRI, the request is answered with `400 Bad Request`;
+an unknown project gives an empty list.
+The endpoint is public and does not check permissions: it lists the IRIs of all resources of the project,
+deleted ones included, also those the requesting user may not see.
+
+All query parameters are optional:
+
+- `resourceClass`: the URL-encoded IRI of a resource class in the [complex schema](introduction.md#api-schema).
+  Only resources of exactly this class are listed, without inference: subclasses do not match.
+  Without it, the resources of all classes of the project are listed.
+  A malformed IRI is a `400`; an unknown class gives an empty list.
+- `cutoff`: only resources whose *effective date* is **at or after** this instant are listed.
+  The effective date is the resource's `lastModificationDate`, or its `creationDate` if it was never modified;
+  creating a resource counts as modifying it.
+- `order`: `asc` (the default) or `desc`.
+- `orderBy`: `lastModificationDate` (the default) or `creationDate`.
+  Resources with equal dates are ordered by ascending resource IRI, also when descending.
+  Any other value of `order` or `orderBy` is a `400`.
+
+The response lists the resources, their number, and `asOf`:
+
+```json
+{
+  "resources": [
+    {
+      "resourceIri": "http://rdfh.ch/0001/a-thing",
+      "resourceClass": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+      "creationDate": "2016-03-02T15:05:10Z",
+      "lastModificationDate": "2026-10-23T08:00:12.123456Z",
+      "isDeleted": false
+    },
+    {
+      "resourceIri": "http://rdfh.ch/0001/a-deleted-thing",
+      "resourceClass": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+      "creationDate": "2016-03-02T15:05:10Z",
+      "lastModificationDate": "2026-10-23T08:01:30.654321Z",
+      "deleteDate": "2026-10-23T08:01:30.654321Z",
+      "isDeleted": true
+    }
+  ],
+  "count": 2,
+  "asOf": "2026-10-23T08:02:00.000001Z"
+}
+```
+
+- `resourceClass` is the complex-schema IRI of the resource's class, also when the request named a class.
+- `lastModificationDate` is the effective date: it equals `creationDate` for a resource that was never modified.
+  Every write to a resource through the API sets it, including changes to its values, links, permissions
+  or metadata; a soft delete sets it to the `deleteDate`. A write that carries a client-chosen date sets it
+  to that date instead (see *back-dated writes* below), and an erased resource is no longer listed at all.
+- `deleteDate` is present only for deleted resources.
+- `asOf` is the server's time, read before the resources are queried.
+
+**Timestamp format.** `cutoff` is an ISO-8601 instant with an offset, e.g. `2026-10-23T08:00:00Z`
+or `2026-10-23T08:00:00.123456Z`. A value without an offset (`2026-10-23T08:00:00`) or a date alone
+(`2026-10-23`) is a `400`. Use `Z`: a `+` offset must be URL-encoded as `%2B` (`2026-10-23T10:00:00%2B02:00`),
+since an unencoded `+` in a query string means a space.
+The dates in the response keep the fractional seconds they are stored with, and `cutoff` is compared
+at full precision, so passing a returned `lastModificationDate` as the cutoff includes that resource.
+
+#### Polling for Changes
+
+A client that keeps a copy of a project's data in sync polls this endpoint:
+
+1. **First sync:** call it without `resourceClass` and without `cutoff`, fetch the listed resources,
+   and remember the response's `asOf`.
+   This lists the whole project in one response; there is no paging, so it can be large.
+2. **Each poll:** call it with `cutoff` set to the previous `asOf` minus a safety window of 60 seconds,
+   and remember the new `asOf`. The server stamps a write with its date before the write is committed,
+   so a long-running write can become visible after a poll that its date already falls behind;
+   the window catches it at the next poll. The overlap is deliberate: the same resource can be listed
+   by two polls in a row, so fetching a resource twice must be harmless.
+3. **Fetch the changes** by their IRIs with [`POST /v2/resources/batch`](#get-multiple-resources-by-iri-via-post).
+4. **Deletions:** an entry with `isDeleted = true` is a deleted resource.
+   `POST /v2/resources/batch` returns it as a tombstone: a resource of type `knora-api:DeletedResource`
+   with the label `Deleted Resource`, `knora-api:isDeleted` set to `true`, its `knora-api:deleteDate`,
+   and no values. The usual permission check still applies.
+
+Always use the server's `asOf`, never the client's clock or the newest date seen in a response:
+`asOf` advances while nothing changes, and it does not depend on clock skew between client and server.
+
+What polling does not see:
+
+- **Erased resources.** A resource that was erased (deleted permanently) leaves no trace and is never listed.
+  A client that must notice erasures has to compare a full listing (step 1) against its copy now and then.
+- **Ontology changes** do not change the dates of the resources whose class or properties they touch.
+- **Back-dated writes.** A write that carries a date chosen by the client (a custom creation date of a resource
+  or value, as data imports may send, or a custom delete date) stamps the resource with that date.
+  If that date lies before the cutoff, the change is never listed.
+- **Permissions.** The listing is not filtered by permissions; fetching a listed resource can still be refused.
+- **Cost.** Each poll scans all resources of the project, whatever the cutoff.
+
 ### Get the Full History of a Resource and its Values as Events
 
 To get a list of the changes that have been made to a resource and its values since its creation as events ordered by 
