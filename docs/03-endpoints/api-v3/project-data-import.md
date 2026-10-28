@@ -134,7 +134,7 @@ curl --request DELETE \
 - **Create-only**: The data graph must contain no data other than list nodes. Re-importing requires deleting the
   project's data graph first, which is out of scope for this API.
 - **Assets must be pre-ingested**: The import does not ingest binary assets. File values must reference assets already
-  present in dsp-ingest. The import fetches their metadata by internal filename and rejects an asset that is not yet
+  present in [ingest](../ingest.md). The import fetches their metadata by internal filename and rejects an asset that is not yet
   ingested. 3D file values (`DDDFileValue`) are not yet supported.
 - **JSON-LD only**: Other RDF serializations are not accepted.
 - **Single instance**: Task state is held in memory per instance.
