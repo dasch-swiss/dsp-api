@@ -7050,6 +7050,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:stillImageFileValueHasIIIFImageService"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -10799,6 +10806,21 @@
                 "@id": "knora-api:StillImageFileValue"
             },
             "rdfs:comment": "The IIIF base URL of a still image file value."
+        },
+        {
+            "rdfs:label": "Still image file value has IIIF image service",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:valueHas"
+            },
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:anyURI"
+            },
+            "@id": "knora-api:stillImageFileValueHasIIIFImageService",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageFileValue"
+            },
+            "rdfs:comment": "The id of the IIIF Image API service that serves this still image file. Append /info.json to read the sizes the service offers to the requesting user. The id names the service; it does not grant access to the image."
         },
         {
             "@id": "knora-api:subjectType",
