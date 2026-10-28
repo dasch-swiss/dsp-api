@@ -7,13 +7,18 @@ package org.knora.webapi.it.v2
 
 import org.junit.runner.RunWith
 import sttp.client4.*
+import zio.*
 import zio.test.*
 
 import scala.language.implicitConversions
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFImageService
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
@@ -70,6 +75,21 @@ class PlaceholderFileValueE2ESpec extends E2EZSpec {
         response <- TestApiClient.postJsonLd(uri"/v2/resources", placeholderFilenameJsonLd, rootUser)
         _        <- response.assert200
       } yield assertCompletes
+    },
+    test("a placeholder StillImage value carries the IIIF base url and no IIIF image service") {
+      for {
+        created <- TestApiClient
+                     .postJsonLd(uri"/v2/resources", placeholderFilenameJsonLd, rootUser)
+                     .flatMap(_.assert200)
+                     .mapAttempt(JsonLDUtil.parseJsonLD)
+        resIri   <- ZIO.fromEither(created.body.getRequiredString("@id")).mapError(new RuntimeException(_))
+        resource <- TestApiClient.getJsonLdDocument(uri"/v2/resources/$resIri", rootUser).flatMap(_.assert200)
+        value    <-
+          ZIO.fromEither(resource.body.getRequiredObject(HasStillImageFileValue)).mapError(new RuntimeException(_))
+      } yield assertTrue(
+        value.value.contains(StillImageFileValueHasIIIFBaseUrl),
+        !value.value.contains(StillImageFileValueHasIIIFImageService),
+      )
     },
     test("creating a StillImage with all four FileValue fields as urn:dasch:placeholder succeeds") {
       for {

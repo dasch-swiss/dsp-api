@@ -49,7 +49,12 @@ class StillImageFileValueContentV2Spec extends ZIOSpecDefault {
     ("http://0.0.0.0:1024/", "0001", "abc.jp2", "http://0.0.0.0:1024/0001/abc.jp2"),
     ("https://iiif.example.org/sipi", "080E", "abc.jp2", "https://iiif.example.org/sipi/080E/abc.jp2"),
     ("https://iiif.example.org/sipi/", "080E", "abc.jp2", "https://iiif.example.org/sipi/080E/abc.jp2"),
-    ("http://0.0.0.0:1024", "0001", "4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2", "http://0.0.0.0:1024/0001/4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2"),
+    (
+      "http://0.0.0.0:1024",
+      "0001",
+      "4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2",
+      "http://0.0.0.0:1024/0001/4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2",
+    ),
   )
 
   override def spec: Spec[Any, Any] =
@@ -89,7 +94,9 @@ class StillImageFileValueContentV2Spec extends ZIOSpecDefault {
             r        <- render(content(filename))
             (base, m) = r
             obj       = m(fileAsUrlProp).asInstanceOf[JsonLDObject].value
-          } yield assertTrue(obj("@value") == JsonLDString(base + "/0001/4sAf4AmPeeg-ZjDn3Tot1Zt.jp2/full/max/0/default.jpg"))
+          } yield assertTrue(
+            obj("@value") == JsonLDString(base + "/0001/4sAf4AmPeeg-ZjDn3Tot1Zt.jp2/full/max/0/default.jpg"),
+          )
         },
       ).provide(AppConfig.layer),
     )

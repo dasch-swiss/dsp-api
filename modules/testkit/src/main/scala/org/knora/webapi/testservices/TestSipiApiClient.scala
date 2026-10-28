@@ -38,6 +38,9 @@ case class TestSipiApiClient(
       basicRequest.get(internalUri(uri)).auth.bearer(jwt).response(asByteArray).send(backend)
     }
 
+  def getFile(uri: String, headers: Map[String, String]): Task[Response[Either[String, Array[Byte]]]] =
+    basicRequest.get(internalUri(uri)).headers(headers).response(asByteArray).send(backend)
+
   private def internalUri(uri: String): Uri =
     Uri.unsafeParse(uri.replace("http://0.0.0.0:1024", sipiConfig.internalBaseUrl))
 }
@@ -56,6 +59,12 @@ object TestSipiApiClient {
 
   def getFile(uri: String, user: User): ZIO[TestSipiApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
     ZIO.serviceWithZIO[TestSipiApiClient](_.getFile(uri, user))
+
+  def getFile(
+    uri: String,
+    headers: Map[String, String],
+  ): ZIO[TestSipiApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
+    ZIO.serviceWithZIO[TestSipiApiClient](_.getFile(uri, headers))
 
   val layer = ZLayer.derive[TestSipiApiClient]
 }
