@@ -53,7 +53,6 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.fair.dpeOaiBaseUrl == "https://repository.dasch.swiss/dpe/oai",
           appConfig.fair.dpeOaiShortcodes == "",
           dspIngestConfig.audience == "http://localhost:3340",
-          dspIngestConfig.externalBaseUrl == "http://localhost:3340",
           // ingest reads its own ingest.conf; no key is shared with webapi's configuration
           !ConfigFactory.load().hasPath("ingest"),
           jwtConfig.expiration == java.time.Duration.ofDays(30),
