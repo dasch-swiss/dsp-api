@@ -1,8 +1,7 @@
 ---
 dune_map: true
-schema_version: 1
-last_verified_commit: 75414c1e71de6a959168f82c24dc07b725ecd94a
-date: 2026-09-13
+schema_version: 2
+date: 2026-10-28
 ---
 
 # dsp-api architecture map
@@ -10,16 +9,18 @@ date: 2026-09-13
 ## Overview
 
 dsp-api is the Scala 3 / ZIO / Tapir backend of the DaSCH Virtual Research Environment, serving semantic
-research data over an Apache Jena Fuseki triplestore with Sipi and dsp-ingest handling media assets. The repo
+research data over an Apache Jena Fuseki triplestore with Sipi and ingest handling media assets. The repo
 is one Bazel monorepo: `modules/webapi` is still a single compilation target that holds every VRE domain, next
-to separate deployables (`modules/ingest`, `modules/sipi`, `modules/fuseki`), leaf libraries
+to the ingest library it serves under `/ingest/` (`modules/ingest`), separate deployables (`modules/sipi`,
+`modules/fuseki`), leaf libraries
 (`modules/bagit`, `modules/jwt`, `modules/shacl-validator`, `modules/sparql-builder`) and three test modules.
 Because webapi is one target with public visibility, nearly every boundary rule below is enforced at `review`
 or `docs-only` rather than structurally. Bounded-context vocabulary lives in [`CONTEXT.md`](./CONTEXT.md) and
 the per-context files under `docs/contexts/*/CONTEXT.md`; the target module structure and its sequencing live
 in [`MODULARIZATION-PLAN.md`](./MODULARIZATION-PLAN.md).
 
-Staleness: run `/dune:map check` to diff every component's globs against `last_verified_commit`.
+Staleness: run `/dune:dune-map check`; each component's **Fingerprint** hashes its files. A component without a
+Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) and counts as stale.
 
 ## Components
 
@@ -58,11 +59,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/BUILD.bazel`
 - **Depends on**: webapi-api, webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore,
     webapi-sipi-client, webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search,
-    webapi-export, webapi-fair (all in-process ZLayer composition); ingest (remote-owned, `DspIngestClient` config lives
-    here); sipi, fuseki (remote-owned, `docker-compose.yml` dev stack); build-toolchain.
+    webapi-export, webapi-fair (all in-process ZLayer composition); ingest (in-process, `LayersLive` wires
+    `IngestModule` and ingest's `Configuration.layer`); sipi (build time, the image layers its `runtime_fs`;
+    remote-owned in the `docker-compose.yml` dev stack), fuseki (remote-owned, dev stack); build-toolchain.
 - **Used by**: webapi-api, webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore,
     webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, webapi-fair,
-    testkit, test-it, test-e2e. About 60 main-source files import `org.knora.webapi.config`, 40 of them under
+    ingest, testkit, test-it, test-e2e. About 60 main-source files import `org.knora.webapi.config`, 40 of them under
     `slice/`; the store adapter for the media server is the one slice importing none of it.
 - **Boundary rules**:
     - New service layers are registered in `LayersLive.Environment` / `LayersLive.remainingLayer`, not wired
@@ -76,7 +78,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `FairConfig` (`app.fair.*`, env `KNORA_WEBAPI_FAIR_APP_EXTERNAL_BASE_URL`, `_APP_SHELL_URL`,
         `_DPE_OAI_BASE_URL`, `_DPE_OAI_SHORTCODES`) is validated in `AppConfig.config`'s `.validate(...)`
         chain and projected in `AppConfigurations`; `LayersLive` wires `FairResourcesLive`,
-        `FairProjectsLive`, `FairClassesLive`, `FairAssetsLive` and `AssetInfoServiceLayer` - enforcement:
+        `FairProjectsLive`, `FairClassesLive`, `FairAssetsLive` and `IngestModule.layer` - enforcement:
         review.
     - `DspApiServer` skips the server's `406` check for endpoints marked `NegotiatesOwnAccept`
         (`negotiatesItsOwnAccept`), the SPARQL passthrough and the fair routes - enforcement: review.
@@ -89,6 +91,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     webapi-ontology; `Db.init` only orchestrates the sequence.
     - `modules/webapi/BUILD.bazel` defines the `webapi` library, the `app` binary, the `test` junit target
         and the `image_amd64` / `image_arm64` / `index` / `load` / `push` targets for `daschswiss/knora-api`.
+        Both images layer `//modules/sipi:runtime_fs_{amd64,arm64}` (Sipi CLI, `ffmpeg`, `ffprobe` for ingest).
 
 ### webapi-api
 
@@ -124,7 +127,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `IriConverter`, `KnoraIris`, `dsp.errors.*`), webapi-admin, webapi-ontology, webapi-resources,
     webapi-search, webapi-standoff, webapi-export, webapi-fair (`FairApiModule`, `FairServerEndpoints`),
     webapi-security (`Authenticator`), webapi-infrastructure (`CacheManager`, `CsvService`), webapi-triplestore (`TriplestoreService`, `Sparql*` errors), webapi-app
-    (`AppConfig`), build-toolchain.
+    (`AppConfig`), ingest (`IngestServerEndpoints`), build-toolchain.
 - **Used by**: webapi-app, webapi-infrastructure (`DocsServer` builds the OpenAPI and Swagger UI from
     `Endpoints.serverEndpoints`), webapi-admin (inverted), webapi-ontology (inverted), webapi-resources
     (inverted), webapi-export (inverted), webapi-common (inverted), webapi-sipi-client (inverted), testkit,
@@ -332,7 +335,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `knoraApi.externalKnoraApiHostPort` in the cookie name), build-toolchain.
 - **Used by**: webapi-common (`BaseEndpoints` builds `securedEndpoint` / `withUserEndpoint` from
     `Authenticator`), webapi-api (`AuthenticationRestService`, `AuthenticationEndpointsV2`, `ApiV2Module`,
-    `V3BaseEndpoint`, `ApiV3Module`), webapi-app, testkit, test-it, test-e2e.
+    `V3BaseEndpoint`, `ApiV3Module`), webapi-app, ingest (`IngestModule.endpointsLayer` takes `Authenticator`),
+    testkit, test-it, test-e2e.
 - **Boundary rules**:
     - Authenticated routes obtain the current user through `BaseEndpoints`' `securedEndpoint` /
         `withUserEndpoint`, never by re-deriving credentials from headers or cookies in a rest service -
@@ -352,6 +356,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `Authenticator.authenticate(jwtToken)` re-derives the `User` via `getUserByIri` rather than trusting a
         cached principal, so every authenticated request re-reads the user from webapi-admin.
     - Only `AuthenticatorLiveSpec` exists for this slice; `ScopeResolver` has no dedicated spec.
+- **Fingerprint**: `b472a2ada8f8`
 
 ### webapi-infrastructure
 
@@ -479,12 +484,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/store/iiif/**`
     - `modules/webapi/src/main/scala/org/knora/webapi/util/SipiUtil.scala`
 - **Purpose**: The Assets-context adapter to the Sipi media server for the two things nothing else does:
-    fetching Sipi-derived file metadata via dsp-ingest, and fetching plain-text files Sipi serves, used for
+    fetching Sipi-derived file metadata via ingest's asset info, and fetching plain-text files Sipi serves, used for
     standoff mapping and XSLT lookups. It does no asset ingest, export or erase; that is `DspIngestClient` in
     webapi-admin.
 - **Key entities**: `SipiService`, `SipiServiceLive`, `SipiServiceMock`, `SipiMockMethodName`,
-    `SipiException`, `FileMetadataSipiResponse`, `SipiUtil`, `getSipiErrorMessage`, `AssetInfoServiceLayer`,
-    `FairAssetsLive`
+    `SipiException`, `FileMetadataSipiResponse`, `SipiUtil`, `getSipiErrorMessage`, `FairAssetsLive`
 - **Public interface**: the `SipiService` trait (`getFileMetadataFromDspIngest(shortcode, assetId)`,
     `getTextFileRequest(fileUrl, senderName)`); `FileMetadataSipiResponse`; `SipiServiceMock` as the test
     double (`setReturnValue`, `assertNoInteraction`); `SipiUtil.getSipiErrorMessage`.
@@ -499,13 +503,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-admin (`DspIngestClient`, `KnoraProject.Shortcode`,
     `MaintenanceRequests.AssetId`), webapi-infrastructure (`TracingHttpClient`), webapi-api (inverted, the
     three `store/iiif` files import `slice.api.*`), webapi-fair (the `FairAssets` port), sipi (remote-owned),
-    ingest (remote-owned, transitively through `DspIngestClient`; in-process for `AssetInfoServiceLayer`,
-    which builds `swiss.dasch.domain.AssetInfoService`), build-toolchain.
+    ingest (in-process, through `DspIngestClient` and, in `FairAssetsLive`, `swiss.dasch.domain.AssetInfoService`),
+    build-toolchain.
 - **Used by**: webapi-resources (`ResourcesResponderV2`, `ResourceUtilV2`), webapi-common
     (`ApiComplexV2JsonLdRequestParser`, `ConstructResponseUtilV2`), webapi-ontology (`OntologyTransformer`),
     webapi-standoff (`StandoffMappingService`), webapi-app, testkit, test-it, test-e2e. No responder or
-    slice calls Sipi's HTTP API outside this component. `AssetInfoServiceLayer` is consumed by
-    webapi-export and webapi-fair (through `FairAssetsLive`).
+    slice calls Sipi's HTTP API outside this component.
 - **Boundary rules**:
     - Only `SipiServiceLive` and `SipiServiceMock` implement `SipiService`; other callers depend on the
         trait - enforcement: review (no sealed or private constraint in code).
@@ -515,11 +518,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         structural test and main separation for its mock - enforcement: docs-only.
     - `getTextFileRequest` is documented as internal, not for arbitrary external URLs - enforcement:
         docs-only (a method comment, no runtime check).
-    - `AssetInfoServiceLayer.layer` is the single construction of the ingest sidecar reader
+    - `IngestModule.layer` (ingest) is the single construction of the ingest sidecar reader
         (`AssetInfoService`), shared by webapi-export and `FairAssetsLive`; no consumer builds its own -
         enforcement: review. `FairAssetsLive` implements the `FairAssets` port of webapi-fair.
     - Wiring: shared inventory. `SipiServiceLive.layer` is the sole `SipiService` binding, registered once in
-        `core/LayersLive.scala`, which also registers `AssetInfoServiceLayer.layer` and `FairAssetsLive.layer`.
+        `core/LayersLive.scala`, which also registers `IngestModule.layer` and `FairAssetsLive.layer`.
 - **Durable state**: none owned. This component is stateless; durable asset bytes and metadata live in Sipi's
     file store and are fetched fresh through `DspIngestClient`, which is the only reader and writer of asset
     info. `SipiServiceLive` only reads.
@@ -574,10 +577,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `slice.api.admin.model.Project`, `UserDto`, `Codecs`, `PagedResponse`), webapi-resources (reach-in:
     `ListsResponder` imports 13 query classes from `slice.resources.repo`), webapi-fair (`FairProjectsLive`
     implements the `FairProjects` port), webapi-search (`ProjectDataGraphsLive` implements the
-    `ProjectDataGraphs` port), ingest (remote-owned via `DspIngestClient`), build-toolchain.
+    `ProjectDataGraphs` port), ingest (in-process: `DspIngestClientLive` runs on ingest's services and
+    `IngestFetchAssetPermissions` implements ingest's `FetchAssetPermissions` port), build-toolchain.
 - **Used by**: webapi-api, webapi-resources, webapi-export, webapi-ontology, webapi-search, webapi-security,
     webapi-standoff, webapi-common, webapi-triplestore, webapi-sipi-client, webapi-infrastructure,
-    webapi-fair (the `Shortcode` and `Permission` types), webapi-app, sipi (remote-owned, the Lua scripts
+    webapi-fair (the `Shortcode` and `Permission` types), webapi-app, ingest (`IngestModule` builds
+    `DspIngestClientLive` and takes `AssetPermissionsCache`), sipi (remote-owned, the Lua scripts
     call `GET /admin/files/*`), testkit, test-it, test-e2e.
 - **Boundary rules**:
     - `FairProjectsLive` (`slice/admin/domain/service`) implements the `FairProjects` port declared by
@@ -1076,8 +1081,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         any change on the export or data-import paths.
 - **Depends on**: webapi-admin, webapi-ontology, webapi-triplestore, webapi-resources, webapi-standoff,
     webapi-common, webapi-infrastructure, webapi-app (`AppConfig`), webapi-api (inverted and cyclic), bagit,
-    shacl-validator, ingest (in-process for `swiss.dasch.domain.AssetInfoService`, remote-owned for
-    `DspIngestClient`), build-toolchain.
+    shacl-validator, ingest (in-process for `swiss.dasch.domain.AssetInfoService` and, through
+    `DspIngestClient`, asset export and import), build-toolchain.
 - **Used by**: webapi-api, webapi-app, testkit, test-it, test-e2e.
 - **Boundary rules**:
     - Reads of admin and permission data go through webapi-admin services, not raw SPARQL against
@@ -1103,7 +1108,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         metadata rules) from webapi-resources - enforcement:
         review.
     - `ExportApiModule` takes `AssetInfoService` from the environment; the single construction is
-        `AssetInfoServiceLayer` in webapi-sipi-client, shared with webapi-fair - enforcement: review.
+        `IngestModule.layer` in ingest, shared with webapi-fair - enforcement: review.
     - Wiring: shared inventory. A new service is registered in `ExportModule.scala` or
         `ExportApiModule.scala`, surfaced through `core/LayersLive.scala` and consumed via `ApiV3Module.scala`.
 - **Durable state**:
@@ -1119,7 +1124,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         rather than failing.
     - Fuseki named graphs (project data, ontology, admin, permissions), multi-writer:
         `triplestore.uploadNQuads` here plus the webapi-admin repos, webapi-ontology and webapi-resources.
-    - The dsp-ingest asset store, multi-writer: `DspIngestClient.importProject` here plus ingest's own upload
+    - The ingest asset store, multi-writer: `DspIngestClient.importProject` here plus ingest's own upload
         path.
     - `ProjectExportService` in webapi-admin overlaps functionally, exporting the same four graph families as
         TriG for `/admin/projects/.../export`, but shares no code with `ProjectMigrationExportService`.
@@ -1184,7 +1189,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `BaseEndpoints`, and are marked `NegotiatesOwnAccept` - enforcement: review.
     - Production code under `slice/fair` is ASCII-only - enforcement: review.
     - Wiring: shared inventory. `FairApiModule.layer` is added to `ApiModule`'s composition and
-        `FairApiModule.Dependencies` to its environment; the four port adapters, `AssetInfoServiceLayer` and
+        `FairApiModule.Dependencies` to its environment; the four port adapters, `IngestModule.layer` and
         the `fair` config projection are listed in `core/LayersLive.scala`.
 - **Durable state**: none stored. `AppShellLive` holds one process-local cache entry for the dsp-app
     `index.html`, kept 10 s on success and 2 s when the shell is unavailable, single writer, so each API
@@ -1196,67 +1201,68 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 
 - **Paths**:
     - `modules/ingest/**`
-    - `modules/test-ingest-integration/**`
-- **Purpose**: dsp-ingest, a standalone Scala and ZIO service in package `swiss.dasch` hosting the Assets
-    bounded context's byte-handling side: asset ingestion, Sipi-driven transcoding, storage layout,
-    checksums, project bulk-ingest and import, reports and maintenance actions. It ships as its own container
-    image, which embeds the Sipi binary, independent of the `org.knora.webapi` tree.
-- **Key entities**: `IngestService`, `BulkIngestService`, `ImportService`, `ProjectService`,
-    `ProjectRepository`, `ProjectRepositoryLive`, `StorageService`, `StorageServiceLive`, `AssetInfoService`,
-    `AssetInfoServiceLive`, `AssetRef`, `AssetId`, `StillImageService`, `MovingImageService`, `SipiClient`,
-    `SipiClientLive`, `ReportService`, `MaintenanceActionsLive`, `CsvService`, `FileChecksumServiceLive`,
-    `AuthService`, `AuthorizationHandler`, `Endpoints`, `IngestApiServer`
-- **Public interface**: HTTP only. Tapir endpoints under `/projects/{shortcode}/...` (ingest, bulk-ingest,
-    import, export), `/maintenance/...`, `/reports/...`, `/monitoring/health` and `/docs`. No Scala API is
-    intended for cross-process consumers; `Endpoints` and the `*EndpointsHandler` classes are the sanctioned
-    surface. In practice `AssetInfoService`, `AssetInfoServiceLive`, `StorageServiceLive` and
-    `MimeTypeGuesser` are also imported in-process by webapi-export.
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/ingest/**`
+    - `modules/webapi/src/test/scala/org/knora/webapi/slice/ingest/**`
+- **Purpose**: The ingest library (`//modules/ingest`, package `swiss.dasch`) hosting the Assets bounded
+    context's byte-handling side: asset ingestion, Sipi-driven transcoding, storage layout, checksums, project
+    bulk-ingest, export and import, reports and maintenance actions; plus webapi's `slice/ingest`, which builds
+    it and serves its endpoints under `/ingest/`. It runs in the API process and image and has no server or
+    image of its own.
+- **Key entities**: `IngestService`, `BulkIngestService`, `ImportService`, `ProjectService`, `StorageService`,
+    `StorageServiceLive`, `AssetInfoService`, `AssetInfoServiceLive`, `AssetRef`, `AssetId`,
+    `StillImageService`, `MovingImageService`, `SipiClient`, `SipiClientLive`, `CommandExecutorLive`,
+    `IngestExecutor`, `ReportService`, `MaintenanceActionsLive`, `CsvService`, `FileChecksumServiceLive`,
+    `AuthService`, `AuthorizationHandler`, `FetchAssetPermissions`, `Configuration`, `IngestModule`,
+    `IngestServerEndpoints`, `MigrateSizes`, `MigrateMimeTypes`
+- **Public interface**: HTTP on the API port under `/ingest/`: `/ingest/projects/{shortcode}/...` (assets,
+    bulk-ingest, export, import, erase), `/ingest/maintenance/...`, `/ingest/report/...` and
+    `/ingest/{info,health,metrics}`, with ingest's own token check and error bodies. In process:
+    `IngestModule.layer` provides `AssetInfoService` and webapi-admin's `DspIngestClient`;
+    `IngestModule.endpointsLayer` provides `IngestServerEndpoints`; ingest's `FetchAssetPermissions` port is
+    implemented in webapi-admin. The backfills `swiss.dasch.MigrateSizes` and `MigrateMimeTypes` are main
+    classes on the API image's classpath.
 - **Local-context kit**:
-    - `modules/ingest/src/main/scala/swiss/dasch/Main.scala`
-    - `modules/ingest/src/main/scala/swiss/dasch/Endpoints.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/ingest/IngestModule.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/ingest/IngestServerEndpoints.scala`
+    - `modules/ingest/src/main/scala/swiss/dasch/config/Configuration.scala`
     - `modules/ingest/src/main/scala/swiss/dasch/domain/IngestService.scala`
-    - `modules/ingest/src/main/scala/swiss/dasch/domain/StorageService.scala`
-    - `modules/ingest/src/main/scala/swiss/dasch/domain/AssetInfoService.scala`
-    - `modules/ingest/src/main/scala/swiss/dasch/db/DbMigrator.scala`
+    - `modules/ingest/src/main/scala/swiss/dasch/infrastructure/CommandExecutorLive.scala`
+    - `modules/ingest/src/main/scala/swiss/dasch/infrastructure/IngestExecutor.scala`
     - `modules/ingest/CLAUDE.md`
-    - Sufficiency gap: `SipiClient` (the transcoding contract) and `ProjectRepositoryLive` (the SQLite
-        schema) sit outside the seven-file cap but are load-bearing for most ingest changes, as does
-        `modules/ingest/BUILD.bazel`.
+    - Sufficiency gap: `src/main/resources/ingest.conf`, `modules/ingest/BUILD.bazel`, `StorageService` and
+        `AssetInfoService` sit outside the seven-file cap but are load-bearing for most ingest changes.
 - **Depends on**: bagit (`org.knora.bagit.{BagIt,BagItError}` in `ImportService` and `ProjectService`), jwt
-    (`org.knora.jwt.{JwtClaim,JwtCodec}` in `AuthService`), sipi (remote-owned over HTTP and CLI via
-    `SipiClientLive` and `CommandExecutorLive`; the image also bundles Sipi's `runtime_fs` layer),
-    build-toolchain.
-- **Used by**: webapi-admin (remote-owned, the correct path, `DspIngestClient` over HTTP via sttp),
-    webapi-export (in-process reach-in), webapi-sipi-client (remote-owned, transitively; in-process through
-    `AssetInfoServiceLayer`), webapi-app,
-    testkit (`DspIngestTestContainer`), test-it, test-e2e.
+    (`org.knora.jwt.{JwtClaim,JwtCodec}` in `AuthService`), sipi (the Sipi CLI from the image's `runtime_fs`
+    layer via `CommandExecutorLive`; `docker run` of the knora-sipi image in local-dev mode), webapi-admin
+    (`DspIngestClientLive`, `IngestFetchAssetPermissions`, `AssetPermissionsCache`), webapi-security
+    (`Authenticator`), webapi-app (`AppConfig` for the token secret, issuer and audience), build-toolchain.
+- **Used by**: webapi-app (`LayersLive` wires `IngestModule`), webapi-api (`Endpoints` and `ApiModule`
+    register `IngestServerEndpoints`), webapi-admin (`DspIngestClientLive`, `IngestFetchAssetPermissions`),
+    webapi-export (`AssetInfoService`), webapi-sipi-client (`FairAssetsLive` reads `AssetInfoService`),
+    testkit (ingest configuration for `remainingLayer`), test-it, test-e2e (`IngestEndpointsE2ESpec`).
 - **Boundary rules**:
-    - Cross-process consumers use the HTTP surface. Currently violated by
-        `slice/export/api/ExportApiModule.scala` and `slice/export/api/service/ExportService.scala`, which
-        `import swiss.dasch.domain.{AssetInfoService, AssetInfoServiceLive, StorageServiceLive,
-        MimeTypeGuesser}` and instantiate them as ZIO layers reading the shared asset directory on disk,
-        bypassing both the HTTP boundary and `DspIngestClient`. Enabled by `modules/webapi/BUILD.bazel`
-        depending on `//modules/ingest:ingest_classes`. Read-only; no write calls observed from the webapi
-        side - enforcement: docs-only.
-    - The `ingest_classes` and `ingest` target split exists so webapi can pull in ingest's domain code
-        without its resources, avoiding a clashing `application.conf` and `logback.xml`. The reach-in is a
-        documented trade-off, not an accident - enforcement: structure for the resource split, docs-only for
-        the reach-in itself.
-    - The container image keeps no `USER` directive, because the NFS asset mount requires root reads -
+    - Only `slice/ingest`, the webapi-admin adapters (`DspIngestClient.scala`,
+        `IngestFetchAssetPermissions.scala`), webapi-export, `FairAssetsLive` and the config wiring import
+        `swiss.dasch`; `IngestModule` exposes three types, so ingest's other services never enter
+        `LayersLive`'s environment - enforcement: review.
+    - Ingest reads only `ingest.conf` (`INGEST_*`); webapi's `ConfigFactory.load()` never reads it, so no key or
+        variable is read by both - enforcement: static-analysis (`ConfigurationSpec` and `AppConfigSpec`).
+    - Ingest routes keep ingest's token check, error bodies and value types and are not rebuilt on webapi's
+        `securedEndpoint` (owner decision) - enforcement: docs-only.
+    - Child processes and BagIt zip and unzip run inside `IngestExecutor.withPermit`, and the server logic of
+        every non-monitoring route runs on `IngestExecutor.run` - enforcement: review.
+    - The knora-api image keeps no `USER` directive, because ingest writes NFS-owned assets as root -
         enforcement: docs-only.
-    - Wiring: shared inventory. New services and handlers are added to the flat layer list in `Main.scala`
-        and, for HTTP-exposed ones, to the handler list in `Endpoints.scala`.
+    - Wiring: shared inventory. New services go in `IngestModule`'s layer list and, for HTTP-exposed ones,
+        the handler list of `IngestServerEndpoints`.
 - **Durable state**:
-    - Asset bytes and derivatives on disk under the configured asset dir, single writer `IngestService`,
+    - Asset bytes and derivatives on disk under `INGEST_STORAGE_ASSET_DIR`, single writer `IngestService`,
         `StillImageService` and `MovingImageService` through `StorageServiceLive`.
     - The `<assetId>.info` JSON sidecar per asset, single writer `AssetInfoServiceLive.updateAssetInfo` /
         `saveJsonFile`, also rewritten in bulk by the one-off `AssetSizeMigrationService` and
         `AssetMimeTypeMigrationService`, which are in-component and not concurrent with normal ingest.
-    - The SQLite `project` table, Flyway-migrated by `DbMigrator`, single writer `ProjectRepositoryLive`.
-    - `Main.scala`'s bootstrap `Configuration.layer` reads `ConfigFactory.defaultApplication()`, which on
-        webapi's classpath silently resolves to webapi's `application.conf`, a subtle coupling created by the
-        in-process reach-in.
     - Colocated docs: `modules/ingest/README.md`, `CLAUDE.md`, `CHANGELOG.md` and `modules/ingest/docs/`.
+- **Fingerprint**: `0bd96d0a73c1`
 
 ### sipi
 
@@ -1272,7 +1278,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Public interface**: the built container image (`daschswiss/knora-sipi:latest`, IIIF port 1024, `/health`)
     and the two callback entry points the upstream Sipi binary invokes at runtime,
     `pre_flight(prefix, identifier, cookie)` for IIIF image requests and `file_pre_flight(identifier, cookie)`
-    for non-image downloads. It also exports `//modules/sipi:runtime_fs_{amd64,arm64}` to `//modules/ingest`.
+    for non-image downloads. It also exports `//modules/sipi:runtime_fs_{amd64,arm64}` to `//modules/webapi`.
 - **Local-context kit**:
     - `modules/sipi/BUILD.bazel`
     - `modules/sipi/scripts/sipi.init.lua`
@@ -1284,9 +1290,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: webapi-admin (remote-owned, calls `GET /admin/files/{shortcode}/{identifier}` at runtime,
     served by `AssetPermissionsResponder` and `AssetPermissionsCache`), build-toolchain (rules_oci,
     `//tools/oci:defs.bzl` `image_rootfs_extract`, the base-image digest pins in `MODULE.bazel`).
-- **Used by**: ingest (build time, the `runtime_fs_{amd64,arm64}` filegroups feed the dsp-ingest rootfs),
-    webapi-sipi-client (remote-owned over HTTP), webapi-app (`docker-compose.yml`), testkit
-    (`SipiTestContainer`), test-it, test-e2e.
+- **Used by**: webapi-app (build time, the `runtime_fs_{amd64,arm64}` filegroups are layered into the
+    knora-api image; `docker-compose.yml`), ingest (runs the Sipi CLI from that layer), webapi-sipi-client
+    (remote-owned over HTTP), testkit (`SipiTestContainer`), test-it, test-e2e.
 - **Boundary rules**:
     - No `USER` directive may be reintroduced in the `oci_image`; Sipi must run as root to read NFS-mounted
         assets owned by orchestrator-controlled uids - enforcement: docs-only (no CI check).
@@ -1294,8 +1300,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         read via `//tools/buildinfo:oci_config_label`, never a hardcoded string - enforcement: docs-only.
     - Permission decisions go through the live `/admin/files/*` call to dsp-api, never hardcoded or cached
         indefinitely in Lua - enforcement: docs-only.
-    - The `runtime_fs_*` extraction targets are package-private (`visibility = ["//modules/ingest:__pkg__"]`),
-        so ingest is the only legal build-time consumer of Sipi's extracted binaries - enforcement: structure.
+    - The `runtime_fs_*` extraction targets are package-private (`visibility = ["//modules/webapi:__pkg__"]`),
+        so the knora-api image is the only legal build-time consumer of Sipi's extracted binaries -
+        enforcement: structure.
     - Wiring: reserved-path discovery. Any `.lua` file dropped under `scripts/` is packaged into
         `/sipi/scripts` by the `scripts_layer` `pkg_tar` glob; runtime dispatch is the fixed pair of
         well-known function names the Sipi binary calls by convention.
@@ -1306,6 +1313,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         with `--config` at container start, not by build-time branching.
     - `admin_upload.lua` is a separate upload path for project logos, avatars and icons, distinct from
         ingest's asset upload flow; it writes directly under `config.docroot/admin/`.
+- **Fingerprint**: `705c73995fb3`
 
 ### fuseki
 
@@ -1533,7 +1541,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     in-memory OpenTelemetry assertions. `test-runner` is the standalone JUnit to ZIO Test bridge
     (`DspZTestJUnitRunner`) Bazel uses to execute every ZIO Test spec in this repo.
 - **Key entities**: `E2EZSpec`, `GoldenTest`, `TestContainerLayers`, `FusekiTestContainer`,
-    `SipiTestContainer`, `DspIngestTestContainer`, `SharedVolumes`, `TestContainerOps`, `SharedTestDataADM`,
+    `SipiTestContainer`, `SharedVolumes`, `TestContainerOps`, `SharedTestDataADM`,
     `SharedOntologyTestDataADM`, `SharedListsTestDataADM`, `SharedPermissionsTestData`, `TestApiClient`,
     `TestAdminApiClient`, `TestClientsModule`, `InMemoryTracing`, `SpanAssertions`, `FileModels`,
     `OntologyModels`, `DspZTestJUnitRunner`, `DspZTestRunnerBase`
@@ -1554,11 +1562,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: all thirteen webapi components (it wraps `//modules/webapi:webapi` directly, so every
     slice, message and store package is reachable): webapi-app, webapi-api, webapi-common, webapi-security,
     webapi-infrastructure, webapi-triplestore, webapi-sipi-client, webapi-admin, webapi-ontology,
-    webapi-resources, webapi-standoff, webapi-search, webapi-export. Also sipi, fuseki and ingest through
-    their testcontainers, the shared test fixtures (`SharedVolumes.Images` copies `sipi/testfiles` classpath
+    webapi-resources, webapi-standoff, webapi-search, webapi-export. Also sipi and fuseki through
+    their testcontainers, ingest (`E2EZSpec` passes ingest's configuration to `remainingLayer`), the shared test fixtures (`SharedVolumes.Images` copies `sipi/testfiles` classpath
     resources at runtime) and build-toolchain. `test-runner` is a separate leaf with zero webapi dependency.
-- **Used by**: test-it, test-e2e (both compile deps). Not used by webapi's own unit tests or
-    test-ingest-integration, which depend on test-runner only and keep their own `GoldenTest` and
+- **Used by**: test-it, test-e2e (both compile deps). Not used by webapi's or ingest's own unit tests,
+    which depend on test-runner only and keep their own `GoldenTest` and
     testcontainer helpers to avoid the dependency cycle testkit's design note calls out.
 - **Boundary rules**:
     - testkit must not import test-it or test-e2e; the direction is one-way - enforcement: structure (the
@@ -1584,7 +1592,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 ### test-it
 
 - **Paths**: `modules/test-it/**`
-- **Purpose**: Docker-backed integration test module. Specs run against real Fuseki, Sipi and dsp-ingest
+- **Purpose**: Docker-backed integration test module. Specs run against real Fuseki and Sipi
     testcontainers but call into responders and services in-process, past the HTTP interface. The layout
     mirrors the legacy `responders/`, `messages/` and `store/` package tree it exercises rather than an
     endpoint-shaped one.
@@ -1606,7 +1614,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Depends on**: testkit, test-runner (both in-process), all thirteen webapi components (webapi-app,
     webapi-api, webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore,
     webapi-sipi-client, webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search,
-    webapi-export), sipi, fuseki, ingest (testcontainers), jwt (`SipiIT` mints test tokens), the shared test
+    webapi-export), sipi, fuseki (testcontainers), ingest (in-process), jwt (`SipiIT` mints test tokens), the shared test
     fixtures via `//test_data:integration_fixture_files`, and build-toolchain.
 - **Used by**: none; this is a leaf.
 - **Boundary rules**:
@@ -1628,7 +1636,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `scala_junit_test` `srcs` glob; the only per-file registration is the exclude list for the isolated
         Gravsearch-span spec.
 - **Durable state**: the Fuseki triplestore, single writer per test JVM being the memoized
-    `TestContainerLayers` container, reset via `Db.initWithTestData` per spec; and the Sipi and dsp-ingest
+    `TestContainerLayers` container, reset via `Db.initWithTestData` per spec; and the Sipi and ingest
     asset volumes under `SharedVolumes.Images` / `Temp`, single writer the process-local scoped layer. No
     production datastore is touched.
     - `_DATA` in BUILD.bazel double-includes `src/test/resources`, once via the fixtures glob and once via
@@ -1638,8 +1646,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 ### test-e2e
 
 - **Paths**: `modules/test-e2e/**`
-- **Purpose**: Black-box HTTP integration test module. Specs run against real Fuseki, Sipi and dsp-ingest
-    testcontainers plus an in-process API server, driving it purely through `TestApiClient` and
+- **Purpose**: Black-box HTTP integration test module. Specs run against real Fuseki and Sipi
+    testcontainers plus an in-process API server, which also serves ingest under `/ingest/`, driving it purely through `TestApiClient` and
     `TestAdminApiClient` over HTTP, never touching a responder or repo directly. The layout is `e2e/` for
     legacy REST-route specs, `e2ez/` for newer `E2EZSpec`-based specs, `it/v2/` for v2 endpoint specs and
     `slice/**` for per-slice endpoint specs.
@@ -1663,7 +1671,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `TestClientsModule.layer`), test-runner, all thirteen webapi components (webapi-app, webapi-api,
     webapi-common, webapi-security, webapi-infrastructure, webapi-triplestore, webapi-sipi-client,
     webapi-admin, webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, though
-    reached only through webapi-api's endpoint surface), sipi, fuseki, ingest (testcontainers), bagit
+    reached only through webapi-api's endpoint surface), sipi, fuseki (testcontainers), ingest (`/ingest/`), bagit
     (`ProjectMigrationExportE2ESpec`), the shared test fixtures, and build-toolchain.
 - **Used by**: none; this is a leaf.
 - **Boundary rules**:
@@ -1679,7 +1687,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `src/test/scala/**`, picked up by a single glob-based `scala_junit_test` target with no per-file
         registration and no target split.
 - **Durable state**: the Fuseki triplestore, single writer per test JVM being the memoized
-    `TestContainerLayers` container; and the Sipi and dsp-ingest asset volumes under `SharedVolumes.Images` /
+    `TestContainerLayers` container; and the Sipi and ingest asset volumes under `SharedVolumes.Images` /
     `Temp`, single writer the process-local scoped layer. No production datastore is touched.
     - `bulk-import-parity/**` fixtures live locally under `src/test/resources/test_data/`, not in the shared
         repo-root `test_data/`, consistent with the "prefer self-contained fixtures" guidance.
@@ -1724,7 +1732,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `require-bazel`,
     `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
 - **Public interface**: `just <recipe>`, the sole entry point, enumerated by `just --list` (`fmt`, `check`,
-    `header-fix`; `test`, `test-unit`, `test-it`, `test-e2e`, `test-ingest*`; `docker-build*`,
+    `header-fix`; `test`, `test-unit`, `test-it`, `test-e2e`, `test-ingest`; `docker-build*`,
     `docker-publish*`; the `stack-*` lifecycle; `docs-*`; `markdownlint`; `structurizer`; `clean*`); the
     `scala_library` / `scala_binary` / `scala_macro_library` / `scala_junit_test` drop-in replacements in
     `tools/scalafmt/defs.bzl` that every module BUILD file loads; the `buildinfo` and `oci_config_label`
@@ -1981,8 +1989,8 @@ webapi-sipi-client, webapi-security) depend on webapi-common; the domain slices 
 webapi-ontology, webapi-resources, webapi-standoff, webapi-search, webapi-export, webapi-fair) depend on the
 platform;
 webapi-api depends on the domain; webapi-app depends on webapi-api. The three test modules depend on
-everything. ingest, sipi and fuseki are separate deployables reached over HTTP, not compile-time
-dependencies, with one documented exception noted below.
+everything. ingest is a library the API links and serves under `/ingest/`; its webapi-side consumers are
+named in its entry. sipi and fuseki are separate deployables reached over HTTP, not compile-time dependencies.
 
 ```mermaid
 graph LR
@@ -1993,7 +2001,8 @@ graph LR
     API["webapi-api"]
     APP["webapi-app"]
     TESTS["tests: testkit, test-it, test-e2e"]
-    DEPLOY["deployables: ingest, sipi, fuseki"]
+    INGEST["ingest library"]
+    DEPLOY["deployables: sipi, fuseki"]
 
     COMMON --> LIB
     PLATFORM --> COMMON
@@ -2001,6 +2010,8 @@ graph LR
     API --> DOMAIN
     APP --> API
     TESTS --> APP
+    DOMAIN --> INGEST
+    INGEST --> LIB
     APP -.->|HTTP| DEPLOY
 ```
 
@@ -2021,8 +2032,6 @@ Observed violations, the wrong-direction edges marked `(inverted)` in the entrie
 - webapi-common additionally depends upward on webapi-admin, webapi-ontology, webapi-resources,
     webapi-standoff, webapi-security, webapi-triplestore and webapi-sipi-client; these are the false
     foundation, not api or app edges, and are marked `(upward)`.
-- webapi-export links `//modules/ingest:ingest_classes` and imports `swiss.dasch.domain.*` in process,
-    bypassing the HTTP boundary between two deployables.
 
 Intended promotion path: per-domain Bazel targets with private-by-default `visibility` and allowlisted
 published interfaces, plus Bazel-query checks for forbidden dependency paths, per MODULARIZATION-PLAN.md
