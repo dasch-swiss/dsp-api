@@ -4,24 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-dsp-ingest is a module of dsp-api; build, test, and format it from the **repo root** via the
-dsp-api build (see the root `CLAUDE.md`), not from this directory.
+Ingest is a library of dsp-api, served by it under `/ingest/`; build, test, and format it from the **repo root** via
+the dsp-api build (see the root `CLAUDE.md`), not from this directory.
 
 - `bazel test //modules/ingest:test` (or `just test-ingest`) - unit tests
-- `bazel test //modules/test-ingest-integration:test` (or `just test-ingest-integration`) - integration tests (Docker/testcontainers)
-- `just docker-build-ingest-image` - build the dsp-ingest image (Bazel + load into the local Docker daemon)
 - `just fmt` / `just check` - format / check formatting (whole repo)
-- `bazel run //modules/ingest:app` - run the service locally
+- `bazel run //modules/webapi:app` - run dsp-api, which serves ingest under `/ingest/` (there is no standalone app)
 
 ### Testing
 
 - Unit tests use the ZIO Test framework; run via `bazel test //modules/ingest:test`.
-- Integration tests live in `modules/test-ingest-integration/` and use testcontainers.
+- End-to-end coverage of the `/ingest/` routes lives in `modules/test-e2e/` (`slice/ingest/IngestEndpointsE2ESpec`).
 
 ## Architecture
 
 - Endpoints follow `*Endpoints.scala` (Tapir definitions) → `*EndpointsHandler.scala`
-  (handlers), aggregated in `Endpoints.scala`.
+  (handlers); dsp-api's `slice/ingest/IngestServerEndpoints` mounts them under `/ingest/`.
 
 ### Key Domain Concepts
 
@@ -32,10 +30,11 @@ dsp-api build (see the root `CLAUDE.md`), not from this directory.
 
 ### Development Environment
 
-- Service runs on port 3340 by default
-- Uses JWT authentication (can be disabled with `JWT_DISABLE_AUTH=true`)
-- Local development storage in `localdev/storage/`
-- Docker setup integrates with Sipi image server (`daschswiss/knora-sipi`)
+- Served on the dsp-api port (3333) under `/ingest/`
+- Uses JWT authentication with dsp-api's secret, issuer and `app.dsp-ingest.audience`
+- Configuration in `src/main/resources/ingest.conf` (`INGEST_*` environment variables)
+- Runs the Sipi CLI, `ffmpeg` and `ffprobe` from the dsp-api image; with `INGEST_SIPI_USE_LOCAL_DEV=true` it runs Sipi
+  through `docker run` of `daschswiss/knora-sipi`
 
 ### Code Style
 
