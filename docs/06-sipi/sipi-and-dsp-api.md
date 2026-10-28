@@ -35,6 +35,9 @@ In the complex schema, a `StillImageFileValue` carries
 `knora-api:stillImageFileValueHasIIIFImageService`: the id of the IIIF Image API service
 that serves the image. Append `/info.json` to read the sizes, tiles and formats the service
 offers to the requesting user, and build IIIF image requests from that id.
+The id is built from `sipi.externalBaseUrl`. It matches the `id` in Sipi's `info.json` only
+if the reverse proxy in front of Sipi forwards the public host and scheme
+(`X-Forwarded-Host` or `Host`, and `X-Forwarded-Proto`).
 Knowing the id does not grant access to the image; access is checked on every request.
 Placeholder file values, which have no stored image, carry no image service.
 

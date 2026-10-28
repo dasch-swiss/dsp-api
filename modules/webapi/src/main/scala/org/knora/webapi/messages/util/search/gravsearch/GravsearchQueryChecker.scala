@@ -141,8 +141,8 @@ object GravsearchQueryChecker {
            )
     } yield ()
 
-  // Predicates that aren't allowed in Gravsearch. Every property computed at response time rather than stored
-  // belongs here, since a query on it has no triples to match.
+  // Predicates that aren't allowed in Gravsearch: knora-api complex-schema names with no stored triples to match,
+  // such as computed values like the IIIF URLs.
   val forbiddenPredicates: Set[IRI] = Set(
     OntologyConstants.KnoraApiV2Complex.AttachedToUser,
     OntologyConstants.KnoraApiV2Complex.HasPermissions,

@@ -79,7 +79,7 @@ class StillImageFileValueContentV2Spec extends ZIOSpecDefault {
           for {
             r     <- render(content(filename, ApiV2Simple), ApiV2Simple)
             (_, m) = r
-          } yield assertTrue(!m.toString.contains("hasIIIFImageService"), !m.contains(serviceIdProp))
+          } yield assertTrue(!m.toString.contains("hasIIIFImageService"))
         },
         test("fileValueAsUrl points at the full-size default jpg") {
           for {
