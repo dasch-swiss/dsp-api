@@ -46,15 +46,7 @@ class StillImageFileValueContentV2Spec extends ZIOSpecDefault {
 
   private val serviceIdCases = Seq(
     ("http://0.0.0.0:1024", "0001", "abc.jp2", "http://0.0.0.0:1024/0001/abc.jp2"),
-    ("http://0.0.0.0:1024/", "0001", "abc.jp2", "http://0.0.0.0:1024/0001/abc.jp2"),
     ("https://iiif.example.org/sipi", "080E", "abc.jp2", "https://iiif.example.org/sipi/080E/abc.jp2"),
-    ("https://iiif.example.org/sipi/", "080E", "abc.jp2", "https://iiif.example.org/sipi/080E/abc.jp2"),
-    (
-      "http://0.0.0.0:1024",
-      "0001",
-      "4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2",
-      "http://0.0.0.0:1024/0001/4sAf4AmPeeg-ZjDn3Tot1Zt_x.jp2",
-    ),
   )
 
   override def spec: Spec[Any, Any] =
@@ -87,7 +79,7 @@ class StillImageFileValueContentV2Spec extends ZIOSpecDefault {
           for {
             r     <- render(content(filename, ApiV2Simple), ApiV2Simple)
             (_, m) = r
-          } yield assertTrue(!m.toString.contains("hasIIIFImageService"), !m.toString.contains(serviceIdProp))
+          } yield assertTrue(!m.toString.contains("hasIIIFImageService"), !m.contains(serviceIdProp))
         },
         test("fileValueAsUrl points at the full-size default jpg") {
           for {

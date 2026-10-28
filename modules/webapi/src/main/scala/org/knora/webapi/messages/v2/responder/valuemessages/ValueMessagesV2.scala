@@ -2154,12 +2154,12 @@ object StillImageFileValueContentV2 {
    * It equals the `id` in Sipi's `info.json` for that image as long as Sipi sees the public host and scheme
    * named by `externalBaseUrl`, which in a deployment is the reverse proxy's job.
    *
-   * @param externalBaseUrl  the public Sipi base URL; a path prefix is kept and a trailing slash dropped.
+   * @param externalBaseUrl  the public Sipi base URL, without a trailing slash, as every other Sipi URL assumes.
    * @param shortcode        the shortcode of the project the file belongs to.
-   * @param internalFilename the internal filename of the image, passed through unchanged.
+   * @param internalFilename the internal filename of the image.
    */
   def serviceId(externalBaseUrl: String, shortcode: Shortcode, internalFilename: String): String =
-    s"${externalBaseUrl.stripSuffix("/")}/${shortcode.value}/$internalFilename"
+    s"$externalBaseUrl/${shortcode.value}/$internalFilename"
 
   def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
     comment   <- objectCommentOption(r)

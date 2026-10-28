@@ -141,7 +141,8 @@ object GravsearchQueryChecker {
            )
     } yield ()
 
-  // A set of predicates that aren't allowed in Gravsearch.
+  // Predicates that aren't allowed in Gravsearch. Every property computed at response time rather than stored
+  // belongs here, since a query on it has no triples to match.
   val forbiddenPredicates: Set[IRI] = Set(
     OntologyConstants.KnoraApiV2Complex.AttachedToUser,
     OntologyConstants.KnoraApiV2Complex.HasPermissions,
