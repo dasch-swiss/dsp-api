@@ -2034,8 +2034,9 @@ Observed violations, the wrong-direction edges marked `(inverted)` in the entrie
     foundation, not api or app edges, and are marked `(upward)`.
 - ingest's webapi side (`slice/ingest`) depends on webapi-admin, webapi-security and webapi-app, which depend
     on ingest in turn: a cycle through the component. The library `//modules/ingest` imports no `org.knora.webapi`
-    code and must not - enforcement: structure (its Bazel target has no webapi dependency); the cycle is confined
-    to `slice/ingest` and the two webapi-admin adapters.
+    code and must not - enforcement: structure (its Bazel target has no webapi dependency). The cycle stays within
+    `slice/ingest` and the webapi-admin adapters `DspIngestClient.scala` and `IngestFetchAssetPermissions.scala` -
+    enforcement: review (all of them sit in the one `//modules/webapi` target).
 
 Intended promotion path: per-domain Bazel targets with private-by-default `visibility` and allowlisted
 published interfaces, plus Bazel-query checks for forbidden dependency paths, per MODULARIZATION-PLAN.md
