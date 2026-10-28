@@ -4,7 +4,7 @@ WHERE {
 {
 SELECT DISTINCT ?match__matchFulltext WHERE {
 GRAPH <http://www.knora.org/data/0001/anything> {
-?match__matchFulltext <http://jena.apache.org/text#query> "Zeitglöcklein"^^<http://www.w3.org/2001/XMLSchema#string> .
+?match__matchFulltext <http://jena.apache.org/text#query> ("Zeitglöcklein" 1000000) .
 }
 }
 }
