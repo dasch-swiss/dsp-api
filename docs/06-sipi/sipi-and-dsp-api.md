@@ -34,19 +34,17 @@ a IIIF URL that can be used to retrieve the file from Sipi.
 In the complex schema, a `StillImageFileValue` carries
 `knora-api:stillImageFileValueHasIIIFImageService`: the id of the IIIF Image API service
 that serves the image. Append `/info.json` to read the sizes, tiles and formats the service
-offers to the requesting user, and build IIIF image requests from that id. The id names
-the service; it does not grant access to the image. Placeholder file values, which have no
-stored image, carry no image service.
+offers to the requesting user, and build IIIF image requests from that id.
+Knowing the id does not grant access to the image; access is checked on every request.
+Placeholder file values, which have no stored image, carry no image service.
 
-The sizes a user is served come from `info.json`, not from the file value:
-a user may be served a smaller image than the stored one.
 `knora-api:stillImageFileValueHasDimX` and `knora-api:stillImageFileValueHasDimY` are the
-native size of the stored file, recorded at ingest, and must not be used to size image
-requests, tiles, regions or overlays.
+native size of the stored file, not the size served to a user, which may be smaller.
+Take the sizes and region coordinates to request from `info.json`.
 
 A `StillImageExternalFileValue` points at an image served by an external IIIF server.
-It has no `stillImageFileValueHasIIIFImageService`; its `knora-api:stillImageFileValueHasExternalUrl`
-and `knora-api:stillImageFileValueHasIIIFBaseUrl` describe that server.
+It has no `stillImageFileValueHasIIIFImageService`: `knora-api:stillImageFileValueHasExternalUrl`
+gives the image URL and `knora-api:stillImageFileValueHasIIIFBaseUrl` the server's base URL.
 See the `knora-api` ontology for details.
 
 ## Authentication of Users with Sipi
