@@ -248,20 +248,20 @@ Checks:
 
 ### Phase 4: Contain ingest work
 
-- [ ] Add `modules/ingest/.../infrastructure/IngestExecutor.scala` (port of `IngestExecutor` from `11c2df207`, without the nested-permit `FiberRef` guard): a scoped layer over `ExecutorConfig` with a fixed pool of `ingest-<n>` daemon threads, shut down on release, a `Semaphore` with as many permits, `run` (`onExecutor`) and `withPermit`; log the size once
-- [ ] Take a permit around the process in `CommandExecutorLive.execute`, and, when `use-local-dev` is false, start the process as `/bin/sh -c 'echo 1000 > /proc/self/oom_score_adj && exec "$0" "$@"' <command> <params...>` (port of `cfa61c4f9`)
-- [ ] Take a permit around BagIt creation in `ProjectService.zipProject` and around `BagIt.readAndValidateZip` and zip extraction in `ImportService.importZipFile` (port of `7ef3dd29c`; owner decision 2026-10-27: export and import are capped too)
-- [ ] Add an `IngestServiceSpec` (or `ProjectServiceSpec`/`ImportServiceSpec`) case with an `IngestExecutor` of one permit: an image ingest, a project export and a project import each complete within a timeout (no nested-permit deadlock)
-- [ ] Provide an `IngestExecutor` in the ingest specs that build `CommandExecutorLive` (`CommandExecutorLiveSpec`, `ProjectsEndpointSpec`, `IngestServiceSpec`)
-- [ ] In `IngestServerEndpoints`, run the server logic of every endpoint except monitoring's on the ingest pool (rebuild each as `ServerEndpoint(se.endpoint, se.securityLogic, m => p => i => executor.run(se.logic(m)(p)(i)))`); run `DspIngestClientLive`'s export, import and erase with `IngestExecutor.run`; add `IngestExecutor.layer` to `IngestModule`
-- [ ] Add `IngestExecutorSpec`: work in `run` executes on an `ingest-` thread, a `forkDaemon` inside `run` does too, and no more than the permit count of `withPermit` sections run at once
-- [ ] Extend `CommandExecutorLiveSpec`: the wrapper is present outside local-dev mode and absent inside it; a Linux-only case (`TestAspect.ifProp("os.name", _.contains("Linux"))`) prints `1000` for `cat /proc/self/oom_score_adj`
-- [ ] Add an `IngestServerEndpointsSpec` case: a bulk-ingest request's forked job runs on an `ingest-` thread, and `/ingest/health` does not
-- [ ] Add an `IngestServiceSpec` case where a failing `SipiClient` fails only that ingest and a concurrent one succeeds, and a `BulkIngestServiceSpec` case where it is counted in `IngestResult.failed` and the run continues (REQ-3.3)
-- [ ] Run `bazel test //modules/ingest:test //modules/webapi:test`; both pass
-- [ ] Run `just test-e2e`; it passes
-- [ ] Run `just check`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add `modules/ingest/.../infrastructure/IngestExecutor.scala` (port of `IngestExecutor` from `11c2df207`, without the nested-permit `FiberRef` guard): a scoped layer over `ExecutorConfig` with a fixed pool of `ingest-<n>` daemon threads, shut down on release, a `Semaphore` with as many permits, `run` (`onExecutor`) and `withPermit`; log the size once
+- [x] Take a permit around the process in `CommandExecutorLive.execute`, and, when `use-local-dev` is false, start the process as `/bin/sh -c 'echo 1000 > /proc/self/oom_score_adj && exec "$0" "$@"' <command> <params...>` (port of `cfa61c4f9`)
+- [x] Take a permit around BagIt creation in `ProjectService.zipProject` and around `BagIt.readAndValidateZip` and zip extraction in `ImportService.importZipFile` (port of `7ef3dd29c`; owner decision 2026-10-27: export and import are capped too)
+- [x] Add an `IngestServiceSpec` (or `ProjectServiceSpec`/`ImportServiceSpec`) case with an `IngestExecutor` of one permit: an image ingest, a project export and a project import each complete within a timeout (no nested-permit deadlock)
+- [x] Provide an `IngestExecutor` in the ingest specs that build `CommandExecutorLive` (`CommandExecutorLiveSpec`, `ProjectsEndpointSpec`, `IngestServiceSpec`)
+- [x] In `IngestServerEndpoints`, run the server logic of every endpoint except monitoring's on the ingest pool (rebuild each as `ServerEndpoint(se.endpoint, se.securityLogic, m => p => i => executor.run(se.logic(m)(p)(i)))`); run `DspIngestClientLive`'s export, import and erase with `IngestExecutor.run`; add `IngestExecutor.layer` to `IngestModule`
+- [x] Add `IngestExecutorSpec`: work in `run` executes on an `ingest-` thread, a `forkDaemon` inside `run` does too, and no more than the permit count of `withPermit` sections run at once
+- [x] Extend `CommandExecutorLiveSpec`: the wrapper is present outside local-dev mode and absent inside it; a Linux-only case (`TestAspect.ifProp("os.name", _.contains("Linux"))`) prints `1000` for `cat /proc/self/oom_score_adj`
+- [x] Add an `IngestServerEndpointsSpec` case: a bulk-ingest request's forked job runs on an `ingest-` thread, and `/ingest/health` does not
+- [x] Add an `IngestServiceSpec` case where a failing `SipiClient` fails only that ingest and a concurrent one succeeds, and a `BulkIngestServiceSpec` case where it is counted in `IngestResult.failed` and the run continues (REQ-3.3)
+- [x] Run `bazel test //modules/ingest:test //modules/webapi:test`; both pass
+- [x] Run `just test-e2e`; it passes (all but the pre-existing `ValueHasXmlOnValueWriteE2ESpec` "6000 standoff tags" timeout)
+- [x] Run `just check`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ### Phase 5: Emit new original-file links on the API host
 
