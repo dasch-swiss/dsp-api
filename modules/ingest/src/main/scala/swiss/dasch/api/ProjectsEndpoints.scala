@@ -169,7 +169,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag(projects)
     .description(
       "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
+        "or ProjectResourceCreateRestrictedPermission in the project).",
     )
 
   val getProjectsChecksumReport = base.secureEndpoint.get
@@ -178,7 +179,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag(projects)
     .description(
       "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
+        "or ProjectResourceCreateRestrictedPermission in the project).",
     )
 
   val deleteProjectsErase = base.secureEndpoint.delete
@@ -197,7 +199,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag("assets")
     .description(
       "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with read/write permissions).",
+        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
+        "or ProjectResourceCreateRestrictedPermission in the project).",
     )
 
   val getProjectsAssetsOriginal = base.withUserEndpoint.get
@@ -208,7 +211,8 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag("assets")
     .description(
       """|Offers the original file for download, provided the API permisisons allow.
-         |Authorization: JWT bearer token (any authenticated user).""".stripMargin,
+         |Authorization: optional JWT bearer token. The file is offered if the API's access decision
+         |for the asset allows it, also to anonymous callers.""".stripMargin,
     )
 
   given filenameCodec: Codec[String, AssetFilename, CodecFormat.TextPlain] =

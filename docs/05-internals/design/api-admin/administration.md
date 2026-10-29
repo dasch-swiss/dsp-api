@@ -324,10 +324,13 @@ as follows:
 | Built-In Group    | Project | Group   | User                | Resource               | Value                |
 | ----------------- | ------- | ------- | ------------------- | ---------------------- | -------------------- |
 | **SystemAdmin**   | `CRUD`  | `CRUDP` | `CRUDP` all         | `CRUDP` all            | `CRUDP` all          |
-| **ProjectAdmin**  | `-RUD`  | `CRUDP` | `CRUDP` +/- project | `CRUDP` (in project)   | `CRUDP` (in project) |
+| **ProjectAdmin**  | `-RU-`  | `CRUDP` | `CR---` +/- project | `CRUDP` (in project)   | `CRUDP` (in project) |
 | **ProjectMember** | `----`  | `-----` | `-----`             | `CRU--` (in project)   | `-----` (in project) |
 | **Creator**       | `----`  | `-----` | `-----`             | `-----` (his resource) | `-----` (his value)  |
-| **KnownUser**     | `C---`  | `C----` | `CRUD-` himself     | `-----` (in project)   | `-----` (in project) |
+| **KnownUser**     | `----`  | `-----` | `-RUD-` himself     | `-----` (in project)   | `-----` (in project) |
+
+Only a SystemAdmin can delete (erase) a project.
+Only a SystemAdmin or the user themselves can update or delete a user.
 
 Default Permissions Matrix for new Projects
 

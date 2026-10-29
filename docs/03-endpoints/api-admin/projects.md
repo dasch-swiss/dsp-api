@@ -718,7 +718,7 @@ Example response:
 
 ### Get Restricted View Settings
 
-Permissions: ProjectAdmin
+Permissions: No permissions required
 
 Request definition:
 
