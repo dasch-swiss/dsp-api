@@ -1,5 +1,18 @@
 # Changelog
 
+## [40.5.1](https://github.com/dasch-swiss/dsp-api/compare/v40.5.0...v40.5.1) (2026-10-30)
+
+
+### Maintenances
+
+* bump sipi to v10.0.0 ([#4404](https://github.com/dasch-swiss/dsp-api/issues/4404)) ([cafe3c1](https://github.com/dasch-swiss/dsp-api/commit/cafe3c1caa174352ca173fa0b28d16b72767421e))
+* **ci:** add the readiness regression check ([#4395](https://github.com/dasch-swiss/dsp-api/issues/4395)) ([6946ab5](https://github.com/dasch-swiss/dsp-api/commit/6946ab5b9375fa01f44b5164e2894c26dac7136a))
+
+
+### Documentation
+
+* correct stale role requirements in endpoint docs and descriptions ([#4409](https://github.com/dasch-swiss/dsp-api/issues/4409)) ([86b8732](https://github.com/dasch-swiss/dsp-api/commit/86b87324b60c32079219b6f6a379895c29805e3f))
+
 ## [40.5.0](https://github.com/dasch-swiss/dsp-api/compare/v40.4.0...v40.5.0) (2026-10-23)
 
 
