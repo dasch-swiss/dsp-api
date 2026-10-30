@@ -37,7 +37,7 @@
                                         "profile": "level1"
                                     }
                                 ],
-                                "id": "IIIF_BASE_URL/0001/page1.jp2/full/512,256/0/default.jpg",
+                                "id": "IIIF_BASE_URL/0001/page1.jp2/full/max/0/default.jpg",
                                 "type": "Image",
                                 "width": 512
                             }
@@ -75,7 +75,7 @@
                                         "profile": "level1"
                                     }
                                 ],
-                                "id": "IIIF_BASE_URL/0001/page2.jp2/full/512,256/0/default.jpg",
+                                "id": "IIIF_BASE_URL/0001/page2.jp2/full/max/0/default.jpg",
                                 "type": "Image",
                                 "width": 512
                             }

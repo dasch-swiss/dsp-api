@@ -577,7 +577,9 @@ Corollary: `GRAPH <projectDataGraph>` **replaces** `?s knora-base:attachedToProj
 project data graph *is* the project, so once a pattern is graph-scoped the membership triple is
 a redundant join, not a belt-and-braces check. Measured (DEV-6827): dropping it from the
 class-browsing prequery, together with its no-op `DISTINCT`, took the largest class in the
-store from 1.66s to 310ms per page (5.4×) with byte-identical results.
+store from 1.66s to 310ms per page (5.4×) with byte-identical results. The one exception is a GRAPH-scoped
+Gravsearch Lucene lookup: it keeps the main resource's `attachedToProject`, because the main resource need not be
+the lookup's anchor (`docs/adr/0012-graph-scoped-lucene-text-lookups.md`).
 
 For a project-wide read, scope to the project's data graph (see § Scope a project-wide aggregation to the project's
 data graph).

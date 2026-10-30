@@ -23,6 +23,7 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTrans
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
@@ -32,12 +33,15 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
  * @param querySchema           the ontology schema used in the input Gravsearch query.
  * @param searchValueMinLength  the minimum length required for a `matchFulltext` search term
  *                              (`appConfig.v2.fulltextSearch.searchValueMinLength`).
+ * @param luceneScope           set when the query is restricted to a project whose data graph is known; scopes the
+ *                              Lucene lookups anchored on the main resource to that graph.
  */
 abstract class AbstractPrequeryGenerator(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
   searchValueMinLength: Int,
+  luceneScope: Option[LuceneScope],
 ) extends WhereTransformer {
 
   /**
@@ -1604,7 +1608,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value),
+      lucenePattern(textValueVar, searchTerm.value, valueDataGraph(textValueVar)),
     )
   }
 
@@ -1661,7 +1665,7 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      lucenePattern(textValueVar, searchTerm.value),
+      lucenePattern(textValueVar, searchTerm.value, valueDataGraph(textValueVar)),
     )
   }
 
@@ -1738,7 +1742,11 @@ abstract class AbstractPrequeryGenerator(
     val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
     // Generate a Lucene statement, to assert that text value contains the search terms.
-    val luceneStatement = lucenePattern(textValueVar, searchTermStr.value)
+    val luceneStatement = lucenePattern(
+      textValueVar,
+      searchTermStr.value,
+      valueDataGraph(textValueVar),
+    )
 
     // Generate query patterns to assign the text in the standoff tag to a variable, if we
     // haven't done so already.
@@ -1902,17 +1910,40 @@ abstract class AbstractPrequeryGenerator(
     // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
       None, // The FILTER has been replaced by statements.
-      lucenePattern(resourceVar, searchTerm.value),
+      lucenePattern(resourceVar, searchTerm.value, resourceDataGraph(resourceVar)),
     )
   }
 
-  private def lucenePattern(subj: QueryVariable, queryString: String): Seq[StatementPattern] =
-    Seq(
-      StatementPattern(
-        subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
-        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-        obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
-      ),
+  /** With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`. */
+  private def lucenePattern(
+    subj: QueryVariable,
+    queryString: String,
+    dataGraph: Option[InternalIri],
+  ): Seq[QueryPattern] = {
+    val lookup = StatementPattern(
+      subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
+      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+      obj = LuceneQueryArgs(queryString, OntologyConstants.Fuseki.luceneHitLimit),
+    )
+    Seq(GraphPattern.scoped(lookup, dataGraph))
+  }
+
+  /*
+   * The data graph a Lucene lookup is scoped to: only with a [[LuceneScope]], and only for a lookup anchored on the
+   * main resource. A lookup anchored elsewhere stays unscoped, since links may cross projects. Every Lucene-backed
+   * function picks one of the two: `resourceDataGraph` for a resource-anchored lookup, `valueDataGraph` for a
+   * value-anchored one.
+   */
+  private def resourceDataGraph(resourceVar: QueryVariable): Option[InternalIri] =
+    luceneScope.filter(_ => resourceVar == mainResourceVariable).map(_.dataGraph)
+
+  private def valueDataGraph(valueVar: QueryVariable): Option[InternalIri] =
+    luceneScope.filter(_ => mainResourceAnchoredValues.contains(valueVar)).map(_.dataGraph)
+
+  // Read from the input WHERE, never from state filled during generation, which is incomplete at a FILTER.
+  private lazy val mainResourceAnchoredValues: Set[QueryVariable] =
+    luceneScope.fold(Set.empty[QueryVariable])(scope =>
+      LuceneScope.mainResourceAnchoredValues(scope.inputWhere, mainResourceVariable),
     )
 
   // Fixed suffix for the internal variables introduced by the matchFulltext expansion. A fixed suffix
@@ -2065,6 +2096,11 @@ abstract class AbstractPrequeryGenerator(
    * be hoisted above the `OPTIONAL`s it depends on by the optimizer passes. See
    * docs/05-internals/design/api-v2/gravsearch.md for the full rationale.
    *
+   * With a [[LuceneScope]] and `resourceVar` the main resource, only the Lucene statement goes into the project's
+   * data graph (see [[matchFulltextLuceneLookup]]); the branches, the `BIND` and the `creationDate` probe stay on the
+   * union graph. The main resource's `attachedToProject` stays too: it is what restricts a lookup anchored elsewhere,
+   * which is left unscoped because links may cross projects.
+   *
    * @param resourceVar the user's resource variable, bound by the group's closing `BIND`.
    * @param searchTerm  the raw (unescaped) Lucene query string, exactly as passed to `matchFulltext`.
    */
@@ -2072,6 +2108,7 @@ abstract class AbstractPrequeryGenerator(
     val matchVar          = matchFulltextVar("match")
     val containingResVar  = matchFulltextVar("containingRes")
     val resWithListValVar = matchFulltextVar("resWithListVal")
+    val dataGraph         = resourceDataGraph(resourceVar)
 
     val bindResource = BindPattern(
       variable = resourceVar,
@@ -2081,7 +2118,7 @@ abstract class AbstractPrequeryGenerator(
 
     GroupPattern(
       Seq(
-        matchFulltextLuceneLookup(matchVar, searchTerm),
+        matchFulltextLuceneLookup(matchVar, searchTerm, dataGraph),
         matchFulltextValueBranch(matchVar, containingResVar),
         matchFulltextListBranch(matchVar, resWithListValVar),
         bindResource,
@@ -2097,19 +2134,23 @@ abstract class AbstractPrequeryGenerator(
 
   /**
    * The Lucene lookup, deduplicated so that a subject matching through several literals is joined only once.
+   * With a `dataGraph`, the `text:query` statement alone is wrapped in `GRAPH <dataGraph> { }`, inside the subselect,
+   * so the index returns only that graph's hits; nothing else may go into the GRAPH block, since ontology-backed
+   * patterns match nothing in a data graph.
    * TODO(DEV-7492): pass a hit limit; this lookup is still capped at Jena's default of 10,000 hits.
    */
-  private def matchFulltextLuceneLookup(matchVar: QueryVariable, searchTerm: String): SubSelectPattern =
-    SubSelectPattern(
-      matchVar,
-      Seq(
-        StatementPattern(
-          subj = matchVar,
-          pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
-          obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
-        ),
-      ),
+  private def matchFulltextLuceneLookup(
+    matchVar: QueryVariable,
+    searchTerm: String,
+    dataGraph: Option[InternalIri],
+  ): SubSelectPattern = {
+    val lookup = StatementPattern(
+      subj = matchVar,
+      pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+      obj = XsdLiteral(value = searchTerm, datatype = OntologyConstants.Xsd.String.toSmartIri),
     )
+    SubSelectPattern(matchVar, Seq(GraphPattern.scoped(lookup, dataGraph)))
+  }
 
   /** A text value or value comment containing the match, and the resource that owns it. */
   private def matchFulltextValueBranch(matchVar: QueryVariable, containingResVar: QueryVariable): OptionalPattern = {

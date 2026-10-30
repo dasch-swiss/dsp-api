@@ -40,6 +40,7 @@ import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMain
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.prequery.LuceneScope
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
@@ -53,6 +54,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.SanitizedSpan
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
@@ -62,6 +64,7 @@ import org.knora.webapi.slice.resources.repo.SearchResultResourcesQuery
 import org.knora.webapi.slice.search.FulltextBreadthGuard
 import org.knora.webapi.slice.search.FulltextSearchTerms
 import org.knora.webapi.slice.search.SearchTimeoutException
+import org.knora.webapi.slice.search.ports.ProjectDataGraphs
 import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -350,6 +353,7 @@ final class SearchResponderV2Live(
   iriConverter: IriConverter,
   constructTransformer: ConstructTransformer,
   ontologyRepo: OntologyRepo,
+  projectDataGraphs: ProjectDataGraphs,
   override protected val tracing: Tracing,
 ) extends SearchResponderV2 {
 
@@ -591,9 +595,23 @@ final class SearchResponderV2Live(
       _                    <- validateSearchString(searchValue)
       _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      countSparql          <- SearchFulltextQuery.build(
+      count                <-
+        SearchResponderV2Live.withProjectDataGraph(projectDataGraphs, limitToProject, ifUnknown = ResourceCountV2(0)) {
+          dataGraph =>
+            fulltextSearchCount(searchValue, dataGraph, limitToResourceClass, limitToStandoffClass)
+        }
+    } yield count
+
+  private def fulltextSearchCount(
+    searchValue: IRI,
+    dataGraph: Option[InternalIri],
+    limitToResourceClass: Option[ResourceClassIri],
+    limitToStandoffClass: Option[SmartIri],
+  ): Task[ResourceCountV2] =
+    for {
+      countSparql <- SearchFulltextQuery.build(
                        searchTerms = LuceneQueryString(searchValue),
-                       limitToProject = limitToProject,
+                       dataGraph = dataGraph,
                        limitToResourceClass = limitToResourceClass,
                        limitToStandoffClass = limitToStandoffClass,
                        returnFiles = false, // not relevant for a count query
@@ -604,7 +622,7 @@ final class SearchResponderV2Live(
                      )
       bindings <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
             triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
@@ -639,16 +657,45 @@ final class SearchResponderV2Live(
     returnFiles: Boolean,
     schemaAndOptions: SchemaRendering,
     requestingUser: User,
-  ): Task[ReadResourcesSequenceV2] = {
-    import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
+  ): Task[ReadResourcesSequenceV2] =
     for {
       _                    <- ensureIsFulltextSearch(searchValue)
       _                    <- validateSearchString(searchValue)
       _                    <- ensureWildcardTermsLongEnough(searchValue)
       limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
-      searchSparql         <- SearchFulltextQuery.build(
+      page                 <- SearchResponderV2Live.withProjectDataGraph(
+                projectDataGraphs,
+                limitToProject,
+                ifUnknown = ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]),
+              ) { dataGraph =>
+                fulltextSearchPage(
+                  searchValue,
+                  offset,
+                  dataGraph,
+                  limitToResourceClass,
+                  limitToStandoffClass,
+                  returnFiles,
+                  schemaAndOptions,
+                  requestingUser,
+                )
+              }
+    } yield page
+
+  private def fulltextSearchPage(
+    searchValue: String,
+    offset: Int,
+    dataGraph: Option[InternalIri],
+    limitToResourceClass: Option[ResourceClassIri],
+    limitToStandoffClass: Option[SmartIri],
+    returnFiles: Boolean,
+    schemaAndOptions: SchemaRendering,
+    requestingUser: User,
+  ): Task[ReadResourcesSequenceV2] = {
+    import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
+    for {
+      searchSparql <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
-                        limitToProject = limitToProject,
+                        dataGraph = dataGraph,
                         limitToResourceClass = limitToResourceClass,
                         limitToStandoffClass = limitToStandoffClass,
                         returnFiles = returnFiles,
@@ -660,7 +707,7 @@ final class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, limitToProject, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
             triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 
@@ -775,6 +822,11 @@ final class SearchResponderV2Live(
 
       countSparql <- stageSpan("gravsearch.prequery.generate") {
                        for {
+                         luceneScope <- SearchResponderV2Live.luceneScopeFor(
+                                          projectDataGraphs,
+                                          limitToProject,
+                                          whereClauseWithoutAnnotations,
+                                        )
                          gravsearchToCountTransformer <-
                            ZIO.succeed(
                              new GravsearchToCountPrequeryTransformer(
@@ -782,6 +834,7 @@ final class SearchResponderV2Live(
                                typeInspectionResult = typeInspectionResult,
                                querySchema = querySchema,
                                searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength,
+                               luceneScope = luceneScope,
                              ),
                            )
                          prequery <-
@@ -859,6 +912,11 @@ final class SearchResponderV2Live(
       // turn the input query into a triplestore-specific SELECT prequery.
       prequeryGenerated <- stageSpan("gravsearch.prequery.generate") {
                              for {
+                               luceneScope <- SearchResponderV2Live.luceneScopeFor(
+                                                projectDataGraphs,
+                                                limitToProject,
+                                                whereClauseWithoutAnnotations,
+                                              )
                                gravsearchToPrequeryTransformer <-
                                  ZIO.attempt(
                                    new GravsearchToPrequeryTransformer(
@@ -866,6 +924,7 @@ final class SearchResponderV2Live(
                                      typeInspectionResult = typeInspectionResult,
                                      querySchema = querySchema,
                                      appConfig = appConfig,
+                                     luceneScope = luceneScope,
                                    ),
                                  )
                                ontologiesForInferenceMaybe <-
@@ -1704,4 +1763,36 @@ object SearchResponderV2 {
 
 object SearchResponderV2Live {
   val layer = ZLayer.derive[SearchResponderV2Live]
+
+  /**
+   * Runs a `/v2/search` query with the data graph of `limitToProject` (`None` without a project limit). An unknown
+   * project has no resources, so the search answers `ifUnknown` (200 with zero results, as the endpoint always
+   * has, not 404) without running the query or the breadth probe. A failing lookup fails the request rather than
+   * falling back to an unscoped search.
+   */
+  def withProjectDataGraph[A](port: ProjectDataGraphs, limitToProject: Option[ProjectIri], ifUnknown: => A)(
+    search: Option[InternalIri] => Task[A],
+  ): Task[A] =
+    limitToProject match {
+      case None          => search(None)
+      case Some(project) =>
+        port.dataGraphOf(project).flatMap {
+          case Some(dataGraph) => search(Some(dataGraph))
+          case None            => ZIO.succeed(ifUnknown)
+        }
+    }
+
+  /**
+   * The Gravsearch [[LuceneScope]] of a query restricted to a known project; `None` without a restriction or for an
+   * unknown project, whose query keeps the unscoped lookup and the main resource's `attachedToProject`. The one
+   * derivation the responder and the prequery goldens share.
+   */
+  def luceneScopeFor(
+    port: ProjectDataGraphs,
+    limitToProject: Option[ProjectIri],
+    inputWhere: WhereClause,
+  ): Task[Option[LuceneScope]] =
+    ZIO
+      .foreach(limitToProject)(port.dataGraphOf)
+      .map(_.flatten.map(LuceneScope(_, inputWhere.patterns)))
 }

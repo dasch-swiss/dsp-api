@@ -22,7 +22,10 @@ import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueC
 import org.knora.webapi.messages.v2.responder.valuemessages.TextValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class SearchResponderV2Spec extends E2EZSpec {
@@ -192,6 +195,77 @@ class SearchResponderV2Spec extends E2EZSpec {
         inIncunabula.resources.nonEmpty,
         inIncunabula.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0803/")),
         inAnything.resources.isEmpty,
+      )
+    },
+
+    // Detects a Fuseki image whose text index has no graph field: there GRAPH around text:query is a no-op, and the
+    // project-scoped lookups silently stop scoping. "Narr" has hits in incunabula and none in anything (see above).
+    test("the text index scopes a Lucene lookup to a named graph") {
+      val scoped =
+        """SELECT ?s WHERE {
+          |  GRAPH <http://www.knora.org/data/0001/anything> {
+          |    ?s <http://jena.apache.org/text#query> ("Narr" 1000000) .
+          |  }
+          |}""".stripMargin
+      val unscoped =
+        """SELECT ?s WHERE {
+          |  ?s <http://jena.apache.org/text#query> ("Narr" 1000000) .
+          |}""".stripMargin
+      for {
+        inAnything <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(scoped)))
+        anywhere   <- ZIO.serviceWithZIO[TriplestoreService](_.query(Select(unscoped)))
+      } yield assertTrue(inAnything.size == 0, anywhere.size > 0)
+    },
+
+    // Two terms, so the scoped path includes the breadth probe (whose scoping FulltextBreadthGuardSpec pins). "Narr" has
+    // hits only in incunabula, "blue" only in anything, so the scoped lookup must keep the anything match and drop
+    // every incunabula one.
+    test("a scoped two-term fulltext search returns the in-project match") {
+      for {
+        result <- searchResponder(
+                    _.fulltextSearchV2(
+                      searchValue = "blue Narr",
+                      offset = 0,
+                      limitToProject = Some(anythingProjectIri),
+                      limitToResourceClass = None,
+                      limitToStandoffClass = None,
+                      returnFiles = false,
+                      apiV2SchemaWithOption(MarkupRendering.Xml),
+                      requestingUser = anythingUser1,
+                    ),
+                  )
+      } yield assertTrue(
+        result.resources.map(_.resourceIri.value).contains("http://rdfh.ch/0001/a-blue-thing"),
+        result.resources.forall(_.resourceIri.value.startsWith("http://rdfh.ch/0001/")),
+      )
+    },
+
+    // The standoff restriction joins inside the scoped lookup's subselect. Both terms must sit under the same root tag,
+    // which only "Es besteht eine Verbindung zu einer Region." (incunabula) satisfies, so the unscoped search has hits
+    // and scoping it to anything must drop all of them.
+    test("a scoped fulltext search with a standoff restriction equals the unscoped one filtered to the project") {
+      val rootTag                             = "http://api.knora.org/ontology/standoff/v2#StandoffRootTag".toSmartIri
+      def search(project: Option[ProjectIri]) =
+        searchResponder(
+          _.fulltextSearchV2(
+            searchValue = "Verbindung Region",
+            offset = 0,
+            limitToProject = project,
+            limitToResourceClass = None,
+            limitToStandoffClass = Some(rootTag),
+            returnFiles = false,
+            apiV2SchemaWithOption(MarkupRendering.Xml),
+            requestingUser = anythingUser1,
+          ),
+        ).map(_.resources.map(_.resourceIri.value).toSet)
+      for {
+        unscoped     <- search(None)
+        inIncunabula <- search(Some(incunabulaProjectIri))
+        inAnything   <- search(Some(anythingProjectIri))
+      } yield assertTrue(
+        unscoped.nonEmpty,
+        inIncunabula == unscoped.filter(_.startsWith("http://rdfh.ch/0803/")),
+        inAnything == unscoped.filter(_.startsWith("http://rdfh.ch/0001/")),
       )
     },
 

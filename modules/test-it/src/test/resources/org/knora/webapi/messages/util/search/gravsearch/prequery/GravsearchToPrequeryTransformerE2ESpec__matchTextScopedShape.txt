@@ -1,0 +1,5 @@
+GRAPH
+STMT var hasText var
+STMT var attachedToProject iri
+FNE
+FNE

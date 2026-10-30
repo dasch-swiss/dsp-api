@@ -2104,7 +2104,7 @@ case class StillImageFileValueContentV2(
     copy(ontologySchema = targetSchema)
 
   def makeFileUrl(projectADM: Project, url: String): String =
-    fileUrlOrPlaceholder(s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg")
+    fileUrlOrPlaceholder(s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/max/0/default.jpg")
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,

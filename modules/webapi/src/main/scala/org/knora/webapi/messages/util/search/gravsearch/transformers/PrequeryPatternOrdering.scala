@@ -22,8 +22,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * Fact 7 (a large `VALUES` table poisons join order unless it drives the scan).
  *
  * Tier table (lower is better):
- *   - T1 Lucene: a `text:query` statement, or a [[GroupPattern]] or [[SubSelectPattern]] containing one directly
- *     or in a nested group or subquery; a `text:query` inside an `OPTIONAL`/`UNION`/`MINUS` within it is not found.
+ *   - T1 Lucene: a `text:query` statement, a [[GraphPattern]] wrapping one, or a [[GroupPattern]] or
+ *     [[SubSelectPattern]] containing either directly or in a nested group or subquery; a `text:query` inside an
+ *     `OPTIONAL`/`UNION`/`MINUS` within it is not found.
  *     T1 pre-empts the connectivity rule: a T1 unit leads its block whether or not it is connected to the
  *     already-bound variables.
  *   - T2 Bound IRI: a non-type statement (property paths included) with an `IriRef` subject or object,
@@ -109,8 +110,8 @@ object PrequeryPatternOrdering {
    * Reorders `patterns` for connectivity-aware evaluation. `outerBound` is the set of variables already
    * bound by an enclosing scope; it exists for the internal per-block recursion
    * (`OPTIONAL`/`UNION`/`MINUS`/`FILTER NOT EXISTS`) and for tests - production has a single call site, which
-   * passes one argument. A [[GroupPattern]] or [[SubSelectPattern]] is an opaque leaf and is never recursed into. Preserves the size
-   * of the input.
+   * passes one argument. A [[GroupPattern]], [[SubSelectPattern]] or [[GraphPattern]] is an opaque leaf and is never
+   * recursed into; a `GraphPattern` ranks exactly like the statement it wraps. Preserves the size of the input.
    */
   def order(patterns: Seq[QueryPattern], outerBound: Set[QueryVariable] = Set.empty): Seq[QueryPattern] =
     orderGroup(patterns, outerBound)
@@ -156,6 +157,7 @@ object PrequeryPatternOrdering {
           case s: StatementPattern         => acc.copy(units = acc.units :+ s)
           case g: GroupPattern             => acc.copy(units = acc.units :+ g)
           case sub: SubSelectPattern       => acc.copy(units = acc.units :+ sub)
+          case g: GraphPattern             => acc.copy(units = acc.units :+ g)
           case blk: OptionalPattern        => acc.copy(blocks = acc.blocks :+ blk)
           case blk: UnionPattern           => acc.copy(blocks = acc.blocks :+ blk)
           case blk: MinusPattern           => acc.copy(blocks = acc.blocks :+ blk)
@@ -176,6 +178,7 @@ object PrequeryPatternOrdering {
     case fne: FilterNotExistsPattern       => fne.patterns.flatMap(vars).toSet
     case g: GroupPattern                   => g.patterns.flatMap(vars).toSet
     case sub: SubSelectPattern             => Set(sub.variable) // only the projection is visible outside
+    case g: GraphPattern                   => vars(g.statement)
   }
 
   /** `Some(subj)` iff `u` is an `rdf:type` statement with variable subject `subj`; see the object's Scaladoc. */
@@ -211,6 +214,7 @@ object PrequeryPatternOrdering {
     case StatementPattern(_, pred, _) => isLuceneQueryPredicate(pred)
     case inner: GroupPattern          => containsLucene(inner.patterns)
     case sub: SubSelectPattern        => containsLucene(sub.patterns)
+    case g: GraphPattern              => isLuceneQueryPredicate(g.statement.pred)
     case _                            => false
   }
 
@@ -331,7 +335,20 @@ object PrequeryPatternOrdering {
     case _ => None
   }
 
-  private def unitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
+  /**
+   * A [[GraphPattern]] takes every field from the statement it wraps, the rendered-SPARQL tie-break included, so
+   * wrapping a Lucene statement never changes its rank against another unit.
+   */
+  private def unitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = u match {
+    case g: GraphPattern => unitKey(g.statement, valuesByVar).copy(unit = g)
+    case _               => plainUnitKey(u, valuesByVar)
+  }
+
+  /**
+   * Never sees a top-level [[GraphPattern]]: `unitKey` unwraps it first, so `tierNum` and `hasProjectDataPredicate`
+   * need no case for one. `containsLucene` keeps its case, for a `GraphPattern` nested in a group or subquery.
+   */
+  private def plainUnitKey(u: QueryPattern, valuesByVar: Map[QueryVariable, Seq[ValuesPattern]]): UnitKey = {
     val t                                                      = tierNum(u, valuesByVar)
     val (restrictedCount, loopVars): (Int, Seq[QueryVariable]) = u match {
       case StatementPattern(subj, pred, obj) =>

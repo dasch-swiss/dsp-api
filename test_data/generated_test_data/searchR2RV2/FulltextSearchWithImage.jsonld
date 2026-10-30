@@ -76,7 +76,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/00505cf0a803/values/9e73f9ac2307",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000004096.jp2/full/1954,2630/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000004096.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -160,7 +160,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/0ee0fe735d03/values/b06e42559006",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003766.jp2/full/3182,5127/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003766.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -244,7 +244,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/6157683636/values/28984db169",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000000237.jp2/full/1962,2833/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000000237.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -328,7 +328,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/661e1505ee03/values/c436807aaa07",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000004398.jp2/full/3617,5202/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000004398.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -412,7 +412,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/672d134a3201/values/1617e7fb5402",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000001339.jp2/full/1297,1837/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000001339.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -496,7 +496,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/b96e9b92eb01/values/cac578f3bd03",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000002149.jp2/full/1360,2028/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000002149.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -580,7 +580,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/fb89fa64ea02/values/1ab1d0f5af05",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003263.jp2/full/1389,1843/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003263.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",

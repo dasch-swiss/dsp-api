@@ -12,7 +12,9 @@ import zio.test.Assertion.failsWithA
 
 import dsp.errors.BadRequestException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.search.FulltextBreadthGuard.BreadthKey
+import org.knora.webapi.slice.search.repo.SearchFulltextQuery
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -25,6 +27,8 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
 
   private val wildcard = LuceneQueryString("der*") // shouldProbe = true
   private val single   = LuceneQueryString("der")  // shouldProbe = false
+
+  private val scoped = Some(InternalIri("http://www.knora.org/data/0001/anything"))
 
   // A query failure unrelated to the breadth cap (stands in for e.g. a TriplestoreTimeoutException).
   private final class QueryBoom extends Exception("boom")
@@ -92,6 +96,16 @@ class FulltextBreadthGuardSpec extends ZIOSpecDefault {
         second <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("b"))
         count  <- probes.get
       } yield assertTrue(first == "a", second == "b", count == 1)
+    },
+    // The guard must hand the data graph to the probe: a term too broad repository-wide but rare in the project
+    // is refused unscoped and admitted scoped. The double answers by the probe SPARQL it receives.
+    test("measures a scoped search with the scoped probe") {
+      val unscopedProbe = SearchFulltextQuery.buildProbe(wildcard, None, None)
+      for {
+        guard    <- guardWith(key => ZIO.succeed(if (key.probeSparql == unscopedProbe) cap.toLong + 1 else 1L))
+        unscoped <- guard.guarded(wildcard, None, None, None)(ZIO.succeed("ok")).exit
+        admitted <- guard.guarded(wildcard, None, scoped, None)(ZIO.succeed("ok"))
+      } yield assert(unscoped)(failsWithA[BadRequestException]) && assertTrue(admitted == "ok")
     },
   )
 }

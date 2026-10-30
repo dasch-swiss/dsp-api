@@ -16,6 +16,7 @@ import org.knora.webapi.messages.util.search.ConstructClause
 import org.knora.webapi.messages.util.search.Entity
 import org.knora.webapi.messages.util.search.FilterNotExistsPattern
 import org.knora.webapi.messages.util.search.FilterPattern
+import org.knora.webapi.messages.util.search.GraphPattern
 import org.knora.webapi.messages.util.search.GroupPattern
 import org.knora.webapi.messages.util.search.IriRef
 import org.knora.webapi.messages.util.search.MinusPattern
@@ -28,6 +29,7 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.SubSelectPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
+import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.messages.util.search.XsdLiteral
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
@@ -36,7 +38,10 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTrans
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.responders.v2.SearchResponderV2Live
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.ProjectDataGraphsLive
 
 /**
  * Shared by [[GravsearchToPrequeryTransformerE2ESpec]] and [[GravsearchToCountPrequeryTransformerE2ESpec]]:
@@ -80,13 +85,16 @@ object GravsearchInferencePipelineTestSupport {
       GravsearchTypeInspectionResult,
       ApiV2Schema,
       AppConfig,
+      Option[LuceneScope],
     ) => AbstractPrequeryGenerator,
     dropOrderBy: Boolean = false,
     limitResultsToProject: Option[ProjectIri] = None,
+    scopeLuceneToProject: Boolean = false,
   )(implicit
     sf: StringFormatter,
   ): ZIO[
-    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService,
+    AppConfig & QueryTraverser & GravsearchTypeInspectionRunner & OntologyInferencer & InferenceOptimizationService &
+      KnoraProjectService,
     Throwable,
     SelectQuery,
   ] = for {
@@ -98,8 +106,11 @@ object GravsearchInferencePipelineTestSupport {
     querySchema <-
       ZIO.fromOption(parsedQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
     appConfig           <- ZIO.service[AppConfig]
+    luceneScope         <- luceneScopeFor(limitResultsToProject, scopeLuceneToProject, sanitizedWhereClause)
     prequeryTransformer <-
-      ZIO.attempt(buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig))
+      ZIO.attempt(
+        buildTransformer(parsedQuery.constructClause, typeInspectionResult, querySchema, appConfig, luceneScope),
+      )
     // Count queries don't need sorting (there's only ever one result row), mirroring
     // SearchResponderV2.fulltextSearchCountV2, which drops orderBy the same way.
     queryForPrequery = parsedQuery.copy(
@@ -127,6 +138,28 @@ object GravsearchInferencePipelineTestSupport {
                              ),
                            )
   } yield transformedPrequery
+
+  /**
+   * Derives the scope from the same project as `limitResultsToProject`, the way the responder does, so a golden never
+   * pairs a data graph with a missing `attachedToProject` or the reverse. A requested scope that does not resolve
+   * fails, so a golden cannot silently pin an unscoped prequery.
+   */
+  private def luceneScopeFor(
+    limitResultsToProject: Option[ProjectIri],
+    scopeLuceneToProject: Boolean,
+    inputWhere: WhereClause,
+  ): ZIO[KnoraProjectService, Throwable, Option[LuceneScope]] =
+    ZIO.serviceWithZIO[KnoraProjectService] { projectService =>
+      SearchResponderV2Live
+        .luceneScopeFor(
+          ProjectDataGraphsLive(projectService),
+          limitResultsToProject.filter(_ => scopeLuceneToProject),
+          inputWhere,
+        )
+        .filterOrFail(scope => scope.isDefined || !scopeLuceneToProject)(
+          AssertionException(s"No Lucene scope for limitResultsToProject = $limitResultsToProject"),
+        )
+    }
 
   /**
    * Renders one line per top-level pattern of `query.whereClause.patterns`, in traversal order, so pattern
@@ -162,6 +195,7 @@ object GravsearchInferencePipelineTestSupport {
       case _: MinusPattern                   => "MINUS"
       case _: GroupPattern                   => "GROUP"
       case _: SubSelectPattern               => "SUBSELECT"
+      case _: GraphPattern                   => "GRAPH"
     }
 
     query.whereClause.patterns.map(patternSummary).mkString("\n")

@@ -7,10 +7,8 @@ package org.knora.webapi.slice.api.v3.projects
 
 import org.junit.runner.RunWith
 import sttp.client4.*
-import sttp.client4.httpclient.zio.HttpClientZioBackend
 import sttp.model.*
 import zio.*
-import zio.json.*
 import zio.json.ast.Json
 import zio.nio.file.Files
 import zio.test.*
@@ -21,16 +19,12 @@ import org.knora.bagit.BagIt
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.KnoraBaseVersion
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.e2ez.ProjectExportTestSupport.*
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
-import org.knora.webapi.slice.api.v3.Conflict
-import org.knora.webapi.slice.infrastructure.JwtService
-import org.knora.webapi.slice.security.ScopeResolver
 import org.knora.webapi.testservices.TestApiClient
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -60,15 +54,15 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
     test("trigger export, poll until completed, download and validate BagIt zip") {
       for {
         // Trigger export (cleaning up any existing export from a previous run, since state is now persistent)
-        taskStatus <- triggerExportWithCleanup()
+        taskStatus <- triggerExport(projectIri)
         exportId    = taskStatus.id
 
         // Poll status until completed (max 30 seconds)
-        completed <- pollUntilCompleted(exportId)
+        completed <- pollUntilCompleted(projectIri, exportId)
                        .retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
         // Download the zip
-        zipBytes <- downloadExportBytes(exportId)
+        zipBytes <- downloadExport(projectIri, exportId)
 
         // Validate BagIt and check payload files
         bag <- ZIO.scoped {
@@ -87,7 +81,7 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
         apiConfig <- ZIO.service[KnoraApi]
 
         // Cleanup
-        _ <- deleteExport(exportId)
+        _ <- deleteExport(projectIri, exportId)
       } yield assertTrue(
         // status
         completed.status == DataTaskStatus.Completed,
@@ -112,16 +106,16 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
       // erased-project condition without mutating the shared incunabula fixture.
       val ghostProjectIri = "http://rdfh.ch/projects/0000000000000000000000"
       for {
-        taskStatus <- triggerExportWithCleanup()
+        taskStatus <- triggerExport(projectIri)
         exportId    = taskStatus.id
-        _          <- pollUntilCompleted(exportId).retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
+        _          <- pollUntilCompleted(projectIri, exportId).retry(Schedule.spaced(500.millis) && Schedule.recurs(60))
 
         statusResponse <- TestApiClient.getJson[DataTaskStatusResponse](
                             uri"/v3/projects/$ghostProjectIri/exports/${exportId.value}",
                             rootUser,
                           )
-        downloadedBytes <- downloadExportBytes(exportId, ghostProjectIri)
-        deleteResponse  <- deleteExportResponse(exportId, ghostProjectIri)
+        downloadedBytes <- downloadExport(ghostProjectIri, exportId)
+        deleteResponse  <- deleteExportResponse(ghostProjectIri, exportId)
 
         // The slot is empty again: the deleted task is gone, and a new export can be created.
         statusAfterDelete <- TestApiClient.getJson[Json](
@@ -133,8 +127,8 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
                          rootUser,
                        )
         _ <- ZIO.foreachDiscard(reTriggered.body.toOption) { s =>
-               pollUntilCompleted(s.id).retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
-                 deleteExport(s.id)
+               pollUntilCompleted(projectIri, s.id).retry(Schedule.spaced(500.millis) && Schedule.recurs(60)) *>
+                 deleteExport(projectIri, s.id)
              }
       } yield assertTrue(
         statusResponse.code == StatusCode.Ok,
@@ -146,64 +140,4 @@ class ProjectMigrationExportE2ESpec extends E2EZSpec {
       )
     },
   )
-
-  private def pollUntilCompleted(exportId: DataTaskId) =
-    TestApiClient
-      .getJson[DataTaskStatusResponse](
-        uri"/v3/projects/$projectIri/exports/${exportId.value}",
-        rootUser,
-      )
-      .flatMap(r => ZIO.fromEither(r.body).mapError(new RuntimeException(_)))
-      .flatMap { status =>
-        status.status match {
-          case DataTaskStatus.Completed => ZIO.succeed(status)
-          case DataTaskStatus.Failed    => ZIO.die(new RuntimeException("Export failed"))
-          case _                        => ZIO.fail(new RuntimeException("Export still in progress"))
-        }
-      }
-
-  private def triggerExportWithCleanup(): ZIO[TestApiClient, Throwable, DataTaskStatusResponse] =
-    TestApiClient
-      .postJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/exports", rootUser)
-      .flatMap { response =>
-        if (response.code == StatusCode.Conflict) {
-          // Clean up existing export from a previous run, then retry
-          val existingId = for {
-            errorStr <- response.body.left.toOption
-            json     <- errorStr.fromJson[Conflict].toOption
-            first    <- json.errors.headOption
-            id       <- first.details.get("id")
-          } yield id
-          for {
-            _ <- ZIO.foreachDiscard(existingId)(id => deleteExport(DataTaskId.unsafeFrom(id)))
-            r <- TestApiClient.postJson[DataTaskStatusResponse](
-                   uri"/v3/projects/$projectIri/exports",
-                   rootUser,
-                 )
-            status <- ZIO.fromEither(r.body).mapError(new RuntimeException(_))
-          } yield status
-        } else ZIO.fromEither(response.body).mapError(new RuntimeException(_))
-      }
-
-  private def deleteExportResponse(exportId: DataTaskId, prjIri: String) =
-    TestApiClient.deleteJson[Json](uri"/v3/projects/$prjIri/exports/${exportId.value}", rootUser)
-
-  private def deleteExport(exportId: DataTaskId, prjIri: String = projectIri) =
-    deleteExportResponse(exportId, prjIri).ignore
-
-  private def downloadExportBytes(exportId: DataTaskId, prjIri: String = projectIri) =
-    for {
-      baseUrl    <- AppConfig.knoraApi(_.externalKnoraApiBaseUrl)
-      scope      <- ZIO.serviceWithZIO[ScopeResolver](_.resolve(rootUser))
-      jwt        <- ZIO.serviceWithZIO[JwtService](_.createJwt(rootUser.userIri, scope))
-      be         <- HttpClientZioBackend()
-      downloadUrl = uri"$baseUrl/v3/projects/$prjIri/exports/$exportId/download"
-      response   <- basicRequest
-                    .get(downloadUrl)
-                    .auth
-                    .bearer(jwt.jwtString)
-                    .response(asByteArray)
-                    .send(be)
-      bytes <- ZIO.fromEither(response.body).mapError(new RuntimeException(_))
-    } yield bytes
 }

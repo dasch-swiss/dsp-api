@@ -12,26 +12,15 @@ import zio.*
 import zio.json.ast.Json
 import zio.test.*
 
-import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.e2ez.ValueHasXmlTestSupport.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.StandoffMappingIri
-import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.testservices.RequestsUpdates.RequestUpdate
-import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
-import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
 /**
@@ -42,14 +31,9 @@ import org.knora.webapi.testservices.TestApiClient
 @RunWith(classOf[DspZTestJUnitRunner])
 class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
 
-  private val projectIri   = "http://rdfh.ch/projects/0001"
-  private val dataGraph    = "http://www.knora.org/data/0001/anything"
-  private val anythingOnto = "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-  private val hasTextIri   = s"${anythingOnto}hasText"
-  private val kb           = "http://www.knora.org/ontology/knora-base#"
-
-  private val customMappingIri =
-    StandoffMappingIri.unsafeFrom(s"$projectIri/mappings/BackfillHTMLMapping")
+  private val customMappingName = "BackfillHTMLMapping"
+  private val customMappingIri  =
+    StandoffMappingIri.unsafeFrom(s"$projectIri/mappings/$customMappingName")
 
   private val pollSchedule = Schedule.spaced(500.millis) && Schedule.recurs(120)
 
@@ -103,138 +87,27 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
 
   private val fixture = new AtomicReference[Fixture]()
 
-  private def textValueJson(xml: String, mapping: StandoffMappingIri, valueIri: Option[String]): Json.Obj = {
-    val id = valueIri.map(iri => Chunk("@id" -> Json.Str(iri))).getOrElse(Chunk.empty)
-    Json.Obj(
-      Chunk[(String, Json)]("@type" -> Json.Str("knora-api:TextValue")) ++ id ++ Chunk(
-        "knora-api:textValueAsXml"      -> Json.Str(xml),
-        "knora-api:textValueHasMapping" -> Json.Obj("@id" -> Json.Str(mapping.value)),
-      ),
-    )
-  }
-
-  private val context = Json.Obj(
-    "knora-api" -> Json.Str("http://api.knora.org/ontology/knora-api/v2#"),
-    "rdfs"      -> Json.Str("http://www.w3.org/2000/01/rdf-schema#"),
-    "anything"  -> Json.Str(anythingOnto),
-  )
-
-  private def createResourceWithText(xml: String, mapping: StandoffMappingIri): RIO[TestApiClient, String] = {
-    val body = Json.Obj(
-      "@type"                       -> Json.Str("anything:Thing"),
-      "knora-api:attachedToProject" -> Json.Obj("@id" -> Json.Str(projectIri)),
-      "rdfs:label"                  -> Json.Str("backfill-value-has-xml-e2e"),
-      "anything:hasText"            -> textValueJson(xml, mapping, None),
-      "@context"                    -> context,
-    )
-    for {
-      doc <- TestApiClient.postJsonLdDocument(uri"/v2/resources", body.toString, anythingUser1).flatMap(_.assert200)
-      iri <- ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)).mapError(new RuntimeException(_))
-    } yield iri
-  }
-
-  private def updateText(
-    resourceIri: String,
-    valueIri: String,
-    xml: String,
-    mapping: StandoffMappingIri,
-  ): RIO[TestApiClient, Unit] = {
-    val body = Json.Obj(
-      "@id"              -> Json.Str(resourceIri),
-      "@type"            -> Json.Str("anything:Thing"),
-      "anything:hasText" -> textValueJson(xml, mapping, Some(valueIri)),
-      "@context"         -> context,
-    )
-    TestApiClient.putJsonLd(uri"/v2/values", body.toString, anythingUser1).flatMap(_.assert200).unit
-  }
-
-  private def deleteText(resourceIri: String, valueIri: String): RIO[TestApiClient, Unit] = {
-    val body = Json.Obj(
-      "@id"              -> Json.Str(resourceIri),
-      "@type"            -> Json.Str("anything:Thing"),
-      "anything:hasText" -> Json.Obj(
-        "@id"                     -> Json.Str(valueIri),
-        "@type"                   -> Json.Str("knora-api:TextValue"),
-        "knora-api:deleteComment" -> Json.Str("deleted by the backfill e2e spec"),
-      ),
-      "@context" -> context,
-    )
-    TestApiClient.postJsonLd(uri"/v2/values/delete", body.toString, anythingUser1).flatMap(_.assert200).unit
-  }
-
-  private def createCustomMapping: RIO[TestApiClient, Unit] = {
-    val params =
-      s"""{
-         |  "knora-api:mappingHasName": "BackfillHTMLMapping",
-         |  "knora-api:attachedToProject": { "@id": "$projectIri" },
-         |  "rdfs:label": "mapping of the valueHasXml backfill e2e spec",
-         |  "@context": {
-         |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-         |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-         |  }
-         |}""".stripMargin
-    val body = Seq(
-      multipart("json", params).contentType("application/json"),
-      multipartFile("xml", Paths.get("test_data/test_route/texts/mappingForHTML.xml")).contentType("text/xml(UTF-8)"),
-    )
-    TestApiClient.postMultiPart[Json](uri"/v2/mapping", body, anythingUser1).flatMap(_.assert200).unit
-  }
-
-  private def ts[A](f: TriplestoreService => Task[A]): ZIO[TriplestoreService, Throwable, A] =
-    ZIO.serviceWithZIO[TriplestoreService](f)
-
-  private def currentValueOf(resourceIri: String): RIO[TriplestoreService, String] =
-    ts(
-      _.query(
-        Select(
-          s"SELECT ?v WHERE { GRAPH <$dataGraph> { <$resourceIri> <http://www.knora.org/ontology/0001/anything#hasText> ?v } }",
-        ),
-      ),
-    ).map(_.getFirstOrThrow("v"))
-
-  private def selectFirst(query: String, variable: String): RIO[TriplestoreService, Option[String]] =
-    ts(_.query(Select(query))).map(_.getFirst(variable))
-
-  private def creationDateOf(valueIri: String): RIO[TriplestoreService, String] =
-    selectFirst(
-      s"SELECT ?d WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueCreationDate> ?d } }",
-      "d",
-    ).someOrFail(new RuntimeException(s"$valueIri has no creation date"))
-
-  private def previousVersionOf(valueIri: String): RIO[TriplestoreService, String] =
-    selectFirst(
-      s"SELECT ?p WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}previousValue> ?p } }",
-      "p",
-    ).someOrFail(new RuntimeException(s"$valueIri has no previous version"))
-
-  private def storedXml(valueIri: String): RIO[TriplestoreService, Option[String]] =
-    selectFirst(s"SELECT ?xml WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasXml> ?xml } }", "xml")
-
   private val removeAllStoredXml: RIO[TriplestoreService, Unit] =
-    ts(_.query(Update(s"DELETE WHERE { GRAPH <$dataGraph> { ?v <${kb}valueHasXml> ?xml } }")))
+    update(s"DELETE WHERE { GRAPH <$dataGraph> { ?v <${kb}valueHasXml> ?xml } }")
 
   private def removeStoredXml(valueIri: String): RIO[TriplestoreService, Unit] =
-    ts(_.query(Update(s"DELETE WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasXml> ?xml } }")))
+    update(s"DELETE WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasXml> ?xml } }")
 
   /** The gate of `ValueHasXmlBackfillQuery.selectCandidates`, minus the given values. */
   private def candidateLeft(except: Seq[String] = Seq.empty): RIO[TriplestoreService, Boolean] = {
     val excluded = if (except.isEmpty) "" else s"FILTER(?v NOT IN (${except.map(i => s"<$i>").mkString(", ")}))"
-    ts(
-      _.query(
-        Ask(s"""ASK {
-               |  GRAPH <$dataGraph> {
-               |    ?v a <${kb}TextValue> ; <${kb}valueHasMapping> ?m .
-               |    FILTER EXISTS { ?v <${kb}valueHasStandoff> ?n }
-               |    FILTER NOT EXISTS { ?v <${kb}valueHasXml> ?x }
-               |    $excluded
-               |  }
-               |}""".stripMargin),
-      ),
-    )
+    ask(s"""ASK {
+           |  GRAPH <$dataGraph> {
+           |    ?v a <${kb}TextValue> ; <${kb}valueHasMapping> ?m .
+           |    FILTER EXISTS { ?v <${kb}valueHasStandoff> ?n }
+           |    FILTER NOT EXISTS { ?v <${kb}valueHasXml> ?x }
+           |    $excluded
+           |  }
+           |}""".stripMargin)
   }
 
   private val graphSnapshot: RIO[TriplestoreService, Set[(String, String, String)]] =
-    ts(_.query(Select(s"SELECT ?s ?p ?o WHERE { GRAPH <$dataGraph> { ?s ?p ?o } }"))).map(
+    select(s"SELECT ?s ?p ?o WHERE { GRAPH <$dataGraph> { ?s ?p ?o } }").map(
       _.results.bindings.map(row => (row.getRequired("s"), row.getRequired("p"), row.getRequired("o"))).toSet,
     )
 
@@ -265,80 +138,44 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
   private def runBackfillToCompletion(except: Seq[String] = Seq.empty): RIO[TriplestoreService & TestApiClient, Unit] =
     awaitBackfillIdle *> awaitNoCandidate(except) *> awaitBackfillIdle
 
-  private def servedXml(resourceIri: String, version: Option[String]): RIO[TestApiClient, String] = {
-    val update = version.fold[RequestUpdate[JsonLDDocument]](identity)(addVersionQueryParam(_))
-    for {
-      doc   <- TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", rootUser, update).flatMap(_.assert200)
-      value <- ZIO.fromEither(doc.body.getRequiredObject(hasTextIri)).mapError(new RuntimeException(_))
-      xml   <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml)).mapError(new RuntimeException(_))
-    } yield xml
-  }
-
-  private def canonical(xml: String, mappingIri: StandoffMappingIri): RIO[StandoffMappingService, String] =
-    ZIO
-      .serviceWithZIO[StandoffMappingService](_.getMappingV2(mappingIri))
-      .flatMap(mapping => ZIO.attempt(StandoffTagUtilV2.canonicalize(xml, mapping)))
-
-  /** The stored literal and the served XML are the same document after canonicalization, and neither is empty. */
-  private def storedEqualsServed(
-    resourceIri: String,
-    valueIri: String,
-    mapping: StandoffMappingIri,
-    version: Option[String] = None,
-  ): RIO[TriplestoreService & TestApiClient & StandoffMappingService, TestResult] =
-    for {
-      stored      <- storedXml(valueIri).someOrFail(new RuntimeException(s"$valueIri has no valueHasXml"))
-      served      <- servedXml(resourceIri, version)
-      storedCanon <- canonical(stored, mapping)
-      servedCanon <- canonical(served, mapping)
-    } yield assertTrue(stored.nonEmpty, storedCanon == servedCanon)
-
   private val failingValue    = "http://rdfh.ch/0001/backfill-e2e/values/failing"
   private val renderableValue = "http://rdfh.ch/0001/backfill-e2e/values/renderable"
 
   private val insertFailingAndRenderableValues: RIO[TriplestoreService, Unit] =
-    ts(
-      _.query(
-        Update(s"""PREFIX kb: <$kb>
-                  |PREFIX standoff: <http://www.knora.org/ontology/standoff#>
-                  |INSERT DATA {
-                  |  GRAPH <$dataGraph> {
-                  |    <$failingValue> a kb:TextValue ;
-                  |      kb:isDeleted false ;
-                  |      kb:valueHasString "unmapped" ;
-                  |      kb:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
-                  |      kb:valueHasStandoff <$failingValue/standoff/0> .
-                  |    <$failingValue/standoff/0> a standoff:StandoffNonexistentTag ;
-                  |      kb:standoffTagHasStart 0 ;
-                  |      kb:standoffTagHasEnd 8 ;
-                  |      kb:standoffTagHasStartIndex 0 ;
-                  |      kb:standoffTagHasUUID "6d1b7b5e-9c1c-4f0e-8a27-5b9e5f4d2a01" .
-                  |    <$renderableValue> a kb:TextValue ;
-                  |      kb:isDeleted false ;
-                  |      kb:valueHasString "renderable" ;
-                  |      kb:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
-                  |      kb:valueHasStandoff <$renderableValue/standoff/0> .
-                  |    <$renderableValue/standoff/0> a standoff:StandoffRootTag ;
-                  |      standoff:standoffRootTagHasDocumentType "html" ;
-                  |      kb:standoffTagHasStart 0 ;
-                  |      kb:standoffTagHasEnd 10 ;
-                  |      kb:standoffTagHasStartIndex 0 ;
-                  |      kb:standoffTagHasUUID "6d1b7b5e-9c1c-4f0e-8a27-5b9e5f4d2a02" .
-                  |  }
-                  |}""".stripMargin),
-      ),
-    )
+    update(s"""PREFIX kb: <$kb>
+              |PREFIX standoff: <http://www.knora.org/ontology/standoff#>
+              |INSERT DATA {
+              |  GRAPH <$dataGraph> {
+              |    <$failingValue> a kb:TextValue ;
+              |      kb:isDeleted false ;
+              |      kb:valueHasString "unmapped" ;
+              |      kb:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+              |      kb:valueHasStandoff <$failingValue/standoff/0> .
+              |    <$failingValue/standoff/0> a standoff:StandoffNonexistentTag ;
+              |      kb:standoffTagHasStart 0 ;
+              |      kb:standoffTagHasEnd 8 ;
+              |      kb:standoffTagHasStartIndex 0 ;
+              |      kb:standoffTagHasUUID "6d1b7b5e-9c1c-4f0e-8a27-5b9e5f4d2a01" .
+              |    <$renderableValue> a kb:TextValue ;
+              |      kb:isDeleted false ;
+              |      kb:valueHasString "renderable" ;
+              |      kb:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+              |      kb:valueHasStandoff <$renderableValue/standoff/0> .
+              |    <$renderableValue/standoff/0> a standoff:StandoffRootTag ;
+              |      standoff:standoffRootTagHasDocumentType "html" ;
+              |      kb:standoffTagHasStart 0 ;
+              |      kb:standoffTagHasEnd 10 ;
+              |      kb:standoffTagHasStartIndex 0 ;
+              |      kb:standoffTagHasUUID "6d1b7b5e-9c1c-4f0e-8a27-5b9e5f4d2a02" .
+              |  }
+              |}""".stripMargin)
 
   private val deleteFailingAndRenderableValues: RIO[TriplestoreService, Unit] =
-    ts(
-      _.query(
-        Update(
-          Seq(failingValue, renderableValue)
-            .flatMap(v => Seq(v, s"$v/standoff/0"))
-            .map(subject => s"DELETE WHERE { GRAPH <$dataGraph> { <$subject> ?p ?o } }")
-            .mkString(";\n"),
-        ),
-      ),
+    update(
+      Seq(failingValue, renderableValue)
+        .flatMap(v => Seq(v, s"$v/standoff/0"))
+        .map(subject => s"DELETE WHERE { GRAPH <$dataGraph> { <$subject> ?p ?o } }")
+        .mkString(";\n"),
     )
 
   override val e2eSpec: Spec[env, Any] = suite("POST /admin/maintenance/backfill-value-has-xml")(
@@ -347,7 +184,7 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     },
     test("set up formatted values of every kind and remove all stored XML of the project") {
       for {
-        _ <- createCustomMapping
+        _ <- createCustomMapping(customMappingName)
 
         historyResource  <- createResourceWithText(plainXml, StandoffMappingIri.StandardMapping)
         historyV1        <- currentValueOf(historyResource)
@@ -399,11 +236,11 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     },
     test("stored XML equals served XML for the current version") {
       val f = fixture.get
-      storedEqualsServed(f.historyResource, f.historyV2, StandoffMappingIri.StandardMapping)
+      storedCanonicallyEqualsServed(f.historyResource, f.historyV2, StandoffMappingIri.StandardMapping)
     },
     test("stored XML equals served XML for a historical version") {
       val f = fixture.get
-      storedEqualsServed(
+      storedCanonicallyEqualsServed(
         f.historyResource,
         f.historyV1,
         StandoffMappingIri.StandardMapping,
@@ -416,11 +253,11 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     },
     test("stored XML equals served XML for a value with a custom mapping") {
       val f = fixture.get
-      storedEqualsServed(f.customResource, f.customValue, customMappingIri)
+      storedCanonicallyEqualsServed(f.customResource, f.customValue, customMappingIri)
     },
     test("stored XML equals served XML for a value with internal references") {
       val f = fixture.get
-      storedEqualsServed(f.internalResource, f.internalValue, StandoffMappingIri.StandardMapping)
+      storedCanonicallyEqualsServed(f.internalResource, f.internalValue, StandoffMappingIri.StandardMapping)
     },
     test("stored XML of mutually referencing tags equals the submitted XML and the served XML") {
       for {
@@ -431,13 +268,13 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
         stored         <- storedXml(value).someOrFail(new RuntimeException("no valueHasXml"))
         storedCan      <- canonical(stored, StandoffMappingIri.StandardMapping)
         inputCan       <- canonical(mutualReferencesXml, StandoffMappingIri.StandardMapping)
-        storedEqServed <- storedEqualsServed(resource, value, StandoffMappingIri.StandardMapping)
+        storedEqServed <- storedCanonicallyEqualsServed(resource, value, StandoffMappingIri.StandardMapping)
       } yield assertTrue(storedCan == inputCan) && storedEqServed
     },
     test("stored XML equals served XML for a value with at least 100 standoff tags") {
       val f = fixture.get
       for {
-        result <- storedEqualsServed(f.manyResource, f.manyValue, StandoffMappingIri.StandardMapping)
+        result <- storedCanonicallyEqualsServed(f.manyResource, f.manyValue, StandoffMappingIri.StandardMapping)
         tags   <-
           selectFirst(
             s"SELECT (COUNT(?n) AS ?count) WHERE { GRAPH <$dataGraph> { <${f.manyValue}> <${kb}valueHasStandoff> ?n } }",

@@ -2839,5 +2839,68 @@
         "@value": 0
       }
     ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g/values/bpxYDQ_ighHiYftjMl1h4Q",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Zebra crossing at <em>dawn</em>.</p><p>Seventh lantern, then <strong>nine</strong> kites.</p><p>Quartz after <u>midnight</u>; mango last.</p></text>"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": [
+      {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g/values/GOTjOB1dc5FImNYaJTuvxw",
+    "@type": [
+      "http://api.knora.org/ontology/knora-api/v2#TextValue"
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Plain sentence beside the formatted one"
+      }
+    ],
+    "http://api.knora.org/ontology/knora-api/v2#valueHasOrder": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#integer",
+        "@value": 0
+      }
+    ]
+  },
+  {
+    "@id": "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g",
+    "@type": [
+      "http://0.0.0.0:3333/ontology/9999/onto/v2#ClassWithEverything"
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testRichtext": [
+      {
+        "@id": "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g/values/bpxYDQ_ighHiYftjMl1h4Q"
+      }
+    ],
+    "http://0.0.0.0:3333/ontology/9999/onto/v2#testSimpleText": [
+      {
+        "@id": "http://rdfh.ch/9999/AM4OzinYW_zi1sNKaToG1g/values/GOTjOB1dc5FImNYaJTuvxw"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "Multi-paragraph and plain text"
+      }
+    ]
   }
 ]

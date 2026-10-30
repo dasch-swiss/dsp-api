@@ -49,7 +49,7 @@ and whitespace:
   a warning is logged and the file is installed on the next start.
 
 So **a release that changes `dsp-repo.ttl` takes the database down for a full index rebuild** on deploy
-(about 6.5 minutes on prod, plus container start). Call this out in the release notes.
+(about 6.5 minutes on prod, plus container start). Plan the deploy accordingly; it is not a release-notes item.
 
 Setting `SKIP_AUTO_INDEX_REBUILD=true` installs a changed file without the rebuild and logs a warning that the
 index is stale. Rebuild it later by starting the container with `REBUILD_INDEX_OF_DATASET=dsp-repo`, or by

@@ -1,0 +1,4 @@
+GRAPH
+STMT var attachedToProject iri
+STMT var type iri
+FNE

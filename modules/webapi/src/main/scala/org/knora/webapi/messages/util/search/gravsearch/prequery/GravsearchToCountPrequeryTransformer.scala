@@ -20,17 +20,20 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
  * @param typeInspectionResult the result of type inspection of the input query.
  * @param querySchema          the ontology schema used in the input query.
  * @param searchValueMinLength the minimum length required for a `matchFulltext` search term.
+ * @param luceneScope          see [[AbstractPrequeryGenerator]].
  */
 class GravsearchToCountPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
   searchValueMinLength: Int,
+  luceneScope: Option[LuceneScope],
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
       querySchema = querySchema,
       searchValueMinLength = searchValueMinLength,
+      luceneScope = luceneScope,
     ) {
 
   override def getSelectColumns: Task[Seq[SelectQueryColumn]] =
