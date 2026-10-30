@@ -176,7 +176,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
     - Project history skips forbidden resources silently. This is documented in
       `docs/03-endpoints/api-v2/reading-and-searching-resources.md`.
     - Value-level history entries for values the caller cannot see stay unfiltered in this plan. That needs
-      per-version value permissions and is a follow-up (H1).
+      per-version value permissions and is a follow-up (DEV-7720).
 - **SystemUser allow-list:** the 19 current main-source files are allow-listed as they are. The lint stops new
   files, not existing uses. The legitimate prefetch-then-check pattern (`ValuesResponderV2:152,818`,
   `ValuesRestService:114`, `ReadResourcesServiceLive:267`) stays. After Phase 3, `ResourcesResponderV2` remains on
@@ -397,7 +397,6 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 | Id | Action | Who | When | Why not the agent |
 | --- | --- | --- | --- | --- |
-| H1 | File the follow-up issues listed under Dependencies & Risks (search counts, `/v2/resources/info`, value-history filtering, `ValuesResponderV2:268`, `CreateResourceV2Handler:359`, `canRemoveValue` ordering, ontology active-user check, remaining slice migrations) | Ivan or Balduin | before start | Creating and prioritizing Linear issues is outward-facing triage |
 | H2 | Review and accept ADR-0013 | Balduin (tech lead) | after ship | Architecture acceptance is an owner decision |
 | H3 | Decide release timing and whether to hotfix DEV-7713, DEV-7714 and the ingest report to stage/prod ahead of the release train; release notes list the status-code changes | Ivan | after ship | Deploy and disclosure decisions |
 
@@ -434,16 +433,17 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - **Lint precision:** rule 1 is line-based and misses a multi-line `@unused` before a `User` parameter. The
   compiler still catches an unannotated unused `user`, so the gap is narrow.
 - **Local e2e** needs a Colima VM larger than 2 GiB.
-- **Follow-ups out of scope (H1):**
-    - Search count endpoints ignore permissions (`SearchRestService.scala:48,188`,
+- **Follow-ups out of scope (filed 2026-10-30):**
+    - DEV-7718: search count endpoints ignore permissions (`SearchRestService.scala:48,188`,
       `SearchResponderV2.gravsearchCountV2`), although their descriptions require object permissions. Fail-open.
-    - `GET /v2/resources/info` is public and unfiltered, including deleted resources. Confirm intent.
-    - Value-history entries for invisible values (DEV-7712 open question).
-    - `ValuesResponderV2.scala:268` passes the user IRI as the project IRI (fail-closed).
-    - `CreateResourceV2Handler.scala:359-361` has an inverted admin check (fail-closed).
-    - `ValuesResponderV2.canRemoveValue` returns errors before the permission check (existence oracle).
-    - `OntologyCacheHelpers` skips the active-user check.
-    - Migrate the remaining slices, worst first: ontologies (re-implemented rule), v2 resources/values, admin users.
+    - DEV-7719: `GET /v2/resources/info` is public and unfiltered, including deleted resources. Confirm intent.
+    - DEV-7720: value-history entries for invisible values (DEV-7712 open question).
+    - DEV-7721: `ValuesResponderV2.scala:268` passes the user IRI as the project IRI (fail-closed).
+    - DEV-7722: `CreateResourceV2Handler.scala:359-361` has an inverted admin check (fail-closed).
+    - DEV-7723: `ValuesResponderV2.canRemoveValue` returns errors before the permission check (existence oracle).
+    - DEV-7724: `OntologyCacheHelpers` skips the active-user check.
+    - DEV-7725: migrate the remaining slices, worst first: ontologies (re-implemented rule), v2 resources/values,
+      admin users.
 
 ## Risk Analysis & Mitigation
 
@@ -469,7 +469,8 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 ## References
 
-- Bugs: DEV-7712, DEV-7713, DEV-7714 (Linear triage, 2026-10-29)
+- Bugs: DEV-7712, DEV-7713, DEV-7714 (Linear triage, 2026-10-29); follow-ups DEV-7718 to DEV-7725
+- Explainer of the root problem and the target model: <https://claude.ai/artifact/7Pa7MKquPJskjxGKCAvHqo>
 - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala` (`bearerSystemAdminEndpoint`:
   authorization in security logic)
 - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/AuthorizationRestService.scala`
