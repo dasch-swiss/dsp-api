@@ -9,8 +9,9 @@ where `<token>` is a [JWT](https://jwt.io/) token issued by the DSP-API.
 The token is a JSON Web Token (JWT) that must contain the following claims:
 
 * `iss` (issuer): The issuer of the token, the DSP-API
-* `sub` (subject): The subject of the token, the IRI of the user
-* `scope`: The routes the token grants access to, format described [below](#authorization-and-scope-format)
+* `sub` (subject): The subject of the token: the IRI of the user,
+  or the issuer for a token that the DSP-API issues for its own calls to Dsp-Ingest
+* `scope` (optional): The routes the token grants access to, format described [below](#authorization-and-scope-format)
 * `aud` (audience): The audience of the token, the Dsp-Ingest service specific audience
 * `exp` (expiration time): The expiration time of the token, in seconds since epoch
 * `iat` (issued at): The time at which the token was issued, in seconds since epoch

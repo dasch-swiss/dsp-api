@@ -95,8 +95,7 @@ specified by the `id` in the request body as below:
 ### Update basic user information**
 
 - Required permission: SystemAdmin / self
-- Changeable information: username, email, given name, family name,
-  password, status, SystemAdmin membership
+- Changeable information: username, email, given name, family name, language
 - TypeScript Docs: userFormats - ChangeUserApiRequestADM
 - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
 - BODY:
@@ -170,7 +169,7 @@ Note: When a user is project admin in the same project, his project admin member
 
 ### Add/remove user to/from project admin group
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin (of the project)
 - Required information: project IRI, user IRI
 - Effects: `knora-base:isInProjectAdminGroup` user property
 - POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`

@@ -124,5 +124,5 @@ Example Group Information stored in admin named graph: :
 ### Get Group Members
 
 - Returns all group members
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - GET: `/admin/groups/<groupIri>/members`

@@ -606,7 +606,7 @@ NB:
 
 ### Get all Keywords
 
-Permissions:
+Permissions: No permissions required
 
 Request definition: `GET /admin/projects/Keywords`
 
@@ -689,7 +689,7 @@ Example response:
 
 ### Get Keywords of a Project
 
-Permissions:
+Permissions: No permissions required
 
 Request definition:
 

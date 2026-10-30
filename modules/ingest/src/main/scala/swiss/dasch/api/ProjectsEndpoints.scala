@@ -156,6 +156,14 @@ object ProjectsEndpointsResponses {
 final case class ProjectsEndpoints(base: BaseEndpoints) {
   private val projects = "projects"
 
+  // The DSP-API gives SystemAdmins the admin scope, and the other users a write scope for the project
+  // (ScopeResolver). The admin scope and a write scope also grant read access.
+  private val projectScopeHolders =
+    "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
+      "or ProjectResourceCreateRestrictedPermission in the project)."
+  private val readScopeAuthorization  = "Authorization: read:project:1234 scope required " + projectScopeHolders
+  private val writeScopeAuthorization = "Authorization: write:project:1234 scope required " + projectScopeHolders
+
   val getProjectsEndpoint = base.secureEndpoint.get
     .in(projects)
     .out(jsonBody[Chunk[ProjectResponse]])
@@ -167,21 +175,13 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar)
     .out(jsonBody[ProjectResponse])
     .tag(projects)
-    .description(
-      "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
-        "or ProjectResourceCreateRestrictedPermission in the project).",
-    )
+    .description(readScopeAuthorization)
 
   val getProjectsChecksumReport = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "checksumreport")
     .out(jsonBody[AssetCheckResultResponse])
     .tag(projects)
-    .description(
-      "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
-        "or ProjectResourceCreateRestrictedPermission in the project).",
-    )
+    .description(readScopeAuthorization)
 
   val deleteProjectsErase = base.secureEndpoint.delete
     .in(projects / shortcodePathVar / "erase")
@@ -197,11 +197,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar / "assets" / assetIdPathVar)
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
-    .description(
-      "Authorization: read:project:1234 scope required " +
-        "(SystemAdmins, and users with ProjectAdminAllPermission, ProjectResourceCreateAllPermission " +
-        "or ProjectResourceCreateRestrictedPermission in the project).",
-    )
+    .description(readScopeAuthorization)
 
   val getProjectsAssetsOriginal = base.withUserEndpoint.get
     .in(projects / shortcodePathVar / "assets" / assetIdPathVar / "original")
@@ -210,7 +206,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .out(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .tag("assets")
     .description(
-      """|Offers the original file for download, provided the API permisisons allow.
+      """|Offers the original file for download, provided the API permissions allow.
          |Authorization: optional JWT bearer token. The file is offered if the API's access decision
          |for the asset allows it, also to anonymous callers.""".stripMargin,
     )
@@ -224,8 +220,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .tag("assets")
     .description(
       "Ingest a single asset file to the project. " +
-        "Authorization: write:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        writeScopeAuthorization,
     )
 
   val postBulkIngest = base.secureEndpoint.post
@@ -236,8 +231,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Triggers an ingest on the project with the given shortcode. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        writeScopeAuthorization,
     )
     .tag("bulk-ingest")
 
@@ -249,8 +243,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
         "This will remove also the mapping.csv file. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        writeScopeAuthorization,
     )
     .tag("bulk-ingest")
 
@@ -260,8 +253,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       "Get the current result of the bulk ingest. " +
         "The result is a csv with the following structure: `original,derivative`. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        writeScopeAuthorization,
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
@@ -275,8 +267,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .description(
       "Uploads a file for consumption with the bulk-ingest route. " +
         "Will return 409 Conflict if a bulk-ingest is currently running for the project. " +
-        "Authorization: write:project:1234 scope required " +
-        "(SystemAdmins + ProjectAdmins + users with ProjectResourceCreate permissions).",
+        writeScopeAuthorization,
     )
     .tag("bulk-ingest")
 

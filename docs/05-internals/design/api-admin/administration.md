@@ -324,11 +324,12 @@ as follows:
 | Built-In Group    | Project | Group   | User                | Resource               | Value                |
 | ----------------- | ------- | ------- | ------------------- | ---------------------- | -------------------- |
 | **SystemAdmin**   | `CRUD`  | `CRUDP` | `CRUDP` all         | `CRUDP` all            | `CRUDP` all          |
-| **ProjectAdmin**  | `-RU-`  | `CRUDP` | `CR---` +/- project | `CRUDP` (in project)   | `CRUDP` (in project) |
+| **ProjectAdmin**  | `-RU-`  | `CRUDP` | `C----` +/- project | `CRUDP` (in project)   | `CRUDP` (in project) |
 | **ProjectMember** | `----`  | `-----` | `-----`             | `CRU--` (in project)   | `-----` (in project) |
 | **Creator**       | `----`  | `-----` | `-----`             | `-----` (his resource) | `-----` (his value)  |
 | **KnownUser**     | `----`  | `-----` | `-RUD-` himself     | `-----` (in project)   | `-----` (in project) |
 
+Everybody can read the public information about projects and users. The matrix does not show this.
 Only a SystemAdmin can delete (erase) a project.
 Only a SystemAdmin or the user themselves can update or delete a user.
 
