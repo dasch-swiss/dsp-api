@@ -14,8 +14,8 @@ the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
 
 Proposed
 
-Not yet in code: the policy-declaring endpoint factories, the endpoint baseline and its ratchet, the lint and its
-allow-lists, and the matrix test. The commit that lands an item removes it from this line.
+Not yet in code: the endpoint baseline and its ratchet, the lint and its allow-lists, and the matrix test. The commit
+that lands an item removes it from this line.
 
 ## Context
 
