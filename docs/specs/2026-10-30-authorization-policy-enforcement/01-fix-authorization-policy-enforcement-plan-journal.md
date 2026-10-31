@@ -34,6 +34,7 @@ status: in-progress
 | 4 | reviewed | dsp-api@6e012a9a4f | 1 |
 | 5 | reviewed | dsp-api@a1fea60630 | 2 |
 | 6 | reviewed | dsp-api@27f5d538f5 | 1 |
+| 7 | reviewed | dsp-api@47747efc4b | 0 |
 
 ## Chunk queue
 
@@ -45,6 +46,9 @@ status: in-progress
 | 4.1 | dsp-api | CreateResourceV2Handler.scala, ResourcesRouteV2E2ESpec.scala | — | all Phase 4 checkboxes except Phase review | anonymous POST /v2/resources 403 with "Anonymous users aren't allowed to create resources", resource absent afterwards; test red before fix on the message (status was already 403); no spec relies on anonymous creation; `.*Resource.*` e2e filter passes | CreateResourceV2Handler.scala § ensureNotAnonymousUser; ResourcesRouteV2E2ESpec.scala § create tests | — |
 | 5.1 | dsp-api | ReportEndpointsHandler.scala, ReportEndpointsSpec.scala (new) | — | all Phase 5 checkboxes except Phase review | POST /report/asset-overview: no token 401, non-admin token 401 with the Unauthorized problem, admin token accepted with "work in progress"; non-admin test red before fix; `just test-ingest` passes | ReportEndpointsHandler.scala § postAssetOverviewReportHandler | — |
 | 6.1 | dsp-api | ValuesResponderV2.scala, ValuesEndpointsE2ESpec.scala, ValuesResponderV2Spec.scala (if an expectation moves 403 -> 404), ValuesEndpoints.scala, docs/03-endpoints/api-v2/editing-values.md | — | all Phase 6 checkboxes except Phase review | hidden resource: 403 with one message for correct, wrong class, unknown value, wrong type (anythingUser1, normalUser); anonymous refusal before lookup; unknown resource 404; hidden value on visible resource 404 like a missing value; view-but-not-delete 403 before class check; delete-permitted caller 400 wrong class/type, 200 correct on a self-created resource; new tests red before fix; ValuesResponderV2Spec and ValuesEraseSpec pass | ValuesResponderV2.scala § canRemoveValue; ValuesEndpointsE2ESpec.scala § delete tests | — |
+| 7.1 | dsp-api | PermissionUtilADM.scala, PermissionUtilADMSpec.scala (test-it), CreateResourceV2Handler.scala | — | helper, unit tests, move site 723 (refactor commit) | helper exempts SystemAdmin or ProjectAdmin of the project, else ForbiddenException(message) on AGreaterThanB; unit cases from the plan pass; canary with each old condition records which tests go red; site 723 keeps its message | PermissionUtilADM.scala § comparePermissionsADM; CreateResourceV2Handler.scala § validateAndFormatValuePermissions | — |
+| 7.2 | dsp-api | ValuesResponderV2.scala, ValuesResponderV2Spec.scala | 7.1 | move site 268 (DEV-7721); value regression test | anythingAdminUser creates a value with custom `CR knora-admin:ProjectMember`; message kept | ValuesResponderV2.scala § createValueV2 custom permissions | — |
+| 7.3 | dsp-api | CreateResourceV2Handler.scala, ResourcesResponderV2Spec.scala | 7.1 | move site 359 (DEV-7722); resource regression tests; grep check; test-it run | rootUser and anythingAdminUser create a resource with custom `CR knora-admin:ProjectMember`; grep finds comparePermissionsADM only in PermissionUtilADM | CreateResourceV2Handler.scala § resourcePermissions | — |
 
 ## Chunks
 
@@ -65,6 +69,9 @@ status: in-progress
 | 5.4 | dsp-api | complete | df0a817df | Review fix round 2 (fixup!): wait for a non-empty report (writer closed) instead of an existing one, polled every 20 ms (consistency, simplicity re-review); canary: job disabled, test red | none |
 | 6.1 | dsp-api | complete | 95bf59afd | canRemoveValue checks resource view right after the load, answers the missing-value 404 for a value the caller cannot view, and checks delete before the class and type checks; endpoint description and editing-values docs; e2e suite in ValuesEndpointsE2ESpec (red before fix: hidden resource wrong class 400, hidden value 403, view-but-not-delete wrong class 400; the correct request on the hidden resource, anonymous, unknown resource 404 and the delete-permitted control were already as decided); ValuesResponderV2Spec, ValuesEraseSpec (history-only erase included), ResourcesResponderV2Spec pass | none |
 | 6.2 | dsp-api | complete | a729cb4fb | Review fix round 1 (fixup!): resource load plus view and delete checks extracted into findDeletableValue, so later checks in canRemoveValue only see an authorized pair (dune DUNE-001); docs and comment no longer claim 403 whatever the request names, since property checks answer first, and state the 400 for a delete-permitted caller (consistency) | none |
+| 7.1 | dsp-api | complete | 878eb9f6a | PermissionUtilADM.ensureWithinDefaultPermissions (typed ProjectIri, User.isSystemAdmin or User.isProjectAdmin(project)); six unit tests with hand-built users (no administrative permissions); values-in-new-resource site moved, message kept; ResourcesResponderV2Spec passes (76). Canary: helper with the DEV-7721 condition fails the ProjectAdmin-group test; with the DEV-7722 condition all 19 pass (SystemAdmin masked by comparePermissionsADM) | none |
+| 7.2 | dsp-api | complete | bb3a56864 | ValuesResponderV2 create-value check moved onto the helper with resourceInfo.projectADM.id, message kept; regression test: anythingAdminUser creates a value with `CR knora-admin:ProjectMember` (passes before and after: ProjectAdminAllPermission masks); ValuesResponderV2Spec passes (100) | none |
+| 7.3 | dsp-api | complete | 1aa78bca1 | CreateResourceV2Handler resource-permission check moved onto the helper with internalCreateResource.projectADM.id, message kept; regression tests: rootUser and anythingAdminUser create an anything Thing with `CR knora-admin:ProjectMember`; grep finds comparePermissionsADM only in PermissionUtilADM; phase filter passes (197) | none |
 
 ## Deferrals
 
@@ -73,12 +80,18 @@ status: in-progress
 
 - Phase 5 (review, scope): admin authorization in ingest is a hand-written `ensureAdminScope` call per handler, and nothing fails if a handler drops its principal (the original bug). Structural fix: an admin endpoint base whose security logic checks the scope, or a check that every endpoint in `Endpoints.scala` is public or admin-tested. Changes the plan's scope; Phase 9/10 policy declarations are the natural home. Warning, dune lens (DUNE-002).
 
+- Phase 7 (review, scope): the String overload `PermissionsDataADM.isProjectAdmin(projectIri: IRI)` (`PermissionsMessagesADM.scala:282`) still accepts a user IRI and answers false, the DEV-7721 bug class; about five callers (`ResourcesResponderV2.scala:456`, `ApiComplexV2JsonLdRequestParser.scala:525`, `OntologyCacheHelpers.scala:339,359`, `RestCardinalityService.scala:167`) hand-roll `isSystemAdmin || isProjectAdmin` through it. Structural fix: move them to `User.isProjectAdmin(ProjectIri)` and delete the overload. Outside Phase 7's three sites; Phase 9-11 (policy model, lint) are the natural home. Warning, dune lens (DUNE-002/003).
+- Phase 7 (review, scope): updating a value's permissions or content with new permissions (`ValuesResponderV2.updateValuePermissions`, `updateValueV2`) requires only ChangeRights and applies no default-permission ceiling, so a ChangeRights holder may exceed the defaults. Pre-existing; whether the ceiling belongs there is a permission-model question. Security lens.
+
 ## Deviations
 
 - none
 
 ## Side findings
 
+- Phase 7 review (refuted): the value regression test writes to the shared `aThingIri` (scala-zio, consistency): measured, `ValuesResponderV2Spec` passes (100) and no later test asserts a `hasInteger` count; the new integration tests duplicate the images-project admin tests and pass before and after (consistency): plan-mandated regression checks; eager `defaultPropertyPermissions(propertyIri)` for admins: plan-decided as safe; ARCH-MAP staleness (DUNE-001): no component or dependency change.
+- Phase 7 review suggestions (not fixed): three adjacent String parameters on the helper (owner-decided signature); no test pins the call-site message texts (diffed by eye, unchanged); `comparePermissionsADM` could be private to `PermissionUtilADM` so nothing bypasses the helper (DUNE-004); a cross-project negative test at responder level (security, covered at unit level).
+- Phase 7: the plan's run checkbox said the SystemAdmin unit test fails against a helper with either old condition. It cannot: with the DEV-7722 condition (`!(isProjectAdmin && !isSystemAdmin)`) the helper still runs `comparePermissionsADM` for a SystemAdmin, which gives the maximum on both sides, so all 19 `PermissionUtilADMSpec` tests pass. With the DEV-7721 condition only the ProjectAdmin-group test fails. The plan already calls DEV-7722 unreachable; its fix rests on code reading. The checkbox is split; the unticked remainder is the owner's to accept or drop.
 - `ListsResponder.deleteListNodeCommentsADM`: the `someOrFail(NotFoundException)` on `listNodeInfoGetADM` is now reachable only in a race, since `getProjectFromNode` answers 400 for a missing node first (owner-decided order). Left as is; Phase 12/13 rework this method.
 - `docs/03-endpoints/api-admin/lists.md`: pre-existing typo "sipmle" left untouched.
 - Review suggestion (dune): a static check against `@unused` on a `User` parameter is already Phase 11's lint.

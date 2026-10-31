@@ -394,29 +394,32 @@ evaluating it for admins is safe. `comparePermissionsADM` takes `entityProject: 
 The helper commit is a refactor with no behaviour change; each fix commit then moves one wrong site onto it. The two
 `fix:` commits stay cherry-pickable once the helper commit is picked with them.
 
-- [ ] Add `PermissionUtilADM.ensureWithinDefaultPermissions`: skip the check for SystemAdmin or ProjectAdmin of
+- [x] Add `PermissionUtilADM.ensureWithinDefaultPermissions`: skip the check for SystemAdmin or ProjectAdmin of
       `project`; otherwise fail with `ForbiddenException(message)` when `comparePermissionsADM` answers
       `AGreaterThanB`.
-- [ ] Add unit tests to `PermissionUtilADMSpec` with hand-built users and literals: default
+- [x] Add unit tests to `PermissionUtilADMSpec` with hand-built users and literals: default
       `M knora-admin:ProjectMember`, custom `CR knora-admin:ProjectMember`, project `0001`. A user in the ProjectAdmin
       group of `0001` without `ProjectAdminAllPermission` passes; a SystemAdmin passes; a plain member of `0001` and
       a ProjectAdmin of another project fail with the given message; a plain member passes with custom
       `M knora-admin:ProjectMember` (equal) and `V knora-admin:ProjectMember` (lower).
-- [ ] Move `CreateResourceV2Handler.scala:723-725` onto the helper, keeping its error message; commit as
+- [x] Move `CreateResourceV2Handler.scala:723-725` onto the helper, keeping its error message; commit as
       `refactor: share the custom-permission ceiling check`. Existing resource-creation tests pass unchanged.
-- [ ] Move `ValuesResponderV2.scala:268` onto the helper with `resourceInfo.projectADM.id`; commit as
+- [x] Move `ValuesResponderV2.scala:268` onto the helper with `resourceInfo.projectADM.id`; commit as
       `fix: apply the admin exemption to custom value permissions (DEV-7721)`.
-- [ ] Move `CreateResourceV2Handler.scala:359-361` onto the helper with `internalCreateResource.projectADM.id`; commit
+- [x] Move `CreateResourceV2Handler.scala:359-361` onto the helper with `internalCreateResource.projectADM.id`; commit
       as `fix: exempt system admins from the resource permission ceiling (DEV-7722)`.
-- [ ] Add regression tests: in `ValuesResponderV2Spec`, `anythingAdminUser` creates a value with custom permissions
+- [x] Add regression tests: in `ValuesResponderV2Spec`, `anythingAdminUser` creates a value with custom permissions
       `CR knora-admin:ProjectMember` and succeeds; in the resource-creation spec, `rootUser` and `anythingAdminUser`
       create a resource with the same custom permissions and succeed. Both pass before and after the fixes.
-- [ ] Confirm no inline copy remains: `grep -rn "comparePermissionsADM" modules/webapi/src/main` finds only
+- [x] Confirm no inline copy remains: `grep -rn "comparePermissionsADM" modules/webapi/src/main` finds only
       `PermissionUtilADM`.
-- [ ] Run `bazel test //modules/test-it:test
-      --test_filter='.*(PermissionUtilADMSpec|ValuesResponderV2Spec|ResourcesResponderV2Spec).*'`; the unit tests for the ProjectAdmin-group user and the SystemAdmin fail against a helper that reproduces either
-      old condition, and all pass after.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-it:test
+      --test_filter='.*(PermissionUtilADMSpec|ValuesResponderV2Spec|ResourcesResponderV2Spec).*'`; all pass; the unit
+      test for the ProjectAdmin-group user fails against a helper that reproduces the DEV-7721 condition.
+- [x] DEV-7722 has no red/green unit test: `comparePermissionsADM` gives a SystemAdmin the maximum on both sides, so a
+      helper with the old condition passes all 19 tests (measured). This is the masking described above; the DEV-7722
+      fix is proved by code reading, and the SystemAdmin unit test pins the exemption as a regression check.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 8: ADR-0013 authorization architecture
 
