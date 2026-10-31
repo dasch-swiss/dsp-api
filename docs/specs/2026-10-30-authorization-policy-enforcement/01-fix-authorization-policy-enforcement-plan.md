@@ -33,7 +33,7 @@ One plan, one PR, as the owner decided. The eight fixes come first as self-conta
 | --- | --- | --- | --- |
 | DEV-7713 | `AdminListRestService.scala:116`, `ListsResponder.scala:1048-1059` | `@unused user`; no role check | Any logged-in user deletes list-node comments in any project, irreversibly |
 | DEV-7714 | `StandoffRestService.scala:36`, `StandoffResponderV2.scala:54-69` | Only `ensureUserIsNotAnonymous` | Any logged-in user writes a mapping into any project's data graph (no overwrite: `StandoffResponderV2.scala:277-282`) |
-| DEV-7712 | `ResourcesResponderV2.scala:1160-1165`, `:1467-1481` | Preview read as `SystemUser`; `.resources.head` on a filtered result | Anonymous callers get dates and author IRIs of hidden resources; project history answers 500 when one resource is hidden |
+| DEV-7712 | `ResourcesResponderV2.scala:1160-1165`, `:1467-1481` | Preview read as `SystemUser`; `.resources.head` on a filtered result | Anonymous callers get dates and author IRIs of hidden resources; project history fails (403, measured; 500 was assumed) when one resource is hidden |
 | new | `CreateResourceV2Handler.scala:102-105` | `ensureNotAnonymousUser` ends in `.ignore` | The anonymous check never fires; only the later create-permission check stands |
 | new | `modules/ingest/.../ReportEndpointsHandler.scala:21` | `serverLogic(_ => _ => ...)` drops the principal | Any valid JWT starts a forked all-project report, although the endpoint is documented as admin-only |
 | DEV-7723 | `ValuesResponderV2.scala:1144` (`canRemoveValue`) | Resource read as `SystemUser`; class, value and type errors before the permission check | Any logged-in user probes a hidden resource's class and its values' IRIs and types |
@@ -182,8 +182,8 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
   permissions for the list's project."). The ratchet test asserts that every endpoint with a policy has a
   description containing it, so the prose cannot drift from the attribute again.
 - **Status code changes:** DEV-7713, DEV-7714 and the ingest report move from 200 to 403 (ingest: 401, which is its
-  `Unauthorized` problem type). DEV-7712 moves from 200 to 403 for hidden resources, and from 500 to 200 for
-  project history. Anonymous resource creation is refused earlier. DEV-7723 moves value deletion on a hidden
+  `Unauthorized` problem type). DEV-7712 moves from 200 to 403 for hidden resources, and from 403 to 200 for
+  project history (measured in Phase 3; `checkResourceIris` refuses before `.resources.head`). Anonymous resource creation is refused earlier. DEV-7723 moves value deletion on a hidden
   resource from 400/404 to 403, and on a visible resource with a hidden value from 403 to 404. All are breaking for a
   caller that relied on the hole, so the PR description and release notes list them.
 - **DEV-7712 decisions:**
@@ -192,10 +192,10 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
       `docs/03-endpoints/api-v2/reading-and-searching-resources.md`.
     - Value-level history entries for values the caller cannot see stay unfiltered in this plan. That needs
       per-version value permissions and is a follow-up (DEV-7720).
-- **SystemUser allow-list:** the 13 current main-source files are allow-listed as they are. The lint stops new
+- **SystemUser allow-list:** the 12 main-source files left after Phase 3 are allow-listed as they are. The lint stops new
   files, not existing uses. The legitimate prefetch-then-check pattern (`ValuesResponderV2:152,818`,
-  `ValuesRestService:114`, `ReadResourcesServiceLive:267`) stays. After Phase 3, `ResourcesResponderV2` remains on
-  the list because it has other legitimate uses.
+  `ValuesRestService:114`, `ReadResourcesServiceLive:267`) stays. Phase 3 removed the last `SystemUser`
+  reference from `ResourcesResponderV2`, so it is not on the list.
 - **Ingest** is a separate release artifact with its own scope-based authorization (`AuthorizationHandler`). Its
   commit uses the `fix(ingest):` scope. `AuthorizationHandlerLive.Empty` (with `JWT_DISABLE_AUTH`) stays a no-op.
 - **Grant callers:** the only non-test callers of `ListsResponder.deleteListNodeCommentsADM` and
@@ -250,25 +250,25 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 #### Phase 3: DEV-7712 resource history respects view permission
 
-- [ ] Add a failing e2e test first: `GET /v2/resources/projectHistoryEvents/{p}` as a user who cannot see one resource
+- [x] Add a failing e2e test first: `GET /v2/resources/projectHistoryEvents/{p}` as a user who cannot see one resource
       of the project answers 500 today. Commit it red with the next deliverable, or mark it pending until the fix lands.
-- [ ] Replace `.resources.head` in `getResourceAtGivenTime` (`ResourcesResponderV2.scala:1467-1481`) with
+- [x] Replace `.resources.head` in `getResourceAtGivenTime` (`ResourcesResponderV2.scala:1467-1481`) with
       `toResource(resourceIri)`.
-- [ ] Pass `resourceHistoryRequest.requestingUser` instead of `SystemUser` to the preview read in
+- [x] Pass `resourceHistoryRequest.requestingUser` instead of `SystemUser` to the preview read in
       `getResourceHistoryV2`, and correct the comment above it.
-- [ ] In `getProjectResourceHistoryEvents`, skip a resource whose history answers `ForbiddenException` (only that type;
+- [x] In `getProjectResourceHistoryEvents`, skip a resource whose history answers `ForbiddenException` (only that type;
       other failures still fail the request). Land this in the same commit as the previous deliverable.
-- [ ] Add e2e tests for `GET /v2/resources/history/{iri}` on the hidden fixture
+- [x] Add e2e tests for `GET /v2/resources/history/{iri}` on the hidden fixture
       `http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ` (`V knora-admin:Creator`, created by `anythingUser2`): anonymous, `normalUser` and `anythingUser1` get 403;
       `anythingUser2` (its creator) gets 200.
-- [ ] Add an e2e test: a non-existent resource IRI answers 404 (unchanged; `checkResourceIris`).
-- [ ] Add an e2e test: `projectHistoryEvents` for the anything project as `anythingUser1` answers 200 and that IRI is
+- [x] Add an e2e test: a non-existent resource IRI answers 404 (unchanged; `checkResourceIris`).
+- [x] Add an e2e test: `projectHistoryEvents` for the anything project as `anythingUser1` answers 200 and that IRI is
       absent; as anonymous it also answers 200.
-- [ ] Document in `docs/03-endpoints/api-v2/reading-and-searching-resources.md` that history endpoints require view
+- [x] Document in `docs/03-endpoints/api-v2/reading-and-searching-resources.md` that history endpoints require view
       permission and that project history omits resources the caller cannot see.
-- [ ] Run the history e2e specs with `bazel test //modules/test-e2e:test --test_filter=...`; they pass, including the
+- [x] Run the history e2e specs with `bazel test //modules/test-e2e:test --test_filter=...`; they pass, including the
       formerly red one.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 4: anonymous resource creation is refused
 
@@ -507,8 +507,8 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [ ] Rule 2: fail on the token `SystemUser` (not `isSystemUser`) in a `src/main` file that is not listed in
       `tools/lint/system_user_allowlist.txt`.
 - [ ] Rule 2 also fails when an allow-listed file no longer contains `SystemUser` (stale entry).
-- [ ] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (13, counted as in the Problem
-      Statement), one path per line, each with a short reason comment.
+- [ ] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (12 after Phase 3; counted as in the
+      Problem Statement), one path per line, each with a short reason comment.
 - [ ] Add `tools/lint/check_authz_test.py` with inline fixtures: an `@unused user: User` param, an
       `@scala.annotation.unused requestingUser: User` param, a non-allow-listed `SystemUser` reference, and a stale
       allow-list entry each fail; `isSystemUser` and `@unused x: Unit` pass.
@@ -656,7 +656,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
   minus 17 after Phase 13 (15 admin lists, 2 v2 standoff). The PR description records both numbers.
 - Authenticated-only endpoints without a role check: 3 before (list-comments delete, standoff mapping,
   canonicalize). After: 0 unreviewed. Canonicalize becomes a reviewed `Authenticated` policy.
-- Main-source files referencing `SystemUser`: 13 before (counted as in the Problem Statement). It must not grow;
+- Main-source files referencing `SystemUser`: 13 before, 12 after Phase 3 (counted as in the Problem Statement). It must not grow;
   the allow-list count is that number.
 - Responder-level copies of the project-admin rule: `ListsResponder.ensureUserIsAdminOrProjectOwner` removed. The
   ontology and cardinality copies remain for follow-up.
