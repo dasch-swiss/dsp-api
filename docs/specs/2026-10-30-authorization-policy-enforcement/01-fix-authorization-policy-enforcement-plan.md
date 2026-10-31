@@ -236,17 +236,17 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 #### Phase 2: DEV-7714 creating a standoff mapping requires ProjectAdmin
 
-- [ ] Add e2e tests for `POST /v2/mapping`: anonymous gets 401/403; `normalUser` (no project) gets 403; `anythingUser1`
+- [x] Add e2e tests for `POST /v2/mapping`: anonymous gets 401/403; `normalUser` (no project) gets 403; `anythingUser1`
       gets 403; `incunabulaProjectAdminUser` gets 403 for the anything project; for each, a read of the mapping IRI
       afterwards finds nothing.
-- [ ] Add e2e tests: `anythingAdminUser` and `rootUser` get 200 for the anything project.
-- [ ] Add an e2e test: a body naming a non-existent project gets 400 or 403, never 200 or 500.
-- [ ] Call `auth.ensureSystemAdminOrProjectAdminById(user, createRequest.projectIri)` in
+- [x] Add e2e tests: `anythingAdminUser` and `rootUser` get 200 for the anything project.
+- [x] Add an e2e test: a body naming a non-existent project gets 400 or 403, never 200 or 500.
+- [x] Call `auth.ensureSystemAdminOrProjectAdminById(user, createRequest.projectIri)` in
       `StandoffRestService.createMapping` after the request is parsed and before `standoffResponder.createMappingV2`.
-- [ ] Change the description at `StandoffEndpoints.scala:32` to state the SystemAdmin or ProjectAdmin requirement.
-- [ ] Add the rule to `docs/03-endpoints/api-v2/text/custom-standoff.md`.
-- [ ] Run the new mapping e2e spec with `bazel test //modules/test-e2e:test --test_filter=...`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Change the description at `StandoffEndpoints.scala:32` to state the SystemAdmin or ProjectAdmin requirement.
+- [x] Add the rule to `docs/03-endpoints/api-v2/text/custom-standoff.md`.
+- [x] Run the new mapping e2e spec with `bazel test //modules/test-e2e:test --test_filter=...`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 3: DEV-7712 resource history respects view permission
 
