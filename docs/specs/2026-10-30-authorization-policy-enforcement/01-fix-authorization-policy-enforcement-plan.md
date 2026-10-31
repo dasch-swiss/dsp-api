@@ -564,20 +564,20 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 14: authorization matrix for the migrated endpoints
 
-- [ ] Add `AuthorizationMatrixE2ESpec` in `modules/test-e2e` with principals from `SharedTestDataADM`: anonymous,
-      `normalUser`, `anythingUser1`, `incunabulaProjectAdminUser`, `anythingAdminUser`, `rootUser`. Use the anything
-      project's existing lists and data; add no records to shared datasets.
-- [ ] Hand-write the expected outcome per migrated write endpoint and principal: allowed, or denied with 401/403. This
+- [x] Add `AuthorizationMatrixE2ESpec` in `modules/test-e2e` with principals from `SharedTestDataADM`: anonymous,
+      `normalUser`, `anythingUser1`, `incunabulaProjectAdminUser`, `anythingAdminUser`, `rootUser`. Each cell targets a
+      fresh list or mapping created in the anything project through the API; add no records to shared datasets.
+- [x] Hand-write the expected outcome per migrated write endpoint and principal: allowed, or denied with 401/403. This
       table is the independent oracle. Include `postCanonicalize` (`Authenticated`).
-- [ ] Map each `Policy` case to its allowed principals for the consistency assertion: `ProjectAdmin` to
+- [x] Map each `Policy` case to its allowed principals for the consistency assertion: `ProjectAdmin` to
       `anythingAdminUser` and `rootUser` (for anything targets); `Authenticated` to every principal but anonymous;
       `SystemAdmin` to `rootUser`.
-- [ ] For each pair, send a valid request and assert the outcome. On denial, assert by read-back that nothing changed.
-- [ ] Assert that the hand-written table agrees with each endpoint's declared `Policy`, so a mislabelled policy fails
+- [x] For each pair, send a valid request and assert the outcome. On denial, assert by read-back that nothing changed.
+- [x] Assert that the hand-written table agrees with each endpoint's declared `Policy`, so a mislabelled policy fails
       too.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*AuthorizationMatrixE2ESpec.*'`; it passes.
-- [ ] Run `just test-unit`, `just test-e2e`, `just test-ingest` and `just check`; all pass.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*AuthorizationMatrixE2ESpec.*'`; it passes.
+- [x] Run `just test-unit`, `just test-e2e`, `just test-ingest` and `just check`; all pass.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
