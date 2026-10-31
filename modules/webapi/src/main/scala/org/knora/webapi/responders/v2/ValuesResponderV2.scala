@@ -24,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -262,28 +261,13 @@ final class ValuesResponderV2(
             // Yes. Validate them.
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
-
-              // Is the requesting user a system admin, or an admin of this project?
-              userPermissions = requestingUser.permissions
-              _              <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
-
-                     // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                     val permissionComparisonResult: PermissionComparisonResult =
-                       PermissionUtilADM.comparePermissionsADM(
-                         entityProject = resourceInfo.projectADM.id.value,
-                         permissionLiteralA = validatedCustomPermissions,
-                         permissionLiteralB = defaultValuePermissions.permissionLiteral,
-                         requestingUser = requestingUser,
-                       )
-
-                     ZIO.when(permissionComparisonResult == AGreaterThanB)(
-                       ZIO.fail(
-                         ForbiddenException(
-                           s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                         ),
-                       ),
-                     )
-                   }
+              _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                     resourceInfo.projectADM.id,
+                     validatedCustomPermissions,
+                     defaultValuePermissions.permissionLiteral,
+                     requestingUser,
+                     "The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                   )
             } yield validatedCustomPermissions
 
           case None =>
