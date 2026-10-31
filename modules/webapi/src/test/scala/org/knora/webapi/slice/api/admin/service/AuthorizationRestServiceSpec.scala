@@ -17,6 +17,7 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
@@ -30,6 +31,7 @@ import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.infrastructure.OtelSetup
@@ -53,6 +55,20 @@ class AuthorizationRestServiceSpec extends ZIOSpecDefault {
     )
 
   private val inactiveSystemAdmin = activeSystemAdmin.copy(status = false)
+
+  private val project = TestDataFactory.someProject
+
+  private def userInGroupOf(projectIri: String, groupIri: String): User =
+    activeNormalUser.copy(permissions = PermissionsDataADM(Map(projectIri -> List(groupIri))))
+
+  private val projectAdmin      = userInGroupOf(project.id.value, KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
+  private val projectMember     = userInGroupOf(project.id.value, KnoraGroupRepo.builtIn.ProjectMember.id.value)
+  private val otherProjectAdmin =
+    userInGroupOf("http://rdfh.ch/projects/other", KnoraGroupRepo.builtIn.ProjectAdmin.id.value)
+
+  private def authorizeProjectAdminById(user: User) =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
+      authorizationRestService(_.authorizeProjectAdminById(TestCandidates.of(user), project.id))
 
   val spec: Spec[Any, Any] = suite("RestPermissionService")(
     suite("given an inactive system admin")(
@@ -138,6 +154,32 @@ class AuthorizationRestServiceSpec extends ZIOSpecDefault {
           userIsNotAdmin = activeNormalUser.copy(permissions = PermissionsDataADM(Map.empty))
           exit          <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsNotAdmin, project.id)).exit
         } yield assert(exit)(failsWithA[ForbiddenException])
+      },
+    ),
+    suite("authorizeProjectAdminById")(
+      test("issues a grant for the project to an active system admin") {
+        authorizeProjectAdminById(activeSystemAdmin).map(grant =>
+          assertTrue(grant.user == activeSystemAdmin, grant.project == project),
+        )
+      },
+      test("issues a grant for the project to the project's admin") {
+        authorizeProjectAdminById(projectAdmin).map(grant =>
+          assertTrue(grant.user == projectAdmin, grant.project == project),
+        )
+      },
+      test("refuses a member of the project") {
+        authorizeProjectAdminById(projectMember).exit.map(exit => assert(exit)(failsWithA[ForbiddenException]))
+      },
+      test("refuses an admin of another project") {
+        authorizeProjectAdminById(otherProjectAdmin).exit.map(exit => assert(exit)(failsWithA[ForbiddenException]))
+      },
+      test("refuses the anonymous user") {
+        authorizeProjectAdminById(AnonymousUser).exit.map(exit => assert(exit)(failsWithA[ForbiddenException]))
+      },
+      test("refuses an inactive system admin") {
+        authorizeProjectAdminById(inactiveSystemAdmin).exit.map(exit =>
+          assertTrue(exit == Exit.fail(ForbiddenException("The account with username 'username' is not active."))),
+        )
       },
     ),
   ).provide(

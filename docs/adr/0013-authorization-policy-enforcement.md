@@ -5,7 +5,7 @@ Date: 2026-10-31
 Relates to: DEV-7712, DEV-7713, DEV-7714, DEV-7721, DEV-7722, DEV-7723 (the fixed bugs), DEV-7718, DEV-7724,
 DEV-7725 (follow-ups), `slice/common/api/Policy.scala` (the policy),
 `slice/common/api/BaseEndpoints.scala` (endpoint bases), `slice/common/api/AuthorizationRestService.scala` (the role
-rules),
+rules), `slice/common/api/ProjectAdminGrant.scala` (candidate and grant),
 [ADR-0011](0011-cross-context-access-ports-and-adapters.md) (context boundaries), the Identity & Access context
 (`docs/contexts/identity-access/CONTEXT.md`). Refines the "Authorization is deliberately distributed" decision of
 the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
@@ -14,8 +14,8 @@ the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
 
 Proposed
 
-Not yet in code: the policy-declaring endpoint factories, `ProjectCandidate`, `ProjectAdminGrant` and
-`authorizeProjectAdmin`, the endpoint baseline and its ratchet, the lint and its allow-lists, and the matrix test. The commit that lands an item removes it from this line.
+Not yet in code: the policy-declaring endpoint factories, the endpoint baseline and its ratchet, the lint and its
+allow-lists, and the matrix test. The commit that lands an item removes it from this line.
 
 ## Context
 
