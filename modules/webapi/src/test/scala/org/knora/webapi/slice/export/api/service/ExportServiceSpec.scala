@@ -47,15 +47,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService
-import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.repo.LicenseRepo
-import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.api.v3.`export`.FileLink
@@ -63,7 +58,6 @@ import org.knora.webapi.slice.api.v3.`export`.MetadataRecord
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
@@ -595,13 +589,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       TriplestoreServiceInMemory.layer,
       ListsResponder.layer,
       IriService.layer,
-      AuthorizationRestService.layer,
       PredicateObjectMapper.layer,
-      KnoraGroupService.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraUserRepoLive.layer,
-      PasswordService.layer,
-      KnoraUserService.layer,
     ) @@ TestAspect.sequential // the tests share one triplestore and one asset dir
 
   private val streamingBehaviorSuite = {
@@ -1000,13 +988,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
       TriplestoreServiceInMemory.layer,
       ListsResponder.layer,
       IriService.layer,
-      AuthorizationRestService.layer,
       PredicateObjectMapper.layer,
-      KnoraGroupService.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraUserRepoLive.layer,
-      PasswordService.layer,
-      KnoraUserService.layer,
     )
   }
 }

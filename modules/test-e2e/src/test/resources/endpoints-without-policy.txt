@@ -1,8 +1,6 @@
 # Endpoints that declare no Policy (ADR-0013), checked by EndpointPolicyE2ESpec. Only ever remove lines:
 # a new endpoint uses a policy-declaring factory in BaseEndpoints instead of being listed here.
 DELETE /admin/groups/{groupIri}
-DELETE /admin/lists/comments/{param1}
-DELETE /admin/lists/{param1}
 DELETE /admin/permissions/{permissionIri}
 DELETE /admin/projects/iri/{projectIri}/RestrictedViewSettings
 DELETE /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings
@@ -113,8 +111,6 @@ GET /version
 HEAD /internal/landing-pages/resources/{shortcode}/{resourceId}
 PATCH /v2/ontologies/cardinalities
 POST /admin/groups
-POST /admin/lists
-POST /admin/lists/{param1}
 POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri
 POST /admin/maintenance/users/replace-iri
 POST /admin/maintenance/{action-name}
@@ -155,11 +151,6 @@ POST /v3/projects/{projectIri}/exports
 POST /v3/projects/{projectIri}/imports
 PUT /admin/groups/{groupIri}
 PUT /admin/groups/{groupIri}/status
-PUT /admin/lists/{param1}
-PUT /admin/lists/{param1}/comments
-PUT /admin/lists/{param1}/labels
-PUT /admin/lists/{param1}/name
-PUT /admin/lists/{param1}/position
 PUT /admin/permissions/doap/{permissionIri}
 PUT /admin/permissions/{permissionIri}/group
 PUT /admin/permissions/{permissionIri}/hasPermissions

@@ -42,14 +42,14 @@ Use these — don't introduce a parallel set of errors.
 The most common style in the codebase. The error channel is `Throwable`; the API edge inspects the subtype and maps to an HTTP status.
 
 ```scala
-// modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminListRestService.scala:48
-def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] =
+// modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminListRestService.scala
+def listChange(candidate: ProjectCandidate)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] =
   for {
-    _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
-    project <- projectService.findById(request.projectIri)
-                 .someOrFail(BadRequestException("Project not found"))
-    _       <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    response <- listsResponder.nodeInfoChangeRequest(request, uuid)
+    _        <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
+    grant    <- authorizeForNode(candidate, iri)
+    _        <- ensureBodyProjectIsGranted(request.projectIri, grant, iri)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.nodeInfoChangeRequest(request, grant, uuid)
   } yield response
 ```
 

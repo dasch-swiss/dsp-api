@@ -24,15 +24,14 @@ import org.knora.webapi.responders.admin.ListsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final class AdminListRestService(
   auth: AuthorizationRestService,
   listsResponder: ListsResponder,
-  projectService: KnoraProjectService,
 ) {
 
   def getLists(projectIriOpt: Option[Either[ProjectIri, Shortcode]]): Task[ListsGetResponseADM] =
@@ -43,76 +42,89 @@ final class AdminListRestService(
   def listNodeInfoGetRequestADM(iri: ListIri): Task[NodeInfoGetResponseADM] =
     listsResponder.listNodeInfoGetRequestADM(iri)
 
-  def listChange(user: User)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] = for {
-    _       <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
-    project <- projectService
-                 .findById(request.projectIri)
-                 .someOrFail(BadRequestException("Project not found"))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    uuid     <- Random.nextUUID
-    response <- listsResponder.nodeInfoChangeRequest(request, uuid)
-  } yield response
-
-  def listChangeName(user: User)(iri: ListIri, request: ListChangeNameRequest): Task[NodeInfoGetResponseADM] = for {
-    // authorization is currently done in the responder
-    uuid     <- Random.nextUUID
-    response <- listsResponder.nodeNameChangeRequest(iri, request, user, uuid)
-  } yield response
-
-  def listChangeLabels(user: User)(iri: ListIri, request: ListChangeLabelsRequest): Task[NodeInfoGetResponseADM] = for {
-    // authorization is currently done in the responder
-    uuid     <- Random.nextUUID
-    response <- listsResponder.nodeLabelsChangeRequest(iri, request, user, uuid)
-  } yield response
-
-  def listChangeComments(user: User)(iri: ListIri, request: ListChangeCommentsRequest): Task[NodeInfoGetResponseADM] =
+  def listChange(candidate: ProjectCandidate)(iri: ListIri, request: ListChangeRequest): Task[NodeInfoGetResponseADM] =
     for {
-      // authorization is currently done in the responder
+      _        <- ZIO.fail(BadRequestException("List IRI in path and body must match")).when(iri != request.listIri)
+      grant    <- authorizeForNode(candidate, iri)
+      _        <- ensureBodyProjectIsGranted(request.projectIri, grant, iri)
       uuid     <- Random.nextUUID
-      response <- listsResponder.nodeCommentsChangeRequest(iri, request, user, uuid)
+      response <- listsResponder.nodeInfoChangeRequest(request, grant, uuid)
     } yield response
 
-  def nodePositionChangeRequest(user: User)(
+  def listChangeName(
+    candidate: ProjectCandidate,
+  )(iri: ListIri, request: ListChangeNameRequest): Task[NodeInfoGetResponseADM] = for {
+    grant    <- authorizeForNode(candidate, iri)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.nodeNameChangeRequest(iri, request, grant, uuid)
+  } yield response
+
+  def listChangeLabels(
+    candidate: ProjectCandidate,
+  )(iri: ListIri, request: ListChangeLabelsRequest): Task[NodeInfoGetResponseADM] = for {
+    grant    <- authorizeForNode(candidate, iri)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.nodeLabelsChangeRequest(iri, request, grant, uuid)
+  } yield response
+
+  def listChangeComments(
+    candidate: ProjectCandidate,
+  )(iri: ListIri, request: ListChangeCommentsRequest): Task[NodeInfoGetResponseADM] = for {
+    grant    <- authorizeForNode(candidate, iri)
+    uuid     <- Random.nextUUID
+    response <- listsResponder.nodeCommentsChangeRequest(iri, request, grant, uuid)
+  } yield response
+
+  def nodePositionChangeRequest(candidate: ProjectCandidate)(
     iri: ListIri,
     request: ListChangePositionRequest,
   ): Task[NodePositionChangeResponseADM] = for {
-    // authorization is currently done in the responder
+    grant    <- authorizeForNode(candidate, iri)
     uuid     <- Random.nextUUID
-    response <- listsResponder.nodePositionChangeRequest(iri, request, user, uuid)
+    response <- listsResponder.nodePositionChangeRequest(iri, request, grant, uuid)
   } yield response
 
-  def deleteListItemRequestADM(user: User)(iri: ListIri): Task[ListItemDeleteResponseADM] = for {
-    // authorization is currently done in the responder
+  def deleteListItemRequestADM(candidate: ProjectCandidate)(iri: ListIri): Task[ListItemDeleteResponseADM] = for {
+    grant    <- authorizeForNode(candidate, iri)
     uuid     <- Random.nextUUID
-    response <- listsResponder.deleteListItemRequestADM(iri, user, uuid)
+    response <- listsResponder.deleteListItemRequestADM(iri, grant, uuid)
   } yield response
 
-  def listCreateRootNode(user: User)(req: ListCreateRootNodeRequest): Task[ListGetResponseADM] = for {
-    project <- projectService
-                 .findById(req.projectIri)
-                 .someOrFail(BadRequestException("Project not found"))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+  def listCreateRootNode(candidate: ProjectCandidate)(req: ListCreateRootNodeRequest): Task[ListGetResponseADM] = for {
+    grant    <- auth.authorizeProjectAdminById(candidate, req.projectIri)
     uuid     <- Random.nextUUID
-    response <- listsResponder.listCreateRootNode(req, uuid)
+    response <- listsResponder.listCreateRootNode(req, grant, uuid)
   } yield response
 
   def listCreateChildNode(
-    user: User,
+    candidate: ProjectCandidate,
   )(iri: ListIri, req: ListCreateChildNodeRequest): Task[ChildNodeInfoGetResponseADM] = for {
-    _       <- ZIO.fail(BadRequestException("Route and payload parentNodeIri mismatch.")).when(iri != req.parentNodeIri)
-    project <- projectService
-                 .findById(req.projectIri)
-                 .someOrFail(BadRequestException("Project not found"))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
+    _        <- ZIO.fail(BadRequestException("Route and payload parentNodeIri mismatch.")).when(iri != req.parentNodeIri)
+    grant    <- authorizeForNode(candidate, iri)
+    _        <- ensureBodyProjectIsGranted(req.projectIri, grant, iri)
     uuid     <- Random.nextUUID
-    response <- listsResponder.listCreateChildNode(req, uuid)
+    response <- listsResponder.listCreateChildNode(req, grant, uuid)
   } yield response
 
   def canDeleteListRequestADM(iri: ListIri): Task[CanDeleteListResponseADM] =
     listsResponder.canDeleteList(iri)
 
-  def deleteListNodeCommentsADM(user: User)(iri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
-    listsResponder.deleteListNodeCommentsADM(iri, user)
+  def deleteListNodeCommentsADM(candidate: ProjectCandidate)(iri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
+    for {
+      grant    <- authorizeForNode(candidate, iri)
+      uuid     <- Random.nextUUID
+      response <- listsResponder.deleteListNodeCommentsADM(iri, grant, uuid)
+    } yield response
+
+  /** Resolves the node's project first, so a missing node answers 400 before an unauthorized caller gets 403. */
+  private def authorizeForNode(candidate: ProjectCandidate, iri: ListIri): Task[ProjectAdminGrant] =
+    listsResponder.getProjectIriFromNode(iri).flatMap(auth.authorizeProjectAdminById(candidate, _))
+
+  private def ensureBodyProjectIsGranted(projectIri: ProjectIri, grant: ProjectAdminGrant, iri: ListIri): Task[Unit] =
+    ZIO
+      .fail(BadRequestException(s"Project IRI in body is not the project of list node ${iri.value}."))
+      .when(projectIri != grant.project.id)
+      .unit
 }
 
 object AdminListRestService {
