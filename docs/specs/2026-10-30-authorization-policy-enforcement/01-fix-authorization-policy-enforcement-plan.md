@@ -181,7 +181,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
   text. Instead, `Policy.requirement: String` renders the sentence (e.g. "Requires SystemAdmin or ProjectAdmin
   permissions for the list's project."). The ratchet test asserts that every endpoint with a policy has a
   description containing it, so the prose cannot drift from the attribute again.
-- **Status code changes:** DEV-7713, DEV-7714 and the ingest report move from 200 to 403 (ingest: 401, which is its
+- **Status code changes:** DEV-7713 and DEV-7714 move from 200 to 403; the ingest report moves from 202 to 401 (its
   `Unauthorized` problem type). DEV-7712 moves from 200 to 403 for hidden resources, and from 403 to 200 for
   project history (measured in Phase 3; `checkResourceIris` refuses before `.resources.head`). Anonymous resource creation is refused earlier. DEV-7723 moves value deletion on a hidden
   resource from 400/404 to 403, and on a visible resource with a hidden value from 403 to 404. All are breaking for a
@@ -325,26 +325,26 @@ Fixtures (anything data, `test_data/project_data/anything-data.ttl`; verified in
 - Positive controls that really delete create their own resource and value first, as `ValuesEndpointsE2ESpec`
   already does, so the shared data stays intact.
 
-- [ ] Add e2e tests to `ValuesEndpointsE2ESpec` for `POST /v2/values/delete` on the hidden resource, as
+- [x] Add e2e tests to `ValuesEndpointsE2ESpec` for `POST /v2/values/delete` on the hidden resource, as
       `anythingUser1` and as `normalUser`: the correct request, a wrong resource class, a non-existent value IRI and a
       wrong value type each answer 403 with the same message; none names the class or the value type.
-- [ ] Add e2e tests: anonymous gets the anonymous refusal before any lookup; a non-existent resource IRI gets 404.
-- [ ] Add an e2e test as `anythingUser2` on `a-thing-with-text-values`: deleting `values/1` and deleting a
+- [x] Add e2e tests: anonymous gets the anonymous refusal before any lookup; a non-existent resource IRI gets 404.
+- [x] Add an e2e test as `anythingUser2` on `a-thing-with-text-values`: deleting `values/1` and deleting a
       non-existent value IRI answer the same 404 and message apart from the value IRI.
-- [ ] Add an e2e test: the view-but-not-delete value answers 403 before any class or type check (a wrong class gives
+- [x] Add an e2e test: the view-but-not-delete value answers 403 before any class or type check (a wrong class gives
       the same 403).
-- [ ] Add an e2e test on a self-created resource: a caller with delete permission still gets 400 for a wrong class and
+- [x] Add an e2e test on a self-created resource: a caller with delete permission still gets 400 for a wrong class and
       a wrong value type, and 200 for a correct request (the checks still run, only later).
-- [ ] In `canRemoveValue`, call `resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View,
+- [x] In `canRemoveValue`, call `resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View,
       requestingUser)` right after the resource is loaded.
-- [ ] Answer the missing-value `NotFoundException` also when the value exists but the caller lacks view permission
+- [x] Answer the missing-value `NotFoundException` also when the value exists but the caller lacks view permission
       on it.
-- [ ] Move the `checkValuePermission(..., Delete, ...)` call directly after the value lookup, before the resource-class
+- [x] Move the `checkValuePermission(..., Delete, ...)` call directly after the value lookup, before the resource-class
       and value-type checks.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*ValuesEndpointsE2ESpec.*'` and
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*ValuesEndpointsE2ESpec.*'` and
       `bazel test //modules/test-it:test --test_filter='.*(ValuesResponderV2Spec|ValuesEraseSpec).*'`; all pass,
       including erase and history-only erase, unchanged.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 7: DEV-7721 and DEV-7722 admin checks on custom permissions, behind one shared helper
 
