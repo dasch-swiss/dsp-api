@@ -24,42 +24,56 @@ import org.knora.webapi.slice.api.admin.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.api.admin.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.api.admin.model.AdminQueryVariables
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "lists"
 
-  val getListsQueryByProjectIriOption = baseEndpoints.publicEndpoint.get
+  private val readReason        = "Lists are controlled vocabularies of a project's data model; anyone may read them."
+  private val publicRequirement = Policy.Public(readReason).requirement
+
+  val getListsQueryByProjectIriOption = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base)
     .in(AdminQueryVariables.projectIriOrShortcodeQueryOption)
     .out(jsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
     .description(
       "Get all lists or all lists belonging to a project. " +
         "Note that you can provide either a project IRI or a project shortcode. " +
-        "Publicly accessible.",
+        publicRequirement,
     )
 
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
-  val getListsByIri          = baseEndpoints.publicEndpoint.get
+  val getListsByIri          = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / listIriPathVar)
     .out(jsonBody[ListItemGetResponseADM])
-    .description("Returns a list node, root or child, with children (if exist). Publicly accessible.")
+    .description(s"Returns a list node, root or child, with children (if exist). $publicRequirement")
 
   private val getListInfoDesc =
-    "Returns basic information about a list node, root or child, w/o children (if exist). Publicly accessible."
-  val getListsByIriInfo = baseEndpoints.publicEndpoint.get
+    s"Returns basic information about a list node, root or child, w/o children (if exist). $publicRequirement"
+  val getListsByIriInfo = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / listIriPathVar / "info")
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDesc)
 
   private val getListInfoDeprecation = "*Deprecated*. Use GET admin/lists/<listIri>/info instead. "
-  val getListsInfosByIri             = baseEndpoints.publicEndpoint.get
+  val getListsInfosByIri             = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / "infos" / listIriPathVar)
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
 
-  val getListsNodesByIri = baseEndpoints.publicEndpoint.get
+  val getListsNodesByIri = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / "nodes" / listIriPathVar)
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
@@ -127,10 +141,12 @@ final class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ListItemDeleteResponseADM])
     .description("Delete a list node. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
 
-  val getListsCanDeleteByIri = baseEndpoints.publicEndpoint.get
+  val getListsCanDeleteByIri = baseEndpoints
+    .publicPolicyEndpoint("Answers only whether a list is in use, never which data uses it.")
+    .get
     .in(base / "candelete" / listIriPathVar)
     .out(jsonBody[CanDeleteListResponseADM])
-    .description("Checks if a list can be deleted (none of its nodes is used in data).")
+    .description(s"Checks if a list can be deleted (none of its nodes is used in data). $publicRequirement")
 
   val deleteListsComment = baseEndpoints.securedEndpoint.delete
     .in(base / "comments" / listIriPathVar)

@@ -27,12 +27,6 @@ GET /admin/files/{projectShortcode}/{filename}
 GET /admin/groups
 GET /admin/groups/{groupIri}
 GET /admin/groups/{groupIri}/members
-GET /admin/lists
-GET /admin/lists/candelete/{param1}
-GET /admin/lists/infos/{param1}
-GET /admin/lists/nodes/{param1}
-GET /admin/lists/{param1}
-GET /admin/lists/{param1}/info
 GET /admin/permissions/ap/{projectIri}
 GET /admin/permissions/ap/{projectIri}/{groupIri}
 GET /admin/permissions/doap/{projectIri}
