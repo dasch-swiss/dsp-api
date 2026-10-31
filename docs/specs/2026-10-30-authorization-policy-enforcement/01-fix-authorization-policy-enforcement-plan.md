@@ -217,22 +217,22 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 <!-- markdownlint-disable-next-line MD001 -->
 #### Phase 1: DEV-7713 list-node comment deletion requires ProjectAdmin
 
-- [ ] Add e2e tests to `DeleteAdminListsEndpointsE2ESpec`: anonymous gets 401 (`securedEndpoint` without
+- [x] Add e2e tests to `DeleteAdminListsEndpointsE2ESpec`: anonymous gets 401 (`securedEndpoint` without
       credentials); `anythingUser1` (member, not admin) gets 403; `incunabulaProjectAdminUser` (admin of another
       project) gets 403; none removes the comments (read back).
-- [ ] Add e2e tests: `anythingAdminUser` and `rootUser` get 200 and the comments are gone.
-- [ ] Pass the user from `AdminListRestService.deleteListNodeCommentsADM` to `ListsResponder.deleteListNodeCommentsADM`
+- [x] Add e2e tests: `anythingAdminUser` and `rootUser` get 200 and the comments are gone.
+- [x] Pass the user from `AdminListRestService.deleteListNodeCommentsADM` to `ListsResponder.deleteListNodeCommentsADM`
       and drop `@unused`.
-- [ ] Call `ensureUserIsAdminOrProjectOwner(nodeIri, user)` first in `ListsResponder.deleteListNodeCommentsADM`, before
+- [x] Call `ensureUserIsAdminOrProjectOwner(nodeIri, user)` first in `ListsResponder.deleteListNodeCommentsADM`, before
       the node checks, so a non-admin learns nothing about the node beyond its existence (see Technical
       Considerations).
-- [ ] Update `ListsResponderSpec` callers for the new signature.
-- [ ] Change the description at `AdminListsEndpoints.scala:138` to "Delete a list node's comments. Requires SystemAdmin
+- [x] Update `ListsResponderSpec` callers for the new signature.
+- [x] Change the description at `AdminListsEndpoints.scala:138` to "Delete a list node's comments. Requires SystemAdmin
       or ProjectAdmin permissions for the list's project."
-- [ ] Add the required-permission line to `docs/03-endpoints/api-admin/lists.md`.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*DeleteAdminListsEndpointsE2ESpec.*'`; the new 403 tests
+- [x] Add the required-permission line to `docs/03-endpoints/api-admin/lists.md`.
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*DeleteAdminListsEndpointsE2ESpec.*'`; the new 403 tests
       fail before the fix and all pass after.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: DEV-7714 creating a standoff mapping requires ProjectAdmin
 
