@@ -47,9 +47,8 @@ final class StandoffRestService(
    * Yields the exact XML dsp-api would return when reading the value. The conversion is idempotent, so
    * the result is comparable to the `textValueAsXml` of a stored value for change detection.
    */
-  def canonicalize(user: User)(xml: String): Task[String] =
+  def canonicalize(xml: String): Task[String] =
     for {
-      _ <- auth.ensureUserIsNotAnonymous(user)
       // The mapping IRI is a constant built-in; any failure to load it is a server-side problem, not a
       // client error, so it must surface as a 500 rather than the BadRequestException getMappingV2 returns.
       mapping <- mappingService

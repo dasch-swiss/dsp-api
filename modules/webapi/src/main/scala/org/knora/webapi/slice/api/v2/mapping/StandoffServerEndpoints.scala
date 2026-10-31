@@ -18,7 +18,7 @@ import org.knora.webapi.slice.standoff.service.StandoffMappingService
 final class StandoffServerEndpoints(endpoints: StandoffEndpoints, restService: StandoffRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.postMapping.serverLogic(restService.createMapping),
-    endpoints.postCanonicalize.serverLogic(restService.canonicalize),
+    endpoints.postCanonicalize.serverLogic(_ => restService.canonicalize),
   )
 }
 object StandoffServerEndpoints {

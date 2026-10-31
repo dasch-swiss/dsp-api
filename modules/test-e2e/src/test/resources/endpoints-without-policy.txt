@@ -139,7 +139,6 @@ POST /v2/resources/delete
 POST /v2/resources/erase
 POST /v2/searchextended
 POST /v2/searchextended/count
-POST /v2/standoff/canonicalize
 POST /v2/values
 POST /v2/values/delete
 POST /v2/values/erase
