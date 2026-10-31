@@ -12,7 +12,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.StandoffInternalException
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.StandoffMappingIri
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 final class StandoffRestService(
@@ -30,16 +30,16 @@ final class StandoffRestService(
   mappingService: StandoffMappingService,
 ) {
   def createMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(mappingForm: CreateStandoffMappingForm, opts: FormatOptions): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
     for {
-      _             <- auth.ensureUserIsNotAnonymous(user)
       createRequest <- requestParser
                          .createMappingRequestMetadataV2(mappingForm)
                          .mapError(BadRequestException.apply)
-      _        <- auth.ensureSystemAdminOrProjectAdminById(user, createRequest.projectIri)
-      uuid     <- Random.nextUUID
-      result   <- standoffResponder.createMappingV2(createRequest, uuid)
+      grant  <- auth.authorizeProjectAdminById(candidate, createRequest.projectIri)
+      uuid   <- Random.nextUUID
+      result <- standoffResponder
+                  .createMappingV2(grant, createRequest.mapping, uuid)
       response <- renderer.render(result, opts)
     } yield response
 

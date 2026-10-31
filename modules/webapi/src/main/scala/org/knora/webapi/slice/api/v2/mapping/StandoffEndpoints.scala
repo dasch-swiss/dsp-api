@@ -24,15 +24,17 @@ final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base: EndpointInput[Unit] = "v2" / "mapping"
 
-  val postMapping = baseEndpoints.withUserEndpoint.post
+  private val bodyProjectIri = "body projectIri"
+  val postMapping            = baseEndpoints
+    .projectAdminPolicyEndpoint(bodyProjectIri)
+    .post
     .in(base)
     .in(multipartBody[CreateStandoffMappingForm])
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Create a standoff mapping for XML to standoff conversion. " +
-        "Requires SystemAdmin or ProjectAdmin permissions for the project the mapping is attached to.",
+      s"Create a standoff mapping for XML to standoff conversion. ${Policy.ProjectAdmin(bodyProjectIri).requirement}",
     )
 
   // The response media type of the canonicalize endpoint.

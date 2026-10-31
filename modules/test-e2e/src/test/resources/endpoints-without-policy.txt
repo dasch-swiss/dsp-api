@@ -127,7 +127,6 @@ POST /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}
 POST /admin/users/iri/{userIri}/project-memberships/{projectIri}
 POST /start-compaction
 POST /v2/authentication
-POST /v2/mapping
 POST /v2/ontologies
 POST /v2/ontologies/candeletecardinalities
 POST /v2/ontologies/cardinalities

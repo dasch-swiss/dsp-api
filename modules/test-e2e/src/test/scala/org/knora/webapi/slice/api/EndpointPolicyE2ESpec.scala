@@ -41,7 +41,7 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
   private def sortedLines(keys: Iterable[String]): String = keys.toList.sorted.mkString("\n")
 
   // Pinned so that an appended baseline line fails; lowered in the same commit that removes lines.
-  private val baselineSize = 176
+  private val baselineSize = 175
 
   override def e2eSpec = suite("Endpoint policy ratchet")(
     test("every endpoint has a unique METHOD /path key") {

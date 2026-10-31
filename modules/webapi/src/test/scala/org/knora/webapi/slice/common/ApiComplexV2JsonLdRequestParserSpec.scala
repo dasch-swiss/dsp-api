@@ -175,7 +175,10 @@ class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
     for {
       req <- service(_.createMappingRequestMetadataV2(form))
     } yield assertTrue(
-      req == CreateMappingRequestV2(expectedLabel, expectedProjectIri, expectedMappingName, someXml),
+      req == CreateMappingRequestV2(
+        expectedProjectIri,
+        NewStandoffMapping(expectedLabel, expectedMappingName, someXml),
+      ),
     )
   })
 

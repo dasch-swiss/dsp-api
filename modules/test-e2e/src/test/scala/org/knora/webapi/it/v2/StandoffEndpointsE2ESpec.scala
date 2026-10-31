@@ -174,7 +174,7 @@ class StandoffEndpointsE2ESpec extends E2EZSpec {
                         mappingBody(deniedMappingName, "label", Paths.get(pathToLetterMapping), anythingProjectIri),
                       )
           exists <- mappingExists(deniedMappingName)
-        } yield assertTrue(Set(StatusCode.Unauthorized, StatusCode.Forbidden).contains(response.code), !exists)
+        } yield assertTrue(response.code == StatusCode.Unauthorized, !exists)
       },
       test("return forbidden for a user without a project and write no mapping") {
         for {
@@ -194,9 +194,9 @@ class StandoffEndpointsE2ESpec extends E2EZSpec {
           exists   <- mappingExists(deniedMappingName)
         } yield assertTrue(response.code == StatusCode.Forbidden, !exists)
       },
-      test("reject a body naming a non-existent project with 400 or 403") {
+      test("reject a body naming a non-existent project with 403") {
         postMapping("UnknownProjectMapping", anythingAdminUser, ProjectIri.makeNew)
-          .map(response => assertTrue(Set(StatusCode.BadRequest, StatusCode.Forbidden).contains(response.code)))
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
       test("create a mapping as project admin") {
         for {
