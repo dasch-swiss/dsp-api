@@ -14,8 +14,8 @@ the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
 
 Proposed
 
-Not yet in code: the endpoint baseline and its ratchet, the lint and its allow-lists, and the matrix test. The commit
-that lands an item removes it from this line.
+Not yet in code: the lint and its allow-lists, and the matrix test. The commit that lands an item removes it from
+this line.
 
 ## Context
 
@@ -186,9 +186,10 @@ node answers 400 before 403) stay where the object is publicly readable anyway. 
 accepted exception to authorizing before parsing: its project comes from the body, so the handler parses the body
 before it obtains the grant, and a malformed body answers 400 to any authenticated caller.
 
-**Enforcement.** The endpoint baseline (`ratchet`), the lint in `just check` (`static-analysis`), the matrix and
-responder tests (`test`), and the `REVIEW.md` items for `Public` and `Authenticated` reasons, policy relabelling
-and new `SystemUser` allow-list entries (`review`).
+**Enforcement.** The endpoint baseline (`ratchet`: `EndpointPolicyE2ESpec` over
+`modules/test-e2e/src/test/resources/endpoints-without-policy.txt`), the lint in `just check` (`static-analysis`),
+the matrix and responder tests (`test`), and the `REVIEW.md` items for `Public` and `Authenticated` reasons, policy
+relabelling and new `SystemUser` allow-list entries (`review`).
 
 ## Alternatives rejected
 
