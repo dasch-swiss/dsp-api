@@ -17,8 +17,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
-import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -355,25 +353,13 @@ final class CreateResourceV2Handler(
           case Some(permissionStr) =>
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
-
-              _ <- ZIO.when {
-                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id.value) &&
-                       !requestingUser.permissions.isSystemAdmin)
-                   } {
-                     // Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                     val permissionComparisonResult: PermissionComparisonResult =
-                       PermissionUtilADM.comparePermissionsADM(
-                         internalCreateResource.projectADM.id.value,
-                         validatedCustomPermissions,
-                         defaultResourcePermissions,
-                         requestingUser,
-                       )
-                     ZIO.when(permissionComparisonResult == AGreaterThanB) {
-                       val msg =
-                         s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                       ZIO.fail(ForbiddenException(msg))
-                     }
-                   }
+              _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                     internalCreateResource.projectADM.id,
+                     validatedCustomPermissions,
+                     defaultResourcePermissions,
+                     requestingUser,
+                     s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions",
+                   )
             } yield validatedCustomPermissions
 
           case None => ZIO.succeed(defaultResourcePermissions)
