@@ -443,37 +443,37 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 9: Policy model and policy-declaring endpoint bases
 
-- [ ] Add `Policy` (enum, `key`, `requirement` sentence per case) in `slice/common/api/Policy.scala`.
-- [ ] Add `ProjectCandidate` (`private[api]` constructor and `user` field) in `slice/common/api/`.
-- [ ] Add `ProjectAdminGrant` with a `private[api]` constructor in `slice/common/api/`.
-- [ ] Add `AuthorizationRestService.authorizeProjectAdmin(candidate, project): IO[ForbiddenException,
+- [x] Add `Policy` (enum, `key`, `requirement` sentence per case) in `slice/common/api/Policy.scala`.
+- [x] Add `ProjectCandidate` (`private[api]` constructor and `user` field) in `slice/common/api/`.
+- [x] Add `ProjectAdminGrant` with a `private[api]` constructor in `slice/common/api/`.
+- [x] Add `AuthorizationRestService.authorizeProjectAdmin(candidate, project): IO[ForbiddenException,
       ProjectAdminGrant]`, reusing `ensureSystemAdminOrProjectAdmin`.
-- [ ] Add `authorizeProjectAdminById(candidate, projectIri)`, reusing `ensureSystemAdminOrProjectAdminById`.
-- [ ] Add a compile-negative unit test (`scala.compiletime.testing.typeCheckErrors`): code outside `slice/common/api`
+- [x] Add `authorizeProjectAdminById(candidate, projectIri)`, reusing `ensureSystemAdminOrProjectAdminById`.
+- [x] Add a compile-negative unit test (`scala.compiletime.testing.typeCheckErrors`): code outside `slice/common/api`
       can construct neither `ProjectCandidate` nor `ProjectAdminGrant`, cannot read `candidate.user`, and cannot call
       `ProjectAdminGrant.apply` or `copy`. Place the spec in a package outside `org.knora.webapi.slice.common.api`
       and its subpackages (inside it every probe compiles, so the test proves nothing). Assert on message
       substrings, not on `nonEmpty`: "cannot be accessed" for `new`, `copy` and `.user`, "does not take parameters"
       for `ProjectAdminGrant(...)`.
-- [ ] Add the test-source helper `TestCandidates.of(user)` in package `org.knora.webapi.slice.common.api`, in the
+- [x] Add the test-source helper `TestCandidates.of(user)` in package `org.knora.webapi.slice.common.api`, in the
       `webapi` test sources and in the `test-it` sources.
-- [ ] Add a `BaseEndpoints` factory for `Public(reason)`: the public base with the attribute set.
-- [ ] Add a `BaseEndpoints` factory for `Authenticated` and `SystemAdmin`: authenticate and authorize in the security
+- [x] Add a `BaseEndpoints` factory for `Public(reason)`: the public base with the attribute set.
+- [x] Add a `BaseEndpoints` factory for `Authenticated` and `SystemAdmin`: authenticate and authorize in the security
       logic (reuse `authorization.ensureUserIsNotAnonymous` / `ensureSystemAdmin`), with the attribute set.
-- [ ] Add a `BaseEndpoints` factory for `ProjectAdmin`: authenticate and refuse anonymous or inactive users in the
+- [x] Add a `BaseEndpoints` factory for `ProjectAdmin`: authenticate and refuse anonymous or inactive users in the
       security logic; the security output is a `ProjectCandidate`, not a `User`; the attribute is set.
-- [ ] Add a `BaseEndpoints` factory for `ObjectAccess` (anonymous allowed, security output `User`), with the attribute
+- [x] Add a `BaseEndpoints` factory for `ObjectAccess` (anonymous allowed, security output `User`), with the attribute
       set. `ProjectMember` gets its factory and candidate type when the first endpoint migrates to it, not in this plan.
-- [ ] Wrap each factory's base in `RequiresMethod`, like the existing bases in `BaseEndpoints`.
-- [ ] Unit tests in a new `BaseEndpointsSpec` (none exists today): each factory sets the attribute, readable from the
+- [x] Wrap each factory's base in `RequiresMethod`, like the existing bases in `BaseEndpoints`.
+- [x] Unit tests in a new `BaseEndpointsSpec` (none exists today): each factory sets the attribute, readable from the
       completed server endpoint.
-- [ ] Unit tests: the `SystemAdmin` and `Authenticated` factories reject the wrong users, anonymous, and an inactive
+- [x] Unit tests: the `SystemAdmin` and `Authenticated` factories reject the wrong users, anonymous, and an inactive
       user before the server logic runs (server logic stubbed to fail the test if reached).
-- [ ] Unit tests in `AuthorizationRestServiceSpec` (`slice.api.admin.service`, outside the `api` package tree): grants
+- [x] Unit tests in `AuthorizationRestServiceSpec` (`slice.api.admin.service`, outside the `api` package tree): grants
       are issued to SystemAdmin and the project's admin, refused to a member, an admin of another project,
       anonymous, and the inactive system admin fixture.
-- [ ] Run `just test-unit`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `just test-unit`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 10: endpoint policy ratchet and convention docs
 
