@@ -525,26 +525,26 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 12: pilot migration, admin lists
 
-- [ ] Move the 5 public list reads and `getListsCanDeleteByIri` (6 public endpoints in `AdminListsEndpoints`) to the
+- [x] Move the 5 public list reads and `getListsCanDeleteByIri` (6 public endpoints in `AdminListsEndpoints`) to the
       `Public(reason)` factory.
-- [ ] Move the 9 list writes (create root, create child, name, labels, comments, position, `putListsByIri`, delete,
+- [x] Move the 9 list writes (create root, create child, name, labels, comments, position, `putListsByIri`, delete,
       delete comments) to the `ProjectAdmin(...)` factory, with `projectFrom` naming the path, body or list node.
-- [ ] Change the `ListsResponder` write methods to take a `ProjectAdminGrant` instead of a `User`, and remove
+- [x] Change the `ListsResponder` write methods to take a `ProjectAdminGrant` instead of a `User`, and remove
       `ensureUserIsAdminOrProjectOwner` and its call sites (`ListsResponder.scala:752, 777, 802, 1007, 1169`, plus
       the one Phase 1 adds). The grant is obtained in `AdminListRestService`, before the responder takes its
       per-node `IriLocker` lock; the node-belongs-to-grant assertion runs inside the lock. Only create-root and
       create-child take the global list lock.
-- [ ] In each `ListsResponder` write that targets an existing node, assert that the node's project equals
+- [x] In each `ListsResponder` write that targets an existing node, assert that the node's project equals
       `grant.project` and fail with 403 otherwise. Create-root takes its project from `grant.project`.
-- [ ] Change the `AdminListRestService` write methods to take a `ProjectCandidate`; each resolves the project (from the
+- [x] Change the `AdminListRestService` write methods to take a `ProjectCandidate`; each resolves the project (from the
       body for create-root, from the node otherwise) and obtains the grant.
-- [ ] Add a responder test: a grant for project A on a node of project B is refused with 403.
-- [ ] Align the 15 endpoint descriptions with `policy.requirement`.
-- [ ] Remove the 15 entries from `endpoints-without-policy.txt`.
-- [ ] Update `ListsResponderSpec` and the admin list e2e specs to the new signatures.
-- [ ] Run `just test-unit` and `bazel test //modules/test-e2e:test --test_filter='.*AdminLists.*'`; they pass.
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*ListsResponderSpec.*'`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Add a responder test: a grant for project A on a node of project B is refused with 403.
+- [x] Align the 15 endpoint descriptions with `policy.requirement`.
+- [x] Remove the 15 entries from `endpoints-without-policy.txt`.
+- [x] Update `ListsResponderSpec` and the admin list e2e specs to the new signatures.
+- [x] Run `just test-unit` and `bazel test //modules/test-e2e:test --test_filter='.*AdminLists.*'`; they pass.
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*ListsResponderSpec.*'`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 13: pilot migration, v2 standoff
 
