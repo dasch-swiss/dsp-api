@@ -119,9 +119,9 @@ project data graph itself stays a whole-graph platform operation under decision 
   consistency with dozens of existing classes wins over cross-repo uniformity.
 - **Storage unit.** Sovereignty is over named graphs in one Fuseki dataset instead of tables in one
   Turso file. The consequence is the same: no cross-owner queries.
-- **Whole-graph exception.** ADR-0013 has no equivalent of decision 10. It exists because Project
+- **Whole-graph exception.** dasch-ops-platform ADR-0013 has no equivalent of decision 10. It exists because Project
   Migration's job is moving graphs, which has no table analogue in the ops platform.
-- **Enforcement today is `review`.** ADR-0013 enforces with Bazel visibility from the start. dsp-api
+- **Enforcement today is `review`.** dasch-ops-platform ADR-0013 enforces with Bazel visibility from the start. dsp-api
   can only do so after the modularization plan's Phase 7 creates per-context targets; until then
   the rule lives in `REVIEW.md` and the architecture map's banned-constructs table.
 
