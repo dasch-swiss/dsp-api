@@ -477,26 +477,26 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 10: endpoint policy ratchet and convention docs
 
-- [ ] Add `EndpointPolicyE2ESpec` in `modules/test-e2e/.../slice/api/` next to `EndpointsE2ESpec` (the only place
+- [x] Add `EndpointPolicyE2ESpec` in `modules/test-e2e/.../slice/api/` next to `EndpointsE2ESpec` (the only place
       `Endpoints.serverEndpoints` is enumerable with the full layer). Key each endpoint as `METHOD /path/template`,
       rendered the way `DspApiServer.scala` already does (`ep.showPathTemplate(showQueryParam = None,
       showQueryParamsAs = None)`); assert the keys are unique.
-- [ ] Ratchet assertion 1: every endpoint without a `Policy` attribute is listed in
+- [x] Ratchet assertion 1: every endpoint without a `Policy` attribute is listed in
       `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`.
-- [ ] Ratchet assertion 2: no line of that file names an endpoint that has a policy or no longer exists.
-- [ ] Assertion: every `Public` and `Authenticated` policy has a non-blank reason.
-- [ ] Assertion: every endpoint with a policy has a description containing `policy.requirement`.
-- [ ] Make the ratchet's failure message print the computed missing set, sorted, one key per line, and write the
+- [x] Ratchet assertion 2: no line of that file names an endpoint that has a policy or no longer exists.
+- [x] Assertion: every `Public` and `Authenticated` policy has a non-blank reason.
+- [x] Assertion: every endpoint with a policy has a description containing `policy.requirement`.
+- [x] Make the ratchet's failure message print the computed missing set, sorted, one key per line, and write the
       baseline file from that output; check it in.
-- [ ] Document the rule in `docs/development/dsp-api-conventions.md`: new endpoints use a policy-declaring factory and
+- [x] Document the rule in `docs/development/dsp-api-conventions.md`: new endpoints use a policy-declaring factory and
       never extend the baseline.
-- [ ] Update the three-tier API section in `CONVENTIONS.md` to the same rule.
-- [ ] Add a reviewer checklist item to `REVIEW.md`: the declared policy matches what the code enforces,
+- [x] Update the three-tier API section in `CONVENTIONS.md` to the same rule.
+- [x] Add a reviewer checklist item to `REVIEW.md`: the declared policy matches what the code enforces,
       `Public`/`Authenticated` reasons are justified, and no slice re-sets `Policy.key` or calls `withInfo` (which
       replaces all attributes).
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes.
-- [ ] Run `just check`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes.
+- [x] Run `just check`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 11: authorization lint in `just check`
 
@@ -654,7 +654,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 ## Success Metrics
 
-- Endpoints without a declared policy: the baseline line count at the end of Phase 10 (about 190, all endpoints;
+- Endpoints without a declared policy: the baseline line count at the end of Phase 10 (192 measured, all endpoints;
   193 server-logic call sites in `modules/webapi/src/main`),
   minus 17 after Phase 13 (15 admin lists, 2 v2 standoff). The PR description records both numbers.
 - Authenticated-only endpoints without a role check: 3 before (list-comments delete, standoff mapping,
