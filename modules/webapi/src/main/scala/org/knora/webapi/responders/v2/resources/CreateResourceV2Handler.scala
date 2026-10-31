@@ -718,30 +718,13 @@ final class CreateResourceV2Handler(
               // Yes. Validate and reformat them.
               for {
                 validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
-
-                // Is the requesting user a system admin, or an admin of this project?
-                _ <- ZIO.when(
-                       !(requestingUser.permissions
-                         .isProjectAdmin(project.id.value) || requestingUser.permissions.isSystemAdmin),
-                     ) {
-
-                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                       val permissionComparisonResult: PermissionComparisonResult =
-                         PermissionUtilADM.comparePermissionsADM(
-                           entityProject = project.id.value,
-                           permissionLiteralA = validatedCustomPermissions,
-                           permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                           requestingUser = requestingUser,
-                         )
-
-                       ZIO.when(permissionComparisonResult == AGreaterThanB) {
-                         ZIO.fail(
-                           ForbiddenException(
-                             s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                           ),
-                         )
-                       }
-                     }
+                _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                       project.id,
+                       validatedCustomPermissions,
+                       defaultPropertyPermissions(propertyIri),
+                       requestingUser,
+                       s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                     )
               } yield GenerateSparqlForValueInNewResourceV2(
                 valueContent = valueToCreate.valueContent,
                 customValueIri = valueToCreate.customValueIri,
