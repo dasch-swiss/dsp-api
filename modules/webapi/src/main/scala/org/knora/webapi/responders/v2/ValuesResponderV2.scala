@@ -1141,6 +1141,44 @@ final class ValuesResponderV2(
                   }
     } yield result
 
+  /**
+   * The authorization gate of value removal: loads the resource as the system user, so that hidden values are found,
+   * and answers only after the caller's permissions are checked. A hidden resource answers 403, a hidden value the
+   * same 404 as a missing one, a visible value the caller may not delete 403. Any check that depends on the
+   * resource's class or values belongs after this call, never inside it.
+   */
+  private def findDeletableValue(
+    deleteValue: ValueRemoval,
+    requestingUser: User,
+  ): Task[(ReadResourceV2, ReadValueV2)] = {
+    val valueNotFound = NotFoundException(
+      s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
+    )
+    for {
+      resourceInfo <- readResources
+                        .getResources(
+                          resourceIris = Seq(deleteValue.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          schemaOptions = Set.empty,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        )
+                        .flatMap(_.toResource(deleteValue.resourceIri))
+      _            <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View, requestingUser)
+      currentValue <- ZIO
+                        .fromOption(
+                          resourceInfo.values
+                            .get(deleteValue.propertyIri.toInternalSchema)
+                            .flatMap(_.find(_.valueIri == deleteValue.valueIri)),
+                        )
+                        .orElseFail(valueNotFound)
+      _ <- resourceUtilV2
+             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.View, requestingUser)
+             .orElseFail(valueNotFound)
+      _ <- resourceUtilV2
+             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.Delete, requestingUser)
+    } yield (resourceInfo, currentValue)
+  }
+
   private def canRemoveValue(
     deleteValue: ValueRemoval,
     requestingUser: User,
@@ -1168,16 +1206,8 @@ final class ValuesResponderV2(
     // corresponding link property, whose objects we will need to query.
     adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
 
-    // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-    // so we can see objects that the user doesn't have permission to see.
-    resourceInfo <- readResources
-                      .getResources(
-                        resourceIris = Seq(deleteValue.resourceIri),
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = Set.empty,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                      )
-                      .flatMap(_.toResource(deleteValue.resourceIri))
+    (resourceInfo, currentValue) <- findDeletableValue(deleteValue, requestingUser)
+    submittedInternalPropertyIri  = propertyIri.toInternalSchema
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1188,21 +1218,6 @@ final class ValuesResponderV2(
            )
          }
 
-    // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
-    // Check that the user has permission to delete the value.
-    submittedInternalPropertyIri = propertyIri.toInternalSchema
-    currentValue                <-
-      ZIO
-        .fromOption(for {
-          values <- resourceInfo.values.get(submittedInternalPropertyIri)
-          curVal <- values.find(_.valueIri == deleteValue.valueIri)
-        } yield curVal)
-        .orElseFail(
-          NotFoundException(
-            s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
-          ),
-        )
-
     // Check that the value is of the type that the client submitted.
     _ <-
       ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
@@ -1212,14 +1227,6 @@ final class ValuesResponderV2(
           ),
         ),
       )
-
-    // Check the user's permissions on the value.
-    _ <- resourceUtilV2.checkValuePermission(
-           resourceInfo = resourceInfo,
-           valueInfo = currentValue,
-           permissionNeeded = Permission.ObjectAccess.Delete,
-           requestingUser,
-         )
 
     // Get the definition of the resource class.
     // Check that the resource class's cardinality for the submitted property allows this value to be deleted.

@@ -598,6 +598,11 @@ specifies a custom timestamp indicating when the value was deleted. If not speci
 
 The response is a JSON-LD document containing the predicate `knora-api:result` with a confirmation message.
 
+The requesting user needs view permission on the resource and delete permission on the value. These are checked
+before the submitted resource class, value IRI and value type, so a resource the user cannot view answers 403
+whatever class, value or type the request names, and a value the user cannot view answers 404, the same as a value
+that does not exist. A user who may delete the value gets 400 for a wrong resource class or value type.
+
 ### Requesting Deleted Values
 
 Values marked as deleted are not found in search queries. But when requesting a resource that has deleted values, these

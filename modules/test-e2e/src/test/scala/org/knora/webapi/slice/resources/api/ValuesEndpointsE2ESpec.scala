@@ -36,6 +36,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.values.ReorderValuesRequest
 import org.knora.webapi.slice.api.v2.values.ReorderValuesResponse
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -45,6 +46,8 @@ import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGrav
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert403
+import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
@@ -612,6 +615,31 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
        |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
        |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
        |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+       |  }
+       |}""".stripMargin
+
+  object HiddenThing {
+    val iri: IRI         = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"
+    val intValueIri: IRI = s"$iri/values/PVPAa37xR--K_wxQwlvSsg"
+  }
+
+  private def deleteValueRequest(
+    resourceIri: IRI,
+    resourceClass: String,
+    property: String,
+    valueIri: IRI,
+    valueType: String = "knora-api:IntValue",
+  ): String =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "$resourceClass",
+       |  "$property" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "$valueType"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
        |  }
        |}""".stripMargin
 
@@ -4609,6 +4637,130 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                )
                                .flatMap(_.assert200)
         } yield assertTrue(reorderResponse.valuesReordered == 1)
+      },
+    ),
+    suite("POST /v2/values/delete checks permissions before revealing value details (DEV-7723)")(
+      test("a hidden resource answers the same 403 for every variant of the request") {
+        val variants = List(
+          deleteValueRequest(HiddenThing.iri, "anything:Thing", "anything:hasInteger", HiddenThing.intValueIri),
+          deleteValueRequest(HiddenThing.iri, "anything:BlueThing", "anything:hasInteger", HiddenThing.intValueIri),
+          deleteValueRequest(
+            HiddenThing.iri,
+            "anything:Thing",
+            "anything:hasInteger",
+            s"${HiddenThing.iri}/values/nope",
+          ),
+          deleteValueRequest(
+            HiddenThing.iri,
+            "anything:Thing",
+            "anything:hasInteger",
+            HiddenThing.intValueIri,
+            "knora-api:TextValue",
+          ),
+        )
+        def messages(user: User) =
+          ZIO.foreach(variants)(body =>
+            TestApiClient.postJsonLd(uri"/v2/values/delete", body, user).flatMap(_.assert403),
+          )
+        for {
+          asMember <- messages(anythingUser1)
+          asOther  <- messages(normalUser)
+        } yield assertTrue(
+          asMember.distinct.size == 1,
+          asOther.distinct.size == 1,
+          (asMember ++ asOther).forall(m => !m.contains("Thing") && !m.contains("IntValue") && !m.contains("TextValue")),
+        )
+      },
+      test("an anonymous caller gets the anonymous refusal before any lookup") {
+        val missing = "http://rdfh.ch/0001/no-such-thing"
+        val hidden  =
+          deleteValueRequest(HiddenThing.iri, "anything:Thing", "anything:hasInteger", HiddenThing.intValueIri)
+        val unknown = deleteValueRequest(missing, "anything:Thing", "anything:noSuchProperty", s"$missing/values/nope")
+        for {
+          msgs <- ZIO.foreach(List(hidden, unknown))(body =>
+                    TestApiClient.postJsonLdDocument(uri"/v2/values/delete", body, None).flatMap(_.assert403),
+                  )
+        } yield assertTrue(msgs.forall(_.contains("Anonymous users aren't allowed to perform this operation")))
+      },
+      test("a non-existent resource answers 404") {
+        val missing = "http://rdfh.ch/0001/no-such-thing"
+        val jsonLd  = deleteValueRequest(missing, "anything:Thing", "anything:hasInteger", s"$missing/values/nope")
+        TestApiClient
+          .postJsonLd(uri"/v2/values/delete", jsonLd, anythingUser1)
+          .flatMap(_.assert404)
+          .as(assertCompletes)
+      },
+      test("a value the caller cannot view answers the same 404 as a non-existent value") {
+        val resourceIri           = "http://rdfh.ch/0001/a-thing-with-text-values"
+        val hiddenValue           = s"$resourceIri/values/1"
+        val noValue               = s"$resourceIri/values/nope"
+        def delete(valueIri: IRI) =
+          TestApiClient
+            .postJsonLd(
+              uri"/v2/values/delete",
+              deleteValueRequest(resourceIri, "anything:Thing", "anything:hasText", valueIri, "knora-api:TextValue"),
+              anythingUser2,
+            )
+            .flatMap(_.assert404)
+        for {
+          hidden  <- delete(hiddenValue)
+          missing <- delete(noValue)
+        } yield assertTrue(hidden.replace(hiddenValue, noValue) == missing)
+      },
+      test("a value the caller can view but not delete answers 403 before the class and type checks") {
+        val resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        val valueIri    = s"$resourceIri/values/6IRVBjuDSUuT3nWLaIj8vg"
+        val variants    = List(
+          ("anything:Thing", "knora-api:LinkValue"),
+          ("anything:BlueThing", "knora-api:LinkValue"),
+          ("anything:Thing", "knora-api:IntValue"),
+        ).map { case (cls, tpe) => deleteValueRequest(resourceIri, cls, "anything:hasOtherThingValue", valueIri, tpe) }
+        for {
+          msgs <- ZIO.foreach(variants)(body =>
+                    TestApiClient.postJsonLd(uri"/v2/values/delete", body, anythingUser2).flatMap(_.assert403),
+                  )
+        } yield assertTrue(msgs.distinct.size == 1)
+      },
+      test("a caller with delete permission still gets 400 for a wrong class or value type") {
+        val createResource =
+          s"""{
+             |  "@type" : "anything:Thing",
+             |  "anything:hasInteger" : {
+             |    "@type" : "knora-api:IntValue",
+             |    "knora-api:intValueAsInt" : 7723
+             |  },
+             |  "knora-api:attachedToProject" : {
+             |    "@id" : "http://rdfh.ch/projects/0001"
+             |  },
+             |  "rdfs:label" : "value deletion order test resource",
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+             |  }
+             |}""".stripMargin
+        val hasInteger                                                        = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"
+        def delete(resourceIri: IRI, valueIri: IRI, cls: String, tpe: String) =
+          TestApiClient.postJsonLd(
+            uri"/v2/values/delete",
+            deleteValueRequest(resourceIri, cls, "anything:hasInteger", valueIri, tpe),
+            anythingUser1,
+          )
+        for {
+          created     <- TestApiClient.postJsonLdDocument(uri"/v2/resources", createResource, anythingUser1)
+          resourceIri <- created.assert200.flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+          resource    <- TestResourcesApiClient
+                        .getResource(ResourceIri.unsafeFrom(resourceIri), anythingUser1)
+                        .flatMap(_.assert200)
+          values   <- ZIO.fromEither(resource.body.getRequiredArray(hasInteger))
+          valueIri <- ZIO
+                        .fromOption(values.value.collectFirst { case obj: JsonLDObject => obj })
+                        .orElseFail("no integer value")
+                        .flatMap(obj => ZIO.fromEither(obj.getRequiredString(JsonLDKeywords.ID)))
+          _ <- delete(resourceIri, valueIri, "anything:BlueThing", "knora-api:IntValue").flatMap(_.assert400)
+          _ <- delete(resourceIri, valueIri, "anything:Thing", "knora-api:TextValue").flatMap(_.assert400)
+          _ <- delete(resourceIri, valueIri, "anything:Thing", "knora-api:IntValue").flatMap(_.assert200)
+        } yield assertCompletes
       },
     ),
   )
