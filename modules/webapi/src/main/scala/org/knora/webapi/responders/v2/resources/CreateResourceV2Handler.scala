@@ -102,7 +102,7 @@ final class CreateResourceV2Handler(
   private def ensureNotAnonymousUser(user: User): Task[Unit] =
     ZIO
       .when(user.isAnonymousUser)(ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources")))
-      .ignore
+      .unit
 
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
     projectIri             <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)

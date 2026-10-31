@@ -718,6 +718,15 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
         _ <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert400)
       } yield assertCompletes
     },
+    test("not create a resource as an anonymous user") {
+      val customIRI: IRI = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+      for {
+        error <- TestApiClient
+                   .postJsonLdDocument(uri"/v2/resources", createResourceWithCustomIRI(customIRI))
+                   .flatMap(_.assert403)
+        _ <- TestApiClient.getJsonLd(uri"/v2/resources/$customIRI", anythingAdminUser).flatMap(_.assert404)
+      } yield assertTrue(error.contains("Anonymous users aren't allowed to create resources"))
+    },
     test("return a DuplicateValueException during resource creation when the supplied resource IRI is not unique") {
       // duplicate resource IRI
 

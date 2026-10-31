@@ -213,7 +213,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a new resource. Requires appropriate object access permissions.")
+    .description("Create a new resource. Anonymous users are refused. Requires appropriate object access permissions.")
 
   val putResources = baseEndpoints.withUserEndpoint.put
     .in(base)
