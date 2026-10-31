@@ -31,6 +31,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@517f1ca17a | 1 |
 | 2 | reviewed | dsp-api@291fcab014 | 2 |
 | 3 | reviewed | dsp-api@c744e192cb | 1 |
+| 4 | reviewed | dsp-api@6e012a9a4f | 1 |
 
 ## Chunk queue
 
@@ -39,6 +40,7 @@ status: in-progress
 | 1.1 | dsp-api | DeleteAdminListsEndpointsE2ESpec.scala, AdminListRestService.scala, ListsResponder.scala, ListsResponderSpec.scala, AdminListsEndpoints.scala, docs/03-endpoints/api-admin/lists.md | — | all Phase 1 checkboxes except Phase review | non-admins 403, anonymous 401, admins 200; new 403 tests red before fix | ListsResponder.scala § deleteListNodeCommentsADM; AdminListsEndpoints.scala § deleteListsComment; lists.md § Delete child node comments | — |
 | 2.1 | dsp-api | StandoffEndpointsE2ESpec.scala, StandoffRestService.scala, StandoffEndpoints.scala, docs/03-endpoints/api-v2/text/custom-standoff.md | — | all Phase 2 checkboxes except Phase review | anonymous 401/403, normalUser/anythingUser1/incunabula admin 403 with no mapping written; anything admin and root 200; unknown project 400/403; new 403 tests red before fix | StandoffRestService.scala § createMapping; StandoffEndpoints.scala § postMapping; custom-standoff.md § Creating a custom Mapping | — |
 | 3.1 | dsp-api | ResourcesResponderV2.scala, ResourcesRouteV2E2ESpec.scala, docs/03-endpoints/api-v2/reading-and-searching-resources.md | — | all Phase 3 checkboxes except Phase review | hidden resource history 403 for anonymous, normalUser, anythingUser1; creator 200; unknown IRI 404; projectHistoryEvents 200 without the hidden IRI for anythingUser1 and anonymous, with it for the creator; new tests red before fix | ResourcesResponderV2.scala § getResourceHistoryV2, getProjectResourceHistoryEvents, getResourceAtGivenTime; reading-and-searching-resources.md § history sections | — |
+| 4.1 | dsp-api | CreateResourceV2Handler.scala, ResourcesRouteV2E2ESpec.scala | — | all Phase 4 checkboxes except Phase review | anonymous POST /v2/resources 403 with "Anonymous users aren't allowed to create resources", resource absent afterwards; test red before fix on the message (status was already 403); no spec relies on anonymous creation; `.*Resource.*` e2e filter passes | CreateResourceV2Handler.scala § ensureNotAnonymousUser; ResourcesRouteV2E2ESpec.scala § create tests | — |
 
 ## Chunks
 
@@ -51,6 +53,8 @@ status: in-progress
 | 2.3 | dsp-api | complete | a73edbdbc | Review fix round 2 (fixup!): mappingExists asks the triplestore (CheckIriExistsQuery) instead of matching the mapping service's not-found message (dune finding on 2.2) | none |
 | 3.1 | dsp-api | complete | 64d18fadf | Preview read as the requesting user; getResourceAtGivenTime uses toResource; project history skips a resource on ForbiddenException only; docs; e2e tests in ResourcesRouteV2E2ESpec (red before fix: anythingUser1 got 200 for hidden history, project history answered 403) | none |
 | 3.2 | dsp-api | complete | 08e34952a | Review fix round 1 (fixup!): project history catches ForbiddenException only around getResourceHistoryV2, since extractEventsFromHistory also uses it for inconsistent value versions (dune, security, scala lenses); project history endpoint description states the omission | none |
+| 4.1 | dsp-api | complete | 4d2f098fd | ensureNotAnonymousUser fails instead of being ignored; e2e test asserts the anonymous message and that the resource is absent (red before fix: 403 from the create-permission check with "User anonymous does not have permission ..."); `.*Resource.*` filter passes (94 tests) | none |
+| 4.2 | dsp-api | complete | 1c34c0f96 | Review fix round 1 (fixup!): POST /v2/resources endpoint description and editing-resources docs state that anonymous users are refused (consistency lens) | none |
 
 ## Deferrals
 
@@ -77,3 +81,7 @@ status: in-progress
 - Phase 3: `ResourcesResponderV2.scala` no longer references `SystemUser` after DEV-7712 (grep finds none). The plan's Technical Considerations and the decided behaviours say it stays on the Phase 11 SystemUser allow-list because of other legitimate uses; that statement is now untrue. Phase 11 should not allow-list the file (dune DUNE-001).
 - Phase 3: `extractEventsFromHistory` (`ResourcesResponderV2.scala`, previous-value date check) fails with `ForbiddenException` for inconsistent value-version data; it should be an inconsistency error. Not changed (out of scope).
 - Phase 3 review suggestions (not fixed): no test pins that a non-Forbidden failure still fails project history (needs a stubbed `ReadResourcesService`); no e2e for a hidden deleted resource, for the date-range path on a hidden resource, or for anonymous on `resourceHistoryEvents` (code reading says all answer 403); a debug log for skipped resources; scaladoc of `getResourceHistoryV2` / `getProjectResourceHistoryEvents` could name the 403 and omission; restricted-view (RV) permission counts as "can view", the same as `GET /v2/resources`. ARCH-MAP fingerprint refresh not done (no component or dependency change).
+- Phase 4: no e2e, test-it or webapi unit spec creates a resource as the anonymous user (searched `AnonymousUser` / `anonymousUser` and every `post*` call to `/v2/resources` in test-e2e, test-it and testkit for a missing user argument), so no spec moved to a real user. Nothing for the PR to list.
+- Phase 4: the status for anonymous `POST /v2/resources` was already 403 (create-permission check); the change is the message and the order: an anonymous request now gets 403 before body validation and ontology checks, where a malformed body or a system-project target answered 400 before.
+- Phase 4 review suggestions (not fixed): no test pins the new order (anonymous with a malformed body or a system-project target now answers 403, not 400); the 404 "nothing created" check also held before the fix, only the message assertion discriminates; `ZIO.fail(..).when(..).unit` would match `ensureUserHasPermission`'s style; the handler's own anonymous message duplicates `AuthorizationRestService`'s generic one (kept: owner-decided wording). Security lens traced `attachedToUser` substitution: every anonymous combination ends in 403 or 400 before any write. ARCH-MAP refresh not needed (no component or dependency change; dune DUNE-001 on staleness).
+- Phase 4 re-review suggestion (not fixed): the endpoint description says "Anonymous users are refused" without the 403 the docs name (simplicity, dune low). Phase 9/10 policy declarations replace this prose.

@@ -272,13 +272,13 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 #### Phase 4: anonymous resource creation is refused
 
-- [ ] Add an e2e test: anonymous `POST /v2/resources` answers 403 with "Anonymous users aren't allowed to create
+- [x] Add an e2e test: anonymous `POST /v2/resources` answers 403 with "Anonymous users aren't allowed to create
       resources" and creates nothing.
-- [ ] Remove `.ignore` from `ensureNotAnonymousUser` in `CreateResourceV2Handler.scala:102-105`.
-- [ ] Search the e2e and test-it specs for resource creation as `AnonymousUser`; a spec that relied on the swallowed
+- [x] Remove `.ignore` from `ensureNotAnonymousUser` in `CreateResourceV2Handler.scala:102-105`.
+- [x] Search the e2e and test-it specs for resource creation as `AnonymousUser`; a spec that relied on the swallowed
       check is updated to a real user, and the PR lists it.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*Resource.*'`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*Resource.*'`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 5: ingest asset-overview report requires admin scope
 
