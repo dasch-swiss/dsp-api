@@ -548,19 +548,19 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 13: pilot migration, v2 standoff
 
-- [ ] Move `postMapping` to the `ProjectAdmin("body projectIri")` factory.
-- [ ] Move `postCanonicalize` to `Authenticated(reason)`, so it is checked in the security logic. The reason: it reads
+- [x] Move `postMapping` to the `ProjectAdmin("body projectIri")` factory.
+- [x] Move `postCanonicalize` to `Authenticated(reason)`, so it is checked in the security logic. The reason: it reads
       no project data.
-- [ ] Change `StandoffResponderV2.createMappingV2` to take a `ProjectAdminGrant` and write into `grant.project`'s data
+- [x] Change `StandoffResponderV2.createMappingV2` to take a `ProjectAdminGrant` and write into `grant.project`'s data
       graph, dropping the request's own project lookup.
-- [ ] Change `StandoffRestService.createMapping` to take a `ProjectCandidate` and obtain the grant from the body's
+- [x] Change `StandoffRestService.createMapping` to take a `ProjectCandidate` and obtain the grant from the body's
       `projectIri` (replacing the Phase 2 `ensure*` call).
-- [ ] Align both descriptions with `policy.requirement`.
-- [ ] Remove the two entries from `endpoints-without-policy.txt`.
-- [ ] Update `StandoffResponderV2Spec`.
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(Standoff|Mapping|EndpointPolicy).*'`; it passes.
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*StandoffResponderV2Spec.*'`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Align both descriptions with `policy.requirement`.
+- [x] Remove the two entries from `endpoints-without-policy.txt`.
+- [x] Update `StandoffResponderV2Spec`.
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(Standoff|Mapping|EndpointPolicy).*'`; it passes.
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*StandoffResponderV2Spec.*'`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 14: authorization matrix for the migrated endpoints
 
