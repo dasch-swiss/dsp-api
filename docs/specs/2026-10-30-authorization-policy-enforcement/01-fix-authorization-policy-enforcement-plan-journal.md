@@ -32,6 +32,7 @@ status: in-progress
 | 2 | reviewed | dsp-api@291fcab014 | 2 |
 | 3 | reviewed | dsp-api@c744e192cb | 1 |
 | 4 | reviewed | dsp-api@6e012a9a4f | 1 |
+| 5 | reviewed | dsp-api@a1fea60630 | 2 |
 
 ## Chunk queue
 
@@ -41,6 +42,7 @@ status: in-progress
 | 2.1 | dsp-api | StandoffEndpointsE2ESpec.scala, StandoffRestService.scala, StandoffEndpoints.scala, docs/03-endpoints/api-v2/text/custom-standoff.md | — | all Phase 2 checkboxes except Phase review | anonymous 401/403, normalUser/anythingUser1/incunabula admin 403 with no mapping written; anything admin and root 200; unknown project 400/403; new 403 tests red before fix | StandoffRestService.scala § createMapping; StandoffEndpoints.scala § postMapping; custom-standoff.md § Creating a custom Mapping | — |
 | 3.1 | dsp-api | ResourcesResponderV2.scala, ResourcesRouteV2E2ESpec.scala, docs/03-endpoints/api-v2/reading-and-searching-resources.md | — | all Phase 3 checkboxes except Phase review | hidden resource history 403 for anonymous, normalUser, anythingUser1; creator 200; unknown IRI 404; projectHistoryEvents 200 without the hidden IRI for anythingUser1 and anonymous, with it for the creator; new tests red before fix | ResourcesResponderV2.scala § getResourceHistoryV2, getProjectResourceHistoryEvents, getResourceAtGivenTime; reading-and-searching-resources.md § history sections | — |
 | 4.1 | dsp-api | CreateResourceV2Handler.scala, ResourcesRouteV2E2ESpec.scala | — | all Phase 4 checkboxes except Phase review | anonymous POST /v2/resources 403 with "Anonymous users aren't allowed to create resources", resource absent afterwards; test red before fix on the message (status was already 403); no spec relies on anonymous creation; `.*Resource.*` e2e filter passes | CreateResourceV2Handler.scala § ensureNotAnonymousUser; ResourcesRouteV2E2ESpec.scala § create tests | — |
+| 5.1 | dsp-api | ReportEndpointsHandler.scala, ReportEndpointsSpec.scala (new) | — | all Phase 5 checkboxes except Phase review | POST /report/asset-overview: no token 401, non-admin token 401 with the Unauthorized problem, admin token accepted with "work in progress"; non-admin test red before fix; `just test-ingest` passes | ReportEndpointsHandler.scala § postAssetOverviewReportHandler | — |
 
 ## Chunks
 
@@ -55,11 +57,17 @@ status: in-progress
 | 3.2 | dsp-api | complete | 08e34952a | Review fix round 1 (fixup!): project history catches ForbiddenException only around getResourceHistoryV2, since extractEventsFromHistory also uses it for inconsistent value versions (dune, security, scala lenses); project history endpoint description states the omission | none |
 | 4.1 | dsp-api | complete | 4d2f098fd | ensureNotAnonymousUser fails instead of being ignored; e2e test asserts the anonymous message and that the resource is absent (red before fix: 403 from the create-permission check with "User anonymous does not have permission ..."); `.*Resource.*` filter passes (94 tests) | none |
 | 4.2 | dsp-api | complete | 1c34c0f96 | Review fix round 1 (fixup!): POST /v2/resources endpoint description and editing-resources docs state that anonymous users are refused (consistency lens) | none |
+| 5.1 | dsp-api | complete | a77485e52 | ReportEndpointsHandler checks ensureAdminScope before forking the report; AuthorizationHandler injected (Main already provides it); new in-process ReportEndpointsSpec with live JWT config (red before fix: non-admin token got 202); `just test-ingest` passes | none |
+| 5.2 | dsp-api | complete | e6177b8d9 | Review fix round 1 (fixup!): admin test waits for the written asset overview report, so the daemon job no longer outlives the test's scoped storage (simplicity, scala-zio, consistency lenses); canary: job disabled, test red | none |
+| 5.3 | dsp-api | complete | a75728001 | Review fix round 1 (fixup!): scalafmt of the report wait; 5.2 was committed with `just check` failing (exit hidden by a pipe) | none |
+| 5.4 | dsp-api | complete | df0a817df | Review fix round 2 (fixup!): wait for a non-empty report (writer closed) instead of an existing one, polled every 20 ms (consistency, simplicity re-review); canary: job disabled, test red | none |
 
 ## Deferrals
 
 - Phase 2 (review, after the 2-round cap): `StandoffEndpointsE2ESpec.mappingExists` imports `slice.ontology.repo.CheckIriExistsQuery` from test-e2e, which breaks the docs-only webapi-ontology boundary rule (ARCH-MAP.md:699). Fix: call `IriService.checkIriExists(iri.value)` (confirm `IriService` is in the E2E layer), as another `fixup!` of the DEV-7714 commit. Warning, dune lens.
 - Phase 3 (re-review Warning, not fixed in round 2): no test pins that a `ForbiddenException` from `extractEventsFromHistory` still fails project history; inducing it needs inconsistent value-version data or a stubbed `ReadResourcesService` in `ResourcesResponderV2Spec`. The omission side is pinned by the e2e test. Natural home: the re-typing of that inconsistency error to a non-Forbidden type, which removes the hazard structurally.
+
+- Phase 5 (review, scope): admin authorization in ingest is a hand-written `ensureAdminScope` call per handler, and nothing fails if a handler drops its principal (the original bug). Structural fix: an admin endpoint base whose security logic checks the scope, or a check that every endpoint in `Endpoints.scala` is public or admin-tested. Changes the plan's scope; Phase 9/10 policy declarations are the natural home. Warning, dune lens (DUNE-002).
 
 ## Deviations
 
@@ -85,3 +93,7 @@ status: in-progress
 - Phase 4: the status for anonymous `POST /v2/resources` was already 403 (create-permission check); the change is the message and the order: an anonymous request now gets 403 before body validation and ontology checks, where a malformed body or a system-project target answered 400 before.
 - Phase 4 review suggestions (not fixed): no test pins the new order (anonymous with a malformed body or a system-project target now answers 403, not 400); the 404 "nothing created" check also held before the fix, only the message assertion discriminates; `ZIO.fail(..).when(..).unit` would match `ensureUserHasPermission`'s style; the handler's own anonymous message duplicates `AuthorizationRestService`'s generic one (kept: owner-decided wording). Security lens traced `attachedToUser` substitution: every anonymous combination ends in 403 or 400 before any write. ARCH-MAP refresh not needed (no component or dependency change; dune DUNE-001 on staleness).
 - Phase 4 re-review suggestion (not fixed): the endpoint description says "Anonymous users are refused" without the 403 the docs name (simplicity, dune low). Phase 9/10 policy declarations replace this prose.
+- Phase 5: the plan and the decided behaviours say an admin-scope token gets 200 "work in progress"; the endpoint declares `statusCode(StatusCode.Accepted)` and answers 202. Unchanged; the spec asserts 202.
+- Phase 5: `ARCH-MAP.md` ingest component lists `/reports/...`; the route is `/report/asset-overview`. Pre-existing; ARCH-MAP is owned by `/dune:dune-map`. A fingerprint refresh is not needed for this phase (no component or dependency change); DUNE-001 refuted on that ground.
+- Phase 5 review suggestions (not fixed): no test pins that a non-admin request never forks the job (a reordered check would still answer 401; needs a recording `ReportService`, which is a final case class); no `read:project` token case (same code path as `write:project`); the spec's 13-layer list mirrors the sibling specs, no shared ingest test layer exists; `createAssetOverReports` is declared after the val that uses it (pre-existing). Security lens: the job is reachable from no other route.
+- Phase 5 re-review suggestions (not fixed, cap reached): the spec hard-codes the `reports` folder and `asset_overview_report` prefix that `ReportService` owns, as `MaintenanceEndpointsSpec` does for `reports` (dune, low); the await helper duplicates `MaintenanceEndpointsSpec.awaitTrue` (no shared test util); the wait still ends just before the job's final `toAbsolutePath` and log line, which touch no storage.

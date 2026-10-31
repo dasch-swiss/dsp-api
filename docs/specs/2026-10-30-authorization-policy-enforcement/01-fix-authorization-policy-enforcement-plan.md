@@ -282,16 +282,16 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 #### Phase 5: ingest asset-overview report requires admin scope
 
-- [ ] Add `ReportEndpointsSpec` next to `MaintenanceEndpointsSpec` (`modules/ingest/src/test/scala/swiss/dasch/api/`),
+- [x] Add `ReportEndpointsSpec` next to `MaintenanceEndpointsSpec` (`modules/ingest/src/test/scala/swiss/dasch/api/`),
       in-process the same way (tapir `ZioHttpInterpreter`, no Docker), for `POST /report/asset-overview`: no token
       gets 401; a token without admin scope gets 401 (the ingest `Unauthorized` problem); an admin-scope token gets
-      200 "work in progress".
-- [ ] Call `authorizationHandler.ensureAdminScope(principal)` (`AuthorizationHandler.scala:16`) in
+      202 "work in progress".
+- [x] Call `authorizationHandler.ensureAdminScope(principal)` (`AuthorizationHandler.scala:16`) in
       `ReportEndpointsHandler` before forking the report job, and take `AuthorizationHandler` as a dependency; the
       handler's `ZLayer.derive` then needs `AuthorizationHandler` in the ingest layer.
-- [ ] Commit with the `fix(ingest):` scope.
-- [ ] Run `just test-ingest`; it passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Commit with the `fix(ingest):` scope.
+- [x] Run `just test-ingest`; it passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 6: DEV-7723 value deletion checks permission before revealing value details
 
