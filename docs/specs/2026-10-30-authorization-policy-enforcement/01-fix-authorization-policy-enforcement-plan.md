@@ -13,8 +13,9 @@ linear:
 ## Overview
 
 Three security issues in triage (DEV-7712, DEV-7713, DEV-7714) are real. Two more fail-open gaps of the
-same kind turned up during research. This plan fixes all five and adds the structure that makes this bug
-class visible:
+same kind turned up during research. Three filed follow-ups were verified and pulled in: DEV-7723 (fail-open),
+DEV-7721 and DEV-7722 (fail-closed). This plan fixes all eight and adds the structure that makes this bug class
+visible:
 
 - every endpoint declares an authorization **policy**;
 - a ratchet test fails on any new endpoint without one;
@@ -22,7 +23,7 @@ class visible:
 - a pilot migrates the admin lists and v2 standoff slices to the new model;
 - an authorization matrix test checks the pilot endpoints per principal.
 
-One plan, one PR, as the owner decided. The five fixes come first as self-contained `fix:` commits.
+One plan, one PR, as the owner decided. The eight fixes come first as self-contained `fix:` commits.
 
 ## Problem Statement / Motivation
 
@@ -261,7 +262,55 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `just test-ingest`; it passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 6: ADR-0013 authorization architecture
+#### Phase 6: DEV-7723 value deletion checks permission before revealing value details
+
+`canRemoveValue` (`ValuesResponderV2.scala:1144`) loads the resource as `SystemUser`, then answers 400/404 for a wrong
+resource class, a value not on the resource, or a wrong value type, all before `checkValuePermission`. Any logged-in
+user can probe a hidden resource's class and its values' IRIs and types through `POST /v2/values/delete`. Erase is
+SystemAdmin-only (`ValuesRestService.eraseValue`), so only delete is exposed.
+
+- [ ] Add e2e tests to `ValuesEndpointsE2ESpec` for `POST /v2/values/delete` on a resource `anythingUser1` cannot see,
+      as `anythingUser1` and as `normalUser`: a wrong resource class, a non-existent value IRI, and a wrong value type
+      each answer the same status and message as a correct request; no answer names the class or the value type.
+- [ ] Add an e2e test: on a visible resource, a value the caller cannot view answers the same 404 as a missing value.
+- [ ] Add an e2e test: a caller with delete permission still gets 400 for a wrong class and a wrong value type, and 200
+      for a correct request (the checks still run, only later).
+- [ ] In `canRemoveValue`, call `resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View,
+      requestingUser)` right after the resource is loaded.
+- [ ] Answer the missing-value `NotFoundException` also when the value exists but the caller lacks view permission
+      on it.
+- [ ] Move the `checkValuePermission(..., Delete, ...)` call directly after the value lookup, before the resource-class
+      and value-type checks.
+- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*ValuesEndpointsE2ESpec.*'` and
+      `bazel test //modules/test-it:test --test_filter='.*ValuesResponderV2Spec.*'`; both pass.
+- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+
+#### Phase 7: DEV-7721 and DEV-7722 admin checks on custom permissions
+
+Both checks decide whether a caller may set custom permissions higher than the defaults. Both fail closed: callers
+who should be exempt are not. The fixes widen access, so each gets a test proving who gains it and who does not.
+
+- DEV-7721: `ValuesResponderV2.scala:268` calls `userPermissions.isProjectAdmin(requestingUser.id)` with the user IRI,
+  so it is always false. A project admin cannot set value permissions above the defaults.
+- DEV-7722: `CreateResourceV2Handler.scala:359-361` tests `!(isProjectAdmin && !isSystemAdmin)`, which is
+  `!isProjectAdmin || isSystemAdmin`. The comparison runs for every SystemAdmin and is skipped only for a
+  ProjectAdmin who is not SystemAdmin. The intended test is `!(isProjectAdmin || isSystemAdmin)`.
+
+- [ ] Add a test-it test to `ValuesResponderV2Spec`: `anythingAdminUser` creates a value with permissions above the
+      defaults and succeeds; `anythingUser1` gets 403 for the same request; `incunabulaProjectAdminUser` (admin of
+      another project) gets 403.
+- [ ] Pass `resourceInfo.projectADM.id` to `isProjectAdmin` in `ValuesResponderV2.scala:268`; commit as
+      `fix: let project admins set custom value permissions (DEV-7721)`.
+- [ ] Add a resource-creation test: `rootUser` (SystemAdmin, not a project admin) creates a resource with permissions
+      above the defaults and succeeds; `anythingAdminUser` succeeds; `anythingUser1` gets 403.
+- [ ] Change the condition at `CreateResourceV2Handler.scala:359-361` to
+      `!(isProjectAdmin(...) || isSystemAdmin)`; commit as
+      `fix: exempt system admins from the resource permission ceiling (DEV-7722)`.
+- [ ] Run `bazel test //modules/test-it:test --test_filter='.*ValuesResponderV2Spec.*'` and the resource-creation spec;
+      the new tests fail before each fix and pass after.
+- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+
+#### Phase 8: ADR-0013 authorization architecture
 
 - [ ] Write `docs/adr/0013-authorization-policy-enforcement.md`, standing alone (no links into `docs/specs/`).
 - [ ] ADR content: declared function-level policy on every endpoint; PDP = `AuthorizationRestService`; PEP = security
@@ -280,7 +329,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `just check`; markdownlint passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 7: Policy model and policy-declaring endpoint bases
+#### Phase 9: Policy model and policy-declaring endpoint bases
 
 - [ ] Add `Policy` (enum, `key`, `requirement` sentence per case) in `slice/common/api/Policy.scala`.
 - [ ] Add `ProjectCandidate` (`private[api]` constructor and `user` field) in `slice/common/api/`.
@@ -307,7 +356,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `just test-unit`; it passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 8: endpoint policy ratchet and convention docs
+#### Phase 10: endpoint policy ratchet and convention docs
 
 - [ ] Add `EndpointPolicyE2ESpec` in `modules/test-e2e/.../slice/api/` next to `EndpointsE2ESpec` (the only place
       `Endpoints.serverEndpoints` is enumerable with the full layer). Key each endpoint as `METHOD /path/template`.
@@ -327,7 +376,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `just check`; it passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 9: authorization lint in `just check`
+#### Phase 11: authorization lint in `just check`
 
 - [ ] Add `tools/lint/check_authz.py`, rule 1: fail on `@unused` or `@scala.annotation.unused` directly annotating a
       parameter whose type is `User` (same line), in `src/main` files.
@@ -344,7 +393,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `just check`; it passes on the current tree.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 10: pilot migration, admin lists
+#### Phase 12: pilot migration, admin lists
 
 - [ ] Move the 6 public list reads and `getListsCanDeleteByIri` to the `Public(reason)` factory.
 - [ ] Move the 9 list writes (create root, create child, name, labels, comments, position, `putListsByIri`, delete,
@@ -363,7 +412,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `bazel test //modules/test-it:test --test_filter='.*ListsResponderSpec.*'`; it passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 11: pilot migration, v2 standoff
+#### Phase 13: pilot migration, v2 standoff
 
 - [ ] Move `postMapping` to the `ProjectAdmin("body projectIri")` factory.
 - [ ] Move `postCanonicalize` to `Authenticated(reason)`, so it is checked in the security logic. The reason: it reads
@@ -379,7 +428,7 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - [ ] Run `bazel test //modules/test-it:test --test_filter='.*StandoffResponderV2Spec.*'`; it passes.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 12: authorization matrix for the migrated endpoints
+#### Phase 14: authorization matrix for the migrated endpoints
 
 - [ ] Add `AuthorizationMatrixE2ESpec` in `modules/test-e2e` with principals from `SharedTestDataADM`: anonymous,
       `normalUser`, `anythingUser1`, `incunabulaProjectAdminUser`, `anythingAdminUser`, `rootUser`. Use the anything
@@ -410,6 +459,10 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
       resources; no 500.
 - [ ] Anonymous resource creation answers 403.
 - [ ] The ingest report endpoint refuses callers without admin scope.
+- [ ] DEV-7723: value deletion on a resource or value the caller cannot see reveals neither the resource class nor
+      the value's existence or type.
+- [ ] DEV-7721: a project admin can set custom value permissions above the defaults; a member cannot.
+- [ ] DEV-7722: a SystemAdmin can set custom resource permissions above the defaults; a member cannot.
 - [ ] ADR-0013 exists, is in the mkdocs nav, and passes `just check`.
 - [ ] Every endpoint either declares a `Policy` or is in `endpoints-without-policy.txt`; adding an endpoint without one
       fails `EndpointPolicyE2ESpec`.
@@ -423,8 +476,8 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 ## Dependencies & Risks
 
-- **One PR holds the security fixes behind the architecture review.** Phases 1-5 are self-contained `fix:`
-  commits at the bottom of the branch. If review of Phases 6-12 stalls, they can be cherry-picked into their own
+- **One PR holds the security fixes behind the architecture review.** Phases 1-7 are self-contained `fix:`
+  commits at the bottom of the branch. If review of Phases 8-14 stalls, they can be cherry-picked into their own
   PR without rework.
 - **Behaviour changes break callers that relied on the holes** (DSP-TOOLS, DSP-APP, scripts). They are listed in
   the PR description and in the release notes (H3).
@@ -433,15 +486,19 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 - **Lint precision:** rule 1 is line-based and misses a multi-line `@unused` before a `User` parameter. The
   compiler still catches an unannotated unused `user`, so the gap is narrow.
 - **Local e2e** needs a Colima VM larger than 2 GiB.
-- **Follow-ups out of scope (filed 2026-10-30):**
+- **Follow-ups out of scope (filed 2026-10-30; DEV-7721, DEV-7722 and DEV-7723 moved into Phases 6-7 on 2026-10-31):**
     - DEV-7718: search count endpoints ignore permissions (`SearchRestService.scala:48,188`,
-      `SearchResponderV2.gravsearchCountV2`), although their descriptions require object permissions. Fail-open.
-    - DEV-7719: `GET /v2/resources/info` is public and unfiltered, including deleted resources. Confirm intent.
+      `SearchResponderV2.gravsearchCountV2`, `fulltextSearchCountV2`, `searchResourcesByLabelCountV2`), although their
+      descriptions require object permissions. Fail-open and reachable anonymously (`withUserEndpoint`): a Gravsearch
+      count with a `FILTER` on a hidden resource's values works as an oracle on those values. Not a fix commit:
+      permissions are evaluated in Scala after the query, so a correct count needs either permission filtering in
+      SPARQL or counting the permission-filtered results. Needs a design decision; highest priority of the follow-ups.
+    - DEV-7719: `GET /v2/resources/info` is public and unfiltered, including deleted resources. Confirm intent. PR #4402
+      changes the same endpoint.
     - DEV-7720: value-history entries for invisible values (DEV-7712 open question).
-    - DEV-7721: `ValuesResponderV2.scala:268` passes the user IRI as the project IRI (fail-closed).
-    - DEV-7722: `CreateResourceV2Handler.scala:359-361` has an inverted admin check (fail-closed).
-    - DEV-7723: `ValuesResponderV2.canRemoveValue` returns errors before the permission check (existence oracle).
-    - DEV-7724: `OntologyCacheHelpers` skips the active-user check.
+    - DEV-7724: `OntologyCacheHelpers` skips the active-user check. Not exploitable through the API:
+      `AuthenticatorLive` reloads the user and rejects inactive accounts on every request, including JWT ones. It is a
+      consistency fix and belongs to the ontology migration (DEV-7725).
     - DEV-7725: migrate the remaining slices, worst first: ontologies (re-implemented rule), v2 resources/values,
       admin users.
 
@@ -450,17 +507,17 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
 | A fix changes behaviour a client depends on | M | M | Status changes listed in PR and release notes; H3 decides rollout |
-| Policy attribute lost through `zServerSecurityLogic` | L | H | Phase 7 unit test reads it from the completed server endpoint |
+| Policy attribute lost through `zServerSecurityLogic` | L | H | Phase 9 unit test reads it from the completed server endpoint |
 | Declared project policy not enforced on an unmigrated endpoint | M | H | Ratchet tracks unmigrated endpoints; migrated ones cannot compile without the grant |
 | Grant obtained for the wrong project | L | H | Domain writes take the target from the grant or assert ownership; matrix test with hand-written oracle |
 | Baseline becomes a dumping ground | M | M | Stale entries fail; convention docs and REVIEW.md forbid extending it |
 | SystemUser allow-list normalises elevation | M | M | Per-entry reason; new files need review; ADR states the rule |
-| Fixes delayed by the architecture review | M | H | Phases 1-5 are cherry-pickable commits |
+| Fixes delayed by the architecture review | M | H | Phases 1-7 are cherry-pickable commits |
 
 ## Success Metrics
 
-- Endpoints without a declared policy: the baseline line count at the end of Phase 8 (about 195, all endpoints),
-  minus 17 after Phase 11 (15 admin lists, 2 v2 standoff). The PR description records both numbers.
+- Endpoints without a declared policy: the baseline line count at the end of Phase 10 (about 195, all endpoints),
+  minus 17 after Phase 13 (15 admin lists, 2 v2 standoff). The PR description records both numbers.
 - Authenticated-only endpoints without a role check: 3 before (list-comments delete, standoff mapping,
   canonicalize). After: 0 unreviewed. Canonicalize becomes a reviewed `Authenticated` policy.
 - Main-source files referencing `SystemUser`: 19 before. It must not grow; the allow-list count is that number.
@@ -469,7 +526,8 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
 
 ## References
 
-- Bugs: DEV-7712, DEV-7713, DEV-7714 (Linear triage, 2026-10-29); follow-ups DEV-7718 to DEV-7725
+- Bugs: DEV-7712, DEV-7713, DEV-7714 (Linear triage, 2026-10-29), DEV-7721, DEV-7722, DEV-7723; follow-ups
+  DEV-7718, DEV-7719, DEV-7720, DEV-7724, DEV-7725
 - Explainer of the root problem and the target model: <https://claude.ai/artifact/7Pa7MKquPJskjxGKCAvHqo>
 - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala` (`bearerSystemAdminEndpoint`:
   authorization in security logic)
