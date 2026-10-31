@@ -1748,7 +1748,7 @@ class SearchEndpointsPostGravsearchWithTypeInferenceComplexSchemaE2ESpec extends
 
       for {
         _ <- TestApiClient // create the new mapping
-               .postMultiPart[Json](uri"/v2/mapping", createStandoffMappingBody, anythingUser1)
+               .postMultiPart[Json](uri"/v2/mapping", createStandoffMappingBody, anythingAdminUser)
                .flatMap(_.assert200)
         _ <- TestApiClient // create the new value
                .postJsonLd(uri"/v2/values", createValueBody.toString, anythingUser1)

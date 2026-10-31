@@ -1284,7 +1284,7 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                    textValueAsXml = textValueAsXml,
                    mappingIri = StandoffMappingIri.unsafeFrom(s"$anythingProjectIri/mappings/HTMLMapping"),
                  )
-        _               <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingUser1).flatMap(_.assert200)
+        _               <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", multipartBody, anythingAdminUser).flatMap(_.assert200)
         responseJsonDoc <- TestApiClient.postJsonLdDocument(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert200)
         valueIri        <- ZIO.fromEither(responseJsonDoc.body.getRequiredString(JsonLDKeywords.ID))
         _                = textValueWithStandoffIri.set(valueIri)

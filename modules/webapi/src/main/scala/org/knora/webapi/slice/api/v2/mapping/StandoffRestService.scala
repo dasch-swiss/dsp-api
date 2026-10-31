@@ -37,6 +37,7 @@ final class StandoffRestService(
       createRequest <- requestParser
                          .createMappingRequestMetadataV2(mappingForm)
                          .mapError(BadRequestException.apply)
+      _        <- auth.ensureSystemAdminOrProjectAdminById(user, createRequest.projectIri)
       uuid     <- Random.nextUUID
       result   <- standoffResponder.createMappingV2(createRequest, uuid)
       response <- renderer.render(result, opts)

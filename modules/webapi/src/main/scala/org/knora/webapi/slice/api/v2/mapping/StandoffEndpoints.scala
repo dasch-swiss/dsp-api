@@ -29,7 +29,10 @@ final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a standoff mapping for XML to standoff conversion. Requires authentication.")
+    .description(
+      "Create a standoff mapping for XML to standoff conversion. " +
+        "Requires SystemAdmin or ProjectAdmin permissions for the project the mapping is attached to.",
+    )
 
   // The response media type of the canonicalize endpoint.
   private case object XmlCodecFormat extends CodecFormat {

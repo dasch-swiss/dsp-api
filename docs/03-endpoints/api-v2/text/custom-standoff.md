@@ -432,6 +432,8 @@ using the path segment `mapping`:
 HTTP POST http://host/v2/mapping
 ```
 
+- Required permission: SystemAdmin / ProjectAdmin of the project named in `knora-api:attachedToProject`
+
 The multipart request consists of two named parts:
 
 ```json
