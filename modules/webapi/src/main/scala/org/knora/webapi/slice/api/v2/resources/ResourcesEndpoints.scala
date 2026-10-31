@@ -89,7 +89,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get history events for all resources in a project. Publicly accessible. Requires appropriate object access permissions.",
+      "Get history events for all resources in a project. Publicly accessible. Resources the requesting user cannot view are omitted.",
     )
 
   val getResourcesHistoryEvents = baseEndpoints.withUserEndpoint.get

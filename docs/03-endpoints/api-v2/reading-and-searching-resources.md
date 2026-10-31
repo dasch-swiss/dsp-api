@@ -304,6 +304,9 @@ The start date is inclusive, and the end date is exclusive.
 If the start date is not provided, the resource's history since its creation is returned.
 If the end date is not provided, the resource's history up to the present is returned.
 
+The requesting user needs permission to view the resource. A resource they cannot view answers `403 Forbidden`,
+the same as `GET /v2/resources`; a resource that does not exist answers `404 Not Found`.
+
 The response is a list of changes made to the resource, in reverse chronological order.
 Each entry has the properties `knora-api:author` (the IRI of the user who made the change) and
 `knora-api:versionDate` (the date when the change was made). For example:
@@ -618,7 +621,8 @@ date:
 HTTP GET to http://host/v2/resources/resourceHistoryEvents/<resourceIRI>
 ```
 
-The resource IRI must be URL-encoded. The response is a list of events describing changes made to the resource and its values,
+The resource IRI must be URL-encoded. As for the version history, the requesting user needs permission to view the
+resource, otherwise the request answers `403 Forbidden`. The response is a list of events describing changes made to the resource and its values,
  in chronological order. Each entry has the properties: 
  `knora-api:eventType` (the type of the operation performed on a specific date. The operation can be either
  `createdResource`, `updatedResourceMetadata`, `deletedResource`, `createdValue`, `updatedValueContent`, 
@@ -761,4 +765,4 @@ HTTP GET to http://host/v2/resources/projectHistoryEvents/<projectIRI>
 ```
 
 The project IRI must be URL-encoded. The response contains the resource history events of all resources that belong to 
-the specified project.
+the specified project. Resources the requesting user cannot view are omitted from the response; the request still succeeds.
