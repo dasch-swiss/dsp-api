@@ -500,25 +500,28 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 11: authorization lint in `just check`
 
-- [ ] Add `tools/lint/check_authz.py`, rule 1: fail on `@unused` or `@scala.annotation.unused` directly annotating a
+- [x] Add `tools/lint/check_authz.py`, rule 1: fail on `@unused` or `@scala.annotation.unused` directly annotating a
       parameter whose type is `User` (same line), in `src/main` files, unless the file and method are listed in
       `tools/lint/unused_user_allowlist.txt`. After Phase 1, two hits remain:
       `SearchRestService.searchResourcesByLabelCountV2` and `SearchRestService.fullTextSearchCount`, the DEV-7718
       count endpoints. Allow-list both with the reason "DEV-7718"; a stale entry fails, as for rule 2.
-- [ ] The `_LINT_SRCS` filegroups glob `src/**/*.scala`, test sources included, so the script itself filters paths
+      As committed (provisional, owner's answer at the final review): rule 1 also matches `implicit`/`using`
+      parameters and a fully qualified `User`, keys a constructor parameter by its class, requires a `# reason` on
+      every allow-list line (an issue id for unused-User entries), and fails when it scans no main-source file.
+- [x] The `_LINT_SRCS` filegroups glob `src/**/*.scala`, test sources included, so the script itself filters paths
       to `/src/main/`.
-- [ ] Rule 2: fail on the token `SystemUser` (not `isSystemUser`) in a `src/main` file that is not listed in
+- [x] Rule 2: fail on the token `SystemUser` (not `isSystemUser`) in a `src/main` file that is not listed in
       `tools/lint/system_user_allowlist.txt`.
-- [ ] Rule 2 also fails when an allow-listed file no longer contains `SystemUser` (stale entry).
-- [ ] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (12 after Phase 3; counted as in the
+- [x] Rule 2 also fails when an allow-listed file no longer contains `SystemUser` (stale entry).
+- [x] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (12 after Phase 3; counted as in the
       Problem Statement), one path per line, each with a short reason comment.
-- [ ] Add `tools/lint/check_authz_test.py` with inline fixtures: an `@unused user: User` param, an
+- [x] Add `tools/lint/check_authz_test.py` with inline fixtures: an `@unused user: User` param, an
       `@scala.annotation.unused requestingUser: User` param, a non-allow-listed `SystemUser` reference, and a stale
       allow-list entry each fail; `isSystemUser` and `@unused x: Unit` pass.
-- [ ] Wire both as `py_test` targets in `tools/lint/BUILD.bazel`, reusing `_LINT_SRCS`.
-- [ ] Add both targets to the `bazel test` line of the `check` recipe in `justfile`.
-- [ ] Run `just check`; it passes on the current tree.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Wire both as `py_test` targets in `tools/lint/BUILD.bazel`, reusing `_LINT_SRCS`.
+- [x] Add both targets to the `bazel test` line of the `check` recipe in `justfile`.
+- [x] Run `just check`; it passes on the current tree.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 12: pilot migration, admin lists
 
