@@ -14,8 +14,7 @@ the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
 
 Proposed
 
-Not yet in code: the lint and its allow-lists, and the matrix test. The commit that lands an item removes it from
-this line.
+Not yet in code: the matrix test. The commit that lands an item removes it from this line.
 
 ## Context
 
@@ -129,11 +128,12 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
    label the tests compare, not a measurement of what the handler checks.
     - A test fails when an endpoint has no `Policy` attribute and is not in a checked-in baseline of endpoints
       without one, and when the baseline names an endpoint that has since gained a policy or no longer exists. The
-      baseline only shrinks; new endpoints use a policy-declaring factory and never extend it.
+      baseline only shrinks; new endpoints use a policy-declaring factory and never extend it. The test pins the
+      baseline's size, so an appended line fails too; a commit that removes lines lowers the pinned size.
     - The same test fails when a `Public` or `Authenticated` policy has a blank reason, or when an endpoint's
       description does not contain its `policy.requirement`.
-    - `just check` fails on `@unused` on a `User` parameter and on a `SystemUser` reference in a main-source file,
-      each outside its allow-list.
+    - `just check` fails on `@unused` on a `User` parameter and on a `SystemUser` use outside comments in a
+      main-source file, each outside its allow-list (`//tools/lint:check_authz`, allow-lists in `tools/lint/`).
     - An authorization matrix test sends a valid request per migrated endpoint and principal and compares the
       outcome with a hand-written table, which also must agree with the declared policies.
     - Each responder that checks an object against `grant.project` is tested with a grant for one project on an

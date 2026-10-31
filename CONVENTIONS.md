@@ -113,6 +113,9 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 - Format with `just fmt`; CI runs `just check` (both scalafmt via the Bazel rules_scala toolchain).
 - Every source file carries the Apache-2.0 + SPDX header (checked by `//tools/license:spdx_header_check`,
   inserted by `just header-fix`).
+- `just check` also fails on `@unused` on a `User` parameter and on `SystemUser` in a main-source file outside
+  the allow-lists in `tools/lint/` (`//tools/lint:check_authz`, ADR-0013). Use the user in an authorization
+  check rather than silencing it; read as `SystemUser` only to prefetch, then check the caller's permission.
 
 ### Versions single-sourced (image tags, deps)
 

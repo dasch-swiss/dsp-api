@@ -6,7 +6,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 ### Build & history
 
-- [ ] `just check` passes (scalafmt formatting + license headers via Bazel, markdownlint via the Nix dev shell)
+- [ ] `just check` passes (scalafmt formatting, license headers, the relative-import and authorization lints via Bazel, markdownlint via the Nix dev shell)
 - [ ] `bazel test` (or `just test-unit` / `test-it` / `test-e2e`) passes; integration / E2E tests cover changed behaviour
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) — see `CONVENTIONS.md` for the prefix → changelog mapping enforced by `release-please`
 - [ ] "Knora" not used in free-form human-readable text (commit messages, PR titles, docs prose, comments) — exempt: legacy packages, class names, and identifiers naming the `knora-base` / `knora-admin` ontologies
@@ -18,6 +18,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] Trait + `*Live` is acceptable only for repos and explicit test seams; any such new repo ships an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`
 - [ ] Endpoints split across the three tiers: `*Endpoints` (definition) → `*ServerEndpoints` (wiring) → `*RestService` (logic) — and registered in the API's aggregator (`AdminApiServerEndpoints` for admin)
 - [ ] **Endpoint policy (ADR-0013):** a new endpoint uses a policy-declaring factory and is not added to `endpoints-without-policy.txt`, and a commit that removes baseline lines lowers `baselineSize` in `EndpointPolicyE2ESpec` by as many; the declared `Policy` matches what the code enforces (a `ProjectAdmin` handler obtains its grant for the project the write targets); every `Public` and `Authenticated` reason justifies why no stronger rule applies; no slice re-sets `Policy.key` or calls `withInfo` (which replaces all attributes, the policy included)
+- [ ] **SystemUser and `@unused` users (ADR-0013):** a new entry in `tools/lint/system_user_allowlist.txt` reads as `SystemUser` only to prefetch and checks the caller's permission on what it loaded before anything reaches the response; a new entry in `tools/lint/unused_user_allowlist.txt` names a tracked issue; neither entry silences a missing authorization check
 - [ ] Secured RestService methods use multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for a `ProjectAdmin` endpoint) — this lets the `ServerEndpoint` wire the method concisely without enumerating every param, so adding a param touches only the endpoint definition and the method
 - [ ] Secured RestService bodies follow **auth check → delegate to service → `format.toExternal(...)`** — RestServices hold only auth / presentation logic; business logic lives in plain `*Service`s; `toExternal` is not skipped
 - [ ] `AuthorizationRestService.ensure*` results are re-used (don't reload the project / group after the auth call returned it)
