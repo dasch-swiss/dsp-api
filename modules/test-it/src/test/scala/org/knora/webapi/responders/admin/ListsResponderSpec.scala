@@ -15,6 +15,7 @@ import scala.reflect.ClassTag
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -717,9 +718,19 @@ class ListsResponderSpec extends E2EZSpec {
       },
     ),
     suite("used to delete list node comments")(
+      test("refuse a project member who is not project admin before checking the node") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
+        listsResponder(_.deleteListNodeCommentsADM(listIri, anythingUser1)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[ForbiddenException](
+              "only a system administrator or project administrator has permissions",
+            ),
+          ),
+        )
+      },
       test("do not delete a comment of root list node") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
+        listsResponder(_.deleteListNodeCommentsADM(listIri, anythingAdminUser)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               s"Root node comments cannot be deleted.",
@@ -729,7 +740,7 @@ class ListsResponderSpec extends E2EZSpec {
       },
       test("delete all comments of child node that contains just one comment") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).map(response =>
+        listsResponder(_.deleteListNodeCommentsADM(listIri, anythingAdminUser)).map(response =>
           assertTrue(
             response.nodeIri == listIri.value,
             response.commentsDeleted,
@@ -738,12 +749,12 @@ class ListsResponderSpec extends E2EZSpec {
       },
       test("delete all comments of child node that contains more than one comment") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
-        listsResponder(_.deleteListNodeCommentsADM(listIri))
+        listsResponder(_.deleteListNodeCommentsADM(listIri, anythingAdminUser))
           .map(response => assertTrue(response.nodeIri == listIri.value, response.commentsDeleted))
       },
       test("if requested list does not have comments, inform there is no comments to delete") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
+        listsResponder(_.deleteListNodeCommentsADM(listIri, anythingAdminUser)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               s"Nothing to delete. Node ${listIri.value} does not have comments.",

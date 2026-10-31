@@ -1045,17 +1045,17 @@ final case class ListsResponder(
   /**
    * Deletes all comments from requested list node (only child).
    */
-  def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
+  def deleteListNodeCommentsADM(nodeIri: ListIri, requestingUser: User): Task[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeInfoGetADM(nodeIri).someOrFail(NotFoundException(s"Node $nodeIri not found."))
-      _    <- ZIO
+      project <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
+      node    <- listNodeInfoGetADM(nodeIri).someOrFail(NotFoundException(s"Node $nodeIri not found."))
+      _       <- ZIO
              .fail(BadRequestException("Root node comments cannot be deleted."))
              .when(!node.isInstanceOf[ListChildNodeInfoADM])
       _ <- ZIO
              .fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
              .when(!node.hasComments)
-      project <- getProjectFromNode(nodeIri)
-      _       <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
+      _ <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
     } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true)
 
   /**

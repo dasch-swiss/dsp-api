@@ -357,6 +357,9 @@ remaining child nodes with respect to the position of the deleted node.
 ### Delete child node comments
 
 Performing a DELETE request to route `/admin/lists/comments/<nodeIri>` deletes the comments of that node.
+
+- Required permission: SystemAdmin / ProjectAdmin of the list's project
+
 As a response sipmle JSON is returned:
 
 ```json

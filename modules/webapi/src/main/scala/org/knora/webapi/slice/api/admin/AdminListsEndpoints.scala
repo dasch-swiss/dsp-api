@@ -135,7 +135,9 @@ final class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
   val deleteListsComment = baseEndpoints.securedEndpoint.delete
     .in(base / "comments" / listIriPathVar)
     .out(jsonBody[ListNodeCommentsDeleteResponseADM])
-    .description("Delete a list node's comments. Requires authentication.")
+    .description(
+      "Delete a list node's comments. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+    )
 }
 
 object Requests {
