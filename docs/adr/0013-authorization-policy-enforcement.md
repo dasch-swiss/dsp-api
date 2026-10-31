@@ -14,8 +14,6 @@ the dsp-api domain modularization reasoning (dasch-specs, 2026-07-30).
 
 Proposed
 
-Not yet in code: the matrix test. The commit that lands an item removes it from this line.
-
 ## Context
 
 dsp-api endpoints authenticate, but nothing makes them authorize. The bases in `BaseEndpoints`

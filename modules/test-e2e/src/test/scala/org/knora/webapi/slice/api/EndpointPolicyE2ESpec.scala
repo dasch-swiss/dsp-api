@@ -24,11 +24,9 @@ import org.knora.webapi.slice.common.api.Policy
 @RunWith(classOf[DspZTestJUnitRunner])
 class EndpointPolicyE2ESpec extends E2EZSpec {
 
-  private val baselineResource = "endpoints-without-policy.txt"
+  import EndpointPolicyE2ESpec.key
 
-  // Rendered like the span name in `DspApiServer`, so a baseline line reads like the route in a trace.
-  private def key(ep: AnyEndpoint): String =
-    s"${ep.method.map(_.method).getOrElse("HTTP")} ${ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)}"
+  private val baselineResource = "endpoints-without-policy.txt"
 
   private val endpoints = ZIO.serviceWith[Endpoints](_.serverEndpoints.map(_.endpoint))
 
@@ -103,4 +101,11 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
       }
     },
   )
+}
+
+object EndpointPolicyE2ESpec {
+
+  // Rendered like the span name in `DspApiServer`, so a baseline line reads like the route in a trace.
+  def key(ep: AnyEndpoint): String =
+    s"${ep.method.map(_.method).getOrElse("HTTP")} ${ep.showPathTemplate(showQueryParam = None, showQueryParamsAs = None)}"
 }
