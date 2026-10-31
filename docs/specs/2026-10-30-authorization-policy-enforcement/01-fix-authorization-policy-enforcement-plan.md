@@ -423,23 +423,23 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 #### Phase 8: ADR-0013 authorization architecture
 
-- [ ] Write `docs/adr/0013-authorization-policy-enforcement.md`, standing alone (no links into `docs/specs/`).
-- [ ] ADR content: declared function-level policy on every endpoint; PDP = `AuthorizationRestService`; PEP = security
+- [x] Write `docs/adr/0013-authorization-policy-enforcement.md`, standing alone (no links into `docs/specs/`).
+- [x] ADR content: declared function-level policy on every endpoint; PDP = `AuthorizationRestService`; PEP = security
       logic for user-only policies, RestService grant for project-scoped ones; object-level enforcement stays in the
       owning domain.
-- [ ] ADR content: the Policy ADT and its semantics, including SystemAdmin in ProjectAdmin and ProjectMember.
-- [ ] ADR content: the candidate-to-grant flow for project-scoped policies, what it guarantees (a forgotten check does
+- [x] ADR content: the Policy ADT and its semantics, including SystemAdmin in ProjectAdmin and ProjectMember.
+- [x] ADR content: the candidate-to-grant flow for project-scoped policies, what it guarantees (a forgotten check does
       not compile), and what it does not (the wrong project is caught by the target-from-grant rule and the matrix test,
       not by types; package access stops accident, not intent, since any file declaring the package gets in, which is
       how the test-source `TestCandidates` works).
-- [ ] ADR content: SystemUser elevation is allow-listed and new uses need review.
-- [ ] ADR content: the ratchet and lint as enforcement; the rejected alternatives (policy engines, everything in
+- [x] ADR content: SystemUser elevation is allow-listed and new uses need review.
+- [x] ADR content: the ratchet and lint as enforcement; the rejected alternatives (policy engines, everything in
       security logic).
-- [ ] ADR content: state that it refines, not reverses, the "authorization is deliberately distributed" decision of the
+- [x] ADR content: state that it refines, not reverses, the "authorization is deliberately distributed" decision of the
       domain modularization work.
-- [ ] Register the ADR in the `mkdocs.yml` nav next to 0012.
-- [ ] Run `just check`; markdownlint passes.
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] Register the ADR in the `mkdocs.yml` nav next to 0012.
+- [x] Run `just check`; markdownlint passes.
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 9: Policy model and policy-declaring endpoint bases
 
