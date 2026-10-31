@@ -285,29 +285,57 @@ SystemAdmin-only (`ValuesRestService.eraseValue`), so only delete is exposed.
       `bazel test //modules/test-it:test --test_filter='.*ValuesResponderV2Spec.*'`; both pass.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
-#### Phase 7: DEV-7721 and DEV-7722 admin checks on custom permissions
+#### Phase 7: DEV-7721 and DEV-7722 admin checks on custom permissions, behind one shared helper
 
-Both checks decide whether a caller may set custom permissions higher than the defaults. Both fail closed: callers
-who should be exempt are not. The fixes widen access, so each gets a test proving who gains it and who does not.
+Three sites decide whether a caller may set custom permissions higher than the defaults, each with its own copy of
+the "SystemAdmin or ProjectAdmin is exempt" rule. Two copies are wrong, and both fail closed: callers who should be
+exempt are not. The fixes widen access, so each gets a test proving who gains it and who does not.
 
 - DEV-7721: `ValuesResponderV2.scala:268` calls `userPermissions.isProjectAdmin(requestingUser.id)` with the user IRI,
   so it is always false. A project admin cannot set value permissions above the defaults.
 - DEV-7722: `CreateResourceV2Handler.scala:359-361` tests `!(isProjectAdmin && !isSystemAdmin)`, which is
   `!isProjectAdmin || isSystemAdmin`. The comparison runs for every SystemAdmin and is skipped only for a
   ProjectAdmin who is not SystemAdmin. The intended test is `!(isProjectAdmin || isSystemAdmin)`.
+- Correct copy: `CreateResourceV2Handler.scala:723-725` (values in a new resource).
 
+One helper replaces all three copies. It takes a typed `ProjectIri`, so passing a user IRI (DEV-7721) no longer
+compiles. It keeps today's exemption, `User.isSystemAdmin` or `User.isProjectAdmin(project)`. It does not exempt
+`SystemUser`, unlike `AuthorizationRestService.isSystemOrProjectAdmin`, because none of the three sites does today.
+
+```scala
+// PermissionUtilADM (object), next to comparePermissionsADM
+def ensureWithinDefaultPermissions(
+  project: ProjectIri,
+  customPermissions: String,
+  defaultPermissions: String,
+  requestingUser: User,
+  error: => ForbiddenException,
+): IO[ForbiddenException, Unit]
+```
+
+The helper commit is a refactor with no behaviour change; each fix commit then moves one wrong site onto it. The two
+`fix:` commits stay cherry-pickable once the helper commit is picked with them.
+
+- [ ] Add `PermissionUtilADM.ensureWithinDefaultPermissions`: skip the check for SystemAdmin or ProjectAdmin of
+      `project`; otherwise fail with `error` when `comparePermissionsADM` answers `AGreaterThanB`.
+- [ ] Add unit tests to `PermissionUtilADMSpec`: SystemAdmin and ProjectAdmin of `project` pass with permissions above
+      the defaults; a member and an admin of another project fail; anyone passes with permissions at or below the
+      defaults.
+- [ ] Move `CreateResourceV2Handler.scala:723-725` onto the helper, keeping its error message; commit as
+      `refactor: share the custom-permission ceiling check`. Existing resource-creation tests pass unchanged.
 - [ ] Add a test-it test to `ValuesResponderV2Spec`: `anythingAdminUser` creates a value with permissions above the
       defaults and succeeds; `anythingUser1` gets 403 for the same request; `incunabulaProjectAdminUser` (admin of
       another project) gets 403.
-- [ ] Pass `resourceInfo.projectADM.id` to `isProjectAdmin` in `ValuesResponderV2.scala:268`; commit as
+- [ ] Move `ValuesResponderV2.scala:268` onto the helper with `resourceInfo.projectADM.id`; commit as
       `fix: let project admins set custom value permissions (DEV-7721)`.
 - [ ] Add a resource-creation test: `rootUser` (SystemAdmin, not a project admin) creates a resource with permissions
       above the defaults and succeeds; `anythingAdminUser` succeeds; `anythingUser1` gets 403.
-- [ ] Change the condition at `CreateResourceV2Handler.scala:359-361` to
-      `!(isProjectAdmin(...) || isSystemAdmin)`; commit as
-      `fix: exempt system admins from the resource permission ceiling (DEV-7722)`.
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*ValuesResponderV2Spec.*'` and the resource-creation spec;
-      the new tests fail before each fix and pass after.
+- [ ] Move `CreateResourceV2Handler.scala:359-361` onto the helper with `internalCreateResource.projectADM.id`; commit
+      as `fix: exempt system admins from the resource permission ceiling (DEV-7722)`.
+- [ ] Confirm no inline copy remains: `grep -rn "comparePermissionsADM" modules/webapi/src/main` finds only
+      `PermissionUtilADM`.
+- [ ] Run `bazel test //modules/test-it:test --test_filter='.*(PermissionUtilADMSpec|ValuesResponderV2Spec).*'` and
+      the resource-creation spec; the new fix tests fail before each fix and pass after.
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 8: ADR-0013 authorization architecture
@@ -476,9 +504,9 @@ who should be exempt are not. The fixes widen access, so each gets a test provin
 
 ## Dependencies & Risks
 
-- **One PR holds the security fixes behind the architecture review.** Phases 1-7 are self-contained `fix:`
-  commits at the bottom of the branch. If review of Phases 8-14 stalls, they can be cherry-picked into their own
-  PR without rework.
+- **One PR holds the security fixes behind the architecture review.** Phases 1-7 are self-contained commits
+  at the bottom of the branch: one `fix:` per issue, plus the Phase 7 `refactor:` that the two Phase 7 fixes build
+  on. If review of Phases 8-14 stalls, they can be cherry-picked into their own PR without rework.
 - **Behaviour changes break callers that relied on the holes** (DSP-TOOLS, DSP-APP, scripts). They are listed in
   the PR description and in the release notes (H3).
 - **Ratchet test placement:** e2e only, because the server endpoints need the full layer. It runs in CI, not in
