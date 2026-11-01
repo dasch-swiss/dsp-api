@@ -30,32 +30,24 @@ class ProjectAdminGrantAccessSpec extends ZIOSpecDefault {
   val candidate: ProjectCandidate = TestCandidates.of(user)
   def grant: ProjectAdminGrant    = ???
 
-  private def messages(errors: List[scala.compiletime.testing.Error]): String = errors.map(_.message).mkString("\n")
+  private def isDenied(errors: List[scala.compiletime.testing.Error], symbol: String, fragment: String) =
+    assertTrue(errors.exists(e => e.message.contains(symbol) && e.message.contains(fragment)))
 
   val spec: Spec[Any, Any] = suite("ProjectCandidate and ProjectAdminGrant outside slice.common.api")(
     test("a ProjectCandidate cannot be constructed") {
-      val errors = typeCheckErrors("new ProjectCandidate(user)")
-      assertTrue(messages(errors).contains("constructor ProjectCandidate cannot be accessed"))
+      isDenied(typeCheckErrors("new ProjectCandidate(user)"), "ProjectCandidate", "cannot be accessed")
     },
     test("a ProjectCandidate's user cannot be read") {
-      val errors = typeCheckErrors("candidate.user")
-      assertTrue(messages(errors).contains("value user cannot be accessed"))
+      isDenied(typeCheckErrors("candidate.user"), "user", "cannot be accessed")
     },
     test("a ProjectAdminGrant cannot be constructed with new") {
-      val errors = typeCheckErrors("new ProjectAdminGrant(user, project)")
-      assertTrue(messages(errors).contains("constructor ProjectAdminGrant cannot be accessed"))
+      isDenied(typeCheckErrors("new ProjectAdminGrant(user, project)"), "ProjectAdminGrant", "cannot be accessed")
     },
     test("a ProjectAdminGrant cannot be constructed with apply") {
-      val errors = typeCheckErrors("ProjectAdminGrant(user, project)")
-      assertTrue(
-        messages(errors).contains(
-          "object ProjectAdminGrant in package org.knora.webapi.slice.common.api does not take parameters",
-        ),
-      )
+      isDenied(typeCheckErrors("ProjectAdminGrant(user, project)"), "ProjectAdminGrant", "does not take parameters")
     },
     test("a ProjectAdminGrant cannot be copied") {
-      val errors = typeCheckErrors("grant.copy(user = user)")
-      assertTrue(messages(errors).contains("method copy cannot be accessed"))
+      isDenied(typeCheckErrors("grant.copy(user = user)"), "copy", "cannot be accessed")
     },
     test("a ProjectAdminGrant's fields and unapply stay readable") {
       val errors = typeCheckErrors(
