@@ -192,7 +192,8 @@ SystemAdmin is included. The active-user check applies to every non-`Public` pol
       `docs/03-endpoints/api-v2/reading-and-searching-resources.md`.
     - Value-level history entries for values the caller cannot see stay unfiltered in this plan. That needs
       per-version value permissions and is a follow-up (DEV-7720).
-- **SystemUser allow-list:** the 12 main-source files left after Phase 3 are allow-listed as they are. The lint stops new
+- **SystemUser allow-list:** the main-source files that use `SystemUser` in code (10 after the final review; comment
+  mentions do not count) are allow-listed as they are. The lint stops new
   files, not existing uses. The legitimate prefetch-then-check pattern (`ValuesResponderV2:152,818`,
   `ValuesRestService:114`, `ReadResourcesServiceLive:267`) stays. Phase 3 removed the last `SystemUser`
   reference from `ResourcesResponderV2`, so it is not on the list.
@@ -416,9 +417,12 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Run `bazel test //modules/test-it:test
       --test_filter='.*(PermissionUtilADMSpec|ValuesResponderV2Spec|ResourcesResponderV2Spec).*'`; all pass; the unit
       test for the ProjectAdmin-group user fails against a helper that reproduces the DEV-7721 condition.
-- [x] DEV-7722 has no red/green unit test: `comparePermissionsADM` gives a SystemAdmin the maximum on both sides, so a
-      helper with the old condition passes all 19 tests (measured). This is the masking described above; the DEV-7722
-      fix is proved by code reading, and the SystemAdmin unit test pins the exemption as a regression check.
+- [x] Measured: through `comparePermissionsADM` a SystemAdmin gets the maximum on both sides, so a helper with the old
+      DEV-7722 condition passes all 19 tests.
+- [ ] Owner decision (2026-11-01): DEV-7722 still gets a red test. Make the comparison in
+      `ensureWithinDefaultPermissions` replaceable in tests (package-private overload or parameter, no main-source
+      escape hatch beyond that), and add a SystemAdmin case with a comparison forced to `AGreaterThanB`; it fails
+      against the old condition and passes after the fix.
 - [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 8: ADR-0013 authorization architecture
@@ -447,7 +451,8 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Add `ProjectCandidate` (`private[api]` constructor and `user` field) in `slice/common/api/`.
 - [x] Add `ProjectAdminGrant` with a `private[api]` constructor in `slice/common/api/`.
 - [x] Add `AuthorizationRestService.authorizeProjectAdmin(candidate, project): IO[ForbiddenException,
-      ProjectAdminGrant]`, reusing `ensureSystemAdminOrProjectAdmin`.
+      ProjectAdminGrant]`, reusing `ensureSystemAdminOrProjectAdmin`. Owner decision (2026-11-01): removed at the final
+      review; it had no production caller and trusted the caller's `KnoraProject`. `...ById` is the only grant source.
 - [x] Add `authorizeProjectAdminById(candidate, projectIri)`, reusing `ensureSystemAdminOrProjectAdminById`.
 - [x] Add a compile-negative unit test (`scala.compiletime.testing.typeCheckErrors`): code outside `slice/common/api`
       can construct neither `ProjectCandidate` nor `ProjectAdminGrant`, cannot read `candidate.user`, and cannot call
@@ -484,6 +489,8 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Ratchet assertion 1: every endpoint without a `Policy` attribute is listed in
       `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`.
 - [x] Ratchet assertion 2: no line of that file names an endpoint that has a policy or no longer exists.
+- [ ] Owner decision (2026-11-01): pin the baseline size with an `==` constant in `EndpointPolicyE2ESpec`, lowered in
+      the same commit that removes baseline lines, so the baseline cannot grow unnoticed.
 - [x] Assertion: every `Public` and `Authenticated` policy has a non-blank reason.
 - [x] Assertion: every endpoint with a policy has a description containing `policy.requirement`.
 - [x] Make the ratchet's failure message print the computed missing set, sorted, one key per line, and write the
@@ -505,7 +512,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
       `tools/lint/unused_user_allowlist.txt`. After Phase 1, two hits remain:
       `SearchRestService.searchResourcesByLabelCountV2` and `SearchRestService.fullTextSearchCount`, the DEV-7718
       count endpoints. Allow-list both with the reason "DEV-7718"; a stale entry fails, as for rule 2.
-      As committed (provisional, owner's answer at the final review): rule 1 also matches `implicit`/`using`
+      As committed and accepted by the owner (2026-11-01): rule 1 also matches `implicit`/`using`
       parameters and a fully qualified `User`, keys a constructor parameter by its class, requires a `# reason` on
       every allow-list line (an issue id for unused-User entries), and fails when it scans no main-source file.
 - [x] The `_LINT_SRCS` filegroups glob `src/**/*.scala`, test sources included, so the script itself filters paths
@@ -513,8 +520,8 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Rule 2: fail on the token `SystemUser` (not `isSystemUser`) in a `src/main` file that is not listed in
       `tools/lint/system_user_allowlist.txt`.
 - [x] Rule 2 also fails when an allow-listed file no longer contains `SystemUser` (stale entry).
-- [x] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (12 after Phase 3; counted as in the
-      Problem Statement), one path per line, each with a short reason comment.
+- [x] Create `tools/lint/system_user_allowlist.txt` with the current main-source files (12 after Phase 3, 10 once rule 2 skips comment
+      lines at the final review), one path per line, each with a short reason comment.
 - [x] Add `tools/lint/check_authz_test.py` with inline fixtures: an `@unused user: User` param, an
       `@scala.annotation.unused requestingUser: User` param, a non-allow-listed `SystemUser` reference, and a stale
       allow-list entry each fail; `isSystemUser` and `@unused x: Unit` pass.
@@ -662,7 +669,8 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
   minus 17 after Phase 13 (15 admin lists, 2 v2 standoff). The PR description records both numbers.
 - Authenticated-only endpoints without a role check: 3 before (list-comments delete, standoff mapping,
   canonicalize). After: 0 unreviewed. Canonicalize becomes a reviewed `Authenticated` policy.
-- Main-source files referencing `SystemUser`: 13 before, 12 after Phase 3 (counted as in the Problem Statement). It must not grow;
+- Main-source files referencing `SystemUser`: 13 before, 12 after Phase 3 (counted as in the Problem Statement), 10 in
+  code once rule 2 skips comment lines (owner decision, 2026-11-01). It must not grow;
   the allow-list count is that number.
 - Responder-level copies of the project-admin rule: `ListsResponder.ensureUserIsAdminOrProjectOwner` removed. The
   ontology and cardinality copies remain for follow-up.

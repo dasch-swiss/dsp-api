@@ -149,6 +149,15 @@ status: in-progress
 - Phase 10 (proposed, not committed): the ratchet lets a baseline line be appended (assertion 1 passes when the missing endpoint is listed), so "the baseline only shrinks" is held by review only. Decided: assertions 1 and 2 as the plan states. Proposed: pin the baseline size with a constant in `EndpointPolicyE2ESpec` asserted with `==`, lowered in the same commit that removes lines (Phases 12 and 13 would then also edit the constant). Dune DUNE-002, Warning. Commit 432c42e8a.
 - Phase 11 (committed, c348cff17 and 4cbebfccc): decided rule 1 is `@unused`/`@scala.annotation.unused` directly on a same-line parameter of type `User`, allow-listed by file + method. Committed: the match also covers `implicit`/`using` parameters and a fully qualified `User`; a constructor parameter is keyed by its class; an allow-list line needs a `# reason`, and an unused-User reason must carry an issue id; the lint fails when no main-source file is scanned. Reason: python and dune review (false negatives, misattribution, vacuous pass, unenforced reason). Today's tree is unaffected: the same two DEV-7718 hits and 12 SystemUser files.
 
+- Final review (proposed): lint rule 2 counts `SystemUser` in comments, so `MaintenanceRestService` and `ProjectMigrationImportService` sit on the allow-list for comment mentions only. Proposed: skip comment lines, drop both entries (12 -> 10 files).
+- Phase 7 (session-resolved mid-run): the SystemAdmin unit test cannot go red against the old DEV-7722 condition, because `comparePermissionsADM` gives a SystemAdmin the maximum on both sides. The session reworded the plan item to "proved by code reading".
+- Owner's answers (2026-11-01, final review):
+    - Phase 9: delete `authorizeProjectAdmin(candidate, project)`; `authorizeProjectAdminById` is the only way to obtain a grant.
+    - Phase 10: pin the baseline size with an `==` constant in `EndpointPolicyE2ESpec` (175), lowered in the same commit that removes lines.
+    - Phase 11: accept the wider rule 1 as committed.
+    - Final review rule 2: skip comment lines; the allow-list drops to 10 files; plan and ADR counts follow.
+    - Phase 7: not accepted. DEV-7722 gets a red test: make the comparison in `ensureWithinDefaultPermissions` replaceable in tests so a SystemAdmin case fails against the old condition.
+
 ## Side findings
 
 - Phase 13 (re-review of 63399dabe, simplicity and dune Suggestion): `NewStandoffMapping` lives in `ApiComplexV2JsonLdRequestParser.scala` next to `CreateMappingRequestV2`; as the responder's input type it would be easier to find in the standoff slice (e.g. beside `StandoffMappingIri`).
