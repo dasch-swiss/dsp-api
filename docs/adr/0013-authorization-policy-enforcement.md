@@ -2,8 +2,8 @@
 
 Date: 2026-10-31
 
-Relates to: DEV-7712, DEV-7713, DEV-7714, DEV-7721, DEV-7722, DEV-7723 (the fixed bugs), DEV-7718, DEV-7724,
-DEV-7725 (follow-ups), `slice/common/api/Policy.scala` (the policy),
+Relates to: DEV-7712, DEV-7713, DEV-7714, DEV-7721, DEV-7722, DEV-7723, DEV-7728 (the fixed bugs), DEV-7718,
+DEV-7724, DEV-7725, DEV-7727, DEV-7730, DEV-7731 (follow-ups), `slice/common/api/Policy.scala` (the policy),
 `slice/common/api/BaseEndpoints.scala` (endpoint bases), `slice/common/api/AuthorizationRestService.scala` (the role
 rules), `slice/common/api/ProjectAdminGrant.scala` (candidate and grant),
 [ADR-0011](0011-cross-context-access-ports-and-adapters.md) (context boundaries), the Identity & Access context
@@ -200,3 +200,125 @@ relabelling and new `SystemUser` allow-list entries (`review`).
   from the body (DEV-7714) or from a list node, and the body is decoded after the security logic.
 - **Proof types on every service method now.** The strongest guarantee, but it touches about 120 signatures at
   once. Two pilot slices prove the shape first; the rest migrate incrementally under the ratchet.
+
+## Addendum 1: one gate for resource and value writes
+
+Date: 2026-11-01
+
+Status: Proposed, together with the decision above.
+
+### Addendum context
+
+Decision 3 left object-level permissions where the owning domain loads the object, and the `ObjectAccess` policy
+only names that place. For the v2 resource and value writes that place is every handler. Each one loads, checks
+and answers in its own order, and the same bug shipped four times in one month:
+
+- Value deletion (DEV-7723) and value update (DEV-7728) read the resource as `SystemUser`. They answered the
+  resource's class, whether a value exists and its type (400 or 404) before checking the caller's view
+  permission.
+- Value reorder (DEV-7727) reads as `SystemUser`, checks only modify permission on the resource, and lists the
+  IRIs of values hidden from the caller in its 400 message.
+- Value creation, value update and resource creation run `valueValidator.validate` before any permission check
+  (DEV-7730). Resource metadata, authorship and deletion check the class, edit conflicts and incoming links before
+  the permission.
+
+DEV-7723 and DEV-7728 are fixed by one private helper, `findVisibleValue`. Its only guard is a comment that says
+which checks must follow it. Prefetch-then-check (decision 7) is the right pattern, but nothing makes a handler
+follow it, and a check placed before it compiles.
+
+### Addendum decisions
+
+**11.** **Resource and value writes go through one gate in the owning domain.** Resources & Values owns a gate,
+`ObjectAccess.within(caller, request)(write)`, in `slice.resources.access`. A write states what it wants as
+an `AccessRequest[T]` case (update a value, delete a value, reorder the values of a property, create a
+resource, and so on), and the case fixes the permission level. Nothing passes a level by hand. The gate runs
+a fixed sequence that no caller can reorder:
+
+1. take the per-resource write lock;
+2. refuse anonymous callers;
+3. load the resource as `SystemUser` (the prefetch of decision 7), only the property the request names for a
+   value write and only the preview for a resource write;
+4. answer 404 for a missing resource and 403 for a resource hidden from the caller. Hidden means no permission at
+   all, the filter reads use; a caller with restricted view sees the resource and fails at step 6;
+5. answer the same 404 for a missing value and for a value hidden from the caller;
+6. answer 403 when the caller lacks the case's level;
+7. call `write` with a `Grant[T]`.
+
+Resource creation has no object, so the gate checks the project create permission and the default permission
+ceiling, and the lock, the IRI and its duplicate check move into `write`. The read-only "can delete" check asks the
+gate for the decision without a lock. Only steps that use the request and public data run before the gate:
+parsing, IRI syntax, the project lookup and the ontology lookups for the request's property.
+
+Object-level enforcement still belongs to the owning domain (decision 3); it now has one place in that domain.
+
+**12.** **A write receives a `Grant[T]`, never the unfiltered object.** `Grant` and its constructor are restricted
+to `slice.resources.access`. Its `target` is the caller's view: values hidden from the caller are not in it.
+The unfiltered resource stays inside the access package. Integrity checks that need hidden values
+(cardinality, link-value reference counts, order slots) run there and return only `Unit`, `Boolean`, a
+count, a write, or an `IntegrityViolation`, whose cases carry no data loaded from the store. Responses and error
+messages are built from the request and from `grant.target` only. Every check that depends on the object
+(class, value type, validation, edit conflicts) takes the grant, so it cannot run before the decision.
+
+**13.** **Hidden values keep their place in a reorder.** A caller reorders the values they can see. The request must
+name exactly those values; hidden values keep their `valueHasOrder` slots, and the visible ones are permuted
+among the slots they held. A mismatch answers 400 and names only visible values.
+
+**14.** **The decision is a pure function, tested as a table.** Given the permission literals, the creators, the
+project and the caller's **Permission profile**, the decision of steps 4 to 6 is computed without IO. A test
+table covers every request case against every relevant permission literal, without a triplestore.
+
+**15.** **Write endpoints declare `Policy.ObjectWrite(requirement)`.** Each v2 resource and value write endpoint that
+goes through the gate is built with a factory that declares what the gate requires: a level on a value, a
+level on a resource, or the permission to create a resource in a project. The factory refuses anonymous
+callers in the security logic, so the ratchet and the authorization matrix know every such endpoint, and its
+description carries the requirement. The erase endpoints keep their role policies (`SystemAdmin` for values,
+`ProjectAdmin` of the resource's project for resources) and still go through the gate. Loading stays in the
+gate: the endpoint does not parse the body to find its target.
+
+**16.** **Only the gate reads resources and values as the requesting `SystemUser` for writes.** The lint gains a
+rule for the requesting-user handle (`KnoraSystemInstances.Users.SystemUser`) with its own allow-list. The
+v2 value and resource write files leave it as they migrate. Using the built-in `SystemUser` IRI as the creator
+of link values remains allowed, under the existing rule.
+
+### Addendum designs considered
+
+Four interface designs were drawn, each under a different constraint.
+
+- **A: one gate with an operation-typed grant (fewest entry points).** One method, `within`, and a grant with
+  two. It hides the system read, the order of the checks, the lock and the 403 or 404 choice. Answering about an
+  object before the decision, using the wrong level, and validating before the permission do not compile once the
+  write methods take the grant. Chosen as the core.
+- **B: row-level security.** A request-scoped view of the store that only returns what the caller may see, with
+  privileged integrity code that returns only counts and booleans. It is the strongest guarantee, but it moves
+  validation and ontology checks into the data-access layer, and a rejected cardinality or duplicate check still
+  reveals one bit. Two of its rules are adopted: unfiltered data leaves only as a count, a boolean or a write
+  (decision 12), and the reorder semantics (decision 13).
+- **C: load and authorize at the endpoint, as Rails `load_and_authorize_resource` does.** The endpoint declares
+  its target and the framework loads and authorizes before the handler runs. Handlers become trivial, but v2
+  JSON-LD bodies name their target inside the body, so the body is parsed twice. A locator can name the wrong
+  object, and the proposed runtime backstop is implicit. Only the declared policy is adopted (decision 15).
+- **D: a policy decision point with a policy language, as Cedar and XACML do.** The most flexible: new actions
+  and object kinds need no interface change, and the rules are data. Its rules are keyed by strings, a missing
+  rule fails only at runtime, and the rule set (three roles, five object levels) does not need a language. This
+  ADR rejected an external engine for the same reason. Only the pure, table-tested decision is adopted
+  (decision 14).
+
+### Addendum consequences
+
+- **What the types guarantee.** A migrated write cannot reach the object's class, values or validation without a
+  grant. The grant exists only after the gate decided, and the gate's order is fixed.
+- **What they do not guarantee.** A handler that skips the gate and loads the resource itself still compiles; the
+  lint rule of decision 16 and review cover that. Choosing the wrong request case for an endpoint compiles; the
+  hidden-resource tests per endpoint cover that. Package access stops accident, not intent, as for the project
+  grant.
+- **Answers change order.** A caller without permission gets 401 or 403 before validation, class, conflict and
+  incoming-link answers. Anonymous callers get 401 from the factory instead of 403 from the handler. A caller with
+  modify permission on a resource whose property has hidden values can now reorder the visible ones; before, every
+  such reorder failed.
+- **Not covered.** File values are checked against the ingest service while the request body is parsed, before
+  any handler runs, so a missing asset answers differently to a caller who would be refused (DEV-7731: make
+  parsing pure and move the lookup behind the gate). Read endpoints are out of scope.
+- **Lock before decision.** The gate takes the write lock before it decides, as the writes do today, so a caller
+  without permission can wait on a busy resource. This is accepted: the lock reveals nothing the 403 does not.
+- **Costs.** Every v2 resource and value write signature changes from a `User` to a grant, and their tests
+  obtain grants through the gate as production does.
