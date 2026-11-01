@@ -586,8 +586,7 @@ Unchanged on purpose:
 
 | Id | Action | Who | When | Why not the agent |
 | --- | --- | --- | --- | --- |
-| H1 | Merge PR #4410, retarget this plan's PR to `main`, and accept ADR-0013 with Addendum 1 | tech lead | before start | Accepting an ADR and the merge order are owner decisions |
-| H2 | Decide the release, and put the status-code table above in the release notes | Ivan | after ship | Release timing is an owner decision |
+| H1 | Decide the release, and put the status-code table above in the release notes | Ivan | after ship | Release timing is an owner decision |
 
 ## Acceptance Criteria
 
@@ -630,7 +629,7 @@ Unchanged on purpose:
     - RV-only callers get the level message;
     - reorder no longer fails because of hidden values;
     - 404 wording is unified.
-  The status-code table goes in the release notes (H2).
+  The status-code table goes in the release notes (H1).
 - **Resource writes load as `SystemUser` instead of as the caller.** The gate computes permissions from the loaded
   literals; a mistake there would grant everyone the system's maximum. `AccessDecisionSpec` and the per-endpoint
   hidden-object tests guard this.
