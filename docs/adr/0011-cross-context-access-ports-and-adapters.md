@@ -30,9 +30,9 @@ next change from copying the nearest pattern.
 
 The modularization plan turns each context into a deep Bazel module. That requires deciding, before
 the first extraction, how contexts may talk to each other. dasch-ops-platform settled the same question
-for its Rust modulith in ADR-0013: consumer-defined ports, provider-owned adapters, a composition root
-that only wires, and data sovereignty over storage. dsp-api already uses that shape in one place, the
-planned `InstanceUsage` interface. This ADR generalises it.
+for its Rust modulith in dasch-ops-platform ADR-0013: consumer-defined ports, provider-owned adapters, a
+composition root that only wires, and data sovereignty over storage. dsp-api already uses that shape in
+one place, the planned `InstanceUsage` interface. This ADR generalises it.
 
 ## Decision
 

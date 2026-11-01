@@ -432,7 +432,8 @@ using the path segment `mapping`:
 HTTP POST http://host/v2/mapping
 ```
 
-- Required permission: SystemAdmin / ProjectAdmin of the project named in `knora-api:attachedToProject`
+- Required permission: SystemAdmin / ProjectAdmin of the project named in `knora-api:attachedToProject`; an unknown
+  `knora-api:attachedToProject` answers 403
 
 The multipart request consists of two named parts:
 
