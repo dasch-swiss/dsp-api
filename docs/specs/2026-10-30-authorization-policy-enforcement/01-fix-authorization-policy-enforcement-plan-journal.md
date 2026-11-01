@@ -13,7 +13,7 @@ symptoms:
   - Any logged-in user deletes list-node comments in any project (DEV-7713)
   - Any logged-in user writes a standoff mapping into any project (DEV-7714)
   - Anonymous callers read history metadata of hidden resources; project history answers 500 (DEV-7712)
-status: in-progress
+status: complete
 ---
 
 # Execution Journal: 01-fix-authorization-policy-enforcement-plan
@@ -122,6 +122,19 @@ status: in-progress
 | 14.3 | dsp-api | complete | c893c6dce | Review fix round 1 (fixup!): the project's root lists come back in no fixed order, so the list read-back compares their sorted IRIs (scala-zio Warning: reordering could fail a denied cell or pass an allowed one); the table-vs-policy test reports duplicate row keys, endpoints without a row (outcomes written from what the endpoint must allow, never from `allowedBy`), stale rows and disagreeing rows with their keys (dune DUNE-003 Warning; scala-zio, security, consistency suggestions on `.toMap` duplicates). A renamed row key and a flipped cell produced the three messages. Matrix + EndpointPolicy 72 green, `just check` exit 0 | none |
 | 14.2 | dsp-api | complete | — | Gates on 8eabdd8b5: `just test-unit` 0, `just test-ingest` 0, `just check` 0; `just test-e2e` 1118 tests, one failure: `ValueHasXmlOnValueWriteE2ESpec` "a document of 6000 standoff tags" (local timeout), which also fails on the branch base cafe3c1caa (detached worktree, same spec filter, 9 tests, same failure). The review fixes touch only the matrix spec, re-run green | none |
 | 14.4 | dsp-api | complete | 3e8acd600 | Review fix round 2 (fixup!), re-review of c893c6dce (consistency, simplicity: no Critical or Warning on code; dune Warnings DUNE-001/002): the disagreeing message says the row states the requirement, so the policy changes and the row only when the requirement changed; a stale row whose endpoint still exists asks for its role-based policy back, only a row of a gone endpoint is removed; keys and principals print sorted. Matrix 67 green, `just check` 0. Cap reached | none |
+| F.1 | dsp-api | complete | c4c4099ac | Final review item 1 (fixup! of 196f8d988): `authorizeProjectAdmin(candidate, project)` deleted; `ProjectCandidate` scaladoc and `AuthorizationRestServiceSpec` (17 tests, grant cases now by id against the stored project, two duplicate by-id cases dropped) point at `authorizeProjectAdminById` | none |
+| F.2 | dsp-api | complete | 00b98998b | Final review items 1 and 5 (fixup! of 5ea95820f): `projectAdminPolicyEndpoint` scaladoc links `authorizeProjectAdminById`; `bearerSystemAdminEndpoint` scaladoc says it declares no Policy and points at `systemAdminPolicyEndpoint` unless bearer-only is required | none |
+| F.3 | dsp-api | complete | 47f791629 | Final review item 2 (fixup! of 432c42e8a): `EndpointPolicyE2ESpec` pins the baseline size with `baselineSize`, failure message says to lower it in the same commit that removes lines; value 192 = the baseline at 432c42e8a, so the size check holds at every commit after autosquash (F.4-F.7 lower it per removing commit). Red at HEAD as expected: "lists 175 endpoints, but baselineSize is 192" | none |
+| F.4 | dsp-api | complete | 35244ba41 | Final review item 2 (fixup! of c9ed88938): `baselineSize` 192 -> 186, the lines this commit removes | none |
+| F.5 | dsp-api | complete | 49d5f01a7 | Final review item 2 (fixup! of 4397f9814): `baselineSize` 186 -> 177 | none |
+| F.6 | dsp-api | complete | c6ff328de | Final review item 2 (fixup! of 1db429e20): `baselineSize` 177 -> 176 | none |
+| F.7 | dsp-api | complete | c186f442b | Final review item 2 (fixup! of 0eb82ec2b): `baselineSize` 176 -> 175 = HEAD baseline; `EndpointPolicyE2ESpec` 6 green | none |
+| F.8 | dsp-api | complete | ac888c03d | Final review item 3 (fixup! of dafe536f1): lint rule 2 skips comment lines and trailing `//` comments (whitespace before `//`); measured: exactly `MaintenanceRestService` and `ProjectMigrationImportService` went stale, removed (allow-list 10 files); fixture tests for comment-only mentions (red against the old rule) and SystemUser after an `http://` string (red with an unanchored strip); check_authz_test 22 green, `just check` 0 | none |
+| F.9 | dsp-api | complete | f03395011 | Final review item 4 (fixup! of 878eb9f6a): `private[util]` overload of `ensureWithinDefaultPermissions` takes the comparison; public one delegates with `comparePermissionsADM`. New case: SystemAdmin not ProjectAdmin, comparison forced to `AGreaterThanB`, passes (20 green). Canaries: old DEV-7722 condition in the helper turns the new case red; old DEV-7721 condition (user IRI) turns the ProjectAdmin-group case red; restored | none |
+| F.10 | dsp-api | complete | 6e6e99792 | Final review items 1, 2, 5 (fixup! of 28de317d7): conventions and CONVENTIONS name `authorizeProjectAdminById` only; baseline rule mentions `baselineSize` (conventions, CONVENTIONS, REVIEW); Authentication section puts the no-policy caveat before the `securedEndpoint` listing; `just check` 0 | none |
+| F.11 | dsp-api | complete | 9c9de3821 | Final review items 1, 3, 5 (fixup! of 8bea5ad50): ADR-0013 decision 5 and 7 name `authorizeProjectAdminById`, sketch uses `getProjectIriFromNode`; SystemUser counts ten files outside comments (Context and decision 7); two identical `TestCandidates` copies; standoff mapping parse-before-authorize stated as the accepted exception in Costs; `just check` 0 | none |
+| F.12 | dsp-api | complete | 348d267d3 | Re-review fix (fixup! of 432c42e8a), dune DUNE-001 Warning: the baseline-size message forbids raising `baselineSize` and names the policy-declaring factories; ratchet 6 green | none |
+| F.13 | dsp-api | complete | 35a882a13 | Re-review fix (fixup! of dafe536f1, since 99b75052f rewrote the adjacent ADR bullet), consistency Warning and suggestions: ADR decision 8 states the pinned baseline size; ADR and allow-list header say "use outside comments" instead of "reference". Autosquash dry-run re-run: folds cleanly apart from the two known REVIEW.md conflicts. Cap reached (2 rounds), no further re-review | none |
 
 ## Deferrals
 
@@ -157,6 +170,8 @@ status: in-progress
     - Phase 11: accept the wider rule 1 as committed.
     - Final review rule 2: skip comment lines; the allow-list drops to 10 files; plan and ADR counts follow.
     - Phase 7: not accepted. DEV-7722 gets a red test: make the comparison in `ensureWithinDefaultPermissions` replaceable in tests so a SystemAdmin case fails against the old condition.
+- Final review item 2 (committed, 47f791629, 35244ba41, 49d5f01a7, c6ff328de, c186f442b): decided as one fixup of 432c42e8a pinning 175. Committed: the 432c42e8a fixup pins 192 (the baseline size at that commit), and four further fixups lower it in the commits that remove baseline lines (c9ed88938 186, 4397f9814 177, 1db429e20 176, 0eb82ec2b 175). Reason: 175 folded into 432c42e8a would fail the size check at every commit up to 1db429e20 after autosquash, and the owner's rule is "lowered in the same commit that removes lines". Cost: on the unfolded branch the e2e size check is red from 47f791629 to c6ff328de; HEAD and every folded commit are consistent (autosquash dry-run checked baselineSize against the baseline at each commit).
+
 
 ## Side findings
 
@@ -219,3 +234,36 @@ status: in-progress
 - Phase 14 (review, refuted or kept): dune DUNE-002 (`IriService` read-back in test-e2e breaks the boundary rule) follows the precedent Phase 13 accepted for `StandoffEndpointsE2ESpec.mappingExists`; there is no HTTP read for a mapping. ARCH-MAP.md test-e2e still says the rule is "not currently violated" (DUNE-001); owned by `/dune:dune-map update`, with the Phase 13 note above. Security Warning (no HTTP row where the body names another project than the node): `ensureBodyProjectIsGranted` answers 400 and the responder's `ensureNodeBelongsToGrant` answers 403 for a grant of another project, both tested in Phase 12; the brief made wrong-target and inactive-principal rows optional, not added. Simplicity Warning (the anonymous/authenticated fold repeated per send helper) kept: each fold picks a different `TestApiClient` overload pair, a shared helper saves no lines.
 - Phase 14 review suggestions (not fixed): `CONVENTIONS.md`, `docs/development/dsp-api-conventions.md` and `REVIEW.md` describe the ratchet but not that a role-based endpoint needs a matrix row (consistency); ADR-0013 line 136 says "per migrated endpoint", the test covers every role-based endpoint (consistency); `outcomes` takes six positional args of one type, a swapped 403 column compiles (simplicity, dune DUNE-006); `key` shared through the `EndpointPolicyE2ESpec` companion rather than a `*TestSupport` object (simplicity, dune DUNE-005); `allowedBy` and rows assume anything-project targets (dune DUNE-004, scaladoc says so); an `incunabulaProjectAdminUser` membership sanity check (security).
 - Phase 14 re-review suggestions (not fixed, cap reached): no separator between the sorted root-list IRIs and the tree in `listState` (simplicity, consistency); the tree read-back stays a raw string, refuted as an ordering risk because `ListADM` sorts children by position and the fixture's labels and comments have one entry each (consistency Warning); messages do not name the row helpers `listRow`/`Row` (dune DUNE-003); the lost-policy branch has no canary (it needs a main-source change), the missing, stale and disagreeing branches were seen red.
+- Final review fix round: an autosquash dry-run (scratch worktree, `rebase -i --autosquash cafe3c1caa`) folds every fixup and ends on a tree identical to HEAD, with two trivial REVIEW.md conflicts. At 6e6e99792 (fold into 28de317d7): take its Endpoint policy line, without the SystemUser line, which does not exist yet. At 99b75052f (fold into dafe536f1): keep the new Endpoint policy line and add the SystemUser line.
+- Final review fix re-review (refuted by owner decision): simplicity Warning and dune DUNE-004 ask to drop the "ten main-source files" count from ADR-0013 because it drifts with the allow-list. The owner decided on 2026-11-01 that the plan and ADR counts follow the list, so the count stays.
+- Final review fix re-review suggestions (not fixed): the `baselineSize` rule is stated in five places (simplicity); the `PermissionUtilADMSpec` SystemAdmin fixture is repeated in two tests (simplicity); the comment-forms lint test bundles four forms (simplicity); the `private[util]` comparison overload shares the public name, so a rename such as `ensureWithinDefaultPermissionsWith` would keep it from being picked by accident (dune DUNE-002); the lint misclassifies `x//` without whitespace and inline `/* SystemUser */` (dune DUNE-003); the ADR decision 5 sketch omits the `uuid` that `deleteListNodeCommentsADM(iri, grant, uuid)` takes and is not labelled as simplified (consistency); "replaceable for tests only" is wider in fact (`private[util]`) (consistency).
+- Item 2 of the final fix round: the size constant is pinned at 192 in the ratchet commit and lowered (186, 177, 176,
+  175) by fixups of the commits that remove baseline lines, so every folded commit stays green. This is the owner's
+  "lowered in the same commit that removes lines", not a deviation.
+
+## Closeout
+
+- root_cause: dsp-api endpoint bases only authenticate. Authorization was a hand-called check per RestService or
+  responder, across about 13 overlapping mechanisms, with nothing tying an endpoint to a required role. A check could
+  be missing (`@unused user`, DEV-7713; anonymous-only check, DEV-7714; ingest report), swallowed (`.ignore` on the
+  anonymous check), given the wrong identity (`SystemUser` reads, DEV-7712 and DEV-7723; a user IRI passed as a
+  project IRI, DEV-7721), or inverted (DEV-7722), and every one of them compiled and passed the tests.
+- investigation: Red runs corrected three plan claims. Project history with a hidden resource answered 403, not 500,
+  because `checkResourceIris` refuses before `.resources.head`. Anonymous resource creation already got 403 from the
+  later create-permission check, so only the message and the check order changed. The ingest report answers 202, not
+  200. DEV-7721 and DEV-7722 were masked by `comparePermissionsADM`, which gives SystemAdmins and
+  ProjectAdminAllPermission holders the maximum on both sides. DEV-7722 became red-testable only after the comparison
+  was made replaceable in tests.
+- solution: Eight `fix:` commits, one per gap, plus a shared custom-permission ceiling helper. Then ADR-0013: a
+  declared `Policy` attribute on every endpoint, set by policy-declaring `BaseEndpoints` factories. Project-scoped
+  policies hand the handler a `ProjectCandidate` that only `AuthorizationRestService.authorizeProjectAdminById` turns
+  into a `ProjectAdminGrant`, which the migrated domain writes require. A ratchet test pins the unpoliced baseline at
+  175 endpoints and lets it only shrink. A lint in `just check` fails on `@unused` `User` parameters and on new
+  `SystemUser` uses (10 allow-listed files). The admin lists and v2 standoff pilots are migrated, with node-to-grant
+  checks inside the per-node lock, and an authorization matrix e2e spec acts as an independent oracle.
+- prevention: Forgetting the project check on a migrated endpoint no longer compiles (compile-negative test). A new
+  endpoint without a policy fails `EndpointPolicyE2ESpec`. Ignored users and new `SystemUser` elevation fail the lint.
+  Anti-patterns to avoid: reading as `SystemUser` before a permission check; `.ignore` on a check effect; validating
+  request shape before authorization when the answer leaks object details; `String` IRI overloads in role checks.
+  Follow-ups: migrate the remaining slices (DEV-7725); the DEV-7718 count endpoints; lint rules for
+  `ensure*ProjectAdmin*`, `Policy.key` and `withInfo` outside `slice.common.api`.

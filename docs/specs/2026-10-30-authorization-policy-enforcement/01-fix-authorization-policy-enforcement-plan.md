@@ -3,7 +3,7 @@ title: "fix: close the triaged authorization gaps and make every endpoint declar
 type: fix
 date: 2026-10-30
 author: "Ivan Subotic"
-status: reviewed
+status: implemented
 repositories: []
 linear:
 ---
@@ -419,7 +419,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
       test for the ProjectAdmin-group user fails against a helper that reproduces the DEV-7721 condition.
 - [x] Measured: through `comparePermissionsADM` a SystemAdmin gets the maximum on both sides, so a helper with the old
       DEV-7722 condition passes all 19 tests.
-- [ ] Owner decision (2026-11-01): DEV-7722 still gets a red test. Make the comparison in
+- [x] Owner decision (2026-11-01): DEV-7722 still gets a red test. Make the comparison in
       `ensureWithinDefaultPermissions` replaceable in tests (package-private overload or parameter, no main-source
       escape hatch beyond that), and add a SystemAdmin case with a comparison forced to `AGreaterThanB`; it fails
       against the old condition and passes after the fix.
@@ -489,7 +489,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Ratchet assertion 1: every endpoint without a `Policy` attribute is listed in
       `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`.
 - [x] Ratchet assertion 2: no line of that file names an endpoint that has a policy or no longer exists.
-- [ ] Owner decision (2026-11-01): pin the baseline size with an `==` constant in `EndpointPolicyE2ESpec`, lowered in
+- [x] Owner decision (2026-11-01): pin the baseline size with an `==` constant in `EndpointPolicyE2ESpec`, lowered in
       the same commit that removes baseline lines, so the baseline cannot grow unnoticed.
 - [x] Assertion: every `Public` and `Authenticated` policy has a non-blank reason.
 - [x] Assertion: every endpoint with a policy has a description containing `policy.requirement`.
@@ -595,29 +595,31 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 
 ## Acceptance Criteria
 
-- [ ] DEV-7713: only SystemAdmin and ProjectAdmin of the list's project can delete list-node comments; others get 403
+- [x] DEV-7713: only SystemAdmin and ProjectAdmin of the list's project can delete list-node comments; others get 403
       and the comments remain.
-- [ ] DEV-7714: only SystemAdmin and ProjectAdmin of the named project can create a mapping; others get 401/403 and no
+- [x] DEV-7714: only SystemAdmin and ProjectAdmin of the named project can create a mapping; others get 401/403 and no
       mapping is written.
-- [ ] DEV-7712: history of a resource the caller cannot see answers 403; project history answers 200 and omits such
+- [x] DEV-7712: history of a resource the caller cannot see answers 403; project history answers 200 and omits such
       resources; no 500.
-- [ ] Anonymous resource creation answers 403.
-- [ ] The ingest report endpoint refuses callers without admin scope.
-- [ ] DEV-7723: on a resource the caller cannot see, value deletion answers the same 403 whatever class, value and
+- [x] Anonymous resource creation answers 403.
+- [x] The ingest report endpoint refuses callers without admin scope.
+- [x] DEV-7723: on a resource the caller cannot see, value deletion answers the same 403 whatever class, value and
       type the request names; on a visible resource, a value the caller cannot see answers the same 404 as a missing
       one. Resource existence (404 vs 403) stays observable, as on every v2 read route.
-- [ ] DEV-7721 and DEV-7722: one helper holds the custom-permission ceiling; it exempts SystemAdmin and the
+- [x] DEV-7721 and DEV-7722: one helper holds the custom-permission ceiling; it exempts SystemAdmin and the
       ProjectAdmin of the target project and nobody else (unit tests); no inline copy remains.
-- [ ] ADR-0013 exists, is in the mkdocs nav, and passes `just check`.
-- [ ] Every endpoint either declares a `Policy` or is in `endpoints-without-policy.txt`; adding an endpoint without one
+- [x] ADR-0013 exists, is in the mkdocs nav, and passes `just check`.
+- [x] Every endpoint either declares a `Policy` or is in `endpoints-without-policy.txt`; adding an endpoint without one
       fails `EndpointPolicyE2ESpec`.
-- [ ] `just check` fails on `@unused` on a `User` parameter and on a new `SystemUser` reference, each outside its
+- [x] `just check` fails on `@unused` on a `User` parameter and on a new `SystemUser` reference, each outside its
       allow-list (proved by the lint's fixture tests), and passes on the tree with the two DEV-7718 entries listed.
-- [ ] All admin list and v2 standoff endpoints declare a policy; their write handlers receive a `ProjectCandidate`, not
+- [x] All admin list and v2 standoff endpoints declare a policy; their write handlers receive a `ProjectCandidate`, not
       a `User`; their domain writes take a `ProjectAdminGrant`; `ensureUserIsAdminOrProjectOwner` is gone.
-- [ ] On a migrated endpoint, a handler that skips the PDP call does not compile (compile-negative test).
-- [ ] The authorization matrix passes for every migrated write endpoint and principal.
-- [ ] `just test-unit`, `just test-e2e`, `just test-ingest` and `just check` pass.
+- [x] On a migrated endpoint, a handler that skips the PDP call does not compile (compile-negative test).
+- [x] The authorization matrix passes for every migrated write endpoint and principal.
+- [x] `just test-unit`, `just test-e2e`, `just test-ingest` and `just check` pass (locally `just test-e2e` had 1117 of
+      1118 green; the one failure, `ValueHasXmlOnValueWriteE2ESpec` with 6000 standoff tags, times out on the branch
+      base too; CI decides).
 
 ## Dependencies & Risks
 
