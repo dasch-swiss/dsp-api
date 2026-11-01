@@ -72,8 +72,9 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     - Project-scoped policies need the decoded input to find the project, so the security logic cannot decide
       them. They are enforced in the RestService by the candidate-to-grant flow (decision 5).
     - Object-level permissions (view, modify, delete, change rights on resources and values) stay where the owning
-      domain loads the object. The `ObjectAccess` policy declares this; it does not move the check. For the v2
-      resource and value writes, Addendum 1 gives that check one place in the owning domain.
+      domain loads the object. The `ObjectAccess` policy declares this (`ObjectWrite` for the gated v2
+      writes); it does not move the check. For the v2 resource and value writes, Addendum 1 gives that check one
+      place in the owning domain.
 
 4. **The `Policy` ADT.** The cases and their semantics:
 
@@ -85,6 +86,7 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     | `ProjectAdmin(projectFrom)` | Active system administrators, and active project administrators of the project named by `projectFrom` (for example "path projectIri", "list node"). |
     | `ProjectMember(projectFrom)` | Active system administrators, project administrators and members of the project named by `projectFrom`. |
     | `ObjectAccess(enforcedIn)` | Anonymous callers included; decided per object where the owning domain loads it, and `enforcedIn` names that place. |
+    | `ObjectWrite(requirement)` | Any active, non-anonymous user; the object decision is made by the gate of Addendum 1 (decision 15). |
 
     `ProjectAdmin` and `ProjectMember` keep the semantics of `isSystemOrProjectAdmin` and `isProjectMember`:
     a system administrator is included in both. The active-user check applies to every policy except `Public`: an
@@ -193,7 +195,7 @@ relabelling and new `SystemUser` allow-list entries (`review`).
 ## Alternatives rejected
 
 - **An external policy engine** (Cedar via `cedar-java`, OPA, Oso, OpenFGA or SpiceDB). None of them stops a
-  forgotten call, which is the bug class here. The rule set is small: three roles and four object permissions.
+  forgotten call, which is the bug class here. The rule set is small: three roles and five object permission levels.
   Object permissions live in RDF, so an engine would need a sync layer that is itself an authorization risk, and
   Cedar would add a native library to the multi-arch images. Revisit only if policies must become data that
   non-developers edit.
@@ -241,14 +243,15 @@ an existing object the gate runs a fixed sequence that no caller can reorder:
    or the preview for a resource request;
 4. answer 404 for a missing resource and 403 for a resource hidden from the caller, with one message each. Hidden
    means no permission at all, the filter reads use; a caller with restricted view sees the resource and fails at
-   step 6;
+   step 7;
 5. answer the same 404 for a missing value and for a value hidden from the caller;
-6. answer 403 when the caller lacks the case's level;
-7. call `write` with a `Grant[T]`.
+6. for erasing a value, answer 400 when the resource is not in the project the request names;
+7. answer 403 when the caller lacks the case's level;
+8. call `write` with a `Grant[T]`.
 
 Erasing a resource is a role decision, not an object one: the gate loads the resource, answers 404 when it is
 missing and otherwise turns the endpoint's `ProjectCandidate` into a `ProjectAdminGrant` for the resource's project
-(decision 5), without steps 4 to 6. Resource creation has no object: the gate refuses anonymous callers and checks
+(decision 5), without steps 4 to 7. Resource creation has no object: the gate refuses anonymous callers and checks
 the project create permission, and the lock, the new IRI, its duplicate check and the default permission ceilings
 run inside `write`. The read-only "can delete" check asks the gate for the decision without a lock.
 
@@ -272,8 +275,8 @@ name exactly those values; hidden values keep their `valueHasOrder` slots, and t
 among the slots they held. A mismatch answers 400 and names only values the caller can see or the request named.
 
 **14.** **The decision is a pure function, tested as a table.** Given the permission literals, the creators, the
-project and the caller's **Permission profile**, the decision of steps 4 to 6 is computed without IO and returns a
-closed outcome (permit, missing resource, hidden resource, missing value, level denied). A generated table covers
+project and the caller's **Permission profile**, the decision of steps 4 to 7 is computed without IO and returns a
+closed outcome (permit, missing resource, hidden resource, missing value, wrong project, level denied). A generated table covers
 every request case against every relevant permission literal and caller, without a triplestore, and property tests
 check that a hidden value and a missing one get the same outcome.
 
@@ -289,7 +292,8 @@ parse the body to find its target.
 **16.** **Only the gate reads resources and values as the requesting `SystemUser` for writes.** The lint gains a
 rule for the requesting-user handle (`KnoraSystemInstances.Users.SystemUser`) with its own allow-list. The
 v2 value and resource write files leave it as they migrate. Using the built-in `SystemUser` IRI as the creator
-of link values remains allowed, under the existing rule.
+of link values remains allowed, under the existing rule. A second rule fails a main-source file that declares
+the `slice.resources.access` package outside that directory, so there is no second issuer of grants.
 
 ### Addendum designs considered
 
@@ -321,7 +325,8 @@ Four interface designs were drawn, each under a different constraint.
 - **What they do not guarantee.** A handler that skips the gate and loads the resource itself still compiles; the
   lint rule of decision 16 and review cover that. Choosing the wrong request case for an endpoint compiles; the
   hidden-resource tests per endpoint cover that. A grant kept beyond its closure outlives the lock; review covers
-  that. Package access stops accident, not intent, as for the project grant.
+  that. Package access stops accident, not intent, as for the project grant; a
+  lint rule pins the package to its directory.
 - **Answers change order.** A caller without permission gets 401 or 403 before validation, class, conflict and
   incoming-link answers. Anonymous callers get 401 from the factory instead of 403 from the handler. A caller with
   modify permission on a resource whose property has hidden values can now reorder the visible ones; before, every
@@ -332,8 +337,7 @@ Four interface designs were drawn, each under a different constraint.
   changing it is a platform-wide decision, and resource IRIs carry random identifiers. Hidden and missing values
   already answer the same 404.
 - **Integrity checks reveal one bit.** A cardinality violation can reveal that a hidden value exists, as a unique
-  index does under row-level security. It is reachable only by a caller who passed the level check, who already
-  holds modify permission on the resource.
+  index does under row-level security. It is reachable only by a caller who passed the request case's level check.
 - **Lock before decision.** The gate takes the write lock before it decides, as the writes do today. A caller
   without permission can wait on a busy resource and, after 15 seconds, get the lock failure (500) instead of 403.
   This is accepted: the wait reveals only that the resource exists, which 403 reveals too. The lock is per JVM, so

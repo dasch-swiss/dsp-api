@@ -3,7 +3,7 @@ title: "feat: route every v2 resource and value write through one object-access 
 type: feat
 date: 2026-11-01
 author: "Ivan Subotic"
-status: draft
+status: reviewed
 repositories: []
 linear:
 ---
@@ -147,7 +147,7 @@ package so that `ValuesResponderV2` can depend on `ObjectAccess`, not the other 
    - Reorder and value erase generate an id; they have none today.
    - After 15 seconds (150 retries of 100 ms) the lock fails with `ApplicationLockException`, a 500.
 3. Load as `SystemUser`, keeping today's loader per request so that deleted resources and values behave as today:
-    - create and update value: the property-scoped Gravsearch load (`getResourceWithPropertyValues`). It excludes
+    - create value, update value and change value rights: the property-scoped Gravsearch load (`getResourceWithPropertyValues`). It excludes
       deleted resources and values, as today.
     - delete, erase and reorder value: `ReadResourcesService.getResources` with the request's property
       (`propertyIri = Some(..)`). It includes deleted values and resources, as today's `findDeletableValue` load
@@ -158,19 +158,21 @@ package so that `ValuesResponderV2` can depend on `ObjectAccess`, not the other 
 5. Hidden resource: 403 "You do not have permission to see resource" followed by the IRI (the `toResource` wording,
    `ResourceMessagesV2.scala:883-886`). **Hidden means the caller has no permission at all**, the filter reads use
    (`ConstructResponseRdfDataParser.scala:96-98`). A caller with restricted view (`RV`) sees the resource and fails
-   at step 7.
+   at step 8.
 6. Missing or hidden value: the same 404, with one gate message.
-7. The level rule of the request case: 403.
-8. `write(grant)`.
+7. For `EraseValue`, a resource outside the project named by the request's shortcode: 400.
+8. The level rule of the request case: 403.
+9. `write(grant)`.
 
-`SystemUser` gets the maximum permission in every load (`PermissionUtilADM.scala:98-102`), so steps 5 to 7 compute
+`SystemUser` gets the maximum permission in every load (`PermissionUtilADM.scala:98-102`), so steps 5 to 8 compute
 the caller's permission from the loaded permission literals and creators with `getUserPermissionADM`. They never
 use the permission the load reports.
 
 ### `withinAsProjectAdmin`, for erasing a resource
 
 1. Take the lock.
-2. Load with `getResourcePreview` as `SystemUser`, as today's erase does.
+2. Load with `getResourcePreview` as `SystemUser`. Today's erase loads as the caller; the role decision replaces
+   the visibility answer. Anonymous callers are refused by the endpoint factory.
 3. Missing resource: 404.
 4. Turn the candidate into a `ProjectAdminGrant` with `AuthorizationRestService.authorizeProjectAdminById(candidate,
    resource.projectIri)` (`AuthorizationRestService.scala:92`): 403 otherwise. There is no visibility step, because a
@@ -216,13 +218,14 @@ exception the ADR records, and follow-up DEV-7731 removes it.
 
 ### Levels and the decision
 
-- The decision of steps 4 to 7 is a pure function, `AccessDecision.decide`, with no ZIO. It works over:
+- The decision of steps 4 to 8 is a pure function, `AccessDecision.decide`, with no ZIO. It works over:
     - the loaded permission literals of the resource and value, and their creators;
     - the project;
     - the `PermissionsChange`;
     - whether the property is a link property;
     - the caller's `User`.
-- It returns a closed ADT: `Permit`, `MissingResource`, `HiddenResource`, `MissingValue`, `LevelDenied(level, on)`.
+- It returns a closed ADT: `Permit`, `MissingResource`, `HiddenResource`, `MissingValue`, `WrongProject`,
+  `LevelDenied(level, on)`. Anonymous callers never reach it: `within` refuses them first.
   The gate maps it to exceptions in one place.
 - For `UpdateValue` it picks Modify or ChangeRights from the `PermissionsChange` and the current literal. It adds
   Modify on the resource for link properties, which replaces the hand-written check at
@@ -232,7 +235,9 @@ exception the ADR records, and follow-up DEV-7731 removes it.
 ### Endpoints
 
 - Gated endpoints declare `Policy.ObjectWrite(requirement)`. The requirement is one of `ObjectWriteRequirement`'s
-  cases: `OnValue(level)`, `OnResource(level)` or `CreateResource`.
+  cases: `OnValue(level)`, `OnValueUpdate` (Modify on the value, ChangeRights when the permissions change, and
+  Modify on the resource for a link), `OnResource(level)` or `CreateResource`. Each renders the sentence the endpoint
+  description must contain, so the description names every level the gate can require.
 - They are built by the new factory `objectWritePolicyEndpoint(requirement)`. It refuses anonymous callers with 401
   and inactive users, and hands the handler a `User`; the gate is the enforcement point.
 - `Policy.ObjectAccess` and `objectAccessPolicyEndpoint` (`Policy.scala:32`, `BaseEndpoints.scala:122`) stay for
@@ -249,7 +254,7 @@ Changes:
 | all migrated v2 value and resource writes except the value erase endpoints, plus `GET /v2/resources/candelete` | no credentials | 403 "Anonymous users aren't allowed..." (candelete: 200 `canDo: false`) | 401 |
 | `POST /v2/values` | resource hidden from the caller | 403 (no Modify) | 403 "You do not have permission to see resource" |
 | `POST /v2/values`, `PUT /v2/values`, `POST /v2/resources` | caller without the required permission, invalid body content (legal info, cross-project link) | 400 | 403 |
-| `POST /v2/values/delete`, `PUT /v2/values` | caller with restricted view on the resource or value | 403 "does not have V" (resource) or 404 (value) | 403 with the level message (resource) or the level message (value) |
+| `POST /v2/values/delete`, `PUT /v2/values` | caller with restricted view on the resource or value | 403 "does not have V" (resource) or 404 (value) | 403 with the level message in both cases |
 | `PUT /v2/values/order` | modify on the resource, some values hidden | 400 listing the hidden IRIs | 200; visible values permuted, hidden values keep their slots; `valuesReordered` counts visible values |
 | `PUT /v2/values/order` | resource hidden from the caller | 403 (no Modify) | 403 "You do not have permission to see resource" |
 | `PUT /v2/values/order` | property unknown, or a link or `hasStandoffLinkToValue` property | (no ontology lookup today) | 404 / 400, as for the other value writes |
@@ -258,7 +263,9 @@ Changes:
 | `POST /v2/resources/delete` | visible, no delete permission, resource in use, wrong class or bad delete date | 400 | 403 |
 | `GET /v2/resources/candelete` | any denial | 200 `canDo: false` with the first failing check's reason | 200 `canDo: false` with the gate's reason (missing, hidden or no Delete) before class, conflict and in-use reasons |
 | `POST /v2/resources/erase` | not an admin of the resource's project, resource hidden | 403 "see one or more resources" | 403 from the role check |
+| `POST /v2/values/erase`, `/erasehistory` | not a SystemAdmin, malformed body | 400 (body parsed before the role check) | 403 |
 | `POST /v2/values/erase`, `/erasehistory` | shortcode names a project the resource is not in | erases in the named project's graph (no effect or wrong graph) | 400 |
+| `POST /v2/values`, resource writes | caller with restricted view on the resource | 403 "does not have M" or "does not have V" | 403 with the level message |
 | resource writes | resource hidden or missing | 403 "see one or more resources: `<iri>`" / 404 "One or more resources were not found" | 403 / 404 with the gate's messages (wording only) |
 | value writes | resource missing | 404 "Expected `<iri>`, but no resources were returned" or "One or more resources were not found" | 404 with the gate's message (wording only) |
 
@@ -268,7 +275,8 @@ Unchanged on purpose:
 - ontology answers for a nonexistent or link property (404 / 400) still come before 403 on create, update and
   delete;
 - deleted resources and values behave as today for every value and resource write; tests pin this before each
-  move.
+  move;
+- resource erase without credentials: Phase 6 confirms today's answer, and the table gains a row if it changes.
 
 ## Technical Considerations
 
@@ -299,6 +307,8 @@ Unchanged on purpose:
     `onlyHistory`);
     - link-value reference counts (`incrementLinkValue` `:1792`, `decrementLinkValue` `:1877`);
     - reorder slots.
+    - The rules themselves (cardinality, reference counts, reorder slots) are defined in the access package,
+      because `Unfiltered` is unreadable outside it; responders pass them to `verify` by name.
     - `ValueRepo.checkDuplicateOrder` (`ValueRepo.scala:178-189`) names the resource and property from the request,
     which is fine.
 
@@ -360,18 +370,20 @@ Unchanged on purpose:
     - `ObjectAccess`;
     - the `AccessRequest` sealed trait and its cases;
     - `PermissionsChange`;
+    - `ObjectWriteRequirement` with its cases (`OnValue`, `OnValueUpdate`, `OnResource`, `CreateResource`);
     - the target types;
     - `Grant`;
     - `Unfiltered`;
     - `IntegrityViolation`.
 - [ ] Move `getResourceWithPropertyValues` from `ValuesResponderV2` into the access package; `ValuesResponderV2` calls it from there until its operations migrate
 - [ ] Implement `AccessDecision.decide` as a pure function over the inputs listed under "Levels and the decision", returning the closed outcome ADT
-- [ ] Implement `ObjectAccess.within`, `withinAsProjectAdmin` and `decideOnly` with the orders described above, and register `ObjectAccess.layer` in `core/LayersLive.scala`
+- [ ] Implement `ObjectAccess.within`, `withinAsProjectAdmin` and `decideOnly` with the orders described above
+- [ ] Register `ObjectAccess.layer` in `core/LayersLive.scala`
 - [ ] Confirm that `getResources` with a property filter keeps deleted values; if it does not, use the unfiltered `getResources` for delete, erase and reorder, and note it in the plan
 - [ ] Add `AccessDecisionSpec` (webapi unit test, ZIO Test), generated as a cross product. The dimensions are:
     - every request case;
     - permission literals for Creator, ProjectMember, KnownUser and UnknownUser, an `RV`-only literal, and a literal no group of the caller matches;
-    - a creator, a project member, a ProjectAdmin, a SystemAdmin and an anonymous user;
+    - a creator, a project member, a ProjectAdmin and a SystemAdmin (anonymous callers are refused before `decide`, and an `ObjectAccess` test covers that);
     - a link property;
     - each `PermissionsChange`;
     - and an assertion that the row count equals the product, so a new case or caller fails until it has rows.
@@ -398,7 +410,9 @@ Unchanged on purpose:
 #### Phase 2: Value delete and erase through the gate
 
 - [ ] Add e2e tests pinning today's outcomes for value delete and value erase on a deleted resource and on a soft-deleted value; they are green before the move and stay green
-- [ ] Move `deleteValueV2` and `canRemoveValue` onto `within(DeleteValue)`. Class, type and cardinality checks take the grant; cardinality uses `verify`
+- [ ] Create the cardinality rule in the access package for the delete and erase check (`ValuesResponderV2.scala:~1244-1260`, with `onlyHistory`)
+- [ ] Move `decrementLinkValue` and its `findLinkValue` use into access-package helpers that read `Unfiltered` and return only the write, for the delete path (`ValuesResponderV2.scala:~1370`, `:~1420`)
+- [ ] Move `deleteValueV2` and `canRemoveValue` onto `within(DeleteValue)`. Class, type and cardinality checks take the grant; cardinality uses the access package's cardinality rule through `verify`. This removes the elevated read in `findDeletableValue` (`ValuesResponderV2.scala:~1167`)
 - [ ] Move `eraseValue` and `eraseValueHistory` onto `within(EraseValue)`, carrying `onlyHistory`. The gate takes the write lock erase lacked, generates an `apiRequestId`, and answers 400 when the resource is not in the project named by the request's shortcode
 - [ ] Remove `findDeletableValue`; its load and checks are now the gate's
 - [ ] Migrate the direct callers in `ValuesResponderV2Spec` and `ValuesEraseSpec` to obtain grants through the gate
@@ -432,9 +446,10 @@ Unchanged on purpose:
 - [ ] Move permissions-only updates onto `within(ChangeValueRights)`
 - [ ] Move `valueValidator.validate`, the object-class check, the list-node check and the standoff and link target checks after the grant (DEV-7730, update)
 - [ ] Remove the hand-written link-update Modify-on-resource check; the gate's level rule covers it
-- [ ] Remove `findVisibleValue` and `checkValueAndRetrieveResourceProperties`
+- [ ] Move link-value reference counting for the update paths (`ValuesResponderV2.scala:~905`, `:~920`, `:~1002`, `:~1012`) into the access-package helpers
+- [ ] Remove `findVisibleValue` and `checkValueAndRetrieveResourceProperties`, and with them the elevated read at `ValuesResponderV2.scala:~802`
 - [ ] Migrate the direct callers in `ValuesResponderV2Spec` and `ValueHasXmlLifecycleSpec`
-- [ ] Rebuild `putValues` with `objectWritePolicyEndpoint(OnValue(Modify))`; remove `PUT /v2/values` from the baseline and lower `baselineSize` to 171
+- [ ] Rebuild `putValues` with `objectWritePolicyEndpoint(OnValueUpdate)`; remove `PUT /v2/values` from the baseline and lower `baselineSize` to 171
 - [ ] Keep the DEV-7728 suite green. Its anonymous case now expects 401; adjust any RV-only expectation to the status-code table
 - [ ] Add e2e tests, each denial red before its change:
     - a Modify-only caller who submits different permissions gets 403;
@@ -442,7 +457,8 @@ Unchanged on purpose:
     - a caller with ChangeRights changes the permissions;
     - the creator updates;
     - a caller without modify permission who sends a disallowed license gets 403, not 400;
-    - a link update by a caller without Modify on the resource gets 403.
+    - a link update by a caller without Modify on the resource gets 403;
+    - an RV-only caller gets 403 with the level message.
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter=*ValuesEndpointsE2ESpec*`; it passes
 - [ ] Run `bazel test //modules/test-it:test --test_filter=*ValuesResponderV2Spec*`; it passes
 - [ ] Run `bazel test //modules/test-it:test --test_filter=*ValueHasXmlLifecycleSpec*`; it passes
@@ -454,8 +470,8 @@ Unchanged on purpose:
 
 - [ ] Move `createValueV2` onto `within(CreateValue)`, adding the view check before modify on the resource
 - [ ] Move `valueValidator.validate`, the rdf:type check, the object-class check, the list-node check and the standoff link target checks after the grant (DEV-7730, create)
-- [ ] Move the create cardinality check (`ValuesResponderV2.scala:206-231`) into `verify`
-- [ ] Move link-value reference counting into access-package helpers that return only writes
+- [ ] Extend the access package's cardinality rule with the create check (`ValuesResponderV2.scala:206-231`), run through `verify`
+- [ ] Move link-value reference counting for the create paths (`ValuesResponderV2.scala:~435`, `:~501`) into the access-package helpers
 - [ ] Remove the elevated read at `ValuesResponderV2.scala:~151`, and remove `ValuesResponderV2.scala` from `elevated_read_allowlist.txt`. Its rule 2 entry stays for the link-value creator, with the reason updated
 - [ ] Migrate the direct callers in `ValuesResponderV2Spec` and `ValueHasXmlLifecycleSpec`
 - [ ] Rebuild `postValues` with `objectWritePolicyEndpoint(OnResource(Modify))`; remove `POST /v2/values` from the baseline and lower `baselineSize` to 170
@@ -479,6 +495,7 @@ Unchanged on purpose:
 - [ ] Implement slot assignment as described under Technical Considerations, Reorder slots
 - [ ] Change `ValueQueries.reorderValues` to write an explicit `(value, slot)` list for visible values, keeping the `OPTIONAL ?oldOrder` clause
 - [ ] Update `ValueQueriesSpec` and its golden SPARQL for the new query
+- [ ] Add the property lookup before the gate in `ValuesRestService.reorderValues`: not found 404, link property 400, `hasStandoffLinkToValue` 400, reusing the checks `canRemoveValue` runs
 - [ ] Move `ValuesRestService.reorderValues` onto `within(ReorderValues)`, generating an `apiRequestId` and taking the lock it lacked
 - [ ] Rework `verifyCanonicalValues` to compare against the grant's visible values. The 400 names only visible values the request omitted and request IRIs that are not visible values. A hidden IRI and a nonexistent one give the same body (DEV-7727)
 - [ ] Remove `ValuesRestService.scala` from both SystemUser allow-lists in the same commit
@@ -491,7 +508,9 @@ Unchanged on purpose:
     - a visible value without `valueHasOrder` gets a slot after the maximum;
     - duplicate slots survive and read back in a deterministic order;
     - a caller who sees no value of the property gets the 400 without loaded IRIs;
-    - an unknown property answers 404.
+    - an unknown property answers 404, and a link or `hasStandoffLinkToValue` property answers 400;
+    - a hidden resource answers 403 "see resource", and an RV-only or no-Modify caller gets the level message;
+    - no credentials gives 401.
 - [ ] Keep the existing reorder suite (`ValuesEndpointsE2ESpec.scala:4311-4701`) green
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter=*ValuesEndpointsE2ESpec*`; it passes
 - [ ] Run `bazel test //modules/test-it:test --test_filter=*ValuesResponderV2Spec*`; it passes
@@ -514,7 +533,7 @@ Unchanged on purpose:
     - `postResourcesDelete` and `getResourcesCanDelete`, with `OnResource(Delete)`.
 - [ ] Rebuild `postResourcesErase` with `projectAdminPolicyEndpoint("the resource's project")`
 - [ ] Remove those five endpoints from the baseline and lower `baselineSize` to 164
-- [ ] Add matrix rows to `AuthorizationMatrixE2ESpec` for `POST /v2/resources/erase`, using a fresh resource per cell
+- [ ] Add matrix rows to `AuthorizationMatrixE2ESpec` for `POST /v2/resources/erase`, using a fresh resource per cell; the anonymous cell expects 401
 - [ ] Add e2e hidden-object tests per migrated endpoint in `ResourcesRouteV2E2ESpec`, each denial red before its change:
     - hidden resource 403 with one message;
     - RV-only 403 with the level message;
@@ -522,7 +541,12 @@ Unchanged on purpose:
     - missing 404;
     - no credentials 401;
     - the permitted caller unchanged.
-- [ ] Add e2e tests: delete without permission on a clean request gets 403 (red before: 400); candelete answers 200 `canDo: false` for hidden, missing and no-delete callers, and 401 without credentials
+- [ ] Add an e2e test: delete without permission on a clean request gets 403 (red before: 400)
+- [ ] Add e2e tests for candelete:
+    - 200 `canDo: false` for hidden, missing and no-delete callers;
+    - for a no-delete caller on a resource in use or of the wrong class, the reason is the gate's;
+    - 401 without credentials.
+- [ ] Add an e2e test: resource erase by a non-admin on a hidden resource answers 403 from the role check
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter=*ResourcesRouteV2E2ESpec*`; it passes
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter=*AuthorizationMatrixE2ESpec*`; it passes
 - [ ] Run `bazel test //modules/test-it:test --test_filter=*ResourcesResponderV2Spec*`; it passes
@@ -548,7 +572,7 @@ Unchanged on purpose:
     - a grant kept beyond its closure.
 - [ ] Update `docs/contexts/resources-values/CONTEXT.md` with the **Grant** and **Access request** terms
 - [ ] Update the endpoint docs: in `docs/03-endpoints/api-v2/editing-values.md` and `editing-resources.md`, add the new permission lines, the 401, and the reorder semantics
-- [ ] Update `ARCH-MAP.md` for webapi-resources, webapi-common and webapi-api with the `dune:dune-map` skill: add the access package and remove the "There is no single chokepoint" note
+- [ ] Update `ARCH-MAP.md` for webapi-resources, webapi-common and webapi-api with the `dune:dune-map` skill: add the access package, and rewrite the "There is no single chokepoint" note to say that v2 resource and value writes have one chokepoint, `ObjectAccess`, while read enforcement is still split
 - [ ] Add a "Not yet in code" line to ADR-0013 Addendum 1 if any part did not land; otherwise state that it is complete
 - [ ] Move DEV-7727 and DEV-7730 to In Review
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter=*BulkImportParityE2ESpec*`; it passes
@@ -582,6 +606,11 @@ Unchanged on purpose:
 - [ ] Response bodies for a hidden value and a nonexistent one are equal wherever the gate answers 404 or 400
 - [ ] A reorder by a caller with hidden values succeeds, and the hidden values keep their `valueHasOrder`
 - [ ] `ValuesEraseSpec`, `ValueHasXmlLifecycleSpec`, `ResourcesResponderV2Spec`, `OntologyResponderV2Spec` and `BulkImportParityE2ESpec` pass
+- [ ] Lint rules 3 and 4 exist with fixture tests, and `elevated_read_allowlist.txt` is wired into `just check`
+- [ ] Every migrated endpoint except the value erase endpoints answers 401 without credentials where it answered 403
+- [ ] Value create, value update and resource create answer 403 before validation for a caller without the required permission (DEV-7730)
+- [ ] Value erase takes the write lock and answers 400 when the resource is not in the shortcode's project
+- [ ] `docs/development/dsp-api-conventions.md`, `CONVENTIONS.md`, `REVIEW.md`, `CONTEXT.md`, the endpoint docs and `ARCH-MAP.md` describe the gate
 - [ ] `just test-unit`, `just test-it` and `just check` pass
 - [ ] `just test-e2e` passes, apart from the known local `ValueHasXmlOnValueWriteE2ESpec` timeout
 
@@ -612,9 +641,10 @@ Unchanged on purpose:
 
 - **SystemUser allow-lists:**
     - Today: 10 files on rule 2.
-    - After the plan: `ValuesRestService.scala` is off both lists, and the access package is on both.
-    - The new elevated-read list holds only the access package, `ReadResourcesServiceLive` and files unrelated to
-      resource and value writes.
+    - After the plan: `ValuesRestService.scala` is off both lists, and the access package is on both, so rule 2
+      still lists 10 files and rule 3 lists 3 (the access package, `ReadResourcesServiceLive`, `ValueHasXmlRenderer`).
+    - The new elevated-read list holds only the access package, `ReadResourcesServiceLive` and
+      `ValueHasXmlRenderer`, none of them a resource or value write.
 - **Endpoint baseline:** 175 today; 163 after the plan.
 - **Hidden-object e2e coverage:** today only delete and update have it; after the plan, every migrated write
   endpoint does.
