@@ -72,7 +72,8 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     - Project-scoped policies need the decoded input to find the project, so the security logic cannot decide
       them. They are enforced in the RestService by the candidate-to-grant flow (decision 5).
     - Object-level permissions (view, modify, delete, change rights on resources and values) stay where the owning
-      domain loads the object. The `ObjectAccess` policy declares this; it does not move the check.
+      domain loads the object. The `ObjectAccess` policy declares this; it does not move the check. For the v2
+      resource and value writes, Addendum 1 gives that check one place in the owning domain.
 
 4. **The `Policy` ADT.** The cases and their semantics:
 
@@ -229,51 +230,61 @@ follow it, and a check placed before it compiles.
 ### Addendum decisions
 
 **11.** **Resource and value writes go through one gate in the owning domain.** Resources & Values owns a gate,
-`ObjectAccess.within(caller, request)(write)`, in `slice.resources.access`. A write states what it wants as
-an `AccessRequest[T]` case (update a value, delete a value, reorder the values of a property, create a
-resource, and so on), and the case fixes the permission level. Nothing passes a level by hand. The gate runs
-a fixed sequence that no caller can reorder:
+`ObjectAccess.within(caller, apiRequestId, request)(write)`, in `slice.resources.access`. A write states what it
+wants as an `AccessRequest[T]` case (update a value, delete a value, reorder the values of a property, create a
+resource, and so on), and the case fixes the permission level. Nothing passes a level by hand. For a request on
+an existing object the gate runs a fixed sequence that no caller can reorder:
 
-1. take the per-resource write lock;
-2. refuse anonymous callers;
-3. load the resource as `SystemUser` (the prefetch of decision 7), only the property the request names for a
-   value write and only the preview for a resource write;
-4. answer 404 for a missing resource and 403 for a resource hidden from the caller. Hidden means no permission at
-   all, the filter reads use; a caller with restricted view sees the resource and fails at step 6;
+1. refuse anonymous callers;
+2. take the per-resource write lock, re-entrant for the same request;
+3. load the resource as `SystemUser` (the prefetch of decision 7), scoped to the property a value request names,
+   or the preview for a resource request;
+4. answer 404 for a missing resource and 403 for a resource hidden from the caller, with one message each. Hidden
+   means no permission at all, the filter reads use; a caller with restricted view sees the resource and fails at
+   step 6;
 5. answer the same 404 for a missing value and for a value hidden from the caller;
 6. answer 403 when the caller lacks the case's level;
 7. call `write` with a `Grant[T]`.
 
-Resource creation has no object, so the gate checks the project create permission and the default permission
-ceiling, and the lock, the IRI and its duplicate check move into `write`. The read-only "can delete" check asks the
-gate for the decision without a lock. Only steps that use the request and public data run before the gate:
-parsing, IRI syntax, the project lookup and the ontology lookups for the request's property.
+Erasing a resource is a role decision, not an object one: the gate loads the resource, answers 404 when it is
+missing and otherwise turns the endpoint's `ProjectCandidate` into a `ProjectAdminGrant` for the resource's project
+(decision 5), without steps 4 to 6. Resource creation has no object: the gate refuses anonymous callers and checks
+the project create permission, and the lock, the new IRI, its duplicate check and the default permission ceilings
+run inside `write`. The read-only "can delete" check asks the gate for the decision without a lock.
+
+Only steps that use the request and public data run before the gate: parsing, IRI syntax, the project lookup, the
+ontology lookups for the request's property and the syntax of a submitted permission literal.
 
 Object-level enforcement still belongs to the owning domain (decision 3); it now has one place in that domain.
 
 **12.** **A write receives a `Grant[T]`, never the unfiltered object.** `Grant` and its constructor are restricted
-to `slice.resources.access`. Its `target` is the caller's view: values hidden from the caller are not in it.
-The unfiltered resource stays inside the access package. Integrity checks that need hidden values
-(cardinality, link-value reference counts, order slots) run there and return only `Unit`, `Boolean`, a
-count, a write, or an `IntegrityViolation`, whose cases carry no data loaded from the store. Responses and error
-messages are built from the request and from `grant.target` only. Every check that depends on the object
-(class, value type, validation, edit conflicts) takes the grant, so it cannot run before the decision.
+to `slice.resources.access`. Its target is the caller's view: the resource and, for a value request, the value,
+with values hidden from the caller left out. The unfiltered resource stays inside the access package. Integrity
+checks that need hidden values (cardinality, link-value reference counts, order slots) run there, only after the
+level check passed, and return only `Unit`, `Boolean`, a count, a write, or an `IntegrityViolation` whose message is
+fixed text plus IRIs from the request. Responses and error messages are built from the request and the grant's
+target only, and a write takes the IRIs it writes from the grant, never from the request. Every check that depends
+on the object (class, value type, validation, edit conflicts) takes the grant, so it cannot run before the
+decision.
 
 **13.** **Hidden values keep their place in a reorder.** A caller reorders the values they can see. The request must
 name exactly those values; hidden values keep their `valueHasOrder` slots, and the visible ones are permuted
-among the slots they held. A mismatch answers 400 and names only visible values.
+among the slots they held. A mismatch answers 400 and names only values the caller can see or the request named.
 
 **14.** **The decision is a pure function, tested as a table.** Given the permission literals, the creators, the
-project and the caller's **Permission profile**, the decision of steps 4 to 6 is computed without IO. A test
-table covers every request case against every relevant permission literal, without a triplestore.
+project and the caller's **Permission profile**, the decision of steps 4 to 6 is computed without IO and returns a
+closed outcome (permit, missing resource, hidden resource, missing value, level denied). A generated table covers
+every request case against every relevant permission literal and caller, without a triplestore, and property tests
+check that a hidden value and a missing one get the same outcome.
 
 **15.** **Write endpoints declare `Policy.ObjectWrite(requirement)`.** Each v2 resource and value write endpoint that
 goes through the gate is built with a factory that declares what the gate requires: a level on a value, a
 level on a resource, or the permission to create a resource in a project. The factory refuses anonymous
 callers in the security logic, so the ratchet and the authorization matrix know every such endpoint, and its
-description carries the requirement. The erase endpoints keep their role policies (`SystemAdmin` for values,
-`ProjectAdmin` of the resource's project for resources) and still go through the gate. Loading stays in the
-gate: the endpoint does not parse the body to find its target.
+description carries the requirement. `Policy.ObjectAccess` stays for endpoints whose object check is not the gate,
+such as reads. The erase endpoints keep their role policies (`SystemAdmin` for values, `ProjectAdmin` of the
+resource's project for resources) and still go through the gate. Loading stays in the gate: the endpoint does not
+parse the body to find its target.
 
 **16.** **Only the gate reads resources and values as the requesting `SystemUser` for writes.** The lint gains a
 rule for the requesting-user handle (`KnoraSystemInstances.Users.SystemUser`) with its own allow-list. The
@@ -309,16 +320,26 @@ Four interface designs were drawn, each under a different constraint.
   grant. The grant exists only after the gate decided, and the gate's order is fixed.
 - **What they do not guarantee.** A handler that skips the gate and loads the resource itself still compiles; the
   lint rule of decision 16 and review cover that. Choosing the wrong request case for an endpoint compiles; the
-  hidden-resource tests per endpoint cover that. Package access stops accident, not intent, as for the project
-  grant.
+  hidden-resource tests per endpoint cover that. A grant kept beyond its closure outlives the lock; review covers
+  that. Package access stops accident, not intent, as for the project grant.
 - **Answers change order.** A caller without permission gets 401 or 403 before validation, class, conflict and
   incoming-link answers. Anonymous callers get 401 from the factory instead of 403 from the handler. A caller with
   modify permission on a resource whose property has hidden values can now reorder the visible ones; before, every
   such reorder failed.
+- **Hidden resources stay distinguishable from missing ones.** OWASP's guidance and GitHub's practice answer 404 for
+  an object the caller may not see, so that existence is not confirmed. The v2 API answers 403 for a hidden
+  resource and 404 for a missing one on every read route, and this addendum keeps that contract for writes:
+  changing it is a platform-wide decision, and resource IRIs carry random identifiers. Hidden and missing values
+  already answer the same 404.
+- **Integrity checks reveal one bit.** A cardinality violation can reveal that a hidden value exists, as a unique
+  index does under row-level security. It is reachable only by a caller who passed the level check, who already
+  holds modify permission on the resource.
+- **Lock before decision.** The gate takes the write lock before it decides, as the writes do today. A caller
+  without permission can wait on a busy resource and, after 15 seconds, get the lock failure (500) instead of 403.
+  This is accepted: the wait reveals only that the resource exists, which 403 reveals too. The lock is per JVM, so
+  concurrent writes on two instances are not serialized, as today.
 - **Not covered.** File values are checked against the ingest service while the request body is parsed, before
   any handler runs, so a missing asset answers differently to a caller who would be refused (DEV-7731: make
   parsing pure and move the lookup behind the gate). Read endpoints are out of scope.
-- **Lock before decision.** The gate takes the write lock before it decides, as the writes do today, so a caller
-  without permission can wait on a busy resource. This is accepted: the lock reveals nothing the 403 does not.
 - **Costs.** Every v2 resource and value write signature changes from a `User` to a grant, and their tests
   obtain grants through the gate as production does.
