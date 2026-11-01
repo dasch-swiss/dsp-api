@@ -22,7 +22,7 @@ status: complete
 
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
-| dsp-api | cafe3c1caa | plan/authorization-policy-enforcement | squash | in-progress | — |
+| dsp-api | cafe3c1caa | plan/authorization-policy-enforcement | squash | shipped | <https://github.com/dasch-swiss/dsp-api/pull/4410> |
 
 ## Phases
 
