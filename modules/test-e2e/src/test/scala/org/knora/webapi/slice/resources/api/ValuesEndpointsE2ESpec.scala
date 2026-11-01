@@ -643,6 +643,68 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
        |  }
        |}""".stripMargin
 
+  private def updateValueRequest(
+    resourceIri: IRI,
+    resourceClass: String,
+    property: String,
+    valueIri: IRI,
+    valueType: String = "knora-api:IntValue",
+    valueContent: Option[String] = None,
+  ): String = {
+    val content = valueContent.getOrElse(valueType match {
+      case "knora-api:TextValue" => """"knora-api:valueAsString" : "7723""""
+      case _                     => """"knora-api:intValueAsInt" : 7723"""
+    })
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "$resourceClass",
+       |  "$property" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "$valueType",
+       |    $content
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
+  }
+
+  private def createThingWithInteger(resourcePermissions: Option[String]) = {
+    val hasInteger  = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"
+    val permissions = resourcePermissions.fold("")(p => s""""knora-api:hasPermissions" : "$p",""")
+    val body        =
+      s"""{
+         |  "@type" : "anything:Thing",
+         |  $permissions
+         |  "anything:hasInteger" : {
+         |    "@type" : "knora-api:IntValue",
+         |    "knora-api:intValueAsInt" : 1
+         |  },
+         |  "knora-api:attachedToProject" : {
+         |    "@id" : "http://rdfh.ch/projects/0001"
+         |  },
+         |  "rdfs:label" : "value update order test resource",
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+         |  }
+         |}""".stripMargin
+    for {
+      created     <- TestApiClient.postJsonLdDocument(uri"/v2/resources", body, anythingUser1).flatMap(_.assert200)
+      resourceIri <- ZIO.fromEither(created.body.getRequiredString(JsonLDKeywords.ID))
+      resource    <- TestResourcesApiClient
+                    .getResource(ResourceIri.unsafeFrom(resourceIri), anythingUser1)
+                    .flatMap(_.assert200)
+      values   <- ZIO.fromEither(resource.body.getRequiredArray(hasInteger))
+      valueIri <- ZIO
+                    .fromOption(values.value.collectFirst { case obj: JsonLDObject => obj })
+                    .orElseFail("no integer value")
+                    .flatMap(obj => ZIO.fromEither(obj.getRequiredString(JsonLDKeywords.ID)))
+    } yield (resourceIri, valueIri)
+  }
+
   private val customValueUUID     = "CpO1TIDf1IS55dQbyIuDsA"
   private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
@@ -4760,6 +4822,90 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           _ <- delete(resourceIri, valueIri, "anything:BlueThing", "knora-api:IntValue").flatMap(_.assert400)
           _ <- delete(resourceIri, valueIri, "anything:Thing", "knora-api:TextValue").flatMap(_.assert400)
           _ <- delete(resourceIri, valueIri, "anything:Thing", "knora-api:IntValue").flatMap(_.assert200)
+        } yield assertCompletes
+      },
+    ),
+    suite("PUT /v2/values checks view permission before revealing value details")(
+      test("a hidden resource answers the same 403 for every variant of the request") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(Some("CR knora-admin:Creator"))
+          variants                 = List(
+                       updateValueRequest(resourceIri, "anything:Thing", "anything:hasInteger", valueIri),
+                       updateValueRequest(resourceIri, "anything:BlueThing", "anything:hasInteger", valueIri),
+                       updateValueRequest(
+                         resourceIri,
+                         "anything:Thing",
+                         "anything:hasInteger",
+                         s"$resourceIri/values/nope",
+                       ),
+                       updateValueRequest(
+                         resourceIri,
+                         "anything:Thing",
+                         "anything:hasInteger",
+                         valueIri,
+                         "knora-api:TextValue",
+                       ),
+                       updateValueRequest(
+                         resourceIri,
+                         "anything:Thing",
+                         "anything:hasInteger",
+                         valueIri,
+                         valueContent = Some(""""knora-api:hasPermissions" : "CR knora-admin:Creator""""),
+                       ),
+                     )
+          messages =
+            (user: User) =>
+              ZIO.foreach(variants)(body => TestApiClient.putJsonLd(uri"/v2/values", body, user).flatMap(_.assert403))
+          asMember <- messages(anythingUser2)
+          asOther  <- messages(normalUser)
+        } yield assertTrue(
+          asMember.distinct.size == 1,
+          asOther.distinct.size == 1,
+          (asMember ++ asOther).forall(m => !m.contains("Thing") && !m.contains("IntValue") && !m.contains("TextValue")),
+        )
+      },
+      test("an anonymous caller gets the anonymous refusal before any lookup") {
+        val missing = "http://rdfh.ch/0001/no-such-thing"
+        val hidden  =
+          updateValueRequest(HiddenThing.iri, "anything:Thing", "anything:hasInteger", HiddenThing.intValueIri)
+        val unknown = updateValueRequest(missing, "anything:Thing", "anything:noSuchProperty", s"$missing/values/nope")
+        for {
+          msgs <- ZIO.foreach(List(hidden, unknown))(body =>
+                    ZIO
+                      .serviceWithZIO[TestApiClient](_.putJsonLdDocument(uri"/v2/values", body, None, identity))
+                      .flatMap(_.assert403),
+                  )
+        } yield assertTrue(msgs.forall(_.contains("Anonymous users aren't allowed to perform this operation")))
+      },
+      test("a value the caller cannot view answers the same 404 as a non-existent value") {
+        val resourceIri           = "http://rdfh.ch/0001/a-thing-with-text-values"
+        val hiddenValue           = s"$resourceIri/values/1"
+        val noValue               = s"$resourceIri/values/nope"
+        def update(valueIri: IRI) =
+          TestApiClient
+            .putJsonLd(
+              uri"/v2/values",
+              updateValueRequest(resourceIri, "anything:Thing", "anything:hasText", valueIri, "knora-api:TextValue"),
+              anythingUser2,
+            )
+            .flatMap(_.assert404)
+        for {
+          hidden  <- update(hiddenValue)
+          missing <- update(noValue)
+        } yield assertTrue(hidden.replace(hiddenValue, noValue) == missing)
+      },
+      test("a caller with modify permission still gets 400 for a wrong class or value type") {
+        def update(resourceIri: IRI, valueIri: IRI, cls: String, tpe: String) =
+          TestApiClient.putJsonLd(
+            uri"/v2/values",
+            updateValueRequest(resourceIri, cls, "anything:hasInteger", valueIri, tpe),
+            anythingUser1,
+          )
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(None)
+          _                       <- update(resourceIri, valueIri, "anything:BlueThing", "knora-api:IntValue").flatMap(_.assert400)
+          _                       <- update(resourceIri, valueIri, "anything:Thing", "knora-api:TextValue").flatMap(_.assert400)
+          _                       <- update(resourceIri, valueIri, "anything:Thing", "knora-api:IntValue").flatMap(_.assert200)
         } yield assertCompletes
       },
     ),

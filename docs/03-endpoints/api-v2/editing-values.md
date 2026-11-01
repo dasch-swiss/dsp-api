@@ -552,6 +552,12 @@ version.
 
 If you submit an outdated value ID in a request to update a value, the response will be an HTTP 404 (Not Found) error.
 
+The requesting user needs view permission on the resource and on the value. These are checked before the submitted
+resource class, value IRI and value type, so a resource the user cannot view answers 403 whatever class, value or type
+the request names, and a value the user cannot view answers 404, the same as a value that does not exist. A user who
+can view the value gets 400 for a wrong resource class or value type, and then needs modify permission on the value,
+or change rights permission to change its permissions.
+
 The response to a value update request contains:
 
 - `@id`: the IRI of the value that was created.

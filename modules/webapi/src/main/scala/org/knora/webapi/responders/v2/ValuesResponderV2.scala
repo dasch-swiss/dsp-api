@@ -802,6 +802,16 @@ final class ValuesResponderV2(
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
 
+      currentValue <- findVisibleValue(
+                        resourceInfo,
+                        submittedInternalPropertyIri,
+                        updateValue.valueIri,
+                        NotFoundException(
+                          s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
+                        ),
+                        requestingUser,
+                      )
+
       _ <- {
         val msg =
           s"The rdf:type of resource <${updateValue.resourceIri.value}> is not <${updateValue.resourceClassIri}>"
@@ -810,18 +820,6 @@ final class ValuesResponderV2(
           .when(resourceInfo.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
       }
 
-      // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-      currentValue <-
-        ZIO
-          .fromOption(for {
-            values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == updateValue.valueIri)
-          } yield curVal)
-          .orElseFail(
-            NotFoundException(
-              s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
-            ),
-          )
       isSameType = currentValue.valueContent.valueType == submittedInternalValueType
       // Cross-type updates are intentionally allowed between all three still-image subtypes
       // (raster, IIIF external, and vector/SVG), since they all represent the same resource
@@ -1126,10 +1124,32 @@ final class ValuesResponderV2(
     } yield result
 
   /**
-   * The authorization gate of value removal: loads the resource as the system user, so that hidden values are found,
-   * and answers only after the caller's permissions are checked. A hidden resource answers 403, a hidden value the
-   * same 404 as a missing one, a visible value the caller may not delete 403. Any check that depends on the
-   * resource's class or values belongs after this call, never inside it.
+   * The authorization gate of value removal and update, given a resource loaded as the system user so that hidden
+   * values are found: answers only after the caller's view permissions are checked. A hidden resource answers 403, a
+   * hidden value the same 404 as a missing one. Any check that depends on the resource's class or values belongs
+   * after this call, never before it.
+   */
+  private def findVisibleValue(
+    resourceInfo: ReadResourceV2,
+    internalPropertyIri: SmartIri,
+    valueIri: ValueIri,
+    valueNotFound: NotFoundException,
+    requestingUser: User,
+  ): Task[ReadValueV2] =
+    for {
+      _            <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View, requestingUser)
+      currentValue <-
+        ZIO
+          .fromOption(resourceInfo.values.get(internalPropertyIri).flatMap(_.find(_.valueIri == valueIri)))
+          .orElseFail(valueNotFound)
+      _ <- resourceUtilV2
+             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.View, requestingUser)
+             .orElseFail(valueNotFound)
+    } yield currentValue
+
+  /**
+   * The authorization gate of value removal: on top of [[findVisibleValue]], a visible value the caller may not delete
+   * answers 403. Any check that depends on the resource's class or values belongs after this call, never inside it.
    */
   private def findDeletableValue(
     deleteValue: ValueRemoval,
@@ -1147,17 +1167,13 @@ final class ValuesResponderV2(
                           requestingUser = KnoraSystemInstances.Users.SystemUser,
                         )
                         .flatMap(_.toResource(deleteValue.resourceIri))
-      _            <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View, requestingUser)
-      currentValue <- ZIO
-                        .fromOption(
-                          resourceInfo.values
-                            .get(deleteValue.propertyIri.toInternalSchema)
-                            .flatMap(_.find(_.valueIri == deleteValue.valueIri)),
-                        )
-                        .orElseFail(valueNotFound)
-      _ <- resourceUtilV2
-             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.View, requestingUser)
-             .orElseFail(valueNotFound)
+      currentValue <- findVisibleValue(
+                        resourceInfo,
+                        deleteValue.propertyIri.toInternalSchema,
+                        deleteValue.valueIri,
+                        valueNotFound,
+                        requestingUser,
+                      )
       _ <- resourceUtilV2
              .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.Delete, requestingUser)
     } yield (resourceInfo, currentValue)
