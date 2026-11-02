@@ -55,7 +55,7 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
   override lazy val bootstrap: ULayer[E2EZSpec.Environment] =
     E2EZSpec.testLogger >>>
       TestContainerLayers.all >+>
-      LayersLive.remainingLayer(otelLayer, sipiServiceLayer) >+>
+      LayersLive.remainingLayer(otelLayer, sipiServiceLayer, TestContainerLayers.ingestConfig) >+>
       ApiModule.layer >+>
       TestClientsModule.layer
 

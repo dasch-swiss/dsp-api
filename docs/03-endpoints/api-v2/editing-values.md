@@ -288,7 +288,7 @@ Support for other types of files will be added in the future.
 
 The following sections describe the steps for creating a file value.
 
-Files can be ingested into DSP using SIPI or DSP-INGEST (experimental).
+Files can be ingested into DSP using SIPI or [ingest](../ingest.md).
 
 ### Upload Files to SIPI
 
@@ -336,9 +336,10 @@ In the case of an image file, the client may now wish to get a thumbnail of each
 confirm that the correct files have been uploaded. This can be done by adding IIIF parameters to `temporaryBaseIIIFUrl`.
 For example, to get a JPG thumbnail image that is 150 pixels wide, you would add `/full/150,/0/default.jpg`.
 
-### Upload Files to DSP-INGEST
+### Upload Files to Ingest
 
-Support for uploads with DSP-INGEST is now the preferred method of uploading files (and also for ingesting large amounts of data internally).
+Uploading files through ingest is the preferred method (and also for ingesting large amounts of data internally):
+`POST /ingest/projects/{shortcode}/assets/ingest/{filename}` on the DSP-API host, see [Ingest Endpoints](../ingest.md).
 
 ### Submit A File Value to DSP-API
 

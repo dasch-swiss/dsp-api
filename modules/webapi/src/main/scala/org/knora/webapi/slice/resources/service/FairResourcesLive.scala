@@ -10,7 +10,7 @@ import zio.*
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageExternalFileValueContentV2
@@ -29,7 +29,7 @@ import org.knora.webapi.slice.resources.domain.ResourceMetadataRules
 final case class FairResourcesLive(
   readResources: ReadResourcesService,
   iriConverter: IriConverter,
-  ingestConfig: DspIngestConfig,
+  knoraApi: KnoraApi,
 ) extends FairResources {
 
   // A missing, deleted or hidden resource is the same answer to an anonymous reader: there is nothing to show.
@@ -54,7 +54,7 @@ final case class FairResourcesLive(
                 }
     } yield read
       .flatMap(_.resources.headOption)
-      .map(FairResourcesLive.toFairResource(_, descriptionProperty, ingestConfig.externalBaseUrl))
+      .map(FairResourcesLive.toFairResource(_, descriptionProperty, knoraApi.externalKnoraApiBaseUrl))
 }
 
 object FairResourcesLive {
@@ -62,7 +62,7 @@ object FairResourcesLive {
   def toFairResource(
     r: ReadResourceV2,
     descriptionProperty: Option[PropertyIri],
-    ingestExternalBaseUrl: String,
+    apiExternalBaseUrl: String,
   ): FairResource =
     FairResource(
       iri = r.resourceIri,
@@ -76,10 +76,10 @@ object FairResourcesLive {
         .flatMap(p => r.findValues(p).headOption)
         .map(_.valueContent.valueHasString)
         .filter(_.trim.nonEmpty),
-      file = toFairFileValue(r, ingestExternalBaseUrl),
+      file = toFairFileValue(r, apiExternalBaseUrl),
     )
 
-  private def toFairFileValue(r: ReadResourceV2, ingestExternalBaseUrl: String): Option[FairFileValue] =
+  private def toFairFileValue(r: ReadResourceV2, apiExternalBaseUrl: String): Option[FairFileValue] =
     ResourceMetadataRules.selectFileValue(r).map { case (value, fc) =>
       val external = fc.isInstanceOf[StillImageExternalFileValueContentV2]
       val assetId  = Option.unless(external)(ResourceMetadataRules.assetIdOf(fc))
@@ -89,7 +89,7 @@ object FairResourcesLive {
         typeOfData = ResourceMetadataRules.typeOfData(fc),
         assetId = assetId,
         originalUrl =
-          assetId.map(ResourceMetadataRules.originalFileUrl(ingestExternalBaseUrl, r.resourceIri.shortcode, _)),
+          assetId.map(ResourceMetadataRules.originalFileUrl(apiExternalBaseUrl, r.resourceIri.shortcode, _)),
         licenseIri = fc.fileValue.licenseIri.map(_.value),
         authorship = fc.fileValue.authorship.toList.flatten.map(_.value),
       )

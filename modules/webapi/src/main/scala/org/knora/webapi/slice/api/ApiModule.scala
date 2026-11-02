@@ -12,6 +12,7 @@ import org.knora.webapi.slice.api.v2.ApiV2Module
 import org.knora.webapi.slice.api.v3.ApiV3Module
 import org.knora.webapi.slice.api.v3.ApiV3ServerEndpoints
 import org.knora.webapi.slice.fair.api.FairApiModule
+import org.knora.webapi.slice.ingest.IngestServerEndpoints
 
 object ApiModule {
 
@@ -21,6 +22,7 @@ object ApiModule {
     ApiV2Module.Dependencies &
     ApiV3Module.Dependencies &
     FairApiModule.Dependencies &
+    IngestServerEndpoints &
     ManagementServerEndpoints.Dependencies
     // format: on
 

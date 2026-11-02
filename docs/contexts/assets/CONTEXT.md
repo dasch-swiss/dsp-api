@@ -27,9 +27,9 @@ _Avoid_: File Value, archival record
 The IIIF image system used to transform and serve asset bytes.
 _Avoid_: Archive
 
-**dsp-ingest**:
-The ingest module currently handling asset ingestion and storage operations, planned to move into
-dsp-api.
+**Ingest**:
+The module handling asset ingestion and storage operations (`modules/ingest`), a library dsp-api serves
+under `/ingest/`. Formerly the separate dsp-ingest service.
 _Avoid_: Project Migration, Archive
 
 **Serving-policy enforcement**:
@@ -42,7 +42,7 @@ _Avoid_: Permission administration
 - An **Asset** is scoped to exactly one **Project**; **Assets** therefore depends on **Projects**.
 - **Restricted View** is configured as a **Project setting** and applied here through
   **Serving-policy enforcement**.
-- **Sipi** and **dsp-ingest** handle **Asset** bytes; dsp-api retains **Asset** metadata and
+- **Sipi** and **Ingest** handle **Asset** bytes; dsp-api retains **Asset** metadata and
   identifiers.
 - **Project Migration** coordinates **Assets** alongside the other VRE contexts.
 
@@ -53,7 +53,7 @@ _Avoid_: Permission administration
 > **Domain expert:** "Here, as **Serving-policy enforcement**. **Projects** owns the configuration;
 > Assets owns what happens when bytes go out."
 >
-> **Dev:** "And once **dsp-ingest** moves into dsp-api, does Assets become the archive?"
+> **Dev:** "Now that **Ingest** runs inside dsp-api, does Assets become the archive?"
 >
 > **Domain expert:** "No. That expands Assets inside an existing seam. Archival custody stays with
 > the **Archive**."

@@ -116,7 +116,7 @@ target's `env`), not by reading a version-report object.
   from the pinned base image's `org.opencontainers.image.version` OCI label
   (`//tools/buildinfo:oci_config_label`); the MODULE.bazel digest is its sole source.
 - The **fuseki** image is versioned by **release-please** (git version, stamped into
-  `org.opencontainers.image.version`), exactly like knora-api/dsp-ingest — not by a hand-typed tag.
+  `org.opencontainers.image.version`), exactly like knora-api — not by a hand-typed tag.
   The one thing declared in-repo is the **Jena dist (jar) version** (`FUSEKI_DIST_VERSION` in
   `MODULE.bazel`), which drives the `@fuseki_dist` tarball URL, the `/version` report, and the image's
   OTLP `service.version` resource attribute (which surfaces the deployed engine version in Grafana). It
@@ -159,7 +159,7 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 - New repo traits ship an in-memory companion under `modules/webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
 - Repeated datatype triples are **unordered** — never assert their insertion order in tests (use sorted lists or sets; entity reads sort small literal lists at the read boundary, see `keywords` / `defaultDataAuthorship` in `KnoraProjectRepoLive`). If result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting. See `docs/development/dsp-api-sparql-queries.md` § Repeated Properties Have No Order.
-- Test locations: unit → `modules/webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
+- Test locations: unit → `modules/webapi/src/test/scala/`; integration → `modules/test-it/`; ingest unit → `modules/ingest/src/test/scala/`; E2E (including `/ingest/`) → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
 - For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. `modules/webapi` and `modules/sparql-builder` each carry their own `GoldenTest` (e.g. `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`) with no other regeneration route, while specs in `modules/test-it` and `modules/test-e2e` use the testkit copy (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which can also be regenerated without a source edit via `--test_env=GOLDEN_REWRITE=1`. See `docs/development/dsp-api-conventions.md` § "Golden snapshot tests" for the full recipe. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders).
 
 ## Commit Conventions
