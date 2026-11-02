@@ -12,7 +12,6 @@ import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.http.*
 import zio.nio.file.Files
@@ -57,7 +56,17 @@ class MaintenanceEndpointsSpec extends ZIOSpecDefault {
       },
     ) @@ TestAspect.withLiveClock @@ TestAspect.flaky
 
-  val spec = suite("MaintenanceEndpoint")(needsTopleftCorrectionSuite)
+  private val postMaintenanceActionSuite =
+    suite("POST /maintenance/{name} should")(
+      test("reject the removed ImportProjectsToDb action as an unknown action") {
+        val request = Request
+          .post(URL(Path.root / "maintenance" / "ImportProjectsToDb"), Body.empty)
+          .addHeader(Header.Authorization.name, "Bearer fakeToken")
+        ZIO.scoped(executeRequest(request)).map(response => assertTrue(response.status == Status.BadRequest))
+      },
+    )
+
+  val spec = suite("MaintenanceEndpoint")(needsTopleftCorrectionSuite, postMaintenanceActionSuite)
     .provide(
       AssetInfoServiceLive.layer,
       AuthServiceLive.layer,
@@ -72,12 +81,11 @@ class MaintenanceEndpointsSpec extends ZIOSpecDefault {
       MovingImageService.layer,
       OtherFilesService.layer,
       ProjectService.layer,
-      ProjectRepositoryLive.layer,
       SipiClientMock.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
       SpecConfigurations.storageConfigLayer,
       StillImageService.layer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     )
 }

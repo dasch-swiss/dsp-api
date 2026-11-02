@@ -1,11 +1,11 @@
-# Dsp-Ingest
+# Ingest
 
-The Dsp-Ingest service is designed to streamline and optimize the process of ingesting and managing data within the
-DaSCH Service Platform.
-By automating the ingestion process, Dsp-Ingest enables efficient data collection, transformation, transcoding,
-metadata extraction, and storage, ensuring that the data is readily available for serving with Sipi.
-This service aims to enhance the overall performance and effectiveness of DSP applications by simplifying and
-accelerating the data ingestion workflow.
+Ingest manages the asset files of the DaSCH Service Platform: upload, transcoding, metadata extraction, storage,
+bulk ingest, and asset export and import, so that the files are ready for serving with Sipi.
+
+It is a library of dsp-api (package `swiss.dasch`): dsp-api serves its endpoints under `/ingest/` on the API host
+(`slice/ingest/` in `modules/webapi`) and runs its Sipi, `ffmpeg` and `ffprobe` processes from the API image. There
+is no separate ingest server or image. Its settings are read from `ingest.conf` (`INGEST_*` environment variables).
 
 # Documentation
 

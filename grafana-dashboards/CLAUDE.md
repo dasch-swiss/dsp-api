@@ -88,8 +88,8 @@ SIPI emits telemetry through **two pipelines** with colliding metric names:
   `deployment_environment_name`; scope it by `instance=~"dasch-vre-$environment-01"` (dsp-api also
   answers on the LS box, so `environment` alone over-counts).
 - **Container CPU/mem** (cAdvisor, `container_*`, `job=integrations/docker`): use exact
-  `service="DSP_iiif_iiif"` — `service=~"DSP_iiif.*"` also matches `DSP_iiif_ingest`. These carry
-  `environment` and short `instance` names (`dasch-vre-dev-01`). Panels are scoped to the primary VRE
+  `service="DSP_iiif_iiif"` — `service=~"DSP_iiif.*"` also matches `DSP_iiif_ingest` (legacy series). These
+  carry `environment` and short `instance` names (`dasch-vre-dev-01`). Panels are scoped to the primary VRE
   host `dasch-vre-$environment-01`.
 - **`node_*`** host metrics have **no `environment` label** (keyed by `instance` hostname), so they
   can't be filtered by the env variable directly — join via `and on(instance)` against a
