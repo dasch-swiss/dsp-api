@@ -26,8 +26,8 @@ compiles and JVM unit-test suites across the 250-core backend on top.
 
 - **Pure-JVM unit tests** (`//modules/{webapi,ingest,bagit,jwt,shacl-validator}:test`) run on the
   remote executor and result-cache — they are hermetic.
-- **Docker/testcontainer suites** (`//modules/test-it:*`, `//modules/test-e2e:test`,
-  `//modules/test-ingest-integration:test`) carry a **`no-remote`** tag (see
+- **Docker/testcontainer suites** (`//modules/test-it:*`, `//modules/test-e2e:test`) carry a
+  **`no-remote`** tag (see
   `modules/test-it/BUILD.bazel`'s `_TAGS` comment). They must run locally (host Docker socket), and
   `no-remote` also keeps their results out of the remote cache — the images they load
   (`//modules/*:load`) are a side effect Bazel does not model as a test input, so a cached "pass"

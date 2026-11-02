@@ -146,10 +146,10 @@ class ResourceMetadataRulesSpec extends ZIOSpecDefault {
       test("assetIdOf drops the filename extension") {
         assertTrue(ResourceMetadataRules.assetIdOf(stillImage) == "AbC123")
       },
-      test("originalFileUrl addresses the ingest original endpoint") {
+      test("originalFileUrl addresses the ingest original endpoint on the API host") {
         assertTrue(
-          ResourceMetadataRules.originalFileUrl("https://ingest.example.org", Shortcode.unsafeFrom("0803"), "AbC123") ==
-            "https://ingest.example.org/projects/0803/assets/AbC123/original",
+          ResourceMetadataRules.originalFileUrl("https://api.example.org", Shortcode.unsafeFrom("0803"), "AbC123") ==
+            "https://api.example.org/ingest/projects/0803/assets/AbC123/original",
         )
       },
     ),

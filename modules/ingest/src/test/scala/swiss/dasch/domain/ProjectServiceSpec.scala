@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.*
-import swiss.dasch.util.TestUtils
 import zio.Chunk
 import zio.Scope
 import zio.ZIO
@@ -188,9 +187,8 @@ class ProjectServiceSpec extends ZIOSpecDefault {
       MimeTypeGuesser.layer,
       FileChecksumServiceLive.layer,
       ProjectService.layer,
-      ProjectRepositoryLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     )
 }

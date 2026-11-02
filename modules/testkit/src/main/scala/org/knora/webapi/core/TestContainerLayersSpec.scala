@@ -9,7 +9,6 @@ import zio.*
 import zio.test.*
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.testcontainers.DspIngestTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object TestContainerLayersSpec extends ZIOSpecDefault {
@@ -17,16 +16,13 @@ object TestContainerLayersSpec extends ZIOSpecDefault {
   def spec: Spec[Any, Nothing] = suite("TestContainerLayers")(
     test("successfully provide the adapted application configuration for using with test containers") {
       for {
-        appConfig          <- ZIO.service[AppConfig]
-        sipiContainer      <- ZIO.service[SipiTestContainer]
-        dspIngestContainer <- ZIO.service[DspIngestTestContainer]
-        configFromRuntime  <- ZIO.config(AppConfig.config).orDie
+        appConfig         <- ZIO.service[AppConfig]
+        sipiContainer     <- ZIO.service[SipiTestContainer]
+        configFromRuntime <- ZIO.config(AppConfig.config).orDie
       } yield {
         assertTrue(
           appConfig.sipi.internalPort == sipiContainer.getFirstMappedPort,
-          appConfig.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
           configFromRuntime.sipi.internalPort == sipiContainer.getFirstMappedPort,
-          configFromRuntime.dspIngest.baseUrl.endsWith(dspIngestContainer.getFirstMappedPort.toString),
         )
       }
     },

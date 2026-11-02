@@ -6,17 +6,13 @@
 package swiss.dasch
 
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.JwtConfig
-import swiss.dasch.config.Configuration.ServiceConfig
-import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.db.Db
 import swiss.dasch.domain.*
-import swiss.dasch.infrastructure.*
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 
 /**
  * One-off migration backfilling `originalMimeType` into every `.info` sidecar that lacks it, derived
- * from `originalFilename`'s extension. Reads `STORAGE_ASSET_DIR` like the service does, so point it at
+ * from `originalFilename`'s extension. Reads `INGEST_STORAGE_ASSET_DIR` like dsp-api does, so point it at
  * the same volume.
  *
  * Locally, via Bazel:
@@ -28,11 +24,8 @@ import zio.*
  *
  * Against a deployed image, swapping only the main class out of the image's own entrypoint:
  */
-// docker compose run --rm --no-deps --entrypoint java ingest -cp '/sipi/lib/*' swiss.dasch.MigrateMimeTypes
+// docker compose run --rm --no-deps --entrypoint java api -cp '/opt/docker/lib/*' swiss.dasch.MigrateMimeTypes
 object MigrateMimeTypes extends ZIOAppDefault {
-
-  override val bootstrap: Layer[Config.Error, ServiceConfig & JwtConfig & StorageConfig] =
-    Configuration.layer >+> Logger.layer
 
   private def migrate(shortcodes: Chunk[String]) =
     for {
@@ -62,10 +55,9 @@ object MigrateMimeTypes extends ZIOAppDefault {
         AssetInfoServiceLive.layer,
         AssetMimeTypeMigrationService.layer,
         Configuration.layer,
-        Db.dataSourceLive,
         FileChecksumServiceLive.layer,
+        IngestExecutor.layer,
         MimeTypeGuesser.layer,
-        ProjectRepositoryLive.layer,
         ProjectService.layer,
         StorageServiceLive.layer,
       )

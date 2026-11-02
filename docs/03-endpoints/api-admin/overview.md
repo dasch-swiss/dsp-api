@@ -14,7 +14,8 @@ All information regarding users, projects, groups, lists and permissions is stor
 named graph.
 
 Additionally there is the [files endpoint](files.md): `http://server:port/admin/files` answers what a caller may
-receive of a stored asset. It is read by dsp-ingest and by Sipi, not by end users.
+receive of a stored asset. It is read by Sipi, not by end users; ingest, which runs inside DSP-API, makes the same
+decision in-process.
 
 There is also the [stores endpoint](stores.md) which allows manipulation of the triplestore content, and the
 [SPARQL passthrough](sparql-passthrough.md): `http://server:port/admin/sparql/query` forwards a `SystemAdmin`'s SPARQL

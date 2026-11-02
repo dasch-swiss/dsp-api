@@ -8,7 +8,6 @@ package swiss.dasch.domain
 import org.junit.runner.RunWith
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.*
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -133,10 +132,9 @@ class ImportServiceSpec extends ZIOSpecDefault {
       FileChecksumServiceLive.layer,
       ImportServiceLive.layer,
       ProjectService.layer,
-      ProjectRepositoryLive.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     ) @@ TestAspect.sequential
 
   private def corruptZipPayload(source: java.nio.file.Path, target: java.nio.file.Path): Unit = {

@@ -40,11 +40,11 @@ Errors:
 
 ### Two channels
 
-The response carries two independent channels, consumed by two different services:
+The response carries two independent channels, consumed by two different readers:
 
 | Field        | Answers                                                      | Read by                |
 | ------------ | ------------------------------------------------------------ | ---------------------- |
-| `original`   | what the caller may receive of the original file as uploaded | dsp-ingest             |
+| `original`   | what the caller may receive of the original file as uploaded | ingest (in-process)    |
 | `derivative` | what the caller may receive of the derivative                | Sipi's pre-flight hook |
 
 **The two channels must not be collapsed: neither consumer may read the other's field.** They answer different

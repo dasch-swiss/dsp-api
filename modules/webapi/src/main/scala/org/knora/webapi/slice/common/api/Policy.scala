@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.common.api
 
 import sttp.tapir.AttributeKey
+import sttp.tapir.Endpoint
 
 /**
  * The function-level authorization an endpoint declares, carried as the tapir attribute [[Policy.key]] (ADR-0013).
@@ -63,4 +64,12 @@ object Policy {
 
   val objectReadRequirement  = "Requires appropriate object access permissions."
   val objectWriteRequirement = "Requires authentication and appropriate object access permissions."
+
+  /**
+   * Declares `policy` on an endpoint built outside the policy-declaring factories, whose own server logic enforces it
+   * (ingest's routes), and appends its requirement to the description.
+   */
+  def declaredOn[A, I, E, O, R](ep: Endpoint[A, I, E, O, R], policy: Policy): Endpoint[A, I, E, O, R] =
+    ep.description(ep.info.description.fold(policy.requirement)(d => s"$d\n\n${policy.requirement}"))
+      .attribute(key, policy)
 }

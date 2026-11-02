@@ -8,6 +8,7 @@ package org.knora.webapi.slice.api
 import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.MediaType
+import sttp.model.Method
 import sttp.model.StatusCode
 import sttp.model.Uri
 import zio.*
@@ -57,6 +58,7 @@ import org.knora.webapi.slice.api.v3.ontology.AddPropertyMappingsRequest
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
+import org.knora.webapi.slice.ingest.IngestRequests
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil
@@ -792,7 +794,36 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       readBack = Some(readThing),
     )
 
+  /**
+   * A read of an ingest route on a freshly uploaded asset of the anything project. Ingest checks the token's scopes and
+   * refuses a missing scope with 401, not 403.
+   */
+  private def ingestRow(key: String, expected: Map[Principal, Expected])(path: String => String) =
+    Row[String](
+      key,
+      expected,
+      IngestRequests.uploadJpeg(anythingShortcode.value, anythingAdminUser),
+      (asset, user) => IngestRequests.send(Method.GET, path(asset), user).map(_.code),
+      None,
+    )
+
+  private val ingestProjectReadOutcomes =
+    outcomes(unauthorized, unauthorized, allowed, unauthorized, allowed, allowed)
+
   private val rows: List[Row[?]] = List(
+    ingestRow(
+      "GET /ingest/projects",
+      outcomes(unauthorized, unauthorized, unauthorized, unauthorized, unauthorized, allowed),
+    )(_ => "/ingest/projects"),
+    ingestRow("GET /ingest/projects/{shortcode}", ingestProjectReadOutcomes)(_ =>
+      s"/ingest/projects/${anythingShortcode.value}",
+    ),
+    ingestRow("GET /ingest/projects/{shortcode}/assets/{assetId}", ingestProjectReadOutcomes)(asset =>
+      s"/ingest/projects/${anythingShortcode.value}/assets/$asset",
+    ),
+    ingestRow("GET /ingest/projects/{shortcode}/checksumreport", ingestProjectReadOutcomes)(_ =>
+      s"/ingest/projects/${anythingShortcode.value}/checksumreport",
+    ),
     listRow("POST /admin/lists", outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed))(_ =>
       post(uri"/admin/lists", rootRequest),
     ),
@@ -1453,6 +1484,18 @@ object AuthorizationMatrixE2ESpec {
     "POST /admin/maintenance/{action-name}"                                -> "MaintenanceBackfillValueHasXmlE2ESpec",
     "POST /admin/maintenance/users/replace-iri"                            -> "MaintenanceReplaceUserIriE2ESpec",
     "POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri" -> "MaintenanceReplaceUserIriInProjectE2ESpec",
+    "GET /ingest/maintenance/needs-top-left-correction"                    -> "IngestAuthorizationE2ESpec",
+    "GET /ingest/maintenance/was-top-left-correction-applied"              -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/maintenance/{name}"                                      -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/report/asset-overview"                                   -> "IngestAuthorizationE2ESpec",
+    "DELETE /ingest/projects/{shortcode}/erase"                            -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/export"                             -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/import"                             -> "IngestAuthorizationE2ESpec",
+    "GET /ingest/projects/{shortcode}/bulk-ingest/mapping.csv"             -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/assets/ingest/{filename}"           -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/bulk-ingest"                        -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/bulk-ingest/finalize"               -> "IngestAuthorizationE2ESpec",
+    "POST /ingest/projects/{shortcode}/bulk-ingest/ingest/{file}"          -> "IngestAuthorizationE2ESpec",
   )
 
   enum Principal(val user: Option[User]) {
