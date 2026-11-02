@@ -129,8 +129,7 @@ case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
 
 /**
  * The object of a Jena `text:query` statement: `("term" limit)`. Every Gravsearch `text:query` object is
- * one of these, because without the limit Jena silently caps the lookup at 10,000 hits; the one exception
- * is an unscoped `matchFulltext` lookup (DEV-7492).
+ * one of these, because without the limit Jena silently caps the lookup at 10,000 hits.
  *
  * @param term  the raw (SPARQL-unescaped) Lucene query string; rendering escapes it.
  * @param limit the maximum number of Lucene hits.
