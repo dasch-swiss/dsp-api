@@ -8,7 +8,7 @@
   "iiifHost": "0.0.0.0",
   "iiifPort": 1024,
   "iiifPath": "",
-  "ingestUrl": "http://0.0.0.0:3340",
+  "ingestUrl": "http://0.0.0.0:3333/ingest",
   "geonameToken": "knora",
   "jsonWebToken": "",
   "logErrors": true,
@@ -32,7 +32,7 @@
         "enabled": true,
         "disabledLevels": []
       },
-      "tracingCorsUrls": ["http://0.0.0.0:3333/.*", "http://localhost:3333/.*", "http://0.0.0.0:3340/.*", "http://localhost:3340/.*"],
+      "tracingCorsUrls": ["http://0.0.0.0:3333/.*", "http://localhost:3333/.*"],
       "otlp": {
         "logsUrl": "http://localhost:4318/v1/logs",
         "tracesUrl": "http://localhost:4318/v1/traces"

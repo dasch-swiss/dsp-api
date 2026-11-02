@@ -109,7 +109,7 @@ pkg_tar(
 # org.opencontainers.image.* labels + stamped version/revision (see
 # oci_stamped_labels' doc in //tools/oci:defs.bzl). `.version`/`.revision` are
 # stamped from git (STABLE_GIT_VERSION / STABLE_GIT_COMMIT), so the Fuseki image
-# is versioned by release-please exactly like knora-api/dsp-ingest. The Jena
+# is versioned by release-please exactly like knora-api. The Jena
 # engine (jar) version is NOT the image version — it's carried separately in the
 # image env (FUSEKI_VERSION + the OTLP service.version resource attribute).
 oci_stamped_labels(

@@ -19,7 +19,6 @@
     "com.softwaremill.sttp.tapir:tapir-swagger-ui-bundle_3": 522367654,
     "com.softwaremill.sttp.tapir:tapir-zio-http-server_3": -1972142903,
     "com.softwaremill.sttp.tapir:tapir-zio-metrics_3": -61243804,
-    "com.zaxxer:HikariCP": 1991920386,
     "commons-io:commons-io": 1305681826,
     "commons-validator:commons-validator": -1849831310,
     "dev.optics:monocle-core_3": 1598778482,
@@ -58,7 +57,6 @@
     "org.eclipse.rdf4j:rdf4j-queryparser-sparql": -307740180,
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder": 1854673555,
     "org.ehcache:ehcache": -2082176898,
-    "org.flywaydb:flyway-core": -2045269608,
     "org.glassfish:jakarta.json": 1056313227,
     "org.scala-lang.modules:scala-xml_3": -1340734140,
     "org.scala-lang:scala-library": 1230160761,
@@ -71,7 +69,6 @@
     "org.testcontainers:testcontainers": -1851951707,
     "org.topbraid:shacl": 1349683740,
     "org.wiremock:wiremock": -1393305765,
-    "org.xerial:sqlite-jdbc": 1165654128,
     "org.xmlunit:xmlunit-core": 290609275,
     "repositories": -1949687017
   },
@@ -211,8 +208,6 @@
     "com.sun.istack:istack-commons-runtime:jar:sources": 794386617,
     "com.typesafe:config": -367467253,
     "com.typesafe:config:jar:sources": 686115203,
-    "com.zaxxer:HikariCP": 1080799863,
-    "com.zaxxer:HikariCP:jar:sources": 1316483434,
     "commons-beanutils:commons-beanutils": 852036681,
     "commons-beanutils:commons-beanutils:jar:sources": 1596942423,
     "commons-cli:commons-cli": -32742453,
@@ -563,8 +558,6 @@
     "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources": 737011528,
     "org.ehcache:ehcache": -447136515,
     "org.ehcache:ehcache:jar:sources": 917936710,
-    "org.flywaydb:flyway-core": -1373507591,
-    "org.flywaydb:flyway-core:jar:sources": 1267017770,
     "org.glassfish.jaxb:jaxb-core": 188053491,
     "org.glassfish.jaxb:jaxb-core:jar:sources": 740649838,
     "org.glassfish.jaxb:jaxb-runtime": 549132050,
@@ -636,8 +629,6 @@
     "org.webjars:swagger-ui": -690338883,
     "org.wiremock:wiremock": 904756999,
     "org.wiremock:wiremock:jar:sources": 1230375324,
-    "org.xerial:sqlite-jdbc": -1929436403,
-    "org.xerial:sqlite-jdbc:jar:sources": 1201298594,
     "org.xmlresolver:xmlresolver": -12887924,
     "org.xmlresolver:xmlresolver:jar:data": -1403738106,
     "org.xmlresolver:xmlresolver:jar:sources": 788648457,
@@ -1129,13 +1120,6 @@
         "sources": "b942a9b75d56a4b5c2875089fa153a7ffc8583eee8d6c0dff0212352e8eba352"
       },
       "version": "1.4.6"
-    },
-    "com.zaxxer:HikariCP": {
-      "shasums": {
-        "jar": "2be45c641b841e81df87292e181f2c203500c5f0e9a1676f135927387f3cf40b",
-        "sources": "b4ebc50e39b1f18f7add905232fd55c564539ed7890d8b20318836be339a4897"
-      },
-      "version": "7.1.0"
     },
     "commons-beanutils:commons-beanutils": {
       "shasums": {
@@ -2352,13 +2336,6 @@
       },
       "version": "3.12.0"
     },
-    "org.flywaydb:flyway-core": {
-      "shasums": {
-        "jar": "78819df13e3196f44506b00a4657b3faaf1d4256914dcfe608396a8585eb51b2",
-        "sources": "a1049aa67b8df333877c70031c4ef5bd38040347364c1174e080f4b8bdc56101"
-      },
-      "version": "12.10.0"
-    },
     "org.glassfish.jaxb:jaxb-core": {
       "shasums": {
         "jar": "b7317036c0e6ce32759981868e8caef8fa51427b6fe842c9eae3118d01ec8343",
@@ -2610,13 +2587,6 @@
       },
       "version": "3.13.2"
     },
-    "org.xerial:sqlite-jdbc": {
-      "shasums": {
-        "jar": "dc320e4102884c135ccc30c3c6fc3fb190b750e1586a100e3aba3be783cf33a9",
-        "sources": "d62bbaf939d58a7ee3942bd402146d201679fb6bbc309309f141aeacc606869f"
-      },
-      "version": "3.53.2.0"
-    },
     "org.xmlresolver:xmlresolver": {
       "shasums": {
         "data": "0614b78ce484ce33670dc842b75efc8961af9bd6145edb65a34865dc521629de",
@@ -2849,9 +2819,6 @@
     ],
     "com.squareup.okio:okio-jvm": [
       "org.jetbrains.kotlin:kotlin-stdlib"
-    ],
-    "com.zaxxer:HikariCP": [
-      "org.slf4j:slf4j-api"
     ],
     "commons-beanutils:commons-beanutils": [
       "commons-collections:commons-collections"
@@ -3551,9 +3518,6 @@
       "org.glassfish.jaxb:jaxb-runtime",
       "org.slf4j:slf4j-api"
     ],
-    "org.flywaydb:flyway-core": [
-      "tools.jackson.core:jackson-databind"
-    ],
     "org.glassfish.jaxb:jaxb-core": [
       "com.sun.activation:jakarta.activation",
       "com.sun.istack:istack-commons-runtime",
@@ -4227,16 +4191,6 @@
       "com.typesafe.config",
       "com.typesafe.config.impl",
       "com.typesafe.config.parser"
-    ],
-    "com.zaxxer:HikariCP": [
-      "com.zaxxer.hikari",
-      "com.zaxxer.hikari.hibernate",
-      "com.zaxxer.hikari.metrics",
-      "com.zaxxer.hikari.metrics.dropwizard",
-      "com.zaxxer.hikari.metrics.micrometer",
-      "com.zaxxer.hikari.metrics.prometheus",
-      "com.zaxxer.hikari.pool",
-      "com.zaxxer.hikari.util"
     ],
     "commons-beanutils:commons-beanutils": [
       "org.apache.commons.beanutils",
@@ -6653,73 +6607,6 @@
       "org.ehcache.xml.provider",
       "org.ehcache.xml.service"
     ],
-    "org.flywaydb:flyway-core": [
-      "org.flywaydb.core",
-      "org.flywaydb.core.api",
-      "org.flywaydb.core.api.callback",
-      "org.flywaydb.core.api.configuration",
-      "org.flywaydb.core.api.exception",
-      "org.flywaydb.core.api.executor",
-      "org.flywaydb.core.api.locations",
-      "org.flywaydb.core.api.logging",
-      "org.flywaydb.core.api.migration",
-      "org.flywaydb.core.api.migration.baseline",
-      "org.flywaydb.core.api.output",
-      "org.flywaydb.core.api.output.errors",
-      "org.flywaydb.core.api.pattern",
-      "org.flywaydb.core.api.resolver",
-      "org.flywaydb.core.api.resource",
-      "org.flywaydb.core.extensibility",
-      "org.flywaydb.core.internal",
-      "org.flywaydb.core.internal.authentication",
-      "org.flywaydb.core.internal.callback",
-      "org.flywaydb.core.internal.clazz",
-      "org.flywaydb.core.internal.command",
-      "org.flywaydb.core.internal.command.clean",
-      "org.flywaydb.core.internal.configuration",
-      "org.flywaydb.core.internal.configuration.extensions",
-      "org.flywaydb.core.internal.configuration.models",
-      "org.flywaydb.core.internal.configuration.resolvers",
-      "org.flywaydb.core.internal.database",
-      "org.flywaydb.core.internal.database.base",
-      "org.flywaydb.core.internal.database.h2",
-      "org.flywaydb.core.internal.database.sqlite",
-      "org.flywaydb.core.internal.exception",
-      "org.flywaydb.core.internal.exception.sqlExceptions",
-      "org.flywaydb.core.internal.info",
-      "org.flywaydb.core.internal.jdbc",
-      "org.flywaydb.core.internal.license",
-      "org.flywaydb.core.internal.logging",
-      "org.flywaydb.core.internal.logging.apachecommons",
-      "org.flywaydb.core.internal.logging.buffered",
-      "org.flywaydb.core.internal.logging.javautil",
-      "org.flywaydb.core.internal.logging.log4j2",
-      "org.flywaydb.core.internal.logging.multi",
-      "org.flywaydb.core.internal.logging.slf4j",
-      "org.flywaydb.core.internal.nc",
-      "org.flywaydb.core.internal.nc.schemahistory",
-      "org.flywaydb.core.internal.parser",
-      "org.flywaydb.core.internal.plugin",
-      "org.flywaydb.core.internal.proprietaryStubs",
-      "org.flywaydb.core.internal.publishing",
-      "org.flywaydb.core.internal.reports",
-      "org.flywaydb.core.internal.resolver",
-      "org.flywaydb.core.internal.resolver.java",
-      "org.flywaydb.core.internal.resolver.script",
-      "org.flywaydb.core.internal.resolver.sql",
-      "org.flywaydb.core.internal.resource",
-      "org.flywaydb.core.internal.resource.classpath",
-      "org.flywaydb.core.internal.resource.filesystem",
-      "org.flywaydb.core.internal.scanner",
-      "org.flywaydb.core.internal.scanner.classpath",
-      "org.flywaydb.core.internal.scanner.classpath.jboss",
-      "org.flywaydb.core.internal.scanner.cloud",
-      "org.flywaydb.core.internal.scanner.filesystem",
-      "org.flywaydb.core.internal.schemahistory",
-      "org.flywaydb.core.internal.sqlscript",
-      "org.flywaydb.core.internal.strategy",
-      "org.flywaydb.core.internal.util"
-    ],
     "org.glassfish.jaxb:jaxb-core": [
       "org.glassfish.jaxb.core",
       "org.glassfish.jaxb.core.annotation",
@@ -7745,16 +7632,6 @@
       "org.wiremock.webhooks",
       "wiremock"
     ],
-    "org.xerial:sqlite-jdbc": [
-      "org.sqlite",
-      "org.sqlite.core",
-      "org.sqlite.date",
-      "org.sqlite.javax",
-      "org.sqlite.jdbc3",
-      "org.sqlite.jdbc4",
-      "org.sqlite.nativeimage",
-      "org.sqlite.util"
-    ],
     "org.xmlresolver:xmlresolver": [
       "org.xmlresolver",
       "org.xmlresolver.adapters",
@@ -8007,8 +7884,6 @@
       "com.sun.istack:istack-commons-runtime:jar:sources",
       "com.typesafe:config",
       "com.typesafe:config:jar:sources",
-      "com.zaxxer:HikariCP",
-      "com.zaxxer:HikariCP:jar:sources",
       "commons-beanutils:commons-beanutils",
       "commons-beanutils:commons-beanutils:jar:sources",
       "commons-cli:commons-cli",
@@ -8359,8 +8234,6 @@
       "org.eclipse.rdf4j:rdf4j-sparqlbuilder:jar:sources",
       "org.ehcache:ehcache",
       "org.ehcache:ehcache:jar:sources",
-      "org.flywaydb:flyway-core",
-      "org.flywaydb:flyway-core:jar:sources",
       "org.glassfish.jaxb:jaxb-core",
       "org.glassfish.jaxb:jaxb-core:jar:sources",
       "org.glassfish.jaxb:jaxb-runtime",
@@ -8432,8 +8305,6 @@
       "org.webjars:swagger-ui",
       "org.wiremock:wiremock",
       "org.wiremock:wiremock:jar:sources",
-      "org.xerial:sqlite-jdbc",
-      "org.xerial:sqlite-jdbc:jar:sources",
       "org.xmlresolver:xmlresolver",
       "org.xmlresolver:xmlresolver:jar:data",
       "org.xmlresolver:xmlresolver:jar:sources",
@@ -9202,88 +9073,6 @@
         "org.ehcache.jsr107.internal.Jsr107CacheConfigurationParser"
       ]
     },
-    "org.flywaydb:flyway-core": {
-      "org.flywaydb.core.extensibility.Plugin": [
-        "org.flywaydb.core.api.migration.baseline.BaselineAppliedMigration",
-        "org.flywaydb.core.api.migration.baseline.BaselineMigrationConfigurationExtension",
-        "org.flywaydb.core.api.migration.baseline.BaselineMigrationResolver",
-        "org.flywaydb.core.api.migration.baseline.BaselineResourceTypeProvider",
-        "org.flywaydb.core.internal.NullFlywayTelemetryManager",
-        "org.flywaydb.core.internal.configuration.resolvers.EnvironmentProvisionerNone",
-        "org.flywaydb.core.internal.configuration.resolvers.EnvironmentVariableResolver",
-        "org.flywaydb.core.internal.configuration.resolvers.PlaceholderPropertyResolver",
-        "org.flywaydb.core.internal.database.base.TestContainersDatabaseType",
-        "org.flywaydb.core.internal.database.h2.H2DatabaseType",
-        "org.flywaydb.core.internal.database.sqlite.SQLiteDatabaseType",
-        "org.flywaydb.core.internal.proprietaryStubs.AuthCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.AwsSecretsManagerSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CheckCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CherryPickConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CherryPickSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DeployCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DiffCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DiffTextCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DryRunConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DryRunSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ErrorOverrideInitializerStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ErrorOverridesSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.GenerateCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.LicenseSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.LicensingConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ModelCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.OfflinePermitConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.PATTokenConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.PrepareCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ShouldExecuteEvaluatorStub",
-        "org.flywaydb.core.internal.proprietaryStubs.UndoCommandExtensionStub",
-        "org.flywaydb.core.internal.publishing.PublishingConfigurationExtension",
-        "org.flywaydb.core.internal.resource.CoreResourceTypeProvider",
-        "org.flywaydb.core.internal.scanner.classpath.ClasspathLocationHandlerImpl",
-        "org.flywaydb.core.internal.scanner.filesystem.FilesystemLocationHandler",
-        "org.flywaydb.core.internal.schemahistory.BaseAppliedMigration"
-      ]
-    },
-    "org.flywaydb:flyway-core:jar:sources": {
-      "org.flywaydb.core.extensibility.Plugin": [
-        "org.flywaydb.core.api.migration.baseline.BaselineAppliedMigration",
-        "org.flywaydb.core.api.migration.baseline.BaselineMigrationConfigurationExtension",
-        "org.flywaydb.core.api.migration.baseline.BaselineMigrationResolver",
-        "org.flywaydb.core.api.migration.baseline.BaselineResourceTypeProvider",
-        "org.flywaydb.core.internal.NullFlywayTelemetryManager",
-        "org.flywaydb.core.internal.configuration.resolvers.EnvironmentProvisionerNone",
-        "org.flywaydb.core.internal.configuration.resolvers.EnvironmentVariableResolver",
-        "org.flywaydb.core.internal.configuration.resolvers.PlaceholderPropertyResolver",
-        "org.flywaydb.core.internal.database.base.TestContainersDatabaseType",
-        "org.flywaydb.core.internal.database.h2.H2DatabaseType",
-        "org.flywaydb.core.internal.database.sqlite.SQLiteDatabaseType",
-        "org.flywaydb.core.internal.proprietaryStubs.AuthCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.AwsSecretsManagerSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CheckCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CherryPickConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.CherryPickSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DeployCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DiffCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DiffTextCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DryRunConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.DryRunSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ErrorOverrideInitializerStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ErrorOverridesSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.GenerateCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.LicenseSupportStub",
-        "org.flywaydb.core.internal.proprietaryStubs.LicensingConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ModelCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.OfflinePermitConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.PATTokenConfigurationExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.PrepareCommandExtensionStub",
-        "org.flywaydb.core.internal.proprietaryStubs.ShouldExecuteEvaluatorStub",
-        "org.flywaydb.core.internal.proprietaryStubs.UndoCommandExtensionStub",
-        "org.flywaydb.core.internal.publishing.PublishingConfigurationExtension",
-        "org.flywaydb.core.internal.resource.CoreResourceTypeProvider",
-        "org.flywaydb.core.internal.scanner.classpath.ClasspathLocationHandlerImpl",
-        "org.flywaydb.core.internal.scanner.filesystem.FilesystemLocationHandler",
-        "org.flywaydb.core.internal.schemahistory.BaseAppliedMigration"
-      ]
-    },
     "org.glassfish.jaxb:jaxb-runtime": {
       "jakarta.xml.bind.JAXBContext": [
         "org.glassfish.jaxb.runtime.v2.ContextFactory"
@@ -9365,16 +9154,6 @@
     "org.wiremock:wiremock:jar:sources": {
       "wiremock.org.slf4j.spi.SLF4JServiceProvider": [
         "wiremock.org.slf4j.helpers.NOP_FallbackServiceProvider"
-      ]
-    },
-    "org.xerial:sqlite-jdbc": {
-      "java.sql.Driver": [
-        "org.sqlite.JDBC"
-      ]
-    },
-    "org.xerial:sqlite-jdbc:jar:sources": {
-      "java.sql.Driver": [
-        "org.sqlite.JDBC"
       ]
     },
     "org.xmlunit:xmlunit-placeholders": {

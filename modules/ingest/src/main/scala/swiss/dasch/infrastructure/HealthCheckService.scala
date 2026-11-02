@@ -28,8 +28,6 @@ final case class HealthCheckServiceLive(indicators: Chunk[HealthIndicator]) exte
 
 object HealthCheckServiceLive {
   val layer =
-    ZLayer.fromZIO(for {
-      fs <- ZIO.service[FileSystemHealthIndicator]
-      db <- ZIO.service[DbHealthIndicator]
-    } yield Chunk[HealthIndicator](fs, db)) >>> ZLayer.derive[HealthCheckServiceLive]
+    ZLayer.fromFunction((fs: FileSystemHealthIndicator) => Chunk[HealthIndicator](fs)) >>>
+      ZLayer.derive[HealthCheckServiceLive]
 }

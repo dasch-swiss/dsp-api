@@ -10,7 +10,6 @@ import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 import swiss.dasch.domain.*
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.http.*
 import zio.nio.file.Files
@@ -80,14 +79,13 @@ class ReportEndpointsSpec extends ZIOSpecDefault {
       CsvService.layer,
       FileChecksumServiceLive.layer,
       MimeTypeGuesser.layer,
-      ProjectRepositoryLive.layer,
       ProjectService.layer,
       ReportEndpoints.layer,
       ReportEndpointsHandler.layer,
       ReportService.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.jwtConfigLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     )
 }

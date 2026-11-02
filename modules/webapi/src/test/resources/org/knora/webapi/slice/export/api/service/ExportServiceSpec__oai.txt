@@ -396,7 +396,7 @@
     "keywords" : [],
     "file" : {
       "mimeType" : "image/jpeg",
-      "url" : "https://ingest.example.org/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original",
+      "url" : "https://api.example.org:443/ingest/projects/1612/assets/B1D0OkEgfFp-Cew2Seur7Wi/original",
       "checksum" : "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
       "checksumAlgorithm" : "SHA-256",
       "fileName" : "the-original.jpg",

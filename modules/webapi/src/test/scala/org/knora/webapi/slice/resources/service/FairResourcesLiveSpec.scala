@@ -18,7 +18,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.Rendering
-import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.PlainStringLiteralV2
@@ -48,7 +48,8 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
 
   private given sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
-  private val ingest = "https://ingest.example.org"
+  private val api     = KnoraApi("0.0.0.0", 3333, "https", "api.example.org", 443, 3333)
+  private val apiBase = api.externalKnoraApiBaseUrl
 
   private def readValue(n: Int, content: ValueContentV2): ReadValueV2 =
     ReadOtherValueV2(
@@ -118,7 +119,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
         descriptionKey -> text("A book"),
         otherKey       -> StillImageFileValueContentV2(InternalSchema, legal, 10, 10),
       )
-      val fair = FairResourcesLive.toFairResource(r, Some(descriptionProperty), ingest)
+      val fair = FairResourcesLive.toFairResource(r, Some(descriptionProperty), apiBase)
       val file = fair.file.get
       assertTrue(
         fair.description == Some("A book"),
@@ -128,13 +129,13 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
         file.kind == FairFileKind.Stored,
         file.typeOfData == Some("Image"),
         file.assetId == Some("AbC123"),
-        file.originalUrl == Some(s"$ingest/projects/0803/assets/AbC123/original"),
+        file.originalUrl == Some(s"$apiBase/ingest/projects/0803/assets/AbC123/original"),
         file.userPermission == Permission.ObjectAccess.Modify,
       )
     },
     test("carries the legal fields of the file value") {
       val r    = resource(otherKey -> StillImageFileValueContentV2(InternalSchema, legal, 10, 10))
-      val file = FairResourcesLive.toFairResource(r, None, ingest).file.get
+      val file = FairResourcesLive.toFairResource(r, None, apiBase).file.get
       assertTrue(
         file.licenseIri == Some(LicenseIri.CC_BY_4_0.value),
         file.authorship == List("Photographer"),
@@ -148,7 +149,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
           IiifImageRequestUrl.unsafeFrom("https://iiif.example.org/image.jp2/full/max/0/default.jpg"),
         ),
       )
-      val file = FairResourcesLive.toFairResource(r, None, ingest).file.get
+      val file = FairResourcesLive.toFairResource(r, None, apiBase).file.get
       assertTrue(
         file.kind == FairFileKind.ExternalIiif,
         file.assetId.isEmpty,
@@ -160,12 +161,12 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       val fair = FairResourcesLive.toFairResource(
         resource(descriptionKey -> text("  \n ")),
         Some(descriptionProperty),
-        ingest,
+        apiBase,
       )
       assertTrue(fair.description.isEmpty)
     },
     test("has no file and no description when the resource has neither") {
-      val fair = FairResourcesLive.toFairResource(resource(otherKey -> text("x")), Some(descriptionProperty), ingest)
+      val fair = FairResourcesLive.toFairResource(resource(otherKey -> text("x")), Some(descriptionProperty), apiBase)
       assertTrue(fair.file.isEmpty, fair.description.isEmpty)
     },
   )
@@ -250,7 +251,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       live   = FairResourcesLive(
                new StubReadResources(result, calls),
                IriConverter(sf),
-               DspIngestConfig("http://ingest", ingest, "audience", "/opt/images"),
+               api,
              )
       iri   = ResourceIri.unsafeFrom("http://rdfh.ch/0803/res")
       out  <- live.readAsAnonymous(iri).exit

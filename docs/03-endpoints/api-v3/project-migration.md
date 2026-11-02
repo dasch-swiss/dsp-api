@@ -2,7 +2,7 @@
 
 The project migration API allows exporting a complete project from one DSP instance and importing it into another instance where the project does not yet exist. This is used for migrating projects between servers (e.g. from a testserver to production).
 
-A complete project includes the project record, its ontologies, all resources and values, permissions, group definitions, and referenced users. Binary assets (files managed by dsp-ingest) can optionally be included. The export is self-contained — cross-project references (memberships in other projects, groups from other projects) are stripped so the import does not depend on external state.
+A complete project includes the project record, its ontologies, all resources and values, permissions, group definitions, and referenced users. Binary assets (files stored by [ingest](../ingest.md)) can optionally be included. The export is self-contained — cross-project references (memberships in other projects, groups from other projects) are stripped so the import does not depend on external state.
 
 ## Endpoints
 
@@ -232,4 +232,4 @@ curl --request DELETE \
 - **One import at a time**: An import is rejected with `import_running` while another import, of either kind, runs on this server. See [Project Data Import](project-data-import.md#key-behaviors).
 - **No payload size limit**: The migration import accepts a bag of any size. A very large bag can exhaust the API heap during validation, because the data files load into the validation model.
 - **Root user references**: Projects where resources or values reference the root user cannot be imported directly. The references must be reassigned before export.
-- **Assets**: Asset export/import is handled via dsp-ingest. If dsp-ingest has no assets for the project, the export continues without them.
+- **Assets**: Assets are exported and imported by ingest, which runs inside DSP-API. If ingest has no assets for the project, the export continues without them.

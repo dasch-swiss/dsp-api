@@ -6,7 +6,10 @@
 package org.knora.webapi.core
 
 import io.opentelemetry.api
+import swiss.dasch.config.Configuration as IngestConfiguration
 import zio.*
+import zio.metrics.connectors.prometheus
+import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
 
@@ -40,6 +43,7 @@ import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.infrastructure.InfrastructureModule
 import org.knora.webapi.slice.infrastructure.OtelSetup
+import org.knora.webapi.slice.ingest.IngestModule
 import org.knora.webapi.slice.ontology.DoapResolverLive
 import org.knora.webapi.slice.ontology.IdSourceLive
 import org.knora.webapi.slice.ontology.OntologyModule
@@ -60,7 +64,6 @@ import org.knora.webapi.slice.security.SecurityModule
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.slice.standoff.service.StandoffMappingServiceLive
 import org.knora.webapi.store.iiif.api.SipiService
-import org.knora.webapi.store.iiif.impl.AssetInfoServiceLayer
 import org.knora.webapi.store.iiif.impl.FairAssetsLive
 import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -94,6 +97,7 @@ object LayersLive { self =>
     OntologyTransformer &
     PermissionUtilADM &
     PermissionsResponder &
+    PrometheusPublisher &
     ExportModule.Provided &
     ProjectExportService &
     ReadResourcesService &
@@ -119,6 +123,7 @@ object LayersLive { self =>
   def remainingLayer(
     otelLayer: ULayer[api.OpenTelemetry & Tracing & ContextStorage] = OtelSetup.layer,
     sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer,
+    ingestConfigLayer: ULayer[IngestConfiguration.IngestConfigs] = IngestConfiguration.layer.orDie,
   ): URLayer[AppConfigurations, Environment] =
     ZLayer.makeSome[
       AppConfig & DspIngestConfig & FairConfig & KnoraApi & Sipi & Triplestore & GraphRoute & Resources & JwtConfig,
@@ -127,7 +132,6 @@ object LayersLive { self =>
       // ZLayer.Debug.mermaid,
       AdminModule.layer,
       ApiComplexV2JsonLdRequestParser.layer,
-      AssetInfoServiceLayer.layer,
       AssetPermissionsCache.layer,
       AssetPermissionsResponder.layer,
       AuthorizationRestService.layer,
@@ -139,7 +143,6 @@ object LayersLive { self =>
       // Wired here (not in OntologyModule) for the same reason as OntologyTransformer below: it depends on the
       // legacy PermissionsResponder + PermissionUtilADM, which sit outside OntologyModule.Dependencies.
       DoapResolverLive.layer,
-      DspIngestClientLive.layer,
       ExportModule.layer,
       ExportApiModule.layer,
       FairAssetsLive.layer,
@@ -148,6 +151,9 @@ object LayersLive { self =>
       FairResourcesLive.layer,
       IdSourceLive.layer,
       InfrastructureModule.layer,
+      ingestConfigLayer,
+      IngestModule.layer,
+      IngestModule.endpointsLayer,
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
@@ -163,6 +169,7 @@ object LayersLive { self =>
       PredicateObjectMapper.layer,
       ProjectDataGraphsLive.layer,
       ProjectExportServiceLive.layer,
+      prometheus.publisherLayer,
       ReadResourcesServiceLive.layer,
       RepositoryUpdater.layer,
       ResourceUtilV2.layer,
