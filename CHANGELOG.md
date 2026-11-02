@@ -1,5 +1,26 @@
 # Changelog
 
+## [40.6.0](https://github.com/dasch-swiss/dsp-api/compare/v40.5.0...v40.6.0) (2026-11-02)
+
+
+### Maintenances
+
+* bump sipi to v10.0.0 ([#4404](https://github.com/dasch-swiss/dsp-api/issues/4404)) ([cafe3c1](https://github.com/dasch-swiss/dsp-api/commit/cafe3c1caa174352ca173fa0b28d16b72767421e))
+* **ci:** add the readiness regression check ([#4395](https://github.com/dasch-swiss/dsp-api/issues/4395)) ([6946ab5](https://github.com/dasch-swiss/dsp-api/commit/6946ab5b9375fa01f44b5164e2894c26dac7136a))
+
+
+### Documentation
+
+* correct stale role requirements in endpoint docs and descriptions ([#4409](https://github.com/dasch-swiss/dsp-api/issues/4409)) ([86b8732](https://github.com/dasch-swiss/dsp-api/commit/86b87324b60c32079219b6f6a379895c29805e3f))
+
+
+### Enhancements
+
+* add cutoff and project-wide listing to GET /v2/resources/info for incremental sync (DEV-7632) ([#4402](https://github.com/dasch-swiss/dsp-api/issues/4402)) ([d465883](https://github.com/dasch-swiss/dsp-api/commit/d4658839f21953899b819dc936ca6fcebadb3412))
+* **gravsearch:** lift the matchFulltext hit cap everywhere, behind the fulltext breadth guard (DEV-7492) ([#4399](https://github.com/dasch-swiss/dsp-api/issues/4399)) ([a3abe94](https://github.com/dasch-swiss/dsp-api/commit/a3abe947cd4f00ec3c0dddbf15d8a88ee020aea8))
+* **gravsearch:** pass the Lucene hit limit in project-scoped matchFulltext lookups (DEV-7492) ([#4398](https://github.com/dasch-swiss/dsp-api/issues/4398)) ([ae6e6af](https://github.com/dasch-swiss/dsp-api/commit/ae6e6afa6298a003bcb020b471f92e8c5006e241))
+* **search:** project-scope the /v2/searchbylabel Lucene lookup via GRAPH &lt;projectDataGraph&gt; (DEV-7613) ([#4401](https://github.com/dasch-swiss/dsp-api/issues/4401)) ([de91822](https://github.com/dasch-swiss/dsp-api/commit/de918229cf2641fe9c2b2c0032828121f02698d1))
+
 ## [40.5.0](https://github.com/dasch-swiss/dsp-api/compare/v40.4.0...v40.5.0) (2026-10-23)
 
 
