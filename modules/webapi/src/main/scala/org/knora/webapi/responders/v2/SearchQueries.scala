@@ -7,8 +7,8 @@ package org.knora.webapi.responders.v2
 
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FusekiLucenceQuery
@@ -17,8 +17,30 @@ object SearchQueries {
 
   private val luceneHitLimit = Literal.int(OntologyConstants.Fuseki.luceneHitLimit)
 
+  // The Lucene lookup both label queries start from, shared so the count and the page scope the same candidate set.
+  private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option[InternalIri]): Fragment = {
+    // `Literal.string` escapes for SPARQL itself, so the raw Lucene query goes in — not `getQueryString`,
+    // which is already SPARQL-escaped and would be escaped twice.
+    val query  = Literal.string(luceneQuery.value)
+    val lookup = sparql"?resource <http://jena.apache.org/text#query> (rdfs:label $query $luceneHitLimit) ."
+    dataGraph match {
+      case Some(graph) =>
+        sparql"""|GRAPH ${Iri.unsafeFrom(graph.value)} {
+                 |    $lookup
+                 |}"""
+      case None => lookup
+    }
+  }
+
   /*
-   * Both label queries below emit the same optional project and resource-class restrictions.
+   * Both label queries below emit the same optional project scope and resource-class restriction.
+   *
+   * `dataGraph` is the data graph of the project the search is limited to. It wraps only the `text:query` statement in
+   * `GRAPH <dataGraph> { }` (labelLookupClause); every other pattern stays outside, since the class walk reads ontology
+   * graphs and a wider GRAPH returns no rows. No `attachedToProject` is emitted: a label hit is the resource itself, and
+   * a resource lives in its project's data graph (the one-graph rule), so the join would only repeat the scope. An
+   * unknown project never reaches these builders: the responder answers it with no results
+   * (docs/adr/0012-graph-scoped-lucene-text-lookups.md).
    *
    * The class restriction walks `rdfs:subClassOf*`. It must not be narrowed to `subClassOf?`: the subclass closure is not
    * materialised in the triplestore and there is no query-time inference, so zero-or-one matched only the target class and
@@ -45,28 +67,21 @@ object SearchQueries {
    */
   def selectCountByLabel(
     luceneQuery: FusekiLucenceQuery,
-    limitToProject: Option[ProjectIri],
+    dataGraph: Option[InternalIri],
     limitToResourceClass: Option[ResourceClassIri],
-  ): Select = {
-    // `Literal.string` escapes for SPARQL itself, so the raw Lucene query goes in — not `getQueryString`,
-    // which is already SPARQL-escaped and would be escaped twice.
-    val query = Literal.string(luceneQuery.value)
+  ): Select =
     Select(
       sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                |SELECT (count(distinct ?resource) as ?count)
                |WHERE {
-               |    ?resource <http://jena.apache.org/text#query> (rdfs:label $query $luceneHitLimit) ;
-               |        knora-base:creationDate ?resourceCreationDate .
-               |    ${List(
-          limitToProject.map(p => sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(p.value)} ."),
-          limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
-                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
-        ).flatten.joinLines}
+               |    ${labelLookupClause(luceneQuery, dataGraph)}
+               |    ?resource knora-base:creationDate ?resourceCreationDate .
+               |    ${limitToResourceClass.whenSome(cls => sparql"""|?resource a ?resourceClass .
+                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} .""")}
                |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
                |}""".render,
     )
-  }
 
   /**
    * Retrieves a page of resources whose `rdfs:label` matches the Lucene query, with their values.
@@ -82,14 +97,11 @@ object SearchQueries {
    */
   def constructSearchByLabel(
     luceneQuery: FusekiLucenceQuery,
-    limitToProject: Option[ProjectIri],
+    dataGraph: Option[InternalIri],
     limitToResourceClass: Option[ResourceClassIri],
     limit: Int,
     offset: Int,
-  ): Construct = {
-    // `Literal.string` escapes for SPARQL itself, so the raw Lucene query goes in — not `getQueryString`,
-    // which is already SPARQL-escaped and would be escaped twice.
-    val query = Literal.string(luceneQuery.value)
+  ): Construct =
     Construct(
       sparql"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -111,13 +123,10 @@ object SearchQueries {
                |    {
                |        SELECT DISTINCT ?resource ?label
                |        WHERE {
-               |            ?resource <http://jena.apache.org/text#query> (rdfs:label $query $luceneHitLimit) ;
-               |                rdfs:label ?label .
-               |            ${List(
-          limitToProject.map(p => sparql"?resource knora-base:attachedToProject ${Iri.unsafeFrom(p.value)} ."),
-          limitToResourceClass.map(cls => sparql"""|?resource a ?resourceClass .
-                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} ."""),
-        ).flatten.joinLines}
+               |            ${labelLookupClause(luceneQuery, dataGraph)}
+               |            ?resource rdfs:label ?label .
+               |            ${limitToResourceClass.whenSome(cls => sparql"""|?resource a ?resourceClass .
+                     |?resourceClass rdfs:subClassOf* ${Iri.unsafeFrom(cls.smartIri.toInternalSchema.toIri)} .""")}
                |            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
                |        }
                |        ORDER BY ?resource
@@ -144,5 +153,4 @@ object SearchQueries {
                |    }
                |}""".render,
     )
-  }
 }
