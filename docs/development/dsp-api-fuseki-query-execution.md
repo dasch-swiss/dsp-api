@@ -16,7 +16,9 @@ Lucene field, which has consequences (Fact 10) — (`modules/fuseki/dsp-repo.ttl
 and **no `stats.opt` statistics file** — so the BGP optimizer runs on the `fixed`
 variable-counting heuristic, not cost estimates. The API sends every query with a server-side
 `timeout` form parameter in tiers (Standard 20s, Maintenance 120s, Gravsearch 120s, Search 60s,
-ViewRestrictions 40s, ViewRestrictionsCounts 120s; `application.conf`). The fulltext prequery and count run on the Search tier; the fulltext breadth probe
+ViewRestrictions 40s, ViewRestrictionsCounts 120s; `application.conf`). The `/v2/search` prequery
+and count run on the Search tier, every Gravsearch prequery (`matchFulltext` included) on the
+Gravsearch tier. The fulltext breadth probe
 (DEV-6864) reuses the Search timeout value under a distinct `SearchProbe` tier so its samples stay out of
 the Search-tier metric.
 
@@ -204,10 +206,10 @@ Pass the limit deliberately (see DEV-6823/DEV-6809) rather than inheriting it. N
 what the predicate argument suggests (Fact 10).
 
 Every `text:query` emission passes `OntologyConstants.Fuseki.luceneHitLimit` — `/v2/search`,
-search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff` and
-`matchLabel` — except Gravsearch's `matchFulltext`, which still inherits the cap: even with
-the DEV-7491 prequery rewrite, the full limit makes broad multi-word terms several times slower
-than today (DEV-7492).
+search-by-label, and the Gravsearch functions `matchText`, `matchTextInStandoff`, `matchLabel`
+and `matchFulltext`. Broad terms are kept in check by `FulltextBreadthGuard` instead, for
+`/v2/search` and Gravsearch `matchFulltext` alike; see
+`docs/05-internals/design/api-v2/gravsearch.md` § Breadth Guard.
 
 ## Fact 10 — `text:query`'s predicate argument does not narrow the search
 
@@ -242,8 +244,9 @@ with no `GRAPH` clause are unchanged under `unionDefaultGraph`. Like any entity-
 field only takes effect after a full reindex, which the Fuseki entrypoint runs on the first start
 with the changed configuration (see `modules/fuseki/README.md`, "Configuration changes").
 dsp-api emits the scoped form for project-restricted lookups (ADR-0012): `/v2/search` with `limitToProject`,
-and the Gravsearch text functions when anchored on the main resource, wrap only the `text:query` statement in
-`GRAPH <projectDataGraph> { }`, never the patterns that follow it.
+`/v2/searchbylabel` with `limitToProject` (page and count, since 2026-10-23), and the Gravsearch text functions
+when anchored on the main resource, wrap only the `text:query` statement in `GRAPH <projectDataGraph> { }`,
+never the patterns that follow it.
 
 ## Fact 11 — Replacing a property path with a plain pattern can be much slower
 

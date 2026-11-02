@@ -1,5 +1,30 @@
 # Changelog
 
+## [40.5.0](https://github.com/dasch-swiss/dsp-api/compare/v40.4.0...v40.5.0) (2026-10-23)
+
+
+### Documentation
+
+* update the resource FAIR landing pages plan for the dsp-app and ops-deploy work (DEV-7420) ([#4391](https://github.com/dasch-swiss/dsp-api/issues/4391)) ([e9a327f](https://github.com/dasch-swiss/dsp-api/commit/e9a327f070e9a509af60b515d69739f9b29d8b99))
+
+
+### Enhancements
+
+* **fuseki:** install dsp-repo.ttl from the image on every start and rebuild the Lucene index when it changed (DEV-7589) ([#4394](https://github.com/dasch-swiss/dsp-api/issues/4394)) ([014103c](https://github.com/dasch-swiss/dsp-api/commit/014103c4d010e81abc91f1a95e04f678bad8b835))
+* **fuseki:** store the graph in the Lucene index so text:query can be GRAPH-scoped (DEV-7377) ([#4393](https://github.com/dasch-swiss/dsp-api/issues/4393)) ([7bdbfdb](https://github.com/dasch-swiss/dsp-api/commit/7bdbfdb2fd39c63b2ecb5e42f51f466da4b27749))
+* project-scope the Lucene lookup in Gravsearch and /v2/search via GRAPH &lt;projectDataGraph&gt; (DEV-7594) ([#4396](https://github.com/dasch-swiss/dsp-api/issues/4396)) ([3b42d89](https://github.com/dasch-swiss/dsp-api/commit/3b42d89c756c4c52aba91152b805bbf748964e0c))
+* serve FAIR metadata and Signposting on the resource pages ARKs resolve to (DEV-7420) ([#4385](https://github.com/dasch-swiss/dsp-api/issues/4385)) ([72dd893](https://github.com/dasch-swiss/dsp-api/commit/72dd89360f2ea0591d7a7253d83165553fe5b805))
+
+
+### Bug Fixes
+
+* count user link values in the restrictions overview (DEV-7390) ([#4392](https://github.com/dasch-swiss/dsp-api/issues/4392)) ([97f1108](https://github.com/dasch-swiss/dsp-api/commit/97f11083feff692cf028c4cd3bb58a56e81ec5fa))
+
+
+### Tests
+
+* prove stored valueHasXml equals served XML across write paths (DEV-7327) ([#4397](https://github.com/dasch-swiss/dsp-api/issues/4397)) ([3e0e2f1](https://github.com/dasch-swiss/dsp-api/commit/3e0e2f1ed484f0fdd575bc9d7d38842ccea7ca7b))
+
 ## [40.4.0](https://github.com/dasch-swiss/dsp-api/compare/v40.3.0...v40.4.0) (2026-10-09)
 
 

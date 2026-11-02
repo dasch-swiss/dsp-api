@@ -35,7 +35,7 @@
 
 ### Get users
 
-- Required permission: SystemAdmin
+- Required permission: SystemAdmin / ProjectAdmin (in any project)
 - GET: `/admin/users`
 
 ### Get user
@@ -47,7 +47,10 @@
 
 ### Create user
 
-- Required permission: none, self-registration is allowed
+- Required permission:
+    - SystemAdmin: for creating a system administrator (`systemAdmin: true`)
+    - SystemAdmin / ProjectAdmin (in any project): for creating any other user
+    - Self-registration is not possible.
 - Required information: email (unique), given name, family name,
   password, status, systemAdmin
 - Username restrictions:
@@ -92,8 +95,7 @@ specified by the `id` in the request body as below:
 ### Update basic user information**
 
 - Required permission: SystemAdmin / self
-- Changeable information: username, email, given name, family name,
-  password, status, SystemAdmin membership
+- Changeable information: username, email, given name, family name, language
 - TypeScript Docs: userFormats - ChangeUserApiRequestADM
 - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
 - BODY:
@@ -151,7 +153,7 @@ specified by the `id` in the request body as below:
 
 ### Add/remove user to/from project
 
-- Required permission: SystemAdmin / ProjectAdmin / self (if project self-assignment is enabled)
+- Required permission: SystemAdmin / ProjectAdmin (of the project)
 - Required information: project IRI, user IRI
 - Effects: `knora-base:isInProject` user property
 - POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
@@ -167,7 +169,7 @@ Note: When a user is project admin in the same project, his project admin member
 
 ### Add/remove user to/from project admin group
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin (of the project)
 - Required information: project IRI, user IRI
 - Effects: `knora-base:isInProjectAdminGroup` user property
 - POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`
@@ -181,10 +183,7 @@ Note: In order to add a user to a project admin group, the user needs to be memb
 
 ### Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*)
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
-  / hasProjectAllGroupAdminPermission /
-  hasProjectRestrictedGroupAdminPermission (for this group) / User
-  (if group self-assignment is enabled)
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - Required information: group IRI, user IRI
 - Effects: `knora-base:isInGroup`
 - POST / DELETE: `/admin/users/iri/<userIri>/group-memberships/<groupIri>`
@@ -192,7 +191,7 @@ Note: In order to add a user to a project admin group, the user needs to be memb
 
 ### Add/remove user to/from system admin group
 
-- Required permission: SystemAdmin / self
+- Required permission: SystemAdmin
 - Effects property: `knora-base:isInSystemAdminGroup` with value
   `true` or `false`
 - PUT: `/admin/users/iri/<userIri>/SystemAdmin`

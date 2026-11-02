@@ -2,8 +2,9 @@
 
 Date: 2026-10-20
 
-Relates to: DEV-7377 (spike), DEV-7492 (lifting the Lucene hit limit), DEV-6851 (label search field),
-DEV-6809 (c) (GRAPH-scoping the post-Lucene patterns), `modules/fuseki/dsp-repo.ttl` (the index configuration).
+Relates to: DEV-7377 (spike), DEV-7492 (lifting the Lucene hit limit behind the breadth guard),
+DEV-6851 (label search field), DEV-6809 (c) (GRAPH-scoping the post-Lucene patterns),
+`modules/fuseki/dsp-repo.ttl` (the index configuration).
 
 ## Status
 
@@ -60,6 +61,9 @@ existing data, while new writes are indexed with their graph, so the index is si
    ontology patterns resolve against other graphs. Scoping to the data graph is exact because of the one-graph
    rule in the Resources & Values context (`docs/contexts/resources-values/CONTEXT.md`): a project's resources,
    values and list nodes live in exactly one data graph.
+   *Note (2026-10-23):* `/v2/searchbylabel` (page and count) with `limitToProject` is scoped the same way and
+   drops `attachedToProject` (DEV-7613). Measured on dev over 8 project-restricted cases, it is 1.5–8× faster,
+   at most 0.5 s scoped on the beol, LIMC and ekws cases (1.1 s on lhtt), with identical results.
 3. **The list-node branch needs no scope of its own.** It starts from the scoped hit, so it only reaches list
    nodes in the project data graph. No union with the system-lists graph, because no cross-graph list references
    exist and the platform does not allow them.
@@ -75,11 +79,16 @@ existing data, while new writes are indexed with their graph, so the index is si
    `text:propField`, which DEV-6851 proposed, does not exist in Jena 6.2.0 and is silently ignored.
 7. **Unscoped searches are out of scope.** Scoping gains them nothing; lifting the hit limit for them is
    DEV-7492's own decision.
+   *Note (2026-10-22):* DEV-7492 lifted the limit for every Gravsearch `matchFulltext` lookup, scoped or not,
+   and runs those queries behind the `/v2/search` breadth guard (`FulltextBreadthGuard`), which refuses an
+   over-broad term with a 400.
 
 ## Consequences
 
 - Project-restricted fulltext searches can take the full Lucene hit limit without paying for every
   out-of-project hit, and most of them stop being silently truncated. Unrestricted searches are unchanged.
+  *Note (2026-10-22):* "Unrestricted searches are unchanged" no longer holds for Gravsearch `matchFulltext`,
+  see the note under Decision 7.
 - Scoping applies only to Lucene lookups anchored on the main resource. `limitToProject` restricts the main
   resource; a lookup anchored elsewhere (`matchFulltext` on a linked resource, `matchText` on a linked resource's
   value) may legitimately hit another project's graph, because links across projects are allowed, so it stays
@@ -94,6 +103,8 @@ existing data, while new writes are indexed with their graph, so the index is si
   which need not be the Lucene anchor. Without the join, `/v2/search` relies on the one-graph rule rather than
   enforcing it: a resource whose values or list nodes sat in another project's graph would be found by the wrong
   project's scoped search (stage had none on 2026-10-21).
+  *Note (2026-10-23):* dropping the join also applies to `/v2/searchbylabel` (DEV-7613), where a label hit is the
+  resource itself.
 - Search now emits SPARQL that names a project data graph, which ADR-0011 assigns to Resources & Values. This
   extends the Lucene queries Search already ran, which ADR-0011's ratchet leaves in place, and the
   `ProjectDataGraphs` port only resolves the graph's IRI. The GRAPH wrap moves with the Lucene queries when they

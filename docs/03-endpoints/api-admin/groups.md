@@ -19,8 +19,7 @@
 
 ### Create Group
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
-  / hasProjectAllGroupAdminPermission
+- Required permission: SystemAdmin / ProjectAdmin (of the project in the request)
 - Required information: name (unique inside project), project IRI
 - Optional information: group descriptions
 - Returns information about the newly created group
@@ -68,9 +67,7 @@ specified by the `id` in the request body as below:
 
 ### Update group information
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
-  / hasProjectAllGroupAdminPermission /
-  hasProjectRestrictedGroupAdminPermission (for this group)
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - Changeable information: `name`, `descriptions`, `selfjoin`
 - TypeScript Docs: groupFormats - ChangeGroupApiRequestADM
 - PUT: `/admin/groups/<groupIri>`
@@ -91,7 +88,7 @@ specified by the `id` in the request body as below:
 
 ### Change Group Status
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - Changeable information: `status`
 - Remark: Deleting a group, removes all members from the group.
 - PUT: `/admin/groups/<groupIri>/status`
@@ -105,7 +102,7 @@ specified by the `id` in the request body as below:
 
 ### Delete Group
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - Remark: The same as changing the groups `status` to
   `false`. To un-delete, set `status` to `true`.
 - DELETE: `/admin/groups/<groupIri>`
@@ -127,5 +124,5 @@ Example Group Information stored in admin named graph: :
 ### Get Group Members
 
 - Returns all group members
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin (of the group's project)
 - GET: `/admin/groups/<groupIri>/members`

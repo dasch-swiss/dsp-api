@@ -480,6 +480,9 @@ first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
 in `app/v2` in `application.conf`.
 
+`limitToProject` restricts the search to the resources of that project. A project IRI that does not
+identify an existing project returns no results.
+
 For performance reasons, standoff markup is not queried for this route.
 
 To request the number of results rather than the results themselves, you can

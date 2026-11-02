@@ -20,7 +20,8 @@ A copyright holder is a person or organization that holds the copyright to a fil
 Each file value has exactly one copyright holder (currently zero or one).
 
 Each project references an allowed list of copyright holders that can be used.  
-System project administrators can add new copyright holders to the list.
+System administrators and the administrators of a project can add new copyright holders
+to the list of that project.
 
 ## Authorship
 

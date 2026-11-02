@@ -103,7 +103,7 @@
                 },
                 "@id": "http://rdfh.ch/0803/50e7460a7203/values/7ead1231b806",
                 "knora-api:fileValueAsUrl": {
-                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
+                    "@value": "IIIF_BASE_URL/0803/incunabula_0000003856.jp2/full/max/0/default.jpg",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",

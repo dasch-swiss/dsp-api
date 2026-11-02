@@ -32,7 +32,7 @@
       "@type" : "knora-api:StillImageFileValue",
       "knora-api:fileValueAsUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg"
+        "@value" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/max/0/default.jpg"
       },
       "knora-api:fileValueHasFilename" : "incunabula_0000004159.jpg",
       "knora-api:fileValueIsPreview" : true,

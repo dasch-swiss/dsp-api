@@ -1,0 +1,83 @@
+---
+# Readiness check for pull requests.
+#
+# The job follows `main` of dasch-swiss/dasch-specs: it checks out the check and its action from
+# there on each run, so a fix of the check reaches every repo at the next run without a change here.
+# The workflow has no `paths:` filter, because a required check that a filter skips stays pending
+# on every pull request that the filter excludes.
+#
+# This file stays identical to `assessments/regression-check/readiness.yml` in
+# `dasch-swiss/dasch-specs`, apart from the pins of the actions.
+# A change of this template must be applied by hand to each copy in the assessed repos, keeping
+# each copy's pins.
+name: readiness
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readiness-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic:
+    if: >-
+      github.repository_owner == 'dasch-swiss' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !startsWith(github.event.pull_request.head.ref, 'release-please--') &&
+      github.event.pull_request.state == 'open'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Mint the readiness reader App token
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510  # v3.3.0
+        with:
+          client-id: ${{ secrets.READINESS_READER_APP_ID }}
+          private-key: ${{ secrets.READINESS_READER_APP_PRIVATE_KEY }}
+          owner: dasch-swiss
+          repositories: dasch-specs,dasch-claude-plugins
+          permission-contents: read
+      - name: Check out dasch-specs
+        id: specs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: dasch-swiss/dasch-specs
+          ref: main
+          token: ${{ steps.token.outputs.token }}
+          path: .readiness/dasch-specs
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /assessments/scripts/
+            /assessments/regression-check/
+            /assessments/pyproject.toml
+            /assessments/uv.lock
+      # The action comes from the dasch-specs checkout above, never from this repo.
+      - name: Run the readiness check
+        id: check
+        uses: ./.readiness/dasch-specs/assessments/regression-check  # zizmor: ignore[self-repository]
+        timeout-minutes: 8
+        with:
+          token: ${{ steps.token.outputs.token }}
+      - name: Name the failed setup step
+        id: failure
+        if: failure() && steps.check.outputs.reported == ''
+        env:
+          TOKEN_OUTCOME: ${{ steps.token.outcome }}
+          SPECS_OUTCOME: ${{ steps.specs.outcome }}
+        run: |
+          if [ "$TOKEN_OUTCOME" != success ]; then
+            cause="the App token step failed; check the secrets READINESS_READER_APP_ID and"
+            cause="$cause READINESS_READER_APP_PRIVATE_KEY and the App installation on this repo"
+          elif [ "$SPECS_OUTCOME" != success ]; then
+            cause="the checkout of dasch-specs failed"
+          else
+            cause="the readiness action stopped before it wrote its report"
+          fi
+          echo "Check error: $cause" | tee -a "$GITHUB_STEP_SUMMARY"
