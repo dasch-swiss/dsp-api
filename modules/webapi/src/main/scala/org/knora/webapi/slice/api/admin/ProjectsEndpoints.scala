@@ -20,6 +20,7 @@ import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.SetRestrictedViewRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -171,7 +172,7 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
         "Returns all admin members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
       )
 
-    val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.securedEndpoint.delete
+    val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.systemAdminPolicyEndpoint.delete
       .in(projectsByShortcode / "erase")
       .in(
         query[Boolean]("keepAssets")
@@ -180,13 +181,13 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
       )
       .out(jsonBody[ProjectOperationResponseADM])
       .description(
-        """|!ATTENTION! Erase a project with the given shortcode.
-           |This will permanently and irrecoverably remove the project and all of its assets.
-           |Requires SystemAdmin permissions.
-           |Only available if the feature has been configured on the server side.""".stripMargin,
+        s"""|!ATTENTION! Erase a project with the given shortcode.
+            |This will permanently and irrecoverably remove the project and all of its assets.
+            |${Policy.SystemAdmin.requirement}
+            |Only available if the feature has been configured on the server side.""".stripMargin,
       )
 
-    val postAdminProjects = baseEndpoints.securedEndpoint.post
+    val postAdminProjects = baseEndpoints.systemAdminPolicyEndpoint.post
       .in(projectsBase)
       .in(
         jsonBody[ProjectCreateRequest].description(
@@ -195,7 +196,7 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
         ),
       )
       .out(jsonBody[ProjectOperationResponseADM])
-      .description("Creates a new project. Requires SystemAdmin permissions.")
+      .description(s"Creates a new project. ${Policy.SystemAdmin.requirement}")
 
     val putAdminProjectsByIri = baseEndpoints.securedEndpoint.put
       .in(projectsByIri)

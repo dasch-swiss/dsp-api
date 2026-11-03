@@ -179,7 +179,6 @@ final case class UserRestService(
   ): Task[UserResponse] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
-      _        <- auth.ensureSystemAdmin(requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
       updated  <- knoraUserService.updateSystemAdminStatus(user, changeRequest.systemAdmin)
       response <- asExternalUserResponse(requestingUser, updated)

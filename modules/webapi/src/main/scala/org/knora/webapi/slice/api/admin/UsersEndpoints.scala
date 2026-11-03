@@ -29,6 +29,7 @@ import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateReques
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 object PathVars {
@@ -157,11 +158,11 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
         "Change a user's status identified by IRI. Users can update their own status. SystemAdmin can update any user's status.",
       )
 
-    val usersIriSystemAdmin = baseEndpoints.securedEndpoint.put
+    val usersIriSystemAdmin = baseEndpoints.systemAdminPolicyEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "SystemAdmin")
       .in(jsonBody[SystemAdminChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Change a user's SystemAdmin status identified by IRI. Requires SystemAdmin permissions.")
+      .description(s"Change a user's SystemAdmin status identified by IRI. ${Policy.SystemAdmin.requirement}")
   }
 
   object delete {

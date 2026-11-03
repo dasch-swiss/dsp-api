@@ -88,8 +88,7 @@ final class ProjectRestService(
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(user: User)(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
-    _ <- auth.ensureSystemAdmin(user)
+  def createProject(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)
     _ <- ZIO
            .fail(
@@ -113,7 +112,6 @@ final class ProjectRestService(
 
   def eraseProject(user: User)(shortcode: Shortcode, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {
-      _ <- auth.ensureSystemAdmin(user)
       _ <- ZIO.unlessZIO(AppConfig.features(_.allowEraseProjects))(
              ZIO.fail(ForbiddenException("The feature to erase projects is not enabled.")),
            )

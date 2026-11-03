@@ -182,6 +182,16 @@ class MaintenanceBackfillValueHasXmlE2ESpec extends E2EZSpec {
     test("returns 403 when the authenticated user is not a SystemAdmin") {
       postBackfill(normalUser).map(code => assertTrue(code == StatusCode.Forbidden))
     },
+    test("returns 401 when no authentication is provided") {
+      TestApiClient
+        .postJson[Json, Json](backfillUri, Json.Obj())
+        .map(response => assertTrue(response.code == StatusCode.Unauthorized))
+    },
+    test("returns 403 to a non-admin for an unknown action, which a SystemAdmin would get a 400 for") {
+      TestApiClient
+        .postJson[Json, Json](uri"/admin/maintenance/no-such-action", Json.Obj(), normalUser)
+        .map(response => assertTrue(response.code == StatusCode.Forbidden))
+    },
     test("set up formatted values of every kind and remove all stored XML of the project") {
       for {
         _ <- createCustomMapping(customMappingName)

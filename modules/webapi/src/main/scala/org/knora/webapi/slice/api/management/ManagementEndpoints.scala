@@ -15,6 +15,7 @@ import zio.json.JsonCodec
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final case class VersionResponse(
   webapi: String,
@@ -77,11 +78,11 @@ final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
     .out(statusCode)
     .description("Get health status. Publicly accessible.")
 
-  val postStartCompaction = baseEndpoints.securedEndpoint.post
+  val postStartCompaction = baseEndpoints.systemAdminPolicyEndpoint.post
     .in("start-compaction")
     .out(jsonBody[String])
     .out(statusCode)
-    .description("Start triplestore compaction. Requires SystemAdmin permissions.")
+    .description(s"Start triplestore compaction. ${Policy.SystemAdmin.requirement}")
 }
 
 object ManagementEndpoints {

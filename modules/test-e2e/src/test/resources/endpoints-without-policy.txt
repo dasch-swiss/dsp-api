@@ -4,7 +4,6 @@ DELETE /admin/groups/{groupIri}
 DELETE /admin/permissions/{permissionIri}
 DELETE /admin/projects/iri/{projectIri}/RestrictedViewSettings
 DELETE /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings
-DELETE /admin/projects/shortcode/{projectShortcode}/erase
 DELETE /admin/users/iri/{userIri}
 DELETE /admin/users/iri/{userIri}/group-memberships/{groupIri}
 DELETE /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}
@@ -111,12 +110,8 @@ GET /version
 HEAD /internal/landing-pages/resources/{shortcode}/{resourceId}
 PATCH /v2/ontologies/cardinalities
 POST /admin/groups
-POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri
-POST /admin/maintenance/users/replace-iri
-POST /admin/maintenance/{action-name}
 POST /admin/permissions/ap
 POST /admin/permissions/doap
-POST /admin/projects
 POST /admin/projects/iri/{projectIri}/RestrictedViewSettings
 POST /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings
 POST /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders
@@ -125,7 +120,6 @@ POST /admin/users
 POST /admin/users/iri/{userIri}/group-memberships/{groupIri}
 POST /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}
 POST /admin/users/iri/{userIri}/project-memberships/{projectIri}
-POST /start-compaction
 POST /v2/authentication
 POST /v2/ontologies
 POST /v2/ontologies/candeletecardinalities
@@ -162,7 +156,6 @@ PUT /admin/projects/shortcode/{projectShortcode}/legal-info/resource
 PUT /admin/users/iri/{userIri}/BasicUserInformation
 PUT /admin/users/iri/{userIri}/Password
 PUT /admin/users/iri/{userIri}/Status
-PUT /admin/users/iri/{userIri}/SystemAdmin
 PUT /v2/ontologies/cardinalities
 PUT /v2/ontologies/classes
 PUT /v2/ontologies/guiorder

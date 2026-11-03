@@ -17,7 +17,7 @@ final class ManagementServerEndpoints(endpoint: ManagementEndpoints, restService
   private val noTags: List[ZServerEndpoint[Any, Any]] = List(
     endpoint.getVersion.zServerLogic(_ => ZIO.succeed(VersionResponse.current)),
     endpoint.getHealth.zServerLogic(_ => restService.healthCheck),
-    endpoint.postStartCompaction.serverLogic(restService.startCompaction),
+    endpoint.postStartCompaction.serverLogic(_ => restService.startCompaction),
   )
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = noTags.map(_.tag("Management API"))

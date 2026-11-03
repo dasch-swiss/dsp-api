@@ -11,11 +11,9 @@ import zio.*
 import scala.annotation.unused
 
 import org.knora.webapi.core.State
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
-final class ManagementRestService(auth: AuthorizationRestService, state: State, triplestore: TriplestoreService) {
+final class ManagementRestService(state: State, triplestore: TriplestoreService) {
 
   def healthCheck: UIO[(HealthResponse, StatusCode)] =
     state.getAppState.map { s =>
@@ -23,9 +21,8 @@ final class ManagementRestService(auth: AuthorizationRestService, state: State, 
       (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
-  def startCompaction(user: User)(@unused ignored: Unit): Task[(String, StatusCode)] =
-    auth.ensureSystemAdmin(user) *>
-      triplestore.compact().map(success => if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden))
+  def startCompaction(@unused ignored: Unit): Task[(String, StatusCode)] =
+    triplestore.compact().map(success => if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden))
 }
 
 object ManagementRestService {

@@ -31,13 +31,11 @@ final case class MaintenanceRestService(
   private val valueHasXmlBackfillService: ValueHasXmlBackfillService,
 ) {
 
-  def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
-    securityService.ensureSystemAdmin(user) *> {
-      action match {
-        case `fixTopLeftAction`          => executeTopLeftAction(jsonMaybe)
-        case `backfillValueHasXmlAction` => backfillValueHasXml
-        case _                           => ZIO.fail(BadRequestException(s"Unknown action $action"))
-      }
+  def executeMaintenanceAction(action: String, jsonMaybe: Option[Json]): Task[Unit] =
+    action match {
+      case `fixTopLeftAction`          => executeTopLeftAction(jsonMaybe)
+      case `backfillValueHasXmlAction` => backfillValueHasXml
+      case _                           => ZIO.fail(BadRequestException(s"Unknown action $action"))
     }
 
   private def getParamsAs[A](paramsMaybe: Option[Json], actionName: String)(implicit
@@ -60,7 +58,6 @@ final case class MaintenanceRestService(
 
   def replaceUserIri(user: User)(req: ReplaceUserIriRequest): Task[Unit] =
     for {
-      _ <- securityService.ensureSystemAdmin(user)
       _ <- ZIO.when(req.oldIri.isBuiltInUser || req.newIri.isBuiltInUser)(
              ZIO.fail(BadRequestException("Cannot replace built-in user IRIs.")),
            )
@@ -76,7 +73,6 @@ final case class MaintenanceRestService(
   def replaceUserIriInProject(user: User)(input: (Shortcode, ReplaceUserIriRequest)): Task[Unit] =
     val (shortcode, req) = input
     for {
-      _ <- securityService.ensureSystemAdmin(user)
       _ <- ZIO.when(req.oldIri == req.newIri)(
              ZIO.fail(BadRequestException("oldIri and newIri must be different.")),
            )
