@@ -1156,13 +1156,13 @@ final class ResourcesResponderV2(
     resourceHistoryRequest: ResourceVersionHistoryGetRequestV2,
   ): Task[ResourceVersionHistoryResponseV2] =
     for {
-      // Get the resource preview, to make sure the user has permission to see the resource, and to get
-      // its creation date.
+      // Read the preview as the requesting user: a resource they cannot see fails here with
+      // ForbiddenException, before any history is read. The preview also gives the creation date.
       resourcePreviewResponse <- readResources.getResourcePreviewWithDeletedResource(
                                    resourceIris = Seq(resourceHistoryRequest.resourceIri),
                                    withDeleted = resourceHistoryRequest.withDeletedResource,
                                    targetSchema = ApiV2Complex,
-                                   requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                   requestingUser = resourceHistoryRequest.requestingUser,
                                  )
 
       resourcePreview <- resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
@@ -1376,17 +1376,21 @@ final class ResourcesResponderV2(
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIriStr =>
           for {
-            resIri          <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
-            resourceHistory <-
+            resIri <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
+            // Project history omits resources the user cannot see (documented API behaviour). Catch only
+            // around this visibility read: extractEventsFromHistory also fails with ForbiddenException,
+            // for inconsistent data, and that must still fail the request.
+            maybeHistory <-
               getResourceHistoryV2(
                 ResourceVersionHistoryGetRequestV2(
                   resourceIri = resIri,
                   withDeletedResource = true,
                   requestingUser = requestingUser,
                 ),
-              )
-            resourceFullHist <- extractEventsFromHistory(resIri, resourceHistory.history, requestingUser)
-          } yield resourceFullHist
+              ).asSome.catchSome { case _: ForbiddenException => ZIO.none }
+            resourceFullHist <-
+              ZIO.foreach(maybeHistory)(h => extractEventsFromHistory(resIri, h.history, requestingUser))
+          } yield resourceFullHist.getOrElse(Seq.empty)
         }
 
       projectHistory                                         <- ZIO.collectAll(historyOfResourcesAsSeqOfFutures)
@@ -1478,7 +1482,8 @@ final class ResourcesResponderV2(
                                          schemaOptions = Set.empty[Rendering],
                                          requestingUser = requestingUser,
                                        )
-    } yield versionHist -> resourceFullRepAtCreationTime.resources.head
+      resource <- resourceFullRepAtCreationTime.toResource(resourceIri)
+    } yield versionHist -> resource
 
   /**
    * Returns a createResource event as [[ResourceAndValueHistoryEvent]] with request body of the form [[ResourceEventBody]].

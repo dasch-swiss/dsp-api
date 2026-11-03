@@ -24,9 +24,10 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.slice.admin.domain.service.ProjectService
-import org.knora.webapi.slice.common.CreateMappingRequestV2
+import org.knora.webapi.slice.common.NewStandoffMapping
 import org.knora.webapi.slice.common.StandoffMappingElementIri
 import org.knora.webapi.slice.common.StandoffMappingIri
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.resources.repo.CreateNewMappingQuery
 import org.knora.webapi.slice.resources.repo.GetMappingQuery
 import org.knora.webapi.slice.resources.repo.model.MappingElement
@@ -41,7 +42,6 @@ import org.knora.webapi.util.FileUtil
  */
 final class StandoffResponderV2(
   triplestore: TriplestoreService,
-  projectService: ProjectService,
   standoffMappingService: StandoffMappingService,
 )(implicit val stringFormatter: StringFormatter) {
 
@@ -49,24 +49,21 @@ final class StandoffResponderV2(
    * Creates a mapping between XML elements and attributes to standoff classes and properties.
    * The mapping is used to convert XML documents to texts with standoff and back.
    *
-   * @param request the mapping creation request.
+   * @param grant the mapping is named after and written into `grant.project`.
    */
   def createMappingV2(
-    request: CreateMappingRequestV2,
+    grant: ProjectAdminGrant,
+    mapping: NewStandoffMapping,
     uuid: UUID,
   ): Task[CreateMappingResponseV2] = {
+    val projectIri                                           = grant.project.id
     val createMappingAndCheck: Task[CreateMappingResponseV2] = (for {
-      // check if the given project IRI represents an actual project
-      project <- projectService
-                   .findById(request.projectIri)
-                   .someOrFail(BadRequestException(s"Project with Iri ${request.projectIri.toString} does not exist"))
-
       // create the mapping IRI from the project IRI and the name provided by the user
       mappingIri <- ZIO
-                      .fromEither(StandoffMappingIri.from(request.projectIri, request.mappingName))
+                      .fromEither(StandoffMappingIri.from(projectIri, mapping.mappingName))
                       .mapError(BadRequestException.apply)
       // put the mapping into the named graph of the project
-      namedGraph = ProjectService.projectDataNamedGraphV2(project).value
+      namedGraph = ProjectService.projectDataNamedGraphV2(grant.project).value
 
       factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
@@ -80,10 +77,10 @@ final class StandoffResponderV2(
       validator      = schemaInstance.newValidator()
 
       // validate the provided mapping
-      _ = validator.validate(new StreamSource(new StringReader(request.xml)))
+      _ = validator.validate(new StreamSource(new StringReader(mapping.xml)))
 
       // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-      mappingXML = XML.loadString(request.xml)
+      mappingXML = XML.loadString(mapping.xml)
 
       // get the default XSL transformation, if given (optional)
       defaultXSLTransformation <-
@@ -285,7 +282,7 @@ final class StandoffResponderV2(
       createNewMappingQuery = CreateNewMappingQuery.build(
                                 dataNamedGraph = namedGraph,
                                 mappingIri = mappingIri.value,
-                                label = request.label,
+                                label = mapping.label,
                                 defaultXSLTransformation = defaultXSLTransformation,
                                 mappingElements = mappingElements,
                               )
@@ -302,7 +299,7 @@ final class StandoffResponderV2(
 
       // populate the mapping cache by reading it back through the service
       _ <- standoffMappingService.getMappingV2(mappingIri)
-    } yield CreateMappingResponseV2(mappingIri.value, request.label, request.projectIri)).mapError {
+    } yield CreateMappingResponseV2(mappingIri.value, mapping.label, projectIri)).mapError {
       case validationException: SAXException =>
         BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
 
@@ -312,7 +309,7 @@ final class StandoffResponderV2(
         BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
     }
 
-    IriLocker.runWithIriLock(uuid, s"${request.projectIri.value}/mappings")(createMappingAndCheck)
+    IriLocker.runWithIriLock(uuid, s"${projectIri.value}/mappings")(createMappingAndCheck)
   }
 }
 

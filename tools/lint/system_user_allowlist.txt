@@ -1,0 +1,12 @@
+# Main-source files that use SystemUser outside comments (check_authz.py rule 2).
+# One `<path>  # reason` per line. A new entry needs review: reading as SystemUser bypasses object permissions.
+modules/webapi/src/main/scala/org/knora/webapi/messages/util/KnoraSystemInstances.scala  # defines the SystemUser principal
+modules/webapi/src/main/scala/org/knora/webapi/messages/util/PermissionUtilADM.scala  # ChangeRights for SystemUser on built-in values
+modules/webapi/src/main/scala/org/knora/webapi/responders/v2/ValuesResponderV2.scala  # elevated reads; SystemUser as creator of link values
+modules/webapi/src/main/scala/org/knora/webapi/responders/v2/resources/CreateResourceV2Handler.scala  # SystemUser as creator of link values
+modules/webapi/src/main/scala/org/knora/webapi/slice/admin/domain/model/User.scala  # isSystemUser and the built-in user IRIs
+modules/webapi/src/main/scala/org/knora/webapi/slice/admin/domain/service/KnoraUserRepo.scala  # defines the built-in SystemUser
+modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/values/ValuesRestService.scala  # elevated read that compares value IRIs only
+modules/webapi/src/main/scala/org/knora/webapi/slice/ontology/OntologyTransformer.scala  # SystemUser as owner of standoff link values
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ReadResourcesServiceLive.scala  # elevated read of region and image resources
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ValueHasXmlRenderer.scala  # standoff tags built as SystemUser

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.messages.util
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
@@ -22,6 +24,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
@@ -207,6 +210,44 @@ object PermissionUtilADM {
         }
     }
   }
+
+  /**
+   * Fails with a [[ForbiddenException]] carrying `message` if `customPermissions` would give the requesting user a
+   * higher permission than `defaultPermissions`. A SystemAdmin or a ProjectAdmin of `project` may set any permissions.
+   */
+  def ensureWithinDefaultPermissions(
+    project: ProjectIri,
+    customPermissions: String,
+    defaultPermissions: String,
+    requestingUser: User,
+    message: String,
+  ): IO[ForbiddenException, Unit] =
+    ensureWithinDefaultPermissions(
+      project,
+      customPermissions,
+      defaultPermissions,
+      requestingUser,
+      message,
+      comparePermissionsADM,
+    )
+
+  // `compare` is replaceable for tests only: the real comparison gives a SystemAdmin the maximum on both sides, so
+  // it alone cannot show that the exemption covers a SystemAdmin.
+  private[util] def ensureWithinDefaultPermissions(
+    project: ProjectIri,
+    customPermissions: String,
+    defaultPermissions: String,
+    requestingUser: User,
+    message: String,
+    compare: (IRI, String, String, User) => PermissionComparisonResult,
+  ): IO[ForbiddenException, Unit] =
+    ZIO
+      .fail(ForbiddenException(message))
+      .when(
+        !(requestingUser.isSystemAdmin || requestingUser.isProjectAdmin(project)) &&
+          compare(project.value, customPermissions, defaultPermissions, requestingUser) == AGreaterThanB,
+      )
+      .unit
 
   /**
    * Given data from a [[org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,

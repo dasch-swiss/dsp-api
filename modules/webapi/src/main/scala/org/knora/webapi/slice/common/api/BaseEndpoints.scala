@@ -52,6 +52,7 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       ),
     )
 
+  /** Declares no [[Policy]]; a new endpoint uses [[publicPolicyEndpoint]]. */
   val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
     RequiresMethod(endpoint.errorOut(errorOutputs), _.method(_))
 
@@ -61,23 +62,81 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
     .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
 
+  private def authenticateOrFail(credentials: SecurityIn): IO[BadCredentialsException, User] = credentials match {
+    case (Some(jwtToken), _) => authenticateJwt(jwtToken)
+    case (_, Some(basic))    => authenticateBasic(basic)
+    case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
+  }
+
+  private def authenticateOrAnonymous(credentials: SecurityIn): IO[BadCredentialsException, User] = credentials match {
+    case (Some(bearer), _) => authenticateJwt(bearer)
+    case (_, Some(basic))  => authenticateBasic(basic)
+    case _                 => ZIO.succeed(AnonymousUser)
+  }
+
+  /** Declares no [[Policy]]; a new endpoint uses one of the policy-declaring factories below. */
   val securedEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(endpointWithBearerBasicAuthOptional.zServerSecurityLogic(authenticateOrFail), _.method(_))
+
+  /** Declares no [[Policy]]; a new endpoint uses one of the policy-declaring factories below. */
+  val withUserEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(endpointWithBearerBasicAuthOptional.zServerSecurityLogic(authenticateOrAnonymous), _.method(_))
+
+  /*
+   * The policy-declaring factories (ADR-0013). Each sets `Policy.key` on the endpoint it hands out; a slice must not
+   * set it again. A factory that decides its policy does so in the security logic, before the body is decoded.
+   */
+
+  /** Declares [[Policy.Public]]; reads no credentials. */
+  def publicPolicyEndpoint(reason: String): RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
+    RequiresMethod(endpoint.errorOut(errorOutputs).attribute(Policy.key, Policy.Public(reason)), _.method(_))
+
+  /** Declares and enforces [[Policy.Authenticated]]: an active, non-anonymous user. */
+  def authenticatedPolicyEndpoint(
+    reason: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(Policy.Authenticated(reason), user => authorization.ensureUserIsNotAnonymous(user).as(user))
+
+  /** Declares and enforces [[Policy.SystemAdmin]]: an active system administrator. */
+  val systemAdminPolicyEndpoint
+    : RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(Policy.SystemAdmin, user => authorization.ensureSystemAdmin(user).as(user))
+
+  /**
+   * Declares [[Policy.ProjectAdmin]]. The security logic refuses anonymous and inactive users; the project is only
+   * known after decoding, so the handler gets a [[ProjectCandidate]] and must obtain a [[ProjectAdminGrant]] from
+   * [[AuthorizationRestService.authorizeProjectAdminById]] before it can act.
+   */
+  def projectAdminPolicyEndpoint(
+    projectFrom: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, ProjectCandidate, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(
+      Policy.ProjectAdmin(projectFrom),
+      user => authorization.ensureUserIsNotAnonymous(user).as(new ProjectCandidate(user)),
+    )
+
+  /**
+   * Declares [[Policy.ObjectAccess]]; anonymous callers are admitted, the owning domain checks the object. Inactive
+   * users are refused by authentication only.
+   */
+  def objectAccessPolicyEndpoint(
+    enforcedIn: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     RequiresMethod(
-      endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
-        case (Some(jwtToken), _) => authenticateJwt(jwtToken)
-        case (_, Some(basic))    => authenticateBasic(basic)
-        case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
-      },
+      endpointWithBearerBasicAuthOptional
+        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn))
+        .zServerSecurityLogic(authenticateOrAnonymous),
       _.method(_),
     )
 
-  val withUserEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+  private def authorizingEndpoint[P](
+    policy: Policy,
+    authorize: User => IO[ForbiddenException, P],
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, P, Unit, Throwable, Unit, Any]] =
     RequiresMethod(
-      endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
-        case (Some(bearer), _) => authenticateJwt(bearer)
-        case (_, Some(basic))  => authenticateBasic(basic)
-        case _                 => ZIO.succeed(AnonymousUser)
-      },
+      endpointWithBearerBasicAuthOptional
+        .attribute(Policy.key, policy)
+        .zServerSecurityLogic(credentials => authenticateOrFail(credentials).flatMap(authorize)),
       _.method(_),
     )
 
@@ -86,6 +145,8 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * endpoint here) no cookie -- and that authorizes the caller as a SystemAdmin **in the security logic**. Use it for a
    * route where accepting basic credentials would be a liability rather than a convenience, and where an unauthorized
    * caller must not be able to cause work.
+   *
+   * Declares no [[Policy]]; use [[systemAdminPolicyEndpoint]] unless bearer-only is required.
    *
    * Both narrowings turn on the same framework ordering: an endpoint's security logic is evaluated before its request
    * body is decoded, and its server logic only afterwards.

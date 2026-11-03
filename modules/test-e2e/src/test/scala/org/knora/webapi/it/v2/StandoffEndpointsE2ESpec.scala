@@ -10,6 +10,7 @@ import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import sttp.client4.*
+import sttp.model.StatusCode
 import zio.*
 import zio.json.*
 import zio.json.ast.*
@@ -30,8 +31,12 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestDspIngestClient
@@ -70,15 +75,11 @@ class StandoffEndpointsE2ESpec extends E2EZSpec {
     ),
   )
 
-  private def createMapping(
-    mappingName: String,
-    label: String,
-    xmlFile: Path,
-  ): ZIO[TestApiClient, Nothing, JsonLDDocument] = {
+  private def mappingBody(mappingName: String, label: String, xmlFile: Path, projectIri: ProjectIri) = {
     val json = Json
       .Obj(
         ("knora-api:mappingHasName", Json.Str(mappingName)),
-        ("knora-api:attachedToProject", Json.Obj("@id", Json.Str(anythingProjectIri.value))),
+        ("knora-api:attachedToProject", Json.Obj("@id", Json.Str(projectIri.value))),
         ("rdfs:label", Json.Str(label)),
         (
           "@context",
@@ -88,15 +89,43 @@ class StandoffEndpointsE2ESpec extends E2EZSpec {
           ),
         ),
       )
-    val body = Seq(
+    Seq(
       multipart("json", json.toString()).contentType("application/json"),
       multipartFile("xml", xmlFile).contentType("text/xml(UTF-8)"),
     )
-    for {
-      response <- TestApiClient.postMultiPart[Json](uri"/v2/mapping", body, anythingUser1).orDie
-      jsonLd   <- response.assert200.map(_.toString).mapAttempt(JsonLDUtil.parseJsonLD).orDie
-    } yield jsonLd
   }
+
+  private def postMapping(mappingName: String, user: User, projectIri: ProjectIri = anythingProjectIri) =
+    TestApiClient.postMultiPart[Json](
+      uri"/v2/mapping",
+      mappingBody(mappingName, "label", Paths.get(pathToLetterMapping), projectIri),
+      user,
+    )
+
+  private def createMapping(
+    mappingName: String,
+    label: String,
+    xmlFile: Path,
+  ): ZIO[TestApiClient, Nothing, JsonLDDocument] =
+    for {
+      response <- TestApiClient
+                    .postMultiPart[Json](
+                      uri"/v2/mapping",
+                      mappingBody(mappingName, label, xmlFile, anythingProjectIri),
+                      anythingAdminUser,
+                    )
+                    .orDie
+      jsonLd <- response.assert200.map(_.toString).mapAttempt(JsonLDUtil.parseJsonLD).orDie
+    } yield jsonLd
+
+  // Denied requests use this name; the project admin creates it last, which fails if a denied request wrote it.
+  private val deniedMappingName = "DeniedMapping"
+
+  private def mappingExists(mappingName: String) =
+    ZIO
+      .fromEither(StandoffMappingIri.from(anythingProjectIri, mappingName))
+      .mapError(Exception(_))
+      .flatMap(iri => ZIO.serviceWithZIO[IriService](_.checkIriExists(iri.value)))
 
   private def createResourceWithTextValue(
     xmlContent: String,
@@ -137,6 +166,51 @@ class StandoffEndpointsE2ESpec extends E2EZSpec {
     TestApiClient.getJsonLdDocument(uri"/v2/resources/$iri", anythingUser1).flatMap(_.assert200)
 
   override val e2eSpec: Spec[env, Any] = suite("The Standoff v2 Endpoint")(
+    suite("authorization of POST /v2/mapping")(
+      test("reject an anonymous user and write no mapping") {
+        for {
+          response <- TestApiClient.postMultiPart[Json](
+                        uri"/v2/mapping",
+                        mappingBody(deniedMappingName, "label", Paths.get(pathToLetterMapping), anythingProjectIri),
+                      )
+          exists <- mappingExists(deniedMappingName)
+        } yield assertTrue(response.code == StatusCode.Unauthorized, !exists)
+      },
+      test("return forbidden for a user without a project and write no mapping") {
+        for {
+          response <- postMapping(deniedMappingName, normalUser)
+          exists   <- mappingExists(deniedMappingName)
+        } yield assertTrue(response.code == StatusCode.Forbidden, !exists)
+      },
+      test("return forbidden for a project member who is not project admin and write no mapping") {
+        for {
+          response <- postMapping(deniedMappingName, anythingUser1)
+          exists   <- mappingExists(deniedMappingName)
+        } yield assertTrue(response.code == StatusCode.Forbidden, !exists)
+      },
+      test("return forbidden for the project admin of another project and write no mapping") {
+        for {
+          response <- postMapping(deniedMappingName, incunabulaProjectAdminUser)
+          exists   <- mappingExists(deniedMappingName)
+        } yield assertTrue(response.code == StatusCode.Forbidden, !exists)
+      },
+      test("reject a body naming a non-existent project with 403") {
+        postMapping("UnknownProjectMapping", anythingAdminUser, ProjectIri.makeNew)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+      test("create a mapping as project admin") {
+        for {
+          _      <- postMapping(deniedMappingName, anythingAdminUser).flatMap(_.assert200)
+          exists <- mappingExists(deniedMappingName)
+        } yield assertTrue(exists)
+      },
+      test("create a mapping as system admin") {
+        for {
+          _      <- postMapping("SystemAdminMapping", rootUser).flatMap(_.assert200)
+          exists <- mappingExists("SystemAdminMapping")
+        } yield assertTrue(exists)
+      },
+    ),
     test("create a text value with standard mapping") {
       for {
         xmlContent <- ZIO.attempt(FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping)))

@@ -27,6 +27,7 @@ import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.aThingWithHistoryIri
+import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.hiddenThingIri
 import org.knora.webapi.e2e.v2.ResourcesRouteV2E2ESpec.reiseInsHeiligeLandIri
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.*
 import org.knora.webapi.messages.IriConversions.*
@@ -39,11 +40,13 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert403
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.testservices.TestResourcesApiClient
@@ -108,6 +111,23 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
        |}""".stripMargin
 
   private def readFile(fileName: String) = TestDataFileUtil.readTestData("resourcesR2RV2", fileName)
+
+  private def projectHistoryResourceIris(user: Option[User]) =
+    for {
+      body <- TestApiClient
+                .getJsonLd(uri"/v2/resources/projectHistoryEvents/$anythingProjectIri", user, identity)
+                .flatMap(_.assert200)
+      events <- ZIO.fromEither(JsonLDUtil.parseJsonLD(body).body.getRequiredArray(JsonLDKeywords.GRAPH))
+      iris   <- ZIO.foreach(events.value) {
+                case event: JsonLDObject =>
+                  ZIO.fromEither(
+                    event
+                      .getRequiredObject(KnoraApiV2Complex.EventBody)
+                      .flatMap(_.getString(KnoraApiV2Complex.ResourceIri)),
+                  )
+                case other => ZIO.fail(s"Expected JsonLDObject, got $other")
+              }
+    } yield iris.flatten.toSet
 
   private def createResourceReqPayload() =
     createResourceWithCustomIRI("http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid)
@@ -251,6 +271,47 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
                .flatMap(_.assert200)
       } yield assertCompletes
     },
+    suite("history of a resource the caller cannot see")(
+      test("anonymous, normalUser and anythingUser1 get 403 for the resource history") {
+        val uri = uri"/v2/resources/history/$hiddenThingIri"
+        for {
+          _ <- TestApiClient.getJsonLd(uri).flatMap(_.assert403)
+          _ <- TestApiClient.getJsonLd(uri, normalUser).flatMap(_.assert403)
+          _ <- TestApiClient.getJsonLd(uri, anythingUser1).flatMap(_.assert403)
+        } yield assertCompletes
+      },
+      test("anythingUser1 gets 403 for the resource history events") {
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/resourceHistoryEvents/$hiddenThingIri", anythingUser1)
+          .flatMap(_.assert403)
+          .as(assertCompletes)
+      },
+      test("its creator anythingUser2 gets 200 for the resource history") {
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/history/$hiddenThingIri", anythingUser2)
+          .flatMap(_.assert200)
+          .as(assertCompletes)
+      },
+      test("a non-existent resource answers 404") {
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/history/${"http://rdfh.ch/0001/does-not-exist"}", anythingUser1)
+          .flatMap(_.assert404)
+          .as(assertCompletes)
+      },
+      test("project history answers 200 and omits the resource for anythingUser1 and anonymous") {
+        for {
+          asMember    <- projectHistoryResourceIris(Some(anythingUser1))
+          asAnonymous <- projectHistoryResourceIris(None)
+          asCreator   <- projectHistoryResourceIris(Some(anythingUser2))
+        } yield assertTrue(
+          asCreator.contains(hiddenThingIri.value),
+          asMember.nonEmpty,
+          !asMember.contains(hiddenThingIri.value),
+          asAnonymous.nonEmpty,
+          !asAnonymous.contains(hiddenThingIri.value),
+        )
+      },
+    ),
     test("return a graph of resources reachable via links from/to a given resource") {
       val resourceIri = "http://rdfh.ch/0001/start"
       for {
@@ -656,6 +717,15 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
       for {
         _ <- TestApiClient.postJsonLd(uri"/v2/resources", jsonLDEntity, anythingUser1).flatMap(_.assert400)
       } yield assertCompletes
+    },
+    test("not create a resource as an anonymous user") {
+      val customIRI: IRI = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+      for {
+        error <- TestApiClient
+                   .postJsonLdDocument(uri"/v2/resources", createResourceWithCustomIRI(customIRI))
+                   .flatMap(_.assert403)
+        _ <- TestApiClient.getJsonLd(uri"/v2/resources/$customIRI", anythingAdminUser).flatMap(_.assert404)
+      } yield assertTrue(error.contains("Anonymous users aren't allowed to create resources"))
     },
     test("return a DuplicateValueException during resource creation when the supplied resource IRI is not unique") {
       // duplicate resource IRI
@@ -1618,4 +1688,6 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
 object ResourcesRouteV2E2ESpec {
   val aThingWithHistoryIri: ResourceIri   = ResourceIri.unsafeFrom("http://rdfh.ch/0001/thing-with-history")
   val reiseInsHeiligeLandIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0803/2a6221216701")
+  // Readable only by its creator, anythingUser2 (`V knora-admin:Creator`).
+  val hiddenThingIri: ResourceIri = ResourceIri.unsafeFrom("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ")
 }

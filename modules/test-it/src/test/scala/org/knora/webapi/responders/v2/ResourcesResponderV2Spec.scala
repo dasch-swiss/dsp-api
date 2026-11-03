@@ -1952,6 +1952,22 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
         resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, imagesUser01, randomUUID)))
           .as(assertCompletes)
       },
+      suite("let an admin set custom resource permissions above the defaults")(
+        List(("a system admin", rootUser), ("a project admin", anythingAdminUser)).map { case (role, user) =>
+          test(role) {
+            val inputResource = CreateResourceV2(
+              resourceIri = Some(ResourceIri.makeNew(anythingProject.shortcode)),
+              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+              label = s"thing with custom permissions by $role",
+              values = Map.empty,
+              projectADM = anythingProject,
+              permissions = Some("CR knora-admin:ProjectMember"),
+            )
+            resourceResponder(_.createResource(CreateResourceRequestV2(inputResource, user, randomUUID)))
+              .as(assertCompletes)
+          }
+        },
+      ),
       test(
         "not accept custom value permissions that would give the requesting user a higher permission on a value than the default",
       ) {

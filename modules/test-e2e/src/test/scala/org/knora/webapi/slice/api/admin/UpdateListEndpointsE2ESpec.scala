@@ -312,6 +312,20 @@ class UpdateListEndpointsE2ESpec extends E2EZSpec {
             ),
           )
       },
+      test("return a BadRequestException if the body projectIri is not the list's project") {
+        val changeReq = ListChangeRequest(
+          listIri = treeListInfoIri,
+          projectIri = imagesProjectIri,
+          labels = Some(Labels.unsafeFrom(Seq(StringLiteralV2.from("Changed in another project", EN)))),
+        )
+        TestApiClient
+          .putJson[RootNodeInfoGetResponseADM, ListChangeRequest](
+            uri"/admin/lists/$treeListInfoIri",
+            changeReq,
+            rootUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
       test("return a ForbiddenException if the user updating the list is not project or system admin") {
         val changeReq = ListChangeRequest(
           listIri = treeListInfoIri,

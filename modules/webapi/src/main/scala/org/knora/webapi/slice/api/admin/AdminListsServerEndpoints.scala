@@ -8,10 +8,6 @@ package org.knora.webapi.slice.api.admin
 import sttp.tapir.ztapir.*
 import zio.*
 
-import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.api.admin.Requests.*
-
 final class AdminListsServerEndpoints(
   adminListsEndpoints: AdminListsEndpoints,
   restService: AdminListRestService,

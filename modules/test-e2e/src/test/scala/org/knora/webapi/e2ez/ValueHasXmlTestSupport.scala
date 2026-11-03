@@ -167,7 +167,7 @@ object ValueHasXmlTestSupport {
       multipartFile("xml", mappingFile).contentType("text/xml(UTF-8)"),
     )
     TestApiClient
-      .postMultiPart[Json](uri"/v2/mapping", body, anythingUser1)
+      .postMultiPart[Json](uri"/v2/mapping", body, anythingAdminUser)
       .flatMap(_.assert200)
       .as(StandoffMappingIri.unsafeFrom(s"$projectIri/mappings/$mappingName"))
   }

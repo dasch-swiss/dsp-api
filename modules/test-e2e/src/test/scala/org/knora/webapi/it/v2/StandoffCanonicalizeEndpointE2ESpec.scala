@@ -146,7 +146,7 @@ class StandoffCanonicalizeEndpointE2ESpec extends E2EZSpec {
       for {
         input    <- ZIO.attempt(FileUtil.readTextFile(Paths.get(standardHtmlPath)))
         response <- TestApiClient.postString(canonicalizeUri, input, xmlMediaType)
-      } yield assertTrue(response.code == StatusCode.Forbidden)
+      } yield assertTrue(response.code == StatusCode.Unauthorized)
     },
     test("does not resolve external XML entities (XXE)") {
       // A DOCTYPE with an external SYSTEM entity must be rejected outright, never resolved/inlined.

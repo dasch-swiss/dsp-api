@@ -31,10 +31,9 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListName
 import org.knora.webapi.slice.admin.domain.model.ListProperties.Position
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.Requests.*
-import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resources.repo.AskListNameInProjectExistsQuery
 import org.knora.webapi.slice.resources.repo.ChangeParentNodeQuery
@@ -54,7 +53,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class ListsResponder(
-  auth: AuthorizationRestService,
   iriService: IriService,
   projectService: KnoraProjectService,
   mapper: PredicateObjectMapper,
@@ -538,17 +536,18 @@ final case class ListsResponder(
    * Creates a node (root or child).
    *
    * @param createNodeRequest    the new node's information.
+   * @param project              the project the node is created in.
    * @return a [newListNodeIri]
    */
-  private def createNode(createNodeRequest: ListCreateRequest): Task[ListIri] = {
+  private def createNode(createNodeRequest: ListCreateRequest, project: KnoraProject): Task[ListIri] = {
     val parentNode: Option[ListIri] = createNodeRequest match {
       case _: ListCreateRootNodeRequest      => None
       case child: ListCreateChildNodeRequest => Some(child.parentNodeIri)
     }
 
-    val (id, projectIri, name, position) = createNodeRequest match {
-      case root: ListCreateRootNodeRequest   => (root.id, root.projectIri, root.name, None)
-      case child: ListCreateChildNodeRequest => (child.id, child.projectIri, child.name, child.position)
+    val (id, name, position) = createNodeRequest match {
+      case root: ListCreateRootNodeRequest   => (root.id, root.name, None)
+      case child: ListCreateChildNodeRequest => (child.id, child.name, child.position)
     }
 
     def getRootNodeIri(parentListNode: ListNodeADM): ListIri =
@@ -579,11 +578,6 @@ final case class ListsResponder(
       } yield (Some(position), Some(getRootNodeIri(parentListNode)))
 
     for {
-      /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      project <- projectService
-                   .findById(projectIri)
-                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-
       /* verify that the list node name is unique for the project */
       _ <- name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
@@ -631,11 +625,16 @@ final case class ListsResponder(
    * Creates a list.
    *
    * @param req    the new list's information.
+   * @param grant  the grant for the project the list is created in.
    * @param apiRequestID         the unique api request ID.
    * @return a [[ListGetResponseADM]]
    */
-  def listCreateRootNode(req: ListCreateRootNodeRequest, apiRequestID: UUID): Task[ListGetResponseADM] = {
-    val createTask = createNode(req).flatMap { createdIri =>
+  def listCreateRootNode(
+    req: ListCreateRootNodeRequest,
+    grant: ProjectAdminGrant,
+    apiRequestID: UUID,
+  ): Task[ListGetResponseADM] = {
+    val createTask = createNode(req, grant.project).flatMap { createdIri =>
       val errMsg = s"List $createdIri was not created. Please report this as a possible bug."
       listGetADM(createdIri)
         .someOrFail(UpdateNotPerformedException(errMsg))
@@ -647,23 +646,24 @@ final case class ListsResponder(
   /**
    * Changes basic node information stored (root or child)
    *
-   * @param request    the new node information.
+   * @param request    the new node information; the node is changed in `grant.project`, not in `request.projectIri`.
+   * @param grant      the grant for the node's project.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * fails with a ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * fails with a ForbiddenException          in the case that the node does not belong to the grant's project.
    * fails with a UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
    */
   def nodeInfoChangeRequest(
     request: ListChangeRequest,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] = IriLocker.runWithIriLock(apiRequestID, request.listIri)(for {
     /* Verify that the node with Iri exists. */
     _ <- listNodeGetADM(request.listIri, shallow = true)
            .someOrFail(BadRequestException(s"List item with '${request.listIri}' not found."))
-    project <- projectService
-                 .findById(request.projectIri)
-                 .someOrFail(NotFoundException.notFound(request.projectIri))
-    _ <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
+    _      <- ensureNodeBelongsToGrant(request.listIri, grant)
+    project = grant.project
+    _      <- request.name.map(ensureListNameInProjectDoesNotExist(_, project)).getOrElse(ZIO.unit)
 
     // Update the list
     update = Update(
@@ -688,11 +688,13 @@ final case class ListsResponder(
    * Creates a new child node and appends it to an existing list node.
    *
    * @param req the new list node's information.
+   * @param grant the grant for the parent node's project.
    * @param apiRequestID           the unique api request ID.
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
   def listCreateChildNode(
     req: ListCreateChildNodeRequest,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[ChildNodeInfoGetResponseADM] = {
 
@@ -703,7 +705,8 @@ final case class ListsResponder(
       createChildNodeRequest: ListCreateChildNodeRequest,
     ): Task[ChildNodeInfoGetResponseADM] =
       for {
-        newListNodeIri <- createNode(createChildNodeRequest)
+        _              <- ensureNodeBelongsToGrant(createChildNodeRequest.parentNodeIri, grant)
+        newListNodeIri <- createNode(createChildNodeRequest, grant.project)
         // Verify that the list node was created.
         maybeNewListNode <- listNodeInfoGetADM(newListNodeIri)
         newListNode      <- maybeNewListNode match {
@@ -729,98 +732,101 @@ final case class ListsResponder(
     )
   }
 
-  private def ensureUserIsAdminOrProjectOwner(listIri: ListIri, user: User): Task[KnoraProject] =
-    getProjectFromNode(listIri).tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+  /**
+   * Fails with a [[ForbiddenException]] if the node belongs to another project than the grant. A grant obtained for
+   * one project must not let its holder write into another project's list.
+   */
+  private def ensureNodeBelongsToGrant(nodeIri: ListIri, grant: ProjectAdminGrant): Task[Unit] =
+    getProjectIriFromNode(nodeIri)
+      .filterOrFail(_ == grant.project.id)(
+        ForbiddenException(s"List node ${nodeIri.value} does not belong to project ${grant.project.id.value}."),
+      )
+      .unit
 
   /**
    * Changes name of the node (root or child)
    *
    * @param listIri               the node's IRI.
    * @param changeNameReq         the new node name.
+   * @param grant                 the grant for the node's project.
    * @param apiRequestID          the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *        Fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *        Fails with a [[ForbiddenException]] in the case that the node does not belong to the grant's project.
    *        Fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
   def nodeNameChangeRequest(
     listIri: ListIri,
     changeNameReq: ListChangeNameRequest,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] =
-    IriLocker.runWithIriLock(apiRequestID, listIri.value)(for {
-      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      updated <- nodeInfoChangeRequest(
-                   ListChangeRequest(listIri, project.id, name = Some(changeNameReq.name)),
-                   apiRequestID,
-                 )
-    } yield updated)
+    nodeInfoChangeRequest(
+      ListChangeRequest(listIri, grant.project.id, name = Some(changeNameReq.name)),
+      grant,
+      apiRequestID,
+    )
 
   /**
    * Changes labels of the node (root or child)
    *
    * @param listIri                 the node's IRI.
    * @param changeNodeLabelsRequest the new node labels.
-   * @param requestingUser          the requesting user.
+   * @param grant                   the grant for the node's project.
    * @param apiRequestID            the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *         fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *         fails with a [[ForbiddenException]] in the case that the node does not belong to the grant's project.
    *         fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
   def nodeLabelsChangeRequest(
     listIri: ListIri,
     changeNodeLabelsRequest: ListChangeLabelsRequest,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] =
-    IriLocker.runWithIriLock(apiRequestID, listIri)(for {
-      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      updated <- nodeInfoChangeRequest(
-                   ListChangeRequest(listIri, project.id, labels = Some(changeNodeLabelsRequest.labels)),
-                   apiRequestID,
-                 )
-    } yield updated)
+    nodeInfoChangeRequest(
+      ListChangeRequest(listIri, grant.project.id, labels = Some(changeNodeLabelsRequest.labels)),
+      grant,
+      apiRequestID,
+    )
 
   /**
    * Changes comments of the node (root or child)
    *
    * @param listIri                   the node's IRI.
    * @param changeNodeCommentsRequest the new node comments.
-   * @param requestingUser            the requesting user.
+   * @param grant                     the grant for the node's project.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   *           fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *           fails with a [[ForbiddenException]] in the case that the node does not belong to the grant's project.
    *           fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
   def nodeCommentsChangeRequest(
     listIri: ListIri,
     changeNodeCommentsRequest: ListChangeCommentsRequest,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[NodeInfoGetResponseADM] =
-    IriLocker.runWithIriLock(apiRequestID, listIri)(for {
-      project <- ensureUserIsAdminOrProjectOwner(listIri, requestingUser)
-      updated <- nodeInfoChangeRequest(
-                   ListChangeRequest(listIri, project.id, comments = Some(changeNodeCommentsRequest.comments)),
-                   apiRequestID,
-                 )
-    } yield updated)
+    nodeInfoChangeRequest(
+      ListChangeRequest(listIri, grant.project.id, comments = Some(changeNodeCommentsRequest.comments)),
+      grant,
+      apiRequestID,
+    )
 
   /**
    * Changes position of the node
    *
    * @param nodeIri                   the node's IRI.
    * @param changeNodePositionRequest the new node comments.
-   * @param requestingUser            the requesting user.
+   * @param grant                     the grant for the node's project.
    * @param apiRequestID              the unique api request ID.
    * @return a [[NodePositionChangeResponseADM]]
-   *         Fails with a [[ForbiddenException]] in the case that the user is not allowed to perform the operation.
+   *         Fails with a [[ForbiddenException]] in the case that the node does not belong to the grant's project.
    *         Fails with a [[UpdateNotPerformedException]] in the case something else went wrong, and the change could not be performed.
    */
   def nodePositionChangeRequest(
     nodeIri: ListIri,
     changeNodePositionRequest: ListChangePositionRequest,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[NodePositionChangeResponseADM] = {
 
@@ -1004,7 +1010,9 @@ final case class ListsResponder(
 
     val updateTask =
       for {
-        project <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
+        _      <- ensureNodeBelongsToGrant(nodeIri, grant)
+        _      <- ensureNodeBelongsToGrant(changeNodePositionRequest.parentNodeIri, grant)
+        project = grant.project
         // get node in its current position
         node <- listNodeGetADM(nodeIri, shallow = true)
                   .map(_.collect { case child: ListChildNodeADM => child })
@@ -1044,9 +1052,15 @@ final case class ListsResponder(
 
   /**
    * Deletes all comments from requested list node (only child).
+   * Fails with a [[ForbiddenException]] in the case that the node does not belong to the grant's project.
    */
-  def deleteListNodeCommentsADM(nodeIri: ListIri): Task[ListNodeCommentsDeleteResponseADM] =
-    for {
+  def deleteListNodeCommentsADM(
+    nodeIri: ListIri,
+    grant: ProjectAdminGrant,
+    apiRequestID: UUID,
+  ): Task[ListNodeCommentsDeleteResponseADM] =
+    IriLocker.runWithIriLock(apiRequestID, nodeIri.value)(for {
+      _    <- ensureNodeBelongsToGrant(nodeIri, grant)
       node <- listNodeInfoGetADM(nodeIri).someOrFail(NotFoundException(s"Node $nodeIri not found."))
       _    <- ZIO
              .fail(BadRequestException("Root node comments cannot be deleted."))
@@ -1054,24 +1068,23 @@ final case class ListsResponder(
       _ <- ZIO
              .fail(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
              .when(!node.hasComments)
-      project <- getProjectFromNode(nodeIri)
-      _       <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, project))
-    } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true)
+      _ <- triplestore.query(DeleteListNodeCommentsQuery.build(nodeIri, grant.project))
+    } yield ListNodeCommentsDeleteResponseADM(nodeIri.value, commentsDeleted = true))
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
    * delete the list and return a confirmation message.
    *
    * @param nodeIri              the node's IRI.
-   * @param requestingUser       the requesting user.
+   * @param grant                the grant for the node's project.
    * @param apiRequestID         the unique api request ID.
    * @return a [[NodeInfoGetResponseADM]]
-   * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+   * @throws ForbiddenException          in the case that the node does not belong to the grant's project.
    * @throws UpdateNotPerformedException in the case the node is in use and cannot be deleted.
    */
   def deleteListItemRequestADM(
     nodeIri: ListIri,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
     apiRequestID: UUID,
   ): Task[ListItemDeleteResponseADM] = {
 
@@ -1166,7 +1179,8 @@ final case class ListsResponder(
       } yield updatedParentNode
 
     val nodeDeleteTask = for {
-      project   <- ensureUserIsAdminOrProjectOwner(nodeIri, requestingUser)
+      _         <- ensureNodeBelongsToGrant(nodeIri, grant)
+      project    = grant.project
       maybeNode <- listNodeGetADM(nodeIri, shallow = false)
 
       response <- maybeNode match {
@@ -1233,12 +1247,13 @@ final case class ListsResponder(
       .unit
 
   /**
-   * Helper method to get projectIri of a node.
+   * The IRI of the project a list node belongs to. A missing node fails with a [[BadRequestException]], so callers that
+   * authorize against this project answer 400 for a missing node before they answer 403.
    *
    * @param nodeIri              the IRI of the node.
-   * @return a [[KnoraProject]].
+   * @return the node's [[ProjectIri]].
    */
-  private def getProjectFromNode(nodeIri: ListIri): Task[KnoraProject] =
+  def getProjectIriFromNode(nodeIri: ListIri): Task[ProjectIri] =
     for {
       maybeNode <- listNodeGetADM(nodeIri, shallow = true)
 
@@ -1261,9 +1276,7 @@ final case class ListsResponder(
                            ZIO.fail(BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI."))
                        }
       projectIri <- ZIO.fromEither(ProjectIri.from(projectIriStr)).mapError(BadRequestException.apply)
-      project    <-
-        projectService.findById(projectIri).someOrFail(BadRequestException(s"Project '$projectIri' not found."))
-    } yield project
+    } yield projectIri
 
   /**
    * Helper method to get parent of a node.

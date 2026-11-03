@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets
 
 import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final case class CreateStandoffMappingForm(json: String, xml: String)
 object CreateStandoffMappingForm {
@@ -23,20 +24,28 @@ final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base: EndpointInput[Unit] = "v2" / "mapping"
 
-  val postMapping = baseEndpoints.withUserEndpoint.post
+  private val bodyProjectIri = "body projectIri"
+  val postMapping            = baseEndpoints
+    .projectAdminPolicyEndpoint(bodyProjectIri)
+    .post
     .in(base)
     .in(multipartBody[CreateStandoffMappingForm])
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a standoff mapping for XML to standoff conversion. Requires authentication.")
+    .description(
+      s"Create a standoff mapping for XML to standoff conversion. ${Policy.ProjectAdmin(bodyProjectIri).requirement}",
+    )
 
   // The response media type of the canonicalize endpoint.
   private case object XmlCodecFormat extends CodecFormat {
     override val mediaType: MediaType = MediaType("application", "xml")
   }
 
-  val postCanonicalize = baseEndpoints.withUserEndpoint.post
+  private val readsNoProjectData = "reads no project data"
+  val postCanonicalize           = baseEndpoints
+    .authenticatedPolicyEndpoint(readsNoProjectData)
+    .post
     .in("v2" / "standoff" / "canonicalize")
     .in(stringBody.description("The rich-text XML to canonicalize, interpreted with the standard standoff mapping."))
     .out(
@@ -51,7 +60,7 @@ final class StandoffEndpoints(baseEndpoints: BaseEndpoints) {
         "canonical form of its own source against the `textValueAsXml` of a stored value to decide whether a " +
         "rich-text value has actually changed. (Raw input is only isomorphic to what dsp-api stores, not " +
         "byte-identical, which makes a direct string comparison unreliable.) Only the standard mapping is " +
-        "supported. Requires authentication.",
+        s"supported. ${Policy.Authenticated(readsNoProjectData).requirement}",
     )
 }
 

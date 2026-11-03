@@ -54,7 +54,10 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.iiif.api.SipiService
 
-case class CreateMappingRequestV2(label: String, projectIri: ProjectIri, mappingName: String, xml: String)
+/** A mapping to create; it names no project, the caller's grant decides where it goes. */
+final case class NewStandoffMapping(label: String, mappingName: String, xml: String)
+
+case class CreateMappingRequestV2(projectIri: ProjectIri, mapping: NewStandoffMapping)
 
 final case class ApiComplexV2JsonLdRequestParser(
   converter: IriConverter,
@@ -683,7 +686,7 @@ final case class ApiComplexV2JsonLdRequestParser(
         label       <- findSingle(m, RDFS.label, _.objectString)
         projectIri  <- findSingle(m, KA.AttachedToProject, r => r.objectUri(_, ProjectIri.from))
         mappingName <- findSingle(m, KA.MappingHasName, _.objectString)
-      } yield CreateMappingRequestV2(label, projectIri, mappingName, form.xml)
+      } yield CreateMappingRequestV2(projectIri, NewStandoffMapping(label, mappingName, form.xml))
     }
 }
 

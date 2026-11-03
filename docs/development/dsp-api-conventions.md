@@ -97,19 +97,25 @@ StringValueCompanion.absoluteUri
 
 ### 1. Endpoints (definitions only)
 
+The example shows the target shape. The real groups endpoints predate the policy factories and are still in the
+endpoint baseline.
+
 ```scala
 final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
   private val base = "admin" / "groups"
 
-  val getGroups = baseEndpoints.publicEndpoint.get
+  val getGroups = baseEndpoints.publicPolicyEndpoint("group names and descriptions are public").get
     .in(base)
     .out(jsonBody[GroupsGetResponseADM].example(Examples.groupsResponse))
-    .description("Return all groups.")
+    .description("Return all groups. Does not require authentication.")
 
-  val postGroup = baseEndpoints.securedEndpoint.post
+  val postGroup = baseEndpoints.projectAdminPolicyEndpoint("body project").post
     .in(base)
     .in(jsonBody[GroupCreateRequest].example(Examples.groupCreateRequest))
     .out(jsonBody[GroupGetResponseADM])
+    .description(
+      "Create a group. Requires SystemAdmin or ProjectAdmin permissions for the project given by the body project.",
+    )
 }
 
 object GroupsEndpoints {
@@ -132,7 +138,8 @@ final class GroupsServerEndpoints(
 ```
 
 - `.zServerLogic()` for public endpoints (ignore auth param with `_`)
-- `.serverLogic()` for secured endpoints (receives `User` parameter)
+- `.serverLogic()` for secured endpoints (receives the security output: a `User`, or a `ProjectCandidate` for
+  `ProjectAdmin`)
 
 ### 3. RestService (translation)
 
@@ -150,10 +157,10 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def postGroup(user: User)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
+  def postGroup(candidate: ProjectCandidate)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
     for {
-      _        <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
-      internal <- groupService.createGroup(request).map(GroupGetResponseADM.apply)
+      grant    <- auth.authorizeProjectAdminById(candidate, request.project)
+      internal <- groupService.createGroup(request, grant.project).map(GroupGetResponseADM.apply)
       external <- format.toExternal(internal)
     } yield external
 }
@@ -161,11 +168,42 @@ final case class GroupRestService(
 
 **Pattern:** Auth check → business logic → format response.
 
+### Endpoint authorization policy
+
+Every new endpoint declares its function-level authorization with a policy-declaring factory in `BaseEndpoints`
+(ADR-0013, `docs/adr/0013-authorization-policy-enforcement.md`):
+
+| Factory | Policy | Security output |
+| --- | --- | --- |
+| `publicPolicyEndpoint(reason)` | `Public`: no credentials read | none |
+| `authenticatedPolicyEndpoint(reason)` | `Authenticated`: any active, non-anonymous user | `User` |
+| `systemAdminPolicyEndpoint` | `SystemAdmin` | `User` |
+| `projectAdminPolicyEndpoint(projectFrom)` | `ProjectAdmin` of the project named by `projectFrom` | `ProjectCandidate` |
+| `objectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess`: per-object permissions, anonymous admitted | `User` |
+
+- `publicEndpoint`, `securedEndpoint`, `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not
+  use them for new endpoints.
+- A `Public` or `Authenticated` reason says why the endpoint needs no stronger rule; it is reviewed.
+- A `ProjectAdmin` handler receives a `ProjectCandidate` and must obtain a `ProjectAdminGrant` from
+  `AuthorizationRestService.authorizeProjectAdminById` before it acts. The domain write acts on `grant.project`.
+  Once a domain write takes the grant itself, a handler that skips the check does not compile; until its write is
+  migrated, it is only as safe as that call.
+- The endpoint description contains the policy's `requirement` sentence (e.g. "Requires SystemAdmin permissions.").
+- Never set `Policy.key` in a slice, and never call `withInfo` on an endpoint: it replaces all attributes,
+  the policy included.
+- `EndpointPolicyE2ESpec` (`modules/test-e2e`) fails for an endpoint without a policy that is not listed in
+  `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`. That baseline lists the endpoints that predate
+  the factories and only shrinks: migrating an endpoint removes its line, and a new endpoint never adds one. The
+  spec pins the baseline's size in `baselineSize`; the commit that removes lines lowers it.
+
 ## Error Handling
 
 See [`dsp-api-error-handling.md`](dsp-api-error-handling.md) for the full rules: when to use the ZIO error channel (recoverable failures) vs. the `die` family (invariant violations), the `RequestRejectedException` / `InternalServerException` hierarchy, typed `IO[E, A]` vs. `Task[A]`, the V3 typed-error pattern, and the narrow legacy carve-out for `throw`.
 
 ## Authentication
+
+These bases declare no authorization policy; new endpoints use the factories in
+[Endpoint authorization policy](#endpoint-authorization-policy).
 
 ```scala
 val securedEndpoint: ZPartialServerEndpoint[...] =

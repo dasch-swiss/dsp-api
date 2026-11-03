@@ -76,7 +76,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Update a value of a resource. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation",
+      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. $linkToValuesDocumentation",
     )
 
   val deleteValues = baseEndpoint.withUserEndpoint.post
@@ -85,7 +85,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Mark a value as deleted. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation",
+      s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. $linkToValuesDocumentation",
     )
 
   val postValuesErase = baseEndpoint.securedEndpoint.post

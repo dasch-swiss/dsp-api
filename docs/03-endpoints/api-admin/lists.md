@@ -64,7 +64,8 @@ List (root node or child node with all its children) can be deleted only if it (
 
 ### Create new list
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the project given by `projectIri`; an unknown
+  `projectIri` answers 403
 - Required fields: `projectIri`, `labels`, `comments`
 - POST: `/admin/lists`
 - BODY:
@@ -115,8 +116,9 @@ The response will contain the basic information of the list, `listinfo` and an e
 
 ### Create new child node
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the parent node's project
 - Required fields: `parentNodeIri`, `projectIri`, `labels`,
+- `projectIri` must be the parent node's project; otherwise the request answers 400.
 - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
   is the listIri, then a new child node is appended to the top level. If a position is given
   for the new child node, the node will be created and inserted in the specified position, otherwise
@@ -187,8 +189,9 @@ The basic information of a list (or node) such as its labels, comments, name, or
 The parameters that must be updated together with the new value must be given in the JSON body of the request 
 together with the IRI of the list and the IRI of the project it belongs to. 
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the list's project
 - Required fields: `listIri`, `projectIri`
+- `projectIri` must be the list's project; otherwise the request answers 400.
 - Update list information
 - PUT: `/admin/lists/<listIri>`
 - BODY:
@@ -243,7 +246,7 @@ can be updated individually as explained below.
 
 ### Update list or node's name
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the node's project
 - Update name of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/name`
 - BODY: The new name of the node must be given in the body of the request as shown below:
@@ -258,7 +261,7 @@ There is no need to specify the project IRI because it is automatically extracte
 
 ### Update list or node's labels
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the node's project
 - Update labels of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/labels`
 - BODY: The new set of labels of the node must be given in the body of the request as shown below:
@@ -273,7 +276,7 @@ There is no need to specify the project IRI because it is automatically extracte
 
 ### Update list or node's comments
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the node's project
 - Update comments of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
 - PUT: `/admin/lists/<listItemIri>/labels`
 - BODY: The new set of comments of the node must be given in the body of the request as shown below:
@@ -333,7 +336,8 @@ and new siblings will not be shifted.
 
 Values less than -1 are not permitted for parameter `position`.
  
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the node's project; the new parent node must belong to the
+  same project, otherwise the request answers 403
 - Response: returns the updated parent node with all its children.
 - Put `/admin/lists/<nodeIri>/position`
 
@@ -347,7 +351,7 @@ Similarily, before deleting a single node of a list, it is verified that the nod
 If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
 remaining child nodes with respect to the position of the deleted node. 
 
-- Required permission: SystemAdmin / ProjectAdmin
+- Required permission: SystemAdmin / ProjectAdmin of the node's project
 - Response:
     - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is returned.
     - If the IRI of a child node is given, the updated parent node is returned.
@@ -357,6 +361,9 @@ remaining child nodes with respect to the position of the deleted node.
 ### Delete child node comments
 
 Performing a DELETE request to route `/admin/lists/comments/<nodeIri>` deletes the comments of that node.
+
+- Required permission: SystemAdmin / ProjectAdmin of the node's project
+
 As a response sipmle JSON is returned:
 
 ```json

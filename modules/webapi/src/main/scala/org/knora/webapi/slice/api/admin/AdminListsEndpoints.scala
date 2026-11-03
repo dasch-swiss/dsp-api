@@ -24,118 +24,159 @@ import org.knora.webapi.slice.api.admin.Requests.ListCreateChildNodeRequest
 import org.knora.webapi.slice.api.admin.Requests.ListCreateRootNodeRequest
 import org.knora.webapi.slice.api.admin.model.AdminQueryVariables
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class AdminListsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "lists"
 
-  val getListsQueryByProjectIriOption = baseEndpoints.publicEndpoint.get
+  private val readReason        = "Lists are controlled vocabularies of a project's data model; anyone may read them."
+  private val publicRequirement = Policy.Public(readReason).requirement
+
+  val getListsQueryByProjectIriOption = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base)
     .in(AdminQueryVariables.projectIriOrShortcodeQueryOption)
     .out(jsonBody[ListsGetResponseADM].description("Contains the list of all root nodes of each found list."))
     .description(
       "Get all lists or all lists belonging to a project. " +
         "Note that you can provide either a project IRI or a project shortcode. " +
-        "Publicly accessible.",
+        publicRequirement,
     )
 
   private val listIriPathVar = path[ListIri].description("The IRI of the list.")
-  val getListsByIri          = baseEndpoints.publicEndpoint.get
+  val getListsByIri          = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / listIriPathVar)
     .out(jsonBody[ListItemGetResponseADM])
-    .description("Returns a list node, root or child, with children (if exist). Publicly accessible.")
+    .description(s"Returns a list node, root or child, with children (if exist). $publicRequirement")
 
   private val getListInfoDesc =
-    "Returns basic information about a list node, root or child, w/o children (if exist). Publicly accessible."
-  val getListsByIriInfo = baseEndpoints.publicEndpoint.get
+    s"Returns basic information about a list node, root or child, w/o children (if exist). $publicRequirement"
+  val getListsByIriInfo = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / listIriPathVar / "info")
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDesc)
 
   private val getListInfoDeprecation = "*Deprecated*. Use GET admin/lists/<listIri>/info instead. "
-  val getListsInfosByIri             = baseEndpoints.publicEndpoint.get
+  val getListsInfosByIri             = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / "infos" / listIriPathVar)
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
 
-  val getListsNodesByIri = baseEndpoints.publicEndpoint.get
+  val getListsNodesByIri = baseEndpoints
+    .publicPolicyEndpoint(readReason)
+    .get
     .in(base / "nodes" / listIriPathVar)
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(getListInfoDeprecation + getListInfoDesc)
     .deprecated()
 
+  private val listNode            = "list node"
+  private val listNodeRequirement = Policy.ProjectAdmin(listNode).requirement
+
   // Creates
-  val postLists = baseEndpoints.securedEndpoint.post
+  private val bodyProjectIri = "body projectIri"
+  val postLists              = baseEndpoints
+    .projectAdminPolicyEndpoint(bodyProjectIri)
+    .post
     .in(base)
     .in(jsonBody[ListCreateRootNodeRequest])
     .out(jsonBody[ListGetResponseADM])
     .description(
-      "Creates a new list by creating the root node of the list. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+      s"Creates a new list by creating the root node of the list. ${Policy.ProjectAdmin(bodyProjectIri).requirement}",
     )
 
-  val postListsChild = baseEndpoints.securedEndpoint.post
+  private val parentListNode = "parent list node"
+  val postListsChild         = baseEndpoints
+    .projectAdminPolicyEndpoint(parentListNode)
+    .post
     .in(base / listIriPathVar)
     .in(jsonBody[ListCreateChildNodeRequest])
     .out(jsonBody[ChildNodeInfoGetResponseADM])
     .description(
-      "Creates a new list node as a child of the specified list node. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+      s"Creates a new list node as a child of the specified list node. ${Policy.ProjectAdmin(parentListNode).requirement}",
     )
 
   // Updates
-  val putListsByIriName = baseEndpoints.securedEndpoint.put
+  val putListsByIriName = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .put
     .in(base / listIriPathVar / "name")
     .in(jsonBody[ListChangeNameRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
-    .description("Update a list node's name. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(s"Update a list node's name. $listNodeRequirement")
 
-  val putListsByIriLabels = baseEndpoints.securedEndpoint.put
+  val putListsByIriLabels = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .put
     .in(base / listIriPathVar / "labels")
     .in(jsonBody[ListChangeLabelsRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(
-      "Update a list node's labels. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+      s"Update a list node's labels. $listNodeRequirement",
     )
 
-  val putListsByIriComments = baseEndpoints.securedEndpoint.put
+  val putListsByIriComments = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .put
     .in(base / listIriPathVar / "comments")
     .in(jsonBody[ListChangeCommentsRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(
-      "Update a list node's comments. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+      s"Update a list node's comments. $listNodeRequirement",
     )
 
-  val putListsByIriPosition = baseEndpoints.securedEndpoint.put
+  val putListsByIriPosition = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .put
     .in(base / listIriPathVar / "position")
     .in(jsonBody[ListChangePositionRequest])
     .out(jsonBody[NodePositionChangeResponseADM])
     .description(
-      "Update a list node's position. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+      s"Update a list node's position. $listNodeRequirement",
     )
 
-  val putListsByIri = baseEndpoints.securedEndpoint.put
+  val putListsByIri = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .put
     .in(base / listIriPathVar)
     .in(jsonBody[ListChangeRequest])
     .out(jsonBody[NodeInfoGetResponseADM])
     .description(
-      "Update a list node's properties. Requires SystemAdmin or ProjectAdmin permissions for the list's project.",
+      s"Update a list node's properties. $listNodeRequirement",
     )
 
   // Deletes
-  val deleteListsByIri = baseEndpoints.securedEndpoint.delete
+  val deleteListsByIri = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .delete
     .in(base / listIriPathVar)
     .out(jsonBody[ListItemDeleteResponseADM])
-    .description("Delete a list node. Requires SystemAdmin or ProjectAdmin permissions for the list's project.")
+    .description(s"Delete a list node. $listNodeRequirement")
 
-  val getListsCanDeleteByIri = baseEndpoints.publicEndpoint.get
+  val getListsCanDeleteByIri = baseEndpoints
+    .publicPolicyEndpoint("Answers only whether a list is in use, never which data uses it.")
+    .get
     .in(base / "candelete" / listIriPathVar)
     .out(jsonBody[CanDeleteListResponseADM])
-    .description("Checks if a list can be deleted (none of its nodes is used in data).")
+    .description(s"Checks if a list can be deleted (none of its nodes is used in data). $publicRequirement")
 
-  val deleteListsComment = baseEndpoints.securedEndpoint.delete
+  val deleteListsComment = baseEndpoints
+    .projectAdminPolicyEndpoint(listNode)
+    .delete
     .in(base / "comments" / listIriPathVar)
     .out(jsonBody[ListNodeCommentsDeleteResponseADM])
-    .description("Delete a list node's comments. Requires authentication.")
+    .description(
+      s"Delete a list node's comments. $listNodeRequirement",
+    )
 }
 
 object Requests {

@@ -24,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
@@ -262,28 +261,13 @@ final class ValuesResponderV2(
             // Yes. Validate them.
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
-
-              // Is the requesting user a system admin, or an admin of this project?
-              userPermissions = requestingUser.permissions
-              _              <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
-
-                     // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                     val permissionComparisonResult: PermissionComparisonResult =
-                       PermissionUtilADM.comparePermissionsADM(
-                         entityProject = resourceInfo.projectADM.id.value,
-                         permissionLiteralA = validatedCustomPermissions,
-                         permissionLiteralB = defaultValuePermissions.permissionLiteral,
-                         requestingUser = requestingUser,
-                       )
-
-                     ZIO.when(permissionComparisonResult == AGreaterThanB)(
-                       ZIO.fail(
-                         ForbiddenException(
-                           s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                         ),
-                       ),
-                     )
-                   }
+              _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                     resourceInfo.projectADM.id,
+                     validatedCustomPermissions,
+                     defaultValuePermissions.permissionLiteral,
+                     requestingUser,
+                     "The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                   )
             } yield validatedCustomPermissions
 
           case None =>
@@ -818,6 +802,16 @@ final class ValuesResponderV2(
           requestingUser = KnoraSystemInstances.Users.SystemUser,
         )
 
+      currentValue <- findVisibleValue(
+                        resourceInfo,
+                        submittedInternalPropertyIri,
+                        updateValue.valueIri,
+                        NotFoundException(
+                          s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
+                        ),
+                        requestingUser,
+                      )
+
       _ <- {
         val msg =
           s"The rdf:type of resource <${updateValue.resourceIri.value}> is not <${updateValue.resourceClassIri}>"
@@ -826,18 +820,6 @@ final class ValuesResponderV2(
           .when(resourceInfo.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
       }
 
-      // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-      currentValue <-
-        ZIO
-          .fromOption(for {
-            values <- resourceInfo.values.get(submittedInternalPropertyIri)
-            curVal <- values.find(_.valueIri == updateValue.valueIri)
-          } yield curVal)
-          .orElseFail(
-            NotFoundException(
-              s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
-            ),
-          )
       isSameType = currentValue.valueContent.valueType == submittedInternalValueType
       // Cross-type updates are intentionally allowed between all three still-image subtypes
       // (raster, IIIF external, and vector/SVG), since they all represent the same resource
@@ -1141,6 +1123,62 @@ final class ValuesResponderV2(
                   }
     } yield result
 
+  /**
+   * The authorization gate of value removal and update, given a resource loaded as the system user so that hidden
+   * values are found: answers only after the caller's view permissions are checked. A hidden resource answers 403, a
+   * hidden value the same 404 as a missing one. Any check that depends on the resource's class or values belongs
+   * after this call, never before it.
+   */
+  private def findVisibleValue(
+    resourceInfo: ReadResourceV2,
+    internalPropertyIri: SmartIri,
+    valueIri: ValueIri,
+    valueNotFound: NotFoundException,
+    requestingUser: User,
+  ): Task[ReadValueV2] =
+    for {
+      _            <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View, requestingUser)
+      currentValue <-
+        ZIO
+          .fromOption(resourceInfo.values.get(internalPropertyIri).flatMap(_.find(_.valueIri == valueIri)))
+          .orElseFail(valueNotFound)
+      _ <- resourceUtilV2
+             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.View, requestingUser)
+             .orElseFail(valueNotFound)
+    } yield currentValue
+
+  /**
+   * The authorization gate of value removal: on top of [[findVisibleValue]], a visible value the caller may not delete
+   * answers 403. Any check that depends on the resource's class or values belongs after this call, never inside it.
+   */
+  private def findDeletableValue(
+    deleteValue: ValueRemoval,
+    requestingUser: User,
+  ): Task[(ReadResourceV2, ReadValueV2)] = {
+    val valueNotFound = NotFoundException(
+      s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
+    )
+    for {
+      resourceInfo <- readResources
+                        .getResources(
+                          resourceIris = Seq(deleteValue.resourceIri),
+                          targetSchema = ApiV2Complex,
+                          schemaOptions = Set.empty,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser,
+                        )
+                        .flatMap(_.toResource(deleteValue.resourceIri))
+      currentValue <- findVisibleValue(
+                        resourceInfo,
+                        deleteValue.propertyIri.toInternalSchema,
+                        deleteValue.valueIri,
+                        valueNotFound,
+                        requestingUser,
+                      )
+      _ <- resourceUtilV2
+             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.Delete, requestingUser)
+    } yield (resourceInfo, currentValue)
+  }
+
   private def canRemoveValue(
     deleteValue: ValueRemoval,
     requestingUser: User,
@@ -1168,16 +1206,8 @@ final class ValuesResponderV2(
     // corresponding link property, whose objects we will need to query.
     adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
 
-    // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-    // so we can see objects that the user doesn't have permission to see.
-    resourceInfo <- readResources
-                      .getResources(
-                        resourceIris = Seq(deleteValue.resourceIri),
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = Set.empty,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                      )
-                      .flatMap(_.toResource(deleteValue.resourceIri))
+    (resourceInfo, currentValue) <- findDeletableValue(deleteValue, requestingUser)
+    submittedInternalPropertyIri  = propertyIri.toInternalSchema
 
     // Check that the resource belongs to the class that the client submitted.
     _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
@@ -1188,21 +1218,6 @@ final class ValuesResponderV2(
            )
          }
 
-    // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
-    // Check that the user has permission to delete the value.
-    submittedInternalPropertyIri = propertyIri.toInternalSchema
-    currentValue                <-
-      ZIO
-        .fromOption(for {
-          values <- resourceInfo.values.get(submittedInternalPropertyIri)
-          curVal <- values.find(_.valueIri == deleteValue.valueIri)
-        } yield curVal)
-        .orElseFail(
-          NotFoundException(
-            s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
-          ),
-        )
-
     // Check that the value is of the type that the client submitted.
     _ <-
       ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
@@ -1212,14 +1227,6 @@ final class ValuesResponderV2(
           ),
         ),
       )
-
-    // Check the user's permissions on the value.
-    _ <- resourceUtilV2.checkValuePermission(
-           resourceInfo = resourceInfo,
-           valueInfo = currentValue,
-           permissionNeeded = Permission.ObjectAccess.Delete,
-           requestingUser,
-         )
 
     // Get the definition of the resource class.
     // Check that the resource class's cardinality for the submitted property allows this value to be deleted.

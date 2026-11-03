@@ -6,21 +6,26 @@
 package org.knora.webapi.messages.util
 
 import org.junit.runner.RunWith
-import zio.test.Spec
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
+import zio.test.*
+import zio.test.Assertion.equalTo
+import zio.test.Assertion.fails
 
 import scala.collection.Map
 
+import dsp.errors.ForbiddenException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class PermissionUtilADMSpec extends ZIOSpecDefault {
@@ -33,6 +38,74 @@ class PermissionUtilADMSpec extends ZIOSpecDefault {
     Permission.ObjectAccess.View           -> Set(KnoraGroupRepo.builtIn.KnownUser.id.value),
     Permission.ObjectAccess.Modify         -> Set(KnoraGroupRepo.builtIn.ProjectMember.id.value),
     Permission.ObjectAccess.ChangeRights   -> Set(KnoraGroupRepo.builtIn.Creator.id.value),
+  )
+
+  private val anything   = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
+  private val incunabula = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0803")
+  private val member     = KnoraGroupRepo.builtIn.ProjectMember.id.value
+  private val admin      = KnoraGroupRepo.builtIn.ProjectAdmin.id.value
+
+  // Group memberships only: no administrative permissions, so `ProjectAdminAllPermission` cannot mask the check.
+  private def userInGroups(groupsPerProject: (ProjectIri, Seq[IRI])*): User =
+    User(
+      id = "http://rdfh.ch/users/permission-ceiling-test-user",
+      username = "permission-ceiling-test-user",
+      email = "permission-ceiling-test-user@example.org",
+      givenName = "Permission",
+      familyName = "Ceiling",
+      status = true,
+      lang = "en",
+      permissions = PermissionsDataADM(groupsPerProject.map((project, groups) => project.value -> groups).toMap),
+    )
+
+  private val defaultPermissions = "M knora-admin:ProjectMember"
+  private val customPermissions  = "CR knora-admin:ProjectMember"
+  private val message            = "custom permissions exceed the defaults"
+
+  // Forces the outcome the real comparison never gives a SystemAdmin, so only the exemption can let one pass.
+  private val exceeds: (IRI, String, String, User) => PermissionUtilADM.PermissionComparisonResult =
+    (_, _, _, _) => PermissionUtilADM.AGreaterThanB
+
+  private def ensureWithinDefaults(user: User, custom: String = customPermissions) =
+    PermissionUtilADM.ensureWithinDefaultPermissions(anything, custom, defaultPermissions, user, message).exit
+
+  private val ensureWithinDefaultPermissionsSuite = suite("ensureWithinDefaultPermissions")(
+    test("let a ProjectAdmin of the project without ProjectAdminAllPermission exceed the defaults") {
+      ensureWithinDefaults(userInGroups(anything -> Seq(member, admin))).map(exit => assertTrue(exit.isSuccess))
+    },
+    test("let a SystemAdmin exceed the defaults") {
+      val systemAdmin = userInGroups(
+        KnoraProjectRepo.builtIn.SystemProject.id -> Seq(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
+        anything                                  -> Seq(member),
+      )
+      ensureWithinDefaults(systemAdmin).map(exit => assertTrue(exit.isSuccess))
+    },
+    test("let a SystemAdmin who is not ProjectAdmin of the project exceed the defaults") {
+      val systemAdmin = userInGroups(
+        KnoraProjectRepo.builtIn.SystemProject.id -> Seq(KnoraGroupRepo.builtIn.SystemAdmin.id.value),
+        anything                                  -> Seq(member),
+      )
+      PermissionUtilADM
+        .ensureWithinDefaultPermissions(anything, customPermissions, defaultPermissions, systemAdmin, message, exceeds)
+        .exit
+        .map(exit => assertTrue(exit.isSuccess))
+    },
+    test("refuse a project member who exceeds the defaults") {
+      ensureWithinDefaults(userInGroups(anything -> Seq(member)))
+        .map(exit => assert(exit)(fails(equalTo(ForbiddenException(message)))))
+    },
+    test("refuse a ProjectAdmin of another project who exceeds the defaults") {
+      ensureWithinDefaults(userInGroups(anything -> Seq(member), incunabula -> Seq(member, admin)))
+        .map(exit => assert(exit)(fails(equalTo(ForbiddenException(message)))))
+    },
+    test("let a project member set permissions equal to the defaults") {
+      ensureWithinDefaults(userInGroups(anything -> Seq(member)), "M knora-admin:ProjectMember")
+        .map(exit => assertTrue(exit.isSuccess))
+    },
+    test("let a project member set permissions lower than the defaults") {
+      ensureWithinDefaults(userInGroups(anything -> Seq(member)), "V knora-admin:ProjectMember")
+        .map(exit => assertTrue(exit.isSuccess))
+    },
   )
 
   val spec: Spec[Any, Nothing] = suite("PermissionUtil")(
@@ -198,5 +271,6 @@ class PermissionUtilADMSpec extends ZIOSpecDefault {
 
       assertTrue(result == permissionsString)
     },
+    ensureWithinDefaultPermissionsSuite,
   )
 }

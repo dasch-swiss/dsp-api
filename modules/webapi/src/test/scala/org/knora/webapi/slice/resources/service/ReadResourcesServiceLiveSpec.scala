@@ -37,19 +37,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.LegalInfo
 import org.knora.webapi.slice.admin.domain.model.Permission
-import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.KnoraUserService
-import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.admin.repo.LicenseRepo
-import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -332,24 +326,18 @@ class ReadResourcesServiceLiveSpec extends ZIOSpecDefault {
       },
     ).provide(
       AppConfig.layer,
-      AuthorizationRestService.layer,
       CacheManager.layer,
       ConstructResponseUtilV2.layer,
       emptyDataset,
       IriConverter.layer,
       IriService.layer,
-      KnoraGroupRepoLive.layer,
-      KnoraGroupService.layer,
       KnoraProjectRepoLive.layer,
       KnoraProjectService.layer,
-      KnoraUserRepoLive.layer,
-      KnoraUserService.layer,
       LicenseRepo.layer,
       ListsResponder.layer,
       OntologyCacheLive.layer,
       OntologyRepoLive.layer,
       StandoffEntityInfoServiceLive.layer,
-      PasswordService.layer,
       PredicateObjectMapper.layer,
       ProjectService.layer,
       ReadResourcesServiceLive.layer,

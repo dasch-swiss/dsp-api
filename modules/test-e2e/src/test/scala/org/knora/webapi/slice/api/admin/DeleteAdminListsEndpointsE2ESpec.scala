@@ -17,6 +17,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.ListIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
@@ -29,6 +30,17 @@ class DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
       name = "http://www.knora.org/data/0001/anything",
     ),
   )
+
+  private val nodeWithTwoComments = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
+
+  private def deleteComments(nodeIri: ListIri, user: User) =
+    TestApiClient.deleteJson[ListNodeCommentsDeleteResponseADM](uri"/admin/lists/comments/$nodeIri", user)
+
+  private def hasComments(nodeIri: ListIri) =
+    TestApiClient
+      .getJson[ChildNodeInfoGetResponseADM](uri"/admin/lists/$nodeIri/info")
+      .flatMap(_.assert200)
+      .map(_.nodeinfo.hasComments)
 
   override val e2eSpec = suite("The admin lists route (/admin/lists)")(
     suite("deleting list items")(
@@ -104,12 +116,45 @@ class DeleteAdminListsEndpointsE2ESpec extends E2EZSpec {
       ),
       suite("The admin lists comments route (/admin/lists/comments)")(
         suite("deleting comments")(
-          test("delete child node comments") {
+          // The rejection tests need testList02's comments, so they must run before the project admin deletes them.
+          test("return unauthorized for an anonymous user and keep the comments") {
+            for {
+              response <- TestApiClient.deleteJson[ListNodeCommentsDeleteResponseADM](
+                            uri"/admin/lists/comments/$nodeWithTwoComments",
+                          )
+              commentsLeft <- hasComments(nodeWithTwoComments)
+            } yield assertTrue(response.code == StatusCode.Unauthorized, commentsLeft)
+          },
+          test("return forbidden for a project member who is not project admin and keep the comments") {
+            for {
+              response     <- deleteComments(nodeWithTwoComments, anythingUser1)
+              commentsLeft <- hasComments(nodeWithTwoComments)
+            } yield assertTrue(response.code == StatusCode.Forbidden, commentsLeft)
+          },
+          test("return forbidden for the project admin of another project and keep the comments") {
+            for {
+              response     <- deleteComments(nodeWithTwoComments, incunabulaProjectAdminUser)
+              commentsLeft <- hasComments(nodeWithTwoComments)
+            } yield assertTrue(response.code == StatusCode.Forbidden, commentsLeft)
+          },
+          test("return bad request for a non-existent node before checking the role") {
+            val missingNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/doesNotExist")
+            deleteComments(missingNodeIri, anythingUser1).map(response =>
+              assertTrue(response.code == StatusCode.BadRequest),
+            )
+          },
+          test("delete child node comments as project admin") {
+            for {
+              response     <- deleteComments(nodeWithTwoComments, anythingAdminUser).flatMap(_.assert200)
+              commentsLeft <- hasComments(nodeWithTwoComments)
+            } yield assertTrue(response.commentsDeleted, response.nodeIri == nodeWithTwoComments.value, !commentsLeft)
+          },
+          test("delete child node comments as system admin") {
             val childNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
-            TestApiClient
-              .deleteJson[ListNodeCommentsDeleteResponseADM](uri"/admin/lists/comments/$childNodeIri", rootUser)
-              .flatMap(_.assert200)
-              .map(response => assertTrue(response.commentsDeleted, response.nodeIri == childNodeIri.value))
+            for {
+              response     <- deleteComments(childNodeIri, rootUser).flatMap(_.assert200)
+              commentsLeft <- hasComments(childNodeIri)
+            } yield assertTrue(response.commentsDeleted, response.nodeIri == childNodeIri.value, !commentsLeft)
           },
           test("return exception for root node comments") {
             val childNodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")

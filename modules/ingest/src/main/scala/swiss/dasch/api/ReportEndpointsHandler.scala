@@ -13,13 +13,16 @@ import zio.stream.ZStream
 
 final class ReportEndpointsHandler(
   reportEndpoints: ReportEndpoints,
+  authorizationHandler: AuthorizationHandler,
   reportService: ReportService,
   projectService: ProjectService,
 ) {
 
   private val postAssetOverviewReportHandler: ZServerEndpoint[Any, Any] =
-    reportEndpoints.postAssetOverviewReport.serverLogic(_ =>
-      _ => createAssetOverReports.forkDaemon.logError.as("work in progress"),
+    reportEndpoints.postAssetOverviewReport.serverLogic(principal =>
+      _ =>
+        authorizationHandler.ensureAdminScope(principal) *>
+          createAssetOverReports.forkDaemon.logError.as("work in progress"),
     )
 
   private val createAssetOverReports: ZIO[Any, Throwable, Unit] =

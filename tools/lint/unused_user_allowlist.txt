@@ -1,0 +1,4 @@
+# Methods (or classes, for a constructor parameter) that mark a User parameter @unused (check_authz.py rule 1).
+# One `<path> <owner>  # <issue id> reason` per line. Remove an entry when its owner uses the user.
+modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/search/SearchRestService.scala searchResourcesByLabelCountV2  # DEV-7718
+modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/search/SearchRestService.scala fullTextSearchCount  # DEV-7718

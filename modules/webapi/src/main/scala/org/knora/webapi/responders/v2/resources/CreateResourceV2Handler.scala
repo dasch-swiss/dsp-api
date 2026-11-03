@@ -17,8 +17,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
-import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
@@ -102,7 +100,7 @@ final class CreateResourceV2Handler(
   private def ensureNotAnonymousUser(user: User): Task[Unit] =
     ZIO
       .when(user.isAnonymousUser)(ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources")))
-      .ignore
+      .unit
 
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
     projectIri             <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
@@ -355,25 +353,13 @@ final class CreateResourceV2Handler(
           case Some(permissionStr) =>
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
-
-              _ <- ZIO.when {
-                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id.value) &&
-                       !requestingUser.permissions.isSystemAdmin)
-                   } {
-                     // Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                     val permissionComparisonResult: PermissionComparisonResult =
-                       PermissionUtilADM.comparePermissionsADM(
-                         internalCreateResource.projectADM.id.value,
-                         validatedCustomPermissions,
-                         defaultResourcePermissions,
-                         requestingUser,
-                       )
-                     ZIO.when(permissionComparisonResult == AGreaterThanB) {
-                       val msg =
-                         s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                       ZIO.fail(ForbiddenException(msg))
-                     }
-                   }
+              _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                     internalCreateResource.projectADM.id,
+                     validatedCustomPermissions,
+                     defaultResourcePermissions,
+                     requestingUser,
+                     s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions",
+                   )
             } yield validatedCustomPermissions
 
           case None => ZIO.succeed(defaultResourcePermissions)
@@ -718,30 +704,13 @@ final class CreateResourceV2Handler(
               // Yes. Validate and reformat them.
               for {
                 validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
-
-                // Is the requesting user a system admin, or an admin of this project?
-                _ <- ZIO.when(
-                       !(requestingUser.permissions
-                         .isProjectAdmin(project.id.value) || requestingUser.permissions.isSystemAdmin),
-                     ) {
-
-                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-                       val permissionComparisonResult: PermissionComparisonResult =
-                         PermissionUtilADM.comparePermissionsADM(
-                           entityProject = project.id.value,
-                           permissionLiteralA = validatedCustomPermissions,
-                           permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                           requestingUser = requestingUser,
-                         )
-
-                       ZIO.when(permissionComparisonResult == AGreaterThanB) {
-                         ZIO.fail(
-                           ForbiddenException(
-                             s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                           ),
-                         )
-                       }
-                     }
+                _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
+                       project.id,
+                       validatedCustomPermissions,
+                       defaultPropertyPermissions(propertyIri),
+                       requestingUser,
+                       s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                     )
               } yield GenerateSparqlForValueInNewResourceV2(
                 valueContent = valueToCreate.valueContent,
                 customValueIri = valueToCreate.customValueIri,

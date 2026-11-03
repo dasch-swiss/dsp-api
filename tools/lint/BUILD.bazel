@@ -26,6 +26,33 @@ py_test(
     main = "check_relative_imports.py",
 )
 
+# Authorization lint (ADR-0013): @unused on a User parameter and SystemUser in main sources, each
+# outside its allow-list. Wired into `just check`.
+py_test(
+    name = "check_authz",
+    srcs = ["check_authz.py"],
+    args = [
+        "--unused-user-allowlist",
+        "$(rootpath unused_user_allowlist.txt)",
+        "--system-user-allowlist",
+        "$(rootpath system_user_allowlist.txt)",
+    ] + ["$(rootpaths %s)" % t for t in _LINT_SRCS],
+    data = _LINT_SRCS + [
+        "system_user_allowlist.txt",
+        "unused_user_allowlist.txt",
+    ],
+    main = "check_authz.py",
+)
+
+py_test(
+    name = "check_authz_test",
+    srcs = [
+        "check_authz.py",
+        "check_authz_test.py",
+    ],
+    main = "check_authz_test.py",
+)
+
 # Enforce that a Gravsearch prequery reaches the triplestore only through
 # SearchResponderV2Live.executePrequery, which owns the matchFulltext breadth
 # guard. Only webapi main sources construct prequery transformers; a new module

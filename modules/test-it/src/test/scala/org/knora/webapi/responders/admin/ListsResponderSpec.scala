@@ -15,6 +15,7 @@ import scala.reflect.ClassTag
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.UpdateNotPerformedException
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -27,7 +28,12 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.admin.AdminListRestService
 import org.knora.webapi.slice.api.admin.Requests.*
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.util.MutableTestIri
 
@@ -45,6 +51,21 @@ class ListsResponderSpec extends E2EZSpec {
     ),
   )
   private val listsResponder = ZIO.serviceWithZIO[ListsResponder]
+
+  private def refusedOutsideGrant(nodeIri: ListIri, grantProject: ProjectIri) =
+    E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
+      s"List node ${nodeIri.value} does not belong to project ${grantProject.value}.",
+    )
+
+  /** Calls the responder with a grant obtained as production obtains it. */
+  private def withGrant[A](user: User, project: ProjectIri)(
+    f: (ListsResponder, ProjectAdminGrant) => Task[A],
+  ): ZIO[AuthorizationRestService & ListsResponder, Throwable, A] =
+    for {
+      grant <-
+        ZIO.serviceWithZIO[AuthorizationRestService](_.authorizeProjectAdminById(TestCandidates.of(user), project))
+      result <- ZIO.serviceWithZIO[ListsResponder](f(_, grant))
+    } yield result
 
   private val treeListInfo: ListRootNodeInfoADM      = SharedListsTestDataADM.treeListInfo
   private val summerNodeInfo: ListNodeInfoADM        = SharedListsTestDataADM.summerNodeInfo
@@ -122,7 +143,7 @@ class ListsResponderSpec extends E2EZSpec {
           imagesProjectIri,
         )
 
-        listsResponder(_.listCreateRootNode(createRequest, UUID.randomUUID))
+        withGrant(rootUser, imagesProjectIri)(_.listCreateRootNode(createRequest, _, UUID.randomUUID))
           .tap(received => ZIO.succeed(received.list.listinfo.id))
           .map(_.list)
           .tap(list => ZIO.succeed(newListIri.set(list.listinfo.id)))
@@ -149,7 +170,7 @@ class ListsResponderSpec extends E2EZSpec {
           Some(ListName.unsafeFrom(nameWithSpecialCharacter)),
           imagesProjectIri,
         )
-        listsResponder(_.listCreateRootNode(createReq, UUID.randomUUID)).map { actual =>
+        withGrant(rootUser, imagesProjectIri)(_.listCreateRootNode(createReq, _, UUID.randomUUID)).map { actual =>
           assertTrue(
             actual.list.listinfo.projectIri == imagesProjectIri.value,
             actual.list.listinfo.name.contains(nameWithSpecialCharacter),
@@ -179,7 +200,7 @@ class ListsResponderSpec extends E2EZSpec {
           labels = Some(Labels.unsafeFrom(newLabelValues)),
           comments = Some(Comments.unsafeFrom(newCommentValues)),
         )
-        listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID()))
+        withGrant(rootUser, imagesProjectIri)(_.nodeInfoChangeRequest(changeReq, _, UUID.randomUUID()))
           .flatMap(expectType[RootNodeInfoGetResponseADM])
           .map(_.listinfo)
           .map(listInfo =>
@@ -197,7 +218,7 @@ class ListsResponderSpec extends E2EZSpec {
           imagesProjectIri,
           name = Some(ListName.unsafeFrom("sommer")),
         )
-        listsResponder(_.nodeInfoChangeRequest(changeReq, UUID.randomUUID())).exit.map(
+        withGrant(rootUser, imagesProjectIri)(_.nodeInfoChangeRequest(changeReq, _, UUID.randomUUID())).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
               s"The name 'sommer' is already used by a list in project $imagesProjectIri.",
@@ -215,7 +236,7 @@ class ListsResponderSpec extends E2EZSpec {
           None,
           imagesProjectIri,
         )
-        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+        withGrant(rootUser, imagesProjectIri)(_.listCreateChildNode(createReq, _, UUID.randomUUID))
           .map(_.nodeinfo)
           .tap(nodeInfo => ZIO.succeed(firstChildIri.set(nodeInfo.id)))
           .map(nodeInfo =>
@@ -241,7 +262,7 @@ class ListsResponderSpec extends E2EZSpec {
           Some(Position.unsafeFrom(0)),
           imagesProjectIri,
         )
-        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+        withGrant(rootUser, imagesProjectIri)(_.listCreateChildNode(createReq, _, UUID.randomUUID))
           .map(_.nodeinfo)
           .tap(nodeInfo => ZIO.succeed(secondChildIri.set(nodeInfo.id)))
           .map(nodeInfo =>
@@ -265,7 +286,7 @@ class ListsResponderSpec extends E2EZSpec {
           Some(Position.unsafeFrom(0)),
           imagesProjectIri,
         )
-        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID))
+        withGrant(rootUser, imagesProjectIri)(_.listCreateChildNode(createReq, _, UUID.randomUUID))
           .map(_.nodeinfo)
           .tap(nodeInfo => ZIO.succeed(thirdChildIri.set(nodeInfo.id)))
           .map(nodeInfo =>
@@ -289,7 +310,7 @@ class ListsResponderSpec extends E2EZSpec {
           Some(givenPosition),
           imagesProjectIri,
         )
-        listsResponder(_.listCreateChildNode(createReq, UUID.randomUUID)).exit.map(
+        withGrant(rootUser, imagesProjectIri)(_.listCreateChildNode(createReq, _, UUID.randomUUID)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.",
@@ -303,11 +324,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(3)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).exit.map(
@@ -322,11 +343,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(30)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).exit.map(
@@ -341,11 +362,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition = Position.unsafeFrom(30)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).exit.map(
@@ -360,11 +381,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(1)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node).map { parentNode =>
@@ -387,11 +408,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList011")
         val parentIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition = Position.unsafeFrom(-1)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, parentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node).map { parentNode =>
@@ -414,11 +435,11 @@ class ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
         val newPosition  = Position.unsafeFrom(2)
         val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
-        val parentNode   = listsResponder(
+        val parentNode   = withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node)
@@ -460,11 +481,11 @@ class ListsResponderSpec extends E2EZSpec {
         val oldParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(-1)
 
-        val parentNode = listsResponder(
+        val parentNode = withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node)
@@ -498,11 +519,11 @@ class ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(-1)
 
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node).map { parentNode =>
@@ -517,11 +538,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList013")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(2)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node).map { parentNode =>
@@ -537,11 +558,11 @@ class ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(0)
 
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node)
@@ -557,11 +578,11 @@ class ListsResponderSpec extends E2EZSpec {
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(3)
 
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node)
@@ -576,11 +597,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList03")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList01")
         val newPosition  = Position.unsafeFrom(5)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node)
@@ -595,11 +616,11 @@ class ListsResponderSpec extends E2EZSpec {
         val nodeIri      = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList014")
         val newParentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList015")
         val newPosition  = Position.unsafeFrom(0)
-        listsResponder(
+        withGrant(anythingAdminUser, anythingProjectIri)(
           _.nodePositionChangeRequest(
             nodeIri,
             ListChangePositionRequest(newPosition, newParentIri),
-            anythingAdminUser,
+            _,
             UUID.randomUUID,
           ),
         ).map(_.node).map { received =>
@@ -610,10 +631,47 @@ class ListsResponderSpec extends E2EZSpec {
         }
       },
     ),
+    suite("used to refuse a grant for another project")(
+      test("not change a node of another project") {
+        val nodeIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val changeReq = ListChangeRequest(nodeIri, imagesProjectIri, name = Some(ListName.unsafeFrom("hijacked")))
+        withGrant(rootUser, imagesProjectIri)(_.nodeInfoChangeRequest(changeReq, _, UUID.randomUUID)).exit
+          .map(assert(_)(refusedOutsideGrant(nodeIri, imagesProjectIri)))
+      },
+      test("not create a child under a node of another project") {
+        val parentIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          None,
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("hijacked", EN))),
+          None,
+          parentIri,
+          None,
+          imagesProjectIri,
+        )
+        withGrant(rootUser, imagesProjectIri)(_.listCreateChildNode(createReq, _, UUID.randomUUID)).exit
+          .map(assert(_)(refusedOutsideGrant(parentIri, imagesProjectIri)))
+      },
+      test("not delete a node of another project") {
+        val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
+        withGrant(rootUser, imagesProjectIri)(_.deleteListItemRequestADM(nodeIri, _, UUID.randomUUID)).exit
+          .map(assert(_)(refusedOutsideGrant(nodeIri, imagesProjectIri)))
+      },
+      test("not move a node under a parent node of another project") {
+        val nodeIri        = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList03")
+        val imagesNodeIri  = ListIri.unsafeFrom("http://rdfh.ch/lists/00FF/526f26ed04")
+        val positionChange = ListChangePositionRequest(Position.unsafeFrom(0), imagesNodeIri)
+        withGrant(anythingAdminUser, anythingProjectIri)(
+          _.nodePositionChangeRequest(nodeIri, positionChange, _, UUID.randomUUID),
+        ).exit.map(assert(_)(refusedOutsideGrant(imagesNodeIri, anythingProjectIri)))
+      },
+    ),
     suite("used to delete list items")(
       test("not delete a node that is in use") {
         val nodeInUseIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList01")
-        listsResponder(_.deleteListItemRequestADM(nodeInUseIri, anythingAdminUser, UUID.randomUUID)).exit.map(
+        withGrant(anythingAdminUser, anythingProjectIri)(
+          _.deleteListItemRequestADM(nodeInUseIri, _, UUID.randomUUID),
+        ).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               s"Node $nodeInUseIri cannot be deleted, because it is in use.",
@@ -624,19 +682,22 @@ class ListsResponderSpec extends E2EZSpec {
       test("not delete a node that has a child which is used (node itself not in use, but its child is)") {
         val nodeIri   = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList03")
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
-        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID)).exit.map(
-          assert(_)(
-            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
-              s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use.",
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListItemRequestADM(nodeIri, _, UUID.randomUUID)).exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+                s"Node ${nodeIri.value} cannot be deleted, because its child $usedChild is in use.",
+              ),
             ),
-          ),
-        )
+          )
       },
       test(
         "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode",
       ) {
         val nodeInUseInOntologyIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/treeList")
-        listsResponder(_.deleteListItemRequestADM(nodeInUseInOntologyIri, anythingAdminUser, UUID.randomUUID)).exit.map(
+        withGrant(anythingAdminUser, anythingProjectIri)(
+          _.deleteListItemRequestADM(nodeInUseInOntologyIri, _, UUID.randomUUID),
+        ).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               s"Node ${nodeInUseInOntologyIri.value} cannot be deleted, because it is in use.",
@@ -646,7 +707,7 @@ class ListsResponderSpec extends E2EZSpec {
       },
       test("delete a middle child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList012")
-        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID))
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListItemRequestADM(nodeIri, _, UUID.randomUUID))
           .flatMap(expectType[ChildNodeDeleteResponseADM])
           .map(_.node.children)
           .map { remainingChildren =>
@@ -663,7 +724,7 @@ class ListsResponderSpec extends E2EZSpec {
       },
       test("delete a child node that is not in use") {
         val nodeIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList02")
-        listsResponder(_.deleteListItemRequestADM(nodeIri, anythingAdminUser, UUID.randomUUID))
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListItemRequestADM(nodeIri, _, UUID.randomUUID))
           .flatMap(expectType[ChildNodeDeleteResponseADM])
           .map(_.node.children)
           .map { remainingChildren =>
@@ -677,7 +738,7 @@ class ListsResponderSpec extends E2EZSpec {
       },
       test("delete a list (i.e. root node) that is not in use in ontology") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/notUsedList")
-        listsResponder(_.deleteListItemRequestADM(listIri, anythingAdminUser, UUID.randomUUID))
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListItemRequestADM(listIri, _, UUID.randomUUID))
           .flatMap(expectType[ListDeleteResponseADM])
           .map(actual => assertTrue(actual.iri == listIri.value, actual.deleted))
       },
@@ -717,39 +778,64 @@ class ListsResponderSpec extends E2EZSpec {
       },
     ),
     suite("used to delete list node comments")(
+      test("refuse a project member who is not project admin before checking the node") {
+        val listIri     = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
+        val restService = for {
+          auth      <- ZIO.service[AuthorizationRestService]
+          responder <- ZIO.service[ListsResponder]
+        } yield new AdminListRestService(auth, responder)
+        restService
+          .flatMap(_.deleteListNodeCommentsADM(TestCandidates.of(anythingUser1))(listIri))
+          .exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageContaining[ForbiddenException](
+                "only a system administrator or project administrator has permissions",
+              ),
+            ),
+          )
+      },
       test("do not delete a comment of root list node") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
-          assert(_)(
-            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
-              s"Root node comments cannot be deleted.",
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListNodeCommentsADM(listIri, _, UUID.randomUUID)).exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+                s"Root node comments cannot be deleted.",
+              ),
             ),
-          ),
-        )
+          )
       },
       test("delete all comments of child node that contains just one comment") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList01")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).map(response =>
-          assertTrue(
-            response.nodeIri == listIri.value,
-            response.commentsDeleted,
-          ),
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListNodeCommentsADM(listIri, _, UUID.randomUUID)).map(
+          response =>
+            assertTrue(
+              response.nodeIri == listIri.value,
+              response.commentsDeleted,
+            ),
         )
       },
       test("delete all comments of child node that contains more than one comment") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList02")
-        listsResponder(_.deleteListNodeCommentsADM(listIri))
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListNodeCommentsADM(listIri, _, UUID.randomUUID))
           .map(response => assertTrue(response.nodeIri == listIri.value, response.commentsDeleted))
+      },
+      test("refuse a grant for another project on a list node") {
+        val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
+        withGrant(rootUser, imagesProjectIri)(_.deleteListNodeCommentsADM(listIri, _, UUID.randomUUID)).exit
+          .map(assert(_)(refusedOutsideGrant(listIri, imagesProjectIri)))
       },
       test("if requested list does not have comments, inform there is no comments to delete") {
         val listIri = ListIri.unsafeFrom("http://rdfh.ch/lists/0001/testList03")
-        listsResponder(_.deleteListNodeCommentsADM(listIri)).exit.map(
-          assert(_)(
-            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
-              s"Nothing to delete. Node ${listIri.value} does not have comments.",
+        withGrant(anythingAdminUser, anythingProjectIri)(_.deleteListNodeCommentsADM(listIri, _, UUID.randomUUID)).exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+                s"Nothing to delete. Node ${listIri.value} does not have comments.",
+              ),
             ),
-          ),
-        )
+          )
       },
     ),
   )

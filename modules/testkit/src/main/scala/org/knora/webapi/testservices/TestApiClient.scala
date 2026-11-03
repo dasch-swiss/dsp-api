@@ -207,12 +207,24 @@ final case class TestApiClient(
     relativeUri: Uri,
     body: Seq[Part[BasicBodyPart]],
     user: User,
+  ): Task[Response[Either[String, A]]] = sendMultiPart(relativeUri, body, Some(user))
+
+  def postMultiPart[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Seq[Part[BasicBodyPart]],
+  ): Task[Response[Either[String, A]]] =
+    sendMultiPart(relativeUri, body, None)
+
+  private def sendMultiPart[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Seq[Part[BasicBodyPart]],
+    user: Option[User],
   ): Task[Response[Either[String, A]]] = {
     val request = basicRequest
       .post(relativeUri)
       .multipartBody(body)
       .response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))
-    sendRequest(request, Some(user))
+    sendRequest(request, user)
   }
 
   def postBinary[A: JsonDecoder](
@@ -555,6 +567,12 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body, user))
+
+  def postMultiPart[A: JsonDecoder](
+    relativeUri: Uri,
+    body: Seq[Part[BasicBodyPart]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postMultiPart[A](relativeUri, body))
 
   def postBinary[A: JsonDecoder](
     relativeUri: Uri,

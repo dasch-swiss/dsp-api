@@ -89,6 +89,12 @@ final class AuthorizationRestService(
     checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
   }
 
+  def authorizeProjectAdminById(
+    candidate: ProjectCandidate,
+    projectIri: ProjectIri,
+  ): IO[ForbiddenException, ProjectAdminGrant] =
+    ensureSystemAdminOrProjectAdminById(candidate.user, projectIri).map(ProjectAdminGrant(candidate.user, _))
+
   def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
     val msg = "ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)

@@ -745,6 +745,16 @@ class ValuesResponderV2Spec extends E2EZSpec { self =>
           ),
         )
       },
+      test("let a project admin create a value with custom permissions above the defaults") {
+        val createValueParams = CreateValueV2(
+          resourceIri = aThingIri,
+          resourceClassIri = Anything.thingClass.smartIri,
+          propertyIri = Anything.hasInteger.smartIri,
+          valueContent = IntegerValueContentV2(ApiV2Complex, 2),
+          permissions = Some("CR knora-admin:ProjectMember"),
+        )
+        valuesResponder(_.createValueV2(createValueParams, anythingAdminUser, randomUUID)).as(assertCompletes)
+      },
       test("not create an integer value with syntactically invalid custom permissions") {
         val resourceIri = aThingIri
         val propertyIri = Anything.hasInteger.smartIri

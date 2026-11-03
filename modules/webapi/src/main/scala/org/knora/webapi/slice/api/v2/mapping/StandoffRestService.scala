@@ -12,7 +12,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.StandoffInternalException
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.mapping.CreateStandoffMappingForm
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.StandoffMappingIri
@@ -20,6 +19,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 
 final class StandoffRestService(
@@ -30,15 +30,16 @@ final class StandoffRestService(
   mappingService: StandoffMappingService,
 ) {
   def createMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(mappingForm: CreateStandoffMappingForm, opts: FormatOptions): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
     for {
-      _             <- auth.ensureUserIsNotAnonymous(user)
       createRequest <- requestParser
                          .createMappingRequestMetadataV2(mappingForm)
                          .mapError(BadRequestException.apply)
-      uuid     <- Random.nextUUID
-      result   <- standoffResponder.createMappingV2(createRequest, uuid)
+      grant  <- auth.authorizeProjectAdminById(candidate, createRequest.projectIri)
+      uuid   <- Random.nextUUID
+      result <- standoffResponder
+                  .createMappingV2(grant, createRequest.mapping, uuid)
       response <- renderer.render(result, opts)
     } yield response
 
@@ -46,9 +47,8 @@ final class StandoffRestService(
    * Yields the exact XML dsp-api would return when reading the value. The conversion is idempotent, so
    * the result is comparable to the `textValueAsXml` of a stored value for change detection.
    */
-  def canonicalize(user: User)(xml: String): Task[String] =
+  def canonicalize(xml: String): Task[String] =
     for {
-      _ <- auth.ensureUserIsNotAnonymous(user)
       // The mapping IRI is a constant built-in; any failure to load it is a server-side problem, not a
       // client error, so it must surface as a 500 rather than the BadRequestException getMappingV2 returns.
       mapping <- mappingService

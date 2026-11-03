@@ -118,6 +118,24 @@ class CreateAdminListsEndpointsE2ESpec extends E2EZSpec {
             ),
           )
       },
+      test("return a BadRequestException if the body projectIri is not the parent node's project") {
+        val createReq = ListCreateChildNodeRequest(
+          None,
+          None,
+          Labels.unsafeFrom(Seq(StringLiteralV2.from("Child in another project", EN))),
+          None,
+          customListIri,
+          None,
+          imagesProjectIri,
+        )
+        TestApiClient
+          .postJson[ChildNodeInfoGetResponseADM, ListCreateChildNodeRequest](
+            uri"/admin/lists/$customListIri",
+            createReq,
+            rootUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.BadRequest))
+      },
       test("return a ForbiddenException if the user creating the list is not project or system admin") {
         val createReq = ListCreateRootNodeRequest(
           None,
