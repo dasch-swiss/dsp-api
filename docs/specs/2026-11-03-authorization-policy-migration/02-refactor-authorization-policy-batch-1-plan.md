@@ -58,17 +58,17 @@ removes baseline lines runs `EndpointPolicyE2ESpec`, and every phase that adds m
 
 Endpoints (7): Appendix A, phase 1.
 
-- [ ] `MaintenanceEndpoints`: the three `/admin/maintenance/*` routes use `systemAdminPolicyEndpoint`; drop the `ensureSystemAdmin` calls in `MaintenanceRestService`
-- [ ] `ManagementEndpoints.postStartCompaction` uses `systemAdminPolicyEndpoint`; drop its `ensureSystemAdmin` in `ManagementRestService`
-- [ ] `ProjectsEndpoints`: `POST /admin/projects` and `DELETE /admin/projects/shortcode/{projectShortcode}/erase` use `systemAdminPolicyEndpoint`; drop both `ensureSystemAdmin` calls in `ProjectRestService`; the erase feature-flag check stays
-- [ ] `UsersEndpoints`: `PUT /admin/users/iri/{userIri}/SystemAdmin` uses `systemAdminPolicyEndpoint`; drop its `ensureSystemAdmin` in `UserRestService`
-- [ ] e2e tests: a non-admin with a malformed body answers 403 on `POST /admin/projects` (it answered 400 before), and a non-admin targeting a built-in user on `PUT .../SystemAdmin` answers 403 (was 400)
-- [ ] `AuthorizationMatrixE2ESpec`: the `exempt` set (key -> reason), subtracted by the row-coverage assertion
-- [ ] Matrix rows for `POST /admin/projects`, `DELETE .../erase` and `PUT .../SystemAdmin`
-- [ ] Compaction and the three maintenance routes: `exempt` entries, plus the non-admin 403 and anonymous 401 e2e tests
-- [ ] Baseline: remove the 7 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Maintenance|Management|Project|User).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `MaintenanceEndpoints`: the three `/admin/maintenance/*` routes use `systemAdminPolicyEndpoint`; drop the `ensureSystemAdmin` calls in `MaintenanceRestService`
+- [x] `ManagementEndpoints.postStartCompaction` uses `systemAdminPolicyEndpoint`; drop its `ensureSystemAdmin` in `ManagementRestService`
+- [x] `ProjectsEndpoints`: `POST /admin/projects` and `DELETE /admin/projects/shortcode/{projectShortcode}/erase` use `systemAdminPolicyEndpoint`; drop both `ensureSystemAdmin` calls in `ProjectRestService`; the erase feature-flag check stays
+- [x] `UsersEndpoints`: `PUT /admin/users/iri/{userIri}/SystemAdmin` uses `systemAdminPolicyEndpoint`; drop its `ensureSystemAdmin` in `UserRestService`
+- [x] e2e tests: a non-admin with a malformed body answers 403 on `POST /admin/projects` (it answered 400 before), and a non-admin targeting a built-in user on `PUT .../SystemAdmin` answers 403 (was 400)
+- [x] `AuthorizationMatrixE2ESpec`: the `exempt` set (key -> reason), subtracted by the row-coverage assertion
+- [x] Matrix rows for `POST /admin/projects`, `DELETE .../erase` and `PUT .../SystemAdmin`
+- [x] Compaction and the three maintenance routes: `exempt` entries, plus the non-admin 403 and anonymous 401 e2e tests
+- [x] Baseline: remove the 7 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Maintenance|Management|Project|User).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 2: Declare public endpoints
 
