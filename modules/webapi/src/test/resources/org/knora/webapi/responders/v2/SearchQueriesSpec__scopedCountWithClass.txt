@@ -1,0 +1,12 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+SELECT (count(distinct ?resource) as ?count)
+WHERE {
+    GRAPH <http://www.knora.org/data/0001/anything> {
+        ?resource <http://jena.apache.org/text#query> (rdfs:label "Anton*" 1000000) .
+    }
+    ?resource knora-base:creationDate ?resourceCreationDate .
+    ?resource a ?resourceClass .
+    ?resourceClass rdfs:subClassOf* <http://www.knora.org/ontology/0001/anything#Thing> .
+    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+}

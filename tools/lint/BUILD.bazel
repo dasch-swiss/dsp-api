@@ -52,3 +52,15 @@ py_test(
     ],
     main = "check_authz_test.py",
 )
+
+# Enforce that a Gravsearch prequery reaches the triplestore only through
+# SearchResponderV2Live.executePrequery, which owns the matchFulltext breadth
+# guard. Only webapi main sources construct prequery transformers; a new module
+# that does must be added here. Wired into `just check`.
+py_test(
+    name = "gravsearch_prequery_seam",
+    srcs = ["check_gravsearch_prequery_seam.py"],
+    args = ["$(rootpaths //modules/webapi:license_srcs)"],
+    data = ["//modules/webapi:license_srcs"],
+    main = "check_gravsearch_prequery_seam.py",
+)

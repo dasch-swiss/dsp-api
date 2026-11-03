@@ -762,7 +762,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
     `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
     `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
-    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `ResourceMetadataRules`, `FairResourcesLive`
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `GetResourceInfoQuery`, `ResourceMetadataRules`,
+    `FairResourcesLive`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -781,7 +782,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         and the endpoints that call them live in webapi-api.
 - **Depends on**: webapi-common, webapi-admin, webapi-ontology, webapi-standoff, webapi-search,
     webapi-triplestore, webapi-sipi-client, webapi-app (`config.AppConfig` only), webapi-api (inverted and
-    cyclic), webapi-fair (`FairResourcesLive` implements the `FairResources` port), sparql-builder (34 files
+    cyclic), webapi-fair (`FairResourcesLive` implements the `FairResources` port), sparql-builder (35 files
     under `slice/resources/repo`), build-toolchain.
 - **Used by**: webapi-api, webapi-app, webapi-search, webapi-standoff, webapi-ontology, webapi-export,
     webapi-admin, webapi-common (`ConstructResponseUtilV2` imports `IiifImageRequestUrl`), testkit, test-it,
@@ -953,7 +954,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `MainQueryResultProcessor`, `QueryTraverser`, `PrequeryPatternOrdering`, `ConstructTransformer`,
     `SelectTransformer`, `WhereTransformer`, `OntologyInferencer`, `InferenceOptimizationService`,
     `FulltextBreadthGuard`, `FulltextSearchTerms`, `SearchFulltextQuery`,
-    `LuceneScope`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
+    `LuceneScope`, `MatchFulltextLookup`, `GraphPattern`, `SearchQueries`, `ApacheLuceneSupport`, `LuceneQueryString`,
     `SearchTimeoutException`, `ResourceCountV2`, and the port `ProjectDataGraphs`
 - **Public interface**: the `SearchResponderV2` trait (`gravsearchV2`, `gravsearchCountV2`,
     `fulltextSearchV2`, `fulltextSearchCountV2`, `searchResourcesByLabelV2`,
@@ -1019,8 +1020,14 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         through `ProjectService` or `KnoraProjectService` - enforcement: review.
     - Only the `text:query` statement goes into `GRAPH`, and in Gravsearch only for lookups anchored on the main
         resource ([ADR-0012](docs/adr/0012-graph-scoped-lucene-text-lookups.md)) - enforcement: review (the
-        scoped prequery goldens, `SearchFulltextQuerySpec` and `LuceneScopeSpec` show a change). This GRAPH-naming
-        SPARQL is a temporary ADR-0011 ratchet exception that moves behind `ResourceSearch` with the Lucene queries.
+        scoped prequery goldens, `SearchFulltextQuerySpec`, `SearchQueriesSpec` and `LuceneScopeSpec` show a
+        change). This GRAPH-naming SPARQL is a temporary ADR-0011 ratchet exception that moves behind
+        `ResourceSearch` with the Lucene queries.
+    - A Gravsearch prequery reaches the triplestore only through `SearchResponderV2Live.executePrequery`, which
+        runs a `matchFulltext` prequery behind `FulltextBreadthGuard` - enforcement: static-analysis, textual
+        (`//tools/lint:gravsearch_prequery_seam`, part of `just check`; a prequery path in a file that builds no
+        transformer is review). The probe uses the lookup's own scope - enforcement: test
+        (`GravsearchFulltextBreadthGuardSpec`).
     - Prequery output is pinned end to end by `GravsearchToPrequeryTransformerE2ESpec` and
         `GravsearchToCountPrequeryTransformerE2ESpec` (both in `modules/test-it`), which snapshot the rendered
         prequery SPARQL after the inference pass, so a change to prequery generation, pattern order or
@@ -1499,8 +1506,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `docs/development/dsp-api-sparql-queries.md`
 - **Depends on**: build-toolchain. No other inventory component; zero main-source deps, with RDF4J's
     `sparqlbuilder` present only as a test-scope escaping oracle.
-- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (34 files under
-    `slice/resources/repo`), among 92 main-source importers of `org.knora.sparqlbuilder` in total;
+- **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (35 files under
+    `slice/resources/repo`), among 94 main-source importers of `org.knora.sparqlbuilder` in total;
     other sites still build queries with RDF4J `SparqlBuilder`.
 - **Boundary rules**:
     - New SPARQL query code uses the `sparql"..."` interpolator, not string concatenation or the legacy RDF4J
@@ -1646,8 +1653,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `E2EZSpec` (inherited), `CORSSupportE2ESpec`, `InstanceChecker`, `AdminFilesE2ESpec`,
     `OntologiesEndpointsE2ESpec`, `ResourcesRouteV2E2ESpec`, `SearchEndpointsGetSearchE2ESpec`,
     `SearchEndpointsPostGravsearchE2ESpec`, `SegmentE2EZSpec`, `SearchE2EZSpec`,
-    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `KnoraBaseJsonModels`,
-    `ValueHasXmlTestSupport`, `ProjectExportTestSupport`
+    `KnoraSipiIntegrationV2ITSpec`, `StandoffEndpointsE2ESpec`, `LegalInfoE2ESpec`, `ResourcesInfoE2ESpec`,
+    `KnoraBaseJsonModels`, `ValueHasXmlTestSupport`, `ProjectExportTestSupport`
 - **Public interface**: none. A leaf test target with no downstream dependents; each spec is a
     `class extends E2EZSpec`, or occasionally a plain `ZIOSpecDefault`, annotated
     `@RunWith(classOf[DspZTestJUnitRunner])`.
@@ -1721,8 +1728,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     released through. It underpins Application composition operationally without hosting domain logic.
 - **Key entities**: `bazel_dep`, `scala_config`, `scala_deps`, `image_versions`, `FUSEKI_DIST_VERSION`,
     `buildinfo`, `oci_config_label`, `ext_scalafmt`, the wrapped `scala_library` / `scala_binary` macros in
-    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `require-bazel`,
-    `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
+    `tools/scalafmt/defs.bzl`, `spdx_header_check`, `no_relative_imports`, `gravsearch_prequery_seam`,
+    `require-bazel`, `scalafmt_targets`, `workspace_status.sh`, the `bazel-rbe` composite action
 - **Public interface**: `just <recipe>`, the sole entry point, enumerated by `just --list` (`fmt`, `check`,
     `header-fix`; `test`, `test-unit`, `test-it`, `test-e2e`, `test-ingest*`; `docker-build*`,
     `docker-publish*`; the `stack-*` lifecycle; `docs-*`; `markdownlint`; `structurizer`; `clean*`); the

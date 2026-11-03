@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.resources.repo
 
+import cats.syntax.traverse.*
 import zio.*
 
 import java.time.Instant
+import scala.util.Try
 
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.ResourceIri
@@ -17,50 +19,49 @@ import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.domain.ResourceInfo
 import org.knora.webapi.slice.resources.domain.ResourceInfoRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends ResourceInfoRepo {
 
-  override def findByProjectAndResourceClass(
+  override def find(
     projectIri: ProjectIri,
-    resourceClass: InternalIri,
-  ): Task[List[ResourceInfo]] = {
-    val select = selectResourcesByCreationDate(resourceClass, projectIri)
-    triplestore.query(select).logError.flatMap(toResourceInfoList)
-  }
-
-  private def selectResourcesByCreationDate(resourceClassIri: InternalIri, projectIri: ProjectIri): Select = Select(
-    s"""
-       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-       |
-       |SELECT DISTINCT ?resource ?creationDate ?isDeleted ?lastModificationDate ?deleteDate
-       |WHERE {
-       |    ?resource a <${resourceClassIri.value}> ;
-       |              knora-base:attachedToProject <${projectIri.value}> ;
-       |              knora-base:creationDate ?creationDate ;
-       |              knora-base:isDeleted ?isDeleted ;
-       |    OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate .}
-       |    OPTIONAL { ?resource knora-base:deleteDate ?deleteDate . }
-       |}
-       |""".stripMargin,
-  )
-
-  private def toResourceInfoList(result: SparqlSelectResult) =
-    ZIO.attempt(result.map(toResourceInfo).toList)
-
-  private def toResourceInfo(row: VariableResultsRow) = {
-    val rowMap = row.rowMap
-    ResourceInfo(
-      ResourceIri.unsafeFrom(rowMap("resource")),
-      Instant.parse(rowMap("creationDate")),
-      rowMap.get("lastModificationDate").map(Instant.parse(_)),
-      rowMap.get("deleteDate").map(Instant.parse),
-      rowMap("isDeleted").toBoolean,
-    )
-  }
+    resourceClass: Option[InternalIri],
+    cutoff: Option[Instant],
+  ): Task[List[ResourceInfo]] =
+    triplestore
+      .query(GetResourceInfoQuery.build(projectIri, resourceClass, cutoff))
+      .logError
+      .flatMap(result =>
+        ZIO.foreach(result.results.bindings.toList)(row =>
+          ZIO.fromEither(ResourceInfoRepoLive.toResourceInfo(resourceClass)(row)),
+        ),
+      )
 }
 
 object ResourceInfoRepoLive {
   val layer = ZLayer.derive[ResourceInfoRepoLive]
+
+  /**
+   * [[GetResourceInfoQuery]] selects `?resourceClass` only when no class is requested; otherwise the requested class
+   * is the row's class. An unbound or malformed variable is an [[InconsistentRepositoryDataException]].
+   */
+  private[repo] def toResourceInfo(requestedClass: Option[InternalIri])(
+    row: VariableResultsRow,
+  ): Either[InconsistentRepositoryDataException, ResourceInfo] = {
+    def required(v: String): Either[String, String]            = row.get(v).toRight(s"'$v' is not bound")
+    def instant(v: String)(s: String): Either[String, Instant] =
+      Try(Instant.parse(s)).toEither.left.map(_ => s"'$v' is not a timestamp: $s")
+    def optionalInstant(v: String): Either[String, Option[Instant]] = row.get(v).traverse(instant(v))
+
+    val parsed = for {
+      iri           <- required("resource").flatMap(ResourceIri.from)
+      resourceClass <- requestedClass.orElse(row.get("resourceClass").map(InternalIri.apply)).toRight("no class bound")
+      creationDate  <- required("creationDate").flatMap(instant("creationDate"))
+      lastModified  <- optionalInstant("lastModificationDate")
+      deleteDate    <- optionalInstant("deleteDate")
+      isDeleted     <- required("isDeleted").flatMap(s => s.toBooleanOption.toRight(s"'isDeleted' is not a boolean: $s"))
+    } yield ResourceInfo(iri, resourceClass, creationDate, lastModified, deleteDate, isDeleted)
+    parsed.left.map(err =>
+      InconsistentRepositoryDataException(s"Invalid resource info for ${row.get("resource").getOrElse("?")}: $err"),
+    )
+  }
 }
