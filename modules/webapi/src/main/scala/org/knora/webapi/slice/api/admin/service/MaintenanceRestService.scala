@@ -21,11 +21,9 @@ import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriReque
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.backfillValueHasXmlAction
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 
 final case class MaintenanceRestService(
-  private val securityService: AuthorizationRestService,
   private val maintenanceService: MaintenanceService,
   private val projectService: KnoraProjectService,
   private val valueHasXmlBackfillService: ValueHasXmlBackfillService,

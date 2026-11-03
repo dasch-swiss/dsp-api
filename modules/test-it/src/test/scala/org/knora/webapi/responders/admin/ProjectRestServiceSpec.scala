@@ -148,7 +148,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
           SelfJoin.CannotJoin,
         )
         for {
-          project <- projectRestService(_.createProject(rootUser)(createReq)).map(_.project)
+          project <- projectRestService(_.createProject(createReq)).map(_.project)
           _        = newProjectIri.set(project.id.value)
           // Check Administrative Permissions
           receivedApAdmin <- ZIO.serviceWithZIO[PermissionsResponder](_.getPermissionsApByProjectIri(project.id))
@@ -220,7 +220,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           SelfJoin.CannotJoin,
         )
-        projectRestService(_.createProject(rootUser)(createRequest))
+        projectRestService(_.createProject(createRequest))
           .map(_.project)
           .map(project =>
             assertTrue(
@@ -249,7 +249,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           SelfJoin.CannotJoin,
         )
-        projectRestService(_.createProject(rootUser)(createRequest))
+        projectRestService(_.createProject(createRequest))
           .map(received =>
             assertTrue(
               received.project.longname
@@ -277,7 +277,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           SelfJoin.CannotJoin,
         )
-        projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
+        projectRestService(_.createProject(createRequest)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageContaining[DuplicateValueException](
               "Project with the shortname: 'newproject' already exists",
@@ -298,7 +298,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
           Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
           SelfJoin.CannotJoin,
         )
-        projectRestService(_.createProject(rootUser)(createRequest)).exit.map(
+        projectRestService(_.createProject(createRequest)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageContaining[DuplicateValueException](
               "Project with the shortcode: '111C' already exists",

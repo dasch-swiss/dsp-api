@@ -398,17 +398,15 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
 object AuthorizationMatrixE2ESpec {
 
   /**
-   * Role-based endpoints without a matrix row, with the reason. Their own specs prove the 401 and 403 instead.
+   * Role-based endpoints without a matrix row (no repeatable, side-effect-free valid request), each mapped to the
+   * spec that proves its 401 and 403.
    */
-  val exempt: Map[String, String] = {
-    val reason = "no repeatable, side-effect-free valid request"
-    Map(
-      "POST /start-compaction"                                               -> reason,
-      "POST /admin/maintenance/{action-name}"                                -> reason,
-      "POST /admin/maintenance/users/replace-iri"                            -> reason,
-      "POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri" -> reason,
-    )
-  }
+  val exempt: Map[String, String] = Map(
+    "POST /start-compaction"                                               -> "ManagementEndpointsE2ESpec",
+    "POST /admin/maintenance/{action-name}"                                -> "MaintenanceBackfillValueHasXmlE2ESpec",
+    "POST /admin/maintenance/users/replace-iri"                            -> "MaintenanceReplaceUserIriE2ESpec",
+    "POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri" -> "MaintenanceReplaceUserIriInProjectE2ESpec",
+  )
 
   enum Principal(val user: Option[User]) {
     case Anonymous       extends Principal(None)

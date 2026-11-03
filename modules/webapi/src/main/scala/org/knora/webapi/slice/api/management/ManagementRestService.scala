@@ -8,8 +8,6 @@ package org.knora.webapi.slice.api.management
 import sttp.model.StatusCode
 import zio.*
 
-import scala.annotation.unused
-
 import org.knora.webapi.core.State
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -21,7 +19,7 @@ final class ManagementRestService(state: State, triplestore: TriplestoreService)
       (response, if (response.status) StatusCode.Ok else StatusCode.ServiceUnavailable)
     }
 
-  def startCompaction(@unused ignored: Unit): Task[(String, StatusCode)] =
+  def startCompaction: Task[(String, StatusCode)] =
     triplestore.compact().map(success => if (success) ("ok", StatusCode.Ok) else ("forbidden", StatusCode.Forbidden))
 }
 

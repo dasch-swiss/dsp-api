@@ -23,8 +23,6 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val maintenanceBase = "admin" / "maintenance"
 
-  private val systemAdminRequirement = Policy.SystemAdmin.requirement
-
   given Schema[Option[Json]] =
     Schema.schemaForOption[Json](using Schema.string.map((str: String) => str.fromJson[Json].toOption)(_.toJson))
 
@@ -44,7 +42,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
                        |""".stripMargin),
     )
     .out(statusCode(StatusCode.Accepted))
-    .description(s"Execute a maintenance action. $systemAdminRequirement")
+    .description(s"Execute a maintenance action. ${Policy.SystemAdmin.requirement}")
 
   val postReplaceUserIri = baseEndpoints.systemAdminPolicyEndpoint.post
     .in(maintenanceBase / "users" / "replace-iri")
@@ -52,7 +50,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Replace a user IRI across the entire database (admin graph + all project data graphs). " +
-        s"$systemAdminRequirement Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
+        s"${Policy.SystemAdmin.requirement} Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
     )
 
   val postReplaceUserIriInProject = baseEndpoints.systemAdminPolicyEndpoint.post
@@ -61,7 +59,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Re-attribute all references to a user IRI within a single project's data graph. " +
-        s"Both user accounts remain intact. $systemAdminRequirement Not idempotent: retrying after success returns 404.",
+        s"Both user accounts remain intact. ${Policy.SystemAdmin.requirement} Not idempotent: retrying after success returns 404.",
     )
 }
 

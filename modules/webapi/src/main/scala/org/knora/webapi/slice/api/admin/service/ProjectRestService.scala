@@ -80,13 +80,11 @@ final class ProjectRestService(
    * Creates a project from the given payload.
    *
    * @param createReq the [[ProjectCreateRequest]] from which to create the project
-   * @param user      the [[User]] making the request
    * @return
    *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]]
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def createProject(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)

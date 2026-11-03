@@ -64,10 +64,12 @@ class ManagementEndpointsE2ESpec extends E2EZSpec {
         .postJson[Json, Json](uri"/start-compaction", Json.Obj())
         .map(r => assertTrue(r.code == StatusCode.Unauthorized))
     },
-    test("answer 403 to a caller who is not a system admin, without compacting") {
+    test("answer 403 with the authorization refusal to a caller who is not a system admin") {
       TestApiClient
         .postJson[Json](uri"/start-compaction", normalUser)
-        .map(r => assertTrue(r.code == StatusCode.Forbidden))
+        .map(r =>
+          assertTrue(r.code == StatusCode.Forbidden, r.body.merge.toString.contains("only a system administrator")),
+        )
     },
   )
 

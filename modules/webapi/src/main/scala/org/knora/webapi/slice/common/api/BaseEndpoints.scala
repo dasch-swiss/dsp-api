@@ -97,7 +97,11 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(Policy.Authenticated(reason), user => authorization.ensureUserIsNotAnonymous(user).as(user))
 
-  /** Declares and enforces [[Policy.SystemAdmin]]: an active system administrator. */
+  /**
+   * Declares and enforces [[Policy.SystemAdmin]]: an active system administrator. Only here may a handler drop the
+   * principal (`serverLogic(_ => ...)`), because the security logic already decided; project-scoped and authenticated
+   * endpoints must use theirs.
+   */
   val systemAdminPolicyEndpoint
     : RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(Policy.SystemAdmin, user => authorization.ensureSystemAdmin(user).as(user))
