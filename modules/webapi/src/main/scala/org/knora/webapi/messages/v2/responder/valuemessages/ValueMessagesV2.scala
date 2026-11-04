@@ -2104,7 +2104,9 @@ case class StillImageFileValueContentV2(
     copy(ontologySchema = targetSchema)
 
   def makeFileUrl(projectADM: Project, url: String): String =
-    fileUrlOrPlaceholder(s"$url/${projectADM.shortcode}/${fileValue.internalFilename}/full/max/0/default.jpg")
+    fileUrlOrPlaceholder(
+      s"${StillImageFileValueContentV2.serviceId(url, projectADM.shortcode, fileValue.internalFilename)}/full/max/0/default.jpg",
+    )
 
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
@@ -2127,6 +2129,12 @@ case class StillImageFileValueContentV2(
                 value = s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}",
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri,
               ),
+          ) ++ Option.when(!hasPlaceholderAsset)(
+            StillImageFileValueHasIIIFImageService -> JsonLDUtil.datatypeValueToJsonLDObject(
+              value = StillImageFileValueContentV2
+                .serviceId(appConfig.sipi.externalBaseUrl, projectADM.shortcode, fileValue.internalFilename),
+              datatype = OntologyConstants.Xsd.Uri.toSmartIri,
+            ),
           ),
         )
     }
@@ -2140,6 +2148,19 @@ case class StillImageFileValueContentV2(
  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
  */
 object StillImageFileValueContentV2 {
+
+  /**
+   * The id of the IIIF Image API service for a still image: `{externalBaseUrl}/{shortcode}/{internalFilename}`.
+   * It equals the `id` in Sipi's `info.json` for that image as long as Sipi sees the public host and scheme
+   * named by `externalBaseUrl`, which in a deployment is the reverse proxy's job.
+   *
+   * @param externalBaseUrl  the public Sipi base URL, without a trailing slash, as every other Sipi URL assumes.
+   * @param shortcode        the shortcode of the project the file belongs to.
+   * @param internalFilename the internal filename of the image.
+   */
+  def serviceId(externalBaseUrl: String, shortcode: Shortcode, internalFilename: String): String =
+    s"$externalBaseUrl/${shortcode.value}/$internalFilename"
+
   def from(r: Resource, fileInfo: FileInfo): Either[String, StillImageFileValueContentV2] = for {
     comment   <- objectCommentOption(r)
     meta       = fileInfo.metadata
