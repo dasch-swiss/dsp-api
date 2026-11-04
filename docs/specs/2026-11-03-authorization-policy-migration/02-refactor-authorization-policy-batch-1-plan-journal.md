@@ -19,7 +19,8 @@ status: in-progress
 | repo | base_commit | branch | merge_strategy | status | pr |
 | --- | --- | --- | --- | --- | --- |
 | dsp-api | 984f74c95 | feature/dev-7725-migrate-remaining-endpoints-to-declared-authorization | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4415> |
-| dsp-api (stacked, Phase 2 on) | 64657ad50 | feature/dev-7725-declare-public-endpoint-policies | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4416> |
+| dsp-api (stacked, Phase 2) | 64657ad50 | feature/dev-7725-declare-public-endpoint-policies | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4416> |
+| dsp-api (stacked, Phase 3) | e2884b80c | feature/dev-7725-declare-object-access-endpoint-policies | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4417> |
 
 ## Phases
 
@@ -27,6 +28,7 @@ status: in-progress
 | --- | --- | --- | --- |
 | 1 | reviewed | dsp-api@4d8713c48 | 1 |
 | 2 | reviewed | dsp-api@64657ad50 | 1 |
+| 3 | reviewed | dsp-api@e2884b80c | 1 |
 
 ## Chunk queue
 
@@ -42,6 +44,8 @@ status: in-progress
 | 1.2 | dsp-api | complete | 4c9a2a316 | review fixes: test-it compile, unused AuthorizationRestService, discriminating compaction 403 test, exemptions name their proving spec | none |
 | 2.1 | dsp-api | complete | 93984ef18 | 20 public endpoints on publicPolicyEndpoint with reasons, requirement in descriptions, Public scaladoc "needs no credentials", baseline 148 | none |
 | 2.2 | dsp-api | complete | c6a28d1ad | review fixes: logout gets its own reason; project and ontology-metadata reasons say what is exposed | none |
+| 3.1 | dsp-api | complete | b31114720, e92601140 | 27 routes on object-access factories; ObjectAccess.admitsAnonymous + authenticatedObjectAccessPolicyEndpoint; 7 writes answer anonymous 401; AnonymousWritesE2ESpec; docs; baseline 121 | none |
+| 3.2 | dsp-api | complete | 2d86f52c5 | review fixes: shared requirement constants on Policy, ratchet guard against anonymous object-access writes (mutation-checked), factory scaladoc | none |
 
 ## Deferrals
 
@@ -49,7 +53,8 @@ status: in-progress
 
 ## Deviations
 
-- Phase 2 on runs on a stacked branch and PR (user request), based on the Phase 1 branch.
+- Phase 2 on runs on a stacked branch and PR (user request), based on the Phase 1 branch; each phase gets its own stacked PR.
+- Phase 3: owner decided anonymous object-access writes answer 401 in the security logic (was 403 from the responder); `PUT /v2/values/order` included as the seventh write; batch-3 Phase 24 updated so `PUT /v2/resources` follows.
 
 ## Side findings
 
@@ -60,5 +65,7 @@ status: in-progress
 - Phase 1: a local dev stack holding port 3333 makes e2e runs report PASSED with 0 tests ("Address already in use"); run with `--test_env=KNORA_WEBAPI_KNORA_API_INTERNAL_PORT=3433 --test_env=KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3433 --nocache_test_results`.
 - Phase 2 review (not fixed): `publicPolicyEndpoint` could append the requirement to the description itself, so the two cannot drift (DUNE-003, structural); the pilot's `readReason` name differs from `publicReason`.
 - Phase 2 review (refuted): DUNE-002's claim that ProjectsEndpoints' public block includes member/admin reads; those are in `Secured`.
+- Phase 3: the test Fuseki container twice dropped connections mid-run ("Failed to connect to triplestore"); the affected specs passed when re-run alone.
+- Phase 3 review (kept): `CreateResourceV2Handler`'s anonymous 403 is now unreachable over HTTP; kept as a backstop. Files `enforcedIn` names AssetPermissionsResponder, which AssetPermissionsCache delegates to.
 
 ## Closeout

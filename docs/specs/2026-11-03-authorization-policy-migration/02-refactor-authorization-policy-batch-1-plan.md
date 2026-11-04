@@ -90,13 +90,21 @@ Endpoints (20): Appendix A, phase 2. The reason states why exposure is fine.
 Endpoints (27): Appendix A, phase 3. Each `enforcedIn` names the place that checks the object, taken from the
 "Where today" column.
 
-- [ ] `ResourcesEndpoints`: the 14 resource, graph, history, IIIF, TEI and preview routes in phase 3 use `objectAccessPolicyEndpoint`
-- [ ] `ValuesEndpoints`: the 5 value routes in phase 3 use `objectAccessPolicyEndpoint`
-- [ ] `SearchEndpoints`: the 7 search routes in phase 3 (not the counts) use `objectAccessPolicyEndpoint`
-- [ ] `FilesEndpoints`: `GET /admin/files/{projectShortcode}/{filename}` uses `objectAccessPolicyEndpoint`
-- [ ] Baseline: remove the 27 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Resources|Values|Search|Files).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+The seven writes (`POST /v2/resources`, `POST /v2/resources/delete`, `PUT /v2/resources/authorship`, `POST /v2/values`,
+`PUT /v2/values`, `PUT /v2/values/order`, `POST /v2/values/delete`) refuse anonymous callers in the security logic, so an anonymous write
+answers 401 before the body is read instead of 403 from the responder (owner decision, 2026-11-04). The reads keep
+admitting anonymous callers.
+
+- [x] `Policy.ObjectAccess` carries `admitsAnonymous`; its requirement sentence also says "Requires authentication." when it is false; ADR-0013's policy table says so
+- [x] `BaseEndpoints.authenticatedObjectAccessPolicyEndpoint(enforcedIn)` declares `ObjectAccess(enforcedIn, admitsAnonymous = false)` and refuses anonymous callers with 401; `BaseEndpointsSpec` covers it
+- [x] The seven writes use `authenticatedObjectAccessPolicyEndpoint`; an e2e test per write asserts the anonymous 401
+- [x] `ResourcesEndpoints`: the 14 resource, graph, history, IIIF, TEI and preview routes in phase 3 use `objectAccessPolicyEndpoint`
+- [x] `ValuesEndpoints`: the 5 value routes in phase 3 use `objectAccessPolicyEndpoint`
+- [x] `SearchEndpoints`: the 7 search routes in phase 3 (not the counts) use `objectAccessPolicyEndpoint`
+- [x] `FilesEndpoints`: `GET /admin/files/{projectShortcode}/{filename}` uses `objectAccessPolicyEndpoint`
+- [x] Baseline: remove the 27 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Resources|Values|Search|Files).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 4: Admin projects by project IRI
 
@@ -172,6 +180,7 @@ Endpoints (1): `POST /admin/groups`. `projectFrom` = "body project".
 | `PUT /admin/users/iri/{userIri}/SystemAdmin` | non-admin, built-in target user | 400 | 403 |
 | `PUT /admin/projects/iri/{projectIri}` | unknown project | 404 | 403 |
 | `GET /admin/permissions/{projectIri}`, `ap/{projectIri}`, `ap/{projectIri}/{groupIri}`, `doap/{projectIri}` | unknown project | 404 | 403 |
+| `POST /v2/resources`, `POST /v2/resources/delete`, `PUT /v2/resources/authorship`, `POST /v2/values`, `PUT /v2/values`, `PUT /v2/values/order`, `POST /v2/values/delete` | anonymous | 403 | 401 |
 
 ## Dependencies & Risks
 

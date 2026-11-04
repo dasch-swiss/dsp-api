@@ -159,7 +159,7 @@ Endpoints (1): `PUT /v2/resources`.
 - [ ] `ResourcesResponderV2` update: when the request carries `hasPermissions`, the caller needs ChangeRights on the resource (403 otherwise), as for values
 - [ ] e2e test: Modify without ChangeRights cannot change permissions, but can still change the label
 - [ ] `docs/03-endpoints/api-v2/editing-resources.md` records the rule
-- [ ] `ResourcesEndpoints`: the route uses `objectAccessPolicyEndpoint`
+- [ ] `ResourcesEndpoints`: the route uses `authenticatedObjectAccessPolicyEndpoint` (a write: anonymous 401, as Phase 3 decided); `AnonymousWritesE2ESpec` lists it
 - [ ] Baseline: remove the line and lower `baselineSize`
 - [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Resources).*'`; it passes
 - [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
@@ -233,6 +233,7 @@ Under the recommended options:
 | `canreplacecardinalities`, `candeletecardinalities` | anonymous | 403 | 401 |
 | `POST /v2/resources/erase` | anonymous | 403 | 401 |
 | `PUT /v2/resources` with `hasPermissions` | Modify without ChangeRights | 200 | 403 |
+| `PUT /v2/resources` | anonymous | 403 | 401 |
 
 ## Dependencies & Risks
 
