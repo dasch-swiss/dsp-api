@@ -32,11 +32,12 @@ final class AuthenticationEndpointsV2(
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
   private val cookieName                    = authenticator.calculateCookieName()
 
-  private val publicReason      = "The endpoint is itself the credential check."
-  private val publicRequirement = Policy.Public(publicReason).requirement
+  private val credentialCheckReason = "The endpoint is itself the credential check."
+  private val logoutReason          = "Acts only on the caller's own token; a missing or invalid token reveals nothing."
+  private val publicRequirement     = Policy.Public(credentialCheckReason).requirement
 
   val getV2Authentication = baseEndpoints
-    .publicPolicyEndpoint(publicReason)
+    .publicPolicyEndpoint(credentialCheckReason)
     .get
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
@@ -46,7 +47,7 @@ final class AuthenticationEndpointsV2(
     .description(s"Checks the credentials and returns whether they are valid. $publicRequirement")
 
   val postV2Authentication = baseEndpoints
-    .publicPolicyEndpoint(publicReason)
+    .publicPolicyEndpoint(credentialCheckReason)
     .post
     .in(basePath)
     .in(jsonBody[LoginPayload])
@@ -55,7 +56,7 @@ final class AuthenticationEndpointsV2(
     .description(s"Logs in and returns a token. $publicRequirement")
 
   val deleteV2Authentication = baseEndpoints
-    .publicPolicyEndpoint(publicReason)
+    .publicPolicyEndpoint(logoutReason)
     .delete
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))

@@ -37,7 +37,8 @@ object LastModificationDate {
 
 final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
-  private val publicReason      = "Ontologies are public."
+  private val publicReason =
+    "Ontology metadata (label, comment, project, last modification) is part of the public data model."
   private val publicRequirement = Policy.Public(publicReason).requirement
 
   private val base = "v2" / "ontologies"

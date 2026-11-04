@@ -35,7 +35,8 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
   private val adminMembers           = "admin-members"
   private val restrictedViewSettings = "RestrictedViewSettings"
 
-  private val publicReason      = "Public project metadata."
+  private val publicReason =
+    "Project descriptions, keywords and restricted-view settings describe how the project presents its data to anyone."
   private val publicRequirement = Policy.Public(publicReason).requirement
 
   object Public {
