@@ -116,6 +116,7 @@ non-sequential positions using `knora-api:valueHasOrder`, calling `PUT /v2/value
 will overwrite those positions and compact them.
 
 To create a value, the user must have **modify permission** on the containing resource.
+Anonymous callers are refused with 401 Unauthorized here and on every other value write (update, reorder, delete).
 
 The response is a JSON-LD document containing:
 
