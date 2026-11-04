@@ -576,6 +576,21 @@ class GravsearchTypeInspectionRunnerSpec extends E2EZSpec {
       )
       inspectTypes(queryVarTypeFromMatchFulltext).map(actual => assertTrue(actual.entities == expected))
     },
+    test("fail, rather than die, when an inference rule rejects the query") {
+      // knora-api:isMainResource has subject type knora-api:Resource but is not a resource property,
+      // which the inference rules reject.
+      val queryRejectedByInference: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?r knora-api:isMainResource true .
+          |} WHERE {
+          |    ?r knora-api:isMainResource true .
+          |}
+          |""".stripMargin
+      inspectTypes(queryRejectedByInference).exit.map(actual => assert(actual)(failsWithA[GravsearchException]))
+    },
     test("reject matchFulltext with an IRI instead of a variable as its first argument") {
       val queryMatchFulltextWithIriArg: String =
         """
