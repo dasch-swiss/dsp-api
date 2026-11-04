@@ -1,5 +1,19 @@
 # Changelog
 
+## [40.6.1](https://github.com/dasch-swiss/dsp-api/compare/v40.6.0...v40.6.1) (2026-11-04)
+
+
+### Maintenances
+
+* add grants and factories for the remaining project-scoped endpoints (batch 2) ([#4419](https://github.com/dasch-swiss/dsp-api/issues/4419)) ([2a2e497](https://github.com/dasch-swiss/dsp-api/commit/2a2e49776afca03c3e4deaf06e328fe8095a5d9c))
+* bump sipi to v10.0.1 ([#4414](https://github.com/dasch-swiss/dsp-api/issues/4414)) ([3de56a6](https://github.com/dasch-swiss/dsp-api/commit/3de56a69d2dd5fb59970e72138a68759d4c32a71))
+* declare authorization policies with the existing factories (batch 1) ([#4415](https://github.com/dasch-swiss/dsp-api/issues/4415)) ([e3cc19c](https://github.com/dasch-swiss/dsp-api/commit/e3cc19c44c82d9925d381a8c372106dc7c32f175))
+
+
+### Bug Fixes
+
+* close the triaged authorization gaps and make every endpoint declare its authorization policy ([#4410](https://github.com/dasch-swiss/dsp-api/issues/4410)) ([984f74c](https://github.com/dasch-swiss/dsp-api/commit/984f74c956d750a53463763192444cea745cbdd9))
+
 ## [40.6.0](https://github.com/dasch-swiss/dsp-api/compare/v40.5.0...v40.6.0) (2026-11-02)
 
 
